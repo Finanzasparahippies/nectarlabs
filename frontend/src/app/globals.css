@@ -1,0 +1,87 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Outfit:wght@400;700;900&display=swap');
+@import "tailwindcss";
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card-bg: var(--card-bg);
+  --color-card-border: var(--card-border);
+
+  /* Nectar Labs Brand Palette */
+  --color-nectar-gold: #C68A1E;
+  --color-nectar-forest: #1E3A2F;
+  --color-nectar-leaf: #2D5A47;
+  --color-nectar-cream: #FDFBF7;
+
+  --font-sans: 'Outfit', 'Inter', var(--font-geist-sans);
+  --font-display: 'Outfit', sans-serif;
+
+  --radius-premium: 2rem;
+}
+
+:root {
+  --background: #F3F4F6;
+  --foreground: #111827;
+  --card-bg: #FFFFFF;
+  --card-border: rgba(17, 24, 39, 0.08);
+  --text-muted: #4B5563;
+  --shadow-premium: 0 20px 50px -12px rgba(0, 0, 0, 0.12);
+}
+
+.dark {
+  --background: #020403;
+  --foreground: #F9FAFB;
+  --card-bg: #121815;
+  --card-border: rgba(249, 250, 251, 0.05);
+  --text-muted: #9CA3AF;
+  --shadow-premium: 0 20px 50px -12px rgba(0, 0, 0, 0.8);
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  transition: background-color 0.5s ease, color 0.5s ease;
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+/* Typography Helpers */
+.text-balance {
+  text-wrap: balance;
+}
+
+.text-muted {
+  color: var(--text-muted);
+}
+
+/* Premium Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes glow {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+.animate-premium {
+  animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-glow {
+  animation: glow 4s ease-in-out infinite;
+}
+
+/* Glassmorphism utility - Updated for better visibility on solid bg */
+.glass {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dark .glass {
+  background: rgba(18, 24, 21, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
