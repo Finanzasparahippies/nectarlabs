@@ -4,8 +4,9 @@ interface Project {
   name: string;
   status: string;
   staging_url: string;
-  server_ip: string;
+  server_ip?: string;
 }
+
 
 export default function StagingStatus({ project }: { project: Project }) {
   return (

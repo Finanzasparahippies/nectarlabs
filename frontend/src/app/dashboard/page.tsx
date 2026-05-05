@@ -14,7 +14,9 @@ interface Project {
   progress_percentage: number;
   staging_url: string;
   production_url: string;
+  server_ip?: string;
 }
+
 
 interface Ticket {
   id: number;
