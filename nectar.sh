@@ -31,47 +31,47 @@ show_help() {
 case $COMMAND in
     dev)
         echo "Starting Nectar Labs Dev Environment..."
-        docker-compose up -d
+        docker compose up -d
         ;;
     stop)
         echo "Stopping containers..."
-        docker-compose down
+        docker compose down
         ;;
     up-prod)
         echo "Starting Nectar Labs Production Environment..."
-        docker-compose -f docker-compose.prod.yml up -d
+        docker compose -f docker-compose.prod.yml up -d
         ;;
     down-prod)
         echo "Stopping Production Environment..."
-        docker-compose -f docker-compose.prod.yml down
+        docker compose -f docker-compose.prod.yml down
         ;;
     restart)
-        docker-compose restart
+        docker compose restart
         ;;
     logs)
-        docker-compose logs -f
+        docker compose logs -f
         ;;
     makemigrations)
-        docker-compose run --rm backend python manage.py makemigrations
+        docker compose run --rm backend python manage.py makemigrations
         ;;
     migrate)
-        docker-compose exec backend python manage.py migrate
+        docker compose exec backend python manage.py migrate
         ;;
     collectstatic)
         echo "Running collectstatic..."
-        docker-compose -f docker-compose.prod.yml exec backend python manage.py collectstatic --no-input
+        docker compose -f docker-compose.prod.yml exec backend python manage.py collectstatic --no-input
         ;;
     createsuperuser)
-        docker-compose exec backend python manage.py createsuperuser
+        docker compose exec backend python manage.py createsuperuser
         ;;
     shell)
-        docker-compose exec backend python manage.py shell
+        docker compose exec backend python manage.py shell
         ;;
     frontend)
         cd frontend && npm run dev
         ;;
     build)
-        docker-compose -f docker-compose.prod.yml build
+        docker compose -f docker-compose.prod.yml build
         ;;
     certbot)
         DOMAIN=$2
@@ -79,8 +79,9 @@ case $COMMAND in
             echo "Usage: ./nectar.sh certbot example.com"
             exit 1
         fi
-        docker-compose -f docker-compose.prod.yml run --rm certbot certonly --webroot --webroot-path=/var/www/certbot -d $DOMAIN -d www.$DOMAIN
+        docker compose -f docker-compose.prod.yml run --rm certbot certonly --webroot --webroot-path=/var/www/certbot -d $DOMAIN -d www.$DOMAIN
         ;;
+
     *)
         show_help
         ;;
