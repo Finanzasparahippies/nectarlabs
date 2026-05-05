@@ -1,0 +1,25 @@
+# Env files
+.env
+.env.local
+.env.*.local
+
+# Docker volumes y certificados
+docker/certbot/conf/
+docker/certbot/www/
+
+# Node/Next.js
+node_modules/
+.next/
+out/
+
+# Python/Django
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.sqlite3
+*.log
+
+# Sistema operativo
+.DS_Store
+*.swp

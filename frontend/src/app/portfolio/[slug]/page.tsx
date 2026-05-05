@@ -1,14 +1,8 @@
 import React from 'react';
 import { fetcher } from '../../../lib/api';
 
-export const revalidate = 3600; // Revalidate every hour
+export const dynamic = "force-dynamic";
 
-export async function generateStaticParams() {
-  const posts = await fetcher('/posts/?is_case_study=true');
-  return posts.map((post: any) => ({
-    slug: post.slug,
-  }));
-}
 
 export default async function CaseStudyPage({ params }: { params: { slug: string } }) {
   const post = await fetcher(`/posts/${params.slug}/`);
