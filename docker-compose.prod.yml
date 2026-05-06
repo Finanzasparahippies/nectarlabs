@@ -28,7 +28,7 @@ services:
   nginx:
     image: nginx:alpine
     ports:
-      - "8081:80"
+      - "8080:80"
       - "8443:443"
     volumes:
       - ./docker/nginx/production.conf:/etc/nginx/conf.d/default.conf:ro
@@ -46,7 +46,6 @@ services:
     volumes:
       - certbot-conf:/etc/letsencrypt
       - certbot-www:/var/www/certbot
-    entrypoint: ""
 
 volumes:
   static_volume:
