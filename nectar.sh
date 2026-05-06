@@ -58,13 +58,10 @@ case $COMMAND in
         docker compose exec backend python manage.py migrate
         ;;
     collectstatic)
+        collectstatic)
         echo "Running collectstatic..."
-        # Try prod first, then dev if prod not running
-        if docker compose -f docker-compose.prod.yml ps | grep -q "Up"; then
-            docker compose -f docker-compose.prod.yml exec backend python manage.py collectstatic --no-input
-        else
-            docker compose exec backend python manage.py collectstatic --no-input
-        fi
+        # Usamos directamente el nombre del contenedor que está UP
+        docker exec -it prod-backend-1 python manage.py collectstatic --no-input
         ;;
     createsuperuser)
         docker compose exec backend python manage.py createsuperuser
