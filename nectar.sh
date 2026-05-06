@@ -23,15 +23,15 @@ show_help() {
     echo "  build          - Build production images"
     echo "  up-prod        - Start production environment"
     echo "  down-prod      - Stop production environment"
-    echo "  collectstatic  - Run collectstatic in backend"
-    echo "  certbot        - Request SSL certificate (requires domain)"
+    echo "  collectstatic  - Run collectstatic in backend (Prod)"
+    echo "  certbot        - Request SSL certificate (Prod)"
     echo "  help           - Show this help"
 }
 
 case $COMMAND in
     dev)
         echo "Starting Nectar Labs Dev Environment..."
-        docker compose up -d
+        docker compose up -d --build
         ;;
     stop)
         echo "Stopping containers..."
@@ -59,7 +59,12 @@ case $COMMAND in
         ;;
     collectstatic)
         echo "Running collectstatic..."
-        docker compose -f docker-compose.prod.yml exec backend python manage.py collectstatic --no-input
+        # Try prod first, then dev if prod not running
+        if docker compose -f docker-compose.prod.yml ps | grep -q "Up"; then
+            docker compose -f docker-compose.prod.yml exec backend python manage.py collectstatic --no-input
+        else
+            docker compose exec backend python manage.py collectstatic --no-input
+        fi
         ;;
     createsuperuser)
         docker compose exec backend python manage.py createsuperuser

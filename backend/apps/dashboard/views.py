@@ -7,6 +7,7 @@ from .serializers import ProjectSerializer, TimeLogSerializer, FAQSerializer
 class FAQViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = FAQ.objects.all()
     serializer_class = FAQSerializer
+    permission_classes = [permissions.AllowAny]
 
 class ProjectViewSet(viewsets.ModelViewSet):
     serializer_class = ProjectSerializer

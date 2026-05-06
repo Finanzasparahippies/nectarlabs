@@ -11,6 +11,7 @@ services:
       - "5432:5432"
 
   backend:
+    image: nectar-labs-backend:dev
     build: ./backend
     volumes:
       - ./backend:/app:Z
@@ -22,6 +23,7 @@ services:
       - "8000:8000"
 
   frontend:
+    image: nectar-labs-frontend:dev
     build:
       context: ./frontend
       dockerfile: Dockerfile

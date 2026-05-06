@@ -1,4 +1,4 @@
-from rest_framework import viewsets
+from rest_framework import viewsets, permissions
 from .models import Post, Category
 from rest_framework import serializers
 
@@ -17,6 +17,7 @@ class PostViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Post.objects.filter(is_published=True).order_by('-created_at')
     serializer_class = PostSerializer
     lookup_field = 'slug'
+    permission_classes = [permissions.AllowAny]
 
     def get_queryset(self):
         queryset = super().get_queryset()

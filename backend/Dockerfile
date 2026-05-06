@@ -23,11 +23,8 @@ RUN pip install --upgrade pip && \
 # Copy project
 COPY . /app/
 
-# Collect static files
-RUN python manage.py collectstatic --no-input
-
 # Expose port
 EXPOSE 8000
 
-# Run gunicorn
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "config.wsgi:application"]
+# Run development server
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]

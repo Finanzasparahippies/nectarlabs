@@ -2,6 +2,7 @@ version: "3.9"
 
 services:
   backend:
+    image: nectar-labs-backend:prod
     build:
       context: ./backend
       dockerfile: Dockerfile.prod
@@ -13,12 +14,13 @@ services:
     restart: always
 
   frontend:
+    image: nectar-labs-frontend:prod
     build:
       context: ./frontend
       dockerfile: Dockerfile.prod
       args:
-        INTERNAL_API_URL: http://backend:8000
-        NEXT_PUBLIC_API_URL: https://nectarlabs.dev
+        INTERNAL_API_URL: ${INTERNAL_API_URL}
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
     env_file:
       - .env
     restart: always
