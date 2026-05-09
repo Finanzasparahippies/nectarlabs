@@ -1,0 +1,56 @@
+services:
+  nectar-db-staging:
+    image: postgres:16-alpine
+    container_name: nectar_db_staging
+    volumes:
+      - postgres_data_staging:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_DB=nectarlabs_staging
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    networks:
+      - prod_network
+
+  backend-staging:
+    image: nectar-labs-backend:staging
+    container_name: nectar_backend_staging
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    volumes:
+      - ./backend:/app:Z
+    env_file:
+      - .env.staging
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings
+      - DEBUG=True
+    depends_on:
+      - nectar-db-staging
+    networks:
+      - prod_network
+
+  frontend-staging:
+    image: nectar-labs-frontend:staging
+    container_name: nectar_frontend_staging
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: https://staging.nectarlabs.dev/api
+    command: npm run dev -- --webpack
+    volumes:
+      - ./frontend:/app:Z
+      - /app/node_modules
+    env_file:
+      - .env.staging
+    environment:
+      - NEXT_PUBLIC_API_URL=https://staging.nectarlabs.dev/api
+    networks:
+      - prod_network
+
+volumes:
+  postgres_data_staging:
+
+networks:
+  prod_network:
+    external: true

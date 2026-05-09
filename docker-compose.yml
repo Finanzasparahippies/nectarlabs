@@ -12,6 +12,7 @@ services:
 
   backend:
     image: nectar-labs-backend:dev
+    container_name: nectar_backend
     build: ./backend
     volumes:
       - ./backend:/app:Z
@@ -21,9 +22,13 @@ services:
       - db
     ports:
       - "8001:8000"
+    networks:
+      - default
+      - prod_network
 
   frontend:
     image: nectar-labs-frontend:dev
+    container_name: nectar_frontend
     build:
       context: ./frontend
       dockerfile: Dockerfile
@@ -31,12 +36,15 @@ services:
       - ./frontend:/app:Z
       - /app/node_modules
       - /app/.next
-    ports:
-      - "3002:3000"
     env_file:
       - .env
     environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:8000/api
+      - NEXT_PUBLIC_API_URL=http://nectarlabs.localhost/api
+    ports:
+      - "3002:3000"
+    networks:
+      - default
+      - prod_network
 
 #  nginx:
 #    image: nginx:alpine
@@ -50,3 +58,9 @@ services:
 
 volumes:
   postgres_data:
+
+networks:
+  default:
+  prod_network:
+    external: true
+    name: prod_network
