@@ -17,3 +17,4 @@ gunicorn==21.2.*
 whitenoise==6.6.*
 pillow==10.2.*
 python-dotenv==1.0.*
+fpdf2==2.8.2

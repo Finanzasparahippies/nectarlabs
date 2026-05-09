@@ -78,6 +78,11 @@ export default function ContractPage() {
           </section>
 
           <section className="space-y-4">
+            <h2 className="text-xl font-black uppercase tracking-tight">5. HERRAMIENTAS DE COMUNICACIÓN</h2>
+            <p>Para garantizar el seguimiento eficiente de cada requerimiento, EL CLIENTE y EL DESARROLLADOR utilizarán el <strong>Sistema de Tickets de Néctar Labs</strong> como canal oficial de comunicación técnica. Cada solicitud generará un folio de seguimiento que permitirá documentar el tiempo invertido y el progreso de la tarea.</p>
+          </section>
+
+          <section className="space-y-4">
             <h2 className="text-xl font-black uppercase tracking-tight">6. GESTIÓN DE HORAS Y PROPIEDAD</h2>
             <p><strong>Límite de Horas:</strong> El paquete máximo contratado es de 12 horas mensuales.</p>
             <p><strong>Excedentes (Mes 1-6):</strong> Las horas adicionales solicitadas durante el periodo obligatorio se facturarán a una tasa fija de <strong>$225 MXN</strong> por hora.</p>
@@ -85,14 +90,28 @@ export default function ContractPage() {
           </section>
 
           <section className="space-y-4">
-            <h2 className="text-xl font-black uppercase tracking-tight">7. CONTINUIDAD POST-COMPROMISO (MES 7+)</h2>
-            <p>Al finalizar el periodo inicial de 6 meses, EL CLIENTE podrá optar por:</p>
+            <h2 className="text-xl font-black uppercase tracking-tight">7. PLAN DE OPTIMIZACIÓN Y ESCALADO (MES 7+)</h2>
+            <p>Al finalizar el periodo inicial de 6 meses (etapa de desarrollo base), el proyecto entra en una fase de "Alta Disponibilidad". EL CLIENTE podrá optar por:</p>
             <ul className="list-disc pl-6 space-y-2">
-              <li><strong>Suscripción continua:</strong> La tarifa se ajustará a <strong>$3,500 MXN</strong> mensuales, manteniendo los beneficios y las 12 horas del servicio.</li>
-              <li><strong>Servicio por Evento (On-Demand):</strong> Tarifa de <strong>$500 MXN</strong> por hora, sujeto a disponibilidad de agenda.</li>
+              <li><strong>Continuidad de Escalado:</strong> La tarifa se ajustará a <strong>$3,500 MXN</strong> mensuales, enfocándose en el monitoreo fino, optimización de rendimiento y nuevas funcionalidades.</li>
+              <li><strong>Servicio On-Demand:</strong> Tarifa de <strong>$500 MXN</strong> por hora, sujeto a disponibilidad de agenda.</li>
             </ul>
           </section>
 
+          <section className="space-y-4">
+            <h2 className="text-xl font-black uppercase tracking-tight">8. INFRAESTRUCTURA Y SERVICIOS DE TERCEROS</h2>
+            <p>Los costos derivados de hosting, dominios, licencias de software y servicios de infraestructura (ej. Hetzner Cloud) son independientes de los honorarios de desarrollo. EL CLIENTE deberá cubrir estos costos de manera anticipada mediante el método de pago que EL DESARROLLADOR indique. El incumplimiento en el pago de infraestructura facultará a EL DESARROLLADOR para suspender temporalmente el servicio con el fin de evitar deudas en las pasarelas de pago.</p>
+          </section>
+
+          <section className="space-y-4">
+            <h2 className="text-xl font-black uppercase tracking-tight">9. ALCANCE DE LAS HORAS</h2>
+            <p>Las horas mensuales/semanales incluyen: programación (frontend/backend), configuración de servidores, corrección de bugs y consultoría técnica. No incluyen diseño de materiales publicitarios, redacción de contenidos o gestión de redes sociales, a menos que se acuerde un plan especial.</p>
+          </section>
+
+          <section className="space-y-4">
+            <h2 className="text-xl font-black uppercase tracking-tight">10. CADUCIDAD DE HORAS</h2>
+            <p>Las horas contratadas corresponden al periodo de pago activo (semana/quincena/mes). Las horas no utilizadas no son acumulables para periodos posteriores, garantizando así la disponibilidad de agenda para todos los socios de Néctar Labs.</p>
+          </section>
 
           <footer className="pt-20 border-t border-card-border grid grid-cols-1 md:grid-cols-2 gap-20">
             <div className="text-center space-y-4">

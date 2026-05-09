@@ -24,13 +24,14 @@ from rest_framework_simplejwt.views import (
 )
 
 
-from apps.shop.views import PlanViewSet, ProductViewSet
+from apps.shop.views import PlanViewSet, ProductViewSet, ContractViewSet
 from apps.dashboard.views import ProjectViewSet, FAQViewSet, TimeLogViewSet
 from apps.blog.views import PostViewSet
 from apps.tickets.views import TicketViewSet
 
 router = DefaultRouter()
 router.register(r'plans', PlanViewSet)
+router.register(r'contracts', ContractViewSet)
 router.register(r'products', ProductViewSet)
 router.register(r'projects', ProjectViewSet, basename='project')
 router.register(r'faqs', FAQViewSet)

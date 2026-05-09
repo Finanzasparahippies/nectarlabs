@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: 'Helvetica', 'Arial', sans-serif; font-size: 10pt; line-height: 1.4; color: #333; }
+        .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #D4AF37; padding-bottom: 10px; }
+        .title { font-size: 16pt; font-weight: bold; color: #000; }
+        .section-title { font-size: 12pt; font-weight: bold; margin-top: 20px; text-transform: uppercase; border-bottom: 1px solid #eee; }
+        .data-table { width: 100%; margin-bottom: 20px; }
+        .data-table td { padding: 5px; }
+        .signature-box { margin-top: 50px; }
+        .signature-img { width: 250px; border-bottom: 1px solid #000; }
+        .footer { font-size: 8pt; text-align: center; margin-top: 50px; color: #777; }
+        .highlight { color: #D4AF37; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="title">CONTRATO DE PRESTACIÓN DE SERVICIOS TECNOLÓGICOS</div>
+        <div style="font-weight: bold; color: #D4AF37;">NÉCTAR LABS • PARTNER TECNOLÓGICO</div>
+    </div>
+
+    <p>Este documento formaliza la relación profesional entre <strong>Jesus Saul Villegas Cruz</strong> (EL DESARROLLADOR) y <strong>{{ contract.full_name }}</strong> (EL CLIENTE), con fecha de firma {{ date }}.</p>
+
+    <div class="section-title">1. DECLARACIONES</div>
+    <table class="data-table">
+        <tr>
+            <td><strong>CLIENTE/EMPRESA:</strong></td>
+            <td>{{ contract.full_name }}</td>
+        </tr>
+        <tr>
+            <td><strong>RFC:</strong></td>
+            <td>{{ contract.tax_id }}</td>
+        </tr>
+        <tr>
+            <td><strong>DOMICILIO:</strong></td>
+            <td>{{ contract.address }}</td>
+        </tr>
+    </table>
+
+    <div class="section-title">2. OBJETO Y PLAN SELECCIONADO</div>
+    <p>EL CLIENTE ha seleccionado el <span class="highlight">{{ plan.name }}</span>, el cual incluye un máximo de <strong>{{ plan.hours }} horas mensuales</strong> de desarrollo e ingeniería.</p>
+    
+    <div class="section-title">3. IDEA DEL PROYECTO</div>
+    <p style="font-style: italic; background-color: #f9f9f9; padding: 10px; border-left: 4px solid #D4AF37;">
+        "{{ contract.project_idea }}"
+    </p>
+
+    <div class="section-title">4. CLÁUSULAS PRINCIPALES</div>
+    <ul>
+        <li><strong>Infraestructura:</strong> Los costos de hosting (Hetzner), dominios y servicios externos son cubiertos por EL CLIENTE.</li>
+        <li><strong>Propiedad:</strong> El código fuente será propiedad de EL CLIENTE tras cumplir el periodo obligatorio de 6 meses.</li>
+        <li><strong>Caducidad:</strong> Las horas no utilizadas en el periodo mensual no son acumulables.</li>
+        <li><strong>Continuidad:</strong> Al finalizar el mes 6, el servicio evoluciona al Plan de Optimización y Escalado ($3,500 MXN/mes).</li>
+    </ul>
+
+    <div class="signature-box">
+        <table style="width: 100%;">
+            <tr>
+                <td style="text-align: center; width: 50%;">
+                    <br><br>
+                    <div style="border-bottom: 1px solid #000; width: 200px; margin: 0 auto;"></div>
+                    <p>Jesus Saul Villegas Cruz<br><small>EL DESARROLLADOR</small></p>
+                </td>
+                <td style="text-align: center; width: 50%;">
+                    {% if contract.signature_base64 %}
+                        <img src="{{ contract.signature_base64 }}" class="signature-img"><br>
+                    {% else %}
+                        <br><br>
+                        <div style="border-bottom: 1px solid #000; width: 200px; margin: 0 auto;"></div>
+                    {% endif %}
+                    <p>{{ contract.full_name }}<br><small>EL CLIENTE</small></p>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="footer">
+        Este contrato fue generado y firmado digitalmente desde nectarlabs.dev<br>
+        IP de Registro: {{ contract.ip_address }} | Fecha: {{ date }}
+    </div>
+</body>
+</html>
