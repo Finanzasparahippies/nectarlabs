@@ -1,32 +1,22 @@
 services:
-  db:
-    image: postgres:16-alpine
-    volumes:
-      - postgres_data:/var/lib/postgresql/data/
-    environment:
-      - POSTGRES_DB=nectarlabs
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-    ports:
-      - "5432:5432"
-
   backend:
-    image: nectar-labs-backend:dev
+    image: nectar-labs-backend:prod
     build: ./backend
     volumes:
       - ./backend:/app:Z
     env_file:
       - .env
-    depends_on:
-      - db
     ports:
       - "8001:8000"
+    networks:
+      - prod_network
 
   frontend:
-    image: nectar-labs-frontend:dev
+    image: nectar-labs-frontend:prod
     build:
       context: ./frontend
       dockerfile: Dockerfile
+    command: sh -c "npm install && npm run build && npm run start"
     volumes:
       - ./frontend:/app:Z
       - /app/node_modules
@@ -36,17 +26,15 @@ services:
     env_file:
       - .env
     environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:8000/api
-
-#  nginx:
-#    image: nginx:alpine
-#    ports:
-#      - "8081:80"
-#    volumes:
-#      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:Z
-#    depends_on:
-#      - backend
-#      - frontend
+      - NEXT_PUBLIC_API_URL=https://nectarlabs.dev/api
+      - API_URL=https://nectarlabs.dev/api
+      - NEXT_DISABLE_SOURCEMAPS=1
+    networks:
+      - prod_network
 
 volumes:
   postgres_data:
+
+networks:
+  prod_network:
+    external: true

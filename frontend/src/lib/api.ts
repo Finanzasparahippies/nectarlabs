@@ -1,11 +1,4 @@
-const API_URL =
-  typeof window === "undefined"
-    ? process.env.INTERNAL_API_URL
-    : process.env.NEXT_PUBLIC_API_URL;
-  
-  if (!API_URL) {
-     throw new Error("API_URL is not defined");
-  }  
+export const API_URL = process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || "https://nectarlabs.dev/api";  
 
 export async function fetcher(endpoint: string, options: RequestInit = {}) {
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
