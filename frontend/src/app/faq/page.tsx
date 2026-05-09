@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from 'react';
 import { fetcher } from '../../lib/api';
-import Navbar from '../../components/Navbar';
 
 interface FAQ {
   id: number;
@@ -35,9 +34,8 @@ export default function FAQPage() {
   if (loading) return <div className="min-h-screen flex items-center justify-center">Cargando...</div>;
 
   return (
-    <div className="min-h-screen bg-background pb-24 px-6">
-      <Navbar />
-      <div className="max-w-4xl mx-auto pt-48">
+    <div className="min-h-screen bg-background pt-32 pb-24 px-6">
+      <div className="max-w-4xl mx-auto">
         <h1 className="text-4xl md:text-6xl font-black mb-8 tracking-tighter">Transparencia Radical: FAQ</h1>
         
         <div className="flex gap-4 mb-12 overflow-x-auto pb-4">

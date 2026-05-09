@@ -23,4 +23,3 @@ __pycache__/
 # Sistema operativo
 .DS_Store
 *.swp
-.env
