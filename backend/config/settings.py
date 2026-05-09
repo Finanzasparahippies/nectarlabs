@@ -147,10 +147,7 @@ STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
-# Media files & Cloudinary
-MEDIA_URL = "/media/"
-MEDIA_ROOT = BASE_DIR / "media"
-
+# Media files & Cloudinary (Default for images)
 if env("ENVIRONMENT", default="local") == "local":
     DEFAULT_FILE_STORAGE = "django.core.files.storage.FileSystemStorage"
 else:
@@ -160,6 +157,15 @@ else:
         'API_SECRET': env('CLOUDINARY_API_SECRET', default=''),
     }
     DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+
+# Cloudflare R2 (Dedicated storage for contracts/documents)
+R2_STORAGE_OPTIONS = {
+    "access_key": env("R2_ACCESS_KEY_ID", default=""),
+    "secret_key": env("R2_SECRET_ACCESS_KEY", default=""),
+    "bucket_name": env("R2_BUCKET_NAME", default="nectarlabs"),
+    "endpoint_url": env("R2_S3_ENDPOINT_URL", default=""),
+    "region_name": "auto",
+}
 
 # Email / SMTP Settings
 EMAIL_BACKEND = env("EMAIL_BACKEND", default="django.core.mail.backends.smtp.EmailBackend")
@@ -194,7 +200,8 @@ CKEDITOR_5_CONFIGS = {
 if env("ENVIRONMENT", default="local") == "local":
     CKEDITOR_5_FILE_STORAGE = "django.core.files.storage.FileSystemStorage"
 else:
-    CKEDITOR_5_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
+    CKEDITOR_5_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
+
 
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

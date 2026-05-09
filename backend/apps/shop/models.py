@@ -1,5 +1,6 @@
 from django.db import models
 from django.conf import settings
+from .storage import R2ContractStorage
 
 class Plan(models.Model):
     name = models.CharField(max_length=100)
@@ -37,6 +38,7 @@ class Order(models.Model):
 
     def __str__(self):
         return f"Order {self.id} - {self.user.email}"
+
 class Contract(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='contracts')
     plan = models.ForeignKey(Plan, on_delete=models.PROTECT)
@@ -49,7 +51,7 @@ class Contract(models.Model):
     
     # Firma y PDF
     signature_base64 = models.TextField() # Base64 de la firma
-    pdf_file = models.FileField(upload_to='contracts/', blank=True, null=True)
+    pdf_file = models.FileField(upload_to='contracts/', storage=R2ContractStorage(), blank=True, null=True)
     
     # Metadata
     signed_at = models.DateTimeField(auto_now_add=True)
