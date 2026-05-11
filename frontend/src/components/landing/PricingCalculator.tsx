@@ -73,8 +73,8 @@ export default function PricingCalculator() {
                   </p>
                   <p className="text-sm font-black text-foreground">{brandDesignPricing[type].label}</p>
                   {brandDesignPricing[type].price > 0 && (
-                    <p className="text-xs font-bold text-nectar-forest mt-2">
-                      +{brandDesignPricing[type].displayPrice} MXN
+                    <p className="text-xs font-black text-nectar-gold mt-2">
+                      {brandDesignPricing[type].displayPrice} MXN
                     </p>
                   )}
                 </button>
