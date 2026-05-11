@@ -5,20 +5,20 @@ import React, { useState } from 'react';
 const steps = [
   {
     month: "Mes 1",
-    title: "Lanzamiento MVP",
-    description: "Despliegue de infraestructura crítica en Hetzner y activación del núcleo operativo de tu plataforma.",
+    title: "Cimentación & Identidad",
+    description: "Despliegue de infraestructura crítica y creación del ADN visual de tu marca. El núcleo operativo y estético nace aquí.",
     color: "nectar-gold"
   },
   {
     month: "Mes 2",
-    title: "Blindaje Operativo",
-    description: "Optimización de seguridad avanzada, refinamiento de UX y ajustes basados en tracción real.",
+    title: "Blindaje & Refinamiento",
+    description: "Optimización de seguridad avanzada, refinamiento de UX basado en tracción real y maduración de la identidad digital.",
     color: "nectar-leaf"
   },
   {
     month: "Meses 3-6",
-    title: "Escalado Masivo",
-    description: "Expansión de funcionalidades, SEO de alta autoridad y preparación para el tráfico global.",
+    title: "Escalado Industrial",
+    description: "Expansión de funcionalidades, automatización de procesos internos y preparación para el tráfico global masivo.",
     color: "nectar-forest"
   }
 ];

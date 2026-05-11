@@ -33,8 +33,8 @@ export default function LandingPage() {
         </div>
 
         <p className="text-2xl md:text-4xl text-foreground opacity-80 max-w-6xl mb-24 animate-premium leading-[1.1] font-bold tracking-tight text-balance" style={{ animationDelay: '0.2s' }}>
-          Arquitectura de software para negocios que exigen <br className="hidden md:block" />
-          <span className="text-nectar-gold underline decoration-nectar-gold/30 underline-offset-[12px]">independencia técnica</span> y rendimiento industrial.
+          Ingeniería de software de alta fidelidad y diseño de marca estratégico. <br className="hidden md:block" />
+          Construimos <span className="text-nectar-gold underline decoration-nectar-gold/30 underline-offset-[12px]">independencia técnica</span> con rendimiento industrial.
         </p>
 
         <div className="flex flex-col md:flex-row gap-8 animate-premium" style={{ animationDelay: '0.3s' }}>

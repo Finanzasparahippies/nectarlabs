@@ -21,37 +21,14 @@ const BentoCard = ({ title, description, icon, className, color }: { title: stri
 export default function BentoGrid() {
   return (
     <section className="w-full py-32 px-6 max-w-7xl mx-auto">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-12 auto-rows-[480px]">
-        {/* Container Isolation */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-12 auto-rows-[520px]">
+        
+        {/* Software de Alto Rendimiento */}
         <BentoCard 
           color="nectar-gold"
           className="md:col-span-2"
-          title="Aislamiento de Infraestructura"
-          description="Cada socio recibe un entorno Docker dedicado y totalmente aislado. Sin 'vecinos ruidosos', garantizando que el rendimiento de tu negocio sea constante y predecible."
-          icon={
-            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-8 h-8">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-            </svg>
-          }
-        />
-
-        {/* SSL & Security */}
-        <BentoCard 
-          color="nectar-gold"
-          title="Seguridad Industrial"
-          description="Certificados SSL automatizados y firewalls de capa 7 para blindar tus datos y la confianza de tus clientes."
-          icon={
-            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-8 h-8">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-            </svg>
-          }
-        />
-
-        {/* Code Ownership */}
-        <BentoCard 
-          color="nectar-gold"
-          title="Propiedad Intelectual"
-          description="El código es tuyo. Entregamos el repositorio Git completo y las llaves del servidor. Independencia técnica total."
+          title="Ingeniería de Software de Alto Rendimiento"
+          description="Desarrollamos plataformas SaaS, Marketplaces y sistemas internos complejos. Ejemplos: Motores de reserva masivos, dashboards de análisis de datos en tiempo real e integraciones críticas con Stripe o SAP."
           icon={
             <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-8 h-8">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
@@ -59,15 +36,39 @@ export default function BentoGrid() {
           }
         />
 
-        {/* Scalability */}
+        {/* Brand Design */}
         <BentoCard 
           color="nectar-gold"
-          className="md:col-span-2"
-          title="Escalabilidad Sin Límites"
-          description="Arquitectura Next.js + Django diseñada para evolucionar. Desde un lanzamiento local hasta una expansión masiva sin reescrituras de código."
+          title="Diseño de Marca & Identidad"
+          description="No solo construimos el motor, también la carrocería. Identidad visual, manuales de marca y UX/UI que comunican autoridad y exclusividad."
+          icon={
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-8 h-8">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.172-1.172a4 4 0 115.656 5.656l-1.172 1.172" />
+            </svg>
+          }
+        />
+
+        {/* Automatización & IA */}
+        <BentoCard 
+          color="nectar-gold"
+          title="Automatización & IA"
+          description="Optimizamos tu operación con agentes de IA personalizados y flujos de trabajo automatizados que ahorran cientos de horas hombre al mes."
           icon={
             <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-8 h-8">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+          }
+        />
+
+        {/* Infraestructura Dedicada */}
+        <BentoCard 
+          color="nectar-gold"
+          className="md:col-span-2"
+          title="Infraestructura y Aislamiento Total"
+          description="Cada socio recibe un entorno Docker dedicado. Garantizamos independencia técnica absoluta: entregamos el código fuente, las llaves del servidor y la propiedad intelectual total."
+          icon={
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-8 h-8">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
             </svg>
           }
         />
