@@ -1,8 +1,8 @@
-export const API_URL = process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || "https://nectarlabs.dev/api";  
+export const API_URL = process.env.NEXT_PUBLIC_API_URL || "/api";
 
 export async function fetcher(endpoint: string, options: RequestInit = {}) {
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-  
+
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
   };
