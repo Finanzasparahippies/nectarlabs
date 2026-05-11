@@ -1,5 +1,6 @@
 import React from 'react';
 import BentoGrid from './landing/BentoGrid';
+import ProcessFlow from './landing/ProcessFlow';
 import InteractiveTimeline from './landing/InteractiveTimeline';
 import PricingCalculator from './landing/PricingCalculator';
 import SubscriptionCards from './landing/SubscriptionCards';
@@ -173,6 +174,10 @@ export default function LandingPage() {
       <div className="w-full space-y-32 pb-32">
         <div id="bento">
           <BentoGrid />
+        </div>
+
+        <div id="process">
+          <ProcessFlow />
         </div>
 
         <div id="formula" className="py-32 bg-foreground/5 border-y border-foreground/10 relative scroll-mt-24 overflow-hidden">
