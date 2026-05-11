@@ -28,7 +28,7 @@ services:
     env_file:
       - .env
     environment:
-      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://nectarlabs.localhost/api}
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-/api}
       - API_URL=http://nectar_backend:8000/api
       - NEXT_DISABLE_SOURCEMAPS=0
     networks:
