@@ -1,6 +1,16 @@
 from django.db import models
 from django.conf import settings
+from django.utils import timezone
+from django.utils.text import slugify
 from .storage import R2ContractStorage
+
+def contract_pdf_path(instance, filename):
+    # Organizar por Año / Mes / Cliente / NombreArchivo
+    date = instance.signed_at if instance.signed_at else timezone.now()
+    year = date.strftime('%Y')
+    month = date.strftime('%m')
+    client_slug = slugify(instance.full_name)
+    return f'contracts/{year}/{month}/{client_slug}/{filename}'
 
 class Plan(models.Model):
     name = models.CharField(max_length=100)
@@ -27,7 +37,7 @@ class Contract(models.Model):
     developer_signed_at = models.DateTimeField(blank=True, null=True)
     is_fully_signed = models.BooleanField(default=False)
     
-    pdf_file = models.FileField(upload_to='contracts/', storage=R2ContractStorage(), blank=True, null=True)
+    pdf_file = models.FileField(upload_to=contract_pdf_path, storage=R2ContractStorage(), blank=True, null=True)
     ip_address = models.GenericIPAddressField(blank=True, null=True)
     is_active = models.BooleanField(default=True)
     next_payment_date = models.DateField(blank=True, null=True)
