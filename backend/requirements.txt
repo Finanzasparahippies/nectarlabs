@@ -19,4 +19,4 @@ pillow==10.2.*
 python-dotenv==1.0.*
 django-storages
 boto3
-
+fpdf2

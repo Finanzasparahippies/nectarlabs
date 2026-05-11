@@ -58,10 +58,9 @@ case $COMMAND in
         docker compose exec backend python manage.py migrate
         ;;
     collectstatic)
-        collectstatic)
         echo "Running collectstatic..."
-        # Usamos directamente el nombre del contenedor que está UP
-        docker exec -it prod-backend-1 python manage.py collectstatic --no-input
+        # Usamos el nombre del contenedor definido en docker-compose.yml
+        docker exec -it nectar_backend python manage.py collectstatic --no-input
         ;;
     createsuperuser)
         docker compose exec backend python manage.py createsuperuser

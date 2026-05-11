@@ -5,11 +5,24 @@ import Link from 'next/link';
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userEmail, setUserEmail] = useState('');
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
+    const checkAuth = () => {
+      const token = localStorage.getItem('token');
+      const email = localStorage.getItem('user_email');
+      setIsLoggedIn(!!token);
+      if (email) setUserEmail(email);
+    };
+
     window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    checkAuth();
+    
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
   }, []);
 
   return (
@@ -21,19 +34,37 @@ export default function Navbar() {
         </Link>
 
         <div className="hidden md:flex items-center gap-12">
-          <a href="#formula" className="text-[10px] font-black uppercase tracking-widest text-foreground opacity-60 hover:opacity-100 transition-opacity">Fórmula</a>
-          <a href="#pricing" className="text-[10px] font-black uppercase tracking-widest text-foreground opacity-60 hover:opacity-100 transition-opacity">Inversión</a>
-          <Link href="/faq" className="text-[10px] font-black uppercase tracking-widest text-foreground opacity-60 hover:opacity-100 transition-opacity">Soporte</Link>
+          <a href="/#formula" className="text-[10px] font-black uppercase tracking-widest text-foreground opacity-60 hover:opacity-100 transition-opacity">Hoja de Ruta</a>
+          <a href="/#pricing" className="text-[10px] font-black uppercase tracking-widest text-foreground opacity-60 hover:opacity-100 transition-opacity">Planes</a>
+          {isLoggedIn && (
+            <Link href="/dashboard" className="text-[10px] font-black uppercase tracking-widest text-nectar-gold">Dashboard</Link>
+          )}
         </div>
 
-        <div className="flex items-center gap-4">
-          <Link href="/login" className="px-6 py-2.5 text-[10px] font-black uppercase tracking-widest text-foreground hover:bg-foreground/5 rounded-xl transition-all">
-            Entrar
-          </Link>
-          <Link href="/register" className="px-6 py-2.5 text-[10px] font-black uppercase tracking-widest bg-nectar-gold text-background rounded-xl hover:scale-105 transition-all shadow-lg shadow-nectar-gold/20">
-            Registro
-          </Link>
-
+        <div className="flex items-center gap-6">
+          {isLoggedIn && (
+            <div className="hidden lg:flex flex-col items-end">
+              <span className="text-[9px] font-black uppercase tracking-widest text-nectar-gold/50">Sesión Activa</span>
+              <span className="text-[10px] font-black text-foreground/80">{userEmail}</span>
+            </div>
+          )}
+          {!isLoggedIn ? (
+            <div className="flex items-center gap-4">
+              <Link href="/login" className="px-6 py-2.5 text-[10px] font-black uppercase tracking-widest text-foreground hover:bg-foreground/5 rounded-xl transition-all">
+                Entrar
+              </Link>
+              <Link href="/register" className="px-8 py-3 text-[10px] font-black uppercase tracking-widest bg-nectar-gold text-background rounded-xl hover:scale-105 transition-all shadow-xl shadow-nectar-gold/20">
+                Comenzar
+              </Link>
+            </div>
+          ) : (
+            <button 
+              onClick={() => { localStorage.clear(); window.location.href = '/'; }}
+              className="px-6 py-2.5 text-[10px] font-black uppercase tracking-widest text-red-500/60 hover:text-red-500 transition-all border border-red-500/10 rounded-xl hover:bg-red-500/5"
+            >
+              Salir
+            </button>
+          )}
         </div>
       </div>
     </nav>

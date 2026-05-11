@@ -25,6 +25,8 @@ export default function LoginPage() {
       if (data.access) {
         localStorage.setItem('token', data.access);
         localStorage.setItem('refresh_token', data.refresh);
+        localStorage.setItem('user_email', formData.email);
+        localStorage.setItem('is_staff', data.is_staff ? 'true' : 'false');
         router.push('/dashboard');
       } else {
         setError('Credenciales inválidas');

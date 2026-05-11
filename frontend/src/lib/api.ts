@@ -3,6 +3,15 @@ export const API_URL = process.env.NEXT_PUBLIC_API_URL || process.env.API_URL ||
 export async function fetcher(endpoint: string, options: RequestInit = {}) {
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
   
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+
+  // Solo agregar Authorization si el token existe y no es la cadena "null" o "undefined"
+  if (token && token !== 'null' && token !== 'undefined') {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+
   const cleanEndpoint = endpoint.startsWith("/")
     ? endpoint
     : `/${endpoint}`;
@@ -10,8 +19,7 @@ export async function fetcher(endpoint: string, options: RequestInit = {}) {
   const res = await fetch(`${API_URL}${cleanEndpoint}`, {
     ...options,
     headers: {
-      "Content-Type": "application/json",
-      ...(token ? { "Authorization": `Bearer ${token}` } : {}),
+      ...headers,
       ...options.headers,
     },
   });

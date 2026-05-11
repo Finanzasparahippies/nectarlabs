@@ -1,6 +1,7 @@
 services:
   backend:
-    image: nectar-labs-backend:prod
+    container_name: nectar_backend
+    image: nectar-labs-backend:dev
     build: ./backend
     volumes:
       - ./backend:/app:Z
@@ -12,11 +13,12 @@ services:
       - prod_network
 
   frontend:
-    image: nectar-labs-frontend:prod
+    container_name: nectar_frontend
+    image: nectar-labs-frontend:dev
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    command: sh -c "npm install && npm run build && npm run start"
+    command: npm run dev
     volumes:
       - ./frontend:/app:Z
       - /app/node_modules
@@ -26,9 +28,9 @@ services:
     env_file:
       - .env
     environment:
-      - NEXT_PUBLIC_API_URL=https://nectarlabs.dev/api
-      - API_URL=https://nectarlabs.dev/api
-      - NEXT_DISABLE_SOURCEMAPS=1
+      - NEXT_PUBLIC_API_URL=http://nectarlabs.localhost/api
+      - API_URL=http://nectar_backend:8000/api
+      - NEXT_DISABLE_SOURCEMAPS=0
     networks:
       - prod_network
 

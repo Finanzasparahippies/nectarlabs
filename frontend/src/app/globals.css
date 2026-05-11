@@ -85,3 +85,19 @@ body {
   background: rgba(18, 24, 21, 0.5);
   border: 1px solid rgba(255, 255, 255, 0.05);
 }
+
+.text-punch {
+  color: transparent;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  /* Técnica de Outlining Limpio con sombras (evita solapamientos internos) */
+  text-shadow: 
+    -0.5px -0.5px 0 rgba(198, 138, 30, 0.5),  
+     0.5px -0.5px 0 rgba(198, 138, 30, 0.5),
+    -0.5px  0.5px 0 rgba(198, 138, 30, 0.5),
+     0.5px  0.5px 0 rgba(198, 138, 30, 0.5);
+  
+  mask-image: linear-gradient(to bottom, black 0%, transparent 90%);
+  -webkit-mask-image: linear-gradient(to bottom, black 0%, transparent 90%);
+}

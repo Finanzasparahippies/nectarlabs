@@ -189,10 +189,10 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Cloudflare R2 / S3 Storage Options
 R2_STORAGE_OPTIONS = {
-    'access_key': env('R2_ACCESS_KEY', default=''),
-    'secret_key': env('R2_SECRET_KEY', default=''),
+    'access_key': env('R2_ACCESS_KEY_ID', default=''),
+    'secret_key': env('R2_SECRET_ACCESS_KEY', default=''),
     'bucket_name': env('R2_BUCKET_NAME', default=''),
-    'endpoint_url': env('R2_ENDPOINT_URL', default=''),
+    'endpoint_url': env('R2_S3_ENDPOINT_URL', default=''),
     'region_name': 'auto',
 }
 

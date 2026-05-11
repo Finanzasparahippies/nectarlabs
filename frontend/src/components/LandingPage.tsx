@@ -10,7 +10,7 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen flex flex-col items-center selection:bg-nectar-gold selection:text-nectar-cream">
       <Navbar />
-      
+
       {/* Hero Section */}
 
       <section className="w-full relative overflow-hidden pt-48 pb-32 px-6 flex flex-col items-center text-center">
@@ -19,13 +19,18 @@ export default function LandingPage() {
         <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-nectar-forest/10 rounded-full blur-[150px] -z-10 animate-glow" style={{ animationDelay: '2s' }}></div>
 
         <div className="inline-block px-10 py-3 mb-12 text-sm font-black tracking-[0.5em] text-nectar-gold uppercase border-2 border-nectar-gold/20 rounded-full bg-white/50 dark:bg-nectar-forest/50 glass animate-premium">
-          Hermosillo • Partner Tecnológico
+          Nectar-Labs • Soluciones a tu Medida
         </div>
 
-        <h1 className="text-7xl md:text-[11rem] font-black mb-12 tracking-tighter leading-[0.75] animate-premium text-foreground" style={{ animationDelay: '0.1s' }}>
-          Software <br />
-          <span className="text-nectar-gold italic pr-4">Artesanal</span>
-        </h1>
+        <div className="relative mb-12">
+          <div className="absolute -top-64 left-1/2 -translate-x-1/2 text-[12rem] md:text-[26rem] font-black text-punch opacity-60 dark:opacity-80 select-none pointer-events-none whitespace-nowrap z-0">
+            NECTAR
+          </div>
+          <h1 className="text-7xl md:text-[11rem] font-black tracking-tighter leading-[0.75] animate-premium text-foreground relative z-10" style={{ animationDelay: '0.1s' }}>
+            Software <br />
+            <span className="text-nectar-gold italic pr-4">Artesanal</span>
+          </h1>
+        </div>
 
         <p className="text-2xl md:text-4xl text-foreground opacity-80 max-w-6xl mb-24 animate-premium leading-[1.1] font-bold tracking-tight text-balance" style={{ animationDelay: '0.2s' }}>
           Arquitectura de software para negocios que exigen <br className="hidden md:block" />
@@ -45,21 +50,21 @@ export default function LandingPage() {
         {/* Expanded Tech Stack Logos */}
         <div className="mt-48 w-full max-w-7xl">
           <p className="text-[10px] font-black uppercase tracking-[0.5em] opacity-30 mb-24">Ecosistema de Ingeniería Nectar</p>
-          
+
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-x-12 gap-y-20 items-center justify-items-center opacity-40 hover:opacity-100 transition-all duration-1000 animate-premium grayscale hover:grayscale-0" style={{ animationDelay: '0.6s' }}>
-            
+
             {/* Django */}
             <div className="text-xl font-black tracking-tighter flex items-center gap-1 text-foreground">
               <span className="bg-nectar-gold text-nectar-cream px-1.5 py-0.5 rounded text-sm">dj</span>
               <span>ango</span>
             </div>
-            
+
             {/* Python */}
             <div className="text-xl font-black flex items-center gap-2 text-foreground">
               <svg className="w-7 h-7" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M11.997 0a.75.75 0 0 0-.75.75v2.25h1.5V.75a.75.75 0 0 0-.75-.75zm0 24a.75.75 0 0 0 .75-.75v-2.25h-1.5v2.25a.75.75 0 0 0 .75.75zM24 11.997a.75.75 0 0 0-.75-.75h-2.25v1.5h2.25a.75.75 0 0 0 .75-.75zM0 11.997a.75.75 0 0 0 .75.75h2.25v-1.5H.75a.75.75 0 0 0-.75.75z" opacity="0.3"/>
-                <path d="M16.037 6.134a.75.75 0 0 0-.847.114L12 9.475l-3.19-3.227a.75.75 0 0 0-1.144.975l3.75 4.5a.75.75 0 0 0 1.168 0l3.75-4.5a.75.75 0 0 0-.297-1.089z" fill="var(--color-nectar-gold)"/>
-                <path d="M7.963 17.866a.75.75 0 0 0 .847-.114L12 14.525l3.19 3.227a.75.75 0 0 0 1.144-.975l-3.75-4.5a.75.75 0 0 0-1.168 0l-3.75 4.5a.75.75 0 0 0 .297 1.089z"/>
+                <path d="M11.997 0a.75.75 0 0 0-.75.75v2.25h1.5V.75a.75.75 0 0 0-.75-.75zm0 24a.75.75 0 0 0 .75-.75v-2.25h-1.5v2.25a.75.75 0 0 0 .75.75zM24 11.997a.75.75 0 0 0-.75-.75h-2.25v1.5h2.25a.75.75 0 0 0 .75-.75zM0 11.997a.75.75 0 0 0 .75.75h2.25v-1.5H.75a.75.75 0 0 0-.75.75z" opacity="0.3" />
+                <path d="M16.037 6.134a.75.75 0 0 0-.847.114L12 9.475l-3.19-3.227a.75.75 0 0 0-1.144.975l3.75 4.5a.75.75 0 0 0 1.168 0l3.75-4.5a.75.75 0 0 0-.297-1.089z" fill="var(--color-nectar-gold)" />
+                <path d="M7.963 17.866a.75.75 0 0 0 .847-.114L12 14.525l3.19 3.227a.75.75 0 0 0 1.144-.975l-3.75-4.5a.75.75 0 0 0-1.168 0l-3.75 4.5a.75.75 0 0 0 .297 1.089z" />
               </svg>
               Python
             </div>
@@ -97,7 +102,7 @@ export default function LandingPage() {
 
             {/* Supabase */}
             <div className="text-lg font-black flex items-center gap-2 text-foreground">
-              <svg className="w-6 h-6 text-green-500" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0l-9.5 13.5h7.5l-2 10.5 15.5-16.5h-9l2.5-7.5z"/></svg>
+              <svg className="w-6 h-6 text-green-500" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0l-9.5 13.5h7.5l-2 10.5 15.5-16.5h-9l2.5-7.5z" /></svg>
               Supabase
             </div>
 
@@ -115,13 +120,13 @@ export default function LandingPage() {
 
             {/* GitHub */}
             <div className="text-lg font-black flex items-center gap-2 text-foreground">
-              <svg className="w-7 h-7" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+              <svg className="w-7 h-7" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" /></svg>
               GitHub
             </div>
 
             {/* Tailwind */}
             <div className="text-lg font-black flex items-center gap-2 text-foreground">
-              <svg className="w-7 h-7 text-cyan-500" viewBox="0 0 24 24" fill="currentColor"><path d="M12.001 4.8c-3.2 0-5.2 1.6-6 4.8 1.2-1.6 2.6-2.2 4.2-1.8.913.228 1.565.89 2.288 1.624C13.666 10.618 15.027 12 18.001 12c3.2 0 5.2-1.6 6-4.8-1.2 1.6-2.6 2.2-4.2 1.8-.913-.228-1.565-.89-2.288-1.624C16.337 6.182 14.976 4.8 12.001 4.8zm-6 7.2c-3.2 0-5.2 1.6-6 4.8 1.2-1.6 2.6-2.2 4.2-1.8.913.228 1.565.89 2.288 1.624 1.177 1.194 2.538 2.576 5.512 2.576 3.2 0 5.2-1.6 6-4.8-1.2 1.6-2.6 2.2-4.2 1.8-.913-.228-1.565-.89-2.288-1.624C10.337 13.382 8.976 12 6.001 12z"/></svg>
+              <svg className="w-7 h-7 text-cyan-500" viewBox="0 0 24 24" fill="currentColor"><path d="M12.001 4.8c-3.2 0-5.2 1.6-6 4.8 1.2-1.6 2.6-2.2 4.2-1.8.913.228 1.565.89 2.288 1.624C13.666 10.618 15.027 12 18.001 12c3.2 0 5.2-1.6 6-4.8-1.2 1.6-2.6 2.2-4.2 1.8-.913-.228-1.565-.89-2.288-1.624C16.337 6.182 14.976 4.8 12.001 4.8zm-6 7.2c-3.2 0-5.2 1.6-6 4.8 1.2-1.6 2.6-2.2 4.2-1.8.913.228 1.565.89 2.288 1.624 1.177 1.194 2.538 2.576 5.512 2.576 3.2 0 5.2-1.6 6-4.8-1.2 1.6-2.6 2.2-4.2 1.8-.913-.228-1.565-.89-2.288-1.624C10.337 13.382 8.976 12 6.001 12z" /></svg>
               Tailwind
             </div>
 
@@ -165,12 +170,12 @@ export default function LandingPage() {
       </section>
 
       {/* Main Content Sections */}
-      <div className="w-full space-y-48 pb-48">
+      <div className="w-full space-y-32 pb-32">
         <div id="bento">
           <BentoGrid />
         </div>
 
-        <div id="formula" className="py-48 bg-foreground/5 border-y border-foreground/10 relative scroll-mt-24">
+        <div id="formula" className="py-32 bg-foreground/5 border-y border-foreground/10 relative scroll-mt-24 overflow-hidden">
           <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(currentColor 2px, transparent 2px)', backgroundSize: '60px 60px' }}></div>
           <InteractiveTimeline />
         </div>
@@ -198,7 +203,7 @@ export default function LandingPage() {
 
       {/* Footer */}
       <footer className="w-full py-12 px-6 border-t border-card-border text-center text-xs text-foreground/20 tracking-widest uppercase">
-        © 2026 Nectar Labs • Hermosillo, Sonora • Partner Tecnológico
+        © 2026 Nectar Labs • Hermosillo, Sonora • Tu Socio Tecnológico
       </footer>
     </div>
   );

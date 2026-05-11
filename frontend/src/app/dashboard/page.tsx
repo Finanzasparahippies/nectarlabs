@@ -14,9 +14,18 @@ interface Project {
   progress_percentage: number;
   staging_url: string;
   production_url: string;
-  server_ip?: string;
+  user_email?: string;
 }
 
+interface Contract {
+  id: number;
+  full_name: string;
+  is_fully_signed: boolean;
+  signature_base64?: string;
+  developer_signature?: string;
+  created_at: string;
+  plan_name?: string;
+}
 
 interface Ticket {
   id: number;
@@ -24,39 +33,56 @@ interface Ticket {
   status: string;
   category: string;
   created_at: string;
+  user_email?: string;
 }
 
 export default function DashboardPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [tickets, setTickets] = useState<Ticket[]>([]);
+  const [contracts, setContracts] = useState<Contract[]>([]);
   const [logs, setLogs] = useState<any[]>([]);
+  const [isStaff, setIsStaff] = useState(false);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
+    const checkAuth = () => {
+      const staff = localStorage.getItem('is_staff') === 'true';
+      setIsStaff(staff);
+    };
+    
     const loadData = async () => {
       try {
+        const staff = localStorage.getItem('is_staff') === 'true';
         const [projectsData, ticketsData, logsData] = await Promise.all([
           fetcher('/projects/'),
           fetcher('/tickets/'),
           fetcher('/logs/')
         ]);
+        
         setProjects(projectsData);
         setTickets(ticketsData);
         setLogs(logsData);
+
+        if (staff) {
+          const contractsData = await fetcher('/contracts/');
+          setContracts(contractsData);
+        }
       } catch (err) {
         console.error("Error loading dashboard data:", err);
       } finally {
         setLoading(false);
       }
     };
+
+    checkAuth();
     loadData();
   }, []);
 
   if (loading) return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-background">
       <div className="w-12 h-12 border-4 border-nectar-gold border-t-transparent rounded-full animate-spin mb-4"></div>
-      <div className="font-black uppercase tracking-[0.4em] opacity-20 text-xs">Syncing Ecosystem...</div>
+      <div className="font-black uppercase tracking-[0.4em] opacity-20 text-[10px]">Syncing Ecosystem...</div>
     </div>
   );
 
@@ -76,7 +102,7 @@ export default function DashboardPage() {
             </Link>
             <Link href="/tickets" className="flex items-center gap-4 px-6 py-4 hover:bg-foreground/5 text-foreground opacity-60 hover:opacity-100 transition-all rounded-2xl font-black uppercase tracking-widest text-[10px]">
               <div className="w-2 h-2 bg-foreground/20 rounded-full"></div>
-              Soporte
+              {isStaff ? 'Gestión Tickets' : 'Soporte'}
             </Link>
             <Link href="/projects" className="flex items-center gap-4 px-6 py-4 hover:bg-foreground/5 text-foreground opacity-60 hover:opacity-100 transition-all rounded-2xl font-black uppercase tracking-widest text-[10px]">
               <div className="w-2 h-2 bg-foreground/20 rounded-full"></div>
@@ -96,17 +122,63 @@ export default function DashboardPage() {
       {/* Main Content Area */}
       <main className="flex-1 p-8 md:p-12 lg:p-16 overflow-y-auto">
         <header className="mb-16">
-          <h1 className="text-4xl md:text-6xl font-black tracking-tighter mb-2">Centro de Control</h1>
-          <p className="text-[10px] font-black uppercase tracking-[0.5em] text-nectar-gold opacity-80">Workspace / Cliente Principal</p>
+          <h1 className="text-4xl md:text-6xl font-black tracking-tighter mb-2">
+            {isStaff ? 'Control Maestro' : 'Centro de Control'}
+          </h1>
+          <p className="text-[10px] font-black uppercase tracking-[0.5em] text-nectar-gold opacity-80">
+            {isStaff ? 'Panel de Ingeniería y Operaciones' : 'Workspace / Cliente Principal'}
+          </p>
         </header>
+
+        {/* Developer Specific Section: Pending Contracts */}
+        {isStaff && contracts.some(c => !c.is_fully_signed) && (
+          <section className="mb-16 p-10 rounded-[3rem] bg-nectar-gold text-background shadow-2xl relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-20 -mt-20"></div>
+            <h2 className="text-3xl font-black tracking-tighter mb-6 relative z-10">Contratos por Validar</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 relative z-10">
+              {contracts.filter(c => !c.is_fully_signed).map(contract => (
+                <div key={contract.id} className="bg-background/10 backdrop-blur-md border border-background/20 p-6 rounded-2xl flex flex-col justify-between">
+                  <div>
+                    <p className="text-[8px] font-black uppercase tracking-widest opacity-60">Cliente</p>
+                    <h4 className="font-black text-lg">{contract.full_name}</h4>
+                    <p className="text-[9px] font-bold mt-1 opacity-80">{contract.plan_name}</p>
+                  </div>
+                  <Link 
+                    href={`/contract/dev-sign/${contract.id}`}
+                    className="mt-6 py-3 bg-background text-nectar-gold text-center rounded-xl text-[9px] font-black uppercase tracking-widest hover:scale-105 transition-all"
+                  >
+                    Firmar y Cerrar
+                  </Link>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Client Specific Empty State */}
+        {!isStaff && projects.length === 0 && (
+          <section className="mb-16 p-12 rounded-[3.5rem] bg-nectar-forest text-nectar-cream border-4 border-nectar-gold shadow-2xl relative overflow-hidden group">
+            <div className="absolute top-[-20%] right-[-10%] w-64 h-64 bg-nectar-gold/20 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-1000"></div>
+            <div className="relative z-10 max-w-2xl">
+              <h2 className="text-4xl md:text-5xl font-black tracking-tighter mb-6 leading-none">Tu Arquitectura está lista para despegar.</h2>
+              <p className="text-xl font-bold opacity-80 mb-10 leading-relaxed">
+                Solo falta un paso para activar tu ecosistema de ingeniería. Firma tu contrato de Partner Tecnológico y comencemos a construir.
+              </p>
+              <Link href="/onboarding" className="inline-block px-12 py-6 bg-nectar-gold text-background font-black uppercase tracking-widest rounded-2xl hover:scale-105 transition-all shadow-xl shadow-nectar-gold/20">
+                Finalizar Onboarding
+              </Link>
+            </div>
+          </section>
+        )}
 
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-12">
           {/* Left Side: Projects & Logs */}
           <div className="xl:col-span-2 space-y-16">
-            {/* Projects Grid */}
             <section>
               <div className="flex justify-between items-end mb-8">
-                <h2 className="text-xs font-black uppercase tracking-[0.3em] opacity-30">Proyectos Activos</h2>
+                <h2 className="text-xs font-black uppercase tracking-[0.3em] opacity-30">
+                  {isStaff ? 'Todos los Proyectos' : 'Proyectos Activos'}
+                </h2>
                 <div className="h-0.5 flex-1 mx-8 bg-card-border mb-1.5 opacity-20"></div>
               </div>
               
@@ -116,7 +188,10 @@ export default function DashboardPage() {
                     <div className="absolute -top-12 -right-12 w-32 h-32 bg-nectar-gold/5 blur-3xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
                     
                     <div className="flex justify-between items-start mb-6">
-                      <h3 className="text-2xl font-black tracking-tight">{project.name}</h3>
+                      <div className="space-y-1">
+                        <h3 className="text-2xl font-black tracking-tight">{project.name}</h3>
+                        {isStaff && <p className="text-[8px] font-bold text-nectar-gold opacity-60">{project.user_email}</p>}
+                      </div>
                       <span className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold text-[8px] font-black uppercase tracking-widest rounded-full">{project.status}</span>
                     </div>
 
@@ -149,13 +224,12 @@ export default function DashboardPage() {
                 ))}
                 {projects.length === 0 && (
                   <div className="col-span-full py-20 text-center border-2 border-dashed border-card-border rounded-[2.5rem] opacity-30">
-                    <p className="font-bold uppercase tracking-widest text-xs">No hay proyectos activos asignados.</p>
+                    <p className="font-bold uppercase tracking-widest text-xs">No hay proyectos activos registrados.</p>
                   </div>
                 )}
               </div>
             </section>
 
-            {/* Logs Section */}
             <section>
               <div className="flex justify-between items-end mb-8">
                 <h2 className="text-xs font-black uppercase tracking-[0.3em] opacity-30">Bitácora de Desarrollo</h2>
@@ -169,11 +243,12 @@ export default function DashboardPage() {
 
           {/* Right Side: Support & Infrastructure */}
           <div className="space-y-12">
-            {/* Tickets */}
             <section className="bg-card-bg border border-card-border rounded-[2.5rem] p-8">
               <div className="flex justify-between items-center mb-10">
-                <h2 className="text-xs font-black tracking-[0.3em] uppercase opacity-30">Soporte Activo</h2>
-                <button className="w-10 h-10 rounded-2xl bg-nectar-gold text-background flex items-center justify-center font-black hover:rotate-12 transition-all shadow-lg shadow-nectar-gold/20">+</button>
+                <h2 className="text-xs font-black tracking-[0.3em] uppercase opacity-30">
+                  {isStaff ? 'Tickets del Sistema' : 'Soporte Activo'}
+                </h2>
+                {!isStaff && <button className="w-10 h-10 rounded-2xl bg-nectar-gold text-background flex items-center justify-center font-black hover:rotate-12 transition-all shadow-lg shadow-nectar-gold/20">+</button>}
               </div>
               
               <div className="space-y-3">
@@ -184,13 +259,13 @@ export default function DashboardPage() {
                       <span className={`w-2 h-2 rounded-full ${ticket.status === 'open' ? 'bg-green-500' : 'bg-red-500'}`}></span>
                     </div>
                     <h4 className="font-bold text-sm text-foreground/80 group-hover:text-foreground transition-colors">{ticket.title}</h4>
+                    {isStaff && <p className="text-[7px] font-bold opacity-40 mt-1 uppercase">{ticket.user_email}</p>}
                   </div>
                 ))}
                 {tickets.length === 0 && <p className="text-center py-10 opacity-20 font-bold uppercase tracking-widest text-[10px]">Sin requerimientos pendientes</p>}
               </div>
             </section>
 
-            {/* Infrastructure Status */}
             {projects[0] && (
               <section className="bg-card-bg border border-card-border rounded-[2.5rem] p-8">
                 <h2 className="text-xs font-black tracking-[0.3em] uppercase opacity-30 mb-8">Estado de Infraestructura</h2>
