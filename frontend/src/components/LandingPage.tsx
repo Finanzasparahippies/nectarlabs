@@ -41,7 +41,7 @@ export default function LandingPage() {
           <a href="#pricing" className="px-16 py-8 bg-nectar-forest text-nectar-cream font-black rounded-[2rem] hover:bg-nectar-gold hover:scale-105 transition-all duration-500 text-xl uppercase tracking-widest shadow-2xl shadow-nectar-forest/20 text-center">
             Elegir Plan
           </a>
-          <a href="#formula" className="px-16 py-8 border-4 border-foreground/5 text-foreground font-black rounded-[2rem] hover:bg-foreground hover:text-background transition-all duration-500 text-xl uppercase tracking-widest glass text-center">
+          <a href="#formula" className="px-16 py-8 border-4 border-foreground/5 text-foreground font-black rounded-[2rem] hover:bg-foreground hover:text-nectar-gold transition-all duration-500 text-xl uppercase tracking-widest glass text-center">
             Nuestra Fórmula
           </a>
         </div>
