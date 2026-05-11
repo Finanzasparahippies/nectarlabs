@@ -151,10 +151,10 @@ function OnboardingContent() {
                 <label className="text-[10px] font-black uppercase tracking-widest opacity-40">¿Requieres Diseño de Marca? (Opcional)</label>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   {[
-                    { id: 'NONE', name: 'Sin Diseño', price: 0 },
-                    { id: 'WEEKLY', name: 'Semanal', price: 500 },
-                    { id: 'BIWEEKLY', name: 'Quincenal', price: 900 },
-                    { id: 'MONTHLY', name: 'Mensual', price: 1600 },
+                    { id: 'NONE', name: 'Sin Diseño', price: 0, display: '' },
+                    { id: 'WEEKLY', name: 'Semanal', price: 500 * 4, display: '$500 / sem' },
+                    { id: 'BIWEEKLY', name: 'Quincenal', price: 900 * 2, display: '$900 / qna' },
+                    { id: 'MONTHLY', name: 'Mensual', price: 1600, display: '$1,600 / mes' },
                   ].map(tier => (
                     <button
                       key={tier.id}
@@ -163,7 +163,7 @@ function OnboardingContent() {
                       className={`p-4 rounded-xl border-2 transition-all text-center text-xs font-bold ${formData.brand_design_tier === tier.id ? 'border-nectar-gold bg-nectar-gold/5' : 'border-card-border hover:border-nectar-gold/30'}`}
                     >
                       {tier.name}
-                      {tier.price > 0 && <div className="text-nectar-gold mt-1">${tier.price.toLocaleString()} MXN</div>}
+                      {tier.price > 0 && <div className="text-nectar-gold mt-1">{tier.display}</div>}
                     </button>
                   ))}
                 </div>

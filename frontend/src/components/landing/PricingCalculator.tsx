@@ -10,10 +10,10 @@ export default function PricingCalculator() {
   const agencyRate = 1200;
 
   const brandDesignPricing = {
-    none: { price: 0, hours: 0, label: 'Sin Diseño de Marca' },
-    weekly: { price: 500 * 4, hours: 4, label: 'Semanal (4h/mes)' },
-    biweekly: { price: 900 * 2, hours: 6, label: 'Quincenal (6h/mes)' },
-    monthly: { price: 1600, hours: 8, label: 'Mensual (8h/mes)' },
+    none: { price: 0, hours: 0, label: 'Sin Diseño de Marca', displayPrice: '' },
+    weekly: { price: 500 * 4, hours: 4, label: 'Semanal', displayPrice: '$500 / sem' },
+    biweekly: { price: 900 * 2, hours: 6, label: 'Quincenal', displayPrice: '$900 / qna' },
+    monthly: { price: 1600, hours: 8, label: 'Mensual', displayPrice: '$1,600 / mes' },
   };
 
   const brandDesignCost = brandDesignPricing[brandDesignType].price;
@@ -74,7 +74,7 @@ export default function PricingCalculator() {
                   <p className="text-sm font-black text-foreground">{brandDesignPricing[type].label}</p>
                   {brandDesignPricing[type].price > 0 && (
                     <p className="text-xs font-bold text-nectar-forest mt-2">
-                      +${brandDesignPricing[type].price.toLocaleString()} MXN
+                      +{brandDesignPricing[type].displayPrice} MXN
                     </p>
                   )}
                 </button>
