@@ -147,4 +147,4 @@ def send_contract_emails(contract):
                     email.attach(f"Contrato_Nectar_{contract.id}_FINAL.pdf", contract.pdf_file.read(), 'application/pdf')
                 email.send()
     except Exception as e:
-        logging.error(f"Failed to send contract emails: {e}")
+        logging.error(f"Failed to send contract emails for contract {contract.id}: {e}", exc_info=True)

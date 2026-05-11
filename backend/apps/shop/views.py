@@ -37,7 +37,8 @@ class ContractViewSet(viewsets.ModelViewSet):
             if generate_contract_pdf(contract):
                 send_contract_emails(contract)
         except Exception as e:
-            print(f"ERROR: {e}")
+            import logging
+            logging.error(f"Error in contract creation flow: {e}", exc_info=True)
 
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAdminUser])
     def dev_sign(self, request, pk=None):
