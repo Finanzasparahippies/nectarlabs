@@ -31,6 +31,8 @@ function OnboardingContent() {
     tax_id: '',
     address: '',
     project_idea: '',
+    brand_design_tier: 'NONE',
+    brand_design_price: 0,
   });
 
   useEffect(() => {
@@ -116,13 +118,13 @@ function OnboardingContent() {
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
             <h1 className="text-5xl font-black tracking-tighter">Inicia tu Legado</h1>
             <p className="text-xl opacity-60">Selecciona tu plan de inversión tecnológica y cuéntanos sobre tu visión.</p>
-            
+
             <div className="grid gap-6">
               <div className="space-y-2">
                 <label className="text-[10px] font-black uppercase tracking-widest opacity-40">Plan Seleccionado</label>
-                <select 
-                  name="plan" 
-                  value={formData.plan} 
+                <select
+                  name="plan"
+                  value={formData.plan}
                   onChange={handleInputChange}
                   className="w-full bg-card-bg border-2 border-card-border rounded-2xl p-6 font-bold focus:border-nectar-gold outline-none appearance-none"
                 >
@@ -135,7 +137,7 @@ function OnboardingContent() {
 
               <div className="space-y-2">
                 <label className="text-[10px] font-black uppercase tracking-widest opacity-40">Idea del Proyecto (Un párrafo)</label>
-                <textarea 
+                <textarea
                   name="project_idea"
                   placeholder="Describe la esencia de tu proyecto..."
                   rows={4}
@@ -145,7 +147,29 @@ function OnboardingContent() {
                 />
               </div>
 
-              <button 
+              <div className="space-y-4">
+                <label className="text-[10px] font-black uppercase tracking-widest opacity-40">¿Requieres Diseño de Marca? (Opcional)</label>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {[
+                    { id: 'NONE', name: 'Sin Diseño', price: 0 },
+                    { id: 'WEEKLY', name: 'Semanal', price: 500 },
+                    { id: 'BIWEEKLY', name: 'Quincenal', price: 900 },
+                    { id: 'MONTHLY', name: 'Mensual', price: 1600 },
+                  ].map(tier => (
+                    <button
+                      key={tier.id}
+                      type="button"
+                      onClick={() => setFormData(prev => ({ ...prev, brand_design_tier: tier.id, brand_design_price: tier.price }))}
+                      className={`p-4 rounded-xl border-2 transition-all text-center text-xs font-bold ${formData.brand_design_tier === tier.id ? 'border-nectar-gold bg-nectar-gold/5' : 'border-card-border hover:border-nectar-gold/30'}`}
+                    >
+                      {tier.name}
+                      {tier.price > 0 && <div className="text-nectar-gold mt-1">${tier.price.toLocaleString()} MXN</div>}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <button
                 onClick={() => setStep(2)}
                 disabled={!formData.plan || !formData.project_idea}
                 className="w-full py-6 bg-foreground text-background font-black uppercase tracking-widest rounded-2xl hover:bg-nectar-gold transition-colors disabled:opacity-20"
@@ -164,8 +188,8 @@ function OnboardingContent() {
             <div className="grid gap-6">
               <div className="space-y-2">
                 <label className="text-[10px] font-black uppercase tracking-widest opacity-40">Nombre Completo o Razón Social</label>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   name="full_name"
                   value={formData.full_name}
                   onChange={handleInputChange}
@@ -176,8 +200,8 @@ function OnboardingContent() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <label className="text-[10px] font-black uppercase tracking-widest opacity-40">RFC</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     name="tax_id"
                     value={formData.tax_id}
                     onChange={handleInputChange}
@@ -186,8 +210,8 @@ function OnboardingContent() {
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-black uppercase tracking-widest opacity-40">Dirección Fiscal</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     name="address"
                     value={formData.address}
                     onChange={handleInputChange}
@@ -197,13 +221,13 @@ function OnboardingContent() {
               </div>
 
               <div className="flex gap-4">
-                <button 
+                <button
                   onClick={() => setStep(1)}
                   className="flex-1 py-6 border-2 border-card-border font-black uppercase tracking-widest rounded-2xl hover:bg-card-bg"
                 >
                   Atrás
                 </button>
-                <button 
+                <button
                   onClick={() => setStep(3)}
                   disabled={!formData.full_name || !formData.tax_id || !formData.address}
                   className="flex-[2] py-6 bg-foreground text-background font-black uppercase tracking-widest rounded-2xl hover:bg-nectar-gold transition-colors disabled:opacity-20"
@@ -220,15 +244,15 @@ function OnboardingContent() {
             <h1 className="text-5xl font-black tracking-tighter">Firma Digital</h1>
             <div className="p-8 bg-card-bg border-2 border-card-border rounded-3xl space-y-6">
               <p className="text-xs opacity-60 leading-relaxed">
-                Al firmar este documento, acepto los términos y condiciones de <strong>Néctar Labs</strong> como mi Partner Tecnológico. 
+                Al firmar este documento, acepto los términos y condiciones de <strong>Néctar Labs</strong> como mi Partner Tecnológico.
                 Entiendo que el plan seleccionado tiene un compromiso de 6 meses y que el costo de infraestructura es independiente.
               </p>
-              
+
               <div className="bg-white rounded-2xl overflow-hidden border-2 border-card-border">
-                <SignatureCanvas 
+                <SignatureCanvas
                   ref={sigCanvas}
                   penColor='black'
-                  canvasProps={{className: 'w-full h-64 cursor-crosshair'}} 
+                  canvasProps={{ className: 'w-full h-64 cursor-crosshair' }}
                 />
               </div>
 
@@ -241,13 +265,13 @@ function OnboardingContent() {
             </div>
 
             <div className="flex gap-4">
-              <button 
+              <button
                 onClick={() => setStep(2)}
                 className="flex-1 py-6 border-2 border-card-border font-black uppercase tracking-widest rounded-2xl hover:bg-card-bg"
               >
                 Atrás
               </button>
-              <button 
+              <button
                 onClick={handleSubmit}
                 disabled={submitting}
                 className="flex-[2] py-6 bg-nectar-forest text-nectar-cream font-black uppercase tracking-widest rounded-2xl hover:bg-nectar-gold transition-all shadow-xl shadow-nectar-forest/20 disabled:opacity-50"

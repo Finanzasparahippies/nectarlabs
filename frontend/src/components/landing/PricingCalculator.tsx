@@ -5,7 +5,7 @@ import React, { useState } from 'react';
 export default function PricingCalculator() {
   const [hours, setHours] = useState(12);
   const [brandDesignType, setBrandDesignType] = useState<'none' | 'weekly' | 'biweekly' | 'monthly'>('none');
-  
+
   const nectarRate = 225;
   const agencyRate = 1200;
 
@@ -63,11 +63,10 @@ export default function PricingCalculator() {
                 <button
                   key={type}
                   onClick={() => setBrandDesignType(type)}
-                  className={`p-6 rounded-3xl border-2 transition-all text-left group ${
-                    brandDesignType === type 
-                      ? 'border-nectar-gold bg-nectar-gold/5 shadow-lg' 
+                  className={`p-6 rounded-3xl border-2 transition-all text-left group ${brandDesignType === type
+                      ? 'border-nectar-gold bg-nectar-gold/5 shadow-lg'
                       : 'border-card-border hover:border-nectar-gold/30'
-                  }`}
+                    }`}
                 >
                   <p className={`text-[10px] font-black uppercase tracking-widest mb-1 ${brandDesignType === type ? 'text-nectar-gold' : 'text-foreground/30'}`}>
                     {type === 'none' ? 'Básico' : 'Premium'}

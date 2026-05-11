@@ -67,7 +67,18 @@ export default function ContractPage() {
           </section>
 
           <section className="space-y-4">
-            <h2 className="text-xl font-black uppercase tracking-tight">4. BENEFICIOS TÉCNICOS</h2>
+            <h2 className="text-xl font-black uppercase tracking-tight">4. COMPLEMENTO: DISEÑO DE MARCA (OPCIONAL)</h2>
+            <p>EL CLIENTE puede integrar el servicio de diseño de marca e identidad visual. Este servicio es complementario a la ingeniería y se rige por el siguiente esquema de inversión:</p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="p-4 border border-card-border rounded-xl text-xs"><strong>Mensual:</strong> $1,600 MXN<br/>(8h/mes - 2h/sem)</div>
+              <div className="p-4 border border-card-border rounded-xl text-xs"><strong>Quincenal:</strong> $900 MXN<br/>(6h/mes - 1.5h/sem)</div>
+              <div className="p-4 border border-card-border rounded-xl text-xs"><strong>Semanal:</strong> $500 MXN<br/>(4h/mes - 1h/sem)</div>
+            </div>
+            <p className="text-[10px] opacity-60">Nota: Los costos de diseño de marca son adicionales a la suscripción de ingeniería seleccionada.</p>
+          </section>
+
+          <section className="space-y-4">
+            <h2 className="text-xl font-black uppercase tracking-tight">5. BENEFICIOS TÉCNICOS</h2>
             <p>Todos los proyectos desarrollados por Néctar Labs incluyen:</p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 opacity-80">
               <p><strong>Contenedores Docker:</strong> Aislamiento total de procesos.</p>
@@ -79,9 +90,9 @@ export default function ContractPage() {
 
           <section className="space-y-4">
             <h2 className="text-xl font-black uppercase tracking-tight">6. GESTIÓN DE HORAS Y PROPIEDAD</h2>
-            <p><strong>Límite de Horas:</strong> El paquete máximo contratado es de 12 horas mensuales.</p>
-            <p><strong>Excedentes (Mes 1-6):</strong> Las horas adicionales solicitadas durante el periodo obligatorio se facturarán a una tasa fija de <strong>$225 MXN</strong> por hora.</p>
-            <p><strong>Propiedad Intelectual:</strong> La propiedad del código fuente se transfiere a EL CLIENTE únicamente tras la liquidación total de los pagos del periodo obligatorio (6 meses).</p>
+            <p><strong>Límite de Horas:</strong> El paquete de ingeniería contratado se define en la sección 3.</p>
+            <p><strong>Excedentes (Mes 1-6):</strong> Las horas adicionales de ingeniería se facturarán a una tasa de <strong>$225 MXN</strong> por hora.</p>
+            <p><strong>Propiedad Intelectual:</strong> La propiedad del código fuente y los activos de diseño se transfieren a EL CLIENTE tras la liquidación del periodo obligatorio (6 meses).</p>
           </section>
 
           <section className="space-y-4">

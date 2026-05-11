@@ -37,6 +37,19 @@ class Contract(models.Model):
     developer_signed_at = models.DateTimeField(blank=True, null=True)
     is_fully_signed = models.BooleanField(default=False)
     
+    class BrandDesignTier(models.TextChoices):
+        NONE = 'NONE', 'Sin Diseño de Marca'
+        WEEKLY = 'WEEKLY', 'Semanal ($500/sem)'
+        BIWEEKLY = 'BIWEEKLY', 'Quincenal ($900/qna)'
+        MONTHLY = 'MONTHLY', 'Mensual ($1600/mes)'
+
+    brand_design_tier = models.CharField(
+        max_length=20, 
+        choices=BrandDesignTier.choices, 
+        default=BrandDesignTier.NONE
+    )
+    brand_design_price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+
     pdf_file = models.FileField(upload_to=contract_pdf_path, storage=R2ContractStorage(), blank=True, null=True)
     ip_address = models.GenericIPAddressField(blank=True, null=True)
     is_active = models.BooleanField(default=True)

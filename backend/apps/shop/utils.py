@@ -57,9 +57,18 @@ def generate_contract_pdf(contract):
         pdf.multi_cell(0, 6, f'"{contract.project_idea}"', border=1, fill=True)
         pdf.ln(5)
 
+        # Complemento Diseño de Marca
+        if contract.brand_design_tier != 'NONE':
+            pdf.set_font('helvetica', 'B', 11)
+            pdf.cell(0, 10, '4. COMPLEMENTO: DISEÑO DE MARCA', new_x="LMARGIN", new_y="NEXT")
+            pdf.set_font('helvetica', '', 10)
+            tier_label = contract.get_brand_design_tier_display()
+            pdf.multi_cell(0, 6, f'EL CLIENTE ha optado por el servicio de {tier_label}. Este servicio incluye el diseño de identidad visual y activos digitales con un costo adicional de ${contract.brand_design_price} MXN mensuales.')
+            pdf.ln(5)
+
         # Cláusulas
         pdf.set_font('helvetica', 'B', 11)
-        pdf.cell(0, 10, '4. CLÁUSULAS PRINCIPALES', new_x="LMARGIN", new_y="NEXT")
+        pdf.cell(0, 10, '5. CLÁUSULAS PRINCIPALES', new_x="LMARGIN", new_y="NEXT")
         pdf.set_font('helvetica', '', 10)
         pdf.multi_cell(0, 6, "1. INFRAESTRUCTURA: EL CLIENTE cubrirá costos de servidores y dominios.\n2. PROPIEDAD: Los derechos se transfieren tras 6 meses de compromiso.\n3. CADUCIDAD: Las horas mensuales no son acumulables.\n4. CONTINUIDAD: Al finalizar la etapa activa, se activará un plan de mantenimiento base.")
         pdf.ln(10)
