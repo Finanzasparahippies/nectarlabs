@@ -25,6 +25,12 @@ export async function fetcher(endpoint: string, options: RequestInit = {}) {
   });
 
 
+  if (res.status === 401 && typeof window !== 'undefined') {
+    localStorage.clear();
+    window.location.href = '/login';
+    throw new Error("Session expired. Please login again.");
+  }
+
   if (!res.ok) {
     const error = await res.json().catch(() => ({ message: "Unknown error" }));
     throw new Error(error.message || "An error occurred");

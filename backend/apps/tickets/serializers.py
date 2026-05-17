@@ -19,4 +19,10 @@ class TicketSerializer(serializers.ModelSerializer):
             'id', 'client', 'client_email', 'title', 'description', 
             'category', 'status', 'priority', 'created_at', 'updated_at', 'messages'
         ]
-        read_only_fields = ['client', 'status']
+        read_only_fields = ['client']
+
+    def validate_status(self, value):
+        user = self.context['request'].user
+        if not user.is_staff and self.instance and self.instance.status != value:
+            raise serializers.ValidationError("Only staff can change ticket status.")
+        return value

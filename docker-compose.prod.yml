@@ -29,9 +29,9 @@ services:
 
   nginx:
     image: nginx:alpine
-#    ports:
-#      - "8081:80"
-#      - "8443:443"
+    #    ports:
+    #      - "8081:80"
+    #      - "8443:443"
     volumes:
       - ./docker/nginx/production.conf:/etc/nginx/conf.d/default.conf:ro
       - static_volume:/app/staticfiles
@@ -42,7 +42,6 @@ services:
       - backend
       - frontend
     restart: always
-
 
   certbot:
     image: certbot/certbot
@@ -59,4 +58,3 @@ volumes:
 networks:
   prod_network:
     external: true
-

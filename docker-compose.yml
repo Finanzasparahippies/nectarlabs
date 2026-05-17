@@ -4,7 +4,7 @@ services:
     image: nectar-labs-backend:dev
     build: ./backend
     volumes:
-      - ./backend:/app:Z
+      - ./backend:/app:z
     env_file:
       - .env
     ports:
@@ -40,10 +40,10 @@ services:
     ports:
       - "8080:80"
     volumes:
-      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro,z
       # Montamos los estáticos si se requieren servir por nginx
-      - ./backend/staticfiles:/app/staticfiles
-      - ./backend/media:/app/media
+      - ./backend/staticfiles:/app/staticfiles:z
+      - ./backend/media:/app/media:z
     depends_on:
       - backend
       - frontend

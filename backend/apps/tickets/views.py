@@ -23,5 +23,14 @@ class TicketViewSet(viewsets.ModelViewSet):
         serializer = MessageSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save(ticket=ticket, sender=request.user)
+            # Update ticket timestamp
+            ticket.save() 
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=['post'])
+    def close(self, request, pk=None):
+        ticket = self.get_object()
+        ticket.status = Ticket.Status.CLOSED
+        ticket.save()
+        return Response({'status': 'ticket closed'})

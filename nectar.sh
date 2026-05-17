@@ -49,7 +49,7 @@ case $COMMAND in
         docker compose restart
         ;;
     logs)
-        docker compose logs -f
+        docker compose logs --tail=100
         ;;
     makemigrations)
         docker compose run --rm backend python manage.py makemigrations
