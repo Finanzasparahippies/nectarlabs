@@ -31,6 +31,7 @@ show_help() {
     echo "  migrate-staging - Run database migrations (Staging)"
     echo "  createsuperuser-staging - Create admin user (Staging)"
     echo "  shell-staging  - Open backend shell (Staging)"
+    echo "  collectstatic-staging - Run collectstatic in backend (Staging)"
     echo "  help           - Show this help"
 }
 
@@ -70,6 +71,10 @@ case $COMMAND in
         ;;
     shell-staging)
         docker compose -f docker-compose.staging.yml exec backend-staging python manage.py shell
+        ;;
+    collectstatic-staging)
+        echo "Running collectstatic in Staging..."
+        docker exec -it nectar_backend_staging python manage.py collectstatic --no-input
         ;;
     restart)
         docker compose restart
