@@ -36,6 +36,7 @@ export default function Navbar() {
         <div className="hidden md:flex items-center gap-12">
           <a href="/#formula" className="text-[10px] font-black uppercase tracking-widest text-foreground opacity-60 hover:opacity-100 transition-opacity">Hoja de Ruta</a>
           <a href="/#pricing" className="text-[10px] font-black uppercase tracking-widest text-foreground opacity-60 hover:opacity-100 transition-opacity">Planes</a>
+          <Link href="/blog" className="text-[10px] font-black uppercase tracking-widest text-foreground opacity-60 hover:opacity-100 transition-opacity">Blog</Link>
           {isLoggedIn && (
             <Link href="/dashboard" className="text-[10px] font-black uppercase tracking-widest text-nectar-gold">Dashboard</Link>
           )}
