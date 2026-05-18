@@ -4,6 +4,7 @@ interface Financials {
   gross_sales: number;
   contracts_mrr: number;
   paid_orders_total: number;
+  designer_fees: number;
   total_costs: number;
   servers_total: number;
   expenses_total: number;
@@ -95,7 +96,7 @@ export default function BusinessCommander({ stats }: BusinessCommanderProps) {
           </div>
           
           {/* Desglose de Ventas */}
-          <div className="pt-4 border-t border-card-border/40 grid grid-cols-2 gap-4 text-[9px] font-bold uppercase tracking-wider">
+          <div className="pt-4 border-t border-card-border/40 grid grid-cols-3 gap-2 text-[8px] font-black uppercase tracking-wider">
             <div>
               <p className="opacity-30 mb-1">Contratos MRR</p>
               <p className="text-foreground/90 font-black">${(financials.contracts_mrr || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}</p>
@@ -103,6 +104,10 @@ export default function BusinessCommander({ stats }: BusinessCommanderProps) {
             <div>
               <p className="opacity-30 mb-1">Ventas Tienda</p>
               <p className="text-foreground/90 font-black">${(financials.paid_orders_total || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}</p>
+            </div>
+            <div className="text-amber-400">
+              <p className="opacity-40 mb-1">Diseñador (Transitorio)</p>
+              <p className="font-black">${(financials.designer_fees || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}</p>
             </div>
           </div>
         </div>

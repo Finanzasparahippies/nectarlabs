@@ -50,12 +50,13 @@ class BusinessStatsView(APIView):
     permission_classes = [permissions.IsAdminUser]
 
     def get(self, request, *args, **kwargs):
-        # 1. Ventas Totales (MRR de contratos activos + extras + total de órdenes pagadas)
+        # 1. Ventas Totales (MRR de contratos activos + total de órdenes pagadas, EXCLUYE diseño de marca transitorio)
         active_contracts = Contract.objects.filter(is_active=True)
         contracts_mrr = 0
+        designer_fees = 0
         for contract in active_contracts:
             contracts_mrr += contract.plan.price
-            contracts_mrr += contract.brand_design_price
+            designer_fees += contract.brand_design_price
         
         paid_orders_total = Order.objects.filter(status='PAID').aggregate(Sum('total'))['total__sum'] or 0
         gross_sales = float(contracts_mrr) + float(paid_orders_total)
@@ -79,7 +80,7 @@ class BusinessStatsView(APIView):
 
         total_costs = float(servers_total) + float(expenses_total)
 
-        # 3. Utilidad Neta y Margen
+        # 3. Utilidad Neta y Margen (Basado exclusivamente en ingresos reales de Néctar Labs)
         net_profit = gross_sales - total_costs
         margin = (net_profit / gross_sales * 100) if gross_sales > 0 else 0
 
@@ -113,19 +114,98 @@ class BusinessStatsView(APIView):
                 "status": status_label
             })
             
-        # 5. Tendencia mensual simulada de ingresos
-        monthly_trend = [
-            {"month": "Ene", "sales": gross_sales * 0.85, "costs": total_costs * 0.90, "profit": (gross_sales * 0.85) - (total_costs * 0.90)},
-            {"month": "Feb", "sales": gross_sales * 0.90, "costs": total_costs * 0.92, "profit": (gross_sales * 0.90) - (total_costs * 0.92)},
-            {"month": "Mar", "sales": gross_sales * 0.95, "costs": total_costs * 0.95, "profit": (gross_sales * 0.95) - (total_costs * 0.95)},
-            {"month": "Abr", "sales": gross_sales, "costs": total_costs, "profit": net_profit},
-        ]
+        # 5. Tendencia mensual real de ingresos y costos basada en base de datos (EXCLUYE diseño transitorio)
+        import datetime
+        from django.utils.timezone import make_aware
+
+        today = timezone.now().date()
+        months = []
+        # Generar los últimos 5 meses (desde hace 4 meses hasta el mes actual)
+        for i in range(4, -1, -1):
+            m = today.month - i
+            y = today.year
+            while m <= 0:
+                m += 12
+                y -= 1
+            months.append(datetime.date(y, m, 1))
+
+        monthly_trend = []
+        month_names = {
+            1: "Ene", 2: "Feb", 3: "Mar", 4: "Abr", 5: "May", 6: "Jun",
+            7: "Jul", 8: "Ago", 9: "Sep", 10: "Oct", 11: "Nov", 12: "Dic"
+        }
+
+        for m_date in months:
+            m_year = m_date.year
+            m_month = m_date.month
+            
+            # Fin de mes para límites de fecha
+            if m_month == 12:
+                next_month = datetime.date(m_year + 1, 1, 1)
+            else:
+                next_month = datetime.date(m_year, m_month + 1, 1)
+            end_of_month = next_month - datetime.timedelta(days=1)
+            end_of_month_dt = make_aware(datetime.datetime.combine(end_of_month, datetime.time.max))
+
+            # Ventas de contratos activos firmados hasta este mes (solo precio del plan, excluye diseño de marca transitorio)
+            month_contracts = Contract.objects.filter(
+                is_active=True,
+                signed_at__lte=end_of_month_dt
+            )
+            
+            month_sales = 0
+            for contract in month_contracts:
+                month_sales += contract.plan.price
+            
+            # Ventas de la tienda en este mes
+            month_orders = Order.objects.filter(
+                status='PAID',
+                created_at__year=m_year,
+                created_at__month=m_month
+            ).aggregate(Sum('total'))['total__sum'] or 0
+            
+            total_month_sales = float(month_sales) + float(month_orders)
+
+            # Costos de servidores creados hasta este mes
+            month_servers = ServerCost.objects.filter(
+                is_active=True,
+                created_at__lte=end_of_month_dt
+            )
+            month_servers_cost = 0
+            for server in month_servers:
+                if server.billing_cycle == 'Yearly':
+                    month_servers_cost += server.cost / 12
+                else:
+                    month_servers_cost += server.cost
+
+            # Gastos SaaS creados hasta este mes
+            month_expenses = BusinessExpense.objects.filter(
+                is_active=True,
+                created_at__lte=end_of_month_dt
+            )
+            month_expenses_cost = 0
+            for exp in month_expenses:
+                if exp.billing_cycle == 'Yearly':
+                    month_expenses_cost += exp.cost / 12
+                else:
+                    month_expenses_cost += exp.cost
+
+            total_month_costs = float(month_servers_cost) + float(month_expenses_cost)
+            month_profit = total_month_sales - total_month_costs
+
+            monthly_trend.append({
+                "month": month_names[m_month],
+                "sales": total_month_sales,
+                "costs": total_month_costs,
+                "profit": month_profit
+            })
 
         return Response({
             "financials": {
                 "gross_sales": gross_sales,
                 "contracts_mrr": float(contracts_mrr),
                 "paid_orders_total": float(paid_orders_total),
+                "designer_fees": float(designer_fees),
                 "total_costs": total_costs,
                 "servers_total": float(servers_total),
                 "expenses_total": float(expenses_total),
