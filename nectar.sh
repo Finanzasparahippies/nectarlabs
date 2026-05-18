@@ -25,6 +25,12 @@ show_help() {
     echo "  down-prod      - Stop production environment"
     echo "  collectstatic  - Run collectstatic in backend (Prod)"
     echo "  certbot        - Request SSL certificate (Prod)"
+    echo "  up-staging     - Start staging environment"
+    echo "  down-staging   - Stop staging environment"
+    echo "  logs-staging   - View staging logs in real-time"
+    echo "  migrate-staging - Run database migrations (Staging)"
+    echo "  createsuperuser-staging - Create admin user (Staging)"
+    echo "  shell-staging  - Open backend shell (Staging)"
     echo "  help           - Show this help"
 }
 
@@ -44,6 +50,26 @@ case $COMMAND in
     down-prod)
         echo "Stopping Production Environment..."
         docker compose -f docker-compose.prod.yml down
+        ;;
+    up-staging)
+        echo "Starting Nectar Labs Staging Environment..."
+        docker compose -f docker-compose.staging.yml up -d --build
+        ;;
+    down-staging)
+        echo "Stopping Staging Environment..."
+        docker compose -f docker-compose.staging.yml down
+        ;;
+    logs-staging)
+        docker compose -f docker-compose.staging.yml logs -f
+        ;;
+    migrate-staging)
+        docker compose -f docker-compose.staging.yml exec backend-staging python manage.py migrate
+        ;;
+    createsuperuser-staging)
+        docker compose -f docker-compose.staging.yml exec backend-staging python manage.py createsuperuser
+        ;;
+    shell-staging)
+        docker compose -f docker-compose.staging.yml exec backend-staging python manage.py shell
         ;;
     restart)
         docker compose restart
