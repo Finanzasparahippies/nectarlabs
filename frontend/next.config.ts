@@ -4,6 +4,14 @@ const nextConfig: NextConfig = {
   output: 'standalone',
   // @ts-ignore - Next.js 16/15 property for allowing dev origins in Docker/Proxies
   allowedDevOrigins: ['nectarlabs.dev', 'www.nectarlabs.dev'],
+  async rewrites() {
+    return [
+      {
+        source: '/api/:path*',
+        destination: 'http://backend:8000/api/:path*',
+      },
+    ];
+  },
 };
 
 export default nextConfig;
