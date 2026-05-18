@@ -1,5 +1,4 @@
 import React from 'react';
-import { DollarSign, Cpu, ArrowUpRight, TrendingUp } from 'lucide-react';
 
 interface Financials {
   gross_sales: number;
@@ -74,7 +73,10 @@ export default function BusinessCommander({ stats }: BusinessCommanderProps) {
           <div className="flex justify-between items-start mb-6">
             <span className="text-[9px] font-black uppercase tracking-widest opacity-40">Ventas Consolidadas</span>
             <div className="w-8 h-8 rounded-xl bg-nectar-gold/10 text-nectar-gold flex items-center justify-center">
-              <DollarSign className="w-4 h-4" />
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+                <line x1="12" y1="1" x2="12" y2="23"></line>
+                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+              </svg>
             </div>
           </div>
           <h3 className="text-3xl font-black tracking-tight mb-2">
@@ -91,7 +93,18 @@ export default function BusinessCommander({ stats }: BusinessCommanderProps) {
           <div className="flex justify-between items-start mb-6">
             <span className="text-[9px] font-black uppercase tracking-widest opacity-40">Costos Operativos</span>
             <div className="w-8 h-8 rounded-xl bg-foreground/5 text-foreground opacity-60 flex items-center justify-center">
-              <Cpu className="w-4 h-4" />
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+                <rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect>
+                <rect x="9" y="9" width="6" height="6"></rect>
+                <line x1="9" y1="1" x2="9" y2="4"></line>
+                <line x1="15" y1="1" x2="15" y2="4"></line>
+                <line x1="9" y1="20" x2="9" y2="23"></line>
+                <line x1="15" y1="20" x2="15" y2="23"></line>
+                <line x1="20" y1="9" x2="23" y2="9"></line>
+                <line x1="20" y1="15" x2="23" y2="15"></line>
+                <line x1="1" y1="9" x2="4" y2="9"></line>
+                <line x1="1" y1="15" x2="4" y2="15"></line>
+              </svg>
             </div>
           </div>
           <h3 className="text-3xl font-black tracking-tight mb-2">
@@ -108,7 +121,10 @@ export default function BusinessCommander({ stats }: BusinessCommanderProps) {
           <div className="flex justify-between items-start mb-6">
             <span className="text-[9px] font-black uppercase tracking-widest opacity-40">Utilidad Neta</span>
             <div className="w-8 h-8 rounded-xl bg-green-500/10 text-green-400 flex items-center justify-center">
-              <ArrowUpRight className="w-4 h-4" />
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+                <line x1="7" y1="17" x2="17" y2="7"></line>
+                <polyline points="7 7 17 7 17 17"></polyline>
+              </svg>
             </div>
           </div>
           <h3 className="text-3xl font-black tracking-tight mb-2 text-green-400">
@@ -125,7 +141,10 @@ export default function BusinessCommander({ stats }: BusinessCommanderProps) {
           <div className="flex justify-between items-start mb-6">
             <span className="text-[9px] font-black uppercase tracking-widest opacity-40">Eficiencia Operativa</span>
             <div className="w-8 h-8 rounded-xl bg-nectar-gold/15 text-nectar-gold flex items-center justify-center">
-              <TrendingUp className="w-4 h-4" />
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+                <polyline points="17 6 23 6 23 12"></polyline>
+              </svg>
             </div>
           </div>
           <h3 className="text-3xl font-black tracking-tight mb-2 text-nectar-gold">
