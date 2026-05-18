@@ -27,11 +27,15 @@ router.register(r'tickets', TicketViewSet, basename='ticket')
 from django.conf import settings
 
 from apps.users.views import RegisterView
+from apps.newsletter.views import SubscribeView
+from apps.dashboard.views import BusinessStatsView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include(router.urls)),
     path('api/register/', RegisterView.as_view(), name='register'),
+    path('api/newsletter/subscribe/', SubscribeView.as_view(), name='newsletter_subscribe'),
+    path('api/dashboard/business-stats/', BusinessStatsView.as_view(), name='business_stats'),
     path('api/token/', MyTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/auth/', include('rest_framework.urls')),

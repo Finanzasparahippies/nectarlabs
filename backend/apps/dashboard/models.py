@@ -42,3 +42,35 @@ class FAQ(models.Model):
 
     def __str__(self):
         return self.question
+
+class ServerCost(models.Model):
+    class Provider(models.TextChoices):
+        HETZNER = 'HETZNER', 'Hetzner'
+        AWS = 'AWS', 'AWS'
+        SUPABASE = 'SUPABASE', 'Supabase'
+        CLOUDFLARE = 'CLOUDFLARE', 'Cloudflare'
+        ZOHO = 'ZOHO', 'Zoho Mail'
+        DOMAIN = 'DOMAIN', 'Registro de Dominio'
+        OTHER = 'OTHER', 'Otro'
+
+    provider = models.CharField(max_length=50, choices=Provider.choices, default=Provider.OTHER)
+    name = models.CharField(max_length=150, help_text="Ej: VPS 2GB, Base de datos Supabase, Google Workspace")
+    cost = models.DecimalField(max_digits=10, decimal_places=2, help_text="Costo mensual o anual en USD")
+    billing_cycle = models.CharField(max_length=20, default="Monthly", choices=[("Monthly", "Mensual"), ("Yearly", "Anual")])
+    next_payment_date = models.DateField(help_text="Próxima fecha límite de pago")
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.get_provider_display()} - {self.name} (${self.cost})"
+
+class BusinessExpense(models.Model):
+    name = models.CharField(max_length=150, help_text="Ej: Github Copilot, OpenAI API, Herramientas de Diseño")
+    cost = models.DecimalField(max_digits=10, decimal_places=2, help_text="Costo mensual o anual en USD")
+    billing_cycle = models.CharField(max_length=20, default="Monthly", choices=[("Monthly", "Mensual"), ("Yearly", "Anual")])
+    next_payment_date = models.DateField(help_text="Próxima fecha de cobro")
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.name} (${self.cost})"
