@@ -1,5 +1,6 @@
 services:
   backend:
+    container_name: nectar_backend
     image: nectar-labs-backend:prod
     build:
       context: ./backend
@@ -14,6 +15,7 @@ services:
       - prod_network
 
   frontend:
+    container_name: nectar_frontend
     image: nectar-labs-frontend:prod
     build:
       context: ./frontend
