@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import SignaturePad from "react-signature-canvas";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import { fetcher } from "@/lib/api";
 
 export default function DevSignPage() {
   const { id } = useParams();
@@ -19,15 +20,10 @@ export default function DevSignPage() {
   useEffect(() => {
     async function fetchContract() {
       try {
-        const token = localStorage.getItem("token");
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/contracts/${id}/`, {
-          headers: { "Authorization": `Bearer ${token}` }
-        });
-        if (!res.ok) throw new Error("No tienes permiso o el contrato no existe");
-        const data = await res.json();
+        const data = await fetcher(`/contracts/${id}/`);
         setContract(data);
       } catch (err: any) {
-        setError(err.message);
+        setError(err.message || "No tienes permiso o el contrato no existe");
       } finally {
         setLoading(false);
       }
@@ -42,24 +38,17 @@ export default function DevSignPage() {
     const signatureBase64 = sigPad.current.getTrimmedCanvas().toDataURL("image/png");
 
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/contracts/${id}/dev_sign/`, {
+      await fetcher(`/contracts/${id}/dev_sign/`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
         body: JSON.stringify({ signature: signatureBase64 })
       });
 
-      if (!res.ok) throw new Error("Error al procesar la firma");
-      
       setSuccess(true);
       setTimeout(() => {
         router.push("/dashboard");
       }, 3000);
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message || "Error al procesar la firma");
       setSaving(false);
     }
   };
