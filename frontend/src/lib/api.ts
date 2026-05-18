@@ -1,4 +1,13 @@
-export const API_URL = "/api";
+let resolvedApiUrl = "/api";
+
+if (typeof window !== "undefined") {
+  const origin = window.location.origin;
+  if (origin.includes("github.dev")) {
+    resolvedApiUrl = origin.replace("-3000", "-8080").replace("-3002", "-8080") + "/api";
+  }
+}
+
+export const API_URL = resolvedApiUrl;
 
 export async function fetcher(endpoint: string, options: RequestInit = {}) {
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
