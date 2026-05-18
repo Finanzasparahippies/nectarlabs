@@ -182,9 +182,10 @@ STRIPE_WEBHOOK_SECRET = env("STRIPE_WEBHOOK_SECRET", default="")
 # CORS / CSRF
 CORS_ALLOW_ALL_ORIGINS = DEBUG
 CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS", default=[])
-CSRF_TRUSTED_ORIGINS = env.list(
-    "CSRF_TRUSTED_ORIGINS",
-    default=[
+CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[])
+
+if DEBUG:
+    dev_origins = [
         "http://localhost:3000",
         "http://localhost:8000",
         "http://localhost:8001",
@@ -196,7 +197,9 @@ CSRF_TRUSTED_ORIGINS = env.list(
         "https://*.github.dev",
         "https://*.app.github.dev",
     ]
-)
+    for origin in dev_origins:
+        if origin not in CSRF_TRUSTED_ORIGINS:
+            CSRF_TRUSTED_ORIGINS.append(origin)
 
 # CKEditor 5
 CKEDITOR_5_CONFIGS = {
