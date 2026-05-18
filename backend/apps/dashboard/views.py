@@ -124,7 +124,11 @@ class BusinessStatsView(APIView):
         return Response({
             "financials": {
                 "gross_sales": gross_sales,
+                "contracts_mrr": float(contracts_mrr),
+                "paid_orders_total": float(paid_orders_total),
                 "total_costs": total_costs,
+                "servers_total": float(servers_total),
+                "expenses_total": float(expenses_total),
                 "net_profit": net_profit,
                 "margin": margin
             },
