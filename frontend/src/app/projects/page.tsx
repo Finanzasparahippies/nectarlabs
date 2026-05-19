@@ -23,6 +23,7 @@ interface Project {
   progress_percentage: number;
   is_active: boolean;
   client: number;
+  plan?: number;
   user_email?: string;
   
   // Activity tracking fields
@@ -47,6 +48,7 @@ export default function ProjectsPage() {
   const [isStaff, setIsStaff] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
+  const [plans, setPlans] = useState<any[]>([]);
 
   // States for timer and inputs
   const [currentTime, setCurrentTime] = useState<Date>(new Date());
@@ -56,6 +58,7 @@ export default function ProjectsPage() {
   const [formData, setFormData] = useState({
     name: '',
     client: '',
+    plan: '' as string | number,
     status: 'MVP',
     progress_percentage: 0,
     staging_url: '',
@@ -78,8 +81,12 @@ export default function ProjectsPage() {
 
   const loadData = async () => {
     try {
-      const projectsData = await fetcher('/projects/');
+      const [projectsData, plansData] = await Promise.all([
+        fetcher('/projects/'),
+        fetcher('/plans/')
+      ]);
       setProjects(projectsData);
+      setPlans(plansData);
     } catch (err) {
       console.error("Error loading projects:", err);
     } finally {
@@ -111,6 +118,7 @@ export default function ProjectsPage() {
     setFormData({
       name: '',
       client: '',
+      plan: '',
       status: 'MVP',
       progress_percentage: 0,
       staging_url: '',
@@ -124,6 +132,7 @@ export default function ProjectsPage() {
     setFormData({
       name: project.name,
       client: project.client.toString(),
+      plan: project.plan || '',
       status: project.status,
       progress_percentage: project.progress_percentage,
       staging_url: project.staging_url || '',
@@ -543,6 +552,20 @@ export default function ProjectsPage() {
                     required
                   />
                 </div>
+              </div>
+
+              <div className="space-y-3">
+                <label className="text-[9px] font-black uppercase tracking-widest opacity-40 ml-4">Plan Base del Proyecto (Opcional)</label>
+                <select 
+                  value={formData.plan}
+                  onChange={(e) => setFormData({...formData, plan: e.target.value ? parseInt(e.target.value) : ''})}
+                  className="w-full bg-card-border/30 border border-card-border rounded-2xl p-5 focus:outline-none focus:border-nectar-gold transition-all text-sm appearance-none"
+                >
+                  <option value="">Ninguno (Heredar del contrato de cliente)</option>
+                  {plans.map(p => (
+                    <option key={p.id} value={p.id}>{p.name} - {p.hours}h/mes</option>
+                  ))}
+                </select>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

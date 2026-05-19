@@ -35,6 +35,26 @@ function OnboardingContent() {
     brand_design_price: 0,
   });
 
+  const selectedPlanObj = plans.find(p => p.id.toString() === formData.plan.toString());
+  const searchParams = useSearchParams();
+  const sigCanvas = useRef<SignatureCanvas>(null);
+
+  const [step, setStep] = useState(1);
+  const [plans, setPlans] = useState<Plan[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+
+  const [formData, setFormData] = useState({
+    plan: '',
+    full_name: '',
+    tax_id: '',
+    address: '',
+    project_idea: '',
+    brand_design_tier: 'NONE',
+    brand_design_price: 0,
+  });
+
   useEffect(() => {
     setIsMounted(true);
     const planFromUrl = searchParams.get('plan');
@@ -242,13 +262,94 @@ function OnboardingContent() {
         {step === 3 && (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
             <h1 className="text-5xl font-black tracking-tighter">Firma Digital</h1>
-            <div className="p-8 bg-card-bg border-2 border-card-border rounded-3xl space-y-6">
-              <p className="text-xs opacity-60 leading-relaxed">
-                Al firmar este documento, acepto los términos y condiciones de <strong>Néctar Labs</strong> como mi Partner Tecnológico.
-                Entiendo que el plan seleccionado tiene un compromiso de 6 meses y que el costo de infraestructura es independiente.
-              </p>
+            <p className="text-xl opacity-60">Revisa cuidadosamente los términos del contrato antes de firmar.</p>
 
-              <div className="bg-white rounded-2xl overflow-hidden border-2 border-card-border">
+            <div className="bg-card-bg border-2 border-card-border rounded-3xl overflow-hidden flex flex-col max-h-[60vh]">
+              {/* Contract Preview Document */}
+              <div className="p-8 md:p-12 overflow-y-auto custom-scrollbar flex-1 bg-background/50">
+                <header className="mb-12 border-b border-card-border pb-8">
+                  <h2 className="text-2xl font-black tracking-tighter mb-2">CONTRATO DE PRESTACIÓN DE SERVICIOS TECNOLÓGICOS</h2>
+                  <p className="text-nectar-gold font-bold uppercase tracking-widest text-[10px]">Modalidad: Partner Tecnológico</p>
+                </header>
+
+                <div className="prose prose-invert max-w-none space-y-10 text-sm leading-relaxed opacity-80">
+                  <section>
+                    <p>Este contrato se celebra entre <strong>Néctar Labs</strong>, representado por <strong>Jesus Saul Villegas Cruz</strong>, en adelante "EL DESARROLLADOR", y <strong>{formData.full_name || '[Nombre del Cliente]'}</strong>, en adelante "EL CLIENTE".</p>
+                  </section>
+
+                  <section className="space-y-6">
+                    <h3 className="text-lg font-black uppercase tracking-tight text-foreground">DECLARACIONES Y DATOS DE LAS PARTES</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2 p-5 bg-background/80 rounded-2xl border border-card-border text-xs">
+                        <h4 className="font-black text-[9px] uppercase text-nectar-gold">EL DESARROLLADOR</h4>
+                        <p><strong>Jesus Saul Villegas Cruz</strong></p>
+                        <p>RFC: VICJ911227KY2</p>
+                        <p>Domicilio: Poder Legislativo 345, col. Ley 57. Hermosillo, Sonora.</p>
+                        <p>Email: contacto@finanzasparahippies.com</p>
+                      </div>
+                      <div className="space-y-2 p-5 bg-background/80 rounded-2xl border border-card-border text-xs">
+                        <h4 className="font-black text-[9px] uppercase text-nectar-gold">EL CLIENTE</h4>
+                        <p><strong>{formData.full_name || '___________________'}</strong></p>
+                        <p>RFC: {formData.tax_id || '__________________________'}</p>
+                        <p>Domicilio: {formData.address || '______________________'}</p>
+                      </div>
+                    </div>
+                  </section>
+
+                  <section className="space-y-3">
+                    <h3 className="text-lg font-black uppercase tracking-tight text-foreground">1. OBJETO DEL SERVICIO</h3>
+                    <p>EL DESARROLLADOR se compromete a brindar servicios de desarrollo, mantenimiento y soporte técnico para los activos digitales de EL CLIENTE, bajo la modalidad de Partner Tecnológico con un enfoque de mejora continua y estabilidad de sistemas.</p>
+                  </section>
+
+                  <section className="space-y-3">
+                    <h3 className="text-lg font-black uppercase tracking-tight text-foreground">2. OBJETIVO ESPECÍFICO DEL PROYECTO</h3>
+                    <p>El enfoque principal durante el periodo inicial será el desarrollo del siguiente proyecto tecnológico:</p>
+                    <div className="p-4 border-l-4 border-nectar-gold bg-nectar-gold/5 italic text-nectar-gold font-bold">
+                      "{formData.project_idea || 'Idea del proyecto no especificada.'}"
+                    </div>
+                  </section>
+
+                  <section className="space-y-3">
+                    <h3 className="text-lg font-black uppercase tracking-tight text-foreground">3. ESQUEMA DE INVERSIÓN SELECCIONADO</h3>
+                    <div className="p-4 border-2 border-nectar-gold bg-nectar-gold/5 rounded-xl font-black text-nectar-gold flex justify-between items-center">
+                      <span>Plan de Ingeniería: {selectedPlanObj ? selectedPlanObj.name : 'No seleccionado'}</span>
+                      <span>${selectedPlanObj ? parseFloat(selectedPlanObj.price).toLocaleString() : '0.00'} MXN / Mes</span>
+                    </div>
+                    {formData.brand_design_tier !== 'NONE' && (
+                      <div className="p-4 border-2 border-foreground/20 bg-foreground/5 rounded-xl font-bold flex justify-between items-center text-xs">
+                        <span>Complemento: Diseño de Marca ({formData.brand_design_tier})</span>
+                        <span>+ ${formData.brand_design_price.toLocaleString()} MXN</span>
+                      </div>
+                    )}
+                  </section>
+
+                  <section className="space-y-3">
+                    <h3 className="text-lg font-black uppercase tracking-tight text-foreground">4. BENEFICIOS TÉCNICOS INCLUIDOS</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                      <p><strong>Contenedores Docker:</strong> Aislamiento total de procesos.</p>
+                      <p><strong>Seguridad SSL:</strong> Certificados HTTPS incluidos.</p>
+                      <p><strong>Arquitectura Next.js + Django:</strong> Escalabilidad industrial.</p>
+                      <p><strong>Hetzner Cloud:</strong> Administración de alto rendimiento.</p>
+                    </div>
+                  </section>
+
+                  <section className="space-y-3">
+                    <h3 className="text-lg font-black uppercase tracking-tight text-foreground">5. GESTIÓN DE HORAS Y PROPIEDAD</h3>
+                    <p><strong>Límite de Horas:</strong> El paquete incluye {selectedPlanObj?.hours || 0} horas de ingeniería mensuales dedicadas al proyecto.</p>
+                    <p><strong>Excedentes (Mes 1-6):</strong> Las horas adicionales de ingeniería solicitadas se facturarán a una tasa de <strong>$225 MXN</strong> por hora.</p>
+                    <p><strong>Propiedad Intelectual:</strong> La propiedad del código fuente y los activos de diseño se transfieren a EL CLIENTE tras la liquidación del periodo obligatorio (6 meses).</p>
+                  </section>
+                  
+                  <section className="space-y-3">
+                    <h3 className="text-lg font-black uppercase tracking-tight text-foreground">6. CONTINUIDAD POST-COMPROMISO (MES 7+)</h3>
+                    <p>Al finalizar el periodo inicial de 6 meses, EL CLIENTE podrá optar por suscripción continua (mantiene beneficios y horas) o Servicio por Evento (On-Demand) a $500 MXN/hora.</p>
+                  </section>
+                </div>
+              </div>
+
+              {/* Signature Area */}
+              <div className="p-8 bg-card-bg border-t border-card-border space-y-6">
+                <div className="bg-white rounded-2xl overflow-hidden border-2 border-card-border shadow-inner">
                 <SignatureCanvas
                   ref={sigCanvas}
                   penColor='black'
