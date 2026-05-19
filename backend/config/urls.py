@@ -8,7 +8,7 @@ from rest_framework_simplejwt.views import (
 )
 
 
-from apps.shop.views import PlanViewSet, ProductViewSet, ContractViewSet
+from apps.shop.views import PlanViewSet, ProductViewSet, ContractViewSet, PaymentInstallmentViewSet
 from apps.dashboard.views import ProjectViewSet, FAQViewSet, TimeLogViewSet
 from apps.blog.views import PostViewSet
 from apps.tickets.views import TicketViewSet
@@ -18,6 +18,7 @@ router = DefaultRouter()
 router.register(r'plans', PlanViewSet)
 router.register(r'products', ProductViewSet)
 router.register(r'contracts', ContractViewSet, basename='contract')
+router.register(r'installments', PaymentInstallmentViewSet, basename='installment')
 router.register(r'projects', ProjectViewSet, basename='project')
 router.register(r'faqs', FAQViewSet)
 router.register(r'logs', TimeLogViewSet, basename='timelog')

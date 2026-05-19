@@ -95,3 +95,24 @@ class Order(models.Model):
 
     def __str__(self):
         return f"Order {self.id} - {self.user.email}"
+
+class PaymentInstallment(models.Model):
+    class Status(models.TextChoices):
+        PENDING = 'PENDING', 'Pendiente'
+        PAID = 'PAID', 'Pagado'
+        CANCELLED = 'CANCELLED', 'Cancelado'
+
+    contract = models.ForeignKey(Contract, on_delete=models.CASCADE, related_name='installments')
+    installment_number = models.IntegerField(help_text="Mes de pago (1 de 6, 2 de 6, etc.)")
+    due_date = models.DateField(help_text="Fecha límite de pago")
+    amount = models.DecimalField(max_digits=10, decimal_places=2, help_text="Monto mensual total (Plan + Adiciones)")
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
+    payment_method = models.CharField(max_length=50, blank=True, null=True, help_text="Método usado para este pago")
+    receipt_file = models.FileField(upload_to='receipts/%Y/%m/', blank=True, null=True, help_text="Comprobante de SPEI/Depósito subido por cliente")
+    stripe_invoice_id = models.CharField(max_length=150, blank=True, null=True)
+    cfdi_uuid = models.CharField(max_length=100, blank=True, null=True, help_text="Folio Fiscal / UUID CFDI del SAT")
+    paid_at = models.DateTimeField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Mensualidad {self.installment_number}/6 - {self.contract.full_name} (${self.amount})"

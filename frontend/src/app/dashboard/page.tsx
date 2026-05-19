@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { fetcher } from '../../lib/api';
+import { fetcher, API_URL } from '../../lib/api';
 import StagingStatus from '../../components/dashboard/StagingStatus';
 import WeeklyLogs from '../../components/dashboard/WeeklyLogs';
 import BusinessCommander from '../../components/dashboard/BusinessCommander';
@@ -67,6 +67,7 @@ export default function DashboardPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [contracts, setContracts] = useState<Contract[]>([]);
+  const [installments, setInstallments] = useState<any[]>([]);
   const [logs, setLogs] = useState<any[]>([]);
   const [isStaff, setIsStaff] = useState(false);
   const [userRole, setUserRole] = useState('');
@@ -106,6 +107,28 @@ export default function DashboardPage() {
     }
   };
 
+  const handleUploadReceipt = async (installmentId: number, file: File) => {
+    try {
+      const formData = new FormData();
+      formData.append('receipt_file', file);
+      
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/installments/${installmentId}/`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      });
+      if (!response.ok) throw new Error("Upload failed");
+      const updated = await response.json();
+      setInstallments(prev => prev.map(inst => inst.id === installmentId ? { ...inst, receipt_file: updated.receipt_file, status: updated.status } : inst));
+      alert("Comprobante subido con éxito. El equipo de administración lo validará a la brevedad.");
+    } catch (err) {
+      alert("Error al subir el comprobante de pago");
+    }
+  };
+
   useEffect(() => {
     const checkAuth = () => {
       const staff = localStorage.getItem('is_staff') === 'true';
@@ -119,17 +142,19 @@ export default function DashboardPage() {
         const staff = localStorage.getItem('is_staff') === 'true';
         const role = localStorage.getItem('user_role') || '';
         const isActuallyStaff = staff && role !== 'DESIGNER';
-        const [projectsData, ticketsData, logsData, contractsData] = await Promise.all([
+        const [projectsData, ticketsData, logsData, contractsData, installmentsData] = await Promise.all([
           fetcher('/projects/'),
           fetcher('/tickets/'),
           fetcher('/logs/'),
-          fetcher('/contracts/')
+          fetcher('/contracts/'),
+          fetcher('/installments/')
         ]);
         
         setProjects(projectsData);
         setTickets(ticketsData);
         setLogs(logsData);
         setContracts(contractsData);
+        setInstallments(installmentsData);
 
         if (isActuallyStaff) {
           const statsData = await fetcher('/dashboard/business-stats/');
@@ -229,7 +254,7 @@ export default function DashboardPage() {
         </header>
 
         {activeTab === 'business' && isStaff ? (
-          <BusinessCommander stats={businessStats} />
+          <BusinessCommander stats={businessStats} installments={installments} setInstallments={setInstallments} />
         ) : (
           <div className="space-y-16 animate-fadeIn">
             {/* Developer Specific Section: Pending Contracts */}
@@ -371,6 +396,67 @@ export default function DashboardPage() {
                             * Envía tu comprobante de pago a contacto@finanzasparahippies.com
                           </p>
                         </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Monthly Payments (6 months commitment) */}
+                  <div className="mt-12 border-t border-card-border/50 pt-10">
+                    <h3 className="text-lg font-black tracking-tight mb-6">Mensualidades Obligatorias (Compromiso a 6 Meses)</h3>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {installments.filter(inst => inst.contract === activeContract.id).map(inst => (
+                        <div key={inst.id} className="p-6 rounded-2xl bg-background/30 border border-card-border flex flex-col justify-between gap-4">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <span className="text-[8px] font-black uppercase tracking-widest opacity-40">Mes {inst.installment_number} de 6</span>
+                              <h4 className="font-black text-lg mt-1">${parseFloat(inst.amount).toLocaleString('es-MX')} MXN</h4>
+                            </div>
+                            <span className={`px-2.5 py-1 text-[8px] font-black uppercase tracking-widest rounded-full ${
+                              inst.status === 'PAID' ? 'bg-green-500/10 text-green-500' :
+                              inst.receipt_file ? 'bg-orange-500/10 text-orange-500' : 'bg-yellow-500/10 text-yellow-500'
+                            }`}>
+                              {inst.status === 'PAID' ? 'Pagado' : inst.receipt_file ? 'En Revisión' : 'Pendiente'}
+                            </span>
+                          </div>
+
+                          <div className="space-y-2 text-[10px]">
+                            <div className="flex justify-between opacity-60">
+                              <span>Fecha Límite:</span>
+                              <span className="font-bold">{inst.due_date}</span>
+                            </div>
+                            {inst.cfdi_uuid && (
+                              <div className="flex justify-between text-green-500 font-bold">
+                                <span>Folio Fiscal SAT:</span>
+                                <span className="text-[8px] tracking-tighter select-all">{inst.cfdi_uuid.slice(0, 8)}...</span>
+                              </div>
+                            )}
+                          </div>
+
+                          {inst.status !== 'PAID' && (
+                            <div className="mt-2">
+                              {inst.receipt_file ? (
+                                <p className="text-[8px] text-center opacity-60 italic font-bold">Comprobante subido. Esperando validación.</p>
+                              ) : (
+                                <label className="w-full block py-2.5 border border-dashed border-nectar-gold/50 text-nectar-gold hover:bg-nectar-gold hover:text-background text-center rounded-xl text-[8px] font-black uppercase tracking-widest transition-all cursor-pointer">
+                                  Subir Comprobante
+                                  <input 
+                                    type="file" 
+                                    accept="image/*,application/pdf"
+                                    className="hidden"
+                                    onChange={(e) => {
+                                      const file = e.target.files?.[0];
+                                      if (file) handleUploadReceipt(inst.id, file);
+                                    }}
+                                  />
+                                </label>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                      {installments.filter(inst => inst.contract === activeContract.id).length === 0 && (
+                        <p className="col-span-full text-center text-xs opacity-40 font-bold py-6">Las mensualidades se generarán una vez que el trato sea firmado por el administrador.</p>
                       )}
                     </div>
                   </div>

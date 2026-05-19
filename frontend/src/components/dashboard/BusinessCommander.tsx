@@ -38,10 +38,68 @@ interface BusinessCommanderProps {
     server_billing: BillingItem[];
     monthly_trend: TrendPoint[];
   } | null;
+  installments: any[];
+  setInstallments: React.Dispatch<React.SetStateAction<any[]>>;
 }
 
-export default function BusinessCommander({ stats }: BusinessCommanderProps) {
+export default function BusinessCommander({ stats, installments, setInstallments }: BusinessCommanderProps) {
   const [activePoint, setActivePoint] = useState<number | null>(null);
+  const [cfdiInputs, setCfdiInputs] = useState<Record<number, string>>({});
+
+  const handleApproveInstallment = async (installmentId: number) => {
+    try {
+      const token = localStorage.getItem('token');
+      const origin = window.location.origin;
+      const API_URL = origin.includes("github.dev") 
+        ? origin.replace("-3000", "-8080").replace("-3002", "-8080") + "/api"
+        : "/api";
+      
+      const response = await fetch(`${API_URL}/installments/${installmentId}/`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ status: 'PAID', paid_at: new Date().toISOString() })
+      });
+      
+      if (!response.ok) throw new Error("Approval failed");
+      const updated = await response.json();
+      setInstallments(prev => prev.map(inst => inst.id === installmentId ? updated : inst));
+      alert("Mensualidad marcada como PAGADA con éxito.");
+    } catch (err) {
+      alert("Error al aprobar mensualidad.");
+    }
+  };
+
+  const handleSaveCFDI = async (installmentId: number) => {
+    const uuid = cfdiInputs[installmentId] || "";
+    if (!uuid.trim()) return alert("Por favor ingresa un folio fiscal válido.");
+    
+    try {
+      const token = localStorage.getItem('token');
+      const origin = window.location.origin;
+      const API_URL = origin.includes("github.dev") 
+        ? origin.replace("-3000", "-8080").replace("-3002", "-8080") + "/api"
+        : "/api";
+      
+      const response = await fetch(`${API_URL}/installments/${installmentId}/`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ cfdi_uuid: uuid })
+      });
+      
+      if (!response.ok) throw new Error("CFDI update failed");
+      const updated = await response.json();
+      setInstallments(prev => prev.map(inst => inst.id === installmentId ? updated : inst));
+      alert("Folio Fiscal / CFDI guardado con éxito.");
+    } catch (err) {
+      alert("Error al guardar Folio Fiscal.");
+    }
+  };
 
   if (!stats) return (
     <div className="py-20 flex flex-col items-center justify-center">
@@ -474,6 +532,107 @@ export default function BusinessCommander({ stats }: BusinessCommanderProps) {
           </div>
         </section>
       </div>
+
+      {/* Control de Mensualidades y Emisión de CFDI (SAT) */}
+      <section className="bg-card-bg border border-card-border rounded-[2.5rem] p-8 md:p-10 shadow-lg mt-12">
+        <div className="mb-8">
+          <h3 className="text-xs font-black uppercase tracking-[0.3em] opacity-30">Control de Mensualidades y Emisión de CFDI (SAT)</h3>
+          <p className="text-[9px] font-bold text-foreground/40 mt-1 uppercase tracking-wider">Validación de comprobantes SPEI/Depósitos y registro de Facturas timbradas</p>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b border-card-border/50 text-[8px] font-black uppercase tracking-widest opacity-40">
+                <th className="pb-4">Contrato / Mes</th>
+                <th className="pb-4 text-right">Monto</th>
+                <th className="pb-4 text-center">Vencimiento</th>
+                <th className="pb-4 text-center">Comprobante</th>
+                <th className="pb-4 text-center">Estatus</th>
+                <th className="pb-4 text-right">Facturación CFDI (SAT)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {installments.map(inst => (
+                <tr key={inst.id} className="border-b border-card-border/30 last:border-0 hover:bg-foreground/[0.02] transition-colors">
+                  <td className="py-4 pr-4">
+                    <h4 className="font-black text-sm">Contrato #{inst.contract}</h4>
+                    <p className="text-[7px] font-bold text-nectar-gold uppercase tracking-wider mt-0.5">Mensualidad {inst.installment_number} de 6</p>
+                  </td>
+                  <td className="py-4 text-right font-bold text-sm">
+                    ${parseFloat(inst.amount).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                  </td>
+                  <td className="py-4 text-center text-[10px] font-bold opacity-60">
+                    {inst.due_date}
+                  </td>
+                  <td className="py-4 text-center">
+                    {inst.receipt_file ? (
+                      <a 
+                        href={inst.receipt_file} 
+                        target="_blank" 
+                        rel="noreferrer"
+                        className="px-2.5 py-1 bg-nectar-gold/10 text-nectar-gold hover:bg-nectar-gold hover:text-background text-[8px] font-black uppercase tracking-widest rounded-full transition-all inline-block"
+                      >
+                        Ver Comprobante
+                      </a>
+                    ) : (
+                      <span className="text-[8px] opacity-35 font-bold uppercase">No cargado</span>
+                    )}
+                  </td>
+                  <td className="py-4 text-center">
+                    {inst.status === 'PAID' ? (
+                      <span className="px-3 py-1 bg-green-500/10 text-green-500 text-[7px] font-black uppercase tracking-widest rounded-full">Pagado</span>
+                    ) : (
+                      <div className="flex flex-col items-center gap-1">
+                        <span className="px-3 py-1 bg-yellow-500/10 text-yellow-500 text-[7px] font-black uppercase tracking-widest rounded-full">Pendiente</span>
+                        {inst.receipt_file && (
+                          <button
+                            onClick={() => handleApproveInstallment(inst.id)}
+                            className="mt-1 px-2.5 py-1 bg-green-600 hover:bg-green-500 text-white text-[7px] font-black uppercase tracking-widest rounded-md hover:scale-105 active:scale-95 transition-all"
+                          >
+                            Aprobar Pago
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </td>
+                  <td className="py-4 text-right">
+                    {inst.cfdi_uuid ? (
+                      <div className="text-right">
+                        <span className="px-2.5 py-1 bg-green-500/10 text-green-400 text-[7px] font-black uppercase tracking-widest rounded-full">Timbrada</span>
+                        <p className="text-[7px] font-mono text-foreground/45 mt-1 select-all">{inst.cfdi_uuid}</p>
+                      </div>
+                    ) : (
+                      <div className="flex justify-end items-center gap-2">
+                        <input
+                          type="text"
+                          placeholder="UUID CFDI 4.0"
+                          value={cfdiInputs[inst.id] || ""}
+                          onChange={(e) => setCfdiInputs(prev => ({ ...prev, [inst.id]: e.target.value }))}
+                          className="bg-background border border-card-border rounded-lg px-3 py-1.5 text-[8px] font-mono focus:outline-none focus:border-nectar-gold w-40 text-foreground"
+                        />
+                        <button
+                          onClick={() => handleSaveCFDI(inst.id)}
+                          className="px-3 py-1.5 bg-nectar-gold text-background text-[7px] font-black uppercase tracking-widest rounded-lg hover:scale-105 active:scale-95 transition-all"
+                        >
+                          Guardar
+                        </button>
+                      </div>
+                    )}
+                  </td>
+                </tr>
+              ))}
+              {installments.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="py-12 text-center text-[9px] font-black uppercase tracking-widest opacity-25">
+                    Sin mensualidades generadas en el sistema
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </section>
     </div>
   );
 }

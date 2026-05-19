@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Plan, Product, Contract
+from .models import Plan, Product, Contract, PaymentInstallment
 
 class PlanSerializer(serializers.ModelSerializer):
     class Meta:
@@ -16,3 +16,9 @@ class ContractSerializer(serializers.ModelSerializer):
         model = Contract
         fields = '__all__'
         read_only_fields = ('user', 'pdf_file', 'signed_at')
+
+class PaymentInstallmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PaymentInstallment
+        fields = '__all__'
+        read_only_fields = ('contract', 'installment_number', 'due_date', 'amount')

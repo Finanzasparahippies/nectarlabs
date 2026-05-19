@@ -2,8 +2,9 @@ from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.utils import timezone
-from .models import Plan, Product, Contract
-from .serializers import PlanSerializer, ProductSerializer, ContractSerializer
+from datetime import timedelta
+from .models import Plan, Product, Contract, PaymentInstallment
+from .serializers import PlanSerializer, ProductSerializer, ContractSerializer, PaymentInstallmentSerializer
 from .utils import generate_contract_pdf, send_contract_emails
 
 class PlanViewSet(viewsets.ReadOnlyModelViewSet):
@@ -53,13 +54,54 @@ class ContractViewSet(viewsets.ModelViewSet):
         contract.developer_signed_at = timezone.now()
         contract.is_fully_signed = True
         contract.save()
+
+        # Generar automáticamente 6 mensualidades obligatorias
+        monthly_amount = contract.plan.price + contract.brand_design_price
+        start_date = contract.signed_at.date() if contract.signed_at else timezone.now().date()
+        
+        # Eliminar mensualidades previas si existían por re-firma para evitar duplicados
+        contract.installments.all().delete()
+        
+        installments_to_create = []
+        for i in range(1, 7):
+            due_date = start_date + timedelta(days=30 * (i - 1))
+            installments_to_create.append(
+                PaymentInstallment(
+                    contract=contract,
+                    installment_number=i,
+                    due_date=due_date,
+                    amount=monthly_amount,
+                    status=PaymentInstallment.Status.PENDING,
+                    payment_method=contract.payment_commitment_method
+                )
+            )
+        PaymentInstallment.objects.bulk_create(installments_to_create)
         
         # Regenerar PDF FINAL y enviar copias certificadas
         try:
             if generate_contract_pdf(contract):
                 send_contract_emails(contract)
-                return Response({'message': 'Contrato cerrado y enviado con éxito'})
+                return Response({'message': 'Contrato cerrado, mensualidades generadas y correo enviado con éxito'})
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
         return Response({'error': 'Error al procesar el cierre'}, status=status.HTTP_400_BAD_REQUEST)
+
+class PaymentInstallmentViewSet(viewsets.ModelViewSet):
+    serializer_class = PaymentInstallmentSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        if self.request.user.is_staff:
+            return PaymentInstallment.objects.all().order_by('due_date')
+        return PaymentInstallment.objects.filter(contract__user=self.request.user).order_by('due_date')
+
+    def perform_update(self, serializer):
+        # Si el usuario no es staff, restringimos qué campos puede modificar (solo receipt_file)
+        if not self.request.user.is_staff:
+            # Forzamos a guardar únicamente el archivo recibido y actualizar status
+            serializer.save(
+                receipt_file=self.request.data.get('receipt_file')
+            )
+        else:
+            serializer.save()
