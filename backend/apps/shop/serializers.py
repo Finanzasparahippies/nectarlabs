@@ -12,6 +12,8 @@ class ProductSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class ContractSerializer(serializers.ModelSerializer):
+    plan_name = serializers.CharField(source='plan.name', read_only=True)
+
     class Meta:
         model = Contract
         fields = '__all__'
