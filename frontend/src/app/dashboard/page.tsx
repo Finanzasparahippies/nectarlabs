@@ -134,14 +134,14 @@ export default function DashboardPage() {
       const staff = localStorage.getItem('is_staff') === 'true';
       const role = localStorage.getItem('user_role') || '';
       setUserRole(role);
-      setIsStaff(staff && role !== 'DESIGNER');
+      setIsStaff((staff || role === 'ADMIN' || role === 'BUSINESS') && role !== 'DESIGNER');
     };
     
     const loadData = async () => {
       try {
         const staff = localStorage.getItem('is_staff') === 'true';
         const role = localStorage.getItem('user_role') || '';
-        const isActuallyStaff = staff && role !== 'DESIGNER';
+        const isActuallyStaff = (staff || role === 'ADMIN' || role === 'BUSINESS') && role !== 'DESIGNER';
         const [projectsData, ticketsData, logsData, contractsData, installmentsData] = await Promise.all([
           fetcher('/projects/'),
           fetcher('/tickets/'),
@@ -203,6 +203,22 @@ export default function DashboardPage() {
               <div className={`w-2 h-2 rounded-full ${activeTab === 'overview' ? 'bg-nectar-gold' : 'bg-foreground/20'}`}></div>
               Dashboard
             </button>
+
+            {!isStaff && contracts.some(c => c.is_fully_signed) && (
+              <button
+                onClick={() => {
+                  setActiveTab('overview');
+                  setTimeout(() => {
+                    const el = document.getElementById('payment-commitment-section');
+                    if (el) el.scrollIntoView({ behavior: 'smooth' });
+                  }, 100);
+                }}
+                className="flex items-center gap-4 px-6 py-4 w-full text-left rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all hover:bg-foreground/5 text-foreground opacity-60 hover:opacity-100"
+              >
+                <div className="w-2 h-2 bg-foreground/20 rounded-full"></div>
+                Compromiso de Pago
+              </button>
+            )}
 
             {isStaff && userRole !== 'DESIGNER' && (
               <button
@@ -291,7 +307,7 @@ export default function DashboardPage() {
               const nextPaymentDate = activeContract.next_payment_date || '';
 
               return (
-                <section className="mb-16 p-10 rounded-[3rem] bg-card-bg border border-card-border shadow-xl relative overflow-hidden group">
+                <section id="payment-commitment-section" className="mb-16 p-10 rounded-[3rem] bg-card-bg border border-card-border shadow-xl relative overflow-hidden group">
                   <div className="absolute top-0 right-0 w-64 h-64 bg-nectar-gold/5 rounded-full blur-3xl -mr-20 -mt-20"></div>
                   
                   <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-10">

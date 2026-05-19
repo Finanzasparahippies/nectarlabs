@@ -50,7 +50,7 @@ export default function TicketsPage() {
     const staff = localStorage.getItem('is_staff') === 'true';
     const role = localStorage.getItem('user_role') || '';
     setUserRole(role);
-    setIsStaff(staff && role !== 'DESIGNER');
+    setIsStaff((staff || role === 'ADMIN' || role === 'BUSINESS') && role !== 'DESIGNER');
     loadTickets();
   }, []);
 

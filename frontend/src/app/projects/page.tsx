@@ -106,7 +106,7 @@ export default function ProjectsPage() {
     const staff = localStorage.getItem('is_staff') === 'true';
     const role = localStorage.getItem('user_role') || '';
     setUserRole(role);
-    setIsStaff(staff && role !== 'DESIGNER');
+    setIsStaff((staff || role === 'ADMIN' || role === 'BUSINESS') && role !== 'DESIGNER');
     loadData();
 
     // Live timer ticking
@@ -121,7 +121,7 @@ export default function ProjectsPage() {
     try {
       const isStaffUser = localStorage.getItem('is_staff') === 'true';
       const role = localStorage.getItem('user_role') || '';
-      const canViewUsers = isStaffUser || role === 'DESIGNER';
+      const canViewUsers = isStaffUser || role === 'ADMIN' || role === 'BUSINESS' || role === 'DESIGNER';
 
       const promises: Promise<any>[] = [
         fetcher('/projects/'),
