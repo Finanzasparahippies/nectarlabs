@@ -30,7 +30,7 @@ interface Project {
   designer?: number;
   designer_plan?: number;
   designer_email?: string;
-  
+
   // Activity tracking fields
   current_activity_start?: string;
   current_activity_description?: string;
@@ -56,14 +56,14 @@ const formatHoursToHM = (decimalHours: number): string => {
   const absHours = Math.abs(decimalHours);
   const h = Math.floor(absHours);
   const m = Math.round((absHours - h) * 60);
-  
+
   let displayH = h;
   let displayM = m;
   if (displayM === 60) {
     displayM = 0;
     displayH += 1;
   }
-  
+
   const sign = isNegative ? '-' : '';
   return `${sign}${displayH}:${displayM.toString().padStart(2, '0')}`;
 };
@@ -82,7 +82,6 @@ export default function ProjectsPage() {
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
   const [userFormData, setUserFormData] = useState({ username: '', email: '', password: '', role: 'CUSTOMER' });
   const [userError, setUserError] = useState('');
-
 
 
   // States for timer and inputs
@@ -109,7 +108,7 @@ export default function ProjectsPage() {
     setUserRole(role);
     setIsStaff(staff && role !== 'DESIGNER');
     loadData();
-    
+
     // Live timer ticking
     const timer = setInterval(() => {
       setCurrentTime(new Date());
@@ -123,7 +122,7 @@ export default function ProjectsPage() {
       const isStaffUser = localStorage.getItem('is_staff') === 'true';
       const role = localStorage.getItem('user_role') || '';
       const canViewUsers = isStaffUser || role === 'DESIGNER';
-      
+
       const promises: Promise<any>[] = [
         fetcher('/projects/'),
         fetcher('/plans/')
@@ -166,7 +165,7 @@ export default function ProjectsPage() {
     try {
       const method = editingProject ? 'PATCH' : 'POST';
       const endpoint = editingProject ? `/projects/${editingProject.id}/` : '/projects/';
-      
+
       const bodyPayload = {
         ...formData,
         designer: formData.designer ? parseInt(formData.designer) : null,
@@ -177,7 +176,7 @@ export default function ProjectsPage() {
         method,
         body: JSON.stringify(bodyPayload)
       });
-      
+
       setIsCreateModalOpen(false);
       setEditingProject(null);
       resetForm();
@@ -292,7 +291,7 @@ export default function ProjectsPage() {
           <Link href="/" className="inline-block text-xl font-black tracking-tighter mb-16">
             NECTAR <span className="text-nectar-gold">LABS</span>
           </Link>
-          
+
           <nav className="space-y-4">
             <Link href="/dashboard" className="flex items-center gap-4 px-6 py-4 hover:bg-foreground/5 text-foreground opacity-60 hover:opacity-100 transition-all rounded-2xl font-black uppercase tracking-widest text-[10px]">
               <div className="w-2 h-2 bg-foreground/20 rounded-full"></div>
@@ -342,10 +341,10 @@ export default function ProjectsPage() {
               Infraestructura, Staging y Despliegue de Ingeniería
             </p>
           </div>
-          
+
           {(isStaff || userRole === 'DESIGNER') && (
             <div className="flex flex-wrap gap-4">
-              <button 
+              <button
                 onClick={() => {
                   setUserFormData({ username: '', email: '', password: '', role: 'CUSTOMER' });
                   setUserError('');
@@ -355,7 +354,7 @@ export default function ProjectsPage() {
               >
                 + Nuevo Cliente
               </button>
-              <button 
+              <button
                 onClick={() => { resetForm(); setEditingProject(null); setIsCreateModalOpen(true); }}
                 className="px-8 py-4 bg-nectar-gold text-background font-black uppercase tracking-widest rounded-2xl hover:scale-105 transition-all shadow-xl shadow-nectar-gold/20 text-[10px]"
               >
@@ -384,7 +383,7 @@ export default function ProjectsPage() {
             return (
               <div key={project.id} className="p-10 rounded-[3rem] bg-card-bg border border-card-border hover:border-nectar-gold transition-all duration-700 group relative overflow-hidden flex flex-col justify-between">
                 <div className="absolute top-0 right-0 w-40 h-40 bg-nectar-gold/5 blur-3xl rounded-full translate-x-10 -translate-y-10 group-hover:scale-150 transition-transform"></div>
-                
+
                 <div>
                   <div className="flex justify-between items-start mb-8 relative z-10">
                     <div className="space-y-2">
@@ -405,7 +404,7 @@ export default function ProjectsPage() {
                     <div className="flex gap-2">
                       <span className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold text-[8px] font-black uppercase tracking-widest rounded-full">{project.status}</span>
                       {(isStaff || userRole === 'DESIGNER') && (
-                        <button 
+                        <button
                           onClick={() => handleEdit(project)}
                           className="w-8 h-8 rounded-xl bg-card-border/50 flex items-center justify-center hover:bg-nectar-gold hover:text-background transition-all text-xs"
                         >
@@ -449,7 +448,7 @@ export default function ProjectsPage() {
                         </div>
                       </div>
                       <div className="w-full h-1.5 bg-card-border/30 rounded-full overflow-hidden">
-                        <div 
+                        <div
                           className={`h-full transition-all duration-500 ${hoursPercentage > 90 ? 'bg-red-500' : hoursPercentage > 75 ? 'bg-nectar-gold' : 'bg-green-500'}`}
                           style={{ width: `${hoursPercentage}%` }}
                         ></div>
@@ -475,7 +474,7 @@ export default function ProjectsPage() {
                           </div>
                         </div>
                         <div className="w-full h-1.5 bg-card-border/30 rounded-full overflow-hidden">
-                          <div 
+                          <div
                             className={`h-full transition-all duration-500 ${designHoursPercentage > 90 ? 'bg-red-500' : designHoursPercentage > 75 ? 'bg-nectar-gold' : 'bg-green-500'}`}
                             style={{ width: `${designHoursPercentage}%` }}
                           ></div>
@@ -519,7 +518,7 @@ export default function ProjectsPage() {
                         </div>
                       ) : (
                         <div className="space-y-4">
-                          <input 
+                          <input
                             type="text"
                             placeholder="Descripción de la tarea..."
                             value={activityDescriptions[project.id] || ''}
@@ -540,7 +539,7 @@ export default function ProjectsPage() {
                   {/* Project Advances / Deliveries */}
                   <div className="mb-8 relative z-10">
                     <h4 className="text-[10px] font-black uppercase tracking-widest opacity-40 mb-4">Avances Entregados</h4>
-                    
+
                     {project.advances && project.advances.length > 0 ? (
                       <div className="space-y-3 max-h-40 overflow-y-auto pr-2">
                         {project.advances.map(adv => (
@@ -565,7 +564,7 @@ export default function ProjectsPage() {
                     {canWork && project.unlocked_milestones && project.unlocked_milestones.length > 0 && (
                       <div className="mt-4 p-4 rounded-2xl border border-dashed border-nectar-gold/40">
                         <p className="text-[9px] font-black text-nectar-gold uppercase tracking-widest mb-3">Metas de Avance Disponibles</p>
-                        
+
                         <div className="flex gap-2 mb-3">
                           {project.unlocked_milestones.map(m => (
                             <button
@@ -586,16 +585,16 @@ export default function ProjectsPage() {
                           <div className="space-y-3 bg-background/60 p-4 rounded-xl border border-card-border mt-3">
                             <div className="flex justify-between items-center">
                               <span className="text-[8px] font-black uppercase tracking-widest text-nectar-gold">Formulario Avance {advanceForms[project.id]?.milestone}%</span>
-                              <button 
+                              <button
                                 onClick={() => setAdvanceForms({ ...advanceForms, [project.id]: null })}
                                 className="text-[9px] font-bold text-red-500 uppercase"
                               >
                                 Cancelar
                               </button>
                             </div>
-                            
-                            <input 
-                              type="text" 
+
+                            <input
+                              type="text"
                               placeholder="Título del Avance..."
                               value={advanceForms[project.id]?.title || ''}
                               onChange={(e) => setAdvanceForms({
@@ -605,8 +604,8 @@ export default function ProjectsPage() {
                               className="w-full bg-background/50 border border-card-border rounded-xl p-3 focus:outline-none focus:border-nectar-gold transition-all text-xs"
                               required
                             />
-                            
-                            <textarea 
+
+                            <textarea
                               placeholder="Detalles del avance..."
                               value={advanceForms[project.id]?.description || ''}
                               onChange={(e) => setAdvanceForms({
@@ -649,7 +648,7 @@ export default function ProjectsPage() {
               </div>
             );
           })}
-          
+
           {projects.length === 0 && (
             <div className="col-span-full py-32 text-center border-2 border-dashed border-card-border rounded-[3rem] bg-card-bg/20">
               <p className="text-sm font-black uppercase tracking-widest opacity-25">No hay proyectos asignados en este momento</p>
@@ -662,13 +661,13 @@ export default function ProjectsPage() {
       {isCreateModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-6 backdrop-blur-xl bg-background/80">
           <div className="w-full max-w-2xl bg-card-bg border border-card-border rounded-[4rem] p-10 md:p-16 relative shadow-2xl overflow-y-auto max-h-[90vh]">
-            <button 
+            <button
               onClick={() => setIsCreateModalOpen(false)}
               className="absolute top-10 right-10 w-12 h-12 rounded-2xl bg-card-border/50 flex items-center justify-center hover:bg-red-500/20 hover:text-red-500 transition-all font-black text-xl"
             >
               ×
             </button>
-            
+
             <header className="mb-12">
               <h2 className="text-4xl font-black tracking-tighter mb-4">
                 {editingProject ? 'Configurar Proyecto' : 'Desplegar Nuevo Proyecto'}
@@ -680,10 +679,10 @@ export default function ProjectsPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-3">
                   <label className="text-[9px] font-black uppercase tracking-widest opacity-40 ml-4">Nombre del Proyecto</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     value={formData.name}
-                    onChange={(e) => setFormData({...formData, name: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     placeholder="Ej: Nectar Labs Mobile"
                     className="w-full bg-card-border/30 border border-card-border rounded-2xl p-5 focus:outline-none focus:border-nectar-gold transition-all text-sm"
                     required
@@ -691,9 +690,9 @@ export default function ProjectsPage() {
                 </div>
                 <div className="space-y-3">
                   <label className="text-[9px] font-black uppercase tracking-widest opacity-40 ml-4">Cliente</label>
-                  <select 
+                  <select
                     value={formData.client}
-                    onChange={(e) => setFormData({...formData, client: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, client: e.target.value })}
                     className="w-full bg-card-border/30 border border-card-border rounded-2xl p-5 focus:outline-none focus:border-nectar-gold transition-all text-sm appearance-none"
                     required
                   >
@@ -709,9 +708,9 @@ export default function ProjectsPage() {
               {isStaff && (
                 <div className="space-y-3">
                   <label className="text-[9px] font-black uppercase tracking-widest opacity-40 ml-4">Plan Base del Proyecto (Desarrollo - Opcional)</label>
-                  <select 
+                  <select
                     value={formData.plan}
-                    onChange={(e) => setFormData({...formData, plan: e.target.value ? parseInt(e.target.value) : ''})}
+                    onChange={(e) => setFormData({ ...formData, plan: e.target.value ? parseInt(e.target.value) : '' })}
                     className="w-full bg-card-border/30 border border-card-border rounded-2xl p-5 focus:outline-none focus:border-nectar-gold transition-all text-sm appearance-none"
                   >
                     <option value="">Ninguno (Heredar del contrato de cliente)</option>
@@ -727,9 +726,9 @@ export default function ProjectsPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-3">
                     <label className="text-[9px] font-black uppercase tracking-widest opacity-40 ml-4">Diseñador Asignado (Opcional)</label>
-                    <select 
+                    <select
                       value={formData.designer}
-                      onChange={(e) => setFormData({...formData, designer: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, designer: e.target.value })}
                       className="w-full bg-card-border/30 border border-card-border rounded-2xl p-5 focus:outline-none focus:border-nectar-gold transition-all text-sm appearance-none"
                     >
                       <option value="">Sin Diseñador</option>
@@ -741,9 +740,9 @@ export default function ProjectsPage() {
 
                   <div className="space-y-3">
                     <label className="text-[9px] font-black uppercase tracking-widest opacity-40 ml-4">Plan de Diseño (Opcional)</label>
-                    <select 
+                    <select
                       value={formData.designer_plan}
-                      onChange={(e) => setFormData({...formData, designer_plan: e.target.value ? parseInt(e.target.value) : ''})}
+                      onChange={(e) => setFormData({ ...formData, designer_plan: e.target.value ? parseInt(e.target.value) : '' })}
                       className="w-full bg-card-border/30 border border-card-border rounded-2xl p-5 focus:outline-none focus:border-nectar-gold transition-all text-sm appearance-none"
                     >
                       <option value="">Ninguno (Heredar del contrato de cliente)</option>
@@ -758,9 +757,9 @@ export default function ProjectsPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-3">
                   <label className="text-[9px] font-black uppercase tracking-widest opacity-40 ml-4">Estado</label>
-                  <select 
+                  <select
                     value={formData.status}
-                    onChange={(e) => setFormData({...formData, status: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                     className="w-full bg-card-border/30 border border-card-border rounded-2xl p-5 focus:outline-none focus:border-nectar-gold transition-all text-sm appearance-none"
                   >
                     <option value="MVP">MVP (Mínimo Viable)</option>
@@ -770,10 +769,10 @@ export default function ProjectsPage() {
                 </div>
                 <div className="space-y-3">
                   <label className="text-[9px] font-black uppercase tracking-widest opacity-40 ml-4">Progreso (%)</label>
-                  <input 
-                    type="number" 
+                  <input
+                    type="number"
                     value={formData.progress_percentage}
-                    onChange={(e) => setFormData({...formData, progress_percentage: parseInt(e.target.value)})}
+                    onChange={(e) => setFormData({ ...formData, progress_percentage: parseInt(e.target.value) })}
                     className="w-full bg-card-border/30 border border-card-border rounded-2xl p-5 focus:outline-none focus:border-nectar-gold transition-all text-sm"
                     min="0"
                     max="100"
@@ -784,10 +783,10 @@ export default function ProjectsPage() {
 
               <div className="space-y-3">
                 <label className="text-[9px] font-black uppercase tracking-widest opacity-40 ml-4">URL de Staging</label>
-                <input 
-                  type="url" 
+                <input
+                  type="url"
                   value={formData.staging_url}
-                  onChange={(e) => setFormData({...formData, staging_url: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, staging_url: e.target.value })}
                   placeholder="https://staging.example.com"
                   className="w-full bg-card-border/30 border border-card-border rounded-2xl p-5 focus:outline-none focus:border-nectar-gold transition-all text-sm"
                 />
@@ -795,16 +794,16 @@ export default function ProjectsPage() {
 
               <div className="space-y-3">
                 <label className="text-[9px] font-black uppercase tracking-widest opacity-40 ml-4">URL de Producción</label>
-                <input 
-                  type="url" 
+                <input
+                  type="url"
                   value={formData.production_url}
-                  onChange={(e) => setFormData({...formData, production_url: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, production_url: e.target.value })}
                   placeholder="https://example.com"
                   className="w-full bg-card-border/30 border border-card-border rounded-2xl p-5 focus:outline-none focus:border-nectar-gold transition-all text-sm"
                 />
               </div>
 
-              <button 
+              <button
                 type="submit"
                 className="w-full py-6 bg-nectar-gold text-background font-black uppercase tracking-widest rounded-[2rem] hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-nectar-gold/20 text-xs"
               >
@@ -819,20 +818,16 @@ export default function ProjectsPage() {
       {isUserModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-6 backdrop-blur-xl bg-background/80">
           <div className="w-full max-w-md bg-card-bg border border-card-border rounded-[3rem] p-10 relative shadow-2xl">
-            <button 
+            <button
               onClick={() => setIsUserModalOpen(false)}
               className="absolute top-8 right-8 w-10 h-10 rounded-2xl bg-card-border/50 flex items-center justify-center hover:bg-red-500/20 hover:text-red-500 transition-all font-black text-xl"
             >
               ×
             </button>
-            
+
             <header className="mb-8">
-              <h2 className="text-3xl font-black tracking-tighter mb-2">
-                {(userRole === 'ADMIN' || userRole === 'BUSINESS') ? 'Crear Usuario' : 'Crear Cliente'}
-              </h2>
-              <p className="text-[9px] font-black uppercase tracking-widest text-nectar-gold opacity-80">
-                {(userRole === 'ADMIN' || userRole === 'BUSINESS') ? 'Registrar nueva cuenta con rol asignado' : 'Registrar cuenta rápidamente'}
-              </p>
+              <h2 className="text-3xl font-black tracking-tighter mb-2">Crear Cliente</h2>
+              <p className="text-[9px] font-black uppercase tracking-widest text-nectar-gold opacity-80">Registrar cuenta rápidamente</p>
             </header>
 
             <form onSubmit={handleCreateUser} className="space-y-6">
@@ -844,10 +839,10 @@ export default function ProjectsPage() {
 
               <div className="space-y-2">
                 <label className="text-[9px] font-black uppercase tracking-widest opacity-40 ml-4">Nombre de Usuario (Username)</label>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   value={userFormData.username}
-                  onChange={(e) => setUserFormData({...userFormData, username: e.target.value})}
+                  onChange={(e) => setUserFormData({ ...userFormData, username: e.target.value })}
                   placeholder="ej: saul"
                   className="w-full bg-card-border/30 border border-card-border rounded-2xl p-4 focus:outline-none focus:border-nectar-gold transition-all text-sm"
                   required
@@ -856,10 +851,10 @@ export default function ProjectsPage() {
 
               <div className="space-y-2">
                 <label className="text-[9px] font-black uppercase tracking-widest opacity-40 ml-4">Correo Electrónico (Email)</label>
-                <input 
-                  type="email" 
+                <input
+                  type="email"
                   value={userFormData.email}
-                  onChange={(e) => setUserFormData({...userFormData, email: e.target.value})}
+                  onChange={(e) => setUserFormData({ ...userFormData, email: e.target.value })}
                   placeholder="cliente@example.com"
                   className="w-full bg-card-border/30 border border-card-border rounded-2xl p-4 focus:outline-none focus:border-nectar-gold transition-all text-sm"
                   required
@@ -868,38 +863,21 @@ export default function ProjectsPage() {
 
               <div className="space-y-2">
                 <label className="text-[9px] font-black uppercase tracking-widest opacity-40 ml-4">Contraseña</label>
-                <input 
-                  type="password" 
+                <input
+                  type="password"
                   value={userFormData.password}
-                  onChange={(e) => setUserFormData({...userFormData, password: e.target.value})}
+                  onChange={(e) => setUserFormData({ ...userFormData, password: e.target.value })}
                   placeholder="••••••••"
                   className="w-full bg-card-border/30 border border-card-border rounded-2xl p-4 focus:outline-none focus:border-nectar-gold transition-all text-sm"
                   required
                 />
               </div>
 
-              {(userRole === 'ADMIN' || userRole === 'BUSINESS') && (
-                <div className="space-y-2">
-                  <label className="text-[9px] font-black uppercase tracking-widest opacity-40 ml-4">Rol del Usuario</label>
-                  <select 
-                    value={userFormData.role}
-                    onChange={(e) => setUserFormData({...userFormData, role: e.target.value})}
-                    className="w-full bg-card-border/30 border border-card-border rounded-2xl p-4 focus:outline-none focus:border-nectar-gold transition-all text-sm appearance-none"
-                    required
-                  >
-                    <option value="CUSTOMER">CUSTOMER (Cliente)</option>
-                    <option value="DESIGNER">DESIGNER (Diseñador)</option>
-                    <option value="ADMIN">ADMIN (Administrador/Desarrollador)</option>
-                    <option value="ANALYST">ANALYST (Analista de Datos)</option>
-                  </select>
-                </div>
-              )}
-
-              <button 
+              <button
                 type="submit"
                 className="w-full py-5 bg-nectar-gold text-background font-black uppercase tracking-widest rounded-2xl hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-nectar-gold/20 text-xs"
               >
-                {(userRole === 'ADMIN' || userRole === 'BUSINESS') ? 'Crear Usuario' : 'Crear Cliente'}
+                Crear Cliente
               </button>
             </form>
           </div>
