@@ -134,6 +134,14 @@ export default function TicketsPage() {
               <div className="w-2 h-2 bg-foreground/20 rounded-full"></div>
               Dashboard
             </Link>
+
+            {isStaff && (
+              <Link href="/dashboard?tab=business" className="flex items-center gap-4 px-6 py-4 hover:bg-foreground/5 text-foreground opacity-60 hover:opacity-100 transition-all rounded-2xl font-black uppercase tracking-widest text-[10px]">
+                <div className="w-2 h-2 bg-foreground/20 rounded-full"></div>
+                Control Negocio
+              </Link>
+            )}
+
             <Link href="/tickets" className="flex items-center gap-4 px-6 py-4 bg-nectar-gold/10 text-nectar-gold rounded-2xl font-black uppercase tracking-widest text-[10px]">
               <div className="w-2 h-2 bg-nectar-gold rounded-full"></div>
               {isStaff ? 'Gestión Tickets' : 'Soporte'}

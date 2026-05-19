@@ -8,6 +8,7 @@ class Project(models.Model):
         PRODUCTION = 'PRODUCTION', 'Production'
 
     client = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    plan = models.ForeignKey('shop.Plan', on_delete=models.SET_NULL, null=True, blank=True, help_text="Plan directly associated with this project")
     name = models.CharField(max_length=200)
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.MVP)
     staging_url = models.URLField(blank=True, null=True)
@@ -26,6 +27,9 @@ class Project(models.Model):
 
     @property
     def plan_hours(self):
+        if self.plan:
+            return self.plan.hours
+        # Fallback to contract for legacy projects
         from apps.shop.models import Contract
         contract = Contract.objects.filter(user=self.client, is_active=True).first()
         return contract.plan.hours if (contract and contract.plan) else 0

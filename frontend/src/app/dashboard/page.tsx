@@ -87,6 +87,12 @@ export default function DashboardPage() {
 
     checkAuth();
     loadData();
+
+    // Check URL for initial tab
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('tab') === 'business') {
+      setActiveTab('business');
+    }
   }, []);
 
   if (loading) return (
