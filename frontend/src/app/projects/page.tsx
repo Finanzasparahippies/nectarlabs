@@ -25,6 +25,9 @@ interface Project {
   client: number;
   plan?: number;
   user_email?: string;
+  designer?: number;
+  designer_plan?: number;
+  designer_email?: string;
   
   // Activity tracking fields
   current_activity_start?: string;
@@ -32,6 +35,9 @@ interface Project {
   plan_hours?: number;
   used_hours_current_month?: number;
   remaining_hours_current_month?: number;
+  designer_plan_hours?: number;
+  designer_used_hours_current_month?: number;
+  designer_remaining_hours_current_month?: number;
   unlocked_milestones?: string[];
   advances?: Advance[];
 }
@@ -39,16 +45,18 @@ interface Project {
 interface User {
   id: number;
   email: string;
+  role?: string;
 }
 
 export default function ProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+  const [plans, setPlans] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isStaff, setIsStaff] = useState(false);
+  const [userRole, setUserRole] = useState('');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
-  const [plans, setPlans] = useState<any[]>([]);
 
   // States for timer and inputs
   const [currentTime, setCurrentTime] = useState<Date>(new Date());
@@ -59,6 +67,8 @@ export default function ProjectsPage() {
     name: '',
     client: '',
     plan: '' as string | number,
+    designer: '',
+    designer_plan: '' as string | number,
     status: 'MVP',
     progress_percentage: 0,
     staging_url: '',
@@ -68,7 +78,9 @@ export default function ProjectsPage() {
 
   useEffect(() => {
     const staff = localStorage.getItem('is_staff') === 'true';
-    setIsStaff(staff);
+    const role = localStorage.getItem('user_role') || '';
+    setUserRole(role);
+    setIsStaff(staff && role !== 'DESIGNER');
     loadData();
     
     // Live timer ticking
@@ -108,9 +120,15 @@ export default function ProjectsPage() {
       const method = editingProject ? 'PATCH' : 'POST';
       const endpoint = editingProject ? `/projects/${editingProject.id}/` : '/projects/';
       
+      const bodyPayload = {
+        ...formData,
+        designer: formData.designer ? parseInt(formData.designer) : null,
+        designer_plan: formData.designer_plan ? parseInt(formData.designer_plan.toString()) : null,
+      };
+
       await fetcher(endpoint, {
         method,
-        body: JSON.stringify(formData)
+        body: JSON.stringify(bodyPayload)
       });
       
       setIsCreateModalOpen(false);
@@ -127,6 +145,8 @@ export default function ProjectsPage() {
       name: '',
       client: '',
       plan: '',
+      designer: '',
+      designer_plan: '',
       status: 'MVP',
       progress_percentage: 0,
       staging_url: '',
@@ -141,6 +161,8 @@ export default function ProjectsPage() {
       name: project.name,
       client: project.client.toString(),
       plan: project.plan || '',
+      designer: project.designer ? project.designer.toString() : '',
+      designer_plan: project.designer_plan || '',
       status: project.status,
       progress_percentage: project.progress_percentage,
       staging_url: project.staging_url || '',
@@ -177,41 +199,43 @@ export default function ProjectsPage() {
   };
 
   const handleDeliverAdvance = async (projectId: number) => {
-    const formData = advanceForms[projectId];
-    if (!formData) return;
-
+    const advanceData = advanceForms[projectId];
+    if (!advanceData) return;
     try {
       const updatedProject = await fetcher(`/projects/${projectId}/deliver_advance/`, {
         method: 'POST',
-        body: JSON.stringify(formData)
+        body: JSON.stringify(advanceData)
       });
       setProjects(projects.map(p => p.id === projectId ? updatedProject : p));
       setAdvanceForms({ ...advanceForms, [projectId]: null });
     } catch (err: any) {
-      alert(err.message || "Error al entregar avance");
+      alert(err.message || "Error al entregar el avance");
     }
   };
 
-  // Timer helpers
-  const getLiveElapsedSeconds = (startStr: string) => {
-    const start = new Date(startStr);
-    const diffMs = currentTime.getTime() - start.getTime();
+  const getLiveElapsedSeconds = (startIso: string) => {
+    const diffMs = currentTime.getTime() - new Date(startIso).getTime();
     return Math.max(0, Math.floor(diffMs / 1000));
   };
 
-  const formatSeconds = (totalSeconds: number) => {
-    const hrs = Math.floor(totalSeconds / 3600);
-    const mins = Math.floor((totalSeconds % 3600) / 60);
-    const secs = totalSeconds % 60;
-    return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  const formatSeconds = (secs: number) => {
+    const h = Math.floor(secs / 3600);
+    const m = Math.floor((secs % 3600) / 60);
+    const s = secs % 60;
+    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
-  if (loading) return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-background">
-      <div className="w-12 h-12 border-4 border-nectar-gold border-t-transparent rounded-full animate-spin mb-4"></div>
-      <div className="font-black uppercase tracking-[0.4em] opacity-20 text-[10px]">Arquitecturando Ecosistemas...</div>
-    </div>
-  );
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background text-foreground flex flex-col items-center justify-center">
+        <div className="w-12 h-12 border-4 border-nectar-gold border-t-transparent rounded-full animate-spin mb-4"></div>
+        <div className="font-black uppercase tracking-[0.4em] opacity-20 text-[10px] animate-pulse">Cargando Proyectos...</div>
+      </div>
+    );
+  }
+
+  const canWork = isStaff || userRole === 'DESIGNER';
+  const designers = users.filter(u => u.role === 'DESIGNER');
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col lg:flex-row">
@@ -228,14 +252,14 @@ export default function ProjectsPage() {
               Dashboard
             </Link>
 
-            {isStaff && (
+            {isStaff && userRole !== 'DESIGNER' && (
               <Link href="/dashboard?tab=business" className="flex items-center gap-4 px-6 py-4 hover:bg-foreground/5 text-foreground opacity-60 hover:opacity-100 transition-all rounded-2xl font-black uppercase tracking-widest text-[10px]">
                 <div className="w-2 h-2 bg-foreground/20 rounded-full"></div>
                 Control Negocio
               </Link>
             )}
 
-            {isStaff && (
+            {isStaff && userRole !== 'DESIGNER' && (
               <Link href="/dashboard/performance" className="flex items-center gap-4 px-6 py-4 hover:bg-foreground/5 text-foreground opacity-60 hover:opacity-100 transition-all rounded-2xl font-black uppercase tracking-widest text-[10px]">
                 <div className="w-2 h-2 bg-foreground/20 rounded-full"></div>
                 Rendimiento
@@ -287,9 +311,16 @@ export default function ProjectsPage() {
             // Live hours calculations
             const liveElapsedSecs = project.current_activity_start ? getLiveElapsedSeconds(project.current_activity_start) : 0;
             const liveElapsedHours = liveElapsedSecs / 3600;
-            const liveUsedHours = (project.used_hours_current_month || 0) + liveElapsedHours;
+
+            // Dev hours
+            const liveUsedHours = (project.used_hours_current_month || 0) + (userRole !== 'DESIGNER' ? liveElapsedHours : 0);
             const liveRemainingHours = Math.max(0, (project.plan_hours || 0) - liveUsedHours);
             const hoursPercentage = project.plan_hours ? Math.min(100, (liveUsedHours / project.plan_hours) * 100) : 0;
+
+            // Designer hours
+            const liveDesignUsedHours = (project.designer_used_hours_current_month || 0) + (userRole === 'DESIGNER' ? liveElapsedHours : 0);
+            const liveDesignRemainingHours = Math.max(0, (project.designer_plan_hours || 0) - liveDesignUsedHours);
+            const designHoursPercentage = project.designer_plan_hours ? Math.min(100, (liveDesignUsedHours / project.designer_plan_hours) * 100) : 0;
 
             return (
               <div key={project.id} className="p-10 rounded-[3rem] bg-card-bg border border-card-border hover:border-nectar-gold transition-all duration-700 group relative overflow-hidden flex flex-col justify-between">
@@ -297,9 +328,20 @@ export default function ProjectsPage() {
                 
                 <div>
                   <div className="flex justify-between items-start mb-8 relative z-10">
-                    <div className="space-y-1">
+                    <div className="space-y-2">
                       <h3 className="text-3xl font-black tracking-tighter group-hover:text-nectar-gold transition-colors">{project.name}</h3>
-                      {project.user_email && <p className="text-[9px] font-bold text-nectar-gold/60 uppercase tracking-widest">{project.user_email}</p>}
+                      <div className="flex flex-col gap-1">
+                        {project.user_email && (
+                          <p className="text-[9px] font-bold text-nectar-gold/60 uppercase tracking-widest">
+                            Cliente: {project.user_email}
+                          </p>
+                        )}
+                        {project.designer_email && (
+                          <p className="text-[9px] font-bold text-white/40 uppercase tracking-widest">
+                            Diseñador: {project.designer_email}
+                          </p>
+                        )}
+                      </div>
                     </div>
                     <div className="flex gap-2">
                       <span className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold text-[8px] font-black uppercase tracking-widest rounded-full">{project.status}</span>
@@ -328,38 +370,68 @@ export default function ProjectsPage() {
                     </div>
                   </div>
 
-                  {/* Dynamic Time Package Tracking */}
-                  <div className="p-6 rounded-[2rem] bg-background/40 border border-card-border/50 mb-8 relative z-10">
-                    <h4 className="text-[10px] font-black uppercase tracking-widest text-nectar-gold/80 mb-4">Consumo de Plan Mensual</h4>
-                    
-                    <div className="grid grid-cols-3 gap-4 mb-4 text-center">
-                      <div>
-                        <p className="text-[8px] font-bold opacity-45 uppercase tracking-wider">Plan Total</p>
-                        <p className="text-xl font-black text-foreground">{project.plan_hours || 0}h</p>
+                  {/* Dual Plan Hours Package Tracking */}
+                  <div className="space-y-6 mb-8 relative z-10">
+                    {/* Development Hours */}
+                    <div className="p-6 rounded-[2rem] bg-background/40 border border-card-border/50">
+                      <h4 className="text-[9px] font-black uppercase tracking-widest text-nectar-gold/85 mb-4">Consumo de Horas (Desarrollo)</h4>
+                      <div className="grid grid-cols-3 gap-4 mb-4 text-center">
+                        <div>
+                          <p className="text-[8px] font-bold opacity-45 uppercase tracking-wider">Plan Dev</p>
+                          <p className="text-lg font-black text-foreground">{project.plan_hours || 0}h</p>
+                        </div>
+                        <div>
+                          <p className="text-[8px] font-bold opacity-45 uppercase tracking-wider">Consumido</p>
+                          <p className="text-lg font-black text-nectar-gold">{liveUsedHours.toFixed(2)}h</p>
+                        </div>
+                        <div>
+                          <p className="text-[8px] font-bold opacity-45 uppercase tracking-wider">Restante</p>
+                          <p className="text-lg font-black text-green-500">{liveRemainingHours.toFixed(2)}h</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-[8px] font-bold opacity-45 uppercase tracking-wider">Consumido</p>
-                        <p className="text-xl font-black text-nectar-gold">{liveUsedHours.toFixed(2)}h</p>
-                      </div>
-                      <div>
-                        <p className="text-[8px] font-bold opacity-45 uppercase tracking-wider">Restante</p>
-                        <p className="text-xl font-black text-green-500">{liveRemainingHours.toFixed(2)}h</p>
+                      <div className="w-full h-1.5 bg-card-border/30 rounded-full overflow-hidden">
+                        <div 
+                          className={`h-full transition-all duration-500 ${hoursPercentage > 90 ? 'bg-red-500' : hoursPercentage > 75 ? 'bg-nectar-gold' : 'bg-green-500'}`}
+                          style={{ width: `${hoursPercentage}%` }}
+                        ></div>
                       </div>
                     </div>
 
-                    <div className="w-full h-1.5 bg-card-border/30 rounded-full overflow-hidden">
-                      <div 
-                        className={`h-full transition-all duration-500 ${hoursPercentage > 90 ? 'bg-red-500' : hoursPercentage > 75 ? 'bg-nectar-gold' : 'bg-green-500'}`}
-                        style={{ width: `${hoursPercentage}%` }}
-                      ></div>
-                    </div>
+                    {/* Design Hours (Show if project has designer plan hours or a designer) */}
+                    {(project.designer_plan_hours || 0) > 0 && (
+                      <div className="p-6 rounded-[2rem] bg-background/40 border border-card-border/50">
+                        <h4 className="text-[9px] font-black uppercase tracking-widest text-white/85 mb-4">Consumo de Horas (Diseño de Marca)</h4>
+                        <div className="grid grid-cols-3 gap-4 mb-4 text-center">
+                          <div>
+                            <p className="text-[8px] font-bold opacity-45 uppercase tracking-wider">Plan Diseño</p>
+                            <p className="text-lg font-black text-foreground">{project.designer_plan_hours || 0}h</p>
+                          </div>
+                          <div>
+                            <p className="text-[8px] font-bold opacity-45 uppercase tracking-wider">Consumido</p>
+                            <p className="text-lg font-black text-nectar-gold">{liveDesignUsedHours.toFixed(2)}h</p>
+                          </div>
+                          <div>
+                            <p className="text-[8px] font-bold opacity-45 uppercase tracking-wider">Restante</p>
+                            <p className="text-lg font-black text-green-500">{liveDesignRemainingHours.toFixed(2)}h</p>
+                          </div>
+                        </div>
+                        <div className="w-full h-1.5 bg-card-border/30 rounded-full overflow-hidden">
+                          <div 
+                            className={`h-full transition-all duration-500 ${designHoursPercentage > 90 ? 'bg-red-500' : designHoursPercentage > 75 ? 'bg-nectar-gold' : 'bg-green-500'}`}
+                            style={{ width: `${designHoursPercentage}%` }}
+                          ></div>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
-                  {/* Live Tracker (Developer / Admin view) */}
-                  {isStaff && (
+                  {/* Live Tracker (Developer / Designer / Admin view) */}
+                  {canWork && (
                     <div className="p-6 rounded-[2rem] bg-nectar-gold/5 border border-nectar-gold/20 mb-8 relative z-10">
                       <div className="flex justify-between items-center mb-4">
-                        <h4 className="text-[10px] font-black uppercase tracking-widest text-nectar-gold">Cronómetro de Actividad</h4>
+                        <h4 className="text-[10px] font-black uppercase tracking-widest text-nectar-gold">
+                          Cronómetro de Actividad {userRole === 'DESIGNER' ? '(Diseño)' : '(Desarrollo)'}
+                        </h4>
                         {project.current_activity_start && (
                           <span className="flex items-center gap-1 text-[8px] font-black text-red-500 uppercase tracking-widest animate-pulse">
                             <span className="w-2 h-2 rounded-full bg-red-500"></span> En Vivo
@@ -390,7 +462,7 @@ export default function ProjectsPage() {
                         <div className="space-y-4">
                           <input 
                             type="text"
-                            placeholder="Descripción de la tarea (Ej: Debugging de pasarela, diseño responsive...)"
+                            placeholder="Descripción de la tarea..."
                             value={activityDescriptions[project.id] || ''}
                             onChange={(e) => setActivityDescriptions({ ...activityDescriptions, [project.id]: e.target.value })}
                             className="w-full bg-background/50 border border-card-border rounded-xl p-4 focus:outline-none focus:border-nectar-gold transition-all text-xs"
@@ -420,7 +492,9 @@ export default function ProjectsPage() {
                             </div>
                             <h5 className="font-black text-foreground">{adv.title}</h5>
                             <p className="opacity-70 mt-1">{adv.description}</p>
-                            {adv.delivered_by_email && <p className="text-[7px] font-bold opacity-30 mt-1 uppercase">Por: {adv.delivered_by_email}</p>}
+                            {adv.delivered_by_email && (
+                              <p className="text-[7px] font-bold opacity-30 mt-1 uppercase">Por: {adv.delivered_by_email}</p>
+                            )}
                           </div>
                         ))}
                       </div>
@@ -428,8 +502,8 @@ export default function ProjectsPage() {
                       <p className="text-[9px] font-bold uppercase tracking-widest opacity-20 text-center py-6">Sin avances registrados en el ciclo actual</p>
                     )}
 
-                    {/* Deliver Advance Section (Staff only, if milestones unlocked) */}
-                    {isStaff && project.unlocked_milestones && project.unlocked_milestones.length > 0 && (
+                    {/* Deliver Advance Section */}
+                    {canWork && project.unlocked_milestones && project.unlocked_milestones.length > 0 && (
                       <div className="mt-4 p-4 rounded-2xl border border-dashed border-nectar-gold/40">
                         <p className="text-[9px] font-black text-nectar-gold uppercase tracking-widest mb-3">Metas de Avance Disponibles</p>
                         
@@ -463,7 +537,7 @@ export default function ProjectsPage() {
                             
                             <input 
                               type="text" 
-                              placeholder="Título del Avance (Ej: Hito 1 Completado)"
+                              placeholder="Título del Avance..."
                               value={advanceForms[project.id]?.title || ''}
                               onChange={(e) => setAdvanceForms({
                                 ...advanceForms,
@@ -474,7 +548,7 @@ export default function ProjectsPage() {
                             />
                             
                             <textarea 
-                              placeholder="Detalles del desarrollo realizado en esta meta..."
+                              placeholder="Detalles del avance..."
                               value={advanceForms[project.id]?.description || ''}
                               onChange={(e) => setAdvanceForms({
                                 ...advanceForms,
@@ -518,14 +592,14 @@ export default function ProjectsPage() {
           })}
           
           {projects.length === 0 && (
-            <div className="col-span-full py-32 text-center border-4 border-dashed border-card-border rounded-[4rem] opacity-30">
-              <p className="font-black uppercase tracking-[0.5em] text-xl">Sin Proyectos en el Ecosistema</p>
+            <div className="col-span-full py-32 text-center border-2 border-dashed border-card-border rounded-[3rem] bg-card-bg/20">
+              <p className="text-sm font-black uppercase tracking-widest opacity-25">No hay proyectos asignados en este momento</p>
             </div>
           )}
         </div>
       </main>
 
-      {/* Modal - Use consistent style */}
+      {/* Modal De Creación/Edición */}
       {isCreateModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-6 backdrop-blur-xl bg-background/80">
           <div className="w-full max-w-2xl bg-card-bg border border-card-border rounded-[4rem] p-10 md:p-16 relative shadow-2xl overflow-y-auto max-h-[90vh]">
@@ -572,8 +646,9 @@ export default function ProjectsPage() {
                 </div>
               </div>
 
+              {/* Dev Plan */}
               <div className="space-y-3">
-                <label className="text-[9px] font-black uppercase tracking-widest opacity-40 ml-4">Plan Base del Proyecto (Opcional)</label>
+                <label className="text-[9px] font-black uppercase tracking-widest opacity-40 ml-4">Plan Base del Proyecto (Desarrollo - Opcional)</label>
                 <select 
                   value={formData.plan}
                   onChange={(e) => setFormData({...formData, plan: e.target.value ? parseInt(e.target.value) : ''})}
@@ -584,6 +659,37 @@ export default function ProjectsPage() {
                     <option key={p.id} value={p.id}>{p.name} - {p.hours}h/mes</option>
                   ))}
                 </select>
+              </div>
+
+              {/* Designer Assignment */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-3">
+                  <label className="text-[9px] font-black uppercase tracking-widest opacity-40 ml-4">Diseñador Asignado (Opcional)</label>
+                  <select 
+                    value={formData.designer}
+                    onChange={(e) => setFormData({...formData, designer: e.target.value})}
+                    className="w-full bg-card-border/30 border border-card-border rounded-2xl p-5 focus:outline-none focus:border-nectar-gold transition-all text-sm appearance-none"
+                  >
+                    <option value="">Sin Diseñador</option>
+                    {designers.map(d => (
+                      <option key={d.id} value={d.id}>{d.email}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-3">
+                  <label className="text-[9px] font-black uppercase tracking-widest opacity-40 ml-4">Plan de Diseño (Opcional)</label>
+                  <select 
+                    value={formData.designer_plan}
+                    onChange={(e) => setFormData({...formData, designer_plan: e.target.value ? parseInt(e.target.value) : ''})}
+                    className="w-full bg-card-border/30 border border-card-border rounded-2xl p-5 focus:outline-none focus:border-nectar-gold transition-all text-sm appearance-none"
+                  >
+                    <option value="">Ninguno (Heredar del contrato de cliente)</option>
+                    {plans.map(p => (
+                      <option key={p.id} value={p.id}>{p.name} - {p.hours}h/mes</option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

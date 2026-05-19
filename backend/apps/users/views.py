@@ -10,12 +10,14 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
         token = super().get_token(user)
         # Claims personalizados
         token['is_staff'] = user.is_staff
+        token['role'] = user.role
         return token
 
     def validate(self, attrs):
         data = super().validate(attrs)
         # Info extra
         data['is_staff'] = self.user.is_staff
+        data['role'] = self.user.role
         data['email'] = self.user.email
         return data
 

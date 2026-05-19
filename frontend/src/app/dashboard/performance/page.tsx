@@ -51,8 +51,10 @@ export default function PerformancePage() {
 
   useEffect(() => {
     const staff = localStorage.getItem('is_staff') === 'true';
-    setIsStaff(staff);
-    if (!staff) {
+    const role = localStorage.getItem('user_role') || '';
+    const isAllowed = staff && role !== 'DESIGNER';
+    setIsStaff(isAllowed);
+    if (!isAllowed) {
       router.push('/dashboard');
       return;
     }

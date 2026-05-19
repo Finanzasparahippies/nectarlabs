@@ -39,6 +39,8 @@ export default function TicketsPage() {
     priority: 'MEDIUM'
   });
 
+  const [userRole, setUserRole] = useState('');
+
   const [newMessage, setNewMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -46,7 +48,9 @@ export default function TicketsPage() {
 
   useEffect(() => {
     const staff = localStorage.getItem('is_staff') === 'true';
-    setIsStaff(staff);
+    const role = localStorage.getItem('user_role') || '';
+    setUserRole(role);
+    setIsStaff(staff && role !== 'DESIGNER');
     loadTickets();
   }, []);
 

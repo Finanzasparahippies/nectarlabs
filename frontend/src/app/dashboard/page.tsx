@@ -46,6 +46,7 @@ export default function DashboardPage() {
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [logs, setLogs] = useState<any[]>([]);
   const [isStaff, setIsStaff] = useState(false);
+  const [userRole, setUserRole] = useState('');
   const [activeTab, setActiveTab] = useState<'overview' | 'business'>('overview');
   const [businessStats, setBusinessStats] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
@@ -54,12 +55,16 @@ export default function DashboardPage() {
   useEffect(() => {
     const checkAuth = () => {
       const staff = localStorage.getItem('is_staff') === 'true';
-      setIsStaff(staff);
+      const role = localStorage.getItem('user_role') || '';
+      setUserRole(role);
+      setIsStaff(staff && role !== 'DESIGNER');
     };
     
     const loadData = async () => {
       try {
         const staff = localStorage.getItem('is_staff') === 'true';
+        const role = localStorage.getItem('user_role') || '';
+        const isActuallyStaff = staff && role !== 'DESIGNER';
         const [projectsData, ticketsData, logsData] = await Promise.all([
           fetcher('/projects/'),
           fetcher('/tickets/'),
@@ -70,7 +75,7 @@ export default function DashboardPage() {
         setTickets(ticketsData);
         setLogs(logsData);
 
-        if (staff) {
+        if (isActuallyStaff) {
           const [contractsData, statsData] = await Promise.all([
             fetcher('/contracts/'),
             fetcher('/dashboard/business-stats/')
@@ -122,7 +127,7 @@ export default function DashboardPage() {
               Dashboard
             </button>
 
-            {isStaff && (
+            {isStaff && userRole !== 'DESIGNER' && (
               <button
                 onClick={() => setActiveTab('business')}
                 className={`flex items-center gap-4 px-6 py-4 w-full text-left rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all ${
@@ -134,7 +139,7 @@ export default function DashboardPage() {
               </button>
             )}
 
-            {isStaff && (
+            {isStaff && userRole !== 'DESIGNER' && (
               <Link href="/dashboard/performance" className="flex items-center gap-4 px-6 py-4 hover:bg-foreground/5 text-foreground opacity-60 hover:opacity-100 transition-all rounded-2xl font-black uppercase tracking-widest text-[10px]">
                 <div className="w-2 h-2 bg-foreground/20 rounded-full"></div>
                 Rendimiento

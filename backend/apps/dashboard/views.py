@@ -21,6 +21,8 @@ class ProjectViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
+        if user.role == 'DESIGNER':
+            return Project.objects.filter(designer=user)
         if user.is_staff:
             return Project.objects.all()
         return Project.objects.filter(client=user)
@@ -40,7 +42,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'])
     def start_activity(self, request, pk=None):
         project = self.get_object()
-        if not request.user.is_staff:
+        if not (request.user.is_staff or request.user.role == 'DESIGNER'):
             return Response({"error": "No tienes permiso para registrar actividades."}, status=status.HTTP_403_FORBIDDEN)
         
         if project.current_activity_start:
@@ -56,7 +58,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'])
     def stop_activity(self, request, pk=None):
         project = self.get_object()
-        if not request.user.is_staff:
+        if not (request.user.is_staff or request.user.role == 'DESIGNER'):
             return Response({"error": "No tienes permiso para registrar actividades."}, status=status.HTTP_403_FORBIDDEN)
         
         if not project.current_activity_start:
@@ -72,6 +74,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         # Create TimeLog
         TimeLog.objects.create(
             project=project,
+            user=request.user,
             date=end_time.date(),
             hours=hours,
             description=description
@@ -87,7 +90,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'])
     def deliver_advance(self, request, pk=None):
         project = self.get_object()
-        if not request.user.is_staff:
+        if not (request.user.is_staff or request.user.role == 'DESIGNER'):
             return Response({"error": "No tienes permiso para registrar avances."}, status=status.HTTP_403_FORBIDDEN)
         
         milestone = request.data.get('milestone')
@@ -118,6 +121,8 @@ class TimeLogViewSet(viewsets.ReadOnlyModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
+        if user.role == 'DESIGNER':
+            return TimeLog.objects.filter(project__designer=user)
         if user.is_staff:
             return TimeLog.objects.all()
         return TimeLog.objects.filter(project__client=user)
