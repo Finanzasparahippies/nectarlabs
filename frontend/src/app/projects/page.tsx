@@ -888,6 +888,7 @@ export default function ProjectsPage() {
                   >
                     <option value="CUSTOMER">CUSTOMER (Cliente)</option>
                     <option value="DESIGNER">DESIGNER (Diseñador)</option>
+                    <option value="BUSINESS">BUSINESS (Dueño de Negocio)</option>
                     <option value="ADMIN">ADMIN (Administrador/Desarrollador)</option>
                     <option value="ANALYST">ANALYST (Analista de Datos)</option>
                   </select>

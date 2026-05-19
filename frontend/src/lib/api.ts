@@ -41,8 +41,17 @@ export async function fetcher(endpoint: string, options: RequestInit = {}) {
   }
 
   if (!res.ok) {
-    const error = await res.json().catch(() => ({ message: "Unknown error" }));
-    throw new Error(error.message || "An error occurred");
+    const error = await res.json().catch(() => ({}));
+    let errMsg = error.message || error.detail;
+    if (!errMsg && error && typeof error === 'object') {
+      errMsg = Object.entries(error)
+        .map(([field, msgs]) => {
+          const messageStr = Array.isArray(msgs) ? msgs.join(', ') : String(msgs);
+          return `${field}: ${messageStr}`;
+        })
+        .join(' | ');
+    }
+    throw new Error(errMsg || "An error occurred");
   }
 
   return res.json();
