@@ -41,8 +41,11 @@ class ContractViewSet(viewsets.ModelViewSet):
             import logging
             logging.error(f"Error in contract creation flow: {e}", exc_info=True)
 
-    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAdminUser])
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
     def dev_sign(self, request, pk=None):
+        if not (request.user.is_staff or request.user.role in ['ADMIN', 'BUSINESS']):
+            return Response({'error': 'No tienes permisos para firmar contratos'}, status=status.HTTP_403_FORBIDDEN)
+            
         contract = self.get_object()
         signature = request.data.get('signature')
         
@@ -56,7 +59,8 @@ class ContractViewSet(viewsets.ModelViewSet):
         contract.save()
 
         # Generar automáticamente 6 mensualidades obligatorias
-        monthly_amount = contract.plan.price + contract.brand_design_price
+        plan_price = contract.plan.price if contract.plan else 0
+        monthly_amount = plan_price + (contract.brand_design_price or 0)
         start_date = contract.signed_at.date() if contract.signed_at else timezone.now().date()
         
         # Eliminar mensualidades previas si existían por re-firma para evitar duplicados
@@ -92,13 +96,36 @@ class PaymentInstallmentViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        if self.request.user.is_staff:
+        # Auto-healer: generate missing installments for already signed contracts
+        for contract in Contract.objects.filter(is_fully_signed=True):
+            if contract.installments.count() == 0:
+                plan_price = contract.plan.price if contract.plan else 0
+                monthly_amount = plan_price + (contract.brand_design_price or 0)
+                start_date = contract.signed_at.date() if contract.signed_at else timezone.now().date()
+                
+                installments_to_create = []
+                for i in range(1, 7):
+                    due_date = start_date + timedelta(days=30 * (i - 1))
+                    installments_to_create.append(
+                        PaymentInstallment(
+                            contract=contract,
+                            installment_number=i,
+                            due_date=due_date,
+                            amount=monthly_amount,
+                            status=PaymentInstallment.Status.PENDING,
+                            payment_method=contract.payment_commitment_method
+                        )
+                    )
+                PaymentInstallment.objects.bulk_create(installments_to_create)
+
+        is_admin_or_business = self.request.user.is_staff or self.request.user.role in ['ADMIN', 'BUSINESS']
+        if is_admin_or_business:
             return PaymentInstallment.objects.all().order_by('due_date')
         return PaymentInstallment.objects.filter(contract__user=self.request.user).order_by('due_date')
 
     def perform_update(self, serializer):
-        # Si el usuario no es staff, restringimos qué campos puede modificar (solo receipt_file)
-        if not self.request.user.is_staff:
+        is_admin_or_business = self.request.user.is_staff or self.request.user.role in ['ADMIN', 'BUSINESS']
+        if not is_admin_or_business:
             # Forzamos a guardar únicamente el archivo recibido y actualizar status
             serializer.save(
                 receipt_file=self.request.data.get('receipt_file')
