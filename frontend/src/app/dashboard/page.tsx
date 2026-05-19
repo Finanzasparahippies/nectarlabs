@@ -44,6 +44,23 @@ interface Ticket {
   user_email?: string;
 }
 
+const formatHoursToHM = (decimalHours: number): string => {
+  const isNegative = decimalHours < 0;
+  const absHours = Math.abs(decimalHours);
+  const h = Math.floor(absHours);
+  const m = Math.round((absHours - h) * 60);
+  
+  let displayH = h;
+  let displayM = m;
+  if (displayM === 60) {
+    displayM = 0;
+    displayH += 1;
+  }
+  
+  const sign = isNegative ? '-' : '';
+  return `${sign}${displayH}:${displayM.toString().padStart(2, '0')}`;
+};
+
 export default function DashboardPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [tickets, setTickets] = useState<Ticket[]>([]);
@@ -280,7 +297,7 @@ export default function DashboardPage() {
                                 />
                               </svg>
                               <div className="absolute inset-0 flex flex-col items-center justify-center mt-1">
-                                <span className="text-3xl font-black leading-none tracking-tighter">{remHours % 1 !== 0 ? remHours.toFixed(1) : remHours}</span>
+                                <span className="text-2xl font-black leading-none tracking-tighter">{formatHoursToHM(remHours)}</span>
                                 <span className="text-[8px] font-black text-foreground/40 uppercase tracking-widest mt-1">HRS REST</span>
                               </div>
                             </div>
@@ -292,12 +309,12 @@ export default function DashboardPage() {
                                 <div className="flex items-center gap-2">
                                   <div className="w-1.5 h-1.5 rounded-full bg-card-border"></div>
                                   <span className="text-xs font-bold opacity-60">Total Plan:</span>
-                                  <span className="text-xs font-black">{planHours} h</span>
+                                  <span className="text-xs font-black">{formatHoursToHM(planHours)} h</span>
                                 </div>
                                 <div className="flex items-center gap-2">
                                   <div className="w-1.5 h-1.5 rounded-full bg-nectar-gold"></div>
                                   <span className="text-xs font-bold opacity-60">Consumidas:</span>
-                                  <span className="text-xs font-black">{usedHours % 1 !== 0 ? usedHours.toFixed(1) : usedHours} h</span>
+                                  <span className="text-xs font-black">{formatHoursToHM(usedHours)} h</span>
                                 </div>
                               </div>
                             </div>

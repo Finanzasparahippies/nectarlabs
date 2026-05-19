@@ -51,6 +51,23 @@ interface User {
   role?: string;
 }
 
+const formatHoursToHM = (decimalHours: number): string => {
+  const isNegative = decimalHours < 0;
+  const absHours = Math.abs(decimalHours);
+  const h = Math.floor(absHours);
+  const m = Math.round((absHours - h) * 60);
+  
+  let displayH = h;
+  let displayM = m;
+  if (displayM === 60) {
+    displayM = 0;
+    displayH += 1;
+  }
+  
+  const sign = isNegative ? '-' : '';
+  return `${sign}${displayH}:${displayM.toString().padStart(2, '0')}`;
+};
+
 export default function ProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [users, setUsers] = useState<User[]>([]);
@@ -381,15 +398,15 @@ export default function ProjectsPage() {
                       <div className="grid grid-cols-3 gap-4 mb-4 text-center">
                         <div>
                           <p className="text-[8px] font-bold opacity-45 uppercase tracking-wider">Plan Dev</p>
-                          <p className="text-lg font-black text-foreground">{project.plan_hours || 0}h</p>
+                          <p className="text-lg font-black text-foreground">{formatHoursToHM(project.plan_hours || 0)}</p>
                         </div>
                         <div>
                           <p className="text-[8px] font-bold opacity-45 uppercase tracking-wider">Consumido</p>
-                          <p className="text-lg font-black text-nectar-gold">{liveUsedHours.toFixed(2)}h</p>
+                          <p className="text-lg font-black text-nectar-gold">{formatHoursToHM(liveUsedHours)}</p>
                         </div>
                         <div>
                           <p className="text-[8px] font-bold opacity-45 uppercase tracking-wider">Restante</p>
-                          <p className="text-lg font-black text-green-500">{liveRemainingHours.toFixed(2)}h</p>
+                          <p className="text-lg font-black text-green-500">{formatHoursToHM(liveRemainingHours)}</p>
                         </div>
                       </div>
                       <div className="w-full h-1.5 bg-card-border/30 rounded-full overflow-hidden">
@@ -407,15 +424,15 @@ export default function ProjectsPage() {
                         <div className="grid grid-cols-3 gap-4 mb-4 text-center">
                           <div>
                             <p className="text-[8px] font-bold opacity-45 uppercase tracking-wider">Plan Diseño</p>
-                            <p className="text-lg font-black text-foreground">{project.designer_plan_hours || 0}h</p>
+                            <p className="text-lg font-black text-foreground">{formatHoursToHM(project.designer_plan_hours || 0)}</p>
                           </div>
                           <div>
                             <p className="text-[8px] font-bold opacity-45 uppercase tracking-wider">Consumido</p>
-                            <p className="text-lg font-black text-nectar-gold">{liveDesignUsedHours.toFixed(2)}h</p>
+                            <p className="text-lg font-black text-nectar-gold">{formatHoursToHM(liveDesignUsedHours)}</p>
                           </div>
                           <div>
                             <p className="text-[8px] font-bold opacity-45 uppercase tracking-wider">Restante</p>
-                            <p className="text-lg font-black text-green-500">{liveDesignRemainingHours.toFixed(2)}h</p>
+                            <p className="text-lg font-black text-green-500">{formatHoursToHM(liveDesignRemainingHours)}</p>
                           </div>
                         </div>
                         <div className="w-full h-1.5 bg-card-border/30 rounded-full overflow-hidden">
