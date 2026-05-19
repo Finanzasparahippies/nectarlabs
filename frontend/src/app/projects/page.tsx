@@ -826,8 +826,12 @@ export default function ProjectsPage() {
             </button>
 
             <header className="mb-8">
-              <h2 className="text-3xl font-black tracking-tighter mb-2">Crear Cliente</h2>
-              <p className="text-[9px] font-black uppercase tracking-widest text-nectar-gold opacity-80">Registrar cuenta rápidamente</p>
+              <h2 className="text-3xl font-black tracking-tighter mb-2">
+                {isStaff ? 'Crear Usuario' : 'Crear Cliente'}
+              </h2>
+              <p className="text-[9px] font-black uppercase tracking-widest text-nectar-gold opacity-80">
+                {isStaff ? 'Registrar nueva cuenta con rol asignado' : 'Registrar cuenta rápidamente'}
+              </p>
             </header>
 
             <form onSubmit={handleCreateUser} className="space-y-6">
@@ -873,11 +877,28 @@ export default function ProjectsPage() {
                 />
               </div>
 
+              {isStaff && (
+                <div className="space-y-2">
+                  <label className="text-[9px] font-black uppercase tracking-widest opacity-40 ml-4">Rol del Usuario</label>
+                  <select 
+                    value={userFormData.role}
+                    onChange={(e) => setUserFormData({ ...userFormData, role: e.target.value })}
+                    className="w-full bg-card-border/30 border border-card-border rounded-2xl p-4 focus:outline-none focus:border-nectar-gold transition-all text-sm appearance-none"
+                    required
+                  >
+                    <option value="CUSTOMER">CUSTOMER (Cliente)</option>
+                    <option value="DESIGNER">DESIGNER (Diseñador)</option>
+                    <option value="ADMIN">ADMIN (Administrador/Desarrollador)</option>
+                    <option value="ANALYST">ANALYST (Analista de Datos)</option>
+                  </select>
+                </div>
+              )}
+
               <button
                 type="submit"
                 className="w-full py-5 bg-nectar-gold text-background font-black uppercase tracking-widest rounded-2xl hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-nectar-gold/20 text-xs"
               >
-                Crear Cliente
+                {isStaff ? 'Crear Usuario' : 'Crear Cliente'}
               </button>
             </form>
           </div>
