@@ -364,6 +364,7 @@ function OnboardingContent() {
                 <p className="text-[10px] font-black uppercase tracking-widest text-nectar-gold">Firma aquí con tu mouse o dedo</p>
               </div>
             </div>
+            </div>
 
             <div className="flex gap-4">
               <button
