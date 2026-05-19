@@ -58,11 +58,16 @@ class UserViewSet(viewsets.ModelViewSet):
         user = self.request.user
         role_to_assign = serializer.validated_data.get('role', User.Role.CUSTOMER)
         
-        if user.role == User.Role.DESIGNER:
+        is_super_admin = user.is_superuser or user.role in [User.Role.ADMIN, User.Role.BUSINESS]
+        
+        if not is_super_admin:
             role_to_assign = User.Role.CUSTOMER
+            is_staff_to_assign = False
+        else:
+            is_staff_to_assign = role_to_assign in [User.Role.ADMIN, User.Role.BUSINESS]
             
         serializer.save(
             role=role_to_assign,
-            is_staff=False,
+            is_staff=is_staff_to_assign,
             is_superuser=False
         )
