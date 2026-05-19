@@ -31,7 +31,7 @@ interface Contract {
   is_fully_signed: boolean;
   signature_base64?: string;
   developer_signature?: string;
-  created_at: string;
+  signed_at: string;
   plan_name?: string;
   payment_commitment_method?: string;
   next_payment_date?: string;
@@ -78,6 +78,7 @@ export default function DashboardPage() {
   const [businessStats, setBusinessStats] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [updatingContractId, setUpdatingContractId] = useState<number | null>(null);
+  const [selectedActiveContractId, setSelectedActiveContractId] = useState<number | null>(null);
   const router = useRouter();
 
   const handleUpdatePaymentMethod = async (contractId: number, method: string) => {
@@ -250,6 +251,12 @@ export default function DashboardPage() {
               <div className="w-2 h-2 bg-foreground/20 rounded-full"></div>
               Proyectos
             </Link>
+            {!isStaff && (
+              <Link href="/onboarding" className="flex items-center gap-4 px-6 py-4 hover:bg-foreground/5 text-foreground opacity-60 hover:opacity-100 transition-all rounded-2xl font-black uppercase tracking-widest text-[10px]">
+                <div className="w-2 h-2 bg-foreground/20 rounded-full"></div>
+                Contratar Plan
+              </Link>
+            )}
           </nav>
         </div>
 
@@ -334,7 +341,7 @@ export default function DashboardPage() {
                             {contract.plan_name || 'Desconocido'}
                           </td>
                           <td className="py-4 text-center text-[10px] font-bold opacity-60">
-                            {new Date(contract.created_at).toLocaleDateString('es-ES')}
+                            {contract.signed_at ? new Date(contract.signed_at).toLocaleDateString('es-ES') : '—'}
                           </td>
                           <td className="py-4 text-center text-[10px] font-bold opacity-60">
                             {contract.developer_signed_at ? new Date(contract.developer_signed_at).toLocaleDateString('es-ES') : '—'}
@@ -387,7 +394,11 @@ export default function DashboardPage() {
 
             {/* Client Specific Section: Payment Commitment & Details (Closed Deal) */}
             {!isStaff && contracts.some(c => c.is_fully_signed) && (() => {
-              const activeContract = contracts.find(c => c.is_fully_signed);
+              const activeContracts = contracts.filter(c => c.is_fully_signed);
+              const activeContract = selectedActiveContractId 
+                ? activeContracts.find(c => c.id === selectedActiveContractId) || activeContracts[0]
+                : activeContracts[0];
+                
               if (!activeContract) return null;
               
               const chosenMethod = activeContract.payment_commitment_method || 'SPEI';
@@ -404,7 +415,34 @@ export default function DashboardPage() {
                         <span className="px-3 py-1 bg-green-500/10 text-green-500 text-[8px] font-black uppercase tracking-widest rounded-full">Trato Cerrado ✓</span>
                         <h2 className="text-3xl font-black tracking-tighter mt-3 mb-1">Compromiso de Pago</h2>
                         <p className="text-[9px] font-black uppercase tracking-widest text-nectar-gold opacity-80">Suscripción y Activación de Partner Tecnológico</p>
+                        {activeContract.pdf_file && (
+                          <div className="mt-2">
+                            <a 
+                              href={activeContract.pdf_file}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex items-center gap-2 text-[9px] font-black uppercase tracking-widest text-nectar-gold hover:underline"
+                            >
+                              📥 Descargar Contrato Certificado (PDF)
+                            </a>
+                          </div>
+                        )}
                       </header>
+
+                      {activeContracts.length > 1 && (
+                        <div className="space-y-2 mt-4">
+                          <label className="text-[9px] font-black uppercase tracking-widest opacity-40 ml-1">Seleccionar Contrato Activo</label>
+                          <select 
+                            value={activeContract.id}
+                            onChange={(e) => setSelectedActiveContractId(Number(e.target.value))}
+                            className="w-full bg-background/50 border border-card-border rounded-xl p-4 focus:outline-none focus:border-nectar-gold transition-all text-xs font-bold text-foreground"
+                          >
+                            {activeContracts.map(c => (
+                              <option key={c.id} value={c.id}>{c.plan_name || 'Plan'} - Razón Social: {c.full_name}</option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
 
                       <div className="space-y-4">
                         <div className="space-y-2">
@@ -567,56 +605,53 @@ export default function DashboardPage() {
               );
             })()}
 
-            {/* Client Specific Empty State / Pending Signature Banner */}
-            {!isStaff && projects.length === 0 && (() => {
-              const pendingContract = contracts.find(c => !c.is_fully_signed);
-              if (pendingContract) {
-                return (
-                  <section className="mb-16 p-12 rounded-[3.5rem] bg-card-bg border border-card-border shadow-2xl relative overflow-hidden group">
-                    <div className="absolute top-[-20%] right-[-10%] w-64 h-64 bg-nectar-gold/5 rounded-full blur-3xl"></div>
-                    <div className="relative z-10 max-w-2xl space-y-6">
-                      <div className="flex items-center gap-3">
-                        <span className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold text-[8px] font-black uppercase tracking-widest rounded-full animate-pulse">
+            {/* Client Specific Sections: Pending Contracts & Empty Onboarding Banner */}
+            {!isStaff && contracts.some(c => !c.is_fully_signed) && (
+              <section className="mb-16 p-10 rounded-[3rem] bg-card-bg border border-card-border shadow-xl relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-nectar-gold/5 rounded-full blur-3xl -mr-20 -mt-20"></div>
+                <h2 className="text-2xl font-black tracking-tighter mb-4">Contrataciones en Proceso</h2>
+                <p className="text-xs text-foreground/60 mb-6 uppercase tracking-wider">Hemos recibido tu firma. Nuestro equipo técnico está validando los detalles para activar tu nuevo ecosistema.</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {contracts.filter(c => !c.is_fully_signed).map(contract => (
+                    <div key={contract.id} className="bg-background/40 border border-card-border/60 p-6 rounded-2xl flex flex-col justify-between">
+                      <div>
+                        <span className="px-2.5 py-1 bg-nectar-gold/10 text-nectar-gold text-[8px] font-black uppercase tracking-widest rounded-full animate-pulse">
                           Esperando Firma de Néctar Labs
                         </span>
+                        <h4 className="font-black text-sm mt-3">{contract.plan_name || 'Plan de Ingeniería'}</h4>
+                        <p className="text-[9px] font-bold opacity-60 mt-2">Razón Social: {contract.full_name}</p>
+                        <p className="text-[8px] font-bold opacity-40 mt-1">Registrado: {contract.signed_at ? new Date(contract.signed_at).toLocaleDateString('es-ES') : '—'}</p>
                       </div>
-                      <h2 className="text-4xl md:text-5xl font-black tracking-tighter leading-none">
-                        Onboarding Completado.
-                      </h2>
-                      <p className="text-lg font-bold opacity-80 leading-relaxed text-foreground/80">
-                        Hemos recibido tu firma para el contrato de Partner Tecnológico del plan <span className="text-nectar-gold font-black">{pendingContract.plan_name || 'seleccionado'}</span>. 
-                        Nuestro equipo está revisando los detalles técnicos y firmará el contrato a la brevedad para dar inicio al proyecto y activar tu portal de control.
-                      </p>
-                      <div className="pt-4 flex gap-4 text-[10px] font-black uppercase tracking-widest opacity-60">
-                        <div>
-                          <p className="opacity-40">Registrado el:</p>
-                          <p className="font-bold text-foreground">{new Date(pendingContract.created_at).toLocaleDateString('es-ES')}</p>
-                        </div>
-                        <div className="border-l border-card-border/50 pl-4">
-                          <p className="opacity-40">Razón Social:</p>
-                          <p className="font-bold text-foreground">{pendingContract.full_name}</p>
-                        </div>
-                      </div>
+                      {contract.pdf_file && (
+                        <a 
+                          href={contract.pdf_file}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="mt-6 py-2.5 bg-card-border hover:bg-foreground hover:text-background text-center rounded-xl text-[8px] font-black uppercase tracking-widest transition-all inline-block font-bold"
+                        >
+                          Ver Contrato Parcial (PDF)
+                        </a>
+                      )}
                     </div>
-                  </section>
-                );
-              }
+                  ))}
+                </div>
+              </section>
+            )}
 
-              return (
-                <section className="mb-16 p-12 rounded-[3.5rem] bg-nectar-forest text-nectar-cream border-4 border-nectar-gold shadow-2xl relative overflow-hidden group">
-                  <div className="absolute top-[-20%] right-[-10%] w-64 h-64 bg-nectar-gold/20 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-1000"></div>
-                  <div className="relative z-10 max-w-2xl">
-                    <h2 className="text-4xl md:text-5xl font-black tracking-tighter mb-6 leading-none">Tu Arquitectura está lista para despegar.</h2>
-                    <p className="text-xl font-bold opacity-80 mb-10 leading-relaxed">
-                      Solo falta un paso para activar tu ecosistema de ingeniería. Firma tu contrato de Partner Tecnológico y comencemos a construir.
-                    </p>
-                    <Link href="/onboarding" className="inline-block px-12 py-6 bg-nectar-gold text-background font-black uppercase tracking-widest rounded-2xl hover:scale-105 transition-all shadow-xl shadow-nectar-gold/20">
-                      Finalizar Onboarding
-                    </Link>
-                  </div>
-                </section>
-              );
-            })()}
+            {!isStaff && projects.length === 0 && !contracts.some(c => !c.is_fully_signed) && (
+              <section className="mb-16 p-12 rounded-[3.5rem] bg-nectar-forest text-nectar-cream border-4 border-nectar-gold shadow-2xl relative overflow-hidden group">
+                <div className="absolute top-[-20%] right-[-10%] w-64 h-64 bg-nectar-gold/20 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-1000"></div>
+                <div className="relative z-10 max-w-2xl">
+                  <h2 className="text-4xl md:text-5xl font-black tracking-tighter mb-6 leading-none">Tu Arquitectura está lista para despegar.</h2>
+                  <p className="text-xl font-bold opacity-80 mb-10 leading-relaxed">
+                    Solo falta un paso para activar tu ecosistema de ingeniería. Firma tu contrato de Partner Tecnológico y comencemos a construir.
+                  </p>
+                  <Link href="/onboarding" className="inline-block px-12 py-6 bg-nectar-gold text-background font-black uppercase tracking-widest rounded-2xl hover:scale-105 transition-all shadow-xl shadow-nectar-gold/20">
+                    Finalizar Onboarding
+                  </Link>
+                </div>
+              </section>
+            )}
 
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-12">
               {/* Left Side: Projects & Logs */}

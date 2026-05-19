@@ -349,6 +349,7 @@ export default function TicketsPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-6 backdrop-blur-xl bg-background/80">
           <div className="w-full max-w-2xl bg-card-bg border border-card-border rounded-[3.5rem] p-10 md:p-16 relative shadow-2xl">
             <button 
+              type="button"
               onClick={() => setIsCreateModalOpen(false)}
               className="absolute top-8 right-8 w-12 h-12 rounded-2xl bg-card-border/50 flex items-center justify-center hover:bg-red-500/20 hover:text-red-500 transition-all font-black"
             >

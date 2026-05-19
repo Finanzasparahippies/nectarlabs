@@ -84,11 +84,13 @@ class ContractViewSet(viewsets.ModelViewSet):
         # --- AUTO-CREATE PROJECT ---
         try:
             from apps.dashboard.models import Project
-            if not Project.objects.filter(client=contract.user).exists():
+            plan_name = contract.plan.name if contract.plan else 'Personalizado'
+            project_name = f"Ecosistema - {contract.full_name} ({plan_name})"
+            if not Project.objects.filter(client=contract.user, plan=contract.plan).exists():
                 Project.objects.create(
                     client=contract.user,
                     plan=contract.plan,
-                    name=f"Ecosistema - {contract.full_name}",
+                    name=project_name,
                     status=Project.Status.MVP,
                     is_active=True
                 )
