@@ -7,6 +7,8 @@ class FAQSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class TimeLogSerializer(serializers.ModelSerializer):
+    user_email = serializers.EmailField(source='user.email', read_only=True)
+
     class Meta:
         model = TimeLog
         fields = '__all__'
@@ -25,6 +27,10 @@ class ProjectSerializer(serializers.ModelSerializer):
     used_hours_current_month = serializers.ReadOnlyField()
     remaining_hours_current_month = serializers.ReadOnlyField()
     unlocked_milestones = serializers.ReadOnlyField()
+    designer_email = serializers.ReadOnlyField()
+    designer_plan_hours = serializers.ReadOnlyField()
+    designer_used_hours_current_month = serializers.ReadOnlyField()
+    designer_remaining_hours_current_month = serializers.ReadOnlyField()
     
     class Meta:
         model = Project

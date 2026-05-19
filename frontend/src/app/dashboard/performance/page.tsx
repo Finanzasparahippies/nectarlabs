@@ -23,10 +23,23 @@ interface SlowEndpoint {
   avg_time: number;
 }
 
+interface HardwareStat {
+  percent: number;
+  used?: number;
+  total?: number;
+}
+
+interface HardwareSummary {
+  cpu: HardwareStat;
+  ram: HardwareStat;
+  disk: HardwareStat;
+}
+
 interface PerformanceSummary {
   server: ServerSummary;
   vitals: WebVital[];
   slowest_endpoints: SlowEndpoint[];
+  hardware: HardwareSummary;
 }
 
 export default function PerformancePage() {
@@ -143,64 +156,143 @@ export default function PerformancePage() {
           </p>
         </header>
 
+        {/* Hardware Status Section */}
+        <section className="mb-12">
+          <h2 className="text-sm font-black uppercase tracking-widest mb-6 opacity-60">Rendimiento de Hardware</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* CPU Metric */}
+            <div className="bg-card-bg border border-card-border p-8 rounded-[2.5rem] relative overflow-hidden group hover:border-nectar-gold/50 transition-all duration-300">
+              <div className="flex justify-between items-center mb-6">
+                <span className="text-[10px] font-black uppercase tracking-widest opacity-40">Procesador (CPU)</span>
+                <svg className="w-5 h-5 text-nectar-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+                </svg>
+              </div>
+              <div className="flex items-baseline gap-2 mb-4">
+                <span className="text-5xl font-black tracking-tighter">{summary?.hardware.cpu.percent}%</span>
+                <span className="text-xs opacity-40 font-bold">uso activo</span>
+              </div>
+              <div className="w-full bg-card-border/30 h-2 rounded-full overflow-hidden">
+                <div 
+                  className={`h-full rounded-full transition-all duration-500 ${
+                    (summary?.hardware.cpu.percent ?? 0) > 80 ? 'bg-red-500' : 'bg-gradient-to-r from-nectar-gold to-yellow-500'
+                  }`}
+                  style={{ width: `${summary?.hardware.cpu.percent}%` }}
+                ></div>
+              </div>
+            </div>
+
+            {/* RAM Metric */}
+            <div className="bg-card-bg border border-card-border p-8 rounded-[2.5rem] relative overflow-hidden group hover:border-nectar-gold/50 transition-all duration-300">
+              <div className="flex justify-between items-center mb-6">
+                <span className="text-[10px] font-black uppercase tracking-widest opacity-40">Memoria RAM</span>
+                <svg className="w-5 h-5 text-nectar-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+              </div>
+              <div className="flex items-baseline gap-2 mb-4">
+                <span className="text-5xl font-black tracking-tighter">{summary?.hardware.ram.percent}%</span>
+                <span className="text-xs opacity-45 font-bold">
+                  {summary?.hardware.ram.used?.toFixed(2)} GB / {summary?.hardware.ram.total?.toFixed(1)} GB
+                </span>
+              </div>
+              <div className="w-full bg-card-border/30 h-2 rounded-full overflow-hidden">
+                <div 
+                  className={`h-full rounded-full transition-all duration-500 ${
+                    (summary?.hardware.ram.percent ?? 0) > 85 ? 'bg-red-500' : 'bg-gradient-to-r from-nectar-gold to-yellow-500'
+                  }`}
+                  style={{ width: `${summary?.hardware.ram.percent}%` }}
+                ></div>
+              </div>
+            </div>
+
+            {/* Disk Metric */}
+            <div className="bg-card-bg border border-card-border p-8 rounded-[2.5rem] relative overflow-hidden group hover:border-nectar-gold/50 transition-all duration-300">
+              <div className="flex justify-between items-center mb-6">
+                <span className="text-[10px] font-black uppercase tracking-widest opacity-40">Almacenamiento (SSD)</span>
+                <svg className="w-5 h-5 text-nectar-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
+                </svg>
+              </div>
+              <div className="flex items-baseline gap-2 mb-4">
+                <span className="text-5xl font-black tracking-tighter">{summary?.hardware.disk.percent}%</span>
+                <span className="text-xs opacity-45 font-bold">
+                  {summary?.hardware.disk.used?.toFixed(1)} GB / {summary?.hardware.disk.total?.toFixed(0)} GB
+                </span>
+              </div>
+              <div className="w-full bg-card-border/30 h-2 rounded-full overflow-hidden">
+                <div 
+                  className={`h-full rounded-full transition-all duration-500 ${
+                    (summary?.hardware.disk.percent ?? 0) > 90 ? 'bg-red-500' : 'bg-gradient-to-r from-nectar-gold to-yellow-500'
+                  }`}
+                  style={{ width: `${summary?.hardware.disk.percent}%` }}
+                ></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Server metrics cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-          {/* Card 1 */}
-          <div className="bg-card-bg border border-card-border p-8 rounded-[2rem] hover:border-nectar-gold/50 transition-all group duration-300">
-            <div className="flex justify-between items-start mb-6">
-              <span className="text-[9px] font-black uppercase tracking-widest opacity-40">Tiempos de Respuesta (Avg)</span>
-              <svg className="w-5 h-5 text-nectar-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
+        <section className="mb-12">
+          <h2 className="text-sm font-black uppercase tracking-widest mb-6 opacity-60">Estadísticas de Peticiones</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {/* Card 1 */}
+            <div className="bg-card-bg border border-card-border p-8 rounded-[2rem] hover:border-nectar-gold/50 transition-all group duration-300">
+              <div className="flex justify-between items-start mb-6">
+                <span className="text-[9px] font-black uppercase tracking-widest opacity-40">Tiempos de Respuesta (Avg)</span>
+                <svg className="w-5 h-5 text-nectar-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div className="text-3xl font-black tracking-tighter mb-2 text-foreground">
+                {summary?.server.avg_response_time.toFixed(3)}s
+              </div>
+              <div className="text-[9px] font-black uppercase tracking-widest text-nectar-gold opacity-65">Promedio Global</div>
             </div>
-            <div className="text-3xl font-black tracking-tighter mb-2 text-foreground">
-              {summary?.server.avg_response_time.toFixed(3)}s
-            </div>
-            <div className="text-[9px] font-black uppercase tracking-widest text-nectar-gold opacity-65">Promedio Global</div>
-          </div>
 
-          {/* Card 2 */}
-          <div className="bg-card-bg border border-card-border p-8 rounded-[2rem] hover:border-nectar-gold/50 transition-all group duration-300">
-            <div className="flex justify-between items-start mb-6">
-              <span className="text-[9px] font-black uppercase tracking-widest opacity-40">Consultas DB (Avg)</span>
-              <svg className="w-5 h-5 text-nectar-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
-              </svg>
+            {/* Card 2 */}
+            <div className="bg-card-bg border border-card-border p-8 rounded-[2rem] hover:border-nectar-gold/50 transition-all group duration-300">
+              <div className="flex justify-between items-start mb-6">
+                <span className="text-[9px] font-black uppercase tracking-widest opacity-40">Consultas DB (Avg)</span>
+                <svg className="w-5 h-5 text-nectar-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
+                </svg>
+              </div>
+              <div className="text-3xl font-black tracking-tighter mb-2 text-foreground">
+                {summary?.server.avg_queries.toFixed(1)}
+              </div>
+              <div className="text-[9px] font-black uppercase tracking-widest text-nectar-gold opacity-65">Queries por solicitud</div>
             </div>
-            <div className="text-3xl font-black tracking-tighter mb-2 text-foreground">
-              {summary?.server.avg_queries.toFixed(1)}
-            </div>
-            <div className="text-[9px] font-black uppercase tracking-widest text-nectar-gold opacity-65">Queries por solicitud</div>
-          </div>
 
-          {/* Card 3 */}
-          <div className="bg-card-bg border border-card-border p-8 rounded-[2rem] hover:border-nectar-gold/50 transition-all group duration-300">
-            <div className="flex justify-between items-start mb-6">
-              <span className="text-[9px] font-black uppercase tracking-widest opacity-40">Total Solicitudes</span>
-              <svg className="w-5 h-5 text-nectar-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
+            {/* Card 3 */}
+            <div className="bg-card-bg border border-card-border p-8 rounded-[2rem] hover:border-nectar-gold/50 transition-all group duration-300">
+              <div className="flex justify-between items-start mb-6">
+                <span className="text-[9px] font-black uppercase tracking-widest opacity-40">Total Solicitudes</span>
+                <svg className="w-5 h-5 text-nectar-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+              </div>
+              <div className="text-3xl font-black tracking-tighter mb-2 text-foreground">
+                {summary?.server.total_requests.toLocaleString()}
+              </div>
+              <div className="text-[9px] font-black uppercase tracking-widest text-nectar-gold opacity-65">Peticiones totales</div>
             </div>
-            <div className="text-3xl font-black tracking-tighter mb-2 text-foreground">
-              {summary?.server.total_requests.toLocaleString()}
-            </div>
-            <div className="text-[9px] font-black uppercase tracking-widest text-nectar-gold opacity-65">Peticiones totales</div>
-          </div>
 
-          {/* Card 4 */}
-          <div className="bg-card-bg border border-card-border p-8 rounded-[2rem] hover:border-nectar-gold/50 transition-all group duration-300">
-            <div className="flex justify-between items-start mb-6">
-              <span className="text-[9px] font-black uppercase tracking-widest opacity-40">Tiempo Máximo</span>
-              <svg className="w-5 h-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
+            {/* Card 4 */}
+            <div className="bg-card-bg border border-card-border p-8 rounded-[2rem] hover:border-nectar-gold/50 transition-all group duration-300">
+              <div className="flex justify-between items-start mb-6">
+                <span className="text-[9px] font-black uppercase tracking-widest opacity-40">Tiempo Máximo</span>
+                <svg className="w-5 h-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <div className="text-3xl font-black tracking-tighter mb-2 text-foreground">
+                {summary?.server.max_response_time.toFixed(3)}s
+              </div>
+              <div className="text-[9px] font-black uppercase tracking-widest text-red-500/80">Peor caso registrado</div>
             </div>
-            <div className="text-3xl font-black tracking-tighter mb-2 text-foreground">
-              {summary?.server.max_response_time.toFixed(3)}s
-            </div>
-            <div className="text-[9px] font-black uppercase tracking-widest text-red-500/80">Peor caso registrado</div>
           </div>
-        </div>
+        </section>
 
         {/* Detailed performance views */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">

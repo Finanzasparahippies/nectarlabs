@@ -8,7 +8,9 @@ class Project(models.Model):
         PRODUCTION = 'PRODUCTION', 'Production'
 
     client = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    plan = models.ForeignKey('shop.Plan', on_delete=models.SET_NULL, null=True, blank=True, help_text="Plan directly associated with this project")
+    plan = models.ForeignKey('shop.Plan', on_delete=models.SET_NULL, null=True, blank=True, related_name='projects', help_text="Plan directly associated with this project")
+    designer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_projects', limit_choices_to={'role': 'DESIGNER'}, help_text="Diseñador asignado")
+    designer_plan = models.ForeignKey('shop.Plan', on_delete=models.SET_NULL, null=True, blank=True, related_name='designer_projects', help_text="Plan de diseño asociado")
     name = models.CharField(max_length=200)
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.MVP)
     staging_url = models.URLField(blank=True, null=True)
@@ -35,16 +37,56 @@ class Project(models.Model):
         return contract.plan.hours if (contract and contract.plan) else 0
 
     @property
+    def designer_plan_hours(self):
+        if self.designer_plan:
+            return self.designer_plan.hours
+        # Fallback to contract brand design tier
+        from apps.shop.models import Contract
+        contract = Contract.objects.filter(user=self.client, is_active=True).first()
+        if contract:
+            tier = contract.brand_design_tier
+            if tier == Contract.BrandDesignTier.WEEKLY:
+                return 5
+            elif tier == Contract.BrandDesignTier.BIWEEKLY:
+                return 10
+            elif tier == Contract.BrandDesignTier.MONTHLY:
+                return 20
+        return 0
+
+    @property
     def used_hours_current_month(self):
         from django.utils import timezone
         from django.db.models import Sum
         start_of_month = timezone.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-        total = self.logs.filter(date__gte=start_of_month.date()).aggregate(Sum('hours'))['hours__sum'] or 0
+        total = self.logs.filter(
+            date__gte=start_of_month.date()
+        ).exclude(
+            user__role='DESIGNER'
+        ).aggregate(Sum('hours'))['hours__sum'] or 0
+        return float(total)
+
+    @property
+    def designer_used_hours_current_month(self):
+        from django.utils import timezone
+        from django.db.models import Sum
+        start_of_month = timezone.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        total = self.logs.filter(
+            date__gte=start_of_month.date(),
+            user__role='DESIGNER'
+        ).aggregate(Sum('hours'))['hours__sum'] or 0
         return float(total)
 
     @property
     def remaining_hours_current_month(self):
         return max(0.0, float(self.plan_hours) - self.used_hours_current_month)
+
+    @property
+    def designer_remaining_hours_current_month(self):
+        return max(0.0, float(self.designer_plan_hours) - self.designer_used_hours_current_month)
+
+    @property
+    def designer_email(self):
+        return self.designer.email if self.designer else None
 
     @property
     def unlocked_milestones(self):
@@ -77,6 +119,7 @@ class Project(models.Model):
 
 class TimeLog(models.Model):
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='logs')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='time_logs')
     date = models.DateField()
     hours = models.DecimalField(max_digits=5, decimal_places=2)
     description = models.TextField()
