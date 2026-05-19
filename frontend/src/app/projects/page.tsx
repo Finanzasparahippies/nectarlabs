@@ -83,6 +83,9 @@ export default function ProjectsPage() {
   const [userFormData, setUserFormData] = useState({ username: '', email: '', password: '', role: 'CUSTOMER' });
   const [userError, setUserError] = useState('');
 
+  // Derived state
+  const designers = users.filter(u => u.role === 'DESIGNER');
+
   // States for timer and inputs
   const [currentTime, setCurrentTime] = useState<Date>(new Date());
   const [activityDescriptions, setActivityDescriptions] = useState<Record<number, string>>({});
