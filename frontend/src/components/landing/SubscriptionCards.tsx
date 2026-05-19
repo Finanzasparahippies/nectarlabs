@@ -65,21 +65,20 @@ export default function SubscriptionCards() {
                 <div className="text-[10px] font-black tracking-[0.3em] uppercase text-foreground/40 mb-3">
                   Inversión {plan.is_recommended ? 'Mensual' : plan.name.toLowerCase().includes('mid') ? 'Quincenal' : 'Semanal'}
                 </div>
-                <div className="flex items-baseline gap-2 mb-4">
+                <div className="flex items-baseline gap-2 mb-6">
                   <span className="text-7xl font-black text-foreground tracking-tighter">
                     ${plan.is_recommended ? parseFloat(plan.price).toLocaleString() : plan.name.toLowerCase().includes('mid') ? (parseFloat(plan.price) / 2).toLocaleString() : (parseFloat(plan.price) / 4).toLocaleString()}
                   </span>
-                  <div className="flex flex-col">
-                    <span className="text-nectar-gold text-sm font-black uppercase tracking-widest leading-none">MXN</span>
-                    <span className="text-foreground/60 text-xs font-bold uppercase tracking-widest mt-1">
-                      / {plan.is_recommended ? 'mes' : plan.name.toLowerCase().includes('mid') ? 'quincena' : 'semana'}
-                    </span>
+                  <span className="text-nectar-gold text-sm font-black uppercase tracking-widest">MXN</span>
+                </div>
+                
+                {!plan.is_recommended && (
+                  <div className="inline-flex items-center gap-3 px-5 py-2.5 rounded-2xl bg-foreground/[0.03] border border-foreground/[0.08] self-start transition-colors hover:bg-foreground/[0.05]">
+                    <span className="text-[10px] font-bold text-foreground/50 tracking-[0.2em] uppercase">Total al mes</span>
+                    <div className="h-3 w-px bg-foreground/20"></div>
+                    <span className="text-sm font-black text-foreground">${parseFloat(plan.price).toLocaleString()}</span>
                   </div>
-                </div>
-                <div className="text-xs font-bold text-foreground/50 tracking-widest uppercase mt-2 pt-4 border-t border-card-border/50 flex justify-between items-center">
-                  <span>Total de plan</span>
-                  <span className="text-foreground font-black">${parseFloat(plan.price).toLocaleString()} MXN / mes</span>
-                </div>
+                )}
               </div>
 
               <li className="flex items-center gap-6 text-xl font-black text-foreground mb-4">
