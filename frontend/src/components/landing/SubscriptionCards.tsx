@@ -61,22 +61,38 @@ export default function SubscriptionCards() {
               <h3 className="text-4xl md:text-5xl font-black mb-8 tracking-tighter text-foreground leading-none">{plan.name}</h3>
               <p className="text-foreground opacity-80 text-lg mb-14 leading-relaxed min-h-[90px] font-bold">{plan.description}</p>
 
-              <div className="flex items-baseline gap-2 mb-16">
-                <span className="text-7xl font-black text-foreground tracking-tighter">${parseFloat(plan.price).toLocaleString()}</span>
-                <span className="text-nectar-gold text-sm font-black uppercase tracking-widest">MXN</span>
+              <div className="flex flex-col mb-12">
+                <div className="text-[10px] font-black tracking-[0.3em] uppercase text-foreground/40 mb-3">
+                  Inversión {plan.is_recommended ? 'Mensual' : plan.name.toLowerCase().includes('mid') ? 'Quincenal' : 'Semanal'}
+                </div>
+                <div className="flex items-baseline gap-2 mb-4">
+                  <span className="text-7xl font-black text-foreground tracking-tighter">
+                    ${plan.is_recommended ? parseFloat(plan.price).toLocaleString() : plan.name.toLowerCase().includes('mid') ? (parseFloat(plan.price) / 2).toLocaleString() : (parseFloat(plan.price) / 4).toLocaleString()}
+                  </span>
+                  <div className="flex flex-col">
+                    <span className="text-nectar-gold text-sm font-black uppercase tracking-widest leading-none">MXN</span>
+                    <span className="text-foreground/60 text-xs font-bold uppercase tracking-widest mt-1">
+                      / {plan.is_recommended ? 'mes' : plan.name.toLowerCase().includes('mid') ? 'quincena' : 'semana'}
+                    </span>
+                  </div>
+                </div>
+                <div className="text-xs font-bold text-foreground/50 tracking-widest uppercase mt-2 pt-4 border-t border-card-border/50 flex justify-between items-center">
+                  <span>Total de plan</span>
+                  <span className="text-foreground font-black">${parseFloat(plan.price).toLocaleString()} MXN / mes</span>
+                </div>
               </div>
 
-              <li className="flex items-center gap-6 text-xl font-black text-foreground">
-                <div className="w-10 h-10 rounded-2xl bg-nectar-forest text-nectar-cream flex items-center justify-center shadow-lg group-hover:bg-nectar-gold transition-colors">
+              <li className="flex items-center gap-6 text-xl font-black text-foreground mb-4">
+                <div className="w-10 h-10 rounded-2xl bg-nectar-forest text-nectar-cream flex items-center justify-center shadow-lg group-hover:bg-nectar-gold transition-colors shrink-0">
                   <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
                 </div>
                 Máximo {plan.hours} Horas / mes
               </li>
               <li className="flex items-center gap-6 text-xl font-black text-foreground">
-                <div className="w-10 h-10 rounded-2xl bg-nectar-forest text-nectar-cream flex items-center justify-center shadow-lg group-hover:bg-nectar-gold transition-colors">
+                <div className="w-10 h-10 rounded-2xl bg-nectar-forest text-nectar-cream flex items-center justify-center shadow-lg group-hover:bg-nectar-gold transition-colors shrink-0">
                   <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
                 </div>
-                Partner Tecnológico (6 meses)
+                Alianza Estratégica (6 meses)
               </li>
 
             </div>
