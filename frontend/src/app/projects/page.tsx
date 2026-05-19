@@ -25,6 +25,8 @@ interface Project {
   client: number;
   plan?: number;
   user_email?: string;
+  client_email?: string;
+  client_username?: string;
   designer?: number;
   designer_plan?: number;
   designer_email?: string;
@@ -45,6 +47,7 @@ interface Project {
 interface User {
   id: number;
   email: string;
+  username: string;
   role?: string;
 }
 
@@ -331,9 +334,9 @@ export default function ProjectsPage() {
                     <div className="space-y-2">
                       <h3 className="text-3xl font-black tracking-tighter group-hover:text-nectar-gold transition-colors">{project.name}</h3>
                       <div className="flex flex-col gap-1">
-                        {project.user_email && (
+                        {project.client_username && (
                           <p className="text-[9px] font-bold text-nectar-gold/60 uppercase tracking-widest">
-                            Cliente: {project.user_email}
+                            Cliente: {project.client_username}
                           </p>
                         )}
                         {project.designer_email && (
@@ -640,7 +643,7 @@ export default function ProjectsPage() {
                   >
                     <option value="">Seleccionar Cliente...</option>
                     {users.map(u => (
-                      <option key={u.id} value={u.id}>{u.email}</option>
+                      <option key={u.id} value={u.id}>{u.username}</option>
                     ))}
                   </select>
                 </div>

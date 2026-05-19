@@ -56,12 +56,12 @@ class Project(models.Model):
     @property
     def used_hours_current_month(self):
         from django.utils import timezone
-        from django.db.models import Sum
+        from django.db.models import Sum, Q
         start_of_month = timezone.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
         total = self.logs.filter(
             date__gte=start_of_month.date()
-        ).exclude(
-            user__role='DESIGNER'
+        ).filter(
+            Q(user__isnull=True) | ~Q(user__role='DESIGNER')
         ).aggregate(Sum('hours'))['hours__sum'] or 0
         return float(total)
 

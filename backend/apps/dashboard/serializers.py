@@ -31,6 +31,8 @@ class ProjectSerializer(serializers.ModelSerializer):
     designer_plan_hours = serializers.ReadOnlyField()
     designer_used_hours_current_month = serializers.ReadOnlyField()
     designer_remaining_hours_current_month = serializers.ReadOnlyField()
+    client_email = serializers.EmailField(source='client.email', read_only=True)
+    client_username = serializers.CharField(source='client.username', read_only=True)
     
     class Meta:
         model = Project

@@ -19,6 +19,10 @@ interface Project {
   plan_hours?: number;
   used_hours_current_month?: number;
   remaining_hours_current_month?: number;
+  designer_plan_hours?: number;
+  designer_used_hours_current_month?: number;
+  designer_remaining_hours_current_month?: number;
+  designer_email?: string;
 }
 
 interface Contract {
@@ -234,9 +238,10 @@ export default function DashboardPage() {
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {projects.map(project => {
-                      const planHours = project.plan_hours || 0;
-                      const usedHours = project.used_hours_current_month || 0;
-                      const remHours = project.remaining_hours_current_month || 0;
+                      const isDesignerUser = userRole === 'DESIGNER';
+                      const planHours = isDesignerUser ? (project.designer_plan_hours || 0) : (project.plan_hours || 0);
+                      const usedHours = isDesignerUser ? (project.designer_used_hours_current_month || 0) : (project.used_hours_current_month || 0);
+                      const remHours = isDesignerUser ? (project.designer_remaining_hours_current_month || 0) : (project.remaining_hours_current_month || 0);
                       const percent = planHours > 0 ? Math.min(100, (usedHours / planHours) * 100) : 0;
                       const radius = 36;
                       const circumference = 2 * Math.PI * radius;
@@ -250,7 +255,8 @@ export default function DashboardPage() {
                           <div className="flex justify-between items-start mb-10">
                             <div className="space-y-1">
                               <h3 className="text-2xl font-black tracking-tight">{project.name}</h3>
-                              {isStaff && <p className="text-[8px] font-bold text-nectar-gold opacity-60">{project.user_email}</p>}
+                              {isStaff && project.client_username && <p className="text-[8px] font-bold text-nectar-gold opacity-60">Cliente: {project.client_username}</p>}
+                              {project.designer_email && <p className="text-[8px] font-bold text-white/45 uppercase tracking-wider">Diseñador: {project.designer_email}</p>}
                             </div>
                             <span className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold text-[8px] font-black uppercase tracking-widest rounded-full">{project.status}</span>
                           </div>
@@ -281,7 +287,7 @@ export default function DashboardPage() {
                             
                             {/* Stats */}
                             <div className="flex flex-col gap-3">
-                              <h4 className="text-[9px] font-black text-foreground/40 uppercase tracking-[0.2em]">Horas de Desarrollo</h4>
+                              <h4 className="text-[9px] font-black text-foreground/40 uppercase tracking-[0.2em]">{isDesignerUser ? 'Horas de Diseño' : 'Horas de Desarrollo'}</h4>
                               <div className="flex flex-col gap-1">
                                 <div className="flex items-center gap-2">
                                   <div className="w-1.5 h-1.5 rounded-full bg-card-border"></div>
