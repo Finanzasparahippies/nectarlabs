@@ -81,11 +81,26 @@ class ContractViewSet(viewsets.ModelViewSet):
             )
         PaymentInstallment.objects.bulk_create(installments_to_create)
         
+        # --- AUTO-CREATE PROJECT ---
+        try:
+            from apps.dashboard.models import Project
+            if not Project.objects.filter(client=contract.user).exists():
+                Project.objects.create(
+                    client=contract.user,
+                    plan=contract.plan,
+                    name=f"Ecosistema - {contract.full_name}",
+                    status=Project.Status.MVP,
+                    is_active=True
+                )
+        except Exception as proj_err:
+            import logging
+            logging.error(f"Error creating project automatically: {proj_err}", exc_info=True)
+
         # Regenerar PDF FINAL y enviar copias certificadas
         try:
             if generate_contract_pdf(contract):
                 send_contract_emails(contract)
-                return Response({'message': 'Contrato cerrado, mensualidades generadas y correo enviado con éxito'})
+                return Response({'message': 'Contrato cerrado, mensualidades generadas, proyecto creado y correo enviado con éxito'})
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
