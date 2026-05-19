@@ -36,24 +36,6 @@ function OnboardingContent() {
   });
 
   const selectedPlanObj = plans.find(p => p.id.toString() === formData.plan.toString());
-  const searchParams = useSearchParams();
-  const sigCanvas = useRef<SignatureCanvas>(null);
-
-  const [step, setStep] = useState(1);
-  const [plans, setPlans] = useState<Plan[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
-  const [isMounted, setIsMounted] = useState(false);
-
-  const [formData, setFormData] = useState({
-    plan: '',
-    full_name: '',
-    tax_id: '',
-    address: '',
-    project_idea: '',
-    brand_design_tier: 'NONE',
-    brand_design_price: 0,
-  });
 
   useEffect(() => {
     setIsMounted(true);
