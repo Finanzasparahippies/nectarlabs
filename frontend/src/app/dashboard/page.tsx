@@ -33,6 +33,8 @@ interface Contract {
   developer_signature?: string;
   created_at: string;
   plan_name?: string;
+  payment_commitment_method?: string;
+  next_payment_date?: string;
 }
 
 interface Ticket {
@@ -71,7 +73,38 @@ export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState<'overview' | 'business'>('overview');
   const [businessStats, setBusinessStats] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
+  const [updatingContractId, setUpdatingContractId] = useState<number | null>(null);
   const router = useRouter();
+
+  const handleUpdatePaymentMethod = async (contractId: number, method: string) => {
+    try {
+      setUpdatingContractId(contractId);
+      const updated = await fetcher(`/contracts/${contractId}/`, {
+        method: 'PATCH',
+        body: JSON.stringify({ payment_commitment_method: method })
+      });
+      setContracts(prev => prev.map(c => c.id === contractId ? { ...c, payment_commitment_method: updated.payment_commitment_method } : c));
+    } catch (err) {
+      alert("Error al actualizar método de pago");
+    } finally {
+      setUpdatingContractId(null);
+    }
+  };
+
+  const handleUpdatePaymentDate = async (contractId: number, date: string) => {
+    try {
+      setUpdatingContractId(contractId);
+      const updated = await fetcher(`/contracts/${contractId}/`, {
+        method: 'PATCH',
+        body: JSON.stringify({ next_payment_date: date })
+      });
+      setContracts(prev => prev.map(c => c.id === contractId ? { ...c, next_payment_date: updated.next_payment_date } : c));
+    } catch (err) {
+      alert("Error al actualizar fecha de compromiso");
+    } finally {
+      setUpdatingContractId(null);
+    }
+  };
 
   useEffect(() => {
     const checkAuth = () => {
@@ -86,22 +119,20 @@ export default function DashboardPage() {
         const staff = localStorage.getItem('is_staff') === 'true';
         const role = localStorage.getItem('user_role') || '';
         const isActuallyStaff = staff && role !== 'DESIGNER';
-        const [projectsData, ticketsData, logsData] = await Promise.all([
+        const [projectsData, ticketsData, logsData, contractsData] = await Promise.all([
           fetcher('/projects/'),
           fetcher('/tickets/'),
-          fetcher('/logs/')
+          fetcher('/logs/'),
+          fetcher('/contracts/')
         ]);
         
         setProjects(projectsData);
         setTickets(ticketsData);
         setLogs(logsData);
+        setContracts(contractsData);
 
         if (isActuallyStaff) {
-          const [contractsData, statsData] = await Promise.all([
-            fetcher('/contracts/'),
-            fetcher('/dashboard/business-stats/')
-          ]);
-          setContracts(contractsData);
+          const statsData = await fetcher('/dashboard/business-stats/');
           setBusinessStats(statsData);
         }
       } catch (err) {
@@ -225,6 +256,127 @@ export default function DashboardPage() {
                 </div>
               </section>
             )}
+
+            {/* Client Specific Section: Payment Commitment & Details (Closed Deal) */}
+            {!isStaff && contracts.some(c => c.is_fully_signed) && (() => {
+              const activeContract = contracts.find(c => c.is_fully_signed);
+              if (!activeContract) return null;
+              
+              const chosenMethod = activeContract.payment_commitment_method || 'SPEI';
+              const nextPaymentDate = activeContract.next_payment_date || '';
+
+              return (
+                <section className="mb-16 p-10 rounded-[3rem] bg-card-bg border border-card-border shadow-xl relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-nectar-gold/5 rounded-full blur-3xl -mr-20 -mt-20"></div>
+                  
+                  <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-10">
+                    {/* Left: Commitment details & form */}
+                    <div className="space-y-6">
+                      <header>
+                        <span className="px-3 py-1 bg-green-500/10 text-green-500 text-[8px] font-black uppercase tracking-widest rounded-full">Trato Cerrado ✓</span>
+                        <h2 className="text-3xl font-black tracking-tighter mt-3 mb-1">Compromiso de Pago</h2>
+                        <p className="text-[9px] font-black uppercase tracking-widest text-nectar-gold opacity-80">Suscripción y Activación de Partner Tecnológico</p>
+                      </header>
+
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <label className="text-[9px] font-black uppercase tracking-widest opacity-40 ml-1">Fecha de Compromiso de Pago</label>
+                          <input 
+                            type="date"
+                            value={nextPaymentDate}
+                            onChange={(e) => handleUpdatePaymentDate(activeContract.id, e.target.value)}
+                            className="w-full bg-background/50 border border-card-border rounded-xl p-4 focus:outline-none focus:border-nectar-gold transition-all text-xs font-bold text-foreground"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <label className="text-[9px] font-black uppercase tracking-widest opacity-40 ml-1">Medio de Pago Seleccionado</label>
+                          <select 
+                            value={chosenMethod}
+                            onChange={(e) => handleUpdatePaymentMethod(activeContract.id, e.target.value)}
+                            className="w-full bg-background/50 border border-card-border rounded-xl p-4 focus:outline-none focus:border-nectar-gold transition-all text-xs font-bold text-foreground appearance-none"
+                          >
+                            <option value="SPEI">Transferencia Electrónica (SPEI)</option>
+                            <option value="DEPOSIT">Depósito Directo / Practicaja (BBVA)</option>
+                            <option value="STRIPE">Tarjeta de Crédito o Débito (Stripe)</option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Right: Specific Instructions depending on the chosen method */}
+                    <div className="p-8 rounded-[2rem] bg-background/40 border border-card-border/50 flex flex-col justify-between">
+                      {chosenMethod === 'STRIPE' && (
+                        <div className="space-y-6 flex flex-col justify-between h-full">
+                          <div>
+                            <h4 className="text-[10px] font-black uppercase tracking-widest text-nectar-gold mb-2">Pago en línea seguro</h4>
+                            <p className="text-xs text-foreground/75 leading-relaxed">
+                              Realiza tu pago directamente con tarjeta a través de Stripe de manera segura y encriptada. El cobro se procesará inmediatamente y activará tu ciclo de horas.
+                            </p>
+                          </div>
+                          
+                          <button 
+                            onClick={() => alert("Simulando Pasarela de Stripe... ¡Enlace de pago iniciado!")}
+                            className="w-full py-4 bg-[#635BFF] hover:bg-[#5b53e8] text-white font-black uppercase tracking-widest rounded-xl hover:scale-[1.02] active:scale-95 transition-all text-xs shadow-lg shadow-[#635BFF]/20"
+                          >
+                            Pagar con Stripe
+                          </button>
+                        </div>
+                      )}
+
+                      {chosenMethod === 'SPEI' && (
+                        <div className="space-y-4">
+                          <h4 className="text-[10px] font-black uppercase tracking-widest text-nectar-gold mb-2">Instrucciones de Transferencia SPEI</h4>
+                          <div className="space-y-2 text-xs">
+                            <div className="flex justify-between border-b border-card-border/30 py-2">
+                              <span className="opacity-50">Banco Destino:</span>
+                              <span className="font-bold">BBVA México</span>
+                            </div>
+                            <div className="flex justify-between border-b border-card-border/30 py-2">
+                              <span className="opacity-50">Beneficiario:</span>
+                              <span className="font-bold">Jesus Saul Villegas Cruz</span>
+                            </div>
+                            <div className="flex justify-between border-b border-card-border/30 py-2">
+                              <span className="opacity-50">Cuenta CLABE:</span>
+                              <span className="font-bold tracking-wider select-all cursor-pointer hover:text-nectar-gold transition-colors">012 760 02936549837 8</span>
+                            </div>
+                            <div className="flex justify-between py-2">
+                              <span className="opacity-50">Celular Vinculado:</span>
+                              <span className="font-bold">66 2139 0238</span>
+                            </div>
+                          </div>
+                          <p className="text-[8px] opacity-40 uppercase tracking-wider text-center mt-4">
+                            * Envía tu comprobante de pago a contacto@finanzasparahippies.com
+                          </p>
+                        </div>
+                      )}
+
+                      {chosenMethod === 'DEPOSIT' && (
+                        <div className="space-y-4">
+                          <h4 className="text-[10px] font-black uppercase tracking-widest text-nectar-gold mb-2">Instrucciones de Depósito Directo</h4>
+                          <p className="text-[10px] text-foreground/75 leading-relaxed mb-4">
+                            Puedes realizar tu depósito directo en cualquier sucursal BBVA o Practicaja utilizando los siguientes datos:
+                          </p>
+                          <div className="space-y-2 text-xs">
+                            <div className="flex justify-between border-b border-card-border/30 py-2">
+                              <span className="opacity-50">Beneficiario:</span>
+                              <span className="font-bold">Jesus Saul Villegas Cruz</span>
+                            </div>
+                            <div className="flex justify-between border-b border-card-border/30 py-2">
+                              <span className="opacity-50">Tarjeta de Débito:</span>
+                              <span className="font-bold tracking-wider select-all cursor-pointer hover:text-nectar-gold transition-colors">4152 3144 3553 5540</span>
+                            </div>
+                          </div>
+                          <p className="text-[8px] opacity-40 uppercase tracking-wider text-center mt-4">
+                            * Envía tu comprobante de pago a contacto@finanzasparahippies.com
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </section>
+              );
+            })()}
 
             {/* Client Specific Empty State */}
             {!isStaff && projects.length === 0 && (

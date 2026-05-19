@@ -50,6 +50,17 @@ class Contract(models.Model):
     )
     brand_design_price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
 
+    class PaymentMethod(models.TextChoices):
+        STRIPE = 'STRIPE', 'Tarjeta (Stripe)'
+        SPEI = 'SPEI', 'Transferencia Electrónica (SPEI)'
+        DEPOSIT = 'DEPOSIT', 'Depósito Directo (BBVA)'
+
+    payment_commitment_method = models.CharField(
+        max_length=20,
+        choices=PaymentMethod.choices,
+        default=PaymentMethod.SPEI
+    )
+
     pdf_file = models.FileField(upload_to=contract_pdf_path, storage=R2ContractStorage(), blank=True, null=True)
     ip_address = models.GenericIPAddressField(blank=True, null=True)
     is_active = models.BooleanField(default=True)
