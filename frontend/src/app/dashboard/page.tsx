@@ -16,6 +16,9 @@ interface Project {
   staging_url: string;
   production_url: string;
   user_email?: string;
+  plan_hours?: number;
+  used_hours_current_month?: number;
+  remaining_hours_current_month?: number;
 }
 
 interface Contract {
@@ -212,28 +215,68 @@ export default function DashboardPage() {
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {projects.map(project => (
-                      <div key={project.id} className="p-8 rounded-[2.5rem] bg-card-bg border border-card-border hover:border-nectar-gold transition-all duration-500 group relative overflow-hidden">
+                    {projects.map(project => {
+                      const planHours = project.plan_hours || 0;
+                      const usedHours = project.used_hours_current_month || 0;
+                      const remHours = project.remaining_hours_current_month || 0;
+                      const percent = planHours > 0 ? Math.min(100, (usedHours / planHours) * 100) : 0;
+                      const radius = 36;
+                      const circumference = 2 * Math.PI * radius;
+                      const strokeDashoffset = circumference - (percent / 100) * circumference;
+
+                      return (
+                      <div key={project.id} className="p-8 rounded-[2.5rem] bg-card-bg border border-card-border hover:border-nectar-gold transition-all duration-500 group relative overflow-hidden flex flex-col justify-between">
                         <div className="absolute -top-12 -right-12 w-32 h-32 bg-nectar-gold/5 blur-3xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
                         
-                        <div className="flex justify-between items-start mb-6">
-                          <div className="space-y-1">
-                            <h3 className="text-2xl font-black tracking-tight">{project.name}</h3>
-                            {isStaff && <p className="text-[8px] font-bold text-nectar-gold opacity-60">{project.user_email}</p>}
+                        <div>
+                          <div className="flex justify-between items-start mb-10">
+                            <div className="space-y-1">
+                              <h3 className="text-2xl font-black tracking-tight">{project.name}</h3>
+                              {isStaff && <p className="text-[8px] font-bold text-nectar-gold opacity-60">{project.user_email}</p>}
+                            </div>
+                            <span className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold text-[8px] font-black uppercase tracking-widest rounded-full">{project.status}</span>
                           </div>
-                          <span className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold text-[8px] font-black uppercase tracking-widest rounded-full">{project.status}</span>
-                        </div>
 
-                        <div className="mb-10">
-                          <div className="flex justify-between text-[10px] font-black uppercase tracking-widest mb-3">
-                            <span className="opacity-40">Progreso</span>
-                            <span className="text-nectar-gold">{project.progress_percentage}%</span>
-                          </div>
-                          <div className="w-full h-1.5 bg-card-border rounded-full overflow-hidden">
-                            <div
-                              className="h-full bg-nectar-gold transition-all duration-1000 ease-out"
-                              style={{ width: `${project.progress_percentage}%` }}
-                            ></div>
+                          <div className="mb-10 flex items-center gap-6">
+                            {/* Circular Progress */}
+                            <div className="relative w-28 h-28 shrink-0 flex items-center justify-center">
+                              <svg className="w-full h-full transform -rotate-90">
+                                <circle cx="56" cy="56" r={radius} stroke="currentColor" strokeWidth="6" fill="transparent" className="text-card-border" />
+                                <circle 
+                                  cx="56" 
+                                  cy="56" 
+                                  r={radius} 
+                                  stroke="currentColor" 
+                                  strokeWidth="6" 
+                                  fill="transparent" 
+                                  className="text-nectar-gold drop-shadow-[0_0_8px_rgba(255,215,0,0.4)] transition-all duration-1000 ease-out" 
+                                  strokeDasharray={circumference} 
+                                  strokeDashoffset={strokeDashoffset} 
+                                  strokeLinecap="round" 
+                                />
+                              </svg>
+                              <div className="absolute inset-0 flex flex-col items-center justify-center mt-1">
+                                <span className="text-3xl font-black leading-none tracking-tighter">{remHours % 1 !== 0 ? remHours.toFixed(1) : remHours}</span>
+                                <span className="text-[8px] font-black text-foreground/40 uppercase tracking-widest mt-1">HRS REST</span>
+                              </div>
+                            </div>
+                            
+                            {/* Stats */}
+                            <div className="flex flex-col gap-3">
+                              <h4 className="text-[9px] font-black text-foreground/40 uppercase tracking-[0.2em]">Horas de Desarrollo</h4>
+                              <div className="flex flex-col gap-1">
+                                <div className="flex items-center gap-2">
+                                  <div className="w-1.5 h-1.5 rounded-full bg-card-border"></div>
+                                  <span className="text-xs font-bold opacity-60">Total Plan:</span>
+                                  <span className="text-xs font-black">{planHours} h</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <div className="w-1.5 h-1.5 rounded-full bg-nectar-gold"></div>
+                                  <span className="text-xs font-bold opacity-60">Consumidas:</span>
+                                  <span className="text-xs font-black">{usedHours % 1 !== 0 ? usedHours.toFixed(1) : usedHours} h</span>
+                                </div>
+                              </div>
+                            </div>
                           </div>
                         </div>
 
@@ -250,7 +293,7 @@ export default function DashboardPage() {
                           )}
                         </div>
                       </div>
-                    ))}
+                    );})}
                     {projects.length === 0 && (
                       <div className="col-span-full py-20 text-center border-2 border-dashed border-card-border rounded-[2.5rem] opacity-30">
                         <p className="font-bold uppercase tracking-widest text-xs">No hay proyectos activos registrados.</p>
