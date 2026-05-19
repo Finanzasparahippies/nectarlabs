@@ -17,9 +17,59 @@ class Project(models.Model):
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    # Activity tracking
+    current_activity_start = models.DateTimeField(null=True, blank=True)
+    current_activity_description = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return self.name
+
+    @property
+    def plan_hours(self):
+        from apps.shop.models import Contract
+        contract = Contract.objects.filter(user=self.client, is_active=True).first()
+        return contract.plan.hours if (contract and contract.plan) else 0
+
+    @property
+    def used_hours_current_month(self):
+        from django.utils import timezone
+        from django.db.models import Sum
+        start_of_month = timezone.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        total = self.logs.filter(date__gte=start_of_month.date()).aggregate(Sum('hours'))['hours__sum'] or 0
+        return float(total)
+
+    @property
+    def remaining_hours_current_month(self):
+        return max(0.0, float(self.plan_hours) - self.used_hours_current_month)
+
+    @property
+    def unlocked_milestones(self):
+        from django.utils import timezone
+        plan_h = float(self.plan_hours)
+        if plan_h <= 0:
+            return []
+        
+        used_h = self.used_hours_current_month
+        start_of_month = timezone.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        
+        # Get milestones already delivered this month
+        delivered = set(self.advances.filter(
+            delivered_at__gte=start_of_month
+        ).values_list('milestone', flat=True))
+        
+        milestones = [
+            ('25', 0.25),
+            ('50', 0.50),
+            ('75', 0.75),
+            ('100', 1.00)
+        ]
+        
+        unlocked = []
+        for key, fraction in milestones:
+            if used_h >= (plan_h * fraction) and key not in delivered:
+                unlocked.append(key)
+                
+        return unlocked
 
 class TimeLog(models.Model):
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='logs')
@@ -29,6 +79,23 @@ class TimeLog(models.Model):
 
     def __str__(self):
         return f"{self.project.name} - {self.date} ({self.hours}h)"
+
+class ProjectAdvance(models.Model):
+    class Milestone(models.TextChoices):
+        M25 = '25', '25%'
+        M50 = '50', '50%'
+        M75 = '75', '75%'
+        M100 = '100', '100%'
+
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='advances')
+    milestone = models.CharField(max_length=10, choices=Milestone.choices)
+    title = models.CharField(max_length=200)
+    description = models.TextField()
+    delivered_at = models.DateTimeField(auto_now_add=True)
+    delivered_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
+
+    def __str__(self):
+        return f"{self.project.name} - Avance {self.milestone}% ({self.delivered_at.strftime('%Y-%m')})"
 
 class FAQ(models.Model):
     class Category(models.TextChoices):
@@ -74,3 +141,4 @@ class BusinessExpense(models.Model):
 
     def __str__(self):
         return f"{self.name} (${self.cost})"
+

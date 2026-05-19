@@ -5,11 +5,12 @@ from rest_framework.response import Response
 from django.db.models import Sum
 from django.utils import timezone
 
-from .models import Project, TimeLog, FAQ, ServerCost, BusinessExpense
+from .models import Project, TimeLog, FAQ, ServerCost, BusinessExpense, ProjectAdvance
 from apps.shop.models import Contract, Order
 from .serializers import ProjectSerializer, TimeLogSerializer, FAQSerializer
 
 class FAQViewSet(viewsets.ReadOnlyModelViewSet):
+    # (FAQ code remains unchanged)
     queryset = FAQ.objects.all()
     serializer_class = FAQSerializer
     permission_classes = [permissions.AllowAny]
@@ -35,6 +36,81 @@ class ProjectViewSet(viewsets.ModelViewSet):
             'active_projects': active_projects,
             'total_billable_hours': total_hours,
         })
+
+    @action(detail=True, methods=['post'])
+    def start_activity(self, request, pk=None):
+        project = self.get_object()
+        if not request.user.is_staff:
+            return Response({"error": "No tienes permiso para registrar actividades."}, status=status.HTTP_403_FORBIDDEN)
+        
+        if project.current_activity_start:
+            return Response({"error": "Ya hay una actividad activa en este proyecto."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        description = request.data.get('description', '')
+        project.current_activity_start = timezone.now()
+        project.current_activity_description = description
+        project.save()
+        
+        return Response(ProjectSerializer(project).data)
+
+    @action(detail=True, methods=['post'])
+    def stop_activity(self, request, pk=None):
+        project = self.get_object()
+        if not request.user.is_staff:
+            return Response({"error": "No tienes permiso para registrar actividades."}, status=status.HTTP_403_FORBIDDEN)
+        
+        if not project.current_activity_start:
+            return Response({"error": "No hay ninguna actividad activa en este proyecto."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        start_time = project.current_activity_start
+        end_time = timezone.now()
+        elapsed_seconds = (end_time - start_time).total_seconds()
+        hours = max(0.01, round(elapsed_seconds / 3600.0, 2))
+        
+        description = project.current_activity_description or "Desarrollo y soporte"
+        
+        # Create TimeLog
+        TimeLog.objects.create(
+            project=project,
+            date=end_time.date(),
+            hours=hours,
+            description=description
+        )
+        
+        # Reset activity
+        project.current_activity_start = None
+        project.current_activity_description = None
+        project.save()
+        
+        return Response(ProjectSerializer(project).data)
+
+    @action(detail=True, methods=['post'])
+    def deliver_advance(self, request, pk=None):
+        project = self.get_object()
+        if not request.user.is_staff:
+            return Response({"error": "No tienes permiso para registrar avances."}, status=status.HTTP_403_FORBIDDEN)
+        
+        milestone = request.data.get('milestone')
+        title = request.data.get('title')
+        description = request.data.get('description')
+        
+        if not milestone or not title or not description:
+            return Response({"error": "Milestone, title y description son campos obligatorios."}, status=status.HTTP_400_BAD_REQUEST)
+            
+        unlocked = project.unlocked_milestones
+        if milestone not in unlocked:
+            return Response({"error": f"El avance del {milestone}% no está disponible para entregar en este momento."}, status=status.HTTP_400_BAD_REQUEST)
+            
+        ProjectAdvance.objects.create(
+            project=project,
+            milestone=milestone,
+            title=title,
+            description=description,
+            delivered_by=request.user
+        )
+        
+        return Response(ProjectSerializer(project).data)
+
 
 class TimeLogViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = TimeLogSerializer

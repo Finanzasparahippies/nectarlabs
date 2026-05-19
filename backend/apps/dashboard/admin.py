@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Project, TimeLog, FAQ, ServerCost, BusinessExpense
+from .models import Project, TimeLog, FAQ, ServerCost, BusinessExpense, ProjectAdvance
 
 @admin.register(Project)
 class ProjectAdmin(admin.ModelAdmin):
@@ -29,4 +29,11 @@ class BusinessExpenseAdmin(admin.ModelAdmin):
     list_display = ('name', 'cost', 'billing_cycle', 'next_payment_date', 'is_active')
     list_filter = ('billing_cycle', 'is_active')
     search_fields = ('name',)
+
+@admin.register(ProjectAdvance)
+class ProjectAdvanceAdmin(admin.ModelAdmin):
+    list_display = ('project', 'milestone', 'title', 'delivered_at', 'delivered_by')
+    list_filter = ('milestone', 'project', 'delivered_at')
+    search_fields = ('title', 'description', 'project__name')
+
 
