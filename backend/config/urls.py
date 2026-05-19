@@ -12,6 +12,7 @@ from apps.shop.views import PlanViewSet, ProductViewSet, ContractViewSet
 from apps.dashboard.views import ProjectViewSet, FAQViewSet, TimeLogViewSet
 from apps.blog.views import PostViewSet
 from apps.tickets.views import TicketViewSet
+from apps.users.views import UserViewSet
 
 router = DefaultRouter()
 router.register(r'plans', PlanViewSet)
@@ -22,6 +23,7 @@ router.register(r'faqs', FAQViewSet)
 router.register(r'logs', TimeLogViewSet, basename='timelog')
 router.register(r'posts', PostViewSet)
 router.register(r'tickets', TicketViewSet, basename='ticket')
+router.register(r'users', UserViewSet, basename='user')
 
 
 from django.conf import settings
@@ -33,6 +35,7 @@ from apps.dashboard.views import BusinessStatsView
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include(router.urls)),
+    path('api/performance/', include('apps.performance.urls')),
     path('api/register/', RegisterView.as_view(), name='register'),
     path('api/newsletter/subscribe/', SubscribeView.as_view(), name='newsletter_subscribe'),
     path('api/dashboard/business-stats/', BusinessStatsView.as_view(), name='business_stats'),

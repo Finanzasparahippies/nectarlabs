@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     "apps.shop",
     "apps.dashboard",
     "apps.tickets",
+    "apps.performance",
 ]
 
 FRONTEND_URL = env("FRONTEND_URL", default="http://localhost:3000")
@@ -71,6 +72,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'apps.performance.middleware.PerformanceMiddleware',
 ]
 
 ROOT_URLCONF = 'config.urls'

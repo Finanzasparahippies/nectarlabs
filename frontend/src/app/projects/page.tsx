@@ -81,12 +81,20 @@ export default function ProjectsPage() {
 
   const loadData = async () => {
     try {
-      const [projectsData, plansData] = await Promise.all([
+      const isStaffUser = localStorage.getItem('is_staff') === 'true';
+      const promises: Promise<any>[] = [
         fetcher('/projects/'),
         fetcher('/plans/')
-      ]);
-      setProjects(projectsData);
-      setPlans(plansData);
+      ];
+      if (isStaffUser) {
+        promises.push(fetcher('/users/'));
+      }
+      const results = await Promise.all(promises);
+      setProjects(results[0]);
+      setPlans(results[1]);
+      if (isStaffUser && results[2]) {
+        setUsers(results[2]);
+      }
     } catch (err) {
       console.error("Error loading projects:", err);
     } finally {
@@ -224,6 +232,13 @@ export default function ProjectsPage() {
               <Link href="/dashboard?tab=business" className="flex items-center gap-4 px-6 py-4 hover:bg-foreground/5 text-foreground opacity-60 hover:opacity-100 transition-all rounded-2xl font-black uppercase tracking-widest text-[10px]">
                 <div className="w-2 h-2 bg-foreground/20 rounded-full"></div>
                 Control Negocio
+              </Link>
+            )}
+
+            {isStaff && (
+              <Link href="/dashboard/performance" className="flex items-center gap-4 px-6 py-4 hover:bg-foreground/5 text-foreground opacity-60 hover:opacity-100 transition-all rounded-2xl font-black uppercase tracking-widest text-[10px]">
+                <div className="w-2 h-2 bg-foreground/20 rounded-full"></div>
+                Rendimiento
               </Link>
             )}
 
@@ -542,15 +557,18 @@ export default function ProjectsPage() {
                   />
                 </div>
                 <div className="space-y-3">
-                  <label className="text-[9px] font-black uppercase tracking-widest opacity-40 ml-4">ID Cliente</label>
-                  <input 
-                    type="number" 
+                  <label className="text-[9px] font-black uppercase tracking-widest opacity-40 ml-4">Cliente</label>
+                  <select 
                     value={formData.client}
                     onChange={(e) => setFormData({...formData, client: e.target.value})}
-                    placeholder="User ID"
-                    className="w-full bg-card-border/30 border border-card-border rounded-2xl p-5 focus:outline-none focus:border-nectar-gold transition-all text-sm"
+                    className="w-full bg-card-border/30 border border-card-border rounded-2xl p-5 focus:outline-none focus:border-nectar-gold transition-all text-sm appearance-none"
                     required
-                  />
+                  >
+                    <option value="">Seleccionar Cliente...</option>
+                    {users.map(u => (
+                      <option key={u.id} value={u.id}>{u.email}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
