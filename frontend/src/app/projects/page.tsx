@@ -78,6 +78,11 @@ export default function ProjectsPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
 
+  // User creation states
+  const [isUserModalOpen, setIsUserModalOpen] = useState(false);
+  const [userFormData, setUserFormData] = useState({ username: '', email: '', password: '', role: 'CUSTOMER' });
+  const [userError, setUserError] = useState('');
+
   // States for timer and inputs
   const [currentTime, setCurrentTime] = useState<Date>(new Date());
   const [activityDescriptions, setActivityDescriptions] = useState<Record<number, string>>({});
@@ -114,23 +119,43 @@ export default function ProjectsPage() {
   const loadData = async () => {
     try {
       const isStaffUser = localStorage.getItem('is_staff') === 'true';
+      const role = localStorage.getItem('user_role') || '';
+      const canViewUsers = isStaffUser || role === 'DESIGNER';
+      
       const promises: Promise<any>[] = [
         fetcher('/projects/'),
         fetcher('/plans/')
       ];
-      if (isStaffUser) {
+      if (canViewUsers) {
         promises.push(fetcher('/users/'));
       }
       const results = await Promise.all(promises);
       setProjects(results[0]);
       setPlans(results[1]);
-      if (isStaffUser && results[2]) {
+      if (canViewUsers && results[2]) {
         setUsers(results[2]);
       }
     } catch (err) {
       console.error("Error loading projects:", err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCreateUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setUserError('');
+    try {
+      const newUser = await fetcher('/users/', {
+        method: 'POST',
+        body: JSON.stringify(userFormData)
+      });
+      setUsers(prev => [...prev, newUser].sort((a, b) => a.username.localeCompare(b.username)));
+      setFormData(prev => ({ ...prev, client: newUser.id.toString() }));
+      setIsUserModalOpen(false);
+      setUserFormData({ username: '', email: '', password: '', role: 'CUSTOMER' });
+    } catch (err: any) {
+      setUserError(err.message || "Error al crear el cliente");
     }
   };
 
@@ -316,13 +341,25 @@ export default function ProjectsPage() {
             </p>
           </div>
           
-          {isStaff && (
-            <button 
-              onClick={() => { resetForm(); setEditingProject(null); setIsCreateModalOpen(true); }}
-              className="px-8 py-4 bg-nectar-gold text-background font-black uppercase tracking-widest rounded-2xl hover:scale-105 transition-all shadow-xl shadow-nectar-gold/20 text-[10px]"
-            >
-              Nuevo Proyecto
-            </button>
+          {(isStaff || userRole === 'DESIGNER') && (
+            <div className="flex flex-wrap gap-4">
+              <button 
+                onClick={() => {
+                  setUserFormData({ username: '', email: '', password: '', role: 'CUSTOMER' });
+                  setUserError('');
+                  setIsUserModalOpen(true);
+                }}
+                className="px-8 py-4 border-2 border-nectar-gold text-nectar-gold hover:bg-nectar-gold hover:text-background font-black uppercase tracking-widest rounded-2xl hover:scale-105 transition-all text-[10px]"
+              >
+                + Nuevo Cliente
+              </button>
+              <button 
+                onClick={() => { resetForm(); setEditingProject(null); setIsCreateModalOpen(true); }}
+                className="px-8 py-4 bg-nectar-gold text-background font-black uppercase tracking-widest rounded-2xl hover:scale-105 transition-all shadow-xl shadow-nectar-gold/20 text-[10px]"
+              >
+                Nuevo Proyecto
+              </button>
+            </div>
           )}
         </header>
 
@@ -365,7 +402,7 @@ export default function ProjectsPage() {
                     </div>
                     <div className="flex gap-2">
                       <span className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold text-[8px] font-black uppercase tracking-widest rounded-full">{project.status}</span>
-                      {isStaff && (
+                      {(isStaff || userRole === 'DESIGNER') && (
                         <button 
                           onClick={() => handleEdit(project)}
                           className="w-8 h-8 rounded-xl bg-card-border/50 flex items-center justify-center hover:bg-nectar-gold hover:text-background transition-all text-xs"
@@ -666,42 +703,13 @@ export default function ProjectsPage() {
                 </div>
               </div>
 
-              {/* Dev Plan */}
-              <div className="space-y-3">
-                <label className="text-[9px] font-black uppercase tracking-widest opacity-40 ml-4">Plan Base del Proyecto (Desarrollo - Opcional)</label>
-                <select 
-                  value={formData.plan}
-                  onChange={(e) => setFormData({...formData, plan: e.target.value ? parseInt(e.target.value) : ''})}
-                  className="w-full bg-card-border/30 border border-card-border rounded-2xl p-5 focus:outline-none focus:border-nectar-gold transition-all text-sm appearance-none"
-                >
-                  <option value="">Ninguno (Heredar del contrato de cliente)</option>
-                  {plans.map(p => (
-                    <option key={p.id} value={p.id}>{p.name} - {p.hours}h/mes</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Designer Assignment */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Dev Plan (Staff only) */}
+              {isStaff && (
                 <div className="space-y-3">
-                  <label className="text-[9px] font-black uppercase tracking-widest opacity-40 ml-4">Diseñador Asignado (Opcional)</label>
+                  <label className="text-[9px] font-black uppercase tracking-widest opacity-40 ml-4">Plan Base del Proyecto (Desarrollo - Opcional)</label>
                   <select 
-                    value={formData.designer}
-                    onChange={(e) => setFormData({...formData, designer: e.target.value})}
-                    className="w-full bg-card-border/30 border border-card-border rounded-2xl p-5 focus:outline-none focus:border-nectar-gold transition-all text-sm appearance-none"
-                  >
-                    <option value="">Sin Diseñador</option>
-                    {designers.map(d => (
-                      <option key={d.id} value={d.id}>{d.email}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="space-y-3">
-                  <label className="text-[9px] font-black uppercase tracking-widest opacity-40 ml-4">Plan de Diseño (Opcional)</label>
-                  <select 
-                    value={formData.designer_plan}
-                    onChange={(e) => setFormData({...formData, designer_plan: e.target.value ? parseInt(e.target.value) : ''})}
+                    value={formData.plan}
+                    onChange={(e) => setFormData({...formData, plan: e.target.value ? parseInt(e.target.value) : ''})}
                     className="w-full bg-card-border/30 border border-card-border rounded-2xl p-5 focus:outline-none focus:border-nectar-gold transition-all text-sm appearance-none"
                   >
                     <option value="">Ninguno (Heredar del contrato de cliente)</option>
@@ -710,7 +718,40 @@ export default function ProjectsPage() {
                     ))}
                   </select>
                 </div>
-              </div>
+              )}
+
+              {/* Designer Assignment (Staff only) */}
+              {isStaff && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-3">
+                    <label className="text-[9px] font-black uppercase tracking-widest opacity-40 ml-4">Diseñador Asignado (Opcional)</label>
+                    <select 
+                      value={formData.designer}
+                      onChange={(e) => setFormData({...formData, designer: e.target.value})}
+                      className="w-full bg-card-border/30 border border-card-border rounded-2xl p-5 focus:outline-none focus:border-nectar-gold transition-all text-sm appearance-none"
+                    >
+                      <option value="">Sin Diseñador</option>
+                      {designers.map(d => (
+                        <option key={d.id} value={d.id}>{d.email}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="space-y-3">
+                    <label className="text-[9px] font-black uppercase tracking-widest opacity-40 ml-4">Plan de Diseño (Opcional)</label>
+                    <select 
+                      value={formData.designer_plan}
+                      onChange={(e) => setFormData({...formData, designer_plan: e.target.value ? parseInt(e.target.value) : ''})}
+                      className="w-full bg-card-border/30 border border-card-border rounded-2xl p-5 focus:outline-none focus:border-nectar-gold transition-all text-sm appearance-none"
+                    >
+                      <option value="">Ninguno (Heredar del contrato de cliente)</option>
+                      {plans.map(p => (
+                        <option key={p.id} value={p.id}>{p.name} - {p.hours}h/mes</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              )}
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-3">
@@ -766,6 +807,76 @@ export default function ProjectsPage() {
                 className="w-full py-6 bg-nectar-gold text-background font-black uppercase tracking-widest rounded-[2rem] hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-nectar-gold/20 text-xs"
               >
                 {editingProject ? 'Actualizar Arquitectura' : 'Desplegar Proyecto'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal De Registro Rápido de Cliente */}
+      {isUserModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 backdrop-blur-xl bg-background/80">
+          <div className="w-full max-w-md bg-card-bg border border-card-border rounded-[3rem] p-10 relative shadow-2xl">
+            <button 
+              onClick={() => setIsUserModalOpen(false)}
+              className="absolute top-8 right-8 w-10 h-10 rounded-2xl bg-card-border/50 flex items-center justify-center hover:bg-red-500/20 hover:text-red-500 transition-all font-black text-xl"
+            >
+              ×
+            </button>
+            
+            <header className="mb-8">
+              <h2 className="text-3xl font-black tracking-tighter mb-2">Crear Cliente</h2>
+              <p className="text-[9px] font-black uppercase tracking-widest text-nectar-gold opacity-80">Registrar cuenta rápidamente</p>
+            </header>
+
+            <form onSubmit={handleCreateUser} className="space-y-6">
+              {userError && (
+                <div className="p-4 bg-red-500/10 border border-red-500/25 rounded-2xl text-red-500 text-xs font-bold">
+                  {userError}
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <label className="text-[9px] font-black uppercase tracking-widest opacity-40 ml-4">Nombre de Usuario (Username)</label>
+                <input 
+                  type="text" 
+                  value={userFormData.username}
+                  onChange={(e) => setUserFormData({...userFormData, username: e.target.value})}
+                  placeholder="ej: saul"
+                  className="w-full bg-card-border/30 border border-card-border rounded-2xl p-4 focus:outline-none focus:border-nectar-gold transition-all text-sm"
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[9px] font-black uppercase tracking-widest opacity-40 ml-4">Correo Electrónico (Email)</label>
+                <input 
+                  type="email" 
+                  value={userFormData.email}
+                  onChange={(e) => setUserFormData({...userFormData, email: e.target.value})}
+                  placeholder="cliente@example.com"
+                  className="w-full bg-card-border/30 border border-card-border rounded-2xl p-4 focus:outline-none focus:border-nectar-gold transition-all text-sm"
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[9px] font-black uppercase tracking-widest opacity-40 ml-4">Contraseña</label>
+                <input 
+                  type="password" 
+                  value={userFormData.password}
+                  onChange={(e) => setUserFormData({...userFormData, password: e.target.value})}
+                  placeholder="••••••••"
+                  className="w-full bg-card-border/30 border border-card-border rounded-2xl p-4 focus:outline-none focus:border-nectar-gold transition-all text-sm"
+                  required
+                />
+              </div>
+
+              <button 
+                type="submit"
+                className="w-full py-5 bg-nectar-gold text-background font-black uppercase tracking-widest rounded-2xl hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-nectar-gold/20 text-xs"
+              >
+                Crear Cliente
               </button>
             </form>
           </div>

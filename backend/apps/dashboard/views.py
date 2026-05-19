@@ -27,6 +27,37 @@ class ProjectViewSet(viewsets.ModelViewSet):
             return Project.objects.all()
         return Project.objects.filter(client=user)
 
+    def check_permissions(self, request):
+        super().check_permissions(request)
+        user = request.user
+        is_staff_or_designer = user.is_staff or user.role in ['ADMIN', 'BUSINESS', 'DESIGNER']
+        
+        if self.action in ['create', 'update', 'partial_update', 'destroy'] and not is_staff_or_designer:
+            self.permission_denied(request, message="No tienes permisos para crear o modificar proyectos.")
+
+    def perform_create(self, serializer):
+        user = self.request.user
+        if user.role == 'DESIGNER':
+            serializer.save(
+                designer=user,
+                plan=None,
+                designer_plan=None
+            )
+        else:
+            serializer.save()
+
+    def perform_update(self, serializer):
+        user = self.request.user
+        if user.role == 'DESIGNER':
+            original_project = self.get_object()
+            serializer.save(
+                designer=user,
+                plan=original_project.plan,
+                designer_plan=original_project.designer_plan
+            )
+        else:
+            serializer.save()
+
     @action(detail=False, methods=['get'], permission_classes=[permissions.IsAdminUser])
     def business_metrics(self, request):
         total_projects = Project.objects.count()

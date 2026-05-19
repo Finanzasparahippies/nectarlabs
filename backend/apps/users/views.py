@@ -29,7 +29,40 @@ class RegisterView(generics.CreateAPIView):
     permission_classes = (permissions.AllowAny,)
     serializer_class = UserSerializer
 
-class UserViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = User.objects.all().order_by('email')
+class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_staff or user.role in [User.Role.ADMIN, User.Role.BUSINESS]:
+            return User.objects.all().order_by('username')
+        elif user.role == User.Role.DESIGNER:
+            return User.objects.filter(role=User.Role.CUSTOMER).order_by('username')
+        else:
+            return User.objects.filter(id=user.id)
+
+    def check_permissions(self, request):
+        super().check_permissions(request)
+        user = request.user
+        is_allowed_role = user.is_staff or user.role in [User.Role.ADMIN, User.Role.BUSINESS, User.Role.ANALYST, User.Role.DESIGNER]
+        
+        if self.action in ['list', 'create'] and not is_allowed_role:
+            self.permission_denied(request, message="No tienes permisos para realizar esta acción.")
+        elif self.action in ['update', 'partial_update', 'destroy']:
+            is_admin_or_business = user.is_staff or user.role in [User.Role.ADMIN, User.Role.BUSINESS]
+            if not is_admin_or_business and not (self.action in ['update', 'partial_update'] and self.get_object() == user):
+                self.permission_denied(request, message="No tienes permisos para modificar o eliminar este usuario.")
+
+    def perform_create(self, serializer):
+        user = self.request.user
+        role_to_assign = serializer.validated_data.get('role', User.Role.CUSTOMER)
+        
+        if user.role == User.Role.DESIGNER:
+            role_to_assign = User.Role.CUSTOMER
+            
+        serializer.save(
+            role=role_to_assign,
+            is_staff=False,
+            is_superuser=False
+        )
