@@ -9,6 +9,14 @@ const nextConfig: NextConfig = {
     'staging.nectarlabs.dev', 
     'www.staging.nectarlabs.dev'
   ],
+  async rewrites() {
+    return [
+      {
+        source: '/api/:path*',
+        destination: `${process.env.API_URL || 'http://backend:8000/api'}/:path*/`,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

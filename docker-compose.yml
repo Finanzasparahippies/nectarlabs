@@ -1,4 +1,16 @@
 services:
+  nectar-db-staging:
+    image: postgres:16-alpine
+    container_name: nectar_db_staging
+    volumes:
+      - postgres_data_staging:/var/lib/postgresql/data/:z
+    environment:
+      - POSTGRES_DB=nectarlabs_staging
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    networks:
+      - prod_network
+
   backend:
     container_name: nectar_backend
     image: nectar-labs-backend:dev
@@ -6,12 +18,14 @@ services:
     volumes:
       - ./backend:/app:z
     env_file:
-      - .env
+      - .env.staging
     environment:
       - DEBUG=True
       - ENVIRONMENT=local
     ports:
       - "8001:8000"
+    depends_on:
+      - nectar-db-staging
     networks:
       - prod_network
 
@@ -29,10 +43,10 @@ services:
     ports:
       - "3002:3000"
     env_file:
-      - .env
+      - .env.staging
     environment:
       - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-/api}
-      - API_URL=http://nectar_backend:8000/api
+      - API_URL=http://backend:8000/api
       - NEXT_DISABLE_SOURCEMAPS=0
     networks:
       - prod_network
@@ -54,7 +68,7 @@ services:
       - prod_network
 
 volumes:
-  postgres_data:
+  postgres_data_staging:
 
 networks:
   prod_network:
