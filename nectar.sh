@@ -27,12 +27,14 @@ show_help() {
     echo "  certbot        - Request SSL certificate (Prod)"
     echo "  up-staging     - Start staging environment"
     echo "  down-staging   - Stop staging environment"
+    echo "  restart-staging - Restart staging environment"
+    echo "  build-staging  - Build staging images"
     echo "  logs-staging   - View staging logs in real-time"
+    echo "  makemigrations-staging - Generate database migrations (Staging)"
     echo "  migrate-staging - Run database migrations (Staging)"
     echo "  createsuperuser-staging - Create admin user (Staging)"
     echo "  shell-staging  - Open backend shell (Staging)"
     echo "  collectstatic-staging - Run collectstatic in backend (Staging)"
-    echo "  makemigrations-staging - Generate database migrations (Staging)"
     echo "  help           - Show this help"
 }
 
@@ -57,9 +59,17 @@ case $COMMAND in
         echo "Starting Nectar Labs Staging Environment..."
         docker compose -f docker-compose.staging.yml up -d --build
         ;;
-    down-staging)
+    down-staging|stop-staging)
         echo "Stopping Staging Environment..."
         docker compose -f docker-compose.staging.yml down
+        ;;
+    restart-staging)
+        echo "Restarting Staging Environment..."
+        docker compose -f docker-compose.staging.yml restart
+        ;;
+    build-staging)
+        echo "Building Staging Images..."
+        docker compose -f docker-compose.staging.yml build
         ;;
     logs-staging)
         docker compose -f docker-compose.staging.yml logs -f
@@ -75,10 +85,10 @@ case $COMMAND in
         ;;
     collectstatic-staging)
         echo "Running collectstatic in Staging..."
-        docker exec -it nectar_backend_staging python manage.py collectstatic --no-input
+        docker compose -f docker-compose.staging.yml exec backend-staging python manage.py collectstatic --no-input
         ;;
     makemigrations-staging)
-        docker compose -f docker-compose.staging.yml exec backend-staging python manage.py makemigrations
+        docker compose -f docker-compose.staging.yml run --rm backend-staging python manage.py makemigrations
         ;;
     restart)
         docker compose restart
