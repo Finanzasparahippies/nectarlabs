@@ -40,6 +40,20 @@ export default function AddonsPage() {
     setUserRole(role);
     setIsStaff((staff || role === 'ADMIN' || role === 'BUSINESS') && role !== 'DESIGNER');
     setLoading(false);
+
+    // Auto-select or request addon from query params
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const selectId = params.get('select');
+      const requestId = params.get('request');
+      if (selectId) {
+        const found = addonsList.find(a => a.id === selectId);
+        if (found) setSelectedAddon(found);
+      } else if (requestId) {
+        const found = addonsList.find(a => a.id === requestId);
+        if (found) setRequestAddon(found);
+      }
+    }
   }, []);
 
   const addonsList: Addon[] = [
@@ -197,7 +211,7 @@ export default function AddonsPage() {
     setErrorMsg(null);
     setSuccessTicketId(null);
 
-    const price = billingCycle === 'monthly' ? `$${requestAddon.monthlyPrice} USD/mes` : `$${requestAddon.yearlyPrice} USD/año`;
+    const price = billingCycle === 'monthly' ? `$${requestAddon.monthlyPrice.toLocaleString('es-MX')} MXN/mes` : `$${requestAddon.yearlyPrice.toLocaleString('es-MX')} MXN/año`;
     const title = `[Solicitud Add-on] ${requestAddon.name} - Plan ${billingCycle === 'monthly' ? 'Mensual' : 'Anual'}`;
     const description = `## Solicitud de Integración de Add-on
 
@@ -396,14 +410,14 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
                   <div className="border-t border-card-border/80 pt-6 mb-6 flex items-baseline justify-between">
                     <div>
                       <div className="flex items-baseline gap-1">
-                        <span className="text-3xl font-black tracking-tighter text-foreground">${price}</span>
+                        <span className="text-3xl font-black tracking-tighter text-foreground">${price.toLocaleString('es-MX')}</span>
                         <span className="text-[10px] font-bold opacity-50 uppercase tracking-wider text-muted">
-                          USD / {billingCycle === 'monthly' ? 'mes' : 'año'}
+                          MXN / {billingCycle === 'monthly' ? 'mes' : 'año'}
                         </span>
                       </div>
                       {billingCycle === 'yearly' && (
                         <p className="text-[8px] text-emerald-400 font-bold uppercase tracking-wider mt-1">
-                          Ahorro anual de ${savings} USD
+                          Ahorro anual de $${savings.toLocaleString('es-MX')} MXN
                         </p>
                       )}
                     </div>
@@ -508,7 +522,7 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
                   }}
                   className="flex-1 py-4 text-xs font-black uppercase tracking-widest bg-nectar-gold text-background hover:scale-[1.02] active:scale-95 transition-all rounded-xl text-center shadow-lg"
                 >
-                  Solicitar este Add-on (${billingCycle === 'monthly' ? selectedAddon.monthlyPrice : selectedAddon.yearlyPrice} USD)
+                  Solicitar este Add-on (${billingCycle === 'monthly' ? selectedAddon.monthlyPrice.toLocaleString('es-MX') : selectedAddon.yearlyPrice.toLocaleString('es-MX')} MXN)
                 </button>
                 <button
                   onClick={() => setSelectedAddon(null)}
@@ -551,7 +565,7 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
                   <div className="text-right">
                     <span className="text-[8px] font-bold opacity-50 uppercase tracking-widest text-muted block mb-0.5">Precio de Integración</span>
                     <span className="font-black text-lg text-nectar-gold">
-                      ${billingCycle === 'monthly' ? requestAddon.monthlyPrice : requestAddon.yearlyPrice} USD
+                      ${billingCycle === 'monthly' ? requestAddon.monthlyPrice.toLocaleString('es-MX') : requestAddon.yearlyPrice.toLocaleString('es-MX')} MXN
                       <span className="text-[9px] font-bold text-muted opacity-60 block">
                         / {billingCycle === 'monthly' ? 'mes' : 'año'}
                       </span>
