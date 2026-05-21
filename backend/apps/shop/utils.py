@@ -3,8 +3,10 @@ import logging
 from io import BytesIO
 from fpdf import FPDF
 from django.core.files.base import ContentFile
-from django.core.mail import EmailMessage
+from django.core.mail import EmailMessage, EmailMultiAlternatives
 from django.conf import settings
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
 
 class ContractPDF(FPDF):
     def header(self):
@@ -133,24 +135,44 @@ def send_contract_emails(contract):
             # FLUJO 1: El cliente acaba de firmar, avisar al dev para que firme
             dev_subject = f"⚠️ ACCIÓN REQUERIDA: Firmar Contrato - {contract.full_name}"
             dev_sign_url = f"{settings.FRONTEND_URL}/contract/dev-sign/{contract.id}"
-            dev_message = f"El cliente {contract.full_name} ha firmado el contrato.\n\nPor favor, accede aquí para estampar tu firma y activar el proyecto:\n{dev_sign_url}\n\nIdea: {contract.project_idea}"
             
-            email_dev = EmailMessage(dev_subject, dev_message, settings.DEFAULT_FROM_EMAIL, [settings.DEFAULT_FROM_EMAIL])
+            # HTML render
+            dev_html = render_to_string('shop/emails/dev_action.html', {
+                'subject': dev_subject,
+                'contract': contract,
+                'dev_sign_url': dev_sign_url,
+            })
+            dev_text = strip_tags(dev_html)
+            
+            email_dev = EmailMultiAlternatives(dev_subject, dev_text, settings.DEFAULT_FROM_EMAIL, [settings.DEFAULT_FROM_EMAIL])
+            email_dev.attach_alternative(dev_html, "text/html")
             email_dev.send()
 
             # Confirmación al cliente
             client_subject = "Contrato recibido - Néctar Labs"
-            client_message = f"Hola {contract.full_name}, hemos recibido tu contrato firmado. En breve será validado y firmado por nuestro equipo para iniciar tu proyecto."
-            email_client = EmailMessage(client_subject, client_message, settings.DEFAULT_FROM_EMAIL, [contract.user.email])
+            client_html = render_to_string('shop/emails/client_confirmation.html', {
+                'subject': client_subject,
+                'contract': contract,
+            })
+            client_text = strip_tags(client_html)
+            
+            email_client = EmailMultiAlternatives(client_subject, client_text, settings.DEFAULT_FROM_EMAIL, [contract.user.email])
+            email_client.attach_alternative(client_html, "text/html")
             email_client.send()
         else:
             # FLUJO 2: Ambos firmaron, enviar copia final certificada
             final_subject = f"✅ Contrato Certificado y Proyecto Activado - {contract.full_name}"
-            final_message = f"¡Enhorabuena {contract.full_name}!\n\nEl contrato ha sido firmado por ambas partes. Adjunto encontrarás la copia final certificada.\n\nBienvenido oficialmente a Néctar Labs."
+            
+            final_html = render_to_string('shop/emails/final_contract.html', {
+                'subject': final_subject,
+                'contract': contract,
+            })
+            final_text = strip_tags(final_html)
             
             emails = [contract.user.email, settings.DEFAULT_FROM_EMAIL]
             for dest in emails:
-                email = EmailMessage(final_subject, final_message, settings.DEFAULT_FROM_EMAIL, [dest])
+                email = EmailMultiAlternatives(final_subject, final_text, settings.DEFAULT_FROM_EMAIL, [dest])
+                email.attach_alternative(final_html, "text/html")
                 if contract.pdf_file:
                     contract.pdf_file.seek(0)
                     email.attach(f"Contrato_Nectar_{contract.id}_FINAL.pdf", contract.pdf_file.read(), 'application/pdf')

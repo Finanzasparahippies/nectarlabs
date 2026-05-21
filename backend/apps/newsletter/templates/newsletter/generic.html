@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ subject }}</title>
+</head>
+<body style="background-color: #090F19; color: #FDFBF7; font-family: 'Outfit', 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 40px 20px; margin: 0; min-height: 100vh; -webkit-font-smoothing: antialiased;">
+    <div style="max-width: 600px; margin: 0 auto; background-color: #121815; border: 1px solid rgba(198, 138, 30, 0.2); padding: 40px; border-radius: 24px; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);">
+        
+        <!-- Header -->
+        <div style="text-align: center; margin-bottom: 40px; border-bottom: 1px solid rgba(198, 138, 30, 0.15); padding-bottom: 30px;">
+            <div style="display: inline-block; font-size: 28px; font-weight: 900; letter-spacing: -0.05em; color: #C68A1E;">
+                NÉCTAR<span style="color: #FDFBF7; font-weight: 300;">LABS</span>
+            </div>
+            <div style="color: #C68A1E; font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 3px; margin-top: 5px;">
+                Newsletter Oficial
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div style="font-size: 15px; line-height: 1.8; color: #E5E7EB; margin-bottom: 40px;">
+            {% if title %}
+            <h2 style="color: #FDFBF7; font-size: 22px; font-weight: 700; line-height: 1.3; margin-top: 0; margin-bottom: 20px; text-align: center;">
+                {{ title }}
+            </h2>
+            {% endif %}
+
+            {{ content|safe }}
+
+            {% if cta_url and cta_text %}
+            <div style="text-align: center; margin: 35px 0;">
+                <a href="{{ cta_url }}" style="background-color: #C68A1E; color: #090F19; padding: 16px 32px; border-radius: 12px; font-size: 14px; font-weight: bold; text-transform: uppercase; text-decoration: none; display: inline-block; letter-spacing: 1px; box-shadow: 0 4px 15px rgba(198, 138, 30, 0.4);">
+                    {{ cta_text }}
+                </a>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Footer -->
+        <div style="text-align: center; border-top: 1px solid rgba(255, 255, 255, 0.05); padding-top: 30px; color: #9CA3AF; font-size: 11px; line-height: 1.5;">
+            <p style="margin: 0 0 10px 0;">Recibiste este correo porque estás suscrito al newsletter de Néctar Labs.</p>
+            <p style="margin: 0 0 10px 0;">Si deseas desuscribirte, puedes hacer clic <a href="{{ unsubscribe_url|default:'https://nectarlabs.dev/unsubscribe' }}" style="color: #C68A1E; text-decoration: underline;">aquí</a>.</p>
+            <p style="margin: 0 0 10px 0;">© {% now "Y" %} Néctar Labs. Todos los derechos reservados.</p>
+            <p style="margin: 0;"><a href="https://nectarlabs.dev" style="color: #C68A1E; text-decoration: none; font-weight: bold;">nectarlabs.dev</a></p>
+        </div>
+
+    </div>
+</body>
+</html>

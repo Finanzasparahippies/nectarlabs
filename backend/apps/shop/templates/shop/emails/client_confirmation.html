@@ -1,0 +1,26 @@
+{% extends 'shop/emails/base_nectar.html' %}
+
+{% block content %}
+<h2 style="color: #FDFBF7; font-size: 22px; font-weight: 700; line-height: 1.3; margin-top: 0; margin-bottom: 20px; text-align: center;">
+    Contrato Recibido con Éxito
+</h2>
+
+<p>Hola <strong>{{ contract.full_name }}</strong>,</p>
+
+<p>Te confirmamos que hemos recibido tu firma para el contrato de servicios de desarrollo de software con <strong>Néctar Labs</strong>.</p>
+
+<p>El plan seleccionado es: <strong>{{ contract.plan.name }}</strong> ({{ contract.plan.hours }} horas mensuales de desarrollo e ingeniería).</p>
+
+<div style="background-color: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); padding: 25px; margin: 30px 0; border-radius: 16px;">
+    <h3 style="color: #C68A1E; font-size: 15px; margin-top: 0; margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 10px;">¿Qué sigue ahora?</h3>
+    <ol style="margin: 0; padding-left: 20px; color: #D1D5DB; line-height: 1.8;">
+        <li style="margin-bottom: 10px;">Nuestro equipo técnico liderado por <strong>Jesus Saul</strong> revisará y firmará digitalmente el contrato.</li>
+        <li style="margin-bottom: 10px;">Recibirás un nuevo correo con la <strong>copia certificada final en PDF</strong> firmada por ambas partes para tu resguardo.</li>
+        <li>Se activará tu espacio de trabajo en el panel de cliente para comenzar la planificación de las tareas y sprints.</li>
+    </ol>
+</div>
+
+<p>Estamos muy entusiasmados de convertirnos en tu partner tecnológico y ayudarte a escalar tu idea de negocio.</p>
+
+<p style="margin-bottom: 0;">Saludos cordiales,<br>El equipo de <strong>Néctar Labs</strong></p>
+{% endblock %}

@@ -1,0 +1,33 @@
+{% extends 'shop/emails/base_nectar.html' %}
+
+{% block content %}
+<h2
+    style="color: #FDFBF7; font-size: 22px; font-weight: 700; line-height: 1.3; margin-top: 0; margin-bottom: 20px; text-align: center;">
+    ✅ Contrato Certificado y Proyecto Activado
+</h2>
+
+<p>Hola <strong>{{ contract.full_name }}</strong>,</p>
+
+<p>¡Excelentes noticias! El contrato de prestación de servicios tecnológicos ha sido firmado de conformidad por ambas
+    partes digitalmente.</p>
+
+<p>Con esto, tu proyecto queda formalmente <strong>activado</strong> y se inicia la asignación de recursos de
+    ingeniería.</p>
+
+<div
+    style="background-color: rgba(198, 138, 30, 0.05); border: 1px solid rgba(198, 138, 30, 0.15); padding: 20px; margin: 25px 0; border-radius: 12px; text-align: center;">
+    <p style="margin: 0; color: #FDFBF7; font-weight: bold; font-size: 16px;">Copia Certificada Adjunta</p>
+    <p style="margin: 5px 0 0 0; color: #9CA3AF; font-size: 13px;">Hemos adjuntado el documento final en formato PDF a
+        este correo: <br><strong>Contrato_Nectar_{{ contract.id }}_FINAL.pdf</strong></p>
+</div>
+
+<p>En el transcurso de las próximas horas, recibirás los accesos al tablero de gestión de proyectos para comenzar con el
+    onboarding inicial.</p>
+
+<p>Bienvenido oficialmente a <strong>Néctar Labs</strong>. Estamos listos para crear código de clase mundial para ti.
+</p>
+
+<p style="margin-bottom: 0;">Saludos cordiales,<br>El equipo de <strong>Néctar Labs</strong></p>
+{% block footer_extra %}
+{% endblock %}
+{% endblock %}

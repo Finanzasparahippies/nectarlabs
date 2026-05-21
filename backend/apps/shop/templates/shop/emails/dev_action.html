@@ -1,0 +1,28 @@
+{% extends 'shop/emails/base_nectar.html' %}
+
+{% block content %}
+<h2 style="color: #FDFBF7; font-size: 22px; font-weight: 700; line-height: 1.3; margin-top: 0; margin-bottom: 20px; text-align: center;">
+    ⚠️ Acción Requerida: Firmar Contrato
+</h2>
+
+<p>Hola <strong>Jesus Saul</strong>,</p>
+
+<p>El cliente <strong>{{ contract.full_name }}</strong> ha revisado y firmado el contrato de prestación de servicios tecnológicos para el plan <strong>{{ contract.plan.name }}</strong>.</p>
+
+<p>Para activar oficialmente el proyecto y comenzar la fase de desarrollo, es necesario que ingreses tu firma digital en el panel de desarrollador de Néctar Labs.</p>
+
+<div style="background-color: rgba(198, 138, 30, 0.05); border-left: 4px solid #C68A1E; padding: 20px; margin: 25px 0; border-radius: 4px;">
+    <h3 style="color: #C68A1E; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; margin-top: 0; margin-bottom: 10px;">Idea del Proyecto</h3>
+    <p style="font-style: italic; margin: 0; color: #D1D5DB;">"{{ contract.project_idea }}"</p>
+</div>
+
+<div style="text-align: center; margin: 35px 0;">
+    <a href="{{ dev_sign_url }}" style="background-color: #C68A1E; color: #090F19; padding: 16px 32px; border-radius: 12px; font-size: 14px; font-weight: bold; text-transform: uppercase; text-decoration: none; display: inline-block; letter-spacing: 1px; box-shadow: 0 4px 15px rgba(198, 138, 30, 0.4);">
+        Estampar Firma y Activar
+    </a>
+</div>
+
+<p>Una vez que firmes, el sistema generará de forma automática la copia certificada final del contrato en formato PDF y se la enviará al cliente con copia para ti.</p>
+
+<p style="margin-bottom: 0;">Atentamente,<br><strong>Sistema de Contratos de Néctar Labs</strong></p>
+{% endblock %}
