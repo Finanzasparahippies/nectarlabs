@@ -13,12 +13,22 @@ class TicketViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        if user.is_staff:
-            return Ticket.objects.all()
-        return Ticket.objects.filter(client=user)
+        if user.is_staff or user.role == 'ADMIN':
+            return Ticket.objects.all().order_by('-created_at')
+        elif user.role == 'BUSINESS':
+            return Ticket.objects.filter(tenant__owner=user).order_by('-created_at')
+        elif user.role == 'CUSTOMER' and user.tenant:
+            return Ticket.objects.filter(client=user, tenant=user.tenant).order_by('-created_at')
+        return Ticket.objects.filter(client=user).order_by('-created_at')
 
     def perform_create(self, serializer):
-        serializer.save(client=self.request.user)
+        user = self.request.user
+        tenant = None
+        if user.role == 'CUSTOMER':
+            tenant = user.tenant
+        elif user.role == 'BUSINESS':
+            tenant = user.owned_tenants.first()
+        serializer.save(client=user, tenant=tenant)
 
     @action(detail=True, methods=['post'])
     def add_message(self, request, pk=None):
@@ -45,12 +55,22 @@ class SupportChatViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        if user.is_staff or user.role in ['ADMIN', 'BUSINESS']:
+        if user.is_staff or user.role == 'ADMIN':
             return SupportChat.objects.all().order_by('-updated_at')
+        elif user.role == 'BUSINESS':
+            return SupportChat.objects.filter(tenant__owner=user).order_by('-updated_at')
+        elif user.role == 'CUSTOMER' and user.tenant:
+            return SupportChat.objects.filter(client=user, tenant=user.tenant).order_by('-updated_at')
         return SupportChat.objects.filter(client=user).order_by('-updated_at')
 
     def perform_create(self, serializer):
-        serializer.save(client=self.request.user)
+        user = self.request.user
+        tenant = None
+        if user.role == 'CUSTOMER':
+            tenant = user.tenant
+        elif user.role == 'BUSINESS':
+            tenant = user.owned_tenants.first()
+        serializer.save(client=user, tenant=tenant)
 
     @action(detail=False, methods=['get'])
     def active(self, request):
@@ -58,8 +78,10 @@ class SupportChatViewSet(viewsets.ModelViewSet):
         if user.is_staff or user.role in ['ADMIN', 'BUSINESS']:
             return Response({'detail': 'Staff does not have a single active chat'}, status=status.HTTP_400_BAD_REQUEST)
         
+        # Filter active chat to only matching client and matching tenant
         active_chat = SupportChat.objects.filter(
             client=user, 
+            tenant=user.tenant,
             status__in=[SupportChat.Status.OPEN, SupportChat.Status.IN_PROGRESS]
         ).first()
         

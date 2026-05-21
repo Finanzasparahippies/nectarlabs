@@ -13,6 +13,7 @@ from apps.dashboard.views import ProjectViewSet, FAQViewSet, TimeLogViewSet
 from apps.blog.views import PostViewSet
 from apps.tickets.views import TicketViewSet, SupportChatViewSet
 from apps.users.views import UserViewSet
+from apps.tenants.views import TenantViewSet, public_config, guest_auth
 
 router = DefaultRouter()
 router.register(r'plans', PlanViewSet)
@@ -26,6 +27,7 @@ router.register(r'posts', PostViewSet)
 router.register(r'tickets', TicketViewSet, basename='ticket')
 router.register(r'support-chats', SupportChatViewSet, basename='support-chat')
 router.register(r'users', UserViewSet, basename='user')
+router.register(r'tenants', TenantViewSet, basename='tenant')
 
 
 from django.conf import settings
@@ -39,6 +41,8 @@ urlpatterns = [
     path('api/', include(router.urls)),
     path('api/performance/', include('apps.performance.urls')),
     path('api/register/', RegisterView.as_view(), name='register'),
+    path('api/tenants/public-config/', public_config, name='tenant_public_config'),
+    path('api/tenants/guest-auth/', guest_auth, name='tenant_guest_auth'),
     path('api/newsletter/subscribe/', SubscribeView.as_view(), name='newsletter_subscribe'),
     path('api/dashboard/business-stats/', BusinessStatsView.as_view(), name='business_stats'),
     path('api/token/', MyTokenObtainPairView.as_view(), name='token_obtain_pair'),

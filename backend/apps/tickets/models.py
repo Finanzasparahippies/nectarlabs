@@ -21,6 +21,13 @@ class Ticket(models.Model):
         URGENT = 'URGENT', 'Urgente'
 
     client = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='tickets')
+    tenant = models.ForeignKey(
+        'tenants.Tenant',
+        on_delete=models.CASCADE,
+        related_name='tickets',
+        null=True,
+        blank=True
+    )
     title = models.CharField(max_length=200)
     description = models.TextField()
     category = models.CharField(max_length=20, choices=Category.choices, default=Category.QUESTION)
@@ -49,6 +56,13 @@ class SupportChat(models.Model):
         CLOSED = 'CLOSED', 'Cerrado'
 
     client = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='support_chats')
+    tenant = models.ForeignKey(
+        'tenants.Tenant',
+        on_delete=models.CASCADE,
+        related_name='support_chats',
+        null=True,
+        blank=True
+    )
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.OPEN)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

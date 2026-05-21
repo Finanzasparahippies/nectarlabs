@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     "apps.dashboard",
     "apps.tickets",
     "apps.performance",
+    "apps.tenants",
 ]
 
 FRONTEND_URL = env("FRONTEND_URL", default="http://localhost:3000")

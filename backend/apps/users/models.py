@@ -17,6 +17,13 @@ class User(AbstractUser):
         default=Role.CUSTOMER
     )
     phone = models.CharField(max_length=15, blank=True, null=True)
+    tenant = models.ForeignKey(
+        'tenants.Tenant', 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True, 
+        related_name='users'
+    )
     
     # Use email as the primary identifier
     USERNAME_FIELD = 'email'

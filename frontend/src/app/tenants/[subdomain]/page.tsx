@@ -1,0 +1,802 @@
+'use client';
+
+import React, { useState, useEffect, useRef } from 'react';
+import { useParams } from 'next/navigation';
+
+interface TenantConfig {
+  id: string;
+  name: string;
+  subdomain: string;
+  theme_color: string;
+  logo_url: string | null;
+  welcome_message: string;
+  require_customer_info: boolean;
+}
+
+interface Ticket {
+  id: number;
+  title: string;
+  description: string;
+  category: string;
+  status: string;
+  priority: string;
+  created_at: string;
+  messages: Array<{
+    id: number;
+    sender_email: string;
+    content: string;
+    created_at: string;
+  }>;
+}
+
+interface Message {
+  id: number;
+  sender_email: string;
+  sender_role: string;
+  message: string;
+  created_at: string;
+}
+
+interface SupportChat {
+  id: number;
+  client_email: string;
+  status: string;
+  messages: Message[];
+}
+
+export default function TenantPortalPage() {
+  const params = useParams();
+  const subdomain = params.subdomain as string;
+
+  const [tenantConfig, setTenantConfig] = useState<TenantConfig | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Auth & Session
+  const [email, setEmail] = useState('');
+  const [name, setName] = useState('');
+  const [token, setToken] = useState<string | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isSubmittingAuth, setIsSubmittingAuth] = useState(false);
+
+  // Tickets State
+  const [tickets, setTickets] = useState<Ticket[]>([]);
+  const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
+  const [newTicketTitle, setNewTicketTitle] = useState('');
+  const [newTicketDesc, setNewTicketDesc] = useState('');
+  const [newTicketCategory, setNewTicketCategory] = useState('QUESTION');
+  const [newTicketPriority, setNewTicketPriority] = useState('MEDIUM');
+  const [ticketMessageText, setTicketMessageText] = useState('');
+  const [isCreatingTicket, setIsCreatingTicket] = useState(false);
+  const [isSendingTicketMsg, setIsSendingTicketMsg] = useState(false);
+
+  // Live Chat State
+  const [activeChat, setActiveChat] = useState<SupportChat | null>(null);
+  const [chatMessages, setChatMessages] = useState<Message[]>([]);
+  const [newChatMessage, setNewChatMessage] = useState('');
+  const [isSendingChat, setIsSendingChat] = useState(false);
+
+  const chatEndRef = useRef<HTMLDivElement>(null);
+  const prevChatCountRef = useRef<number>(0);
+
+  // 1. Fetch Tenant Configuration on mount
+  useEffect(() => {
+    if (!subdomain) return;
+
+    const fetchConfig = async () => {
+      try {
+        // Resolve using the subdomain slug
+        const res = await fetch(`/api/tenants/public-config/?subdomain=${subdomain}`);
+        if (!res.ok) throw new Error('Portal no encontrado o inactivo');
+        const data = await res.json();
+        setTenantConfig(data);
+
+        // Check for local credentials
+        const storedToken = localStorage.getItem(`nectar_guest_token_${data.id}`);
+        const storedEmail = localStorage.getItem(`nectar_guest_email_${data.id}`);
+        if (storedToken && storedEmail) {
+          setToken(storedToken);
+          setEmail(storedEmail);
+          setIsAuthenticated(true);
+        }
+      } catch (err: any) {
+        setError(err.message || 'Error al cargar el portal');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchConfig();
+  }, [subdomain]);
+
+  // 2. Custom fetch helper
+  const portalFetch = async (endpoint: string, options: RequestInit = {}) => {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    const currentToken = token || (tenantConfig ? localStorage.getItem(`nectar_guest_token_${tenantConfig.id}`) : null);
+    if (currentToken) {
+      headers['Authorization'] = `Bearer ${currentToken}`;
+    }
+
+    const res = await fetch(endpoint, {
+      ...options,
+      headers: {
+        ...headers,
+        ...options.headers,
+      },
+    });
+
+    if (res.status === 401) {
+      if (tenantConfig) {
+        localStorage.removeItem(`nectar_guest_token_${tenantConfig.id}`);
+        localStorage.removeItem(`nectar_guest_email_${tenantConfig.id}`);
+      }
+      setToken(null);
+      setIsAuthenticated(false);
+      setActiveChat(null);
+      setTickets([]);
+      throw new Error('Sesión expirada');
+    }
+
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.detail || errData.error || 'Operación fallida');
+    }
+
+    if (res.status === 204) return null;
+    return res.json();
+  };
+
+  // 3. Load Tickets and Active Chat on auth success
+  const loadPortalData = async () => {
+    if (!isAuthenticated || !tenantConfig) return;
+    try {
+      // Fetch user's tickets
+      const ticketsData = await portalFetch('/api/tickets/');
+      setTickets(ticketsData);
+
+      // Fetch active chat
+      const chat = await portalFetch('/api/support-chats/active/');
+      if (chat) {
+        setActiveChat(chat);
+        setChatMessages(chat.messages || []);
+        prevChatCountRef.current = (chat.messages || []).length;
+      } else {
+        setActiveChat(null);
+        setChatMessages([]);
+      }
+    } catch (err) {
+      console.error('Error loading portal data:', err);
+    }
+  };
+
+  useEffect(() => {
+    if (isAuthenticated && tenantConfig) {
+      loadPortalData();
+    }
+  }, [isAuthenticated, tenantConfig]);
+
+  // 4. Polling for Live Chat & Ticket Updates
+  useEffect(() => {
+    if (!isAuthenticated || !tenantConfig) return;
+
+    const pollData = async () => {
+      try {
+        // Poll current tickets briefly (less frequent)
+        const ticketsData = await portalFetch('/api/tickets/');
+        setTickets(ticketsData);
+        if (selectedTicket) {
+          const updated = ticketsData.find((t: Ticket) => t.id === selectedTicket.id);
+          if (updated) setSelectedTicket(updated);
+        }
+
+        // Poll chat messages (more frequent)
+        if (activeChat) {
+          const chat = await portalFetch(`/api/support-chats/${activeChat.id}/`);
+          if (chat) {
+            setActiveChat(chat);
+            setChatMessages(chat.messages || []);
+          }
+        }
+      } catch (err) {
+        console.error('Error polling portal updates:', err);
+      }
+    };
+
+    const interval = setInterval(pollData, 6000);
+    return () => clearInterval(interval);
+  }, [isAuthenticated, tenantConfig, activeChat, selectedTicket?.id]);
+
+  // Scroll chat to bottom on updates
+  useEffect(() => {
+    if (chatEndRef.current) {
+      chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [chatMessages]);
+
+  // Login/Auth Submission
+  const handleAuthSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.trim() || !tenantConfig) return;
+    if (tenantConfig.require_customer_info && !name.trim()) return;
+
+    setIsSubmittingAuth(true);
+    try {
+      const data = await portalFetch('/api/tenants/guest-auth/', {
+        method: 'POST',
+        body: JSON.stringify({
+          tenant_id: tenantConfig.id,
+          email: email.trim(),
+          name: name.trim(),
+        }),
+      });
+
+      localStorage.setItem(`nectar_guest_token_${tenantConfig.id}`, data.token);
+      localStorage.setItem(`nectar_guest_email_${tenantConfig.id}`, data.email);
+      setToken(data.token);
+      setIsAuthenticated(true);
+    } catch (err: any) {
+      alert(err.message || 'Error al iniciar sesión');
+    } finally {
+      setIsSubmittingAuth(false);
+    }
+  };
+
+  // Ticket Management
+  const handleCreateTicket = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newTicketTitle.trim() || !newTicketDesc.trim()) return;
+
+    setIsCreatingTicket(true);
+    try {
+      const ticket = await portalFetch('/api/tickets/', {
+        method: 'POST',
+        body: JSON.stringify({
+          title: newTicketTitle,
+          description: newTicketDesc,
+          category: newTicketCategory,
+          priority: newTicketPriority,
+        }),
+      });
+
+      setTickets((prev) => [ticket, ...prev]);
+      setNewTicketTitle('');
+      setNewTicketDesc('');
+      alert('Ticket de soporte creado correctamente.');
+    } catch (err) {
+      alert('Error al crear el ticket.');
+    } finally {
+      setIsCreatingTicket(false);
+    }
+  };
+
+  const handleSendTicketMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!ticketMessageText.trim() || !selectedTicket) return;
+
+    setIsSendingTicketMsg(true);
+    try {
+      const msg = await portalFetch(`/api/tickets/${selectedTicket.id}/add_message/`, {
+        method: 'POST',
+        body: JSON.stringify({ content: ticketMessageText }),
+      });
+
+      setSelectedTicket((prev) => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          messages: [...(prev.messages || []), msg],
+        };
+      });
+      setTicketMessageText('');
+    } catch (err) {
+      alert('Error al enviar respuesta al ticket.');
+    } finally {
+      setIsSendingTicketMsg(false);
+    }
+  };
+
+  // Live Chat Management
+  const handleStartChat = async () => {
+    try {
+      const chat = await portalFetch('/api/support-chats/', {
+        method: 'POST',
+        body: JSON.stringify({}),
+      });
+      setActiveChat(chat);
+      setChatMessages([]);
+    } catch (err) {
+      alert('Error al iniciar sesión de chat.');
+    }
+  };
+
+  const handleSendChatMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newChatMessage.trim() || !activeChat) return;
+
+    const msgText = newChatMessage;
+    setNewChatMessage('');
+    setIsSendingChat(true);
+
+    try {
+      const sent = await portalFetch(`/api/support-chats/${activeChat.id}/add_message/`, {
+        method: 'POST',
+        body: JSON.stringify({ message: msgText }),
+      });
+
+      setChatMessages((prev) => [...prev, sent]);
+    } catch (err) {
+      alert('Error al enviar el mensaje.');
+      setNewChatMessage(msgText);
+    } finally {
+      setIsSendingChat(false);
+    }
+  };
+
+  const handleCloseChat = async () => {
+    if (!activeChat) return;
+    if (!confirm('¿Deseas finalizar la sesión de chat?')) return;
+
+    try {
+      await portalFetch(`/api/support-chats/${activeChat.id}/close/`, {
+        method: 'POST',
+      });
+      setActiveChat(null);
+      setChatMessages([]);
+    } catch (err) {
+      alert('Error al finalizar el chat.');
+    }
+  };
+
+  const handleLogout = () => {
+    if (tenantConfig) {
+      localStorage.removeItem(`nectar_guest_token_${tenantConfig.id}`);
+      localStorage.removeItem(`nectar_guest_email_${tenantConfig.id}`);
+    }
+    setToken(null);
+    setIsAuthenticated(false);
+    setActiveChat(null);
+    setTickets([]);
+    setSelectedTicket(null);
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#020403] text-white flex flex-col items-center justify-center font-sans">
+        <span className="w-8 h-8 rounded-full border-4 border-t-white border-white/10 animate-spin"></span>
+        <p className="mt-4 text-xs font-black uppercase tracking-widest text-white/50">Cargando Portal de Soporte...</p>
+      </div>
+    );
+  }
+
+  if (error || !tenantConfig) {
+    return (
+      <div className="min-h-screen bg-[#020403] text-white flex flex-col items-center justify-center font-sans px-6 text-center">
+        <h1 className="text-xl font-black text-red-500 uppercase tracking-widest mb-2">Error de Enrutamiento</h1>
+        <p className="text-sm text-white/60 max-w-md">{error || 'El portal solicitado no se encuentra activo.'}</p>
+        <a
+          href="https://nectarlabs.dev"
+          className="mt-8 px-6 py-3 bg-white/5 border border-white/10 rounded-full text-xs font-black uppercase tracking-widest hover:bg-white/10 transition-all"
+        >
+          Volver al Inicio
+        </a>
+      </div>
+    );
+  }
+
+  const primaryColor = tenantConfig.theme_color || '#C68A1E';
+
+  return (
+    <div className="min-h-screen bg-[#020403] text-white flex flex-col font-sans">
+      {/* 1. Header Navigation */}
+      <header className="border-b border-white/5 bg-[#030604]/50 backdrop-blur-md sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-6 h-18 flex justify-between items-center">
+          <div className="flex items-center gap-3">
+            {tenantConfig.logo_url ? (
+              <img src={tenantConfig.logo_url} alt={tenantConfig.name} className="w-8 h-8 rounded-full object-cover" />
+            ) : (
+              <span
+                className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-black text-black"
+                style={{ backgroundColor: primaryColor }}
+              >
+                {tenantConfig.name.substring(0, 1).toUpperCase()}
+              </span>
+            )}
+            <div>
+              <h1 className="text-sm font-black uppercase tracking-tight text-white">{tenantConfig.name}</h1>
+              <p className="text-[9px] uppercase tracking-widest font-black opacity-60">Centro de Soporte Técnico</p>
+            </div>
+          </div>
+
+          {isAuthenticated && (
+            <div className="flex items-center gap-4">
+              <span className="text-[10px] text-white/40 font-bold hidden sm:inline">{email}</span>
+              <button
+                onClick={handleLogout}
+                className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/10 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all"
+              >
+                Cerrar Sesión
+              </button>
+            </div>
+          )}
+        </div>
+      </header>
+
+      {/* 2. Main Portal Area */}
+      <main className="flex-1 max-w-7xl w-full mx-auto px-6 py-8 flex flex-col">
+        {!isAuthenticated ? (
+          /* Login Screen */
+          <div className="flex-1 flex items-center justify-center py-12">
+            <div className="max-w-md w-full bg-[#050a06]/60 backdrop-blur-md border border-white/5 rounded-[2.5rem] p-8 sm:p-10 shadow-2xl relative overflow-hidden">
+              {/* Gold glow top right */}
+              <div
+                className="absolute -top-24 -right-24 w-48 h-48 rounded-full blur-3xl opacity-20"
+                style={{ backgroundColor: primaryColor }}
+              ></div>
+
+              <div className="text-center mb-8">
+                <h2 className="text-xl font-black uppercase tracking-wider text-white">Acceso al Portal</h2>
+                <p className="text-xs text-white/50 mt-1 max-w-xs mx-auto">
+                  Introduce tu correo para ver tu historial de tickets y chatear con soporte.
+                </p>
+              </div>
+
+              <form onSubmit={handleAuthSubmit} className="space-y-4">
+                {tenantConfig.require_customer_info && (
+                  <div className="space-y-1">
+                    <label className="text-[9px] font-black uppercase tracking-widest text-white/40">Nombre Completo</label>
+                    <input
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="Ej. Carlos Mendoza"
+                      required
+                      className="w-full bg-white/5 border border-white/5 rounded-2xl px-4.5 py-3.5 text-xs text-white focus:outline-none focus:border-white/15 transition-all"
+                    />
+                  </div>
+                )}
+
+                <div className="space-y-1">
+                  <label className="text-[9px] font-black uppercase tracking-widest text-white/40">Correo Electrónico</label>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="correo@ejemplo.com"
+                    required
+                    className="w-full bg-white/5 border border-white/5 rounded-2xl px-4.5 py-3.5 text-xs text-white focus:outline-none focus:border-white/15 transition-all"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isSubmittingAuth}
+                  className="w-full py-4 text-black font-black uppercase tracking-widest text-[10px] rounded-2xl transition-all hover:scale-[1.01] active:scale-95 disabled:opacity-50 mt-6 cursor-pointer"
+                  style={{ backgroundColor: primaryColor }}
+                >
+                  {isSubmittingAuth ? 'Iniciando...' : 'Entrar al Centro de Soporte'}
+                </button>
+              </form>
+            </div>
+          </div>
+        ) : (
+          /* Logged In Portal Dashboard */
+          <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+            {/* Left side: Tickets (7 cols) */}
+            <div className="lg:col-span-7 flex flex-col space-y-6">
+              {/* Ticket Details Panel or Ticket Creation Form */}
+              {selectedTicket ? (
+                /* Ticket Detail View */
+                <div className="bg-[#050a06]/40 border border-white/5 rounded-[2rem] p-6 flex flex-col flex-1 shadow-lg">
+                  <div className="flex justify-between items-start border-b border-white/5 pb-4 mb-4">
+                    <div>
+                      <button
+                        onClick={() => setSelectedTicket(null)}
+                        className="text-[9px] font-black uppercase tracking-wider text-white/40 hover:text-white mb-2 flex items-center gap-1"
+                      >
+                        ← Volver a la Lista
+                      </button>
+                      <h3 className="text-base font-black uppercase text-white tracking-tight">{selectedTicket.title}</h3>
+                      <p className="text-[8.5px] uppercase tracking-widest mt-1 text-white/40 font-bold">
+                        Ticket #{selectedTicket.id} | Categoría: {selectedTicket.category}
+                      </p>
+                    </div>
+                    <span
+                      className="px-3.5 py-1.5 rounded-full text-[8.5px] font-black uppercase tracking-widest border border-white/10"
+                      style={{
+                        backgroundColor:
+                          selectedTicket.status === 'CLOSED'
+                            ? 'rgba(239, 68, 68, 0.1)'
+                            : selectedTicket.status === 'RESOLVED'
+                            ? 'rgba(16, 185, 129, 0.1)'
+                            : 'rgba(245, 158, 11, 0.1)',
+                        color:
+                          selectedTicket.status === 'CLOSED'
+                            ? '#ef4444'
+                            : selectedTicket.status === 'RESOLVED'
+                            ? '#10b981'
+                            : '#f59e0b',
+                      }}
+                    >
+                      {selectedTicket.status}
+                    </span>
+                  </div>
+
+                  {/* History of messages within the ticket */}
+                  <div className="flex-1 overflow-y-auto space-y-4 max-h-[300px] pr-2 custom-scrollbar">
+                    <div className="bg-white/5 border border-white/5 rounded-2xl p-4">
+                      <p className="text-[8.5px] font-black uppercase tracking-widest text-white/40">Descripción Inicial</p>
+                      <p className="text-xs text-white/80 mt-1 leading-relaxed whitespace-pre-wrap">{selectedTicket.description}</p>
+                      <p className="text-[7.5px] text-white/30 mt-2 font-bold">{new Date(selectedTicket.created_at).toLocaleString()}</p>
+                    </div>
+
+                    {selectedTicket.messages &&
+                      selectedTicket.messages.map((msg) => (
+                        <div
+                          key={msg.id}
+                          className={`p-4 border rounded-2xl ${
+                            msg.sender_email.toLowerCase() === email.toLowerCase()
+                              ? 'bg-white/[0.02] border-white/5'
+                              : 'bg-white/5 border-white/10'
+                          }`}
+                        >
+                          <p className="text-[8.5px] font-black uppercase tracking-widest" style={{ color: primaryColor }}>
+                            {msg.sender_email.toLowerCase() === email.toLowerCase() ? 'Yo' : '🛠️ Soporte Técnico'}
+                          </p>
+                          <p className="text-xs text-white/80 mt-1 leading-relaxed whitespace-pre-wrap">{msg.content}</p>
+                          <p className="text-[7.5px] text-white/30 mt-2 font-bold">{new Date(msg.created_at).toLocaleString()}</p>
+                        </div>
+                      ))}
+                  </div>
+
+                  {/* Add response form */}
+                  {selectedTicket.status !== 'CLOSED' && (
+                    <form onSubmit={handleSendTicketMessage} className="mt-4 pt-4 border-t border-white/5 flex gap-2">
+                      <input
+                        type="text"
+                        value={ticketMessageText}
+                        onChange={(e) => setTicketMessageText(e.target.value)}
+                        placeholder="Escribe tu respuesta técnica aquí..."
+                        className="flex-1 bg-white/5 border border-white/5 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-white/15 transition-all"
+                        disabled={isSendingTicketMsg}
+                        required
+                      />
+                      <button
+                        type="submit"
+                        disabled={!ticketMessageText.trim() || isSendingTicketMsg}
+                        className="px-5 py-3 text-black font-black uppercase tracking-widest text-[9px] rounded-xl hover:scale-105 transition-all disabled:opacity-50"
+                        style={{ backgroundColor: primaryColor }}
+                      >
+                        {isSendingTicketMsg ? 'Enviando...' : 'Responder'}
+                      </button>
+                    </form>
+                  )}
+                </div>
+              ) : (
+                /* Ticket List & Creation View */
+                <>
+                  {/* Ticket creation form */}
+                  <div className="bg-[#050a06]/40 border border-white/5 rounded-[2rem] p-6 shadow-lg">
+                    <h3 className="text-sm font-black uppercase tracking-wider mb-4 text-white">Nuevo Ticket de Soporte</h3>
+                    <form onSubmit={handleCreateTicket} className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                          <label className="text-[8.5px] font-black uppercase tracking-wider text-white/40">Título del Problema</label>
+                          <input
+                            type="text"
+                            value={newTicketTitle}
+                            onChange={(e) => setNewTicketTitle(e.target.value)}
+                            placeholder="Ej. Error en pasarela de pagos"
+                            required
+                            className="w-full bg-white/5 border border-white/5 rounded-xl px-3.5 py-3 text-xs text-white focus:outline-none focus:border-white/10"
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="space-y-1">
+                            <label className="text-[8.5px] font-black uppercase tracking-wider text-white/40">Categoría</label>
+                            <select
+                              value={newTicketCategory}
+                              onChange={(e) => setNewTicketCategory(e.target.value)}
+                              className="w-full bg-white/5 border border-white/5 rounded-xl px-3.5 py-3 text-xs text-white focus:outline-none"
+                            >
+                              <option value="QUESTION">Pregunta</option>
+                              <option value="ISSUE">Problema Técnico</option>
+                              <option value="IMPLEMENTATION">Implementación</option>
+                              <option value="IDEA">Nueva Idea</option>
+                            </select>
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-[8.5px] font-black uppercase tracking-wider text-white/40">Prioridad</label>
+                            <select
+                              value={newTicketPriority}
+                              onChange={(e) => setNewTicketPriority(e.target.value)}
+                              className="w-full bg-white/5 border border-white/5 rounded-xl px-3.5 py-3 text-xs text-white focus:outline-none"
+                            >
+                              <option value="LOW">Baja</option>
+                              <option value="MEDIUM">Media</option>
+                              <option value="HIGH">Alta</option>
+                              <option value="URGENT">Urgente</option>
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[8.5px] font-black uppercase tracking-wider text-white/40">Detalle / Requerimientos</label>
+                        <textarea
+                          value={newTicketDesc}
+                          onChange={(e) => setNewTicketDesc(e.target.value)}
+                          placeholder="Describe con el mayor detalle técnico posible el inconveniente..."
+                          required
+                          rows={3}
+                          className="w-full bg-white/5 border border-white/5 rounded-xl px-3.5 py-3 text-xs text-white focus:outline-none focus:border-white/10 resize-none"
+                        ></textarea>
+                      </div>
+
+                      <button
+                        type="submit"
+                        disabled={isCreatingTicket}
+                        className="px-6 py-3.5 text-black font-black uppercase tracking-widest text-[9px] rounded-xl hover:scale-102 active:scale-95 transition-all disabled:opacity-50"
+                        style={{ backgroundColor: primaryColor }}
+                      >
+                        {isCreatingTicket ? 'Abriendo Ticket...' : 'Crear Ticket de Soporte'}
+                      </button>
+                    </form>
+                  </div>
+
+                  {/* List of existing tickets */}
+                  <div className="bg-[#050a06]/40 border border-white/5 rounded-[2rem] p-6 flex-1 shadow-lg overflow-hidden flex flex-col">
+                    <h3 className="text-sm font-black uppercase tracking-wider mb-4 text-white">Mis Tickets Abiertos</h3>
+                    <div className="flex-1 overflow-y-auto space-y-3 custom-scrollbar pr-1 max-h-[300px]">
+                      {tickets.length === 0 ? (
+                        <p className="text-xs text-white/35 py-6 text-center">No has creado ningún ticket de soporte técnico aún.</p>
+                      ) : (
+                        tickets.map((t) => (
+                          <div
+                            key={t.id}
+                            onClick={() => setSelectedTicket(t)}
+                            className="bg-white/[0.02] hover:bg-white/5 border border-white/5 rounded-2xl p-4.5 flex justify-between items-center transition-all cursor-pointer hover:border-white/10"
+                          >
+                            <div>
+                              <h4 className="text-xs font-black uppercase text-white tracking-tight">{t.title}</h4>
+                              <p className="text-[8px] uppercase tracking-widest text-white/40 mt-1 font-bold">
+                                Ticket #{t.id} | Categoría: {t.category} | Prioridad: {t.priority}
+                              </p>
+                            </div>
+                            <span
+                              className="px-2.5 py-1 rounded-full text-[7.5px] font-black uppercase tracking-widest"
+                              style={{
+                                border: '1px solid rgba(255, 255, 255, 0.1)',
+                                color: t.status === 'CLOSED' ? '#ef4444' : t.status === 'RESOLVED' ? '#10b981' : '#f59e0b',
+                              }}
+                            >
+                              {t.status}
+                            </span>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Right side: Live Chat widget (5 cols) */}
+            <div className="lg:col-span-5 bg-[#050a06]/40 border border-white/5 rounded-[2rem] p-6 shadow-lg flex flex-col h-[580px] lg:h-auto items-stretch">
+              <h3 className="text-sm font-black uppercase tracking-wider mb-4 text-white">Soporte Live Chat</h3>
+
+              {!activeChat ? (
+                <div className="flex-1 flex flex-col items-center justify-center text-center p-6 bg-white/[0.01] border border-white/5 rounded-2xl">
+                  <div
+                    className="w-14 h-14 rounded-full flex items-center justify-center mb-5"
+                    style={{ backgroundColor: `${primaryColor}15`, color: primaryColor }}
+                  >
+                    <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                    </svg>
+                  </div>
+                  <h4 className="font-black text-xs text-white uppercase tracking-wide">¿Deseas iniciar chat en vivo?</h4>
+                  <p className="text-[10px] text-white/50 max-w-xs mt-1 mb-8 leading-relaxed">
+                    Conéctate en tiempo real con nuestro equipo técnico para un soporte inmediato de alta prioridad.
+                  </p>
+                  <button
+                    onClick={handleStartChat}
+                    className="w-full py-4 text-black font-black uppercase tracking-widest text-[9px] rounded-xl hover:scale-102 active:scale-95 transition-all cursor-pointer"
+                    style={{ backgroundColor: primaryColor }}
+                  >
+                    Iniciar Sesión de Chat
+                  </button>
+                </div>
+              ) : (
+                <div className="flex-1 flex flex-col bg-white/[0.01] border border-white/5 rounded-2xl overflow-hidden">
+                  <div className="p-4 border-b border-white/5 flex justify-between items-center bg-white/[0.005]">
+                    <div>
+                      <span className="text-[8.5px] font-black uppercase tracking-widest text-white/40">Chat de Soporte #{activeChat.id}</span>
+                      <p className="text-[7.5px] uppercase tracking-wider text-green-500 font-black mt-0.5 animate-pulse">Conectado</p>
+                    </div>
+                    <button
+                      onClick={handleCloseChat}
+                      className="text-[8px] font-black uppercase text-red-500/80 hover:text-red-500 hover:bg-red-500/5 px-2.5 py-1.5 rounded-lg transition-all"
+                    >
+                      Finalizar
+                    </button>
+                  </div>
+
+                  {/* Messages */}
+                  <div className="flex-1 overflow-y-auto p-4 space-y-3.5 custom-scrollbar">
+                    {chatMessages.map((msg) => {
+                      const isMine = msg.sender_email.toLowerCase() === email.toLowerCase();
+                      const isAgent = msg.sender_role === 'ADMIN' || msg.sender_role === 'BUSINESS';
+                      return (
+                        <div key={msg.id} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
+                          <div
+                            className={`max-w-[85%] rounded-2xl p-3 shadow-sm ${
+                              isMine ? 'text-black rounded-tr-none' : 'bg-white/5 text-white border border-white/5 rounded-tl-none'
+                            }`}
+                            style={isMine ? { backgroundColor: primaryColor } : {}}
+                          >
+                            {!isMine && (
+                              <p className="text-[7.5px] font-black uppercase tracking-wider mb-1" style={{ color: primaryColor }}>
+                                {isAgent ? '🛠️ Ingeniero' : msg.sender_email.split('@')[0]}
+                              </p>
+                            )}
+                            <p className="text-[11px] font-medium leading-relaxed whitespace-pre-wrap">{msg.message}</p>
+                            <p className={`text-[6px] font-bold text-right mt-1 opacity-40 ${isMine ? 'text-black' : 'text-white'}`}>
+                              {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                    <div ref={chatEndRef} />
+                  </div>
+
+                  {/* Message Input */}
+                  <form onSubmit={handleSendChatMessage} className="p-3 border-t border-white/5 bg-white/[0.005] flex gap-2">
+                    <input
+                      type="text"
+                      value={newChatMessage}
+                      onChange={(e) => setNewChatMessage(e.target.value)}
+                      placeholder="Escribe tu mensaje..."
+                      className="flex-1 bg-[#020403] border border-white/5 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-white/10"
+                      disabled={isSendingChat}
+                      required
+                    />
+                    <button
+                      type="submit"
+                      disabled={!newChatMessage.trim() || isSendingChat}
+                      className="p-3 rounded-xl hover:scale-105 transition-all text-black cursor-pointer"
+                      style={{ backgroundColor: primaryColor }}
+                    >
+                      <svg className="w-3.5 h-3.5 transform rotate-90" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
+                      </svg>
+                    </button>
+                  </form>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </main>
+
+      {/* Footer copyright */}
+      <footer className="border-t border-white/5 py-6 bg-[#030604]/50">
+        <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row justify-between items-center gap-4 text-center sm:text-left">
+          <p className="text-[10px] font-black uppercase tracking-widest text-white/20">
+            &copy; {new Date().getFullYear()} Néctar Labs Software Artesanal. Todos los derechos reservados.
+          </p>
+          <div className="flex gap-6 text-[10px] font-black uppercase tracking-widest text-white/30">
+            <a href="https://nectarlabs.dev" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-all">
+              Sitio Oficial
+            </a>
+            <span>Portal Multitenant v1.0</span>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+}
