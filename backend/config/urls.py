@@ -11,7 +11,7 @@ from rest_framework_simplejwt.views import (
 from apps.shop.views import PlanViewSet, ProductViewSet, ContractViewSet, PaymentInstallmentViewSet
 from apps.dashboard.views import ProjectViewSet, FAQViewSet, TimeLogViewSet
 from apps.blog.views import PostViewSet
-from apps.tickets.views import TicketViewSet
+from apps.tickets.views import TicketViewSet, SupportChatViewSet
 from apps.users.views import UserViewSet
 
 router = DefaultRouter()
@@ -24,6 +24,7 @@ router.register(r'faqs', FAQViewSet)
 router.register(r'logs', TimeLogViewSet, basename='timelog')
 router.register(r'posts', PostViewSet)
 router.register(r'tickets', TicketViewSet, basename='ticket')
+router.register(r'support-chats', SupportChatViewSet, basename='support-chat')
 router.register(r'users', UserViewSet, basename='user')
 
 

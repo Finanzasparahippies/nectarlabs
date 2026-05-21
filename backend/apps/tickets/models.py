@@ -40,3 +40,30 @@ class Message(models.Model):
 
     def __str__(self):
         return f"Message from {self.sender.email} on Ticket #{self.ticket.id}"
+
+class SupportChat(models.Model):
+    class Status(models.TextChoices):
+        OPEN = 'OPEN', 'Abierto'
+        IN_PROGRESS = 'IN_PROGRESS', 'En Progreso'
+        RESOLVED = 'RESOLVED', 'Resuelto'
+        CLOSED = 'CLOSED', 'Cerrado'
+
+    client = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='support_chats')
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.OPEN)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Support Chat #{self.id} for {self.client.email} ({self.status})"
+
+class SupportChatMessage(models.Model):
+    chat = models.ForeignKey(SupportChat, on_delete=models.CASCADE, related_name='messages')
+    sender = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    message = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['created_at']
+
+    def __str__(self):
+        return f"Msg {self.id} on Chat #{self.chat.id} by {self.sender.email}"
