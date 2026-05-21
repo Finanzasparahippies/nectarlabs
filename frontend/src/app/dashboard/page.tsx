@@ -16,6 +16,7 @@ interface Project {
   staging_url: string;
   production_url: string;
   user_email?: string;
+  client_username?: string;
   plan_hours?: number;
   used_hours_current_month?: number;
   remaining_hours_current_month?: number;
