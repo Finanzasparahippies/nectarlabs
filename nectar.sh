@@ -41,6 +41,8 @@ show_help() {
     echo "  createsuperuser         - Create a Django admin user"
     echo "  shell                   - Open backend shell"
     echo "  test                    - Run backend tests"
+    echo "  typecheck               - Run TypeScript type-check in Dev frontend"
+    echo "  buildcheck              - Run Next.js build check in Dev frontend"
     echo "  frontend                - Run frontend locally (npm run dev)"
     echo "  build                   - Build production images"
     echo "  up-prod                 - Start production environment"
@@ -58,6 +60,8 @@ show_help() {
     echo "  shell-staging           - Open backend shell (Staging)"
     echo "  collectstatic-staging   - Run collectstatic in backend (Staging)"
     echo "  test-staging            - Run backend tests (Staging)"
+    echo "  typecheck-staging       - Run TypeScript type-check in Staging frontend"
+    echo "  buildcheck-staging      - Run Next.js build check in Staging frontend"
     echo "  help                    - Show this help"
 }
 
@@ -120,6 +124,14 @@ case $COMMAND in
     test-staging)
         run_django_cmd_staging test "$@"
         ;;
+    typecheck-staging)
+        echo "Running TypeScript type-check in Staging frontend..."
+        docker compose -f docker-compose.staging.yml exec frontend-staging npx tsc --noEmit "$@"
+        ;;
+    buildcheck-staging)
+        echo "Running Next.js build-check in Staging frontend..."
+        docker compose -f docker-compose.staging.yml exec frontend-staging npm run build "$@"
+        ;;
     restart)
         docker compose restart "$@"
         ;;
@@ -152,6 +164,14 @@ case $COMMAND in
         ;;
     test)
         run_django_cmd_dev test "$@"
+        ;;
+    typecheck)
+        echo "Running TypeScript type-check in Dev frontend..."
+        docker compose exec frontend npx tsc --noEmit "$@"
+        ;;
+    buildcheck)
+        echo "Running Next.js build-check in Dev frontend..."
+        docker compose exec frontend npm run build "$@"
         ;;
     frontend)
         cd frontend && npm run dev "$@"
