@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Plan, Product, Contract, PaymentInstallment
+from .models import Plan, Product, Contract, PaymentInstallment, AddOn
 
 class PlanSerializer(serializers.ModelSerializer):
     class Meta:
@@ -11,8 +11,15 @@ class ProductSerializer(serializers.ModelSerializer):
         model = Product
         fields = '__all__'
 
+class AddOnSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AddOn
+        fields = '__all__'
+
 class ContractSerializer(serializers.ModelSerializer):
     plan_name = serializers.CharField(source='plan.name', read_only=True)
+    addons = serializers.SlugRelatedField(many=True, slug_field='slug', queryset=AddOn.objects.all(), required=False)
+    addons_details = AddOnSerializer(source='addons', many=True, read_only=True)
 
     class Meta:
         model = Contract

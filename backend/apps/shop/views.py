@@ -3,8 +3,8 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.utils import timezone
 from datetime import timedelta
-from .models import Plan, Product, Contract, PaymentInstallment
-from .serializers import PlanSerializer, ProductSerializer, ContractSerializer, PaymentInstallmentSerializer
+from .models import Plan, Product, Contract, PaymentInstallment, AddOn
+from .serializers import PlanSerializer, ProductSerializer, ContractSerializer, PaymentInstallmentSerializer, AddOnSerializer
 from .utils import generate_contract_pdf, send_contract_emails
 
 class PlanViewSet(viewsets.ReadOnlyModelViewSet):
@@ -16,6 +16,11 @@ class PlanViewSet(viewsets.ReadOnlyModelViewSet):
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+class AddOnViewSet(viewsets.ModelViewSet):
+    queryset = AddOn.objects.all()
+    serializer_class = AddOnSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
 class ContractViewSet(viewsets.ModelViewSet):
@@ -60,7 +65,8 @@ class ContractViewSet(viewsets.ModelViewSet):
 
         # Generar automáticamente 6 mensualidades obligatorias
         plan_price = contract.plan.price if contract.plan else 0
-        monthly_amount = plan_price + (contract.brand_design_price or 0)
+        addons_price = sum(addon.monthly_price for addon in contract.addons.all())
+        monthly_amount = plan_price + (contract.brand_design_price or 0) + addons_price
         start_date = contract.signed_at.date() if contract.signed_at else timezone.now().date()
         
         # Eliminar mensualidades previas si existían por re-firma para evitar duplicados
@@ -117,7 +123,8 @@ class PaymentInstallmentViewSet(viewsets.ModelViewSet):
         for contract in Contract.objects.filter(is_fully_signed=True):
             if contract.installments.count() == 0:
                 plan_price = contract.plan.price if contract.plan else 0
-                monthly_amount = plan_price + (contract.brand_design_price or 0)
+                addons_price = sum(addon.monthly_price for addon in contract.addons.all())
+                monthly_amount = plan_price + (contract.brand_design_price or 0) + addons_price
                 start_date = contract.signed_at.date() if contract.signed_at else timezone.now().date()
                 
                 installments_to_create = []

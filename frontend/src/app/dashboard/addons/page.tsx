@@ -21,6 +21,171 @@ interface Addon {
   icon: React.ReactNode;
 }
 
+const getAddonIcon = (id: string) => {
+  switch (id) {
+    case 'live-chat':
+      return (
+        <svg className="w-8 h-8 text-nectar-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+        </svg>
+      );
+    case 'booking-signature':
+      return (
+        <svg className="w-8 h-8 text-nectar-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+        </svg>
+      );
+    case 'logistics-gps':
+      return (
+        <svg className="w-8 h-8 text-nectar-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+      );
+    case 'patreon-sponsorship':
+      return (
+        <svg className="w-8 h-8 text-nectar-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      );
+    case 'analytics-apm':
+      return (
+        <svg className="w-8 h-8 text-nectar-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h2a2 2 0 002-2z" />
+        </svg>
+      );
+    case 'newsletter-campaigner':
+      return (
+        <svg className="w-8 h-8 text-nectar-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+        </svg>
+      );
+    default:
+      return (
+        <svg className="w-8 h-8 text-nectar-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+        </svg>
+      );
+  }
+};
+
+const fallbackAddons: Omit<Addon, 'icon'>[] = [
+  {
+    id: 'live-chat',
+    name: 'Néctar Live Chat',
+    categoryBadge: 'COMUNICACIÓN EN VIVO',
+    description: 'Widget de chat flotante en tiempo real y consola multi-agente con historial persistente.',
+    detailedDescription: 'Un canal de comunicación instantáneo integrado para retención y soporte de usuarios. Los clientes ven un widget interactivo de chat, mientras que los agentes de soporte gestionan las conversaciones desde una consola interna dedicada.',
+    monthlyPrice: 79,
+    yearlyPrice: 790,
+    originProject: 'nectarlabs-main',
+    sourceReference: 'backend/apps/tickets (SupportChat, SupportChatMessage)',
+    complexity: 'Media',
+    serverRequirements: 'Django Channels (ASGI) con servidor de caché Redis + Base de Datos relacional.',
+    technicalDetails: [
+      'Widget JS reactivo y ligero incrustable',
+      'Polling persistente o WebSocket fallback',
+      'Asignación dinámica de chats a staff técnico',
+      'Marcado de estado abierto/resuelto/cerrado'
+    ]
+  },
+  {
+    id: 'booking-signature',
+    name: 'Néctar Booking & Signature',
+    categoryBadge: 'CONTRATOS Y CITAS',
+    description: 'Motor de reserva de citas integrado con firma digital de propuestas y generación de PDFs con firma incrustada.',
+    detailedDescription: 'Ideal para digitalizar acuerdos contractuales. Permite configurar calendarios interactivos, generar propuestas en PDF al vuelo a partir de plantillas y capturar firmas táctiles o con mouse seguras con marcas de tiempo criptográficas.',
+    monthlyPrice: 149,
+    yearlyPrice: 1490,
+    originProject: 'ms-ambar',
+    sourceReference: 'ms-ambar/backend/apps/bookings & templates/emails',
+    complexity: 'Alta',
+    serverRequirements: 'Almacenamiento seguro en la nube (AWS S3, Azure Blob o similar) para resguardar PDFs + Biblioteca ReportLab.',
+    technicalDetails: [
+      'Lienzo de firma en React (Canvas HTML5)',
+      'Generación de documentos PDF vía backend',
+      'Notificaciones de propuesta por correo electrónico con templates HTML',
+      'Control de flujos y estados de aprobación'
+    ]
+  },
+  {
+    id: 'logistics-gps',
+    name: 'Néctar Logistics & GPS',
+    categoryBadge: 'LOGÍSTICA Y CONTROL',
+    description: 'Seguimiento en tiempo real de repartidores, trazado de rutas óptimas de paradas y cálculo de ETA en mapa interactivo.',
+    detailedDescription: 'Módulo de geolocalización industrial. Registra rutas y telemetría GPS, ofreciendo una experiencia interactiva tanto al administrador (consola de flotas) como al usuario final (seguimiento del pedido en tiempo real).',
+    monthlyPrice: 249,
+    yearlyPrice: 2490,
+    originProject: 'losplacosones',
+    sourceReference: 'losplacosones/backend/apps/delivery',
+    complexity: 'Muy Alta',
+    serverRequirements: 'Acceso a Mapbox API o Google Maps API para cálculo de rutas + Telemetría persistente de alta frecuencia.',
+    technicalDetails: [
+      'WebSockets / Polling optimizado para actualización GPS',
+      'Consola administrativa con mapas interactivos de flotas',
+      'Cálculo inteligente de rutas y paradas ordenadas',
+      'Estimaciones de tiempo de entrega basadas en tráfico'
+    ]
+  },
+  {
+    id: 'patreon-sponsorship',
+    name: 'Néctar Patreon/Sponsorship',
+    categoryBadge: 'MONETIZACIÓN',
+    description: 'Pasarela de suscripciones recurrentes de Stripe con control de acceso a feeds exclusivos y niveles de membresía.',
+    detailedDescription: 'Permite monetizar tu contenido, comunidad o SaaS de manera flexible. Automatiza cobros recurrentes de Stripe, gestiona roles y bloquea o desbloquea secciones de contenido multimedia basándose en el nivel del suscriptor.',
+    monthlyPrice: 129,
+    yearlyPrice: 1290,
+    originProject: 'tierraviva',
+    sourceReference: 'tierraviva/tierraViva-backend-main/sponsorship',
+    complexity: 'Media',
+    serverRequirements: 'Cuenta comercial de Stripe + Configuración de endpoint para Webhooks HTTPS del backend.',
+    technicalDetails: [
+      'Integración con Stripe Billing API y Webhooks',
+      'Definición de tiers o niveles dinámicos desde Django Admin',
+      'Validación automatizada de estatus de membresías en backend',
+      'Portal de auto-gestión del suscriptor'
+    ]
+  },
+  {
+    id: 'analytics-apm',
+    name: 'Néctar Analytics APM',
+    categoryBadge: 'MONITOREO DE DESEMPEÑO',
+    description: 'Monitor de Core Web Vitals en navegador y telemetría de base de datos con conteo de queries e hilos en tiempo real.',
+    detailedDescription: 'Optimiza la infraestructura midiendo el impacto real. Este middleware inyecta telemetría que calcula Web Vitals (LCP, FID, CLS) desde el lado del cliente y registra el tiempo de respuesta y la eficiencia de las consultas SQL en Django.',
+    monthlyPrice: 59,
+    yearlyPrice: 590,
+    originProject: 'nectarlabs-main',
+    sourceReference: 'backend/apps/performance (PerformanceMiddleware, models.py)',
+    complexity: 'Media',
+    serverRequirements: 'Módulo de Middleware Django instalado + Agregación de logs asíncrona para no afectar el flujo principal.',
+    technicalDetails: [
+      'Detección automática de consultas duplicadas (N+1)',
+      'Monitoreo del hardware del servidor (CPU/RAM/SSD)',
+      'Alertas configurables por lentitud de base de datos',
+      'Registro detallado de Web Vitals del navegador del cliente'
+    ]
+  },
+  {
+    id: 'newsletter-campaigner',
+    name: 'Néctar Newsletter',
+    categoryBadge: 'EMAIL MARKETING',
+    description: 'Gestor de suscripciones, programador de campañas con plantillas HTML y envío masivo optimizado para SMTP/SES.',
+    detailedDescription: 'Envía boletines interactivos a tu base de contactos. Cuenta con un sistema automático de tokens únicos de cancelación de suscripción para cumplir con las normativas internacionales de correo, además de plantillas HTML prediseñadas.',
+    monthlyPrice: 39,
+    yearlyPrice: 390,
+    originProject: 'nectarlabs-main',
+    sourceReference: 'backend/apps/newsletter (Subscriber, send_newsletter_email)',
+    complexity: 'Baja',
+    serverRequirements: 'Servicio de entrega de correos electrónicos configurado (AWS SES, Resend, Sendgrid o un SMTP privado).',
+    technicalDetails: [
+      'Tokens únicos de desuscripción seguros (UUID)',
+      'Render de templates de correo HTML con Django Template Loader',
+      'Manejo de estados activos / inactivos de la base de datos',
+      'Soporte multi-idioma de plantillas'
+    ]
+  }
+];
+
 export default function AddonsPage() {
   const router = useRouter();
   const [isStaff, setIsStaff] = useState(false);
@@ -33,176 +198,82 @@ export default function AddonsPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successTicketId, setSuccessTicketId] = useState<number | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [addonsList, setAddonsList] = useState<Addon[]>([]);
 
   useEffect(() => {
     const staff = localStorage.getItem('is_staff') === 'true';
     const role = localStorage.getItem('user_role') || '';
     setUserRole(role);
     setIsStaff((staff || role === 'ADMIN' || role === 'BUSINESS') && role !== 'DESIGNER');
-    setLoading(false);
 
-    // Auto-select or request addon from query params
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      const selectId = params.get('select');
-      const requestId = params.get('request');
-      if (selectId) {
-        const found = addonsList.find(a => a.id === selectId);
-        if (found) setSelectedAddon(found);
-      } else if (requestId) {
-        const found = addonsList.find(a => a.id === requestId);
-        if (found) setRequestAddon(found);
+    const loadAddons = async () => {
+      try {
+        const data = await fetcher('/addons/');
+        if (Array.isArray(data)) {
+          const mapped: Addon[] = data.map((item: any) => ({
+            id: item.slug,
+            name: item.name,
+            categoryBadge: item.category_badge,
+            description: item.description,
+            detailedDescription: item.detailed_description,
+            monthlyPrice: parseFloat(item.monthly_price),
+            yearlyPrice: parseFloat(item.yearly_price),
+            originProject: item.origin_project,
+            sourceReference: item.source_reference,
+            complexity: item.complexity,
+            serverRequirements: item.server_requirements,
+            technicalDetails: item.technical_details || [],
+            icon: getAddonIcon(item.slug),
+          }));
+          setAddonsList(mapped);
+
+          // Auto-select or request from params
+          if (typeof window !== 'undefined') {
+            const params = new URLSearchParams(window.location.search);
+            const selectId = params.get('select');
+            const requestId = params.get('request');
+            if (selectId) {
+              const found = mapped.find(a => a.id === selectId);
+              if (found) setSelectedAddon(found);
+            } else if (requestId) {
+              const found = mapped.find(a => a.id === requestId);
+              if (found) setRequestAddon(found);
+            }
+          }
+        } else {
+          useFallback();
+        }
+      } catch (error) {
+        console.error("Error loading addons, falling back to static config:", error);
+        useFallback();
+      } finally {
+        setLoading(false);
       }
-    }
-  }, []);
+    };
 
-  const addonsList: Addon[] = [
-    {
-      id: 'live-chat',
-      name: 'Néctar Live Chat',
-      categoryBadge: 'COMUNICACIÓN EN VIVO',
-      description: 'Widget de chat flotante en tiempo real y consola multi-agente con historial persistente.',
-      detailedDescription: 'Un canal de comunicación instantáneo integrado para retención y soporte de usuarios. Los clientes ven un widget interactivo de chat, mientras que los agentes de soporte gestionan las conversaciones desde una consola interna dedicada.',
-      monthlyPrice: 79,
-      yearlyPrice: 790,
-      originProject: 'nectarlabs-main',
-      sourceReference: 'backend/apps/tickets (SupportChat, SupportChatMessage)',
-      complexity: 'Media',
-      serverRequirements: 'Django Channels (ASGI) con servidor de caché Redis + Base de Datos relacional.',
-      technicalDetails: [
-        'Widget JS reactivo y ligero incrustable',
-        'Polling persistente o WebSocket fallback',
-        'Asignación dinámica de chats a staff técnico',
-        'Marcado de estado abierto/resuelto/cerrado'
-      ],
-      icon: (
-        <svg className="w-8 h-8 text-nectar-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-        </svg>
-      )
-    },
-    {
-      id: 'booking-signature',
-      name: 'Néctar Booking & Signature',
-      categoryBadge: 'CONTRATOS Y CITAS',
-      description: 'Motor de reserva de citas integrado con firma digital de propuestas y generación de PDFs con firma incrustada.',
-      detailedDescription: 'Ideal para digitalizar acuerdos contractuales. Permite configurar calendarios interactivos, generar propuestas en PDF al vuelo a partir de plantillas y capturar firmas táctiles o con mouse seguras con marcas de tiempo criptográficas.',
-      monthlyPrice: 149,
-      yearlyPrice: 1490,
-      originProject: 'ms-ambar',
-      sourceReference: 'ms-ambar/backend/apps/bookings & templates/emails',
-      complexity: 'Alta',
-      serverRequirements: 'Almacenamiento seguro en la nube (AWS S3, Azure Blob o similar) para resguardar PDFs + Biblioteca ReportLab.',
-      technicalDetails: [
-        'Lienzo de firma en React (Canvas HTML5)',
-        'Generación de documentos PDF vía backend',
-        'Notificaciones de propuesta por correo electrónico con templates HTML',
-        'Control de flujos y estados de aprobación'
-      ],
-      icon: (
-        <svg className="w-8 h-8 text-nectar-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-        </svg>
-      )
-    },
-    {
-      id: 'logistics-gps',
-      name: 'Néctar Logistics & GPS',
-      categoryBadge: 'LOGÍSTICA Y CONTROL',
-      description: 'Seguimiento en tiempo real de repartidores, trazado de rutas óptimas de paradas y cálculo de ETA en mapa interactivo.',
-      detailedDescription: 'Módulo de geolocalización industrial. Registra rutas y telemetría GPS, ofreciendo una experiencia interactiva tanto al administrador (consola de flotas) como al usuario final (seguimiento del pedido en tiempo real).',
-      monthlyPrice: 249,
-      yearlyPrice: 2490,
-      originProject: 'losplacosones',
-      sourceReference: 'losplacosones/backend/apps/delivery',
-      complexity: 'Muy Alta',
-      serverRequirements: 'Acceso a Mapbox API o Google Maps API para cálculo de rutas + Telemetría persistente de alta frecuencia.',
-      technicalDetails: [
-        'WebSockets / Polling optimizado para actualización GPS',
-        'Consola administrativa con mapas interactivos de flotas',
-        'Cálculo inteligente de rutas y paradas ordenadas',
-        'Estimaciones de tiempo de entrega basadas en tráfico'
-      ],
-      icon: (
-        <svg className="w-8 h-8 text-nectar-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-          <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-        </svg>
-      )
-    },
-    {
-      id: 'patreon-sponsorship',
-      name: 'Néctar Patreon/Sponsorship',
-      categoryBadge: 'MONETIZACIÓN',
-      description: 'Pasarela de suscripciones recurrentes de Stripe con control de acceso a feeds exclusivos y niveles de membresía.',
-      detailedDescription: 'Permite monetizar tu contenido, comunidad o SaaS de manera flexible. Automatiza cobros recurrentes de Stripe, gestiona roles y bloquea o desbloquea secciones de contenido multimedia basándose en el nivel del suscriptor.',
-      monthlyPrice: 129,
-      yearlyPrice: 1290,
-      originProject: 'tierraviva',
-      sourceReference: 'tierraviva/tierraViva-backend-main/sponsorship',
-      complexity: 'Media',
-      serverRequirements: 'Cuenta comercial de Stripe + Configuración de endpoint para Webhooks HTTPS del backend.',
-      technicalDetails: [
-        'Integración con Stripe Billing API y Webhooks',
-        'Definición de tiers o niveles dinámicos desde Django Admin',
-        'Validación automatizada de estatus de membresías en backend',
-        'Portal de auto-gestión del suscriptor'
-      ],
-      icon: (
-        <svg className="w-8 h-8 text-nectar-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      )
-    },
-    {
-      id: 'analytics-apm',
-      name: 'Néctar Analytics APM',
-      categoryBadge: 'MONITOREO DE DESEMPEÑO',
-      description: 'Monitor de Core Web Vitals en navegador y telemetría de base de datos con conteo de queries e hilos en tiempo real.',
-      detailedDescription: 'Optimiza la infraestructura midiendo el impacto real. Este middleware inyecta telemetría que calcula Web Vitals (LCP, FID, CLS) desde el lado del cliente y registra el tiempo de respuesta y la eficiencia de las consultas SQL en Django.',
-      monthlyPrice: 59,
-      yearlyPrice: 590,
-      originProject: 'nectarlabs-main',
-      sourceReference: 'backend/apps/performance (PerformanceMiddleware, models.py)',
-      complexity: 'Media',
-      serverRequirements: 'Módulo de Middleware Django instalado + Agregación de logs asíncrona para no afectar el flujo principal.',
-      technicalDetails: [
-        'Detección automática de consultas duplicadas (N+1)',
-        'Monitoreo del hardware del servidor (CPU/RAM/SSD)',
-        'Alertas configurables por lentitud de base de datos',
-        'Registro detallado de Web Vitals del navegador del cliente'
-      ],
-      icon: (
-        <svg className="w-8 h-8 text-nectar-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h2a2 2 0 002-2z" />
-        </svg>
-      )
-    },
-    {
-      id: 'newsletter-campaigner',
-      name: 'Néctar Newsletter',
-      categoryBadge: 'EMAIL MARKETING',
-      description: 'Gestor de suscripciones, programador de campañas con plantillas HTML y envío masivo optimizado para SMTP/SES.',
-      detailedDescription: 'Envía boletines interactivos a tu base de contactos. Cuenta con un sistema automático de tokens únicos de cancelación de suscripción para cumplir con las normativas internacionales de correo, además de plantillas HTML prediseñadas.',
-      monthlyPrice: 39,
-      yearlyPrice: 390,
-      originProject: 'nectarlabs-main',
-      sourceReference: 'backend/apps/newsletter (Subscriber, send_newsletter_email)',
-      complexity: 'Baja',
-      serverRequirements: 'Servicio de entrega de correos electrónicos configurado (AWS SES, Resend, Sendgrid o un SMTP privado).',
-      technicalDetails: [
-        'Tokens únicos de desuscripción seguros (UUID)',
-        'Render de templates de correo HTML con Django Template Loader',
-        'Manejo de estados activos / inactivos de la base de datos',
-        'Soporte multi-idioma de plantillas'
-      ],
-      icon: (
-        <svg className="w-8 h-8 text-nectar-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-        </svg>
-      )
-    }
-  ];
+    const useFallback = () => {
+      const mapped = fallbackAddons.map(a => ({
+        ...a,
+        icon: getAddonIcon(a.id)
+      })) as Addon[];
+      setAddonsList(mapped);
+
+      if (typeof window !== 'undefined') {
+        const params = new URLSearchParams(window.location.search);
+        const selectId = params.get('select');
+        const requestId = params.get('request');
+        if (selectId) {
+          const found = mapped.find(a => a.id === selectId);
+          if (found) setSelectedAddon(found);
+        } else if (requestId) {
+          const found = mapped.find(a => a.id === requestId);
+          if (found) setRequestAddon(found);
+        }
+      }
+    };
+
+    loadAddons();
+  }, []);
 
   const handleRequestIntegration = async (e: React.FormEvent) => {
     e.preventDefault();

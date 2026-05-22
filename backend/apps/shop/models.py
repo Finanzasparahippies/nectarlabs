@@ -49,6 +49,7 @@ class Contract(models.Model):
         default=BrandDesignTier.NONE
     )
     brand_design_price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    addons = models.ManyToManyField('AddOn', blank=True, related_name='contracts')
 
     class PaymentMethod(models.TextChoices):
         STRIPE = 'STRIPE', 'Tarjeta (Stripe)'
@@ -116,3 +117,33 @@ class PaymentInstallment(models.Model):
 
     def __str__(self):
         return f"Mensualidad {self.installment_number}/6 - {self.contract.full_name} (${self.amount})"
+
+
+class AddOn(models.Model):
+    class Complexity(models.TextChoices):
+        LOW = 'Baja', 'Baja'
+        MEDIUM = 'Media', 'Media'
+        HIGH = 'Alta', 'Alta'
+        VERY_HIGH = 'Muy Alta', 'Muy Alta'
+
+    slug = models.SlugField(max_length=100, unique=True, help_text="Identificador único (ej: live-chat)")
+    name = models.CharField(max_length=150, verbose_name="Nombre del Add-on")
+    category_badge = models.CharField(max_length=100, verbose_name="Categoría (Badge)")
+    description = models.TextField(verbose_name="Descripción Corta")
+    detailed_description = models.TextField(verbose_name="Descripción Detallada")
+    monthly_price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Precio Mensual (MXN)")
+    yearly_price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Precio Anual (MXN)")
+    origin_project = models.CharField(max_length=150, verbose_name="Proyecto Origen")
+    source_reference = models.CharField(max_length=255, verbose_name="Referencia de Código")
+    complexity = models.CharField(
+        max_length=50, 
+        choices=Complexity.choices, 
+        default=Complexity.MEDIUM, 
+        verbose_name="Complejidad de Integración"
+    )
+    server_requirements = models.TextField(verbose_name="Requerimientos de Servidor")
+    technical_details = models.JSONField(default=list, help_text="Lista JSON de detalles técnicos (funcionalidades clave)")
+    is_active = models.BooleanField(default=True, verbose_name="Activo")
+
+    def __str__(self):
+        return f"{self.name} (${self.monthly_price}/mes)"
