@@ -110,6 +110,14 @@ if not env("DATABASE_URL", default=None):
         "PORT": env("DB_PORT", default="5432"),
     }
 
+# Force direct connection port (5432) instead of PgBouncer pooler (6543) when running tests
+import sys
+if 'test' in sys.argv:
+    # If using Supabase PgBouncer, route through direct/session port to allow dropping the test DB cleanly
+    if DATABASES["default"].get("PORT") == "6543":
+        DATABASES["default"]["PORT"] = "5432"
+
+
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
