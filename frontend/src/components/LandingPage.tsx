@@ -5,6 +5,7 @@ import InteractiveTimeline from './landing/InteractiveTimeline';
 import PricingCalculator from './landing/PricingCalculator';
 import SubscriptionCards from './landing/SubscriptionCards';
 import AddonShowcase from './landing/AddonShowcase';
+import AddonTutorial from './landing/AddonTutorial';
 import Navbar from './Navbar';
 import Link from 'next/link';
 
@@ -192,6 +193,10 @@ export default function LandingPage() {
 
         <div id="addons" className="scroll-mt-24">
           <AddonShowcase />
+        </div>
+
+        <div id="addon-tutorial" className="scroll-mt-24">
+          <AddonTutorial />
         </div>
 
         <div className="py-48 bg-gradient-to-b from-transparent via-nectar-gold/5 to-transparent">

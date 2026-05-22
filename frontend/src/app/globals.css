@@ -66,6 +66,17 @@ body {
   50% { opacity: 1; }
 }
 
+@keyframes dash {
+  from {
+    stroke-dasharray: 120;
+    stroke-dashoffset: 120;
+  }
+  to {
+    stroke-dasharray: 120;
+    stroke-dashoffset: 0;
+  }
+}
+
 .animate-premium {
   animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
