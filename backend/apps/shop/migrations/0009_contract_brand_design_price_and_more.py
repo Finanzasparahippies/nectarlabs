@@ -25,6 +25,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='contract',
             name='pdf_file',
-            field=models.FileField(blank=True, null=True, storage=storages.backends.s3.S3Storage(access_key='4a2cf3da8511b920bc5243a7f45be7df', addressing_style='path', bucket_name='nectarlabs', default_acl='private', endpoint_url='https://00e263633ee27c2e8558008e645c21f2.r2.cloudflarestorage.com', file_overwrite=False, region_name='auto', secret_key='e3a178d75e3724532f672f4752e84ce35b18433ee634d200949fdb8bc0f510ce', signature_version='s3v4'), upload_to=apps.shop.models.contract_pdf_path),
+            field=models.FileField(blank=True, null=True, storage=storages.backends.s3.S3Storage(access_key='PLACEHOLDER_R2_ACCESS_KEY_ID', addressing_style='path', bucket_name='nectarlabs', default_acl='private', endpoint_url='https://00e263633ee27c2e8558008e645c21f2.r2.cloudflarestorage.com', file_overwrite=False, region_name='auto', secret_key='PLACEHOLDER_R2_SECRET_ACCESS_KEY', signature_version='s3v4'), upload_to=apps.shop.models.contract_pdf_path),
         ),
     ]
