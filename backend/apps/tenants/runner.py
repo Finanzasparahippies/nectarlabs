@@ -17,17 +17,21 @@ class TenantTestRunner(DiscoverRunner):
                 test_db_name = settings.DATABASES['default'].get('NAME')
 
 
-            print(f"\n[TenantTestRunner] Terminating lingering connections to test database: {test_db_name}...")
+            print(f"\n[TenantTestRunner] Terminating all connections to test database: {test_db_name}...")
             try:
-                # Terminate other sessions using this database (excluding our own session pid)
-                with connection.cursor() as cursor:
+                # 1. Close our client connection to the test database first
+                connection.close()
+
+                # 2. Use a cursor to the maintenance database (e.g. 'postgres') to terminate all sessions on the test DB
+                with connection._nodb_cursor() as cursor:
                     cursor.execute(
                         "SELECT pg_terminate_backend(pid) FROM pg_stat_activity "
-                        "WHERE datname = %s AND pid <> pg_backend_pid();",
+                        "WHERE datname = %s;",
                         [test_db_name]
                     )
-                print("[TenantTestRunner] Lingering connections terminated successfully.")
+                print("[TenantTestRunner] All connections terminated successfully.")
             except Exception as e:
                 print(f"[TenantTestRunner] Warning: Could not terminate connections: {e}")
+
 
         super().teardown_databases(old_config, **kwargs)
