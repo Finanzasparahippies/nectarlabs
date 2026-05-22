@@ -5,13 +5,18 @@ from django.template.loader import render_to_string
 from django.conf import settings
 
 class Subscriber(models.Model):
-    email = models.EmailField(unique=True)
+    tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, related_name='subscribers', null=True, blank=True)
+    email = models.EmailField()
     token = models.UUIDField(default=uuid.uuid4, editable=False)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        unique_together = ('email', 'tenant')
+
     def __str__(self):
-        return self.email
+        return f"{self.email} ({self.tenant.subdomain if self.tenant else 'No Tenant'})"
+
 
 def send_newsletter_email(subject, template_name, context, recipient_list):
     """

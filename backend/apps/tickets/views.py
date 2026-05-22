@@ -49,9 +49,13 @@ class TicketViewSet(viewsets.ModelViewSet):
         return Response({'status': 'ticket closed'})
 
 
+from apps.tenants.permissions import HasAddOnPermission
+
 class SupportChatViewSet(viewsets.ModelViewSet):
     serializer_class = SupportChatSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, HasAddOnPermission]
+    addon_slug = 'live-chat'
+
 
     def get_queryset(self):
         user = self.request.user

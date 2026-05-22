@@ -2,6 +2,14 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'next/navigation';
+import dynamic from 'next/dynamic';
+
+const ChatWidget = dynamic(() => import('@/components/addons/live-chat/ChatWidget'), { ssr: false });
+const BookingCanvas = dynamic(() => import('@/components/addons/booking-signature/BookingCanvas'), { ssr: false });
+const FleetMap = dynamic(() => import('@/components/addons/logistics-gps/FleetMap'), { ssr: false });
+const SponsorTiers = dynamic(() => import('@/components/addons/patreon-sponsorship/SponsorTiers'), { ssr: false });
+const TelemetryDashboard = dynamic(() => import('@/components/addons/analytics-apm/TelemetryDashboard'), { ssr: false });
+const SubscribeForm = dynamic(() => import('@/components/addons/newsletter-campaigner/SubscribeForm'), { ssr: false });
 
 interface TenantConfig {
   id: string;
@@ -60,6 +68,25 @@ export default function TenantPortalPage() {
   const [token, setToken] = useState<string | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isSubmittingAuth, setIsSubmittingAuth] = useState(false);
+
+  // Active addon state for non-chat modules
+  const [activeAddonTab, setActiveAddonTab] = useState<string | null>(null);
+
+  const activeAddonsList = tenantConfig?.active_addons || [];
+  const otherActiveAddons = activeAddonsList.filter(slug => slug !== 'live-chat');
+
+  useEffect(() => {
+    if (tenantConfig?.active_addons) {
+      const otherAddons = tenantConfig.active_addons.filter(slug => slug !== 'live-chat');
+      if (otherAddons.length > 0) {
+        if (!activeAddonTab || !otherAddons.includes(activeAddonTab)) {
+          setActiveAddonTab(otherAddons[0]);
+        }
+      } else {
+        setActiveAddonTab(null);
+      }
+    }
+  }, [tenantConfig]);
 
   // Tickets State
   const [tickets, setTickets] = useState<Ticket[]>([]);
@@ -686,143 +713,163 @@ export default function TenantPortalPage() {
               )}
             </div>
 
-            {/* Right side: Live Chat widget (5 cols) - Conditionally rendered by addon */}
-            {tenantConfig.active_addons?.includes('live-chat') ? (
-              <div className="lg:col-span-5 bg-[#050a06]/40 border border-white/5 rounded-[2rem] p-6 shadow-lg flex flex-col h-[580px] lg:h-auto items-stretch">
-                <h3 className="text-sm font-black uppercase tracking-wider mb-4 text-white">Soporte Live Chat</h3>
+            {/* Right side: Dynamic Addons panel (5 cols) */}
+            <div className="lg:col-span-5 flex flex-col space-y-6">
+              {otherActiveAddons.length > 0 ? (
+                <div className="bg-[#050a06]/40 border border-white/5 rounded-[2rem] p-6 shadow-lg flex flex-col flex-1 relative overflow-hidden group">
+                  {/* Gold glow top right */}
+                  <div
+                    className="absolute -top-32 -right-32 w-64 h-64 rounded-full blur-[100px] opacity-10 transition-all duration-700 pointer-events-none group-hover:opacity-20"
+                    style={{ backgroundColor: primaryColor }}
+                  ></div>
 
-                {!activeChat ? (
-                  <div className="flex-1 flex flex-col items-center justify-center text-center p-6 bg-white/[0.01] border border-white/5 rounded-2xl">
-                    <div
-                      className="w-14 h-14 rounded-full flex items-center justify-center mb-5"
-                      style={{ backgroundColor: `${primaryColor}15`, color: primaryColor }}
-                    >
-                      <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                      </svg>
-                    </div>
-                    <h4 className="font-black text-xs text-white uppercase tracking-wide">¿Deseas iniciar chat en vivo?</h4>
-                    <p className="text-[10px] text-white/50 max-w-xs mt-1 mb-8 leading-relaxed">
-                      Conéctate en tiempo real con nuestro equipo técnico para un soporte inmediato de alta prioridad.
-                    </p>
-                    <button
-                      onClick={handleStartChat}
-                      className="w-full py-4 text-black font-black uppercase tracking-widest text-[9px] rounded-xl hover:scale-102 active:scale-95 transition-all cursor-pointer"
-                      style={{ backgroundColor: primaryColor }}
-                    >
-                      Iniciar Sesión de Chat
-                    </button>
-                  </div>
-                ) : (
-                  <div className="flex-1 flex flex-col bg-white/[0.01] border border-white/5 rounded-2xl overflow-hidden">
-                    <div className="p-4 border-b border-white/5 flex justify-between items-center bg-white/[0.005]">
-                      <div>
-                        <span className="text-[8.5px] font-black uppercase tracking-widest text-white/40">Chat de Soporte #{activeChat.id}</span>
-                        <p className="text-[7.5px] uppercase tracking-wider text-green-500 font-black mt-0.5 animate-pulse">Conectado</p>
-                      </div>
-                      <button
-                        onClick={handleCloseChat}
-                        className="text-[8px] font-black uppercase text-red-500/80 hover:text-red-500 hover:bg-red-500/5 px-2.5 py-1.5 rounded-lg transition-all"
-                      >
-                        Finalizar
-                      </button>
-                    </div>
-
-                    {/* Messages */}
-                    <div className="flex-1 overflow-y-auto p-4 space-y-3.5 custom-scrollbar">
-                      {chatMessages.map((msg) => {
-                        const isMine = msg.sender_email.toLowerCase() === email.toLowerCase();
-                        const isAgent = msg.sender_role === 'ADMIN' || msg.sender_role === 'BUSINESS';
-                        return (
-                          <div key={msg.id} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
-                            <div
-                              className={`max-w-[85%] rounded-2xl p-3 shadow-sm ${
-                                isMine ? 'text-black rounded-tr-none' : 'bg-white/5 text-white border border-white/5 rounded-tl-none'
-                              }`}
-                              style={isMine ? { backgroundColor: primaryColor } : {}}
+                  {/* Header & Tabs */}
+                  <div className="border-b border-white/5 pb-4 mb-6">
+                    <h3 className="text-sm font-black uppercase tracking-wider text-white mb-4">
+                      Módulos Adicionales
+                    </h3>
+                    
+                    {/* Horizontal scrollable tab buttons */}
+                    <div className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar">
+                      {[
+                        { slug: 'booking-signature', label: 'Reservas', icon: '📅', component: <BookingCanvas primaryColor={primaryColor} /> },
+                        { slug: 'logistics-gps', label: 'Logística', icon: '📍', component: <FleetMap primaryColor={primaryColor} /> },
+                        { slug: 'patreon-sponsorship', label: 'Sponsorship', icon: '💎', component: <SponsorTiers primaryColor={primaryColor} /> },
+                        { slug: 'analytics-apm', label: 'Métricas APM', icon: '📊', component: <TelemetryDashboard primaryColor={primaryColor} /> },
+                        { slug: 'newsletter-campaigner', label: 'Boletín', icon: '✉️', component: <SubscribeForm tenantId={tenantConfig.id} subdomain={subdomain} primaryColor={primaryColor} /> },
+                      ]
+                        .filter(tab => activeAddonsList.includes(tab.slug))
+                        .map(tab => {
+                          const isActive = activeAddonTab === tab.slug;
+                          return (
+                            <button
+                              key={tab.slug}
+                              onClick={() => setActiveAddonTab(tab.slug)}
+                              className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer border"
+                              style={{
+                                backgroundColor: isActive ? `${primaryColor}15` : 'transparent',
+                                borderColor: isActive ? primaryColor : 'rgba(255, 255, 255, 0.05)',
+                                color: isActive ? primaryColor : 'rgba(255, 255, 255, 0.4)'
+                              }}
                             >
-                              {!isMine && (
-                                <p className="text-[7.5px] font-black uppercase tracking-wider mb-1" style={{ color: primaryColor }}>
-                                  {isAgent ? '🛠️ Ingeniero' : msg.sender_email.split('@')[0]}
-                                </p>
-                              )}
-                              <p className="text-[11px] font-medium leading-relaxed whitespace-pre-wrap">{msg.message}</p>
-                              <p className={`text-[6px] font-bold text-right mt-1 opacity-40 ${isMine ? 'text-black' : 'text-white'}`}>
-                                {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                              </p>
-                            </div>
-                          </div>
-                        );
-                      })}
-                      <div ref={chatEndRef} />
+                              <span className="mr-1.5">{tab.icon}</span>
+                              {tab.label}
+                            </button>
+                          );
+                        })}
                     </div>
-
-                    {/* Message Input */}
-                    <form onSubmit={handleSendChatMessage} className="p-3 border-t border-white/5 bg-white/[0.005] flex gap-2">
-                      <input
-                        type="text"
-                        value={newChatMessage}
-                        onChange={(e) => setNewChatMessage(e.target.value)}
-                        placeholder="Escribe tu mensaje..."
-                        className="flex-1 bg-[#020403] border border-white/5 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-white/10"
-                        disabled={isSendingChat}
-                        required
-                      />
-                      <button
-                        type="submit"
-                        disabled={!newChatMessage.trim() || isSendingChat}
-                        className="p-3 rounded-xl hover:scale-105 transition-all text-black cursor-pointer"
-                        style={{ backgroundColor: primaryColor }}
-                      >
-                        <svg className="w-3.5 h-3.5 transform rotate-90" fill="currentColor" viewBox="0 0 20 20">
-                          <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
-                        </svg>
-                      </button>
-                    </form>
                   </div>
-                )}
-              </div>
-            ) : (
-              <div className="lg:col-span-5 bg-[#050a06]/40 border border-white/5 rounded-[2rem] p-8 shadow-lg flex flex-col items-center justify-center text-center min-h-[450px] relative overflow-hidden group">
-                {/* Gold glow top right */}
-                <div
-                  className="absolute -top-32 -right-32 w-64 h-64 rounded-full blur-[100px] opacity-10 transition-all duration-700 pointer-events-none group-hover:opacity-20"
-                  style={{ backgroundColor: primaryColor }}
-                ></div>
 
-                <div
-                  className="w-16 h-16 rounded-full flex items-center justify-center mb-6"
-                  style={{ backgroundColor: `${primaryColor}12`, color: primaryColor }}
-                >
-                  <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                  </svg>
+                  {/* Tab Body */}
+                  <div className="flex-1">
+                    {[
+                      { slug: 'booking-signature', component: <BookingCanvas primaryColor={primaryColor} /> },
+                      { slug: 'logistics-gps', component: <FleetMap primaryColor={primaryColor} /> },
+                      { slug: 'patreon-sponsorship', component: <SponsorTiers primaryColor={primaryColor} /> },
+                      { slug: 'analytics-apm', component: <TelemetryDashboard primaryColor={primaryColor} /> },
+                      { slug: 'newsletter-campaigner', component: <SubscribeForm tenantId={tenantConfig.id} subdomain={subdomain} primaryColor={primaryColor} /> },
+                    ].find(tab => tab.slug === activeAddonTab)?.component}
+                  </div>
                 </div>
-                
-                <h4 className="font-black text-sm text-white uppercase tracking-wider mb-3">Live Chat No Activo</h4>
-                
-                <p className="text-xs text-white/50 max-w-sm leading-relaxed mb-8">
-                  El canal de comunicación instantánea en tiempo real es un módulo adicional (**Add-on**) en Néctar Labs.
-                  Si eres propietario de esta plataforma, puedes solicitar la activación inmediata de este servicio desde tu panel administrativo.
-                </p>
+              ) : (
+                /* Fallback Support Hub Dashboard */
+                <div className="bg-[#050a06]/40 border border-white/5 rounded-[2rem] p-8 shadow-lg flex flex-col justify-between flex-1 relative overflow-hidden group">
+                  {/* Gold glow top right */}
+                  <div
+                    className="absolute -top-32 -right-32 w-64 h-64 rounded-full blur-[100px] opacity-10 transition-all duration-700 pointer-events-none group-hover:opacity-20"
+                    style={{ backgroundColor: primaryColor }}
+                  ></div>
 
-                <a
-                  href="/dashboard/addons?select=live-chat"
-                  className="px-6 py-4.5 rounded-xl font-black uppercase tracking-widest text-[9px] border hover:scale-[1.03] active:scale-95 transition-all duration-300 shadow-md hover:shadow-lg"
-                  style={{ 
-                    borderColor: `${primaryColor}30`, 
-                    color: primaryColor,
-                    backgroundColor: `${primaryColor}05`
-                  }}
-                >
-                  Adquirir en Néctar Labs
-                </a>
-              </div>
-            )}
+                  <div>
+                    <h3 className="text-sm font-black uppercase tracking-wider text-white mb-6 border-b border-white/5 pb-4">
+                      Servicios del Portal
+                    </h3>
+                    
+                    <div className="space-y-6">
+                      <div className="flex gap-4">
+                        <div 
+                          className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
+                          style={{ backgroundColor: `${primaryColor}10`, color: primaryColor }}
+                        >
+                          🎫
+                        </div>
+                        <div>
+                          <h4 className="text-xs font-black uppercase text-white tracking-tight">Soporte Técnico Asignado</h4>
+                          <p className="text-[11px] text-white/50 mt-1 leading-relaxed">
+                            Crea tickets para comunicarte con tus ingenieros asignados. Resolveremos tus dudas e incidencias de forma prioritaria.
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex gap-4">
+                        <div 
+                          className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
+                          style={{ backgroundColor: `${primaryColor}10`, color: primaryColor }}
+                        >
+                          💬
+                        </div>
+                        <div>
+                          <h4 className="text-xs font-black uppercase text-white tracking-tight">Chat en Vivo y Tiempo Real</h4>
+                          <p className="text-[11px] text-white/50 mt-1 leading-relaxed">
+                            {activeAddonsList.includes('live-chat') ? (
+                              <>
+                                Soporte inmediato en tiempo real **activado**. Utiliza el botón de chat flotante que se encuentra en la esquina inferior derecha para iniciar una conversación.
+                              </>
+                            ) : (
+                              <>
+                                Comunicación directa por chat. Puedes solicitar la activación del Add-on `live-chat` en tu panel para habilitar esta funcionalidad.
+                              </>
+                            )}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex gap-4">
+                        <div 
+                          className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
+                          style={{ backgroundColor: `${primaryColor}10`, color: primaryColor }}
+                        >
+                          🧩
+                        </div>
+                        <div>
+                          <h4 className="text-xs font-black uppercase text-white tracking-tight">Ecosistema de Add-ons</h4>
+                          <p className="text-[11px] text-white/50 mt-1 leading-relaxed">
+                            Expande las capacidades de tu portal integrando módulos pre-construidos como agendas de citas, pasarelas de patrocinio, telemetría y campañas de newsletter.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-8 pt-6 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <p className="text-[9px] uppercase tracking-widest font-black text-white/30">
+                      Néctar Labs &copy; {new Date().getFullYear()}
+                    </p>
+                    <a
+                      href="/dashboard/addons"
+                      className="px-5 py-3 border border-white/10 hover:bg-white/5 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all"
+                      style={{ color: primaryColor, borderColor: `${primaryColor}30` }}
+                    >
+                      Explorar Catálogo
+                    </a>
+                  </div>
+                </div>
+              )}
+            </div>
 
           </div>
         )}
       </main>
+
+      {/* Floating Live Chat Widget */}
+      {isAuthenticated && activeAddonsList.includes('live-chat') && (
+        <ChatWidget
+          tenantId={tenantConfig.id}
+          tenantName={tenantConfig.name}
+          primaryColor={primaryColor}
+          welcomeMessage={tenantConfig.welcome_message}
+        />
+      )}
 
       {/* Footer copyright */}
       <footer className="border-t border-white/5 py-6 bg-[#030604]/50">
