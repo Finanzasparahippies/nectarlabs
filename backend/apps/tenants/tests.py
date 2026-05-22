@@ -6,11 +6,14 @@ from rest_framework.test import APITestCase
 from apps.tenants.models import Tenant
 from apps.shop.models import Plan, Contract, AddOn
 from apps.newsletter.models import Subscriber
+import logging
 
+logger = logging.getLogger("tests")
 User = get_user_model()
 
 class TenantsAddonIsolationTests(APITestCase):
     def setUp(self):
+        logger.info("Initializing test workspace...")
         # Create Owner/Business Users
         self.owner_a = User.objects.create_user(
             username="owner_a",
@@ -82,23 +85,32 @@ class TenantsAddonIsolationTests(APITestCase):
             origin_project="Nectar",
             source_reference="Ref"
         )
+        logger.info("Test workspace initialized successfully.")
 
     def test_live_chat_requires_addon_permission_denied(self):
         """
         Verify that a client cannot access support-chats endpoint if the tenant
         does not have the 'live-chat' addon active.
         """
+        logger.info("Executing test_live_chat_requires_addon_permission_denied...")
         self.client.force_authenticate(user=self.customer_a)
+        
+        logger.info("Requesting live-chat endpoint for Tenant A (without active addon)...")
         response = self.client.get(reverse('support-chat-list'))
+        
+        logger.info(f"Response status: {response.status_code}")
         # Should return 403 Forbidden since no contract is active for tenant_a
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertIn("no está habilitado para tu portal", response.data['detail'])
+        logger.info("Test passed: Access correctly denied with 403 Forbidden.")
 
     def test_live_chat_allowed_via_plan_contract(self):
         """
         Verify that a client CAN access support-chats endpoint if the owner
         has a signed active contract with a plan (which activates all addons).
         """
+        logger.info("Executing test_live_chat_allowed_via_plan_contract...")
+        logger.info("Creating a signed 6-month contract with Plan for Tenant A...")
         Contract.objects.create(
             user=self.owner_a,
             plan=self.plan_6m,
@@ -112,15 +124,21 @@ class TenantsAddonIsolationTests(APITestCase):
         )
         
         self.client.force_authenticate(user=self.customer_a)
+        logger.info("Requesting live-chat endpoint for Tenant A (with active plan contract)...")
         response = self.client.get(reverse('support-chat-list'))
+        
+        logger.info(f"Response status: {response.status_code}")
         # Should succeed (return 200 OK) because owner_a has a signed contract with a plan
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        logger.info("Test passed: Access granted with 200 OK.")
 
     def test_live_chat_allowed_via_manual_addon_contract(self):
         """
         Verify that a client CAN access support-chats endpoint if the owner
         has a signed active contract specifically purchasing the 'live-chat' addon.
         """
+        logger.info("Executing test_live_chat_allowed_via_manual_addon_contract...")
+        logger.info("Creating contract and manually assigning 'live-chat' addon...")
         contract = Contract.objects.create(
             user=self.owner_a,
             plan=None, # Flex contract / manual addon only
@@ -135,23 +153,30 @@ class TenantsAddonIsolationTests(APITestCase):
         contract.addons.add(self.live_chat_addon)
 
         self.client.force_authenticate(user=self.customer_a)
+        logger.info("Requesting live-chat endpoint for Tenant A (with manual addon)...")
         response = self.client.get(reverse('support-chat-list'))
+        
+        logger.info(f"Response status: {response.status_code}")
         # Should succeed because live-chat addon was manually associated to the active contract
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        logger.info("Test passed: Access granted with 200 OK.")
 
     def test_newsletter_subscribe_permission_and_isolation(self):
         """
         Verify subscription permissions and subscriber isolation per tenant.
         """
-        # Initially, subscribing without the addon active returns 403
+        logger.info("Executing test_newsletter_subscribe_permission_and_isolation...")
+        
+        logger.info("Step 1: Attempt subscription on Tenant A without active addon...")
         response = self.client.post(
             reverse('newsletter_subscribe'),
             data={'email': 'sub@example.com', 'tenant_id': str(self.tenant_a.id)},
             format='json'
         )
+        logger.info(f"Response status: {response.status_code}")
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-        # Activate newsletter addon for Tenant A via contract
+        logger.info("Step 2: Activate newsletter addon for Tenant A...")
         contract_a = Contract.objects.create(
             user=self.owner_a,
             plan=None,
@@ -165,54 +190,59 @@ class TenantsAddonIsolationTests(APITestCase):
         )
         contract_a.addons.add(self.newsletter_addon)
 
-        # Now subscription on Tenant A should succeed
+        logger.info("Step 3: Attempt subscription on Tenant A with active addon...")
         response = self.client.post(
             reverse('newsletter_subscribe'),
             data={'email': 'sub@example.com', 'tenant_id': str(self.tenant_a.id)},
             format='json'
         )
+        logger.info(f"Response status: {response.status_code}")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertTrue(Subscriber.objects.filter(email='sub@example.com', tenant=self.tenant_a).exists())
 
-        # Attempt to subscribe same email to Tenant B -> should fail with 403 (Tenant B has no active addon)
+        logger.info("Step 4: Attempt subscription on Tenant B without active addon...")
         response = self.client.post(
             reverse('newsletter_subscribe'),
             data={'email': 'sub@example.com', 'tenant_id': str(self.tenant_b.id)},
             format='json'
         )
+        logger.info(f"Response status: {response.status_code}")
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-        # Activate newsletter addon for Tenant B
+        logger.info("Step 5: Activate newsletter addon for Tenant B...")
         contract_b = Contract.objects.create(
             user=self.owner_b,
             plan=None,
             full_name="Owner B Contract",
             tax_id="TAXB123",
             address="Address B",
- project_idea="Idea B",
+            project_idea="Idea B",
             signature_base64="signature",
             is_fully_signed=True,
             is_active=True
         )
         contract_b.addons.add(self.newsletter_addon)
 
-        # Now subscription on Tenant B should succeed for the exact same email
+        logger.info("Step 6: Attempt subscription on Tenant B (same email)...")
         response = self.client.post(
             reverse('newsletter_subscribe'),
             data={'email': 'sub@example.com', 'tenant_id': str(self.tenant_b.id)},
             format='json'
         )
+        logger.info(f"Response status: {response.status_code}")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertTrue(Subscriber.objects.filter(email='sub@example.com', tenant=self.tenant_b).exists())
 
-        # Subscribing again on Tenant A should report already subscribed and return 200 OK
+        logger.info("Step 7: Attempt duplicate subscription on Tenant A...")
         response = self.client.post(
             reverse('newsletter_subscribe'),
             data={'email': 'sub@example.com', 'tenant_id': str(self.tenant_a.id)},
             format='json'
         )
+        logger.info(f"Response status: {response.status_code}")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn("ya se encuentra suscrito", response.data['message'])
 
-        # Verify welcome email sent
+        logger.info("Step 8: Verify welcome emails sent...")
         self.assertEqual(len(mail.outbox), 2)  # Two successful subscriptions
+        logger.info("Test passed: Subscriber isolation and duplicate prevention verified successfully.")

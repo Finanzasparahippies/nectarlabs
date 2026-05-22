@@ -234,4 +234,35 @@ R2_STORAGE_OPTIONS = {
     'region_name': 'auto',
 }
 
+# Logging configuration to display logs in console during test/run
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '[\033[94m%(asctime)s\033[0m] %(levelname)s [%(name)s] %(message)s',
+            'datefmt': '%H:%M:%S'
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+    },
+    'loggers': {
+        'apps': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'tests': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    },
+}
+
+
 
