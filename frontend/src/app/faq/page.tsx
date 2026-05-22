@@ -16,7 +16,7 @@ export default function FAQPage() {
   const [activeCategory, setActiveCategory] = useState('ALL');
 
   useEffect(() => {
-    fetcher('/faqs/')
+    fetcher('/faqs/', { isPublic: true })
       .then(data => {
         setFaqs(data);
         setLoading(false);

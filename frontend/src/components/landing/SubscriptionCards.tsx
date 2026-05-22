@@ -18,7 +18,7 @@ export default function SubscriptionCards() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetcher('/plans/')
+    fetcher('/plans/', { isPublic: true })
       .then(data => {
 
         setPlans(data);

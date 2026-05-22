@@ -24,7 +24,7 @@ export default function BlogPage() {
   useEffect(() => {
     async function loadPosts() {
       try {
-        const data = await fetcher('/posts/');
+        const data = await fetcher('/posts/', { isPublic: true });
         setPosts(data);
       } catch (err) {
         console.error("Error fetching posts:", err);
@@ -45,6 +45,7 @@ export default function BlogPage() {
       const res = await fetcher('/newsletter/subscribe/', {
         method: 'POST',
         body: JSON.stringify({ email }),
+        isPublic: true,
       });
       setNewsletterMsg({ text: res.message, type: 'success' });
       setEmail('');

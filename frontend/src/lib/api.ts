@@ -9,15 +9,20 @@ if (typeof window !== "undefined") {
 
 export const API_URL = resolvedApiUrl;
 
-export async function fetcher(endpoint: string, options: RequestInit = {}) {
+export interface FetcherOptions extends RequestInit {
+  isPublic?: boolean;
+}
+
+export async function fetcher(endpoint: string, options: FetcherOptions = {}) {
+  const { isPublic, ...fetchOptions } = options;
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
 
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
   };
 
-  // Solo agregar Authorization si el token existe y no es la cadena "null" o "undefined"
-  if (token && token !== 'null' && token !== 'undefined') {
+  // Solo agregar Authorization si no es público, el token existe y no es la cadena "null" o "undefined"
+  if (!isPublic && token && token !== 'null' && token !== 'undefined') {
     headers["Authorization"] = `Bearer ${token}`;
   }
 
@@ -26,15 +31,15 @@ export async function fetcher(endpoint: string, options: RequestInit = {}) {
     : `/${endpoint}`;
 
   const res = await fetch(`${API_URL}${cleanEndpoint}`, {
-    ...options,
+    ...fetchOptions,
     headers: {
       ...headers,
-      ...options.headers,
+      ...fetchOptions.headers,
     },
   });
 
 
-  if (res.status === 401 && typeof window !== 'undefined') {
+  if (res.status === 401 && !isPublic && typeof window !== 'undefined') {
     localStorage.clear();
     window.location.href = '/login';
     throw new Error("Session expired. Please login again.");

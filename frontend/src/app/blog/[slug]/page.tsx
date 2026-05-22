@@ -25,7 +25,7 @@ export default function BlogPostDetail({ params }: { params: Promise<{ slug: str
   useEffect(() => {
     async function loadPost() {
       try {
-        const data = await fetcher(`/posts/${slug}/`);
+        const data = await fetcher(`/posts/${slug}/`, { isPublic: true });
         setPost(data);
       } catch (err: any) {
         console.error("Error loading post:", err);
