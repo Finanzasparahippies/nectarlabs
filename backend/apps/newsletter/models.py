@@ -18,18 +18,24 @@ class Subscriber(models.Model):
         return f"{self.email} ({self.tenant.subdomain if self.tenant else 'No Tenant'})"
 
 
-def send_newsletter_email(subject, template_name, context, recipient_list):
+from apps.tenants.utils import get_tenant_email_connection
+
+def send_newsletter_email(subject, template_name, context, recipient_list, tenant=None):
     """
-    Utility to send HTML emails for newsletters.
+    Utility to send HTML emails for newsletters dynamically routed by tenant status.
     """
     html_content = render_to_string(f"newsletter/{template_name}.html", context)
     text_content = f"Visita nuestra web para ver las novedades: {settings.FRONTEND_URL}"
     
+    connection, from_email = get_tenant_email_connection(tenant)
+    
     msg = EmailMultiAlternatives(
         subject,
         text_content,
-        settings.DEFAULT_FROM_EMAIL,
-        recipient_list
+        from_email,
+        recipient_list,
+        connection=connection
     )
     msg.attach_alternative(html_content, "text/html")
     return msg.send()
+

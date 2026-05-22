@@ -475,4 +475,108 @@ class TenantsAddonIsolationTests(APITestCase):
         self.assertIn("Unauthorized access", response.data['error'])
         logger.info("Cross-tenant customer access restriction verified.")
 
+    def test_get_tenant_email_connection_free_tenant(self):
+        """
+        Verify that a tenant without a contract defaults to the Brevo SMTP configuration.
+        """
+        logger.info("Executing test_get_tenant_email_connection_free_tenant...")
+        from apps.tenants.utils import get_tenant_email_connection
+        from django.conf import settings
+        
+        # Save original values
+        orig_user = getattr(settings, "BREVO_EMAIL_HOST_USER", "")
+        orig_pass = getattr(settings, "BREVO_EMAIL_HOST_PASSWORD", "")
+        orig_host = getattr(settings, "BREVO_EMAIL_HOST", "")
+        
+        # Override settings for tests
+        settings.BREVO_EMAIL_HOST_USER = "brevo_user"
+        settings.BREVO_EMAIL_HOST_PASSWORD = "brevo_password"
+        settings.BREVO_EMAIL_HOST = "smtp-relay.brevo.com"
+        
+        try:
+            connection, from_email = get_tenant_email_connection(self.tenant_a)
+            self.assertIsNotNone(connection)
+            self.assertEqual(from_email, settings.BREVO_DEFAULT_FROM_EMAIL)
+            self.assertEqual(connection.host, "smtp-relay.brevo.com")
+            self.assertEqual(connection.username, "brevo_user")
+            self.assertEqual(connection.password, "brevo_password")
+        finally:
+            settings.BREVO_EMAIL_HOST_USER = orig_user
+            settings.BREVO_EMAIL_HOST_PASSWORD = orig_pass
+            settings.BREVO_EMAIL_HOST = orig_host
+            
+        logger.info("Test passed: Free tenant defaults correctly to Brevo.")
+
+    def test_get_tenant_email_connection_paid_tenant(self):
+        """
+        Verify that a tenant with an active plan contract routes through Amazon SES.
+        """
+        logger.info("Executing test_get_tenant_email_connection_paid_tenant...")
+        from apps.tenants.utils import get_tenant_email_connection
+        from django.conf import settings
+        
+        # Save original values
+        orig_user = getattr(settings, "SES_EMAIL_HOST_USER", "")
+        orig_pass = getattr(settings, "SES_EMAIL_HOST_PASSWORD", "")
+        orig_host = getattr(settings, "SES_EMAIL_HOST", "")
+        
+        # Override settings for tests
+        settings.SES_EMAIL_HOST_USER = "ses_user"
+        settings.SES_EMAIL_HOST_PASSWORD = "ses_password"
+        settings.SES_EMAIL_HOST = "email-smtp.us-east-1.amazonaws.com"
+        
+        # Create a signed, active contract with a plan for tenant A
+        Contract.objects.create(
+            user=self.owner_a,
+            plan=self.plan_6m,
+            full_name="Owner A Contract",
+            tax_id="TAXA123",
+            address="Address A",
+            project_idea="Idea A",
+            signature_base64="signature",
+            is_fully_signed=True,
+            is_active=True
+        )
+        
+        try:
+            connection, from_email = get_tenant_email_connection(self.tenant_a)
+            self.assertIsNotNone(connection)
+            self.assertEqual(from_email, settings.SES_DEFAULT_FROM_EMAIL)
+            self.assertEqual(connection.host, "email-smtp.us-east-1.amazonaws.com")
+            self.assertEqual(connection.username, "ses_user")
+            self.assertEqual(connection.password, "ses_password")
+        finally:
+            settings.SES_EMAIL_HOST_USER = orig_user
+            settings.SES_EMAIL_HOST_PASSWORD = orig_pass
+            settings.SES_EMAIL_HOST = orig_host
+            
+        logger.info("Test passed: Paid tenant routes correctly through Amazon SES.")
+
+    def test_get_tenant_email_connection_fallback_when_credentials_missing(self):
+        """
+        Verify fallback to default system connection when credentials are not configured.
+        """
+        logger.info("Executing test_get_tenant_email_connection_fallback_when_credentials_missing...")
+        from apps.tenants.utils import get_tenant_email_connection
+        from django.conf import settings
+        
+        # Save original values
+        orig_user = getattr(settings, "BREVO_EMAIL_HOST_USER", "")
+        orig_pass = getattr(settings, "BREVO_EMAIL_HOST_PASSWORD", "")
+        
+        # Clear settings
+        settings.BREVO_EMAIL_HOST_USER = ""
+        settings.BREVO_EMAIL_HOST_PASSWORD = ""
+        
+        try:
+            connection, from_email = get_tenant_email_connection(self.tenant_a)
+            self.assertIsNone(connection)
+            self.assertEqual(from_email, settings.DEFAULT_FROM_EMAIL)
+        finally:
+            settings.BREVO_EMAIL_HOST_USER = orig_user
+            settings.BREVO_EMAIL_HOST_PASSWORD = orig_pass
+            
+        logger.info("Test passed: Missing credentials correctly fallback to default connection.")
+
+
 

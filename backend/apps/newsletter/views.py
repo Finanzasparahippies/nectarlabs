@@ -84,7 +84,8 @@ class SubscribeView(APIView):
                 subject=subject,
                 template_name="generic",
                 context=context,
-                recipient_list=[subscriber.email]
+                recipient_list=[subscriber.email],
+                tenant=subscriber.tenant
             )
         except Exception as e:
             import logging
