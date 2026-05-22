@@ -110,12 +110,15 @@ if not env("DATABASE_URL", default=None):
         "PORT": env("DB_PORT", default="5432"),
     }
 
-# Force direct connection port (5432) instead of PgBouncer pooler (6543) when running tests
+# Force using SQLite when running tests to avoid Supabase connection pooler conflicts
 import sys
 if 'test' in sys.argv:
-    # If using Supabase PgBouncer, route through direct/session port to allow dropping the test DB cleanly
-    if DATABASES["default"].get("PORT") == "6543":
-        DATABASES["default"]["PORT"] = "5432"
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
+    }
 
 
 # Password validation
@@ -230,8 +233,5 @@ R2_STORAGE_OPTIONS = {
     'endpoint_url': env('R2_S3_ENDPOINT_URL', default=''),
     'region_name': 'auto',
 }
-
-# Custom test runner to handle database teardown cleanly on PostgreSQL
-TEST_RUNNER = "apps.tenants.runner.TenantTestRunner"
 
 
