@@ -199,6 +199,7 @@ export default function AddonsPage() {
   const [successTicketId, setSuccessTicketId] = useState<number | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [addonsList, setAddonsList] = useState<Addon[]>([]);
+  const [hasPlanContract, setHasPlanContract] = useState(false);
 
   useEffect(() => {
     const staff = localStorage.getItem('is_staff') === 'true';
@@ -208,6 +209,19 @@ export default function AddonsPage() {
 
     const loadAddons = async () => {
       try {
+        // Fetch contract information to check for active 6-month plan contracts
+        try {
+          const contractsData = await fetcher('/contracts/');
+          if (Array.isArray(contractsData)) {
+            const planContractExists = contractsData.some(
+              (c: any) => c.is_active && c.is_fully_signed && c.plan !== null && c.plan !== undefined
+            );
+            setHasPlanContract(planContractExists);
+          }
+        } catch (contractErr) {
+          console.error("Error loading contracts:", contractErr);
+        }
+
         const data = await fetcher('/addons/');
         if (Array.isArray(data)) {
           const mapped: Addon[] = data.map((item: any) => ({
@@ -241,17 +255,29 @@ export default function AddonsPage() {
             }
           }
         } else {
-          useFallback();
+          await useFallback();
         }
       } catch (error) {
         console.error("Error loading addons, falling back to static config:", error);
-        useFallback();
+        await useFallback();
       } finally {
         setLoading(false);
       }
     };
 
-    const useFallback = () => {
+    const useFallback = async () => {
+      try {
+        const contractsData = await fetcher('/contracts/');
+        if (Array.isArray(contractsData)) {
+          const planContractExists = contractsData.some(
+            (c: any) => c.is_active && c.is_fully_signed && c.plan !== null && c.plan !== undefined
+          );
+          setHasPlanContract(planContractExists);
+        }
+      } catch (contractErr) {
+        console.error("Error loading contracts in fallback:", contractErr);
+      }
+
       const mapped = fallbackAddons.map(a => ({
         ...a,
         icon: getAddonIcon(a.id)
@@ -282,16 +308,26 @@ export default function AddonsPage() {
     setErrorMsg(null);
     setSuccessTicketId(null);
 
-    const price = billingCycle === 'monthly' ? `$${requestAddon.monthlyPrice.toLocaleString('es-MX')} MXN/mes` : `$${requestAddon.yearlyPrice.toLocaleString('es-MX')} MXN/año`;
-    const title = `[Solicitud Add-on] ${requestAddon.name} - Plan ${billingCycle === 'monthly' ? 'Mensual' : 'Anual'}`;
+    const title = hasPlanContract
+      ? `[Solicitud Add-on Gratis] ${requestAddon.name} - Con Contrato Activo`
+      : `[Solicitud Add-on] ${requestAddon.name} - Plan ${billingCycle === 'monthly' ? 'Mensual' : 'Anual'}`;
+
+    const priceText = hasPlanContract
+      ? `$0 MXN (Incluido en plan de desarrollo de 6 meses)`
+      : (billingCycle === 'monthly' ? `$${requestAddon.monthlyPrice.toLocaleString('es-MX')} MXN/mes` : `$${requestAddon.yearlyPrice.toLocaleString('es-MX')} MXN/año`);
+
+    const schemeText = hasPlanContract
+      ? `Gratuito / Incluido (Servicio técnico integrado - Restando de horas de desarrollo correspondientes)`
+      : (billingCycle === 'monthly' ? 'Suscripción Mensual' : 'Suscripción Anual (Ahorro + 2 meses gratis)');
+
     const description = `## Solicitud de Integración de Add-on
 
 El cliente solicita la integración de un módulo aislado del ecosistema Néctar Labs.
 
 ### Detalles del Módulo
 - **Módulo**: ${requestAddon.name}
-- **Esquema de Pago**: ${billingCycle === 'monthly' ? 'Suscripción Mensual' : 'Suscripción Anual (Ahorro + 2 meses gratis)'}
-- **Precio Acordado**: ${price}
+- **Esquema de Pago**: ${schemeText}
+- **Precio Acordado**: ${priceText}
 - **Referencia Técnica en Ecosistema**: \`${requestAddon.sourceReference}\`
 - **Complejidad del Módulo**: ${requestAddon.complexity}
 - **Requerimiento del Servidor**: ${requestAddon.serverRequirements}
@@ -398,29 +434,43 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
             </p>
           </div>
 
-          {/* Billing Cycle Switcher */}
-          <div className="bg-card-bg border border-card-border p-1.5 rounded-2xl flex items-center gap-2 relative z-10 shadow-sm">
-            <button
-              onClick={() => setBillingCycle('monthly')}
-              className={`px-6 py-2.5 rounded-xl font-black uppercase tracking-widest text-[9px] transition-all duration-300 ${
-                billingCycle === 'monthly'
-                  ? 'bg-nectar-gold text-background shadow-md'
-                  : 'text-foreground/60 hover:text-foreground hover:bg-foreground/5'
-              }`}
-            >
-              Pago Mensual
-            </button>
-            <button
-              onClick={() => setBillingCycle('yearly')}
-              className={`px-6 py-2.5 rounded-xl font-black uppercase tracking-widest text-[9px] transition-all duration-300 ${
-                billingCycle === 'yearly'
-                  ? 'bg-nectar-gold text-background shadow-md'
-                  : 'text-foreground/60 hover:text-foreground hover:bg-foreground/5'
-              }`}
-            >
-              Pago Anual <span className="text-[7px] text-nectar-forest dark:text-nectar-cream bg-white/20 px-1 py-0.5 rounded ml-1 font-bold">2 meses gratis</span>
-            </button>
-          </div>
+          {/* Billing Cycle Switcher or Contract Active Notice */}
+          {hasPlanContract ? (
+            <div className="bg-nectar-gold/10 border border-nectar-gold/25 p-4 rounded-2xl flex items-center gap-3 max-w-md shadow-sm">
+              <div className="p-2 bg-nectar-gold/20 rounded-xl text-nectar-gold">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-widest text-nectar-gold">Plan de 6 Meses Activo</p>
+                <p className="text-[9px] text-muted leading-tight mt-0.5">Todos los Add-ons están incluidos sin costo adicional. La integración se deduce de tus horas de desarrollo.</p>
+              </div>
+            </div>
+          ) : (
+            <div className="bg-card-bg border border-card-border p-1.5 rounded-2xl flex items-center gap-2 relative z-10 shadow-sm">
+              <button
+                onClick={() => setBillingCycle('monthly')}
+                className={`px-6 py-2.5 rounded-xl font-black uppercase tracking-widest text-[9px] transition-all duration-300 ${
+                  billingCycle === 'monthly'
+                    ? 'bg-nectar-gold text-background shadow-md'
+                    : 'text-foreground/60 hover:text-foreground hover:bg-foreground/5'
+                }`}
+              >
+                Pago Mensual
+              </button>
+              <button
+                onClick={() => setBillingCycle('yearly')}
+                className={`px-6 py-2.5 rounded-xl font-black uppercase tracking-widest text-[9px] transition-all duration-300 ${
+                  billingCycle === 'yearly'
+                    ? 'bg-nectar-gold text-background shadow-md'
+                    : 'text-foreground/60 hover:text-foreground hover:bg-foreground/5'
+                }`}
+              >
+                Pago Anual <span className="text-[7px] text-nectar-forest dark:text-nectar-cream bg-white/20 px-1 py-0.5 rounded ml-1 font-bold">2 meses gratis</span>
+              </button>
+            </div>
+          )}
         </header>
 
         {/* Global Notifications */}
@@ -480,16 +530,32 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
                 <div>
                   <div className="border-t border-card-border/80 pt-6 mb-6 flex items-baseline justify-between">
                     <div>
-                      <div className="flex items-baseline gap-1">
-                        <span className="text-3xl font-black tracking-tighter text-foreground">${price.toLocaleString('es-MX')}</span>
-                        <span className="text-[10px] font-bold opacity-50 uppercase tracking-wider text-muted">
-                          MXN / {billingCycle === 'monthly' ? 'mes' : 'año'}
-                        </span>
-                      </div>
-                      {billingCycle === 'yearly' && (
-                        <p className="text-[8px] text-emerald-400 font-bold uppercase tracking-wider mt-1">
-                          Ahorro anual de $${savings.toLocaleString('es-MX')} MXN
-                        </p>
+                      {hasPlanContract ? (
+                        <div>
+                          <div className="flex items-baseline gap-1.5">
+                            <span className="text-3xl font-black tracking-tighter text-nectar-gold">$0 MXN</span>
+                            <span className="text-[8px] font-black text-nectar-gold bg-nectar-gold/10 border border-nectar-gold/20 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                              Incluido
+                            </span>
+                          </div>
+                          <p className="text-[9px] text-muted mt-1">
+                            Soporte técnico integrado • <span className="line-through opacity-50">${addon.monthlyPrice}/mes</span>
+                          </p>
+                        </div>
+                      ) : (
+                        <div>
+                          <div className="flex items-baseline gap-1">
+                            <span className="text-3xl font-black tracking-tighter text-foreground">${price.toLocaleString('es-MX')}</span>
+                            <span className="text-[10px] font-bold opacity-50 uppercase tracking-wider text-muted">
+                              MXN / {billingCycle === 'monthly' ? 'mes' : 'año'}
+                            </span>
+                          </div>
+                          {billingCycle === 'yearly' && (
+                            <p className="text-[8px] text-emerald-400 font-bold uppercase tracking-wider mt-1">
+                              Ahorro anual de ${savings.toLocaleString('es-MX')} MXN
+                            </p>
+                          )}
+                        </div>
                       )}
                     </div>
                     <span className={`text-[8px] font-black uppercase tracking-wider px-2.5 py-1 rounded-md border ${
@@ -513,7 +579,7 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
                       onClick={() => setRequestAddon(addon)}
                       className="w-full py-4 text-[9px] font-black uppercase tracking-widest bg-nectar-gold text-background hover:scale-[1.03] active:scale-95 transition-all rounded-xl shadow-lg shadow-nectar-gold/10 hover:shadow-nectar-gold/25"
                     >
-                      Solicitar
+                      {hasPlanContract ? 'Solicitar Gratis' : 'Solicitar'}
                     </button>
                   </div>
                 </div>
@@ -593,7 +659,9 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
                   }}
                   className="flex-1 py-4 text-xs font-black uppercase tracking-widest bg-nectar-gold text-background hover:scale-[1.02] active:scale-95 transition-all rounded-xl text-center shadow-lg"
                 >
-                  Solicitar este Add-on (${billingCycle === 'monthly' ? selectedAddon.monthlyPrice.toLocaleString('es-MX') : selectedAddon.yearlyPrice.toLocaleString('es-MX')} MXN)
+                  {hasPlanContract
+                    ? `Solicitar este Add-on Gratis (Incluido en tu Plan)`
+                    : `Solicitar este Add-on ($${billingCycle === 'monthly' ? selectedAddon.monthlyPrice.toLocaleString('es-MX') : selectedAddon.yearlyPrice.toLocaleString('es-MX')} MXN)`}
                 </button>
                 <button
                   onClick={() => setSelectedAddon(null)}
@@ -623,7 +691,9 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
                 </span>
                 <h2 className="text-3xl font-black tracking-tight mb-2">Configurar {requestAddon.name}</h2>
                 <p className="text-xs text-muted leading-relaxed">
-                  Estás solicitando la adición del módulo en tu plan de servicio. Esto creará un ticket en tu panel de Soporte para coordinar la implementación.
+                  {hasPlanContract
+                    ? 'Como cliente con plan activo, estás solicitando este módulo gratis. Se creará un ticket de alta prioridad en Soporte y las horas se deducirán de tu plan.'
+                    : 'Estás solicitando la adición del módulo en tu plan de servicio. Esto creará un ticket en tu panel de Soporte para coordinar la implementación y facturación.'}
                 </p>
               </div>
 
@@ -635,12 +705,21 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
                   </div>
                   <div className="text-right">
                     <span className="text-[8px] font-bold opacity-50 uppercase tracking-widest text-muted block mb-0.5">Precio de Integración</span>
-                    <span className="font-black text-lg text-nectar-gold">
-                      ${billingCycle === 'monthly' ? requestAddon.monthlyPrice.toLocaleString('es-MX') : requestAddon.yearlyPrice.toLocaleString('es-MX')} MXN
-                      <span className="text-[9px] font-bold text-muted opacity-60 block">
-                        / {billingCycle === 'monthly' ? 'mes' : 'año'}
+                    {hasPlanContract ? (
+                      <span className="font-black text-lg text-nectar-gold text-right">
+                        $0 MXN
+                        <span className="text-[9px] font-bold text-muted opacity-60 block">
+                          Incluido en tu Plan
+                        </span>
                       </span>
-                    </span>
+                    ) : (
+                      <span className="font-black text-lg text-nectar-gold text-right">
+                        ${billingCycle === 'monthly' ? requestAddon.monthlyPrice.toLocaleString('es-MX') : requestAddon.yearlyPrice.toLocaleString('es-MX')} MXN
+                        <span className="text-[9px] font-bold text-muted opacity-60 block">
+                          / {billingCycle === 'monthly' ? 'mes' : 'año'}
+                        </span>
+                      </span>
+                    )}
                   </div>
                 </div>
 
@@ -670,7 +749,7 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
                         Enviando Solicitud...
                       </>
                     ) : (
-                      'Confirmar e Iniciar Ticket'
+                      hasPlanContract ? 'Confirmar y Solicitar Gratis' : 'Confirmar e Iniciar Ticket'
                     )}
                   </button>
                   <button

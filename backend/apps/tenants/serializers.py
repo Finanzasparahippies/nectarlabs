@@ -14,9 +14,12 @@ class TenantSerializer(serializers.ModelSerializer):
 
 
 class TenantPublicSerializer(serializers.ModelSerializer):
+    active_addons = serializers.ReadOnlyField()
+
     class Meta:
         model = Tenant
         fields = [
             'id', 'name', 'subdomain', 'theme_color', 'logo_url', 
-            'welcome_message', 'require_customer_info'
+            'welcome_message', 'require_customer_info', 'active_addons'
         ]
+

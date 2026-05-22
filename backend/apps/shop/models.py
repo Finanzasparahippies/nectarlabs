@@ -25,7 +25,7 @@ class Plan(models.Model):
 
 class Contract(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='contracts')
-    plan = models.ForeignKey(Plan, on_delete=models.PROTECT)
+    plan = models.ForeignKey(Plan, on_delete=models.SET_NULL, null=True, blank=True)
     full_name = models.CharField(max_length=255)
     tax_id = models.CharField(max_length=50)
     address = models.TextField()

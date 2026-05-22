@@ -40,3 +40,27 @@ class Tenant(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.subdomain})"
+
+    @property
+    def active_addons(self):
+        from apps.shop.models import AddOn, Contract
+        # Check if owner has a signed and active 6-month contract with any plan
+        has_plan_contract = Contract.objects.filter(
+            user=self.owner,
+            is_active=True,
+            is_fully_signed=True,
+            plan__isnull=False
+        ).exists()
+        
+        if has_plan_contract:
+            # Plan contract holders get access to ALL active Add-ons
+            return list(AddOn.objects.filter(is_active=True).values_list('slug', flat=True).distinct())
+            
+        # Otherwise, they only get the ones they purchased manually (associated via their contracts)
+        return list(AddOn.objects.filter(
+            is_active=True,
+            contracts__user=self.owner,
+            contracts__is_active=True,
+            contracts__is_fully_signed=True
+        ).values_list('slug', flat=True).distinct())
+

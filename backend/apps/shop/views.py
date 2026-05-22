@@ -65,7 +65,12 @@ class ContractViewSet(viewsets.ModelViewSet):
 
         # Generar automáticamente 6 mensualidades obligatorias
         plan_price = contract.plan.price if contract.plan else 0
-        addons_price = sum(addon.monthly_price for addon in contract.addons.all())
+        if contract.plan:
+            # Los usuarios con contrato del plan tienen acceso a todos los add-ons sin costo (incluido, restando horas de desarrollo)
+            addons_price = 0
+        else:
+            # Adquisición manual de add-ons para clientes sin plan de 6 meses
+            addons_price = sum(addon.monthly_price for addon in contract.addons.all())
         monthly_amount = plan_price + (contract.brand_design_price or 0) + addons_price
         start_date = contract.signed_at.date() if contract.signed_at else timezone.now().date()
         
@@ -123,7 +128,10 @@ class PaymentInstallmentViewSet(viewsets.ModelViewSet):
         for contract in Contract.objects.filter(is_fully_signed=True):
             if contract.installments.count() == 0:
                 plan_price = contract.plan.price if contract.plan else 0
-                addons_price = sum(addon.monthly_price for addon in contract.addons.all())
+                if contract.plan:
+                    addons_price = 0
+                else:
+                    addons_price = sum(addon.monthly_price for addon in contract.addons.all())
                 monthly_amount = plan_price + (contract.brand_design_price or 0) + addons_price
                 start_date = contract.signed_at.date() if contract.signed_at else timezone.now().date()
                 

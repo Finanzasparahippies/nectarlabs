@@ -9,7 +9,11 @@
 
 <p>Te confirmamos que hemos recibido tu firma para el contrato de servicios de desarrollo de software con <strong>Néctar Labs</strong>.</p>
 
+{% if contract.plan %}
 <p>El plan seleccionado es: <strong>{{ contract.plan.name }}</strong> ({{ contract.plan.hours }} horas mensuales de desarrollo e ingeniería).</p>
+{% else %}
+<p>El servicio contratado es: <strong>Adquisición de Add-ons y Módulos de Software</strong>.</p>
+{% endif %}
 
 <div style="background-color: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); padding: 25px; margin: 30px 0; border-radius: 16px;">
     <h3 style="color: #C68A1E; font-size: 15px; margin-top: 0; margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 10px;">¿Qué sigue ahora?</h3>

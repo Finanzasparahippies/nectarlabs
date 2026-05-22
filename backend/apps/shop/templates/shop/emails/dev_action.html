@@ -7,7 +7,7 @@
 
 <p>Hola <strong>Jesus Saul</strong>,</p>
 
-<p>El cliente <strong>{{ contract.full_name }}</strong> ha revisado y firmado el contrato de prestación de servicios tecnológicos para el plan <strong>{{ contract.plan.name }}</strong>.</p>
+<p>El cliente <strong>{{ contract.full_name }}</strong> ha revisado y firmado el contrato de prestación de servicios tecnológicos{% if contract.plan %} para el plan <strong>{{ contract.plan.name }}</strong>{% else %} para la adquisición de Add-ons y Módulos de Software{% endif %}.</p>
 
 <p>Para activar oficialmente el proyecto y comenzar la fase de desarrollo, es necesario que ingreses tu firma digital en el panel de desarrollador de Néctar Labs.</p>
 

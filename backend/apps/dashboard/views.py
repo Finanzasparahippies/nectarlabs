@@ -167,7 +167,8 @@ class BusinessStatsView(APIView):
         contracts_mrr = 0
         designer_fees = 0
         for contract in active_contracts:
-            contracts_mrr += contract.plan.price
+            plan_price = contract.plan.price if contract.plan else sum(addon.monthly_price for addon in contract.addons.all())
+            contracts_mrr += plan_price
             designer_fees += contract.brand_design_price
         
         paid_orders_total = Order.objects.filter(status='PAID').aggregate(Sum('total'))['total__sum'] or 0
@@ -202,11 +203,13 @@ class BusinessStatsView(APIView):
             if contract.next_payment_date:
                 days_left = (contract.next_payment_date - timezone.now().date()).days
                 status_label = "overdue" if days_left < 0 else ("upcoming" if days_left <= 7 else "paid")
+                plan_name = contract.plan.name if contract.plan else 'Módulos/Add-ons'
+                plan_price = contract.plan.price if contract.plan else sum(addon.monthly_price for addon in contract.addons.all())
                 client_billing.append({
                     "id": contract.id,
                     "client": contract.full_name,
-                    "plan": contract.plan.name,
-                    "amount": float(contract.plan.price + contract.brand_design_price),
+                    "plan": plan_name,
+                    "amount": float(plan_price + contract.brand_design_price),
                     "next_payment_date": str(contract.next_payment_date),
                     "days_remaining": days_left,
                     "status": status_label
@@ -267,7 +270,8 @@ class BusinessStatsView(APIView):
             
             month_sales = 0
             for contract in month_contracts:
-                month_sales += contract.plan.price
+                plan_price = contract.plan.price if contract.plan else sum(addon.monthly_price for addon in contract.addons.all())
+                month_sales += plan_price
             
             # Ventas de la tienda en este mes
             month_orders = Order.objects.filter(
