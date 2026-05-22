@@ -11,9 +11,11 @@ class TenantTestRunner(DiscoverRunner):
         """
         # Only run this if the engine is PostgreSQL
         if settings.DATABASES['default']['ENGINE'] == 'django.db.backends.postgresql':
-            test_db_name = settings.DATABASES['default'].get('TEST', {}).get('NAME')
+            # At this phase, connection.settings_dict['NAME'] is already the test database name (e.g. 'test_postgres')
+            test_db_name = connection.settings_dict.get('NAME')
             if not test_db_name:
-                test_db_name = f"test_{settings.DATABASES['default']['NAME']}"
+                test_db_name = settings.DATABASES['default'].get('NAME')
+
 
             print(f"\n[TenantTestRunner] Terminating lingering connections to test database: {test_db_name}...")
             try:
