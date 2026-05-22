@@ -346,7 +346,8 @@ class TenantsAddonIsolationTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # Check that logo_url is resolved to the uploaded file path/URL
         self.assertIsNotNone(response.data['logo_url'])
-        self.assertIn("logo.gif", response.data['logo_url'])
+        self.assertTrue(response.data['logo_url'].startswith('http'))
+        self.assertIn("tenant_logos/logo", response.data['logo_url'])
         self.assertEqual(response.data['accent_color'], "#112233")
         logger.info("Step 2 passed: File upload updates logo and overrides logo_url with media URL.")
         
@@ -354,9 +355,13 @@ class TenantsAddonIsolationTests(APITestCase):
         import os
         tenant_a_updated = Tenant.objects.get(id=self.tenant_a.id)
         if tenant_a_updated.logo:
-            logo_path = tenant_a_updated.logo.path
-            if os.path.exists(logo_path):
-                os.remove(logo_path)
+            try:
+                logo_path = tenant_a_updated.logo.path
+                if os.path.exists(logo_path):
+                    os.remove(logo_path)
+            except (NotImplementedError, AttributeError):
+                # Remote storage backends like Cloudinary don't expose local .path
+                pass
         logger.info("Test passed: Logo upload and fallback behavior verified successfully.")
 
     def test_tenant_public_config_lookup_methods(self):
