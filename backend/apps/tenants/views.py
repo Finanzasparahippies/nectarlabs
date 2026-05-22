@@ -34,6 +34,36 @@ class TenantViewSet(viewsets.ModelViewSet):
             'api_key': str(tenant.api_key)
         })
 
+    @action(detail=True, methods=['post'], url_path='validate-domain')
+    def validate_domain(self, request, pk=None):
+        tenant = self.get_object()
+        domain = tenant.custom_domain
+        if not domain:
+            return Response({
+                'is_valid': False,
+                'message': 'No se ha configurado ningún dominio personalizado para este portal.'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        import socket
+        try:
+            resolved_ip = socket.gethostbyname(domain.strip())
+            return Response({
+                'is_valid': True,
+                'resolved_ip': resolved_ip,
+                'message': f'El dominio resuelve correctamente a la IP {resolved_ip}.'
+            })
+        except socket.gaierror:
+            return Response({
+                'is_valid': False,
+                'message': 'No se pudo resolver el dominio. Verifica la configuración CNAME en tu proveedor de DNS.'
+            })
+        except Exception as e:
+            return Response({
+                'is_valid': False,
+                'message': f'Error durante la comprobación: {str(e)}'
+            })
+
+
 
 @api_view(['GET'])
 @permission_classes([permissions.AllowAny])

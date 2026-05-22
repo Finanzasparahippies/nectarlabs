@@ -23,6 +23,11 @@ interface TenantConfig {
   name: string;
   subdomain: string;
   theme_color: string;
+  accent_color: string;
+  bg_color: string;
+  card_bg_color: string;
+  text_color: string;
+  border_color: string;
   logo_url: string | null;
   welcome_message: string;
   require_customer_info: boolean;
@@ -308,12 +313,42 @@ function ChatWidgetContent() {
   const primaryColor = tenantConfig.theme_color || '#C68A1E';
 
   return (
-    <div className="w-full h-full flex flex-col items-end justify-end select-none font-sans overflow-hidden p-3 bg-transparent">
+    <div id="nectar-chat-widget" className="w-full h-full flex flex-col items-end justify-end select-none font-sans overflow-hidden p-3 bg-transparent">
+      <style>{`
+        #nectar-chat-widget .widget-window {
+          background-color: ${tenantConfig.bg_color || '#020403'}e0 !important;
+          border-color: ${tenantConfig.border_color || '#151F18'} !important;
+          color: ${tenantConfig.text_color || '#FFFFFF'} !important;
+        }
+        #nectar-chat-widget .widget-header {
+          background-color: ${tenantConfig.card_bg_color || '#050a06'}80 !important;
+          border-color: ${tenantConfig.border_color || '#151F18'} !important;
+        }
+        #nectar-chat-widget .widget-input {
+          background-color: ${tenantConfig.bg_color || '#020403'} !important;
+          border-color: ${tenantConfig.border_color || '#151F18'} !important;
+          color: ${tenantConfig.text_color || '#FFFFFF'} !important;
+        }
+        #nectar-chat-widget .widget-input:focus {
+          border-color: ${tenantConfig.accent_color || '#10B981'} !important;
+        }
+        #nectar-chat-widget .widget-card {
+          background-color: ${tenantConfig.card_bg_color || '#050a06'}a0 !important;
+          border-color: ${tenantConfig.border_color || '#151F18'} !important;
+        }
+        #nectar-chat-widget .widget-border {
+          border-color: ${tenantConfig.border_color || '#151F18'} !important;
+        }
+        #nectar-chat-widget .widget-close-btn:hover {
+          color: ${tenantConfig.accent_color || '#10B981'} !important;
+          background-color: ${tenantConfig.card_bg_color || '#050a06'}b0 !important;
+        }
+      `}</style>
       {/* 1. Chat Widget Window (Only rendered if open) */}
       {isOpen && (
-        <div className="w-full h-[calc(100%-80px)] bg-[#030604]/95 backdrop-blur-2xl border border-white/5 rounded-[2rem] shadow-2xl flex flex-col overflow-hidden animate-premium">
+        <div className="w-full h-[calc(100%-80px)] backdrop-blur-2xl border rounded-[2rem] shadow-2xl flex flex-col overflow-hidden animate-premium widget-window widget-border">
           {/* Header */}
-          <div className="p-4.5 border-b border-white/5 flex justify-between items-center bg-white/[0.01]">
+          <div className="p-4.5 border-b flex justify-between items-center bg-white/[0.01] widget-header widget-border">
             <div className="flex items-center gap-2.5">
               {tenantConfig.logo_url ? (
                 <img
@@ -342,14 +377,15 @@ function ChatWidgetContent() {
                 <button
                   onClick={handleLogout}
                   title="Salir"
-                  className="text-[8px] font-black uppercase text-white/40 hover:text-white bg-white/5 hover:bg-white/10 px-2 py-1 rounded-lg transition-all"
+                  className="text-[8px] font-black uppercase bg-white/5 px-2 py-1 rounded-lg transition-all border widget-border hover:opacity-85"
+                  style={{ color: tenantConfig.accent_color || '#10B981', borderColor: `${tenantConfig.accent_color || '#10B981'}30` }}
                 >
                   Salir
                 </button>
               )}
               <button
                 onClick={() => setIsOpen(false)}
-                className="text-white/40 hover:text-white bg-white/5 hover:bg-white/10 w-7 h-7 rounded-full flex items-center justify-center transition-all text-lg font-bold"
+                className="text-white/40 bg-white/5 w-7 h-7 rounded-full flex items-center justify-center transition-all text-lg font-bold widget-close-btn"
               >
                 ×
               </button>
@@ -385,7 +421,7 @@ function ChatWidgetContent() {
                       onChange={(e) => setName(e.target.value)}
                       placeholder="Ej. Juan Pérez"
                       required
-                      className="w-full bg-white/5 border border-white/5 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-white/20 focus:outline-none focus:border-white/20 transition-all font-medium"
+                      className="w-full border rounded-xl px-3.5 py-2.5 text-xs placeholder-white/20 focus:outline-none transition-all font-medium widget-input"
                     />
                   </div>
                 )}
@@ -398,7 +434,7 @@ function ChatWidgetContent() {
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="correo@ejemplo.com"
                     required
-                    className="w-full bg-white/5 border border-white/5 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-white/20 focus:outline-none focus:border-white/20 transition-all font-medium"
+                    className="w-full border rounded-xl px-3.5 py-2.5 text-xs placeholder-white/20 focus:outline-none transition-all font-medium widget-input"
                   />
                 </div>
 
@@ -453,7 +489,7 @@ function ChatWidgetContent() {
                         className={`max-w-[85%] rounded-2xl p-3.5 shadow-sm ${
                           isMine
                             ? 'text-black rounded-tr-none'
-                            : 'bg-white/5 text-white border border-white/5 rounded-tl-none'
+                            : 'border rounded-tl-none widget-card'
                         }`}
                         style={isMine ? { backgroundColor: primaryColor } : {}}
                       >
@@ -479,14 +515,14 @@ function ChatWidgetContent() {
 
           {/* Footer Input */}
           {activeChat && activeChat.status !== 'CLOSED' && (
-            <div className="p-3 border-t border-white/5 bg-white/[0.005]">
+            <div className="p-3 border-t bg-white/[0.005] widget-header widget-border">
               <form onSubmit={handleSendMessage} className="flex gap-2">
                 <input
                   type="text"
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
                   placeholder="Escribe tu mensaje aquí..."
-                  className="flex-1 bg-white/5 border border-white/5 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-white/20 focus:outline-none focus:border-white/10 transition-all"
+                  className="flex-1 border rounded-xl px-3.5 py-2.5 text-xs placeholder-white/20 focus:outline-none transition-all widget-input"
                   disabled={isSubmitting}
                   required
                 />
@@ -522,7 +558,7 @@ function ChatWidgetContent() {
         onClick={() => setIsOpen((prev) => !prev)}
         className="w-14 h-14 rounded-full shadow-2xl flex items-center justify-center text-black hover:scale-110 active:scale-95 transition-all relative border border-white/10 cursor-pointer"
         style={{
-          background: `linear-gradient(135deg, ${primaryColor}, #020503)`,
+          background: `linear-gradient(135deg, ${primaryColor}, ${tenantConfig.accent_color || '#10B981'})`,
           boxShadow: `0 8px 30px -4px ${primaryColor}40`,
         }}
       >
@@ -535,7 +571,10 @@ function ChatWidgetContent() {
         )}
 
         {hasNewMessages && !isOpen && (
-          <span className="absolute top-0 right-0 w-4 h-4 bg-red-500 rounded-full border-2 border-[#020503] flex items-center justify-center text-[7px] font-black text-white">
+          <span
+            className="absolute top-0 right-0 w-4 h-4 bg-red-500 rounded-full border-2 flex items-center justify-center text-[7px] font-black text-white"
+            style={{ borderColor: tenantConfig.bg_color || '#020403' }}
+          >
             !
           </span>
         )}

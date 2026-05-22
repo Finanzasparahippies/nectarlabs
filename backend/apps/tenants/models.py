@@ -26,13 +26,23 @@ class Tenant(models.Model):
     )
     
     # Customization & Branding fields
-    theme_color = models.CharField(max_length=7, default="#C68A1E")
+    logo = models.ImageField(upload_to="tenant_logos/", blank=True, null=True)
     logo_url = models.URLField(blank=True, null=True)
     welcome_message = models.TextField(default="¡Hola! ¿En qué podemos ayudarte hoy?")
+    portal_title = models.CharField(max_length=150, blank=True, null=True)
+    footer_text = models.TextField(blank=True, null=True)
     require_customer_info = models.BooleanField(
         default=True,
         help_text="Whether to require customer Name and Email before starting a support session."
     )
+    
+    # 6-Color Palette Customization
+    theme_color = models.CharField(max_length=7, default="#C68A1E")     # Primary / Nectar Gold
+    accent_color = models.CharField(max_length=7, default="#10B981")    # Secondary / Emerald Green
+    bg_color = models.CharField(max_length=7, default="#020403")        # General Canvas Background
+    card_bg_color = models.CharField(max_length=7, default="#050a06")   # Cards / Modals Background
+    text_color = models.CharField(max_length=7, default="#FFFFFF")      # Main Text color
+    border_color = models.CharField(max_length=7, default="#151F18")    # Borders / Dividers color
     
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)

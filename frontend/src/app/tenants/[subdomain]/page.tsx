@@ -15,10 +15,17 @@ interface TenantConfig {
   id: string;
   name: string;
   subdomain: string;
-  theme_color: string;
   logo_url: string | null;
   welcome_message: string;
+  portal_title: string | null;
+  footer_text: string | null;
   require_customer_info: boolean;
+  theme_color: string;
+  accent_color: string;
+  bg_color: string;
+  card_bg_color: string;
+  text_color: string;
+  border_color: string;
   active_addons?: string[];
 }
 
@@ -137,6 +144,12 @@ export default function TenantPortalPage() {
 
     fetchConfig();
   }, [subdomain]);
+
+  useEffect(() => {
+    if (tenantConfig) {
+      document.title = tenantConfig.portal_title || `${tenantConfig.name} - Centro de Soporte`;
+    }
+  }, [tenantConfig]);
 
   // 2. Custom fetch helper
   const portalFetch = async (endpoint: string, options: RequestInit = {}) => {
@@ -418,9 +431,36 @@ export default function TenantPortalPage() {
   const primaryColor = tenantConfig.theme_color || '#C68A1E';
 
   return (
-    <div className="min-h-screen bg-[#020403] text-white flex flex-col font-sans">
+    <div id="tenant-portal-root" className="min-h-screen flex flex-col font-sans">
+      <style>{`
+        #tenant-portal-root {
+          background-color: ${tenantConfig.bg_color || '#020403'} !important;
+          color: ${tenantConfig.text_color || '#FFFFFF'} !important;
+        }
+        #tenant-portal-root .tenant-header {
+          background-color: ${tenantConfig.card_bg_color || '#050a06'}80 !important;
+          border-color: ${tenantConfig.border_color || '#151F18'} !important;
+        }
+        #tenant-portal-root .tenant-card {
+          background-color: ${tenantConfig.card_bg_color || '#050a06'}a0 !important;
+          border-color: ${tenantConfig.border_color || '#151F18'} !important;
+        }
+        #tenant-portal-root .tenant-input {
+          background-color: ${tenantConfig.bg_color || '#020403'} !important;
+          border-color: ${tenantConfig.border_color || '#151F18'} !important;
+          color: ${tenantConfig.text_color || '#FFFFFF'} !important;
+        }
+        #tenant-portal-root .tenant-border {
+          border-color: ${tenantConfig.border_color || '#151F18'} !important;
+        }
+        #tenant-portal-root .tenant-footer {
+          background-color: ${tenantConfig.card_bg_color || '#050a06'}a0 !important;
+          border-color: ${tenantConfig.border_color || '#151F18'} !important;
+        }
+      `}</style>
+
       {/* 1. Header Navigation */}
-      <header className="border-b border-white/5 bg-[#030604]/50 backdrop-blur-md sticky top-0 z-50">
+      <header className="border-b backdrop-blur-md sticky top-0 z-50 tenant-header">
         <div className="max-w-7xl mx-auto px-6 h-18 flex justify-between items-center">
           <div className="flex items-center gap-3">
             {tenantConfig.logo_url ? (
@@ -458,7 +498,7 @@ export default function TenantPortalPage() {
         {!isAuthenticated ? (
           /* Login Screen */
           <div className="flex-1 flex items-center justify-center py-12">
-            <div className="max-w-md w-full bg-[#050a06]/60 backdrop-blur-md border border-white/5 rounded-[2.5rem] p-8 sm:p-10 shadow-2xl relative overflow-hidden">
+            <div className="max-w-md w-full backdrop-blur-md border rounded-[2.5rem] p-8 sm:p-10 shadow-2xl relative overflow-hidden tenant-card">
               {/* Gold glow top right */}
               <div
                 className="absolute -top-24 -right-24 w-48 h-48 rounded-full blur-3xl opacity-20"
@@ -482,7 +522,7 @@ export default function TenantPortalPage() {
                       onChange={(e) => setName(e.target.value)}
                       placeholder="Ej. Carlos Mendoza"
                       required
-                      className="w-full bg-white/5 border border-white/5 rounded-2xl px-4.5 py-3.5 text-xs text-white focus:outline-none focus:border-white/15 transition-all"
+                      className="w-full border rounded-2xl px-4.5 py-3.5 text-xs focus:outline-none transition-all tenant-input"
                     />
                   </div>
                 )}
@@ -495,7 +535,7 @@ export default function TenantPortalPage() {
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="correo@ejemplo.com"
                     required
-                    className="w-full bg-white/5 border border-white/5 rounded-2xl px-4.5 py-3.5 text-xs text-white focus:outline-none focus:border-white/15 transition-all"
+                    className="w-full border rounded-2xl px-4.5 py-3.5 text-xs focus:outline-none transition-all tenant-input"
                   />
                 </div>
 
@@ -518,8 +558,8 @@ export default function TenantPortalPage() {
               {/* Ticket Details Panel or Ticket Creation Form */}
               {selectedTicket ? (
                 /* Ticket Detail View */
-                <div className="bg-[#050a06]/40 border border-white/5 rounded-[2rem] p-6 flex flex-col flex-1 shadow-lg">
-                  <div className="flex justify-between items-start border-b border-white/5 pb-4 mb-4">
+                <div className="rounded-[2rem] p-6 flex flex-col flex-1 shadow-lg tenant-card border">
+                  <div className="flex justify-between items-start border-b pb-4 mb-4 tenant-border">
                     <div>
                       <button
                         onClick={() => setSelectedTicket(null)}
@@ -527,14 +567,15 @@ export default function TenantPortalPage() {
                       >
                         ← Volver a la Lista
                       </button>
-                      <h3 className="text-base font-black uppercase text-white tracking-tight">{selectedTicket.title}</h3>
+                      <h3 className="text-base font-black uppercase tracking-tight">{selectedTicket.title}</h3>
                       <p className="text-[8.5px] uppercase tracking-widest mt-1 text-white/40 font-bold">
                         Ticket #{selectedTicket.id} | Categoría: {selectedTicket.category}
                       </p>
                     </div>
                     <span
-                      className="px-3.5 py-1.5 rounded-full text-[8.5px] font-black uppercase tracking-widest border border-white/10"
+                      className="px-3.5 py-1.5 rounded-full text-[8.5px] font-black uppercase tracking-widest border"
                       style={{
+                        borderColor: tenantConfig.border_color || 'rgba(255,255,255,0.1)',
                         backgroundColor:
                           selectedTicket.status === 'CLOSED'
                             ? 'rgba(239, 68, 68, 0.1)'
@@ -555,7 +596,7 @@ export default function TenantPortalPage() {
 
                   {/* History of messages within the ticket */}
                   <div className="flex-1 overflow-y-auto space-y-4 max-h-[300px] pr-2 custom-scrollbar">
-                    <div className="bg-white/5 border border-white/5 rounded-2xl p-4">
+                    <div className="bg-white/5 border rounded-2xl p-4 tenant-border">
                       <p className="text-[8.5px] font-black uppercase tracking-widest text-white/40">Descripción Inicial</p>
                       <p className="text-xs text-white/80 mt-1 leading-relaxed whitespace-pre-wrap">{selectedTicket.description}</p>
                       <p className="text-[7.5px] text-white/30 mt-2 font-bold">{new Date(selectedTicket.created_at).toLocaleString()}</p>
@@ -565,11 +606,7 @@ export default function TenantPortalPage() {
                       selectedTicket.messages.map((msg) => (
                         <div
                           key={msg.id}
-                          className={`p-4 border rounded-2xl ${
-                            msg.sender_email.toLowerCase() === email.toLowerCase()
-                              ? 'bg-white/[0.02] border-white/5'
-                              : 'bg-white/5 border-white/10'
-                          }`}
+                          className="p-4 border rounded-2xl tenant-border bg-white/[0.02]"
                         >
                           <p className="text-[8.5px] font-black uppercase tracking-widest" style={{ color: primaryColor }}>
                             {msg.sender_email.toLowerCase() === email.toLowerCase() ? 'Yo' : '🛠️ Soporte Técnico'}
@@ -582,13 +619,13 @@ export default function TenantPortalPage() {
 
                   {/* Add response form */}
                   {selectedTicket.status !== 'CLOSED' && (
-                    <form onSubmit={handleSendTicketMessage} className="mt-4 pt-4 border-t border-white/5 flex gap-2">
+                    <form onSubmit={handleSendTicketMessage} className="mt-4 pt-4 border-t flex gap-2 tenant-border">
                       <input
                         type="text"
                         value={ticketMessageText}
                         onChange={(e) => setTicketMessageText(e.target.value)}
                         placeholder="Escribe tu respuesta técnica aquí..."
-                        className="flex-1 bg-white/5 border border-white/5 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-white/15 transition-all"
+                        className="flex-1 border rounded-xl px-4 py-3 text-xs focus:outline-none transition-all tenant-input"
                         disabled={isSendingTicketMsg}
                         required
                       />
@@ -607,7 +644,7 @@ export default function TenantPortalPage() {
                 /* Ticket List & Creation View */
                 <>
                   {/* Ticket creation form */}
-                  <div className="bg-[#050a06]/40 border border-white/5 rounded-[2rem] p-6 shadow-lg">
+                  <div className="border rounded-[2rem] p-6 shadow-lg tenant-card">
                     <h3 className="text-sm font-black uppercase tracking-wider mb-4 text-white">Nuevo Ticket de Soporte</h3>
                     <form onSubmit={handleCreateTicket} className="space-y-4">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -619,7 +656,7 @@ export default function TenantPortalPage() {
                             onChange={(e) => setNewTicketTitle(e.target.value)}
                             placeholder="Ej. Error en pasarela de pagos"
                             required
-                            className="w-full bg-white/5 border border-white/5 rounded-xl px-3.5 py-3 text-xs text-white focus:outline-none focus:border-white/10"
+                            className="w-full border rounded-xl px-3.5 py-3 text-xs focus:outline-none tenant-input"
                           />
                         </div>
 
@@ -629,7 +666,7 @@ export default function TenantPortalPage() {
                             <select
                               value={newTicketCategory}
                               onChange={(e) => setNewTicketCategory(e.target.value)}
-                              className="w-full bg-white/5 border border-white/5 rounded-xl px-3.5 py-3 text-xs text-white focus:outline-none"
+                              className="w-full border rounded-xl px-3.5 py-3 text-xs focus:outline-none tenant-input"
                             >
                               <option value="QUESTION">Pregunta</option>
                               <option value="ISSUE">Problema Técnico</option>
@@ -642,7 +679,7 @@ export default function TenantPortalPage() {
                             <select
                               value={newTicketPriority}
                               onChange={(e) => setNewTicketPriority(e.target.value)}
-                              className="w-full bg-white/5 border border-white/5 rounded-xl px-3.5 py-3 text-xs text-white focus:outline-none"
+                              className="w-full border rounded-xl px-3.5 py-3 text-xs focus:outline-none tenant-input"
                             >
                               <option value="LOW">Baja</option>
                               <option value="MEDIUM">Media</option>
@@ -661,7 +698,7 @@ export default function TenantPortalPage() {
                           placeholder="Describe con el mayor detalle técnico posible el inconveniente..."
                           required
                           rows={3}
-                          className="w-full bg-white/5 border border-white/5 rounded-xl px-3.5 py-3 text-xs text-white focus:outline-none focus:border-white/10 resize-none"
+                          className="w-full border rounded-xl px-3.5 py-3 text-xs focus:outline-none resize-none tenant-input"
                         ></textarea>
                       </div>
 
@@ -677,7 +714,7 @@ export default function TenantPortalPage() {
                   </div>
 
                   {/* List of existing tickets */}
-                  <div className="bg-[#050a06]/40 border border-white/5 rounded-[2rem] p-6 flex-1 shadow-lg overflow-hidden flex flex-col">
+                  <div className="border rounded-[2rem] p-6 flex-1 shadow-lg overflow-hidden flex flex-col tenant-card">
                     <h3 className="text-sm font-black uppercase tracking-wider mb-4 text-white">Mis Tickets Abiertos</h3>
                     <div className="flex-1 overflow-y-auto space-y-3 custom-scrollbar pr-1 max-h-[300px]">
                       {tickets.length === 0 ? (
@@ -687,7 +724,7 @@ export default function TenantPortalPage() {
                           <div
                             key={t.id}
                             onClick={() => setSelectedTicket(t)}
-                            className="bg-white/[0.02] hover:bg-white/5 border border-white/5 rounded-2xl p-4.5 flex justify-between items-center transition-all cursor-pointer hover:border-white/10"
+                            className="bg-white/[0.02] hover:bg-white/5 border rounded-2xl p-4.5 flex justify-between items-center transition-all cursor-pointer tenant-border"
                           >
                             <div>
                               <h4 className="text-xs font-black uppercase text-white tracking-tight">{t.title}</h4>
@@ -716,7 +753,7 @@ export default function TenantPortalPage() {
             {/* Right side: Dynamic Addons panel (5 cols) */}
             <div className="lg:col-span-5 flex flex-col space-y-6">
               {otherActiveAddons.length > 0 ? (
-                <div className="bg-[#050a06]/40 border border-white/5 rounded-[2rem] p-6 shadow-lg flex flex-col flex-1 relative overflow-hidden group">
+                <div className="border rounded-[2rem] p-6 shadow-lg flex flex-col flex-1 relative overflow-hidden group tenant-card">
                   {/* Gold glow top right */}
                   <div
                     className="absolute -top-32 -right-32 w-64 h-64 rounded-full blur-[100px] opacity-10 transition-all duration-700 pointer-events-none group-hover:opacity-20"
@@ -724,7 +761,7 @@ export default function TenantPortalPage() {
                   ></div>
 
                   {/* Header & Tabs */}
-                  <div className="border-b border-white/5 pb-4 mb-6">
+                  <div className="border-b pb-4 mb-6 tenant-border">
                     <h3 className="text-sm font-black uppercase tracking-wider text-white mb-4">
                       Módulos Adicionales
                     </h3>
@@ -773,7 +810,7 @@ export default function TenantPortalPage() {
                 </div>
               ) : (
                 /* Fallback Support Hub Dashboard */
-                <div className="bg-[#050a06]/40 border border-white/5 rounded-[2rem] p-8 shadow-lg flex flex-col justify-between flex-1 relative overflow-hidden group">
+                <div className="border rounded-[2rem] p-8 shadow-lg flex flex-col justify-between flex-1 relative overflow-hidden group tenant-card">
                   {/* Gold glow top right */}
                   <div
                     className="absolute -top-32 -right-32 w-64 h-64 rounded-full blur-[100px] opacity-10 transition-all duration-700 pointer-events-none group-hover:opacity-20"
@@ -781,7 +818,7 @@ export default function TenantPortalPage() {
                   ></div>
 
                   <div>
-                    <h3 className="text-sm font-black uppercase tracking-wider text-white mb-6 border-b border-white/5 pb-4">
+                    <h3 className="text-sm font-black uppercase tracking-wider text-white mb-6 border-b pb-4 tenant-border">
                       Servicios del Portal
                     </h3>
                     
@@ -841,7 +878,7 @@ export default function TenantPortalPage() {
                     </div>
                   </div>
 
-                  <div className="mt-8 pt-6 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div className="mt-8 pt-6 border-t flex flex-col sm:flex-row items-center justify-between gap-4 tenant-border">
                     <p className="text-[9px] uppercase tracking-widest font-black text-white/30">
                       Néctar Labs &copy; {new Date().getFullYear()}
                     </p>
@@ -867,15 +904,20 @@ export default function TenantPortalPage() {
           tenantId={tenantConfig.id}
           tenantName={tenantConfig.name}
           primaryColor={primaryColor}
+          accentColor={tenantConfig.accent_color}
+          bgColor={tenantConfig.bg_color}
+          cardBgColor={tenantConfig.card_bg_color}
+          textColor={tenantConfig.text_color}
+          borderColor={tenantConfig.border_color}
           welcomeMessage={tenantConfig.welcome_message}
         />
       )}
 
       {/* Footer copyright */}
-      <footer className="border-t border-white/5 py-6 bg-[#030604]/50">
+      <footer className="border-t py-6 tenant-footer">
         <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row justify-between items-center gap-4 text-center sm:text-left">
           <p className="text-[10px] font-black uppercase tracking-widest text-white/20">
-            &copy; {new Date().getFullYear()} Néctar Labs Software Artesanal. Todos los derechos reservados.
+            {tenantConfig.footer_text || `© ${new Date().getFullYear()} Néctar Labs Software Artesanal. Todos los derechos reservados.`}
           </p>
           <div className="flex gap-6 text-[10px] font-black uppercase tracking-widest text-white/30">
             <a href="https://nectarlabs.dev" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-all">

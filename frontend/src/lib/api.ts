@@ -17,9 +17,10 @@ export async function fetcher(endpoint: string, options: FetcherOptions = {}) {
   const { isPublic, ...fetchOptions } = options;
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
 
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-  };
+  const headers: Record<string, string> = {};
+  if (!(fetchOptions?.body instanceof FormData)) {
+    headers["Content-Type"] = "application/json";
+  }
 
   // Solo agregar Authorization si no es público, el token existe y no es la cadena "null" o "undefined"
   if (!isPublic && token && token !== 'null' && token !== 'undefined') {

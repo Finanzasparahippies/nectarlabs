@@ -14,8 +14,15 @@ interface Tenant {
   allowed_origins: string;
   custom_domain: string | null;
   theme_color: string;
+  accent_color: string;
+  bg_color: string;
+  card_bg_color: string;
+  text_color: string;
+  border_color: string;
   logo_url: string | null;
   welcome_message: string;
+  portal_title: string | null;
+  footer_text: string | null;
   require_customer_info: boolean;
   is_active: boolean;
   created_at: string;
@@ -33,6 +40,10 @@ export default function SupportSettingsPage() {
   const [activeSubTab, setActiveSubTab] = useState<'branding' | 'routing' | 'widget'>('branding');
   const [copied, setCopied] = useState(false);
   
+  // DNS verification states
+  const [isValidatingDomain, setIsValidatingDomain] = useState(false);
+  const [domainValidationResult, setDomainValidationResult] = useState<{ is_valid: boolean; resolved_ip?: string; message: string } | null>(null);
+
   // New Tenant Form State
   const [newTenantName, setNewTenantName] = useState('');
   const [newTenantSubdomain, setNewTenantSubdomain] = useState('');
@@ -42,8 +53,17 @@ export default function SupportSettingsPage() {
   const [editSubdomain, setEditSubdomain] = useState('');
   const [editCustomDomain, setEditCustomDomain] = useState('');
   const [editThemeColor, setEditThemeColor] = useState('#C68A1E');
+  const [editAccentColor, setEditAccentColor] = useState('#10B981');
+  const [editBgColor, setEditBgColor] = useState('#020403');
+  const [editCardBgColor, setEditCardBgColor] = useState('#050a06');
+  const [editTextColor, setEditTextColor] = useState('#FFFFFF');
+  const [editBorderColor, setEditBorderColor] = useState('#151F18');
   const [editLogoUrl, setEditLogoUrl] = useState('');
+  const [editLogoFile, setEditLogoFile] = useState<File | null>(null);
+  const [editLogoPreview, setEditLogoPreview] = useState<string | null>(null);
   const [editWelcomeMessage, setEditWelcomeMessage] = useState('');
+  const [editPortalTitle, setEditPortalTitle] = useState('');
+  const [editFooterText, setEditFooterText] = useState('');
   const [editRequireCustomerInfo, setEditRequireCustomerInfo] = useState(true);
   const [editAllowedOrigins, setEditAllowedOrigins] = useState('');
   
@@ -85,10 +105,20 @@ export default function SupportSettingsPage() {
     setEditSubdomain(tenant.subdomain);
     setEditCustomDomain(tenant.custom_domain || '');
     setEditThemeColor(tenant.theme_color || '#C68A1E');
+    setEditAccentColor(tenant.accent_color || '#10B981');
+    setEditBgColor(tenant.bg_color || '#020403');
+    setEditCardBgColor(tenant.card_bg_color || '#050a06');
+    setEditTextColor(tenant.text_color || '#FFFFFF');
+    setEditBorderColor(tenant.border_color || '#151F18');
     setEditLogoUrl(tenant.logo_url || '');
+    setEditLogoFile(null);
+    setEditLogoPreview(null);
     setEditWelcomeMessage(tenant.welcome_message || '');
+    setEditPortalTitle(tenant.portal_title || '');
+    setEditFooterText(tenant.footer_text || '');
     setEditRequireCustomerInfo(tenant.require_customer_info);
     setEditAllowedOrigins(tenant.allowed_origins || '');
+    setDomainValidationResult(null);
   };
 
   const handleCreateTenant = async (e: React.FormEvent) => {
@@ -122,27 +152,65 @@ export default function SupportSettingsPage() {
 
     setIsSubmitting(true);
     try {
+      const formData = new FormData();
+      formData.append('name', editName.trim());
+      formData.append('subdomain', editSubdomain.trim().toLowerCase());
+      formData.append('custom_domain', editCustomDomain.trim() || '');
+      formData.append('theme_color', editThemeColor);
+      formData.append('accent_color', editAccentColor);
+      formData.append('bg_color', editBgColor);
+      formData.append('card_bg_color', editCardBgColor);
+      formData.append('text_color', editTextColor);
+      formData.append('border_color', editBorderColor);
+      formData.append('welcome_message', editWelcomeMessage.trim());
+      formData.append('portal_title', editPortalTitle.trim());
+      formData.append('footer_text', editFooterText.trim());
+      formData.append('require_customer_info', String(editRequireCustomerInfo));
+      formData.append('allowed_origins', editAllowedOrigins.trim());
+
+      if (editLogoFile) {
+        formData.append('logo', editLogoFile);
+      } else {
+        formData.append('logo_url', editLogoUrl.trim() || '');
+      }
+
       const updated = await fetcher(`/tenants/${selectedTenant.id}/`, {
         method: 'PATCH',
-        body: JSON.stringify({
-          name: editName.trim(),
-          subdomain: editSubdomain.trim().toLowerCase(),
-          custom_domain: editCustomDomain.trim() || null,
-          theme_color: editThemeColor,
-          logo_url: editLogoUrl.trim() || null,
-          welcome_message: editWelcomeMessage.trim(),
-          require_customer_info: editRequireCustomerInfo,
-          allowed_origins: editAllowedOrigins.trim(),
-        }),
+        body: formData,
       });
 
       setTenants((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
       setSelectedTenant(updated);
+      if (updated.logo_url) {
+        setEditLogoUrl(updated.logo_url);
+      }
+      setEditLogoFile(null);
+      setEditLogoPreview(null);
       alert('Configuración guardada correctamente.');
     } catch (err: any) {
       alert(err.message || 'Error al guardar los cambios.');
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleValidateDomain = async () => {
+    if (!selectedTenant || !editCustomDomain.trim()) return;
+
+    setIsValidatingDomain(true);
+    setDomainValidationResult(null);
+    try {
+      const res = await fetcher(`/tenants/${selectedTenant.id}/validate-domain/`, {
+        method: 'POST',
+      });
+      setDomainValidationResult(res);
+    } catch (err: any) {
+      setDomainValidationResult({
+        is_valid: false,
+        message: err.message || 'Error al validar el dominio.',
+      });
+    } finally {
+      setIsValidatingDomain(false);
     }
   };
 
@@ -400,44 +468,222 @@ export default function SupportSettingsPage() {
                         </div>
 
                         <div className="space-y-1">
-                          <label className="text-[9px] font-black uppercase tracking-widest text-white/40">Color de Marca (Widget & Portal)</label>
-                          <div className="flex gap-2">
-                            <input
-                              type="color"
-                              value={editThemeColor}
-                              onChange={(e) => setEditThemeColor(e.target.value)}
-                              className="w-12 h-10 bg-background border border-card-border rounded-xl cursor-pointer p-1"
-                            />
-                            <input
-                              type="text"
-                              value={editThemeColor}
-                              onChange={(e) => setEditThemeColor(e.target.value)}
-                              placeholder="#C68A1E"
-                              className="flex-1 bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-nectar-gold transition-all uppercase"
-                            />
+                          <label className="text-[9px] font-black uppercase tracking-widest text-white/40">Título del Portal (Pestaña del Navegador)</label>
+                          <input
+                            type="text"
+                            value={editPortalTitle}
+                            onChange={(e) => setEditPortalTitle(e.target.value)}
+                            placeholder="Ej. Soporte Premium - MiEmpresa"
+                            className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-nectar-gold transition-all"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Logo Section with file uploader and URL fallback */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-1">
+                          <label className="text-[9px] font-black uppercase tracking-widest text-white/40">Logotipo de la Marca (Subir Archivo)</label>
+                          <div className="flex flex-col sm:flex-row gap-4 items-center bg-background border border-card-border rounded-xl p-4">
+                            <div className="relative w-16 h-16 rounded-xl border border-card-border overflow-hidden bg-background flex items-center justify-center shrink-0">
+                              {editLogoPreview || editLogoUrl ? (
+                                <img
+                                  src={editLogoPreview || editLogoUrl}
+                                  alt="Vista previa del logo"
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <span className="text-[10px] text-white/30 uppercase font-black text-center p-1">Sin Logo</span>
+                              )}
+                            </div>
+                            <div className="flex-1 space-y-2">
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) {
+                                    setEditLogoFile(file);
+                                    setEditLogoPreview(URL.createObjectURL(file));
+                                  }
+                                }}
+                                className="text-xs text-white file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-[10px] file:font-black file:uppercase file:tracking-wider file:bg-white/5 file:text-white hover:file:bg-white/10 w-full"
+                              />
+                              {(editLogoPreview || editLogoUrl) && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setEditLogoFile(null);
+                                    setEditLogoPreview(null);
+                                    setEditLogoUrl('');
+                                  }}
+                                  className="text-[8px] font-black uppercase tracking-widest text-red-500 hover:underline block"
+                                >
+                                  Remover Logo
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="space-y-1 flex flex-col justify-end">
+                          <label className="text-[9px] font-black uppercase tracking-widest text-white/40">O URL Externa del Logo (Opcional)</label>
+                          <input
+                            type="url"
+                            value={editLogoUrl}
+                            onChange={(e) => setEditLogoUrl(e.target.value)}
+                            placeholder="https://ejemplo.com/logo.png"
+                            className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-nectar-gold transition-all"
+                          />
+                        </div>
+                      </div>
+
+                      {/* 6-Color Palette Grid */}
+                      <div className="space-y-3 pt-4 border-t border-card-border">
+                        <h4 className="text-[10px] font-black uppercase tracking-widest text-nectar-gold">Paleta de Colores Corporativa (6 Colores)</h4>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+                          {/* 1. Theme Color */}
+                          <div className="space-y-1">
+                            <label className="text-[8px] font-black uppercase tracking-widest text-white/45">Primario (Tema)</label>
+                            <div className="flex gap-2">
+                              <input
+                                type="color"
+                                value={editThemeColor}
+                                onChange={(e) => setEditThemeColor(e.target.value)}
+                                className="w-10 h-10 bg-background border border-card-border rounded-xl cursor-pointer p-1"
+                              />
+                              <input
+                                type="text"
+                                value={editThemeColor}
+                                onChange={(e) => setEditThemeColor(e.target.value)}
+                                placeholder="#C68A1E"
+                                className="flex-1 bg-background border border-card-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-nectar-gold uppercase text-center font-mono"
+                              />
+                            </div>
+                          </div>
+
+                          {/* 2. Accent Color */}
+                          <div className="space-y-1">
+                            <label className="text-[8px] font-black uppercase tracking-widest text-white/45">Acento</label>
+                            <div className="flex gap-2">
+                              <input
+                                type="color"
+                                value={editAccentColor}
+                                onChange={(e) => setEditAccentColor(e.target.value)}
+                                className="w-10 h-10 bg-background border border-card-border rounded-xl cursor-pointer p-1"
+                              />
+                              <input
+                                type="text"
+                                value={editAccentColor}
+                                onChange={(e) => setEditAccentColor(e.target.value)}
+                                placeholder="#10B981"
+                                className="flex-1 bg-background border border-card-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-nectar-gold uppercase text-center font-mono"
+                              />
+                            </div>
+                          </div>
+
+                          {/* 3. Text Color */}
+                          <div className="space-y-1">
+                            <label className="text-[8px] font-black uppercase tracking-widest text-white/45">Texto</label>
+                            <div className="flex gap-2">
+                              <input
+                                type="color"
+                                value={editTextColor}
+                                onChange={(e) => setEditTextColor(e.target.value)}
+                                className="w-10 h-10 bg-background border border-card-border rounded-xl cursor-pointer p-1"
+                              />
+                              <input
+                                type="text"
+                                value={editTextColor}
+                                onChange={(e) => setEditTextColor(e.target.value)}
+                                placeholder="#FFFFFF"
+                                className="flex-1 bg-background border border-card-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-nectar-gold uppercase text-center font-mono"
+                              />
+                            </div>
+                          </div>
+
+                          {/* 4. Canvas BG Color */}
+                          <div className="space-y-1">
+                            <label className="text-[8px] font-black uppercase tracking-widest text-white/45">Fondo Lienzo</label>
+                            <div className="flex gap-2">
+                              <input
+                                type="color"
+                                value={editBgColor}
+                                onChange={(e) => setEditBgColor(e.target.value)}
+                                className="w-10 h-10 bg-background border border-card-border rounded-xl cursor-pointer p-1"
+                              />
+                              <input
+                                type="text"
+                                value={editBgColor}
+                                onChange={(e) => setEditBgColor(e.target.value)}
+                                placeholder="#020403"
+                                className="flex-1 bg-background border border-card-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-nectar-gold uppercase text-center font-mono"
+                              />
+                            </div>
+                          </div>
+
+                          {/* 5. Card BG Color */}
+                          <div className="space-y-1">
+                            <label className="text-[8px] font-black uppercase tracking-widest text-white/45">Fondo Tarjetas</label>
+                            <div className="flex gap-2">
+                              <input
+                                type="color"
+                                value={editCardBgColor}
+                                onChange={(e) => setEditCardBgColor(e.target.value)}
+                                className="w-10 h-10 bg-background border border-card-border rounded-xl cursor-pointer p-1"
+                              />
+                              <input
+                                type="text"
+                                value={editCardBgColor}
+                                onChange={(e) => setEditCardBgColor(e.target.value)}
+                                placeholder="#050a06"
+                                className="flex-1 bg-background border border-card-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-nectar-gold uppercase text-center font-mono"
+                              />
+                            </div>
+                          </div>
+
+                          {/* 6. Border Color */}
+                          <div className="space-y-1">
+                            <label className="text-[8px] font-black uppercase tracking-widest text-white/45">Bordes / Divisiones</label>
+                            <div className="flex gap-2">
+                              <input
+                                type="color"
+                                value={editBorderColor}
+                                onChange={(e) => setEditBorderColor(e.target.value)}
+                                className="w-10 h-10 bg-background border border-card-border rounded-xl cursor-pointer p-1"
+                              />
+                              <input
+                                type="text"
+                                value={editBorderColor}
+                                onChange={(e) => setEditBorderColor(e.target.value)}
+                                placeholder="#151F18"
+                                className="flex-1 bg-background border border-card-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-nectar-gold uppercase text-center font-mono"
+                              />
+                            </div>
                           </div>
                         </div>
                       </div>
 
-                      <div className="space-y-1">
-                        <label className="text-[9px] font-black uppercase tracking-widest text-white/40">URL del Logo (Opcional)</label>
-                        <input
-                          type="url"
-                          value={editLogoUrl}
-                          onChange={(e) => setEditLogoUrl(e.target.value)}
-                          placeholder="https://ejemplo.com/logo.png"
-                          className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-nectar-gold transition-all"
-                        />
-                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-card-border">
+                        <div className="space-y-1">
+                          <label className="text-[9px] font-black uppercase tracking-widest text-white/40">Mensaje de Bienvenida del Chat</label>
+                          <textarea
+                            value={editWelcomeMessage}
+                            onChange={(e) => setEditWelcomeMessage(e.target.value)}
+                            rows={3}
+                            className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-nectar-gold transition-all resize-none animate-premium"
+                          ></textarea>
+                        </div>
 
-                      <div className="space-y-1">
-                        <label className="text-[9px] font-black uppercase tracking-widest text-white/40">Mensaje de Bienvenida del Chat</label>
-                        <textarea
-                          value={editWelcomeMessage}
-                          onChange={(e) => setEditWelcomeMessage(e.target.value)}
-                          rows={3}
-                          className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-nectar-gold transition-all resize-none"
-                        ></textarea>
+                        <div className="space-y-1">
+                          <label className="text-[9px] font-black uppercase tracking-widest text-white/40">Texto de Pie de Página (Footer)</label>
+                          <textarea
+                            value={editFooterText}
+                            onChange={(e) => setEditFooterText(e.target.value)}
+                            rows={3}
+                            placeholder="Ej. © 2026 MiEmpresa. Todos los derechos reservados."
+                            className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-nectar-gold transition-all resize-none animate-premium"
+                          ></textarea>
+                        </div>
                       </div>
 
                       <div className="flex items-center justify-between p-4 bg-background/50 border border-card-border rounded-xl">
@@ -500,6 +746,36 @@ export default function SupportSettingsPage() {
                           <p className="text-[8px] text-white/30 uppercase mt-1">
                             Apunta tu CNAME en tu proveedor de DNS (GoDaddy, Cloudflare, etc.) hacia <span className="text-nectar-gold">nectarlabs.dev</span>.
                           </p>
+                          
+                          {editCustomDomain.trim() && (
+                            <div className="mt-3 space-y-3">
+                              <button
+                                type="button"
+                                onClick={handleValidateDomain}
+                                disabled={isValidatingDomain}
+                                className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-lg text-[9px] font-black uppercase tracking-wider transition-all disabled:opacity-50"
+                              >
+                                {isValidatingDomain ? 'Validando...' : 'Verificar DNS'}
+                              </button>
+                              {domainValidationResult && (
+                                <div
+                                  className={`p-3 rounded-lg border text-[10px] ${
+                                    domainValidationResult.is_valid
+                                      ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                                      : 'bg-red-500/10 border-red-500/30 text-red-400'
+                                  }`}
+                                >
+                                  <p className="font-bold">
+                                    {domainValidationResult.is_valid ? '✓ Configuración DNS correcta' : '✗ Configuración DNS incompleta'}
+                                  </p>
+                                  <p className="mt-1 opacity-90">{domainValidationResult.message}</p>
+                                  {domainValidationResult.resolved_ip && (
+                                    <p className="mt-1 font-mono text-[9px]">IP Resuelta: {domainValidationResult.resolved_ip}</p>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </div>
 
@@ -582,32 +858,62 @@ export default function SupportSettingsPage() {
                   </div>
 
                   {/* Mock Widget UI */}
-                  <div className="w-full bg-[#030604] border border-white/5 rounded-2xl p-4 flex flex-col space-y-3 shadow-inner my-4 flex-1">
-                    <div className="flex items-center gap-2 border-b border-white/5 pb-2">
-                      <span
-                        className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-black text-black"
-                        style={{ backgroundColor: editThemeColor }}
-                      >
-                        {editName ? editName.substring(0, 1).toUpperCase() : 'S'}
-                      </span>
+                  <div
+                    className="w-full border rounded-2xl p-4 flex flex-col space-y-3 shadow-inner my-4 flex-1"
+                    style={{
+                      backgroundColor: editBgColor,
+                      borderColor: editBorderColor,
+                      color: editTextColor
+                    }}
+                  >
+                    <div className="flex items-center gap-2 border-b pb-2" style={{ borderColor: editBorderColor }}>
+                      {editLogoPreview || editLogoUrl ? (
+                        <img
+                          src={editLogoPreview || editLogoUrl}
+                          alt="Logo"
+                          className="w-5 h-5 rounded-full object-cover"
+                        />
+                      ) : (
+                        <span
+                          className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-black text-black"
+                          style={{ backgroundColor: editThemeColor }}
+                        >
+                          {editName ? editName.substring(0, 1).toUpperCase() : 'S'}
+                        </span>
+                      )}
                       <div>
-                        <p className="text-[9px] font-black text-white uppercase">{editName || 'Soporte'}</p>
-                        <p className="text-[6.5px] font-bold uppercase tracking-wider" style={{ color: editThemeColor }}>Línea Directa</p>
+                        <p className="text-[9px] font-black uppercase" style={{ color: editTextColor }}>{editName || 'Soporte'}</p>
+                        <p className="text-[6.5px] font-bold uppercase tracking-wider" style={{ color: editAccentColor }}>Línea Directa</p>
                       </div>
                     </div>
 
                     <div className="flex-1 flex flex-col justify-end space-y-2">
                       <div className="flex justify-start">
-                        <div className="bg-white/5 border border-white/5 text-white p-2 rounded-xl rounded-tl-none max-w-[90%]">
+                        <div
+                          className="border p-2 rounded-xl rounded-tl-none max-w-[90%]"
+                          style={{
+                            backgroundColor: editCardBgColor,
+                            borderColor: editBorderColor,
+                            color: editTextColor
+                          }}
+                        >
                           <p className="text-[9px] leading-relaxed">{editWelcomeMessage || '¡Hola! ¿En qué podemos ayudarte?'}</p>
                         </div>
                       </div>
 
                       {editRequireCustomerInfo && (
-                        <div className="bg-white/[0.02] border border-white/5 rounded-lg p-2 space-y-1.5">
-                          <div className="h-4 bg-white/5 rounded"></div>
-                          <div className="h-4 bg-white/5 rounded"></div>
-                          <div className="h-4 rounded" style={{ backgroundColor: editThemeColor }}></div>
+                        <div
+                          className="border rounded-lg p-2 space-y-1.5"
+                          style={{
+                            backgroundColor: editCardBgColor,
+                            borderColor: editBorderColor
+                          }}
+                        >
+                          <div className="h-4 rounded border opacity-20" style={{ borderColor: editBorderColor }}></div>
+                          <div className="h-4 rounded border opacity-20" style={{ borderColor: editBorderColor }}></div>
+                          <div className="h-4 rounded flex items-center justify-center text-[7px] font-black uppercase tracking-wider cursor-default select-none" style={{ backgroundColor: editThemeColor, color: editBgColor }}>
+                            Iniciar
+                          </div>
                         </div>
                       )}
                     </div>

@@ -21,10 +21,25 @@ interface ChatWidgetProps {
   tenantId: string;
   tenantName: string;
   primaryColor: string;
+  accentColor?: string;
+  bgColor?: string;
+  cardBgColor?: string;
+  textColor?: string;
+  borderColor?: string;
   welcomeMessage: string;
 }
 
-export default function ChatWidget({ tenantId, tenantName, primaryColor, welcomeMessage }: ChatWidgetProps) {
+export default function ChatWidget({
+  tenantId,
+  tenantName,
+  primaryColor,
+  accentColor = '#10B981',
+  bgColor = '#020403',
+  cardBgColor = '#050a06',
+  textColor = '#FFFFFF',
+  borderColor = '#151F18',
+  welcomeMessage
+}: ChatWidgetProps) {
   const [token, setToken] = useState<string | null>(null);
   const [email, setEmail] = useState('');
   const [isOpen, setIsOpen] = useState(false);
@@ -196,12 +211,43 @@ export default function ChatWidget({ tenantId, tenantName, primaryColor, welcome
   if (!token) return null;
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end font-sans">
+    <div id="portal-chat-widget" className="fixed bottom-6 right-6 z-50 flex flex-col items-end font-sans">
+      <style>{`
+        #portal-chat-widget .widget-window {
+          background-color: ${bgColor}e0 !important;
+          border-color: ${borderColor} !important;
+          color: ${textColor} !important;
+        }
+        #portal-chat-widget .widget-header {
+          background-color: ${cardBgColor}80 !important;
+          border-color: ${borderColor} !important;
+        }
+        #portal-chat-widget .widget-input {
+          background-color: ${bgColor} !important;
+          border-color: ${borderColor} !important;
+          color: ${textColor} !important;
+        }
+        #portal-chat-widget .widget-input:focus {
+          border-color: ${accentColor} !important;
+        }
+        #portal-chat-widget .widget-card {
+          background-color: ${cardBgColor}a0 !important;
+          border-color: ${borderColor} !important;
+        }
+        #portal-chat-widget .widget-border {
+          border-color: ${borderColor} !important;
+        }
+        #portal-chat-widget .widget-close-btn:hover {
+          color: ${accentColor} !important;
+          background-color: ${cardBgColor}b0 !important;
+        }
+      `}</style>
+
       {/* Chat Window */}
       {isOpen && (
-        <div className="bg-[#050a06]/95 backdrop-blur-2xl border border-white/10 rounded-[2rem] shadow-2xl mb-4 w-[360px] h-[500px] overflow-hidden flex flex-col transition-all duration-300">
+        <div className="backdrop-blur-2xl border rounded-[2rem] shadow-2xl mb-4 w-[360px] h-[500px] overflow-hidden flex flex-col transition-all duration-300 widget-window widget-border">
           {/* Header */}
-          <div className="p-5 border-b border-white/5 flex justify-between items-center bg-white/[0.01]">
+          <div className="p-5 border-b flex justify-between items-center bg-white/[0.01] widget-header widget-border">
             <div>
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full animate-pulse" style={{ backgroundColor: primaryColor }}></span>
@@ -223,7 +269,7 @@ export default function ChatWidget({ tenantId, tenantName, primaryColor, welcome
               )}
               <button 
                 onClick={() => setIsOpen(false)}
-                className="text-white/40 hover:text-white hover:bg-white/5 w-8 h-8 rounded-full flex items-center justify-center transition-all text-xl font-bold"
+                className="text-white/40 hover:bg-white/5 w-8 h-8 rounded-full flex items-center justify-center transition-all text-xl font-bold widget-close-btn"
               >
                 ×
               </button>
@@ -249,7 +295,7 @@ export default function ChatWidget({ tenantId, tenantName, primaryColor, welcome
                 <button
                   onClick={handleStartChat}
                   disabled={isSubmitting}
-                  className="w-full py-4 text-black font-black uppercase tracking-widest text-[9px] rounded-2xl transition-all hover:scale-[1.01] active:scale-95 disabled:opacity-50"
+                  className="w-full py-4 text-black font-black uppercase tracking-widest text-[9px] rounded-2xl transition-all hover:scale-[1.01] active:scale-95 disabled:opacity-50 cursor-pointer"
                   style={{ backgroundColor: primaryColor }}
                 >
                   {isSubmitting ? 'Iniciando...' : 'Iniciar Conversación'}
@@ -270,7 +316,7 @@ export default function ChatWidget({ tenantId, tenantName, primaryColor, welcome
                     <div key={msg.id} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
                       <div 
                         className={`max-w-[85%] rounded-2xl p-3 shadow-sm ${
-                          isMine ? 'text-black rounded-tr-none' : 'bg-white/5 text-white border border-white/5 rounded-tl-none'
+                          isMine ? 'text-black rounded-tr-none' : 'text-white rounded-tl-none widget-card border'
                         }`}
                         style={isMine ? { backgroundColor: primaryColor } : {}}
                       >
@@ -294,13 +340,13 @@ export default function ChatWidget({ tenantId, tenantName, primaryColor, welcome
 
           {/* Form */}
           {activeChat && activeChat.status !== 'CLOSED' && (
-            <form onSubmit={handleSendMessage} className="p-3 border-t border-white/5 bg-white/[0.005] flex gap-2">
+            <form onSubmit={handleSendMessage} className="p-3 flex gap-2 widget-header widget-border border-t">
               <input
                 type="text"
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 placeholder="Escribe tu mensaje..."
-                className="flex-1 bg-[#020403] border border-white/5 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-white/10"
+                className="flex-1 border rounded-xl px-3.5 py-2.5 text-xs focus:outline-none widget-input"
                 disabled={isSubmitting}
                 required
               />
@@ -322,19 +368,25 @@ export default function ChatWidget({ tenantId, tenantName, primaryColor, welcome
       {/* Bubble Toggle Button */}
       <button
         onClick={() => setIsOpen((prev) => !prev)}
-        className="w-14 h-14 rounded-full shadow-2xl flex items-center justify-center hover:scale-105 active:scale-95 transition-all relative border border-white/10 text-black"
-        style={{ backgroundColor: primaryColor }}
+        className="w-14 h-14 rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all relative border border-white/10 text-black cursor-pointer"
+        style={{
+          background: `linear-gradient(135deg, ${primaryColor}, ${accentColor})`,
+          boxShadow: `0 8px 30px -4px ${primaryColor}40`,
+        }}
       >
         {isOpen ? (
-          <span className="text-2xl font-bold">×</span>
+          <span className="text-white text-2xl font-bold">×</span>
         ) : (
-          <svg className="w-6 h-6 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <svg className="w-6 h-6 text-white animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
           </svg>
         )}
         
         {hasNewMessages && !isOpen && (
-          <span className="absolute -top-1 -right-1 w-4.5 h-4.5 bg-red-500 rounded-full border-2 border-black flex items-center justify-center text-[7px] font-black text-white">
+          <span 
+            className="absolute top-0 right-0 w-4.5 h-4.5 bg-red-500 rounded-full border-2 flex items-center justify-center text-[7px] font-black text-white"
+            style={{ borderColor: bgColor }}
+          >
             !
           </span>
         )}
