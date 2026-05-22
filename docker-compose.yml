@@ -18,7 +18,7 @@ services:
     volumes:
       - ./backend:/app:z
     env_file:
-      - .env.staging
+      - .env
     environment:
       - DEBUG=True
       - ENVIRONMENT=local
