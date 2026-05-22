@@ -223,3 +223,7 @@ R2_STORAGE_OPTIONS = {
     'region_name': 'auto',
 }
 
+# Custom test runner to handle database teardown cleanly on PostgreSQL
+TEST_RUNNER = "apps.tenants.runner.TenantTestRunner"
+
+
