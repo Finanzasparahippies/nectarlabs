@@ -13,6 +13,17 @@ from .utils import generate_contract_pdf, send_contract_emails
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
+def get_frontend_origin(request):
+    origin = request.META.get('HTTP_ORIGIN')
+    if origin:
+        return origin
+    referer = request.META.get('HTTP_REFERER')
+    if referer:
+        from urllib.parse import urlparse
+        parsed = urlparse(referer)
+        return f"{parsed.scheme}://{parsed.netloc}"
+    return settings.FRONTEND_URL
+
 class PlanViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Plan.objects.filter(is_active=True).order_by('price')
     serializer_class = PlanSerializer
@@ -66,8 +77,8 @@ class AddOnViewSet(viewsets.ModelViewSet):
                         'comments': comments_truncated
                     }
                 },
-                success_url=f"{settings.FRONTEND_URL}/dashboard?payment=success&addon_slug={addon.slug}",
-                cancel_url=f"{settings.FRONTEND_URL}/dashboard?payment=cancel",
+                success_url=f"{get_frontend_origin(request)}/dashboard?payment=success&addon_slug={addon.slug}",
+                cancel_url=f"{get_frontend_origin(request)}/dashboard?payment=cancel",
                 metadata={
                     'user_id': request.user.id,
                     'addon_id': addon.id,
@@ -94,7 +105,7 @@ class AddOnViewSet(viewsets.ModelViewSet):
                 
             session = stripe.billing_portal.Session.create(
                 customer=customer_id,
-                return_url=f"{settings.FRONTEND_URL}/dashboard"
+                return_url=f"{get_frontend_origin(request)}/dashboard"
             )
             return Response({'url': session.url}, status=status.HTTP_200_OK)
         except Exception as e:
@@ -260,8 +271,8 @@ class PaymentInstallmentViewSet(viewsets.ModelViewSet):
                     'quantity': 1,
                 }],
                 mode='payment',
-                success_url=f"{settings.FRONTEND_URL}/dashboard?payment=success&installment_id={installment.id}",
-                cancel_url=f"{settings.FRONTEND_URL}/dashboard?payment=cancel",
+                success_url=f"{get_frontend_origin(request)}/dashboard?payment=success&installment_id={installment.id}",
+                cancel_url=f"{get_frontend_origin(request)}/dashboard?payment=cancel",
                 metadata={
                     'installment_id': installment.id
                 }
