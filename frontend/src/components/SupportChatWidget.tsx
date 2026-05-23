@@ -170,12 +170,22 @@ export default function SupportChatWidget() {
     return () => clearInterval(interval);
   }, [token, isStaff, activeChat, isOpen]);
 
-  // Scroll to bottom when new messages arrive
+  const prevLengthRef = useRef(0);
+
+  // Scroll to bottom when new messages arrive (only when length increases)
   useEffect(() => {
-    if (isOpen && messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    if (isOpen && messages.length > prevLengthRef.current) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      prevLengthRef.current = messages.length;
     }
-  }, [messages, isOpen]);
+  }, [messages.length, isOpen]);
+
+  // Reset length when chat is closed or reset
+  useEffect(() => {
+    if (!isOpen || !activeChat) {
+      prevLengthRef.current = 0;
+    }
+  }, [isOpen, activeChat]);
 
   // Clear notification dot when opening chat
   useEffect(() => {

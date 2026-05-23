@@ -193,12 +193,22 @@ function ChatWidgetContent() {
     return () => clearInterval(interval);
   }, [isAuthenticated, activeChat, isOpen, tenantId]);
 
-  // Scroll to bottom when messages list updates
+  const prevLengthRef = useRef(0);
+
+  // Scroll to bottom when new messages arrive (only when length increases)
   useEffect(() => {
-    if (isOpen && messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    if (isOpen && messages.length > prevLengthRef.current) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      prevLengthRef.current = messages.length;
     }
-  }, [messages, isOpen]);
+  }, [messages.length, isOpen]);
+
+  // Reset length when chat is closed or reset
+  useEffect(() => {
+    if (!isOpen || !activeChat) {
+      prevLengthRef.current = 0;
+    }
+  }, [isOpen, activeChat]);
 
   // Clear notification dot when opening chat
   useEffect(() => {

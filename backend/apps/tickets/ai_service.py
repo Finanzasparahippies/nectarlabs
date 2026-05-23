@@ -80,10 +80,50 @@ def _build_nectarlabs_support_context(client) -> str:
         else:
             context.append("\n[Tickets:] El cliente no tiene tickets de soporte creados actualmente.")
 
+        # Inyectar información detallada de los servicios y secciones de la landing
+        context.append(_build_nectarlabs_services_info())
+
         return "\n".join(context)
     except Exception as e:
         logger.error(f"[AI] Error building NectarLabs support context: {e}")
         return "Error cargando contexto de la base de datos."
+
+
+def _build_nectarlabs_services_info() -> str:
+    """Retorna información detallada y exacta sobre las secciones de NectarLabs.dev para guiar a los clientes."""
+    return (
+        "\n=======================================================\n"
+        "--- INFORMACIÓN DETALLADA DE NECTARLABS.DEV (LANDING PAGE) ---\n"
+        "Néctar Labs es un taller digital premium que desarrolla 'Software Artesanal': ingeniería de software de alta fidelidad y diseño de marca estratégico.\n\n"
+        "1. SECCIONES CLAVE DE NECTARLABS.DEV:\n"
+        "   - [BENTO GRID - Nuestras Fortalezas / Diferenciadores:]\n"
+        "     * Ingeniería de Software de Alto Rendimiento: Desarrollo de plataformas SaaS, Marketplaces complejos, motores de reserva masivos, dashboards de datos en tiempo real e integraciones con Stripe o SAP.\n"
+        "     * Diseño de Marca e Identidad: Creación de manuales de identidad visual, logotipo, diseño UX/UI exclusivo, transmitiendo autoridad y exclusividad.\n"
+        "     * Automatización & IA: Optimizamos operaciones internas mediante agentes de IA y flujos de trabajo personalizados.\n"
+        "     * Infraestructura y Aislamiento Total: Entorno Docker dedicado por socio, entrega total del código fuente, llaves de servidor y propiedad intelectual.\n"
+        "   - [NUESTRA FÓRMULA (PROCESO DE TRABAJO - PROCESS FLOW):]\n"
+        "     * Fase 01 (Consultoría): 'El Caos Creativo'. Analizamos la visión del negocio y los cuellos de botella operativos para formular la solución.\n"
+        "     * Fase 02 (Blueprint): 'Arquitectura de Orden'. Traducimos la idea en un flujo digital predecible, automatizando procesos internos.\n"
+        "     * Fase 03 (Desarrollo): 'Ingeniería de Alta Fidelidad'. Codificación nativa a mano con Django (Python) y Next.js (React/TypeScript). Sin plantillas.\n"
+        "     * Fase 04 (Evolución): 'Activo Digital Vivo'. Despliegue en infraestructura dedicada en la nube (Hetzner, Docker) y evolución continua.\n"
+        "   - [CATÁLOGO DE ADD-ONS (MÓDULOS A LA CARTA):]\n"
+        "     * Néctar Live Chat (live-chat): Widget de chat en tiempo real incrustable en cualquier web + consola de administración. $79 MXN/mes o $790 MXN/año (ahorro de 2 meses). Requiere Django Channels + Redis.\n"
+        "     * Néctar Booking & Signature (booking-signature): Motor de reserva de citas y firma de propuestas táctil/mouse con marcas de tiempo criptográficas y generación automática de PDFs en ReportLab. $149 MXN/mes o $1490 MXN/año. Almacenamiento en Cloudflare R2 / AWS S3.\n"
+        "     * Néctar Logistics & GPS (logistics-gps): Seguimiento en vivo de repartidores, estimación de ETA y rutas optimizadas mediante Mapbox / Google Maps. $249 MXN/mes o $2490 MXN/año.\n"
+        "     * Néctar Patreon/Sponsorship (patreon-sponsorship): Membresías y feeds de contenido exclusivo con cobros recurrentes vía Stripe Billing API. $129 MXN/mes o $1290 MXN/año.\n"
+        "     * Néctar Analytics APM (analytics-apm): Middleware de telemetría para base de datos y Core Web Vitals (LCP, FID, CLS) en navegador del cliente. Detecta consultas redundantes (N+1). $59 MXN/mes o $590 MXN/año.\n"
+        "     * Néctar Newsletter (newsletter-campaigner): Campañas de correo masivo optimizadas con Amazon SES o SMTP privado y tokens UUID de desuscripción de cumplimiento legal. $39 MXN/mes o $390 MXN/año.\n"
+        "   - [PLANES DE INVERSIÓN TECNOLÓGICA (SUSCRIPCIONES CON COMPROMISO DE 6 MESES):]\n"
+        "     * Néctar Labs ofrece planes de suscripción para desarrollo activo (semanal, quincenal o mensual) basados en las horas de desarrollo contratadas.\n"
+        "     * Cada plan ofrece un canal dedicado de soporte y alianza estratégica a 6 meses para forjar plataformas completas a medida.\n\n"
+        "2. ENLACES Y NAVEGACIÓN ÚTILES DE NECTARLABS.DEV:\n"
+        "   - Registro de cuenta: /register\n"
+        "   - Inicio de sesión: /login\n"
+        "   - Catálogo de Add-ons (para usuarios registrados): /dashboard/addons\n"
+        "   - Visor de Contrato Oficial: /contract (donde publicamos de forma transparente nuestros términos legales)\n"
+        "   - FAQ Técnico: /faq (especificaciones sobre propiedad del código, hosting y metodologías)\n"
+        "=======================================================\n"
+    )
 
 
 def _build_tenant_support_context(chat) -> str:
@@ -170,8 +210,7 @@ def _build_history(chat_messages, client_email: str) -> list:
         # Mensajes del cliente → rol user
         elif msg.sender.email.lower() == client_email.lower():
             history.append({"role": "user", "content": msg.message})
-        # Mensajes de agente humano (ADMIN/BUSINESS) → assistant también,
-        # pero si llegamos aquí ya estaríamos IN_PROGRESS y no se llamaría esta función
+        # Mensajes de agente humano (ADMIN/BUSINESS) → assistant
         else:
             history.append({"role": "assistant", "content": msg.message})
     return history
@@ -195,22 +234,26 @@ def generate_ai_reply(chat, new_message_text: str) -> str | None:
 
         client = Groq(api_key=api_key)
 
-        # Construir el historial completo del chat como contexto
-        existing_messages = list(chat.messages.all())
+        # 1. Traemos únicamente los últimos 15 mensajes en base de datos de forma descendente
+        # para evitar lecturas pesadas y controlar el consumo de tokens (TPM/RPM).
+        existing_messages = chat.messages.order_by('-created_at')[:15]
         client_email = chat.client.email
 
         messages = [{"role": "system", "content": _build_system_prompt(chat)}]
-        messages.extend(_build_history(existing_messages, client_email))
-        # El nuevo mensaje ya está guardado en DB, pero por si acaso lo incluimos en contexto
-        # (puede que ya esté en existing_messages según el orden de ejecución)
-        if not existing_messages or existing_messages[-1].message != new_message_text:
+        
+        # 2. Invertimos la lista para que quede en orden cronológico (más antiguo al más nuevo)
+        messages.extend(_build_history(list(reversed(existing_messages)), client_email))
+        
+        # 3. Validamos si el último mensaje del historial ya tiene rol "user" (ya guardado en DB).
+        # Si no lo tiene, lo insertamos al final del prompt.
+        if not messages or messages[-1]["role"] != "user":
             messages.append({"role": "user", "content": new_message_text})
 
         completion = client.chat.completions.create(
             messages=messages,
             model="llama-3.1-8b-instant",
-            temperature=0.5,
-            max_tokens=600,
+            temperature=0.4, # Temperatura idónea para respuestas precisas de soporte
+            max_tokens=400,  # Límite óptimo para respuestas concisas y directas
         )
 
         reply = completion.choices[0].message.content

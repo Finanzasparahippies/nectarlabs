@@ -280,12 +280,15 @@ export default function TenantPortalPage() {
     return () => clearInterval(interval);
   }, [isAuthenticated, tenantConfig, activeChat, selectedTicket?.id]);
 
-  // Scroll chat to bottom on updates
+  const prevChatMessagesLengthRef = useRef(0);
+
+  // Scroll chat to bottom on updates (only when length increases)
   useEffect(() => {
-    if (chatEndRef.current) {
-      chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    if (chatMessages.length > prevChatMessagesLengthRef.current) {
+      chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      prevChatMessagesLengthRef.current = chatMessages.length;
     }
-  }, [chatMessages]);
+  }, [chatMessages.length]);
 
   // Login/Auth Submission
   const handleAuthSubmit = async (e: React.FormEvent) => {
