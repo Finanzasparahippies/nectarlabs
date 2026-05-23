@@ -62,10 +62,14 @@ export default function SupportChatWidget() {
           setActiveChat(null);
           setMessages([]);
         }
-      } catch (err) {
-        console.error('Error checking active support chat:', err);
+      } catch (err: any) {
+        // Silently ignore addon/permission errors — staff users don't use this widget
+        if (!err?.message?.includes('add-on') && !err?.message?.includes('403')) {
+          console.error('Error checking active support chat:', err);
+        }
       }
     };
+
 
     checkActiveChat();
   }, [token, isStaff]);

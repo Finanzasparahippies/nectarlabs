@@ -60,5 +60,6 @@ export async function fetcher(endpoint: string, options: FetcherOptions = {}) {
     throw new Error(errMsg || "An error occurred");
   }
 
+  if (res.status === 204) return null;
   return res.json();
 }

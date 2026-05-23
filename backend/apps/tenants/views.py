@@ -148,9 +148,8 @@ def guest_auth(request):
     user = User.objects.filter(email=email).first()
     
     if user:
-        # If user exists but belongs to another role or is not tied to this tenant, let's link them
-        # if they are a customer.
-        if user.role == User.Role.CUSTOMER and not user.tenant:
+        # Always update tenant context for CUSTOMER users to match current portal
+        if user.role == User.Role.CUSTOMER and user.tenant != tenant:
             user.tenant = tenant
             user.save()
     else:

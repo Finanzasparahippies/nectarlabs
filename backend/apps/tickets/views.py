@@ -49,11 +49,11 @@ class TicketViewSet(viewsets.ModelViewSet):
         return Response({'status': 'ticket closed'})
 
 
-from apps.tenants.permissions import HasAddOnPermission
+
 
 class SupportChatViewSet(viewsets.ModelViewSet):
     serializer_class = SupportChatSerializer
-    permission_classes = [permissions.IsAuthenticated, HasAddOnPermission]
+    permission_classes = [permissions.IsAuthenticated]
     addon_slug = 'live-chat'
 
 
@@ -79,20 +79,23 @@ class SupportChatViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def active(self, request):
         user = request.user
+
+        # Staff / ADMIN / BUSINESS don't have a "personal" chat session
         if user.is_staff or user.role in ['ADMIN', 'BUSINESS']:
-            return Response({'detail': 'Staff does not have a single active chat'}, status=status.HTTP_400_BAD_REQUEST)
-        
-        # Filter active chat to only matching client and matching tenant
+            return Response(None, status=status.HTTP_204_NO_CONTENT)
+
+        # For CUSTOMER users: find their open chat (tenant may be None for direct NectarLabs clients)
         active_chat = SupportChat.objects.filter(
-            client=user, 
-            tenant=user.tenant,
+            client=user,
+            tenant=user.tenant,   # None for direct clients, UUID for tenant portal clients
             status__in=[SupportChat.Status.OPEN, SupportChat.Status.IN_PROGRESS]
         ).first()
-        
+
         if active_chat:
             serializer = self.get_serializer(active_chat)
             return Response(serializer.data)
         return Response(None, status=status.HTTP_204_NO_CONTENT)
+
 
     @action(detail=True, methods=['post'])
     def add_message(self, request, pk=None):
