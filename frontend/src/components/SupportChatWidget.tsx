@@ -256,6 +256,7 @@ export default function SupportChatWidget() {
                 {messages.map((msg) => {
                   const isMine = msg.sender_email === localStorage.getItem('user_email');
                   const isAgent = msg.sender_role === 'ADMIN' || msg.sender_role === 'BUSINESS';
+                  const isAI = (msg as any).is_ai_message === true;
                   return (
                     <div key={msg.id} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
                       <div className={`max-w-[85%] rounded-3xl p-4 shadow-sm ${
@@ -266,7 +267,7 @@ export default function SupportChatWidget() {
                         {!isMine && (
                           <div className="flex items-center gap-1.5 mb-1">
                             <span className="text-[8px] font-black uppercase tracking-wider text-nectar-gold">
-                              {isAgent ? '🛠️ Ingeniero Néctar' : msg.sender_email.split('@')[0]}
+                              {isAI ? '🤖 Asistente IA' : isAgent ? '🛠️ Ingeniero Néctar' : (msg.sender_email?.split('@')[0] ?? 'Cliente')}
                             </span>
                           </div>
                         )}
