@@ -16,6 +16,13 @@ DEBUG = env.bool("DEBUG", default=(ENVIRONMENT == "local"))
 SECRET_KEY = env("SECRET_KEY", default="django-insecure-default-key")
 
 ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["*", "localhost", "127.0.0.1", "backend"])
+# Automatically allow all customer subdomains in local, staging, and production environments
+if ".nectarlabs.dev" not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(".nectarlabs.dev")
+if ".staging.nectarlabs.dev" not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(".staging.nectarlabs.dev")
+if ".localhost" not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(".localhost")
 
 # Production Security Settings (inspired by OG Barberia)
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')

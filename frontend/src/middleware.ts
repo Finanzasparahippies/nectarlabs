@@ -36,7 +36,9 @@ export function middleware(request: NextRequest) {
     let identifier = hostname.toLowerCase();
 
     // Check if it's a subdomain of nectarlabs.dev or localhost
-    if (hostname.includes('.nectarlabs.dev')) {
+    if (hostname.includes('.staging.nectarlabs.dev')) {
+      identifier = hostname.split('.staging.nectarlabs.dev')[0];
+    } else if (hostname.includes('.nectarlabs.dev')) {
       identifier = hostname.split('.nectarlabs.dev')[0];
     } else if (hostname.includes('.localhost:3000')) {
       identifier = hostname.split('.localhost:3000')[0];

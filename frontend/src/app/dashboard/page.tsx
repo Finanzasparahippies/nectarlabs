@@ -82,6 +82,15 @@ export default function DashboardPage() {
   const [selectedActiveContractId, setSelectedActiveContractId] = useState<number | null>(null);
   const router = useRouter();
 
+  // Custom states for portals and notifications
+  const [tenants, setTenants] = useState<any[]>([]);
+  const [notification, setNotification] = useState<{
+    type: 'success' | 'cancel' | 'polling';
+    title: string;
+    message: string;
+    attempts?: number;
+  } | null>(null);
+
   const handleUpdatePaymentMethod = async (contractId: number, method: string) => {
     try {
       setUpdatingContractId(contractId);
@@ -213,12 +222,13 @@ export default function DashboardPage() {
         const staff = localStorage.getItem('is_staff') === 'true';
         const role = localStorage.getItem('user_role') || '';
         const isActuallyStaff = (staff || role === 'ADMIN' || role === 'BUSINESS') && role !== 'DESIGNER';
-        const [projectsData, ticketsData, logsData, contractsData, installmentsData] = await Promise.all([
+        const [projectsData, ticketsData, logsData, contractsData, installmentsData, tenantsData] = await Promise.all([
           fetcher('/projects/'),
           fetcher('/tickets/'),
           fetcher('/logs/'),
           fetcher('/contracts/'),
-          fetcher('/installments/')
+          fetcher('/installments/'),
+          fetcher('/tenants/')
         ]);
         
         setProjects(projectsData);
@@ -226,6 +236,7 @@ export default function DashboardPage() {
         setLogs(logsData);
         setContracts(contractsData);
         setInstallments(installmentsData);
+        setTenants(tenantsData);
 
         if (isActuallyStaff) {
           const statsData = await fetcher('/dashboard/business-stats/');
@@ -248,14 +259,82 @@ export default function DashboardPage() {
     }
     
     if (params.get('payment') === 'success') {
-      alert("¡Pago procesado con éxito! Tu panel se actualizará en unos instantes.");
-      // Limpiar parámetros de la URL
+      setNotification({
+        type: 'polling',
+        title: 'Verificando Pago',
+        message: 'Estamos sincronizando tu pago con Stripe y activando tu portal. Por favor espera...',
+        attempts: 1
+      });
       window.history.replaceState({}, document.title, window.location.pathname);
     } else if (params.get('payment') === 'cancel') {
-      alert("El pago fue cancelado.");
+      setNotification({
+        type: 'cancel',
+        title: 'Pago Cancelado',
+        message: 'La suscripción o pago de Stripe ha sido cancelada.'
+      });
       window.history.replaceState({}, document.title, window.location.pathname);
     }
   }, []);
+
+  // Polling hook to sync Stripe payment with backend
+  useEffect(() => {
+    if (!notification || notification.type !== 'polling') return;
+
+    let timer: NodeJS.Timeout;
+    const maxAttempts = 5;
+    const currentAttempt = notification.attempts || 1;
+
+    const poll = async () => {
+      try {
+        const staff = localStorage.getItem('is_staff') === 'true';
+        const role = localStorage.getItem('user_role') || '';
+        const isActuallyStaff = (staff || role === 'ADMIN' || role === 'BUSINESS') && role !== 'DESIGNER';
+        
+        const [projectsData, ticketsData, logsData, contractsData, installmentsData, tenantsData] = await Promise.all([
+          fetcher('/projects/'),
+          fetcher('/tickets/'),
+          fetcher('/logs/'),
+          fetcher('/contracts/'),
+          fetcher('/installments/'),
+          fetcher('/tenants/')
+        ]);
+
+        setProjects(projectsData);
+        setTickets(ticketsData);
+        setLogs(logsData);
+        setContracts(contractsData);
+        setInstallments(installmentsData);
+        setTenants(tenantsData);
+
+        if (isActuallyStaff) {
+          const statsData = await fetcher('/dashboard/business-stats/');
+          setBusinessStats(statsData);
+        }
+
+        if (currentAttempt >= 3) {
+          setNotification({
+            type: 'success',
+            title: '¡Ecosistema Listo!',
+            message: 'Tu pago ha sido procesado e integrado. Tu portal y subdominios están activos y actualizados.'
+          });
+        } else {
+          timer = setTimeout(() => {
+            setNotification(prev => prev ? {
+              ...prev,
+              message: `Sincronizando portal con Stripe... (Intento ${currentAttempt + 1}/${maxAttempts})`,
+              attempts: currentAttempt + 1
+            } : null);
+          }, 3000);
+        }
+      } catch (err) {
+        console.error("Error polling database updates:", err);
+      }
+    };
+
+    poll();
+
+    return () => clearTimeout(timer);
+  }, [notification?.attempts]);
 
   if (loading) return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-background">
@@ -266,6 +345,37 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col lg:flex-row">
+      {/* Toast Notification */}
+      {notification && (
+        <div className="fixed top-6 right-6 z-50 max-w-sm w-full bg-card-bg/95 backdrop-blur-md border border-card-border p-6 rounded-[2rem] shadow-2xl flex flex-col gap-3 transition-all duration-300 animate-fade-in">
+          <div className="flex justify-between items-start">
+            <div className="flex items-center gap-3">
+              {notification.type === 'polling' && (
+                <span className="w-4 h-4 rounded-full border-2 border-nectar-gold border-t-transparent animate-spin shrink-0"></span>
+              )}
+              {notification.type === 'success' && (
+                <span className="w-4 h-4 rounded-full bg-green-500/20 border border-green-500 text-green-500 flex items-center justify-center font-bold text-[9px] shrink-0">✓</span>
+              )}
+              {notification.type === 'cancel' && (
+                <span className="w-4 h-4 rounded-full bg-yellow-500/20 border border-yellow-500 text-yellow-500 flex items-center justify-center font-bold text-[9px] shrink-0">!</span>
+              )}
+              <h3 className="font-black text-[10px] uppercase tracking-wider text-white">
+                {notification.title}
+              </h3>
+            </div>
+            <button 
+              onClick={() => setNotification(null)}
+              className="text-[9px] font-black uppercase tracking-widest opacity-40 hover:opacity-100 transition-opacity"
+            >
+              Cerrar
+            </button>
+          </div>
+          <p className="text-xs text-foreground/80 leading-relaxed">
+            {notification.message}
+          </p>
+        </div>
+      )}
+
       {/* Sidebar Navigation */}
       <aside className="w-full lg:w-72 bg-card-bg border-b lg:border-r border-card-border p-8 flex flex-col justify-between">
         <div>
@@ -885,6 +995,51 @@ export default function DashboardPage() {
                     {tickets.length === 0 && <p className="text-center py-10 opacity-20 font-bold uppercase tracking-widest text-[10px]">Sin requerimientos pendientes</p>}
                   </div>
                 </section>
+
+                {!isStaff && (
+                  <section className="bg-card-bg border border-card-border rounded-[2.5rem] p-8">
+                    <h2 className="text-xs font-black tracking-[0.3em] uppercase opacity-30 mb-8">Mis Portales (Subdominios)</h2>
+                    <div className="space-y-4">
+                      {tenants.map(tenant => {
+                        const host = typeof window !== 'undefined' ? window.location.hostname : '';
+                        let domain = `https://${tenant.subdomain}.nectarlabs.dev`;
+                        let urlDisplay = `${tenant.subdomain}.nectarlabs.dev`;
+                        if (host.includes('localhost')) {
+                          domain = `http://${tenant.subdomain}.localhost:3000`;
+                          urlDisplay = `${tenant.subdomain}.localhost:3000`;
+                        } else if (host.includes('staging.nectarlabs.dev')) {
+                          domain = `https://${tenant.subdomain}.staging.nectarlabs.dev`;
+                          urlDisplay = `${tenant.subdomain}.staging.nectarlabs.dev`;
+                        }
+                        return (
+                          <div key={tenant.id} className="p-5 rounded-2xl border border-card-border hover:border-nectar-gold/60 transition-all flex flex-col justify-between gap-3 bg-background/20 relative overflow-hidden group">
+                            <div className="flex justify-between items-center">
+                              <h4 className="font-bold text-xs text-foreground/80 group-hover:text-foreground transition-colors">{tenant.name}</h4>
+                              <span className={`px-2.5 py-1 text-[7px] font-black uppercase tracking-widest rounded-full ${tenant.is_active ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>
+                                {tenant.is_active ? 'Activo' : 'Inactivo'}
+                              </span>
+                            </div>
+                            <div className="flex justify-between items-center text-[10px] opacity-60">
+                              <span>URL:</span>
+                              <span className="font-mono text-[9px] text-nectar-gold font-bold">{urlDisplay}</span>
+                            </div>
+                            <a 
+                              href={domain}
+                              target="_blank" 
+                              rel="noreferrer"
+                              className="w-full mt-2 py-2 bg-nectar-gold/10 hover:bg-nectar-gold hover:text-background border border-nectar-gold/20 hover:border-nectar-gold text-nectar-gold text-center rounded-xl text-[8px] font-black uppercase tracking-widest transition-all cursor-pointer"
+                            >
+                              Abrir Portal ↗
+                            </a>
+                          </div>
+                        );
+                      })}
+                      {tenants.length === 0 && (
+                        <p className="text-center py-10 opacity-20 font-bold uppercase tracking-widest text-[10px]">Sin subdominios registrados</p>
+                      )}
+                    </div>
+                  </section>
+                )}
 
                 {projects[0] && (
                   <section className="bg-card-bg border border-card-border rounded-[2.5rem] p-8">
