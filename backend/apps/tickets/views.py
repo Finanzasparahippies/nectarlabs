@@ -102,10 +102,36 @@ class SupportChatViewSet(viewsets.ModelViewSet):
             
         serializer = SupportChatMessageSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save(chat=chat, sender=request.user)
+            msg = serializer.save(chat=chat, sender=request.user)
             chat.save()  # update updated_at timestamp
+
+            # === IA Auto-reply ===
+            # Only trigger if no human agent has joined yet (status == OPEN)
+            if chat.status == SupportChat.Status.OPEN:
+                try:
+                    from .ai_service import generate_ai_reply
+                    ai_text = generate_ai_reply(chat, msg.message)
+                    if ai_text:
+                        ai_msg = SupportChatMessage.objects.create(
+                            chat=chat,
+                            sender=request.user,   # sender field required; flag distinguishes it
+                            message=ai_text,
+                            is_ai_message=True,
+                        )
+                        chat.save()
+                        # Return both user message and AI reply in response
+                        ai_serializer = SupportChatMessageSerializer(ai_msg)
+                        return Response({
+                            'message': serializer.data,
+                            'ai_reply': ai_serializer.data,
+                        }, status=status.HTTP_201_CREATED)
+                except Exception as e:
+                    import logging
+                    logging.getLogger(__name__).error(f"[AI] Unexpected error in add_message: {e}")
+
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
     @action(detail=True, methods=['post'])
     def join(self, request, pk=None):

@@ -35,8 +35,9 @@ class SupportChatMessageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = SupportChatMessage
-        fields = ['id', 'chat', 'sender', 'sender_email', 'sender_role', 'message', 'created_at']
-        read_only_fields = ['chat', 'sender']
+        fields = ['id', 'chat', 'sender', 'sender_email', 'sender_role', 'message', 'is_ai_message', 'created_at']
+        read_only_fields = ['chat', 'sender', 'is_ai_message']
+
 
 
 class SupportChatSerializer(serializers.ModelSerializer):
