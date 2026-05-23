@@ -27,7 +27,7 @@ def _build_nectarlabs_support_context(client) -> str:
         context.append(f"Usuario: {client.get_full_name() or client.username} ({client.email})")
 
         if tenants.exists():
-            context.append("\n[Portales / Tenants del Cliente:]")
+            context.append("\n[Colmenas / Portales del Socio:]")
             for t in tenants:
                 slugs = t.active_addons
                 addons_objs = AddOn.objects.filter(slug__in=slugs, is_active=True)
@@ -35,15 +35,15 @@ def _build_nectarlabs_support_context(client) -> str:
                 # Usar subdominio con host local/staging/producción
                 staging_url = f"https://{t.subdomain}.staging.nectarlabs.dev"
                 context.append(
-                    f"- Nombre del portal: {t.name}\n"
+                    f"- Nombre de la Colmena: {t.name}\n"
                     f"  Subdominio/Slug: {t.subdomain}\n"
                     f"  Enlace Staging: {staging_url}\n"
                     f"  Dominio Personalizado: {t.custom_domain or 'No configurado'}\n"
                     f"  Add-ons Activos: {addons_str}\n"
-                    f"  Estado del portal: {'Activo' if t.is_active else 'Inactivo'}"
+                    f"  Estado de la Colmena: {'Activo' if t.is_active else 'Inactivo'}"
                 )
         else:
-            context.append("\n[Portales / Tenants:] El cliente aún no tiene ningún portal/tenant creado.")
+            context.append("\n[Colmenas / Portales:] El socio aún no tiene ninguna Colmena creada.")
 
         if contracts.exists():
             context.append("\n[Contratos de Desarrollo:]")
@@ -95,28 +95,28 @@ def _build_nectarlabs_services_info() -> str:
         "\n=======================================================\n"
         "--- INFORMACIÓN DETALLADA DE NECTARLABS.DEV (LANDING PAGE) ---\n"
         "Néctar Labs es un taller digital premium que desarrolla 'Software Artesanal': ingeniería de software de alta fidelidad y diseño de marca estratégico.\n\n"
-        "1. SECCIONES CLAVE DE NECTARLABS.DEV:\n"
-        "   - [BENTO GRID - Nuestras Fortalezas / Diferenciadores:]\n"
-        "     * Ingeniería de Software de Alto Rendimiento: Desarrollo de plataformas SaaS, Marketplaces complejos, motores de reserva masivos, dashboards de datos en tiempo real e integraciones con Stripe o SAP.\n"
-        "     * Diseño de Marca e Identidad: Creación de manuales de identidad visual, logotipo, diseño UX/UI exclusivo, transmitiendo autoridad y exclusividad.\n"
-        "     * Automatización & IA: Optimizamos operaciones internas mediante agentes de IA y flujos de trabajo personalizados.\n"
-        "     * Infraestructura y Aislamiento Total: Entorno Docker dedicado por socio, entrega total del código fuente, llaves de servidor y propiedad intelectual.\n"
-        "   - [NUESTRA FÓRMULA (PROCESO DE TRABAJO - PROCESS FLOW):]\n"
-        "     * Fase 01 (Consultoría): 'El Caos Creativo'. Analizamos la visión del negocio y los cuellos de botella operativos para formular la solución.\n"
-        "     * Fase 02 (Blueprint): 'Arquitectura de Orden'. Traducimos la idea en un flujo digital predecible, automatizando procesos internos.\n"
-        "     * Fase 03 (Desarrollo): 'Ingeniería de Alta Fidelidad'. Codificación nativa a mano con Django (Python) y Next.js (React/TypeScript). Sin plantillas.\n"
-        "     * Fase 04 (Evolución): 'Activo Digital Vivo'. Despliegue en infraestructura dedicada en la nube (Hetzner, Docker) y evolución continua.\n"
-        "   - [CATÁLOGO DE ADD-ONS (MÓDULOS A LA CARTA):]\n"
-        "     * Néctar Live Chat (live-chat): Widget de chat en tiempo real incrustable en cualquier web + consola de administración. $79 MXN/mes o $790 MXN/año (ahorro de 2 meses). Requiere Django Channels + Redis.\n"
-        "     * Néctar Booking & Signature (booking-signature): Motor de reserva de citas y firma de propuestas táctil/mouse con marcas de tiempo criptográficas y generación automática de PDFs en ReportLab. $149 MXN/mes o $1490 MXN/año. Almacenamiento en Cloudflare R2 / AWS S3.\n"
-        "     * Néctar Logistics & GPS (logistics-gps): Seguimiento en vivo de repartidores, estimación de ETA y rutas optimizadas mediante Mapbox / Google Maps. $249 MXN/mes o $2490 MXN/año.\n"
-        "     * Néctar Patreon/Sponsorship (patreon-sponsorship): Membresías y feeds de contenido exclusivo con cobros recurrentes vía Stripe Billing API. $129 MXN/mes o $1290 MXN/año.\n"
-        "     * Néctar Analytics APM (analytics-apm): Middleware de telemetría para base de datos y Core Web Vitals (LCP, FID, CLS) en navegador del cliente. Detecta consultas redundantes (N+1). $59 MXN/mes o $590 MXN/año.\n"
-        "     * Néctar Newsletter (newsletter-campaigner): Campañas de correo masivo optimizadas con Amazon SES o SMTP privado y tokens UUID de desuscripción de cumplimiento legal. $39 MXN/mes o $390 MXN/año.\n"
-        "   - [PLANES DE INVERSIÓN TECNOLÓGICA (SUSCRIPCIONES CON COMPROMISO DE 6 MESES):]\n"
-        "     * Néctar Labs ofrece planes de suscripción para desarrollo activo (semanal, quincenal o mensual) basados en las horas de desarrollo contratadas.\n"
-        "     * Cada plan ofrece un canal dedicado de soporte y alianza estratégica a 6 meses para forjar plataformas completas a medida.\n\n"
-        "2. ENLACES Y NAVEGACIÓN ÚTILES DE NECTARLABS.DEV:\n"
+        "1. ALCANCES Y CAPACIDADES DE INGENIERÍA:\n"
+        "   - Desde Sistemas Sencillos hasta Apps Complejas: Desarrollamos a la medida cualquier requerimiento digital. No usamos plantillas, todo se escribe código a código.\n"
+        "   - Sistemas y CRMs a medida: Administradores de base de datos, ERPs sencillos, gestores de inventario y dashboards operativos para automatizar el día a día.\n"
+        "   - Apps de Alta Complejidad: Plataformas SaaS multi-usuario, Marketplaces con pasarelas de pago, motores de reserva masivos con firma digital (marcas de tiempo criptográficas), logística de envíos y tracking GPS en tiempo real en mapas, integraciones API con SAP/Salesforce, y automatizaciones avanzadas con agentes de IA.\n"
+        "   - Diseño de Marca & Branding Táctico: Contamos con un equipo de diseñadores dedicados. Creamos logotipos de autor, manuales de identidad de marca (paletas de colores, tipografías), diseño UX/UI exclusivo de interfaces y materiales listos para producción. Ofrecemos tiers de diseño integrado en los planes de soporte activo (con entregas Semanales, Quincenales o Mensuales de branding).\n"
+        "   - Propiedad y Soberanía Total: Entregamos el código fuente completo, propiedad intelectual absoluta y desplegamos cada proyecto en una infraestructura en la nube dedicada por socio (Hetzner, Docker) con llaves del servidor y aislamiento completo.\n\n"
+        "2. NUESTRA FÓRMULA (PROCESO DE TRABAJO - PROCESS FLOW):\n"
+        "   - Fase 01 (Consultoría): 'El Caos Creativo'. Analizamos la visión del negocio y los cuellos de botella operativos para formular la solución.\n"
+        "   - Fase 02 (Blueprint): 'Arquitectura de Orden'. Traducimos la idea en un flujo digital predecible, automatizando procesos internos.\n"
+        "   - Fase 03 (Desarrollo): 'Ingeniería de Alta Fidelidad'. Codificación nativa a mano con Django (Python) y Next.js (React/TypeScript). Sin plantillas.\n"
+        "   - Fase 04 (Evolución): 'Activo Digital Vivo'. Despliegue en infraestructura dedicada en la nube (Hetzner, Docker) y evolución continua.\n\n"
+        "3. CATÁLOGO DE MÓDULOS NÉCTAR (ADD-ONS A LA CARTA):\n"
+        "   - Néctar Live Chat (live-chat): Widget de chat en tiempo real incrustable en cualquier web + consola de administración. $79 MXN/mes o $790 MXN/año (ahorro de 2 meses). Requiere Django Channels + Redis.\n"
+        "   - Néctar Booking & Signature (booking-signature): Motor de reserva de citas y firma de propuestas táctil/mouse con marcas de tiempo criptográficas y generación automática de PDFs en ReportLab. $149 MXN/mes o $1490 MXN/año. Almacenamiento en Cloudflare R2 / AWS S3.\n"
+        "   - Néctar Logistics & GPS (logistics-gps): Seguimiento en vivo de repartidores, estimación de ETA y rutas optimizadas mediante Mapbox / Google Maps. $249 MXN/mes o $2490 MXN/año.\n"
+        "   - Néctar Patreon/Sponsorship (patreon-sponsorship): Membresías y feeds de contenido exclusivo con cobros recurrentes vía Stripe Billing API. $129 MXN/mes o $1290 MXN/año.\n"
+        "   - Néctar Analytics APM (analytics-apm): Middleware de telemetría para base de datos y Core Web Vitals (LCP, FID, CLS) en navegador del cliente. Detecta consultas redundantes (N+1). $59 MXN/mes o $590 MXN/año.\n"
+        "   - Néctar Newsletter (newsletter-campaigner): Campañas de correo masivo optimizadas con Amazon SES o SMTP privado y tokens UUID de desuscripción de cumplimiento legal. $39 MXN/mes o $390 MXN/año.\n\n"
+        "4. PLANES DE SOPORTE Y DESARROLLO ACTIVO (COMPROMISO DE 6 MESES):\n"
+        "   - Ofrecemos planes de suscripción para desarrollo activo (semanal, quincenal o mensual) basados en las horas de desarrollo y diseño contratadas.\n"
+        "   - Cada plan ofrece un canal dedicado de soporte y alianza estratégica a 6 meses para forjar plataformas completas a medida.\n\n"
+        "5. ENLACES Y NAVEGACIÓN ÚTILES DE NECTARLABS.DEV:\n"
         "   - Registro de cuenta: /register\n"
         "   - Inicio de sesión: /login\n"
         "   - Catálogo de Add-ons (para usuarios registrados): /dashboard/addons\n"
@@ -149,12 +149,12 @@ def _build_tenant_support_context(chat) -> str:
                     f"  Última Actualización: {tick.updated_at.strftime('%Y-%m-%d %H:%M')}"
                 )
         else:
-            context.append(f"\nNo tienes tickets de soporte registrados en el portal de {tenant.name}.")
+            context.append(f"\nNo tienes tickets de soporte registrados en la Colmena de {tenant.name}.")
 
         return "\n".join(context)
     except Exception as e:
         logger.error(f"[AI] Error building tenant support context: {e}")
-        return "Error cargando contexto del portal."
+        return "Error cargando contexto de la Colmena."
 
 
 def _build_system_prompt(chat) -> str:
@@ -171,11 +171,13 @@ def _build_system_prompt(chat) -> str:
             f"Eres el Asistente Virtual de Soporte Técnico de '{tenant.name}'.\n"
             f"Mensaje de bienvenida oficial: '{welcome_msg}'.\n"
             "Ayudas a los clientes a resolver dudas sobre la plataforma y el estado de sus tickets de soporte.\n"
-            "Responde siempre de forma breve, útil, cortés y profesional.\n"
+            "Responde siempre de forma breve, útil, cortés, amigable y profesional.\n"
             "Solo tienes acceso a los datos del cliente provistos en el contexto de abajo. No inventes información.\n"
-            "Nunca menciones a NectarLabs a menos que te pregunten qué es (es el proveedor de software subyacente).\n"
-            "Si el usuario pregunta algo complejo, requiere un cambio de configuración técnica o la ayuda de un humano, "
-            "dile educadamente que un agente de soporte de la empresa se comunicará con él muy pronto.\n\n"
+            "REGLA DE ORO DE VOCABULARIO: Prohibido usar palabras técnicas de desarrollo como 'tenant' o 'instancia'.\n"
+            "En su lugar, usa 'Colmena' (para referirte a su espacio/cuenta de negocio) y 'Portal' (para su sitio web/aplicación activa).\n"
+            "Nunca menciones a NectarLabs a menos que te pregunten qué es (es la colmena matriz proveedora de software).\n"
+            "Si el usuario pregunta algo complejo o que requiere la ayuda de un humano, "
+            "dile educadamente que un agente de soporte de la colmena se comunicará con él muy pronto.\n\n"
             f"{db_context}"
         )
     else:
@@ -183,16 +185,30 @@ def _build_system_prompt(chat) -> str:
         db_context = _build_nectarlabs_support_context(client)
         
         return (
-            "Eres el Ingeniero de Soporte IA de NectarLabs, una plataforma premium de desarrollo y add-ons.\n"
-            "Tu misión es asistir a los socios/dueños de negocio (clientes de NectarLabs) a gestionar sus portales, revisar sus contratos de desarrollo, mensualidades pendientes y add-ons.\n"
-            "Tono: Altamente técnico, profesional, premium, conciso y directo al grano.\n"
+            "Eres el Ingeniero de Soporte IA de Néctar Labs, un taller premium que diseña Software Artesanal: desde sistemas internos sencillos (CRM, administradores) hasta aplicaciones de altísima complejidad con toda la lógica de negocio, pasarelas de pago y automatizaciones.\n"
+            "Tu misión es asistir a los socios de negocio a gestionar sus Colmenas (Portales), revisar sus contratos de desarrollo, mensualidades pendientes y módulos de software (Add-ons).\n"
+            "Tono: Profesional, sumamente amigable, de alta confianza, claro, premium y directo al grano.\n\n"
+            "Normas de Vocabulario y Metáfora de Colmenas (MANDATORIAS):\n"
+            "1. NUNCA, bajo ninguna circunstancia, uses palabras técnicas como 'tenant', 'multi-tenant', 'instancia' o 'servidor'.\n"
+            "2. En su lugar, emplea SIEMPRE la metáfora de la Colmena de abejas:\n"
+            "   - 'tenant' -> 'Colmena' (ej: 'tu Colmena de Sushilo' o 'iniciar una nueva Colmena').\n"
+            "   - 'portal' / 'subdominio' -> 'Portal' o 'Entrada al Panal' (ej: 'tu Portal de Sushilo' o 'crear un Portal dentro de tu Colmena').\n"
+            "   - 'add-ons' / 'plugins' -> 'Módulos Néctar' o 'Gotas de Néctar' (ej: 'el módulo Néctar Live Chat' o 'endulzar tu Colmena con Néctar Booking').\n"
+            "   - 'desarrolladores' y 'diseñadores' -> 'Apicultores de software' y 'Diseñadores de Marca del Panal'.\n"
+            "3. Ejemplos de traducción obligatorios:\n"
+            "   - Incorrecto: 'puedo guiarte a través del proceso de creación de un nuevo tenant y portal'\n"
+            "   - Correcto: 'te guiaré con gusto para crear una nueva Colmena para tu negocio e integrar sus Portales dulces'\n"
+            "   - Incorrecto: 'una vez configurado el tenant, puedes activar los add-ons en tu portal'\n"
+            "   - Correcto: 'una vez lista tu Colmena, puedes endulzarla activando los módulos Néctar (como Néctar Live Chat o Booking) en tus Portales'\n\n"
+            "Alcances de Ingeniería de Néctar Labs (para responder sobre lo que podemos crear):\n"
+            "- Desarrollamos cualquier solución a mano y a la medida (sin plantillas): desde administradores sencillos de base de datos (CRMs, ERPs, inventarios) hasta aplicaciones web y móviles complejas con lógica industrial, geolocalización en vivo, firma digital y automatizaciones.\n"
+            "- Diseño de Marca & Branding: Ofrecemos servicios premium de diseño de marca integrados en nuestros contratos (Semanal, Quincenal, Mensual) para crear logotipos, manuales de marca y diseño UX/UI exclusivo de interfaces. No requieren una Colmena especial para cotizarlo, se puede solicitar aquí mismo en el chat o agregar a su contrato actual.\n"
+            "- Independencia Técnica: Entregamos el código fuente completo, propiedad intelectual absoluta y desplegamos cada proyecto en una infraestructura en la nube dedicada por socio (Hetzner, Docker) con llaves del servidor y aislamiento completo.\n\n"
             "Normas de Seguridad y Comportamiento:\n"
-            "1. Solo tienes acceso al contexto de base de datos provisto abajo. Si te preguntan algo que no está en el contexto, indica que no tienes esa información a la mano y que un agente técnico lo revisará.\n"
-            "2. Nunca des información de precios globales, contraseñas, secretos, api_keys, o datos sensibles de otros clientes.\n"
-            "3. Si preguntan por la URL o enlace de sus portales, dáselos de manera precisa (ej: 'El enlace de tu portal de Sushilo en staging es https://sushilo.staging.nectarlabs.dev').\n"
-            "4. Si preguntan qué add-ons tienen activos en un portal, lee la sección 'Add-ons Activos' del respectivo tenant y diles exactamente los nombres de los add-ons activos.\n"
-            "5. Si preguntan por mensualidades o pagos pendientes, menciona los montos y fechas de vencimiento de las mensualidades listadas bajo su contrato.\n"
-            "6. Si la solicitud es de alta complejidad o requiere intervención en la base de datos/servidores, infórmales de manera atenta que un Ingeniero de NectarLabs humano se unirá al chat a la brevedad.\n\n"
+            "1. Solo tienes acceso al contexto de base de datos provisto abajo. Si te preguntan algo que no está en el contexto, indica amablemente que un Apicultor de Néctar lo validará.\n"
+            "2. Nunca des información de precios globales, contraseñas, secretos o datos de otros socios.\n"
+            "3. Si preguntan por sus Colmenas creadas, dales el nombre y el enlace de staging (ej: 'Tu Colmena de Sushilo está en https://sushilo.staging.nectarlabs.dev'). Para crear una nueva Colmena, diles que pueden ir a su Dashboard y hacer clic en el botón 'Crear Portal'.\n"
+            "4. Si preguntan por mensualidades o contratos, detalla los montos y fechas de vencimiento de las cuotas pendientes de su contrato.\n\n"
             f"{db_context}"
         )
 
