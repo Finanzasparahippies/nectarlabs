@@ -35,7 +35,7 @@ class SupportChatConsumer(AsyncWebsocketConsumer):
                 # Petición a Groq Cloud (Tarda milisegundos en responder)
                 chat_completion = self.client.chat.completions.create(
                     messages=self.history,
-                    model="llama3-8b-8192", # Modelo de Meta ultra rápido
+                    model="llama-3.1-8b-instant",
                     temperature=0.5,
                 )
                 
