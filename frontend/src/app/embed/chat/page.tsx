@@ -269,8 +269,23 @@ function ChatWidgetContent() {
         body: JSON.stringify({ message: messageText }),
       });
 
-      setMessages((prev) => [...prev, sentMsg]);
-      prevMessagesCountRef.current += 1;
+      if (sentMsg && sentMsg.message && sentMsg.ai_reply) {
+        setMessages((prev) => {
+          const ids = new Set(prev.map((m) => m.id));
+          const toAdd: Message[] = [];
+          if (!ids.has(sentMsg.message.id)) toAdd.push(sentMsg.message);
+          if (!ids.has(sentMsg.ai_reply.id)) toAdd.push(sentMsg.ai_reply);
+          prevMessagesCountRef.current = prev.length + toAdd.length;
+          return [...prev, ...toAdd];
+        });
+      } else if (sentMsg) {
+        setMessages((prev) => {
+          const ids = new Set(prev.map((m) => m.id));
+          if (ids.has(sentMsg.id)) return prev;
+          prevMessagesCountRef.current = prev.length + 1;
+          return [...prev, sentMsg];
+        });
+      }
     } catch (err) {
       alert('Error al enviar el mensaje');
       setNewMessage(messageText);

@@ -397,7 +397,21 @@ export default function TenantPortalPage() {
         body: JSON.stringify({ message: msgText }),
       });
 
-      setChatMessages((prev) => [...prev, sent]);
+      if (sent && sent.message && sent.ai_reply) {
+        setChatMessages((prev) => {
+          const ids = new Set(prev.map((m) => m.id));
+          const toAdd: any[] = [];
+          if (!ids.has(sent.message.id)) toAdd.push(sent.message);
+          if (!ids.has(sent.ai_reply.id)) toAdd.push(sent.ai_reply);
+          return [...prev, ...toAdd];
+        });
+      } else if (sent) {
+        setChatMessages((prev) => {
+          const ids = new Set(prev.map((m) => m.id));
+          if (ids.has(sent.id)) return prev;
+          return [...prev, sent];
+        });
+      }
     } catch (err) {
       alert('Error al enviar el mensaje.');
       setNewChatMessage(msgText);
