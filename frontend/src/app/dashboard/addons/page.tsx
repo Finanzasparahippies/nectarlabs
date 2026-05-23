@@ -202,6 +202,13 @@ export default function AddonsPage() {
   const [addonsList, setAddonsList] = useState<Addon[]>([]);
   const [hasPlanContract, setHasPlanContract] = useState(false);
 
+  // States for subdomains / tenants
+  const [tenants, setTenants] = useState<any[]>([]);
+  const [selectedTenantId, setSelectedTenantId] = useState<string>('new');
+  const [newTenantName, setNewTenantName] = useState('');
+  const [newTenantSubdomain, setNewTenantSubdomain] = useState('');
+  const [tenantErrorMsg, setTenantErrorMsg] = useState<string | null>(null);
+
   useEffect(() => {
     const staff = localStorage.getItem('is_staff') === 'true';
     const role = localStorage.getItem('user_role') || '';
@@ -221,6 +228,21 @@ export default function AddonsPage() {
           }
         } catch (contractErr) {
           console.error("Error loading contracts:", contractErr);
+        }
+
+        // Fetch tenants owned by the user
+        try {
+          const tenantsData = await fetcher('/tenants/');
+          if (Array.isArray(tenantsData)) {
+            setTenants(tenantsData);
+            if (tenantsData.length > 0) {
+              setSelectedTenantId(tenantsData[0].id);
+            } else {
+              setSelectedTenantId('new');
+            }
+          }
+        } catch (tenantsErr) {
+          console.error("Error loading tenants:", tenantsErr);
         }
 
         const data = await fetcher('/addons/');
@@ -280,6 +302,20 @@ export default function AddonsPage() {
         console.error("Error loading contracts in fallback:", contractErr);
       }
 
+      try {
+        const tenantsData = await fetcher('/tenants/');
+        if (Array.isArray(tenantsData)) {
+          setTenants(tenantsData);
+          if (tenantsData.length > 0) {
+            setSelectedTenantId(tenantsData[0].id);
+          } else {
+            setSelectedTenantId('new');
+          }
+        }
+      } catch (tenantsErr) {
+        console.error("Error loading tenants in fallback:", tenantsErr);
+      }
+
       const mapped = fallbackAddons.map(a => ({
         ...a,
         icon: getAddonIcon(a.id)
@@ -308,7 +344,52 @@ export default function AddonsPage() {
     if (!requestAddon) return;
     setIsSubmitting(true);
     setErrorMsg(null);
+    setTenantErrorMsg(null);
     setSuccessTicketId(null);
+
+    let portalInfo = "";
+
+    // If customer selected to create a new portal or has no portals
+    if (selectedTenantId === 'new') {
+      try {
+        if (!newTenantName.trim() || !newTenantSubdomain.trim()) {
+          setTenantErrorMsg("Por favor ingresa el nombre de la empresa y el subdominio deseado.");
+          setIsSubmitting(false);
+          return;
+        }
+        if (!/^[a-z0-9-]+$/.test(newTenantSubdomain.trim())) {
+          setTenantErrorMsg("El subdominio solo puede contener letras minúsculas, números y guiones.");
+          setIsSubmitting(false);
+          return;
+        }
+        
+        const createdTenant = await fetcher('/tenants/', {
+          method: 'POST',
+          body: JSON.stringify({
+            name: newTenantName.trim(),
+            subdomain: newTenantSubdomain.trim().toLowerCase()
+          })
+        });
+
+        // Add newly created tenant to list
+        setTenants(prev => [...prev, createdTenant]);
+        setSelectedTenantId(createdTenant.id);
+        portalInfo = `${newTenantSubdomain.trim().toLowerCase()}.nectarlabs.dev`;
+      } catch (err: any) {
+        console.error("Error creating tenant:", err);
+        setTenantErrorMsg(err.message || "El subdominio ya está ocupado o es inválido. Por favor intenta con otro.");
+        setIsSubmitting(false);
+        return;
+      }
+    } else {
+      const selectedTenant = tenants.find(t => t.id === selectedTenantId);
+      if (selectedTenant) {
+        portalInfo = `${selectedTenant.subdomain}.nectarlabs.dev`;
+      }
+    }
+
+    // Prepare comments with portal info included
+    const checkoutComments = `[Portal: ${portalInfo}] ${comments.trim()}`;
 
     // If client does NOT have a plan contract (paid add-on), redirect to Stripe checkout subscription flow
     if (!hasPlanContract) {
@@ -317,7 +398,7 @@ export default function AddonsPage() {
         const data = await fetcher(`/addons/${addonId}/subscribe/`, {
           method: 'POST',
           body: JSON.stringify({
-            comments: comments.trim()
+            comments: checkoutComments
           })
         });
         if (data.url) {
@@ -346,6 +427,9 @@ export default function AddonsPage() {
 
 El cliente solicita la integración de un módulo aislado del ecosistema Néctar Labs.
 
+### Portal Destino
+- **Página de Integración**: ${portalInfo}
+
 ### Detalles del Módulo
 - **Módulo**: ${requestAddon.name}
 - **Esquema de Pago**: ${schemeText}
@@ -372,6 +456,8 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
       });
       setSuccessTicketId(data.id);
       setComments('');
+      setNewTenantName('');
+      setNewTenantSubdomain('');
       setRequestAddon(null);
     } catch (err: any) {
       console.error(err);
@@ -743,6 +829,83 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
                       </span>
                     )}
                   </div>
+                </div>
+
+                <div className="space-y-4 border-t border-card-border/50 pt-4">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-nectar-gold block">
+                    Portal de Destino
+                  </label>
+                  
+                  {tenants.length > 0 && (
+                    <div className="space-y-2">
+                      <span className="text-[8px] font-bold opacity-50 uppercase tracking-widest text-muted block">
+                        Selecciona tu Portal
+                      </span>
+                      <select
+                        value={selectedTenantId}
+                        onChange={(e) => {
+                          setSelectedTenantId(e.target.value);
+                          setTenantErrorMsg(null);
+                        }}
+                        className="w-full bg-background/50 border border-card-border focus:border-nectar-gold/60 outline-none rounded-2xl p-4 text-xs text-foreground transition-colors"
+                      >
+                        {tenants.map(t => (
+                          <option key={t.id} value={t.id}>
+                            {t.name} ({t.subdomain}.nectarlabs.dev)
+                          </option>
+                        ))}
+                        <option value="new">+ Registrar un nuevo portal...</option>
+                      </select>
+                    </div>
+                  )}
+
+                  {selectedTenantId === 'new' && (
+                    <div className="space-y-4 bg-foreground/[0.02] border border-card-border p-5 rounded-2xl animate-premium">
+                      <span className="text-[8px] font-black text-nectar-gold uppercase tracking-widest block mb-2">
+                        Configurar Nuevo Portal
+                      </span>
+                      
+                      <div className="space-y-2">
+                        <label htmlFor="newTenantName" className="text-[8px] font-bold opacity-50 uppercase tracking-widest text-muted block">
+                          Nombre del Portal / Empresa
+                        </label>
+                        <input
+                          id="newTenantName"
+                          type="text"
+                          value={newTenantName}
+                          onChange={(e) => setNewTenantName(e.target.value)}
+                          placeholder="Ej: Mi Empresa S.A."
+                          className="w-full bg-background/50 border border-card-border focus:border-nectar-gold/60 outline-none rounded-2xl p-4 text-xs text-foreground transition-colors"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <label htmlFor="newTenantSubdomain" className="text-[8px] font-bold opacity-50 uppercase tracking-widest text-muted block">
+                          Sufijo / Subdominio
+                        </label>
+                        <div className="flex items-center gap-2 bg-background/50 border border-card-border focus-within:border-nectar-gold/60 rounded-2xl px-4 py-3.5 transition-colors">
+                          <input
+                            id="newTenantSubdomain"
+                            type="text"
+                            value={newTenantSubdomain}
+                            onChange={(e) => setNewTenantSubdomain(e.target.value.toLowerCase().replace(/\s+/g, '-'))}
+                            placeholder="mi-empresa"
+                            className="bg-transparent border-none outline-none text-xs text-foreground flex-1"
+                          />
+                          <span className="text-xs text-muted font-bold font-mono">.nectarlabs.dev</span>
+                        </div>
+                        <p className="text-[7.5px] opacity-40 leading-normal mt-1">
+                          Solo minúsculas, números y guiones. Será la URL final donde se desplegarán tus Add-ons activos.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {tenantErrorMsg && (
+                    <p className="text-[9px] text-red-400 font-bold uppercase tracking-wider bg-red-400/5 border border-red-400/20 px-4 py-2.5 rounded-xl">
+                      ⚠️ {tenantErrorMsg}
+                    </p>
+                  )}
                 </div>
 
                 <div>

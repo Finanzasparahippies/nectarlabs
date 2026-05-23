@@ -89,6 +89,25 @@ export default function TicketsPage() {
     }
   };
 
+  const refreshSelectedTicket = async () => {
+    if (!selectedTicket) return;
+    try {
+      const data = await fetcher(`/tickets/${selectedTicket.id}/`);
+      setSelectedTicket(data);
+      setTickets(prev => prev.map((t: Ticket) => t.id === data.id ? data : t));
+    } catch (err) {
+      console.error("Error refreshing selected ticket:", err);
+    }
+  };
+
+  // Ticket messages polling hook (only runs if a ticket is selected to minimize server load)
+  useEffect(() => {
+    if (activeSupportTab !== 'tickets' || !selectedTicket) return;
+
+    const interval = setInterval(refreshSelectedTicket, 5000);
+    return () => clearInterval(interval);
+  }, [activeSupportTab, selectedTicket?.id]);
+
   // Support chat polling hook
   useEffect(() => {
     if (!isStaff || activeSupportTab !== 'chats') return;
