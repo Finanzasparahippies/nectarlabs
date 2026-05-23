@@ -210,8 +210,7 @@ function ChatWidgetContent() {
   // Handle Guest Authentication
   const handleGuestSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.trim() || !tenantId) return;
-    if (tenantConfig?.require_customer_info && !name.trim()) return;
+    if (!name.trim() || !tenantId) return;
 
     setIsSubmitting(true);
     try {
@@ -219,7 +218,6 @@ function ChatWidgetContent() {
         method: 'POST',
         body: JSON.stringify({
           tenant_id: tenantId,
-          email: email.trim(),
           name: name.trim(),
         }),
       });
@@ -423,31 +421,17 @@ function ChatWidgetContent() {
                   </div>
                   <h5 className="font-black text-sm text-white uppercase tracking-wide">Iniciar Sesión de Soporte</h5>
                   <p className="text-[10px] text-white/50 max-w-xs mx-auto mt-1 leading-relaxed">
-                    Por favor introduce tus datos para conectarte con un ingeniero de {tenantConfig.name}.
+                    Por favor introduce tu nombre para conectarte con un ingeniero de {tenantConfig.name}.
                   </p>
                 </div>
 
-                {tenantConfig.require_customer_info && (
-                  <div className="space-y-1">
-                    <label className="text-[8.5px] font-black uppercase tracking-wider text-white/40">Nombre Completo</label>
-                    <input
-                      type="text"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      placeholder="Ej. Juan Pérez"
-                      required
-                      className="w-full border rounded-xl px-3.5 py-2.5 text-xs placeholder-white/20 focus:outline-none transition-all font-medium widget-input"
-                    />
-                  </div>
-                )}
-
                 <div className="space-y-1">
-                  <label className="text-[8.5px] font-black uppercase tracking-wider text-white/40">Correo Electrónico</label>
+                  <label className="text-[8.5px] font-black uppercase tracking-wider text-white/40">Nombre Completo</label>
                   <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="correo@ejemplo.com"
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Ej. Juan Pérez"
                     required
                     className="w-full border rounded-xl px-3.5 py-2.5 text-xs placeholder-white/20 focus:outline-none transition-all font-medium widget-input"
                   />

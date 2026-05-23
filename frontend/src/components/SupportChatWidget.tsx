@@ -30,6 +30,64 @@ export default function SupportChatWidget() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const prevMessagesCountRef = useRef<number>(0);
 
+  // Guest Fields
+  const [guestName, setGuestName] = useState('');
+
+  const handleGuestSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!guestName.trim()) return;
+
+    setIsSubmitting(true);
+    try {
+      // Call guest-auth with no tenant_id to register as a direct guest visitor of Néctar Labs
+      const res = await fetch('/api/tenants/guest-auth/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: guestName.trim(),
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || data.detail || 'Fallo al iniciar sesión de soporte');
+      }
+
+      const data = await res.json();
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user_email', data.email);
+      localStorage.setItem('user_role', data.user_role);
+      localStorage.setItem('is_staff', String(data.is_staff));
+      
+      setToken(data.token);
+      setIsStaff(data.is_staff);
+
+      // Auto start chat room using the newly obtained token
+      const chat = await fetch(`/api/support-chats/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${data.token}`
+        },
+        body: JSON.stringify({}),
+      });
+
+      if (!chat.ok) {
+        throw new Error('No se pudo crear la sesión de chat.');
+      }
+
+      const chatData = await chat.json();
+      setActiveChat(chatData);
+      setMessages([]);
+      prevMessagesCountRef.current = 0;
+      setIsOpen(true);
+    } catch (err: any) {
+      alert(err.message || 'Error al iniciar el chat de soporte técnico');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   // Check auth and user role
   useEffect(() => {
     const handleAuthCheck = () => {
@@ -200,8 +258,8 @@ export default function SupportChatWidget() {
     }
   };
 
-  // Do not show widget if user is not authenticated or is staff
-  if (!token || isStaff) return null;
+  // Do not show widget if user is staff (staff uses tickets page instead)
+  if (isStaff) return null;
 
   return (
     <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end font-sans">
@@ -241,7 +299,42 @@ export default function SupportChatWidget() {
 
           {/* Chat Messages / Setup */}
           <div className="flex-1 overflow-y-auto p-5 space-y-4 custom-scrollbar">
-            {!activeChat ? (
+            {!token ? (
+              /* Guest Auth Form */
+              <form onSubmit={handleGuestSubmit} className="h-full flex flex-col justify-center space-y-4 px-2 animate-premium">
+                <div className="text-center pb-2">
+                  <div className="w-12 h-12 bg-nectar-gold/10 text-nectar-gold rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                  </div>
+                  <h5 className="font-black text-sm text-foreground uppercase tracking-wide">Conversa con Néctar Labs</h5>
+                  <p className="text-[10px] text-muted max-w-xs mx-auto mt-1 leading-relaxed">
+                    Escribe tu nombre para hablar con nuestro asistente de IA o un ingeniero técnico.
+                  </p>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[8.5px] font-black uppercase tracking-wider text-muted">Nombre Completo</label>
+                  <input
+                    type="text"
+                    value={guestName}
+                    onChange={(e) => setGuestName(e.target.value)}
+                    placeholder="Ej. Juan Pérez"
+                    required
+                    className="w-full border border-card-border rounded-xl px-3.5 py-2.5 text-xs placeholder-foreground/20 focus:outline-none focus:border-nectar-gold transition-colors bg-background text-foreground font-medium"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full py-3.5 bg-nectar-gold text-background font-black uppercase tracking-widest text-[9px] rounded-xl transition-all hover:scale-[1.01] active:scale-95 disabled:opacity-50 mt-4 cursor-pointer"
+                >
+                  {isSubmitting ? 'Iniciando...' : 'Iniciar Conversación'}
+                </button>
+              </form>
+            ) : !activeChat ? (
               <div className="h-full flex flex-col items-center justify-center text-center p-4">
                 <div className="w-16 h-16 bg-nectar-gold/10 text-nectar-gold rounded-full flex items-center justify-center mb-6">
                   <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

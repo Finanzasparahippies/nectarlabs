@@ -126,29 +126,29 @@ def guest_auth(request):
     email = request.data.get('email')
     name = request.data.get('name', '').strip()
     
-    if not tenant_id or not email:
-        return Response({'error': 'tenant_id and email are required fields'}, status=status.HTTP_400_BAD_REQUEST)
+    if not name:
+        return Response({'error': 'El nombre es obligatorio para iniciar sesión de soporte.'}, status=status.HTTP_400_BAD_REQUEST)
         
-    try:
-        tenant = Tenant.objects.filter(id=uuid.UUID(tenant_id), is_active=True).first()
-    except ValueError:
-        return Response({'error': 'Invalid tenant_id format'}, status=status.HTTP_400_BAD_REQUEST)
+    if not email:
+        # Generate a unique guest email dynamically
+        email = f"guest_{uuid.uuid4().hex[:8]}@nectarlabs.dev"
         
-    if not tenant:
-        return Response({'error': 'Tenant not found or inactive'}, status=status.HTTP_404_NOT_FOUND)
-        
-    # Check if we require customer info and name wasn't provided for new signup
-    if tenant.require_customer_info and not name:
-        # Look up existing user first. If not exists, we require name.
-        if not User.objects.filter(email=email).exists():
-            return Response({'error': 'name is required to initiate support session for this tenant'}, status=status.HTTP_400_BAD_REQUEST)
+    tenant = None
+    if tenant_id:
+        try:
+            tenant = Tenant.objects.filter(id=uuid.UUID(tenant_id), is_active=True).first()
+        except ValueError:
+            return Response({'error': 'Formato de tenant_id inválido.'}, status=status.HTTP_400_BAD_REQUEST)
             
+        if not tenant:
+            return Response({'error': 'Tenant no encontrado o inactivo.'}, status=status.HTTP_404_NOT_FOUND)
+        
     # Get or create User associated with this tenant
     # Since username is unique, we slugify or use email as username
     user = User.objects.filter(email=email).first()
     
     if user:
-        # Always update tenant context for CUSTOMER users to match current portal
+        # Always update tenant context for CUSTOMER users to match current portal (can be None)
         if user.role == User.Role.CUSTOMER and user.tenant != tenant:
             user.tenant = tenant
             user.save()
@@ -175,13 +175,13 @@ def guest_auth(request):
             tenant=tenant
         )
 
-    # Verify user is CUSTOMER of this tenant or belongs to it (or is staff/owner of tenant)
+    # Verify user is CUSTOMER of this tenant or belongs to it (or is staff/owner of tenant, or is direct customer if tenant is None)
     is_staff = user.is_staff or user.role == 'ADMIN'
-    is_owner = tenant.owner == user
+    is_owner = tenant and (tenant.owner == user)
     is_customer = user.role == User.Role.CUSTOMER and user.tenant == tenant
     
     if not (is_staff or is_owner or is_customer):
-        return Response({'error': 'Unauthorized access to this tenant context'}, status=status.HTTP_403_FORBIDDEN)
+        return Response({'error': 'Acceso no autorizado para este contexto.'}, status=status.HTTP_403_FORBIDDEN)
         
     # Generate simple JWT tokens
     refresh = RefreshToken.for_user(user)
