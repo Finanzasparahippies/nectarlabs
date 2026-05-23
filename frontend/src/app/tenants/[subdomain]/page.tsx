@@ -63,7 +63,36 @@ interface SupportChat {
 
 export default function TenantPortalPage() {
   const params = useParams();
-  const subdomain = params.subdomain as string;
+  const rawSubdomain = params?.subdomain as string;
+  const [subdomain, setSubdomain] = useState<string>('');
+
+  useEffect(() => {
+    if (rawSubdomain) {
+      setSubdomain(rawSubdomain);
+      return;
+    }
+
+    if (typeof window !== 'undefined') {
+      const hostname = window.location.hostname;
+      let parsed = '';
+
+      if (hostname.includes('.staging.nectarlabs.dev')) {
+        parsed = hostname.split('.staging.nectarlabs.dev')[0];
+      } else if (hostname.includes('.nectarlabs.dev')) {
+        parsed = hostname.split('.nectarlabs.dev')[0];
+      } else if (hostname.includes('.localhost:3000')) {
+        parsed = hostname.split('.localhost:3000')[0];
+      } else if (hostname.includes('.localhost:3002')) {
+        parsed = hostname.split('.localhost:3002')[0];
+      } else if (hostname.includes('.localhost')) {
+        parsed = hostname.split('.localhost')[0];
+      }
+
+      if (parsed && parsed !== 'www' && parsed !== 'api' && parsed !== 'admin' && parsed !== 'staging') {
+        setSubdomain(parsed);
+      }
+    }
+  }, [rawSubdomain]);
 
   const [tenantConfig, setTenantConfig] = useState<TenantConfig | null>(null);
   const [loading, setLoading] = useState(true);
