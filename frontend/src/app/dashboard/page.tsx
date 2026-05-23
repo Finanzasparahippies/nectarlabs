@@ -134,6 +134,72 @@ export default function DashboardPage() {
     }
   };
 
+  const handlePayStripe = async (installmentId: number) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/installments/${installmentId}/checkout_session/`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.error || "Error al inicializar sesión de pago");
+      }
+      const data = await response.json();
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    } catch (err: any) {
+      alert(err.message || "Error al conectar con Stripe");
+    }
+  };
+
+  const handleSubscribeAddon = async (addonId: number) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/addons/${addonId}/subscribe/`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.error || "Error al iniciar suscripción");
+      }
+      const data = await response.json();
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    } catch (err: any) {
+      alert(err.message || "Error al conectar con Stripe");
+    }
+  };
+
+  const handleOpenBillingPortal = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/addons/customer_portal/`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.error || "Error al abrir el portal de facturación");
+      }
+      const data = await response.json();
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    } catch (err: any) {
+      alert(err.message || "Error de conexión con Stripe");
+    }
+  };
+
   useEffect(() => {
     const checkAuth = () => {
       const staff = localStorage.getItem('is_staff') === 'true';
@@ -175,10 +241,19 @@ export default function DashboardPage() {
     checkAuth();
     loadData();
 
-    // Check URL for initial tab
+    // Check URL for initial tab and Stripe payment results
     const params = new URLSearchParams(window.location.search);
     if (params.get('tab') === 'business') {
       setActiveTab('business');
+    }
+    
+    if (params.get('payment') === 'success') {
+      alert("¡Pago procesado con éxito! Tu panel se actualizará en unos instantes.");
+      // Limpiar parámetros de la URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    } else if (params.get('payment') === 'cancel') {
+      alert("El pago fue cancelado.");
+      window.history.replaceState({}, document.title, window.location.pathname);
     }
   }, []);
 
@@ -490,13 +565,16 @@ export default function DashboardPage() {
                             <p className="text-xs text-foreground/75 leading-relaxed">
                               Realiza tu pago directamente con tarjeta a través de Stripe de manera segura y encriptada. El cobro se procesará inmediatamente y activará tu ciclo de horas.
                             </p>
+                            <p className="text-[10px] text-foreground/50 mt-2">
+                              Para pagar una mensualidad pendiente, haz clic en "Pagar con Stripe" directamente en la tarjeta de la mensualidad abajo.
+                            </p>
                           </div>
                           
                           <button 
-                            onClick={() => alert("Simulando Pasarela de Stripe... ¡Enlace de pago iniciado!")}
+                            onClick={handleOpenBillingPortal}
                             className="w-full py-4 bg-[#635BFF] hover:bg-[#5b53e8] text-white font-black uppercase tracking-widest rounded-xl hover:scale-[1.02] active:scale-95 transition-all text-xs shadow-lg shadow-[#635BFF]/20"
                           >
-                            Pagar con Stripe
+                            Portal de Facturación (Stripe)
                           </button>
                         </div>
                       )}
@@ -586,8 +664,15 @@ export default function DashboardPage() {
                           </div>
 
                           {inst.status !== 'PAID' && (
-                            <div className="mt-2">
-                              {inst.receipt_file ? (
+                            <div className="mt-2 space-y-2">
+                              {chosenMethod === 'STRIPE' ? (
+                                <button
+                                  onClick={() => handlePayStripe(inst.id)}
+                                  className="w-full py-2.5 bg-[#635BFF] hover:bg-[#5b53e8] text-white text-center rounded-xl text-[8px] font-black uppercase tracking-widest transition-all shadow-md"
+                                >
+                                  Pagar con Stripe
+                                </button>
+                              ) : inst.receipt_file ? (
                                 <p className="text-[8px] text-center opacity-60 italic font-bold">Comprobante subido. Esperando validación.</p>
                               ) : (
                                 <label className="w-full block py-2.5 border border-dashed border-nectar-gold/50 text-nectar-gold hover:bg-nectar-gold hover:text-background text-center rounded-xl text-[8px] font-black uppercase tracking-widest transition-all cursor-pointer">

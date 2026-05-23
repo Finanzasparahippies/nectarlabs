@@ -3,9 +3,15 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.utils import timezone
 from datetime import timedelta
+from django.conf import settings
+from django.views.decorators.csrf import csrf_exempt
+from django.http import HttpResponse
+import stripe
 from .models import Plan, Product, Contract, PaymentInstallment, AddOn
 from .serializers import PlanSerializer, ProductSerializer, ContractSerializer, PaymentInstallmentSerializer, AddOnSerializer
 from .utils import generate_contract_pdf, send_contract_emails
+
+stripe.api_key = settings.STRIPE_SECRET_KEY
 
 class PlanViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Plan.objects.filter(is_active=True).order_by('price')
@@ -22,6 +28,60 @@ class AddOnViewSet(viewsets.ModelViewSet):
     queryset = AddOn.objects.all()
     serializer_class = AddOnSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
+    def subscribe(self, request, pk=None):
+        addon = self.get_object()
+        if not addon.stripe_price_id:
+            return Response({'error': 'Este Add-on no está configurado para suscripciones directas de Stripe.'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        try:
+            session = stripe.checkout.Session.create(
+                payment_method_types=['card'],
+                line_items=[{
+                    'price': addon.stripe_price_id,
+                    'quantity': 1,
+                }],
+                mode='subscription',
+                subscription_data={
+                    'metadata': {
+                        'user_id': request.user.id,
+                        'addon_id': addon.id,
+                        'type': 'addon_subscription'
+                    }
+                },
+                success_url=f"{settings.FRONTEND_URL}/dashboard?payment=success&addon_slug={addon.slug}",
+                cancel_url=f"{settings.FRONTEND_URL}/dashboard?payment=cancel",
+                metadata={
+                    'user_id': request.user.id,
+                    'addon_id': addon.id,
+                    'type': 'addon_subscription'
+                }
+            )
+            return Response({'url': session.url}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @action(detail=False, methods=['post'], permission_classes=[permissions.IsAuthenticated])
+    def customer_portal(self, request):
+        try:
+            customers = stripe.Customer.list(email=request.user.email).data
+            if customers:
+                customer_id = customers[0].id
+            else:
+                customer = stripe.Customer.create(
+                    email=request.user.email,
+                    name=request.user.get_full_name() or request.user.username
+                )
+                customer_id = customer.id
+                
+            session = stripe.billing_portal.Session.create(
+                customer=customer_id,
+                return_url=f"{settings.FRONTEND_URL}/dashboard"
+            )
+            return Response({'url': session.url}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class ContractViewSet(viewsets.ModelViewSet):
     serializer_class = ContractSerializer
@@ -63,34 +123,33 @@ class ContractViewSet(viewsets.ModelViewSet):
         contract.is_fully_signed = True
         contract.save()
 
-        # Generar automáticamente 6 mensualidades obligatorias
-        plan_price = contract.plan.price if contract.plan else 0
+        # Generar automáticamente 6 mensualidades obligatorias (solo si hay plan contratado)
         if contract.plan:
-            # Los usuarios con contrato del plan tienen acceso a todos los add-ons sin costo (incluido, restando horas de desarrollo)
-            addons_price = 0
-        else:
-            # Adquisición manual de add-ons para clientes sin plan de 6 meses
-            addons_price = sum(addon.monthly_price for addon in contract.addons.all())
-        monthly_amount = plan_price + (contract.brand_design_price or 0) + addons_price
-        start_date = contract.signed_at.date() if contract.signed_at else timezone.now().date()
-        
-        # Eliminar mensualidades previas si existían por re-firma para evitar duplicados
-        contract.installments.all().delete()
-        
-        installments_to_create = []
-        for i in range(1, 7):
-            due_date = start_date + timedelta(days=30 * (i - 1))
-            installments_to_create.append(
-                PaymentInstallment(
-                    contract=contract,
-                    installment_number=i,
-                    due_date=due_date,
-                    amount=monthly_amount,
-                    status=PaymentInstallment.Status.PENDING,
-                    payment_method=contract.payment_commitment_method
+            plan_price = contract.plan.price
+            monthly_amount = plan_price + (contract.brand_design_price or 0)
+            start_date = contract.signed_at.date() if contract.signed_at else timezone.now().date()
+            
+            # Eliminar mensualidades previas si existían por re-firma para evitar duplicados
+            contract.installments.all().delete()
+            
+            installments_to_create = []
+            for i in range(1, 7):
+                due_date = start_date + timedelta(days=30 * (i - 1))
+                installments_to_create.append(
+                    PaymentInstallment(
+                        contract=contract,
+                        installment_number=i,
+                        due_date=due_date,
+                        amount=monthly_amount,
+                        status=PaymentInstallment.Status.PENDING,
+                        payment_method=contract.payment_commitment_method
+                    )
                 )
-            )
-        PaymentInstallment.objects.bulk_create(installments_to_create)
+            PaymentInstallment.objects.bulk_create(installments_to_create)
+        else:
+            # Si no hay plan (adquisición individual de add-ons), no generamos las 6 mensualidades fijas.
+            # En su lugar, el cliente se suscribirá de forma recurrente en Stripe.
+            pass
         
         # --- AUTO-CREATE PROJECT ---
         try:
@@ -124,15 +183,11 @@ class PaymentInstallmentViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        # Auto-healer: generate missing installments for already signed contracts
-        for contract in Contract.objects.filter(is_fully_signed=True):
+        # Auto-healer: generate missing installments for already signed contracts (only if they have a plan)
+        for contract in Contract.objects.filter(is_fully_signed=True, plan__isnull=False):
             if contract.installments.count() == 0:
-                plan_price = contract.plan.price if contract.plan else 0
-                if contract.plan:
-                    addons_price = 0
-                else:
-                    addons_price = sum(addon.monthly_price for addon in contract.addons.all())
-                monthly_amount = plan_price + (contract.brand_design_price or 0) + addons_price
+                plan_price = contract.plan.price
+                monthly_amount = plan_price + (contract.brand_design_price or 0)
                 start_date = contract.signed_at.date() if contract.signed_at else timezone.now().date()
                 
                 installments_to_create = []
@@ -164,3 +219,115 @@ class PaymentInstallmentViewSet(viewsets.ModelViewSet):
             )
         else:
             serializer.save()
+
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
+    def checkout_session(self, request, pk=None):
+        installment = self.get_object()
+        
+        # Validar que no esté ya pagada
+        if installment.status == PaymentInstallment.Status.PAID:
+            return Response({'error': 'Esta mensualidad ya ha sido pagada.'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        try:
+            session = stripe.checkout.Session.create(
+                payment_method_types=['card'],
+                line_items=[{
+                    'price_data': {
+                        'currency': 'mxn',
+                        'product_data': {
+                            'name': f"Mensualidad {installment.installment_number}/6 - Nectar Labs",
+                            'description': f"Cliente: {installment.contract.full_name}",
+                        },
+                        'unit_amount': int(installment.amount * 100),  # Stripe requiere centavos (ej: $1000.00 -> 100000)
+                    },
+                    'quantity': 1,
+                }],
+                mode='payment',
+                success_url=f"{settings.FRONTEND_URL}/dashboard?payment=success&installment_id={installment.id}",
+                cancel_url=f"{settings.FRONTEND_URL}/dashboard?payment=cancel",
+                metadata={
+                    'installment_id': installment.id
+                }
+            )
+            return Response({'url': session.url}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@csrf_exempt
+def stripe_webhook(request):
+    payload = request.body
+    sig_header = request.META.get('HTTP_STRIPE_SIGNATURE')
+    event = None
+
+    try:
+        event = stripe.Webhook.construct_event(
+            payload, sig_header, settings.STRIPE_WEBHOOK_SECRET
+        )
+    except ValueError:
+        return HttpResponse(status=400)
+    except stripe.error.SignatureVerificationError:
+        return HttpResponse(status=400)
+
+    # Procesar pago exitoso
+    if event['type'] == 'checkout.session.completed':
+        session = event['data']['object']
+        
+        # Caso 1: Pago de una mensualidad (Installment)
+        installment_id = session.get('metadata', {}).get('installment_id')
+        if installment_id:
+            try:
+                installment = PaymentInstallment.objects.get(id=installment_id)
+                installment.status = PaymentInstallment.Status.PAID
+                installment.stripe_invoice_id = session.get('id')  # ID de sesión o pago
+                installment.paid_at = timezone.now()
+                installment.payment_method = 'STRIPE'
+                installment.save()
+                
+                # Actualizar la fecha del siguiente pago en el contrato
+                contract = installment.contract
+                contract.next_payment_date = installment.due_date + timedelta(days=30)
+                contract.save()
+            except PaymentInstallment.DoesNotExist:
+                pass
+
+        # Caso 2: Suscripción a un Add-on individual
+        elif session.get('metadata', {}).get('type') == 'addon_subscription':
+            user_id = session.get('metadata', {}).get('user_id')
+            addon_id = session.get('metadata', {}).get('addon_id')
+            if user_id and addon_id:
+                try:
+                    # Buscar el contrato activo del usuario para agregarle el addon
+                    contract = Contract.objects.filter(user_id=user_id, is_active=True).first()
+                    if not contract:
+                        # Si no tiene contrato activo, crear uno básico
+                        from django.contrib.auth import get_user_model
+                        User = get_user_model()
+                        user = User.objects.get(id=user_id)
+                        contract = Contract.objects.create(
+                            user=user,
+                            full_name=user.get_full_name() or user.username,
+                            is_fully_signed=True,
+                            payment_commitment_method='STRIPE'
+                        )
+                    contract.addons.add(addon_id)
+                except Exception:
+                    pass
+
+    # Procesar cancelación de suscripción
+    elif event['type'] == 'customer.subscription.deleted':
+        subscription = event['data']['object']
+        metadata = subscription.get('metadata', {})
+        user_id = metadata.get('user_id')
+        addon_id = metadata.get('addon_id')
+        
+        if user_id and addon_id:
+            try:
+                # Buscar el contrato activo del usuario y remover el add-on
+                contract = Contract.objects.filter(user_id=user_id, is_active=True).first()
+                if contract:
+                    contract.addons.remove(addon_id)
+            except Exception:
+                pass
+
+    return HttpResponse(status=200)

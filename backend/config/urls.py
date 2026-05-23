@@ -36,6 +36,7 @@ from django.conf import settings
 from apps.users.views import RegisterView
 from apps.newsletter.views import SubscribeView
 from apps.dashboard.views import BusinessStatsView
+from apps.shop.views import stripe_webhook
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -50,6 +51,7 @@ urlpatterns = [
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/auth/', include('rest_framework.urls')),
     path("ckeditor5/", include('django_ckeditor_5.urls')),
+    path('api/shop/stripe-webhook/', stripe_webhook, name='stripe_webhook'),
 ]
 
 
