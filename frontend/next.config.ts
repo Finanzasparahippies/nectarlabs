@@ -7,7 +7,11 @@ const nextConfig: NextConfig = {
     'nectarlabs.dev', 
     'www.nectarlabs.dev', 
     'staging.nectarlabs.dev', 
-    'www.staging.nectarlabs.dev'
+    'www.staging.nectarlabs.dev',
+    '*.staging.nectarlabs.dev',
+    '*.localhost',
+    '*.localhost:3000',
+    '*.localhost:3002'
   ],
   async rewrites() {
     return [
