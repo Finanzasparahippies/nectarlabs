@@ -32,8 +32,20 @@ class AddOnViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
     def subscribe(self, request, pk=None):
         addon = self.get_object()
-        if not addon.stripe_price_id:
-            return Response({'error': 'Este Add-on no está configurado para suscripciones directas de Stripe.'}, status=status.HTTP_400_BAD_REQUEST)
+        billing_cycle = request.data.get('billing_cycle', 'monthly')
+        
+        if billing_cycle == 'yearly':
+            price_id = addon.stripe_yearly_price_id
+            cycle_name = 'anual'
+        else:
+            price_id = addon.stripe_price_id
+            cycle_name = 'mensual'
+            
+        if not price_id:
+            return Response({'error': f'Este Add-on no está configurado para la suscripción {cycle_name} de Stripe.'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        if not price_id.startswith('price_'):
+            return Response({'error': f'Configuración de Stripe incorrecta para el Add-on "{addon.name}" (suscripción {cycle_name}): El ID "{price_id}" parece ser un ID de Producto (empieza con prod_) o es inválido. Debes ingresar el ID de Precio de Stripe (que empieza con price_) en el Django Admin.'}, status=status.HTTP_400_BAD_REQUEST)
             
         try:
             comments = request.data.get('comments', '')
@@ -42,7 +54,7 @@ class AddOnViewSet(viewsets.ModelViewSet):
             session = stripe.checkout.Session.create(
                 payment_method_types=['card'],
                 line_items=[{
-                    'price': addon.stripe_price_id,
+                    'price': price_id,
                     'quantity': 1,
                 }],
                 mode='subscription',

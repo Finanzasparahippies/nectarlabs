@@ -145,6 +145,7 @@ class AddOn(models.Model):
     technical_details = models.JSONField(default=list, help_text="Lista JSON de detalles técnicos (funcionalidades clave)")
     is_active = models.BooleanField(default=True, verbose_name="Activo")
     stripe_price_id = models.CharField(max_length=100, blank=True, null=True, help_text="ID de precio mensual de Stripe para suscripciones directas")
+    stripe_yearly_price_id = models.CharField(max_length=100, blank=True, null=True, help_text="ID de precio anual de Stripe para suscripciones directas")
 
     def __str__(self):
         return f"{self.name} (${self.monthly_price}/mes)"
