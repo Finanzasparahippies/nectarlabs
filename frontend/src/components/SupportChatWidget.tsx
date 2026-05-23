@@ -254,11 +254,11 @@ export default function SupportChatWidget() {
                 </div>
                 
                 {messages.map((msg) => {
-                  const isMine = msg.sender_email === localStorage.getItem('user_email');
-                  const isAgent = msg.sender_role === 'ADMIN' || msg.sender_role === 'BUSINESS';
                   const isAI = (msg as any).is_ai_message === true;
+                  const isMine = !isAI && msg.sender_email === localStorage.getItem('user_email');
+                  const isAgent = msg.sender_role === 'ADMIN' || msg.sender_role === 'BUSINESS';
                   return (
-                    <div key={msg.id} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
+                    <div key={String(msg.id)} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
                       <div className={`max-w-[85%] rounded-3xl p-4 shadow-sm ${
                         isMine 
                           ? 'bg-nectar-gold text-background rounded-tr-none' 
