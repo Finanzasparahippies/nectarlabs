@@ -36,6 +36,9 @@ class AddOnViewSet(viewsets.ModelViewSet):
             return Response({'error': 'Este Add-on no está configurado para suscripciones directas de Stripe.'}, status=status.HTTP_400_BAD_REQUEST)
             
         try:
+            comments = request.data.get('comments', '')
+            comments_truncated = comments[:450] if comments else ''
+            
             session = stripe.checkout.Session.create(
                 payment_method_types=['card'],
                 line_items=[{
@@ -47,7 +50,8 @@ class AddOnViewSet(viewsets.ModelViewSet):
                     'metadata': {
                         'user_id': request.user.id,
                         'addon_id': addon.id,
-                        'type': 'addon_subscription'
+                        'type': 'addon_subscription',
+                        'comments': comments_truncated
                     }
                 },
                 success_url=f"{settings.FRONTEND_URL}/dashboard?payment=success&addon_slug={addon.slug}",
@@ -55,7 +59,8 @@ class AddOnViewSet(viewsets.ModelViewSet):
                 metadata={
                     'user_id': request.user.id,
                     'addon_id': addon.id,
-                    'type': 'addon_subscription'
+                    'type': 'addon_subscription',
+                    'comments': comments_truncated
                 }
             )
             return Response({'url': session.url}, status=status.HTTP_200_OK)
@@ -295,6 +300,7 @@ def stripe_webhook(request):
         elif session.get('metadata', {}).get('type') == 'addon_subscription':
             user_id = session.get('metadata', {}).get('user_id')
             addon_id = session.get('metadata', {}).get('addon_id')
+            comments = session.get('metadata', {}).get('comments', '')
             if user_id and addon_id:
                 try:
                     # Buscar el contrato activo del usuario para agregarle el addon
@@ -311,6 +317,39 @@ def stripe_webhook(request):
                             payment_commitment_method='STRIPE'
                         )
                     contract.addons.add(addon_id)
+                    
+                    # --- AUTO-CREATE IMPLEMENTATION TICKET ---
+                    try:
+                        from apps.tickets.models import Ticket
+                        addon = AddOn.objects.get(id=addon_id)
+                        ticket_title = f"[Suscripción Stripe] Integración de Add-on: {addon.name}"
+                        ticket_description = (
+                            f"## Nueva Suscripción Recurrente a Add-on (Pago Exitoso)\n\n"
+                            f"El cliente ha realizado el pago en Stripe para suscribirse al módulo.\n\n"
+                            f"### Detalles del Módulo\n"
+                            f"- **Módulo**: {addon.name}\n"
+                            f"- **Esquema de Pago**: Suscripción Mensual\n"
+                            f"- **Precio**: ${addon.monthly_price} MXN/mes\n"
+                            f"- **Referencia Técnica**: `{addon.source_reference}`\n"
+                            f"- **Complejidad**: {addon.complexity}\n"
+                            f"- **Requerimientos Servidor**: {addon.server_requirements}\n\n"
+                            f"### Notas del Cliente / Requerimientos Particulares:\n"
+                            f"{comments if comments.strip() else '_El cliente no ingresó comentarios adicionales._'}\n\n"
+                            f"---\n"
+                            f"*Creado automáticamente tras confirmación de Stripe Webhook.*"
+                        )
+                        Ticket.objects.create(
+                            client=contract.user,
+                            tenant=contract.user.tenant,
+                            title=ticket_title,
+                            description=ticket_description,
+                            category=Ticket.Category.IMPLEMENTATION,
+                            priority=Ticket.Priority.HIGH,
+                            status=Ticket.Status.OPEN
+                        )
+                    except Exception as ticket_err:
+                        import logging
+                        logging.error(f"Error creating ticket on webhook: {ticket_err}", exc_info=True)
                 except Exception:
                     pass
 

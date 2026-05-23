@@ -7,6 +7,7 @@ import { fetcher } from '@/lib/api';
 
 interface Addon {
   id: string;
+  dbId?: number;
   name: string;
   categoryBadge: string;
   description: string;
@@ -226,6 +227,7 @@ export default function AddonsPage() {
         if (Array.isArray(data)) {
           const mapped: Addon[] = data.map((item: any) => ({
             id: item.slug,
+            dbId: item.id,
             name: item.name,
             categoryBadge: item.category_badge,
             description: item.description,
@@ -308,17 +310,37 @@ export default function AddonsPage() {
     setErrorMsg(null);
     setSuccessTicketId(null);
 
-    const title = hasPlanContract
-      ? `[Solicitud Add-on Gratis] ${requestAddon.name} - Con Contrato Activo`
-      : `[Solicitud Add-on] ${requestAddon.name} - Plan ${billingCycle === 'monthly' ? 'Mensual' : 'Anual'}`;
+    // If client does NOT have a plan contract (paid add-on), redirect to Stripe checkout subscription flow
+    if (!hasPlanContract) {
+      try {
+        const addonId = requestAddon.dbId || requestAddon.id;
+        const data = await fetcher(`/addons/${addonId}/subscribe/`, {
+          method: 'POST',
+          body: JSON.stringify({
+            comments: comments.trim()
+          })
+        });
+        if (data.url) {
+          window.location.href = data.url;
+          return;
+        } else {
+          throw new Error("No se recibió la URL de Stripe.");
+        }
+      } catch (err: any) {
+        console.error("Stripe Checkout error:", err);
+        setErrorMsg(err.message || "Ocurrió un error al conectar con Stripe. Por favor intenta de nuevo.");
+        return;
+      } finally {
+        setIsSubmitting(false);
+      }
+    }
 
-    const priceText = hasPlanContract
-      ? `$0 MXN (Incluido en plan de desarrollo de 6 meses)`
-      : (billingCycle === 'monthly' ? `$${requestAddon.monthlyPrice.toLocaleString('es-MX')} MXN/mes` : `$${requestAddon.yearlyPrice.toLocaleString('es-MX')} MXN/año`);
+    // Otherwise, if they have an active plan (free add-on), we create a support ticket directly
+    const title = `[Solicitud Add-on Gratis] ${requestAddon.name} - Con Contrato Activo`;
 
-    const schemeText = hasPlanContract
-      ? `Gratuito / Incluido (Servicio técnico integrado - Restando de horas de desarrollo correspondientes)`
-      : (billingCycle === 'monthly' ? 'Suscripción Mensual' : 'Suscripción Anual (Ahorro + 2 meses gratis)');
+    const priceText = `$0 MXN (Incluido en plan de desarrollo de 6 meses)`;
+
+    const schemeText = `Gratuito / Incluido (Servicio técnico integrado - Restando de horas de desarrollo correspondientes)`;
 
     const description = `## Solicitud de Integración de Add-on
 
@@ -353,7 +375,7 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
       setRequestAddon(null);
     } catch (err: any) {
       console.error(err);
-      setErrorMsg("Ocurrió un error al procesar tu solicitud. Por favor intenta de nuevo.");
+      setErrorMsg(err.message || "Ocurrió un error al procesar tu solicitud. Por favor intenta de nuevo.");
     } finally {
       setIsSubmitting(false);
     }
@@ -749,7 +771,7 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
                         Enviando Solicitud...
                       </>
                     ) : (
-                      hasPlanContract ? 'Confirmar y Solicitar Gratis' : 'Confirmar e Iniciar Ticket'
+                      hasPlanContract ? 'Confirmar y Solicitar Gratis' : 'Pagar Suscripción en Stripe'
                     )}
                   </button>
                   <button
