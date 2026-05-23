@@ -398,7 +398,8 @@ export default function AddonsPage() {
         const data = await fetcher(`/addons/${addonId}/subscribe/`, {
           method: 'POST',
           body: JSON.stringify({
-            comments: checkoutComments
+            comments: checkoutComments,
+            billing_cycle: billingCycle
           })
         });
         if (data.url) {
