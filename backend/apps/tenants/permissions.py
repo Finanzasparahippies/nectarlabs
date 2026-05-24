@@ -33,8 +33,11 @@ class HasAddOnPermission(permissions.BasePermission):
                     pass
             elif subdomain:
                 tenant = Tenant.objects.filter(subdomain=subdomain.lower(), is_active=True).first()
+            else:
+                # No tenant parameters supplied; allow access for the main/host platform
+                return True
 
-        # Si no se puede resolver un inquilino válido, denegar acceso
+        # Si no se puede resolver un inquilino válido (pero se especificó uno), denegar acceso
         if not tenant:
             return False
 

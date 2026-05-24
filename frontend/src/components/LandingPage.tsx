@@ -49,13 +49,58 @@ export default function LandingPage() {
           </a>
         </div>
 
+      </section>
 
-        {/* Expanded Tech Stack Logos */}
-        <div className="mt-48 w-full max-w-7xl">
-          <p className="text-[10px] font-black uppercase tracking-[0.5em] opacity-30 mb-24">Ecosistema de Ingeniería Nectar</p>
+      {/* Main Content Sections */}
+      <div className="w-full space-y-32 pb-32">
+        <div id="bento">
+          <BentoGrid />
+        </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-x-12 gap-y-20 items-center justify-items-center opacity-40 hover:opacity-100 transition-all duration-1000 animate-premium grayscale hover:grayscale-0" style={{ animationDelay: '0.6s' }}>
+        <div id="process">
+          <ProcessFlow />
+        </div>
 
+        <div id="formula" className="py-32 bg-foreground/5 border-y border-foreground/10 relative scroll-mt-24 overflow-hidden">
+          <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(currentColor 2px, transparent 2px)', backgroundSize: '60px 60px' }}></div>
+          <InteractiveTimeline />
+        </div>
+
+        <div id="pricing" className="scroll-mt-24">
+          <SubscriptionCards />
+        </div>
+
+        <div id="addons" className="scroll-mt-24">
+          <AddonShowcase />
+        </div>
+
+        <div id="addon-tutorial" className="scroll-mt-24">
+          <AddonTutorial />
+        </div>
+
+        <div className="py-48 bg-gradient-to-b from-transparent via-nectar-gold/5 to-transparent">
+          <PricingCalculator />
+        </div>
+      </div>
+
+      {/* Tech Stack Section */}
+      <section id="tech-stack" className="w-full py-32 px-6 border-t border-card-border relative overflow-hidden flex flex-col items-center bg-gradient-to-b from-transparent via-nectar-gold/5 to-transparent">
+        {/* Decorative background glows */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[300px] bg-nectar-gold/5 rounded-full blur-[150px] -z-10"></div>
+        <div className="absolute inset-0 opacity-[0.02] pointer-events-none" style={{ backgroundImage: 'radial-gradient(currentColor 2px, transparent 2px)', backgroundSize: '60px 60px' }}></div>
+
+        <div className="w-full max-w-7xl text-center">
+          <span className="inline-block px-8 py-2.5 mb-6 text-[10px] font-black tracking-[0.5em] text-nectar-gold uppercase border border-nectar-gold/20 rounded-full bg-nectar-gold/5">
+            Ecosistema Tecnológico
+          </span>
+          <h2 className="text-4xl md:text-6xl font-black tracking-tight mb-6 text-foreground">
+            Nuestra <span className="text-nectar-gold italic">Infraestructura</span> de Ingeniería
+          </h2>
+          <p className="text-base md:text-lg text-foreground/60 max-w-3xl mx-auto mb-24 leading-relaxed">
+            Combinamos las tecnologías más robustas, estables y eficientes del mercado para construir plataformas escalables con total soberanía e independencia técnica.
+          </p>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-x-12 gap-y-20 items-center justify-items-center opacity-40 hover:opacity-100 transition-all duration-1000 grayscale hover:grayscale-0">
             {/* Django */}
             <div className="text-xl font-black tracking-tighter flex items-center gap-1 text-foreground">
               <span className="bg-nectar-gold text-nectar-cream px-1.5 py-0.5 rounded text-sm">dj</span>
@@ -67,7 +112,7 @@ export default function LandingPage() {
               <svg className="w-7 h-7" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M11.997 0a.75.75 0 0 0-.75.75v2.25h1.5V.75a.75.75 0 0 0-.75-.75zm0 24a.75.75 0 0 0 .75-.75v-2.25h-1.5v2.25a.75.75 0 0 0 .75.75zM24 11.997a.75.75 0 0 0-.75-.75h-2.25v1.5h2.25a.75.75 0 0 0 .75-.75zM0 11.997a.75.75 0 0 0 .75.75h2.25v-1.5H.75a.75.75 0 0 0-.75.75z" opacity="0.3" />
                 <path d="M16.037 6.134a.75.75 0 0 0-.847.114L12 9.475l-3.19-3.227a.75.75 0 0 0-1.144.975l3.75 4.5a.75.75 0 0 0 1.168 0l3.75-4.5a.75.75 0 0 0-.297-1.089z" fill="var(--color-nectar-gold)" />
-                <path d="M7.963 17.866a.75.75 0 0 0 .847-.114L12 14.525l3.19 3.227a.75.75 0 0 0 1.144-.975l-3.75-4.5a.75.75 0 0 0-1.168 0l-3.75 4.5a.75.75 0 0 0 .297 1.089z" />
+                <path d="M7.963 17.866a.75.75 0 0 0 .847-.114L12 14.525l-3.19 3.227a.75.75 0 0 0 1.144-.975l-3.75-4.5a.75.75 0 0 0-1.168 0l-3.75 4.5a.75.75 0 0 0 .297 1.089z" />
               </svg>
               Python
             </div>
@@ -169,40 +214,7 @@ export default function LandingPage() {
             <div className="text-lg font-black border-4 border-foreground px-4 py-1 uppercase tracking-[0.2em] text-foreground">Hetzner</div>
           </div>
         </div>
-
       </section>
-
-      {/* Main Content Sections */}
-      <div className="w-full space-y-32 pb-32">
-        <div id="bento">
-          <BentoGrid />
-        </div>
-
-        <div id="process">
-          <ProcessFlow />
-        </div>
-
-        <div id="formula" className="py-32 bg-foreground/5 border-y border-foreground/10 relative scroll-mt-24 overflow-hidden">
-          <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(currentColor 2px, transparent 2px)', backgroundSize: '60px 60px' }}></div>
-          <InteractiveTimeline />
-        </div>
-
-        <div id="pricing" className="scroll-mt-24">
-          <SubscriptionCards />
-        </div>
-
-        <div id="addons" className="scroll-mt-24">
-          <AddonShowcase />
-        </div>
-
-        <div id="addon-tutorial" className="scroll-mt-24">
-          <AddonTutorial />
-        </div>
-
-        <div className="py-48 bg-gradient-to-b from-transparent via-nectar-gold/5 to-transparent">
-          <PricingCalculator />
-        </div>
-      </div>
 
       {/* FAQ Link Section */}
       <section className="w-full py-24 text-center border-t border-card-border">

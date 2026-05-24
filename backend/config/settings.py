@@ -193,7 +193,13 @@ EMAIL_PORT = env.int("EMAIL_PORT", default=587)
 EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=True)
 EMAIL_HOST_USER = env("EMAIL_HOST_USER", default="")
 EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", default="")
-DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="Nectar Labs <no-reply@nectarlabs.com>")
+DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="Nectar Labs <soporte@nectarlabs.dev>")
+
+# Nectar Labs Organizational Email Aliases
+EMAIL_SUPPORT = env("EMAIL_SUPPORT", default="Nectar Labs Soporte <soporte@nectarlabs.dev>")
+EMAIL_NEWSLETTER = env("EMAIL_NEWSLETTER", default="Nectar Labs <hola@nectarlabs.dev>")
+EMAIL_CONTACT = env("EMAIL_CONTACT", default="Nectar Labs <contacto@nectarlabs.dev>")
+EMAIL_BILLING = env("EMAIL_BILLING", default="Nectar Labs Facturación <facturacion@nectarlabs.dev>")
 
 # SMTP Brevo (Plan Gratuito)
 BREVO_EMAIL_HOST = env("BREVO_EMAIL_HOST", default="smtp-relay.brevo.com")
@@ -228,14 +234,18 @@ CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[])
 
 if DEBUG:
     dev_origins = [
+        "http://localhost",
         "http://localhost:3000",
         "http://localhost:8000",
         "http://localhost:8001",
         "http://localhost:8080",
+        "http://127.0.0.1",
         "http://127.0.0.1:3000",
         "http://127.0.0.1:8000",
         "http://127.0.0.1:8001",
         "http://127.0.0.1:8080",
+        "http://*.localhost",
+        "http://*.nectarlabs.localhost",
         "https://*.github.dev",
         "https://*.app.github.dev",
     ]

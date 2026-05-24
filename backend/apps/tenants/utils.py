@@ -48,3 +48,15 @@ def get_tenant_email_connection(tenant=None):
     )
     
     return connection, from_email
+
+
+def get_platform_sender(display_name):
+    """
+    Helper to cleanly parse settings.DEFAULT_FROM_EMAIL to get the email address,
+    and format it with a custom display name. This avoids nested angle brackets
+    which raise ValueError when DEFAULT_FROM_EMAIL contains a display name itself.
+    """
+    from email.utils import parseaddr
+    _, email_addr = parseaddr(settings.DEFAULT_FROM_EMAIL)
+    email_addr = email_addr or settings.EMAIL_HOST_USER or "soporte@nectarlabs.dev"
+    return f"{display_name} <{email_addr}>"

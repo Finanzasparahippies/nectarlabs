@@ -9,7 +9,7 @@ from django.http import HttpResponse
 import stripe
 from .models import Plan, Product, Contract, PaymentInstallment, AddOn
 from .serializers import PlanSerializer, ProductSerializer, ContractSerializer, PaymentInstallmentSerializer, AddOnSerializer
-from .utils import generate_contract_pdf, send_contract_emails
+from .utils import generate_contract_pdf, send_contract_emails, send_payment_receipt_email, send_addon_payment_receipt_email
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
@@ -316,6 +316,13 @@ def stripe_webhook(request):
                 contract = installment.contract
                 contract.next_payment_date = installment.due_date + timedelta(days=30)
                 contract.save()
+                
+                # Enviar correo de confirmación de pago (facturación)
+                try:
+                    send_payment_receipt_email(installment)
+                except Exception as mail_err:
+                    import logging
+                    logging.getLogger(__name__).error(f"Error sending payment receipt email: {mail_err}", exc_info=True)
             except PaymentInstallment.DoesNotExist:
                 pass
 
@@ -340,6 +347,14 @@ def stripe_webhook(request):
                             payment_commitment_method='STRIPE'
                         )
                     contract.addons.add(addon_id)
+                    
+                    # Enviar correo de confirmación de pago del Add-on (facturación)
+                    try:
+                        addon = AddOn.objects.get(id=addon_id)
+                        send_addon_payment_receipt_email(contract.user, addon, session)
+                    except Exception as mail_err:
+                        import logging
+                        logging.getLogger(__name__).error(f"Error sending addon subscription payment receipt email: {mail_err}", exc_info=True)
                     
                     # --- AUTO-CREATE IMPLEMENTATION TICKET ---
                     try:

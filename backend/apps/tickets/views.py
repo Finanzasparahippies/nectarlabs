@@ -28,16 +28,33 @@ class TicketViewSet(viewsets.ModelViewSet):
             tenant = user.tenant
         elif user.role == 'BUSINESS':
             tenant = user.owned_tenants.first()
-        serializer.save(client=user, tenant=tenant)
+        ticket = serializer.save(client=user, tenant=tenant)
+        
+        # Trigger email notifications for support ticket creation
+        try:
+            from .utils import send_ticket_creation_emails
+            send_ticket_creation_emails(ticket)
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).error(f"Failed to send ticket creation emails: {e}", exc_info=True)
 
     @action(detail=True, methods=['post'])
     def add_message(self, request, pk=None):
         ticket = self.get_object()
         serializer = MessageSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save(ticket=ticket, sender=request.user)
+            msg = serializer.save(ticket=ticket, sender=request.user)
             # Update ticket timestamp
             ticket.save() 
+            
+            # Trigger email notifications for ticket message reply
+            try:
+                from .utils import send_ticket_message_emails
+                send_ticket_message_emails(ticket, msg)
+            except Exception as e:
+                import logging
+                logging.getLogger(__name__).error(f"Failed to send ticket reply emails: {e}", exc_info=True)
+                
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 

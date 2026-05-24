@@ -18,7 +18,7 @@ class Subscriber(models.Model):
         return f"{self.email} ({self.tenant.subdomain if self.tenant else 'No Tenant'})"
 
 
-from apps.tenants.utils import get_tenant_email_connection
+from apps.tenants.utils import get_tenant_email_connection, get_platform_sender
 
 def send_newsletter_email(subject, template_name, context, recipient_list, tenant=None):
     """
@@ -28,14 +28,26 @@ def send_newsletter_email(subject, template_name, context, recipient_list, tenan
     text_content = f"Visita nuestra web para ver las novedades: {settings.FRONTEND_URL}"
     
     connection, from_email = get_tenant_email_connection(tenant)
+    reply_to = None
     
+    if not tenant or connection is None:
+        actual_alias = settings.EMAIL_NEWSLETTER
+        from_email = get_platform_sender("Néctar Labs Boletín")
+        reply_to = [actual_alias]
+    else:
+        if not tenant:
+            from_email = settings.EMAIL_NEWSLETTER
+        
     msg = EmailMultiAlternatives(
         subject,
         text_content,
         from_email,
         recipient_list,
-        connection=connection
+        connection=connection,
+        reply_to=reply_to
     )
     msg.attach_alternative(html_content, "text/html")
     return msg.send()
+
+
 

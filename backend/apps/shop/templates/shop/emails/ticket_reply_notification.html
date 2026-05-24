@@ -1,0 +1,24 @@
+{% extends 'shop/emails/base_nectar.html' %}
+
+{% block content %}
+<h2 style="color: #FDFBF7; font-size: 22px; font-weight: 700; line-height: 1.3; margin-top: 0; margin-bottom: 20px; text-align: center;">
+    Nuevo Mensaje en Ticket #{{ ticket.id }}
+</h2>
+
+<p>Hola <strong>{{ name }}</strong>,</p>
+
+<p>Se ha registrado una nueva respuesta en el ticket de soporte: <strong>"{{ ticket.title }}"</strong>.</p>
+
+<div style="background-color: rgba(255, 255, 255, 0.03); border: 1px solid rgba(198, 138, 30, 0.2); padding: 25px; margin: 30px 0; border-radius: 16px;">
+    <div style="font-size: 12px; color: #9CA3AF; margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;">
+        Enviado por: <strong>{{ sender_name }}</strong> el {{ date }}
+    </div>
+    <div style="color: #E5E7EB; line-height: 1.6;">
+        {{ content }}
+    </div>
+</div>
+
+<p>Puedes dar seguimiento o responder a este mensaje directamente iniciando sesión en tu portal de cliente.</p>
+
+<p style="margin-bottom: 0;">Saludos cordiales,<br>Equipo de Soporte • <strong>Néctar Labs</strong></p>
+{% endblock %}

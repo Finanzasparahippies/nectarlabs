@@ -5,8 +5,10 @@ from fpdf import FPDF
 from django.core.files.base import ContentFile
 from django.core.mail import EmailMessage, EmailMultiAlternatives
 from django.conf import settings
+from apps.tenants.utils import get_platform_sender
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
+from django.utils import timezone
 
 class ContractPDF(FPDF):
     def header(self):
@@ -147,7 +149,16 @@ def send_contract_emails(contract):
             })
             dev_text = strip_tags(dev_html)
             
-            email_dev = EmailMultiAlternatives(dev_subject, dev_text, settings.DEFAULT_FROM_EMAIL, [settings.DEFAULT_FROM_EMAIL])
+            from_email = get_platform_sender("Néctar Labs Contrataciones")
+            reply_to = [settings.EMAIL_CONTACT]
+
+            email_dev = EmailMultiAlternatives(
+                subject=dev_subject,
+                body=dev_text,
+                from_email=from_email,
+                to=[settings.EMAIL_HOST_USER],
+                reply_to=reply_to
+            )
             email_dev.attach_alternative(dev_html, "text/html")
             email_dev.send()
 
@@ -159,7 +170,13 @@ def send_contract_emails(contract):
             })
             client_text = strip_tags(client_html)
             
-            email_client = EmailMultiAlternatives(client_subject, client_text, settings.DEFAULT_FROM_EMAIL, [contract.user.email])
+            email_client = EmailMultiAlternatives(
+                subject=client_subject,
+                body=client_text,
+                from_email=from_email,
+                to=[contract.user.email],
+                reply_to=reply_to
+            )
             email_client.attach_alternative(client_html, "text/html")
             email_client.send()
         else:
@@ -172,9 +189,18 @@ def send_contract_emails(contract):
             })
             final_text = strip_tags(final_html)
             
-            emails = [contract.user.email, settings.DEFAULT_FROM_EMAIL]
+            from_email = get_platform_sender("Néctar Labs Contrataciones")
+            reply_to = [settings.EMAIL_CONTACT]
+
+            emails = [contract.user.email, settings.EMAIL_HOST_USER]
             for dest in emails:
-                email = EmailMultiAlternatives(final_subject, final_text, settings.DEFAULT_FROM_EMAIL, [dest])
+                email = EmailMultiAlternatives(
+                    subject=final_subject,
+                    body=final_text,
+                    from_email=from_email,
+                    to=[dest],
+                    reply_to=reply_to
+                )
                 email.attach_alternative(final_html, "text/html")
                 if contract.pdf_file:
                     contract.pdf_file.seek(0)
@@ -182,3 +208,87 @@ def send_contract_emails(contract):
                 email.send()
     except Exception as e:
         logging.error(f"Failed to send contract emails for contract {contract.id}: {e}", exc_info=True)
+
+
+def send_payment_receipt_email(installment):
+    """
+    Sends a billing confirmation/receipt email to the client when a payment installment is paid.
+    Sent from settings.EMAIL_BILLING (facturacion@nectarlabs.dev).
+    """
+    try:
+        user = installment.contract.user
+        recipient_email = user.email
+        name = installment.contract.full_name
+        
+        subject = f"Confirmación de Pago: Mensualidad {installment.installment_number}/6 - Néctar Labs"
+        description = f"Mensualidad {installment.installment_number}/6 para el contrato #{installment.contract.id}"
+        amount = f"{installment.amount:,.2f}"
+        reference = installment.stripe_invoice_id or f"INSTALLMENT-{installment.id}"
+        date_str = timezone.localtime(installment.paid_at if installment.paid_at else timezone.now()).strftime('%d/%m/%Y %H:%M')
+        
+        html_content = render_to_string('shop/emails/payment_receipt.html', {
+            'subject': subject,
+            'name': name,
+            'description': description,
+            'amount': amount,
+            'reference': reference,
+            'date': date_str,
+        })
+        text_content = strip_tags(html_content)
+        
+        email = EmailMultiAlternatives(
+            subject=subject,
+            body=text_content,
+            from_email=get_platform_sender("Néctar Labs Facturación"),
+            to=[recipient_email],
+            reply_to=[settings.EMAIL_BILLING],
+            bcc=[settings.EMAIL_BILLING]
+        )
+        email.attach_alternative(html_content, "text/html")
+        email.send()
+    except Exception as e:
+        logging.error(f"Error sending payment receipt email for installment {installment.id}: {e}", exc_info=True)
+
+
+def send_addon_payment_receipt_email(user, addon, session):
+    """
+    Sends a billing confirmation/receipt email to the client when subscribing to an individual Add-on.
+    Sent from settings.EMAIL_BILLING (facturacion@nectarlabs.dev).
+    """
+    try:
+        recipient_email = user.email
+        name = user.get_full_name() or user.username or "Cliente"
+        
+        subject = f"Confirmación de Pago: Suscripción a Add-on {addon.name} - Néctar Labs"
+        description = f"Suscripción mensual al módulo/Add-on: {addon.name}"
+        
+        # Stripe session amount_total is in cents
+        amount_total = session.get('amount_total', 0)
+        amount = f"{amount_total / 100:,.2f}" if amount_total else f"{addon.monthly_price:,.2f}"
+        
+        reference = session.get('id') or f"ADDON-SUB-{addon.id}"
+        date_str = timezone.now().strftime('%d/%m/%Y %H:%M')
+        
+        html_content = render_to_string('shop/emails/payment_receipt.html', {
+            'subject': subject,
+            'name': name,
+            'description': description,
+            'amount': amount,
+            'reference': reference,
+            'date': date_str,
+        })
+        text_content = strip_tags(html_content)
+        
+        email = EmailMultiAlternatives(
+            subject=subject,
+            body=text_content,
+            from_email=get_platform_sender("Néctar Labs Facturación"),
+            to=[recipient_email],
+            reply_to=[settings.EMAIL_BILLING],
+            bcc=[settings.EMAIL_BILLING]
+        )
+        email.attach_alternative(html_content, "text/html")
+        email.send()
+    except Exception as e:
+        logging.error(f"Error sending addon payment receipt email for addon {addon.id} and user {user.id}: {e}", exc_info=True)
+

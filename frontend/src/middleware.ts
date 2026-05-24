@@ -17,9 +17,12 @@ export function middleware(request: NextRequest) {
 
   // Define system domains to ignore (i.e. Nectar Labs main site)
   const systemDomains = [
+    'localhost',
     'localhost:3000',
     '127.0.0.1:3000',
     'localhost:3002',
+    'nectarlabs.localhost',
+    'www.nectarlabs.localhost',
     'nectarlabs.dev',
     'www.nectarlabs.dev',
     'staging.nectarlabs.dev',
