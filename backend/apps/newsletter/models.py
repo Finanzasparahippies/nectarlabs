@@ -29,6 +29,28 @@ def send_newsletter_email(subject, template_name, context, recipient_list, tenan
     import logging
     logger = logging.getLogger(__name__)
     
+    # 0. Enforce limits if tenant is provided and not using BYO SMTP
+    has_byo_smtp = False
+    if tenant:
+        has_byo_smtp = bool(tenant.custom_smtp_host and tenant.custom_smtp_username and tenant.custom_smtp_password)
+        if not has_byo_smtp:
+            from django.utils import timezone
+            # Reset monthly count if the month has changed
+            today = timezone.now().date()
+            if not tenant.newsletter_last_reset or (tenant.newsletter_last_reset.month != today.month or tenant.newsletter_last_reset.year != today.year):
+                tenant.newsletter_sent_this_month = 0
+                tenant.newsletter_last_reset = today
+                tenant.save(update_fields=['newsletter_sent_this_month', 'newsletter_last_reset'])
+
+            # Determine limit based on plan
+            base_limit = 10000 if tenant.newsletter_plan == 'PREMIUM' else 100
+            total_limit = base_limit + tenant.newsletter_extra_credits
+
+            if tenant.newsletter_sent_this_month + len(recipient_list) > total_limit:
+                raise ValueError(
+                    f"Límite mensual de correos alcanzado. Has enviado {tenant.newsletter_sent_this_month} de {total_limit} correos."
+                )
+
     html_content = render_to_string(f"newsletter/{template_name}.html", context)
     text_content = f"Visita nuestra web para ver las novedades: {settings.FRONTEND_URL}"
     
@@ -105,6 +127,12 @@ def send_newsletter_email(subject, template_name, context, recipient_list, tenan
             msg.send(fail_silently=False)
             
             logger.info(f"Successfully sent newsletter email via {name} to {recipient_list}")
+            
+            # Increment monthly counter for non-BYO SMTP tenants
+            if tenant and not has_byo_smtp:
+                tenant.newsletter_sent_this_month += len(recipient_list)
+                tenant.save(update_fields=['newsletter_sent_this_month'])
+
             return True
             
         except Exception as e:

@@ -4,11 +4,24 @@ from apps.shop.models import Contract
 
 def get_tenant_email_connection(tenant=None):
     """
-    Determina si el tenant tiene plan activo (SES) o gratuito (Brevo)
-    y retorna la conexión SMTP de Django correspondiente y el remitente.
+    Determina si el tenant tiene plan activo (SES) o gratuito (Brevo),
+    o si tiene su propio SMTP configurado (BYO SMTP), y retorna la conexión correspondiente.
     """
     if not tenant:
         return None, settings.DEFAULT_FROM_EMAIL
+
+    # 1. Si el tenant tiene configurado su propio SMTP personalizado (BYO SMTP)
+    if tenant.custom_smtp_host and tenant.custom_smtp_username and tenant.custom_smtp_password:
+        from_email = tenant.custom_smtp_from_email or tenant.custom_smtp_username
+        connection = get_connection(
+            backend='django.core.mail.backends.smtp.EmailBackend',
+            host=tenant.custom_smtp_host,
+            port=tenant.custom_smtp_port or 587,
+            username=tenant.custom_smtp_username,
+            password=tenant.custom_smtp_password,
+            use_tls=tenant.custom_smtp_use_tls
+        )
+        return connection, from_email
 
     # Verificar si el owner tiene contrato firmado y activo con algún plan
     is_paid = Contract.objects.filter(

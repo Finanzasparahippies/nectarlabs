@@ -39,6 +39,20 @@ class SubscribeView(APIView):
             return Response({"error": "No se pudo identificar un inquilino (tenant) válido en la petición."}, status=status.HTTP_400_BAD_REQUEST)
 
         tenant_name = tenant.name if tenant else "Néctar Labs"
+        
+        # Enforce contact limit for TRIAL plan if tenant is active and not using BYO SMTP
+        if tenant:
+            has_byo_smtp = bool(tenant.custom_smtp_host and tenant.custom_smtp_username and tenant.custom_smtp_password)
+            if not has_byo_smtp and getattr(tenant, 'newsletter_plan', 'TRIAL') == 'TRIAL':
+                exists = Subscriber.objects.filter(email=email, tenant=tenant).exists()
+                if not exists:
+                    current_contacts = Subscriber.objects.filter(tenant=tenant, is_active=True).count()
+                    if current_contacts >= 1000:
+                        return Response(
+                            {"error": "El límite de suscriptores para el plan de prueba ha sido alcanzado. Por favor, actualiza tu plan para recibir más registros."},
+                            status=status.HTTP_400_BAD_REQUEST
+                        )
+
         subscriber, created = Subscriber.objects.get_or_create(email=email, tenant=tenant)
         if not created:
             if subscriber.is_active:

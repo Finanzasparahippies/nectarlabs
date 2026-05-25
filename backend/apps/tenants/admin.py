@@ -17,6 +17,13 @@ class TenantAdmin(admin.ModelAdmin):
         ('Branding & Customization', {
             'fields': ('theme_color', 'logo_url', 'welcome_message', 'require_customer_info')
         }),
+        ('Newsletter Billing & Limits', {
+            'fields': ('newsletter_plan', 'newsletter_extra_credits', 'newsletter_sent_this_month', 'newsletter_last_reset')
+        }),
+        ('Custom SMTP Configuration (BYO SMTP)', {
+            'fields': ('custom_smtp_host', 'custom_smtp_port', 'custom_smtp_username', 'custom_smtp_password', 'custom_smtp_use_tls', 'custom_smtp_from_email'),
+            'classes': ('collapse',),
+        }),
         ('Timestamps', {
             'fields': ('created_at', 'updated_at'),
             'classes': ('collapse',),

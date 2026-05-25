@@ -1,6 +1,7 @@
 import uuid
 from django.db import models
 from django.conf import settings
+from django.utils import timezone
 
 class Tenant(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -43,6 +44,31 @@ class Tenant(models.Model):
     card_bg_color = models.CharField(max_length=7, default="#050a06")   # Cards / Modals Background
     text_color = models.CharField(max_length=7, default="#FFFFFF")      # Main Text color
     border_color = models.CharField(max_length=7, default="#151F18")    # Borders / Dividers color
+    
+    # Newsletter Billing & Limits Configuration
+    NEWSLETTER_PLANS = [
+        ('TRIAL', 'Periodo de prueba'),
+        ('PREMIUM', 'Plan Premium ($79)'),
+    ]
+    newsletter_plan = models.CharField(
+        max_length=20, 
+        choices=NEWSLETTER_PLANS, 
+        default='TRIAL'
+    )
+    newsletter_extra_credits = models.PositiveIntegerField(
+        default=0, 
+        help_text="Créditos extra de correo contratados (múltiplos de 10,000)"
+    )
+    newsletter_sent_this_month = models.PositiveIntegerField(default=0)
+    newsletter_last_reset = models.DateField(default=timezone.now)
+
+    # Bring Your Own SMTP (BYO SMTP)
+    custom_smtp_host = models.CharField(max_length=255, blank=True, null=True)
+    custom_smtp_port = models.IntegerField(blank=True, null=True)
+    custom_smtp_username = models.CharField(max_length=255, blank=True, null=True)
+    custom_smtp_password = models.CharField(max_length=255, blank=True, null=True)
+    custom_smtp_use_tls = models.BooleanField(default=True)
+    custom_smtp_from_email = models.EmailField(blank=True, null=True)
     
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
