@@ -33,6 +33,7 @@ function OnboardingContent() {
     project_idea: '',
     brand_design_tier: 'NONE',
     brand_design_price: 0,
+    payment_day: 'MONTHLY_1ST',
   });
 
   const selectedPlanObj = plans.find(p => p.id.toString() === formData.plan.toString());
@@ -135,6 +136,21 @@ function OnboardingContent() {
                     <option key={p.id} value={p.id}>{p.name} - ${parseFloat(p.price).toLocaleString()} MXN</option>
                   ))}
                 </select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest opacity-40">Esquema y Día de Pago Preferido</label>
+                <select
+                  name="payment_day"
+                  value={formData.payment_day}
+                  onChange={handleInputChange}
+                  className="w-full bg-card-bg border-2 border-card-border rounded-2xl p-6 font-bold focus:border-nectar-gold outline-none appearance-none"
+                >
+                  <option value="MONTHLY_1ST">Mensual - Día 1ero de cada mes</option>
+                  <option value="FORTNIGHTLY_1ST_15TH">Quincenal - Días 1 y 15 de cada mes</option>
+                  <option value="WEEKLY_MONDAY">Semanal - Lunes de cada semana</option>
+                </select>
+                <p className="text-[9px] text-foreground/40 mt-1 uppercase font-bold">Elige el esquema de abonos periódicos que mejor se adapte al flujo de tu negocio.</p>
               </div>
 
               <div className="space-y-2">
@@ -296,6 +312,14 @@ function OnboardingContent() {
                     <div className="p-4 border-2 border-nectar-gold bg-nectar-gold/5 rounded-xl font-black text-nectar-gold flex justify-between items-center">
                       <span>Plan de Ingeniería: {selectedPlanObj ? selectedPlanObj.name : 'No seleccionado'}</span>
                       <span>${selectedPlanObj ? parseFloat(selectedPlanObj.price).toLocaleString() : '0.00'} MXN / Mes</span>
+                    </div>
+                    <div className="p-4 border-2 border-foreground/20 bg-background/50 rounded-xl font-bold flex justify-between items-center text-xs">
+                      <span>Frecuencia y Día de Pago:</span>
+                      <span className="text-nectar-gold">
+                        {formData.payment_day === 'WEEKLY_MONDAY' ? 'Abonos semanales (Lunes de cada semana)' :
+                         formData.payment_day === 'FORTNIGHTLY_1ST_15TH' ? 'Abonos quincenales (Días 1 y 15 de cada mes)' :
+                         'Abonos mensuales (Día 1ero de cada mes)'}
+                      </span>
                     </div>
                     {formData.brand_design_tier !== 'NONE' && (
                       <div className="p-4 border-2 border-foreground/20 bg-foreground/5 rounded-xl font-bold flex justify-between items-center text-xs">

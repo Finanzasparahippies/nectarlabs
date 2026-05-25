@@ -73,14 +73,20 @@ export default function DashboardPage() {
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [installments, setInstallments] = useState<any[]>([]);
   const [logs, setLogs] = useState<any[]>([]);
+  const [plans, setPlans] = useState<any[]>([]);
   const [isStaff, setIsStaff] = useState(false);
   const [userRole, setUserRole] = useState('');
-  const [activeTab, setActiveTab] = useState<'overview' | 'business'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'business' | 'hire-plan'>('overview');
   const [businessStats, setBusinessStats] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [updatingContractId, setUpdatingContractId] = useState<number | null>(null);
   const [selectedActiveContractId, setSelectedActiveContractId] = useState<number | null>(null);
   const router = useRouter();
+  
+  const isCEO = userRole === 'ADMIN';
+  const isDeveloper = userRole === 'DEVELOPER';
+  const isDesigner = userRole === 'DESIGNER';
+  const isClient = userRole === 'BUSINESS' || userRole === 'CUSTOMER' || userRole === '';
 
   // Custom states for portals and notifications
   const [tenants, setTenants] = useState<any[]>([]);
@@ -214,21 +220,23 @@ export default function DashboardPage() {
       const staff = localStorage.getItem('is_staff') === 'true';
       const role = localStorage.getItem('user_role') || '';
       setUserRole(role);
-      setIsStaff((staff || role === 'ADMIN' || role === 'BUSINESS') && role !== 'DESIGNER');
+      setIsStaff(staff || role === 'ADMIN' || role === 'DEVELOPER');
     };
     
     const loadData = async () => {
       try {
         const staff = localStorage.getItem('is_staff') === 'true';
         const role = localStorage.getItem('user_role') || '';
-        const isActuallyStaff = (staff || role === 'ADMIN' || role === 'BUSINESS') && role !== 'DESIGNER';
-        const [projectsData, ticketsData, logsData, contractsData, installmentsData, tenantsData] = await Promise.all([
+        const isCEO = role === 'ADMIN' || staff;
+        
+        const [projectsData, ticketsData, logsData, contractsData, installmentsData, tenantsData, plansData] = await Promise.all([
           fetcher('/projects/'),
           fetcher('/tickets/'),
           fetcher('/logs/'),
           fetcher('/contracts/'),
           fetcher('/installments/'),
-          fetcher('/tenants/')
+          fetcher('/tenants/'),
+          fetcher('/plans/')
         ]);
         
         setProjects(projectsData);
@@ -237,8 +245,9 @@ export default function DashboardPage() {
         setContracts(contractsData);
         setInstallments(installmentsData);
         setTenants(tenantsData);
+        setPlans(plansData);
 
-        if (isActuallyStaff) {
+        if (isCEO) {
           const statsData = await fetcher('/dashboard/business-stats/');
           setBusinessStats(statsData);
         }
@@ -394,7 +403,8 @@ export default function DashboardPage() {
               Dashboard
             </button>
 
-            {!isStaff && contracts.some(c => c.is_fully_signed) && (
+            {/* Clients Only: payment commitment shortcut and hire plan tab */}
+            {isClient && contracts.some(c => c.is_fully_signed) && (
               <button
                 onClick={() => {
                   setActiveTab('overview');
@@ -410,7 +420,20 @@ export default function DashboardPage() {
               </button>
             )}
 
-            {isStaff && userRole !== 'DESIGNER' && (
+            {isClient && (
+              <button
+                onClick={() => setActiveTab('hire-plan')}
+                className={`flex items-center gap-4 px-6 py-4 w-full text-left rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all ${
+                  activeTab === 'hire-plan' ? 'bg-nectar-gold/10 text-nectar-gold' : 'hover:bg-foreground/5 text-foreground opacity-60 hover:opacity-100'
+                }`}
+              >
+                <div className={`w-2 h-2 rounded-full ${activeTab === 'hire-plan' ? 'bg-nectar-gold' : 'bg-foreground/20'}`}></div>
+                Contratar Plan
+              </button>
+            )}
+
+            {/* CEO Only: Control Negocio, Rendimiento, Configuración Soporte */}
+            {isCEO && (
               <button
                 onClick={() => setActiveTab('business')}
                 className={`flex items-center gap-4 px-6 py-4 w-full text-left rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all ${
@@ -422,37 +445,35 @@ export default function DashboardPage() {
               </button>
             )}
 
-            {isStaff && userRole !== 'DESIGNER' && (
+            {isCEO && (
               <Link href="/dashboard/performance" className="flex items-center gap-4 px-6 py-4 hover:bg-foreground/5 text-foreground opacity-60 hover:opacity-100 transition-all rounded-2xl font-black uppercase tracking-widest text-[10px]">
                 <div className="w-2 h-2 bg-foreground/20 rounded-full"></div>
                 Rendimiento
               </Link>
             )}
 
-            <Link href="/tickets" className="flex items-center gap-4 px-6 py-4 hover:bg-foreground/5 text-foreground opacity-60 hover:opacity-100 transition-all rounded-2xl font-black uppercase tracking-widest text-[10px]">
-              <div className="w-2 h-2 bg-foreground/20 rounded-full"></div>
-              {isStaff ? 'Gestión Tickets' : 'Soporte'}
-            </Link>
-            <Link href="/projects" className="flex items-center gap-4 px-6 py-4 hover:bg-foreground/5 text-foreground opacity-60 hover:opacity-100 transition-all rounded-2xl font-black uppercase tracking-widest text-[10px]">
-              <div className="w-2 h-2 bg-foreground/20 rounded-full"></div>
-              Proyectos
-            </Link>
-            <Link href="/dashboard/addons" className="flex items-center gap-4 px-6 py-4 hover:bg-foreground/5 text-foreground opacity-60 hover:opacity-100 transition-all rounded-2xl font-black uppercase tracking-widest text-[10px]">
-              <div className="w-2 h-2 bg-foreground/20 rounded-full"></div>
-              Catálogo Add-ons
-            </Link>
-            {isStaff && userRole !== 'DESIGNER' && (
+            {isCEO && (
               <Link href="/dashboard/support-settings" className="flex items-center gap-4 px-6 py-4 hover:bg-foreground/5 text-foreground opacity-60 hover:opacity-100 transition-all rounded-2xl font-black uppercase tracking-widest text-[10px]">
                 <div className="w-2 h-2 bg-foreground/20 rounded-full"></div>
                 Configuración Soporte
               </Link>
             )}
-            {!isStaff && (
-              <Link href="/onboarding" className="flex items-center gap-4 px-6 py-4 hover:bg-foreground/5 text-foreground opacity-60 hover:opacity-100 transition-all rounded-2xl font-black uppercase tracking-widest text-[10px]">
-                <div className="w-2 h-2 bg-foreground/20 rounded-full"></div>
-                Contratar Plan
-              </Link>
-            )}
+
+            {/* General links customized by role */}
+            <Link href="/tickets" className="flex items-center gap-4 px-6 py-4 hover:bg-foreground/5 text-foreground opacity-60 hover:opacity-100 transition-all rounded-2xl font-black uppercase tracking-widest text-[10px]">
+              <div className="w-2 h-2 bg-foreground/20 rounded-full"></div>
+              {isStaff ? 'Gestión Tickets' : 'Soporte'}
+            </Link>
+
+            <Link href="/projects" className="flex items-center gap-4 px-6 py-4 hover:bg-foreground/5 text-foreground opacity-60 hover:opacity-100 transition-all rounded-2xl font-black uppercase tracking-widest text-[10px]">
+              <div className="w-2 h-2 bg-foreground/20 rounded-full"></div>
+              {isStaff ? 'Proyectos Activos' : 'Mis Proyectos'}
+            </Link>
+
+            <Link href="/dashboard/addons" className="flex items-center gap-4 px-6 py-4 hover:bg-foreground/5 text-foreground opacity-60 hover:opacity-100 transition-all rounded-2xl font-black uppercase tracking-widest text-[10px]">
+              <div className="w-2 h-2 bg-foreground/20 rounded-full"></div>
+              Catálogo Add-ons
+            </Link>
           </nav>
         </div>
 
@@ -468,15 +489,73 @@ export default function DashboardPage() {
       <main className="flex-1 p-8 md:p-12 lg:p-16 overflow-y-auto">
         <header className="mb-16">
           <h1 className="text-4xl md:text-6xl font-black tracking-tighter mb-2">
-            {isStaff ? (activeTab === 'business' ? 'Control de Negocio' : 'Control Maestro') : 'Centro de Control'}
+            {isCEO ? (activeTab === 'business' ? 'Control de Negocio' : 'Consola del CEO') :
+             isDeveloper ? 'Consola de Ingeniería' :
+             isDesigner ? 'Centro de Diseño' :
+             activeTab === 'hire-plan' ? 'Escala tu Ecosistema' : 'Centro de Control'}
           </h1>
           <p className="text-[10px] font-black uppercase tracking-[0.5em] text-nectar-gold opacity-80">
-            {isStaff ? (activeTab === 'business' ? 'Consola Financiera y de Infraestructura' : 'Panel de Ingeniería y Operaciones') : 'Workspace / Cliente Principal'}
+            {isCEO ? (activeTab === 'business' ? 'Consola Financiera y de Infraestructura' : 'Panel de Operaciones Néctar Labs') :
+             isDeveloper ? 'Workspace de Desarrollo y Soporte' :
+             isDesigner ? 'Activos y Proyectos Creativos' :
+             activeTab === 'hire-plan' ? 'Elige tu Plan de Ingeniería Dedicado' : 'Workspace / Cliente Principal'}
           </p>
         </header>
 
-        {activeTab === 'business' && isStaff ? (
+        {activeTab === 'business' && isCEO ? (
           <BusinessCommander stats={businessStats} installments={installments} setInstallments={setInstallments} />
+        ) : activeTab === 'hire-plan' && isClient ? (
+          <div className="space-y-12 animate-fadeIn">
+            <section className="p-10 rounded-[3rem] bg-card-bg border border-card-border shadow-xl relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-nectar-gold/5 rounded-full blur-3xl -mr-20 -mt-20"></div>
+              <div className="relative z-10 max-w-2xl">
+                <span className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold text-[8px] font-black uppercase tracking-widest rounded-full">Planes de Ingeniería Néctar Labs</span>
+                <h2 className="text-4xl font-black tracking-tighter mt-4 mb-2">Escala tu Ecosistema Tecnológico</h2>
+                <p className="text-xs text-foreground/60 uppercase tracking-wider mb-8">
+                  Elige un plan de inversión de ingeniería mensual o agrega complementos. Todos los planes incluyen infraestructura en la nube dedicada.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative z-10">
+                {plans.map((plan) => (
+                  <div key={plan.id} className="p-8 rounded-[2rem] bg-background/50 border border-card-border flex flex-col justify-between hover:border-nectar-gold transition-all duration-300 group animate-in fade-in zoom-in-95">
+                    <div>
+                      <h3 className="text-2xl font-black tracking-tight mb-2">{plan.name}</h3>
+                      <div className="text-3xl font-black text-nectar-gold mb-6 font-mono">
+                        ${parseFloat(plan.price).toLocaleString()} <span className="text-[10px] text-foreground/50 uppercase tracking-widest">MXN / Mes</span>
+                      </div>
+                      
+                      <ul className="space-y-3 mb-8 text-xs text-foreground/80">
+                        <li className="flex items-center gap-2">
+                          <span className="text-nectar-gold font-bold">✓</span>
+                          <strong>{plan.hours} Horas</strong> de ingeniería dedicadas
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <span className="text-nectar-gold font-bold">✓</span>
+                          Docker Containers
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <span className="text-nectar-gold font-bold">✓</span>
+                          Seguridad SSL Incluida
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <span className="text-nectar-gold font-bold">✓</span>
+                          Soporte Multi-tenant
+                        </li>
+                      </ul>
+                    </div>
+
+                    <Link
+                      href={`/onboarding?plan=${plan.id}`}
+                      className="w-full py-4 bg-nectar-gold hover:bg-nectar-gold/90 text-background text-center rounded-xl text-[10px] font-black uppercase tracking-widest transition-all hover:scale-[1.02] shadow-lg shadow-nectar-gold/10"
+                    >
+                      Contratar Plan
+                    </Link>
+                  </div>
+                ))}
+              </div>
+            </section>
+          </div>
         ) : (
           <div className="space-y-16 animate-fadeIn">
             {/* Developer Specific Section: Pending Contracts */}
@@ -505,7 +584,7 @@ export default function DashboardPage() {
             )}
 
             {/* Developer Specific Section: Ecosystem Contracts */}
-            {isStaff && (
+            {isCEO && (
               <section className="mb-16 p-8 md:p-10 rounded-[3rem] bg-card-bg border border-card-border shadow-xl relative">
                 <div className="flex justify-between items-center mb-8">
                   <div>

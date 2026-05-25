@@ -9,6 +9,7 @@ class User(AbstractUser):
         ANALYST = 'ANALYST', _('Data Analyst')
         CUSTOMER = 'CUSTOMER', _('Customer')
         DESIGNER = 'DESIGNER', _('Designer')
+        DEVELOPER = 'DEVELOPER', _('Developer')
 
     email = models.EmailField(_('email address'), unique=True)
     role = models.CharField(

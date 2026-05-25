@@ -52,7 +52,8 @@ def generate_contract_pdf(contract):
         pdf.cell(0, 10, '2. OBJETO Y PLAN SELECCIONADO', new_x="LMARGIN", new_y="NEXT")
         pdf.set_font('helvetica', '', 10)
         if contract.plan:
-            pdf.multi_cell(0, 6, f'EL CLIENTE ha seleccionado el plan {contract.plan.name}, el cual incluye un máximo de {contract.plan.hours} horas mensuales de desarrollo e ingeniería.')
+            pay_day_label = contract.get_payment_day_display()
+            pdf.multi_cell(0, 6, f'EL CLIENTE ha seleccionado el plan {contract.plan.name}, el cual incluye un máximo de {contract.plan.hours} horas mensuales de desarrollo e ingeniería. El esquema de abonos periódicos elegido es: {pay_day_label}.')
         else:
             pdf.multi_cell(0, 6, 'EL CLIENTE ha contratado la integración y licenciamiento de módulos y Add-ons del ecosistema Néctar Labs sin un plan de desarrollo de 6 meses.')
         pdf.ln(5)

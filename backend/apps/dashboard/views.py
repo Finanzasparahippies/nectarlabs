@@ -23,16 +23,16 @@ class ProjectViewSet(viewsets.ModelViewSet):
         user = self.request.user
         if user.role == 'DESIGNER':
             return Project.objects.filter(designer=user)
-        if user.is_staff:
+        if user.is_staff or user.role in ['ADMIN', 'DEVELOPER']:
             return Project.objects.all()
         return Project.objects.filter(client=user)
 
     def check_permissions(self, request):
         super().check_permissions(request)
         user = request.user
-        is_staff_or_designer = user.is_staff or user.role in ['ADMIN', 'BUSINESS', 'DESIGNER']
+        is_staff_or_dev_or_des = user.is_staff or user.role in ['ADMIN', 'DEVELOPER', 'DESIGNER']
         
-        if self.action in ['create', 'update', 'partial_update', 'destroy'] and not is_staff_or_designer:
+        if self.action in ['create', 'update', 'partial_update', 'destroy'] and not is_staff_or_dev_or_des:
             self.permission_denied(request, message="No tienes permisos para crear o modificar proyectos.")
 
     def perform_create(self, serializer):
@@ -73,7 +73,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'])
     def start_activity(self, request, pk=None):
         project = self.get_object()
-        if not (request.user.is_staff or request.user.role == 'DESIGNER'):
+        if not (request.user.is_staff or request.user.role in ['ADMIN', 'DEVELOPER', 'DESIGNER']):
             return Response({"error": "No tienes permiso para registrar actividades."}, status=status.HTTP_403_FORBIDDEN)
         
         if project.current_activity_start:
@@ -89,7 +89,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'])
     def stop_activity(self, request, pk=None):
         project = self.get_object()
-        if not (request.user.is_staff or request.user.role == 'DESIGNER'):
+        if not (request.user.is_staff or request.user.role in ['ADMIN', 'DEVELOPER', 'DESIGNER']):
             return Response({"error": "No tienes permiso para registrar actividades."}, status=status.HTTP_403_FORBIDDEN)
         
         if not project.current_activity_start:
@@ -121,7 +121,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'])
     def deliver_advance(self, request, pk=None):
         project = self.get_object()
-        if not (request.user.is_staff or request.user.role == 'DESIGNER'):
+        if not (request.user.is_staff or request.user.role in ['ADMIN', 'DEVELOPER', 'DESIGNER']):
             return Response({"error": "No tienes permiso para registrar avances."}, status=status.HTTP_403_FORBIDDEN)
         
         milestone = request.data.get('milestone')

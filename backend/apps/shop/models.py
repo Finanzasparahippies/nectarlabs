@@ -62,6 +62,17 @@ class Contract(models.Model):
         default=PaymentMethod.SPEI
     )
 
+    class PaymentDay(models.TextChoices):
+        WEEKLY_MONDAY = 'WEEKLY_MONDAY', 'Lunes de cada semana (Semanal)'
+        FORTNIGHTLY_1ST_15TH = 'FORTNIGHTLY_1ST_15TH', 'Días 1 y 15 de cada mes (Quincenal)'
+        MONTHLY_1ST = 'MONTHLY_1ST', 'Día 1ero de cada mes (Mensual)'
+
+    payment_day = models.CharField(
+        max_length=30,
+        choices=PaymentDay.choices,
+        default=PaymentDay.MONTHLY_1ST
+    )
+
     pdf_file = models.FileField(upload_to=contract_pdf_path, storage=R2ContractStorage(), blank=True, null=True)
     ip_address = models.GenericIPAddressField(blank=True, null=True)
     is_active = models.BooleanField(default=True)
