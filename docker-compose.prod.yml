@@ -29,33 +29,9 @@ services:
     networks:
       - prod_network
 
-  nginx:
-    image: nginx:alpine
-    #    ports:
-    #      - "8081:80"
-    #      - "8443:443"
-    volumes:
-      - ./docker/nginx/production.conf:/etc/nginx/conf.d/default.conf:ro
-      - static_volume:/app/staticfiles
-      - media_volume:/app/media
-      - /etc/letsencrypt:/etc/letsencrypt:ro
-      - certbot-www:/var/www/certbot
-    depends_on:
-      - backend
-      - frontend
-    restart: always
-
-  certbot:
-    image: certbot/certbot
-    volumes:
-      - certbot-conf:/etc/letsencrypt
-      - certbot-www:/var/www/certbot
-
 volumes:
   static_volume:
   media_volume:
-  certbot-conf:
-  certbot-www:
 
 networks:
   prod_network:

@@ -56,6 +56,8 @@ class TicketViewSet(viewsets.ModelViewSet):
                 logging.getLogger(__name__).error(f"Failed to send ticket reply emails: {e}", exc_info=True)
                 
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+        import logging
+        logging.getLogger(__name__).warning(f"MessageSerializer validation failed: {serializer.errors}")
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=True, methods=['post'])
@@ -150,6 +152,8 @@ class SupportChatViewSet(viewsets.ModelViewSet):
                     logging.getLogger(__name__).error(f"[AI] Unexpected error in add_message: {e}")
 
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+        import logging
+        logging.getLogger(__name__).warning(f"SupportChatMessageSerializer validation failed: {serializer.errors}")
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 

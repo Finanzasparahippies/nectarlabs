@@ -14,6 +14,9 @@ class SubscribeView(APIView):
     addon_slug = 'newsletter-campaigner'
 
     def post(self, request, *args, **kwargs):
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.warning(f"SubscribeView POST request: User={request.user}, Auth={request.user.is_authenticated if request.user else False}, Headers={dict(request.headers)}")
         email = request.data.get('email')
         if not email:
             return Response({"error": "El correo electrónico es obligatorio."}, status=status.HTTP_400_BAD_REQUEST)
