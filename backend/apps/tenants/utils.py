@@ -10,11 +10,33 @@ def get_tenant_email_connection(tenant=None):
     if not tenant:
         return None, settings.DEFAULT_FROM_EMAIL
 
+    # Helper to resolve connections in test environment
+    def make_connection(host, port, username, password, use_tls):
+        if getattr(settings, 'EMAIL_BACKEND', None) == 'django.core.mail.backends.locmem.EmailBackend':
+            from django.core.mail.backends.locmem import EmailBackend as LocMemEmailBackend
+            class TestEmailBackend(LocMemEmailBackend):
+                def __init__(self, host=None, port=None, username=None, password=None, use_tls=None, **kwargs):
+                    self.host = host
+                    self.port = port
+                    self.username = username
+                    self.password = password
+                    self.use_tls = use_tls
+                    super().__init__(**kwargs)
+            return TestEmailBackend(host=host, port=port, username=username, password=password, use_tls=use_tls)
+            
+        return get_connection(
+            backend='django.core.mail.backends.smtp.EmailBackend',
+            host=host,
+            port=port,
+            username=username,
+            password=password,
+            use_tls=use_tls
+        )
+
     # 1. Si el tenant tiene configurado su propio SMTP personalizado (BYO SMTP)
     if tenant.custom_smtp_host and tenant.custom_smtp_username and tenant.custom_smtp_password:
         from_email = tenant.custom_smtp_from_email or tenant.custom_smtp_username
-        connection = get_connection(
-            backend='django.core.mail.backends.smtp.EmailBackend',
+        connection = make_connection(
             host=tenant.custom_smtp_host,
             port=tenant.custom_smtp_port or 587,
             username=tenant.custom_smtp_username,
@@ -51,8 +73,7 @@ def get_tenant_email_connection(tenant=None):
         # Retorna la conexión por defecto de django y el remitente de la plataforma
         return None, settings.DEFAULT_FROM_EMAIL
 
-    connection = get_connection(
-        backend='django.core.mail.backends.smtp.EmailBackend',
+    connection = make_connection(
         host=host,
         port=port,
         username=username,

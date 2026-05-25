@@ -126,13 +126,6 @@ def guest_auth(request):
     email = request.data.get('email')
     name = request.data.get('name', '').strip()
     
-    if not name:
-        return Response({'error': 'El nombre es obligatorio para iniciar sesión de soporte.'}, status=status.HTTP_400_BAD_REQUEST)
-        
-    if not email:
-        # Generate a unique guest email dynamically
-        email = f"guest_{uuid.uuid4().hex[:8]}@nectarlabs.dev"
-        
     tenant = None
     if tenant_id:
         try:
@@ -143,6 +136,19 @@ def guest_auth(request):
         if not tenant:
             return Response({'error': 'Tenant no encontrado o inactivo.'}, status=status.HTTP_404_NOT_FOUND)
         
+    user_exists = User.objects.filter(email=email).exists() if email else False
+
+    require_name = True
+    if tenant:
+        require_name = tenant.require_customer_info
+
+    if require_name and not user_exists and not name:
+        return Response({'error': 'name is required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+    if not email:
+        # Generate a unique guest email dynamically
+        email = f"guest_{uuid.uuid4().hex[:8]}@nectarlabs.dev"
+        
     # Get or create User associated with this tenant
     # Since username is unique, we slugify or use email as username
     user = User.objects.filter(email=email).first()
@@ -150,6 +156,8 @@ def guest_auth(request):
     if user:
         # Always update tenant context for CUSTOMER users to match current portal (can be None)
         if user.role == User.Role.CUSTOMER and user.tenant != tenant:
+            if user.tenant is not None:
+                return Response({'error': 'Unauthorized access'}, status=status.HTTP_403_FORBIDDEN)
             user.tenant = tenant
             user.save()
     else:
@@ -181,7 +189,7 @@ def guest_auth(request):
     is_customer = user.role == User.Role.CUSTOMER and user.tenant == tenant
     
     if not (is_staff or is_owner or is_customer):
-        return Response({'error': 'Acceso no autorizado para este contexto.'}, status=status.HTTP_403_FORBIDDEN)
+        return Response({'error': 'Unauthorized access'}, status=status.HTTP_403_FORBIDDEN)
         
     # Generate simple JWT tokens
     refresh = RefreshToken.for_user(user)

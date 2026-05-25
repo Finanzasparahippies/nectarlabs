@@ -1,6 +1,7 @@
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from apps.tenants.permissions import HasAddOnPermission
 from .models import Ticket, Message, SupportChat, SupportChatMessage
 from .serializers import (
     TicketSerializer, MessageSerializer, 
@@ -72,7 +73,7 @@ class TicketViewSet(viewsets.ModelViewSet):
 
 class SupportChatViewSet(viewsets.ModelViewSet):
     serializer_class = SupportChatSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, HasAddOnPermission]
     addon_slug = 'live-chat'
 
 
