@@ -15,7 +15,7 @@ backend/staticfiles/
 .env*
 !.env.example
 *.save
-
+.env.local
 
 # Next.js
 .next/

@@ -142,10 +142,10 @@ case $COMMAND in
             docker compose logs "$@"
         fi
         ;;
-    makemigrations)
+    makemigrations|makemigrations-dev)
         run_django_cmd_dev makemigrations "$@"
         ;;
-    migrate)
+    migrate|migrate-dev)
         run_django_cmd_dev migrate "$@"
         ;;
     collectstatic)
@@ -156,13 +156,13 @@ case $COMMAND in
             docker compose -f docker-compose.prod.yml run --rm backend python manage.py collectstatic --no-input "$@"
         fi
         ;;
-    createsuperuser)
+    createsuperuser|createsuperuser-dev)
         run_django_cmd_dev createsuperuser "$@"
         ;;
-    shell)
+    shell|shell-dev)
         run_django_cmd_dev shell "$@"
         ;;
-    test)
+    test|test-dev)
         run_django_cmd_dev test "$@"
         ;;
     typecheck)
