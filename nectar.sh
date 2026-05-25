@@ -26,6 +26,15 @@ run_django_cmd_staging() {
     fi
 }
 
+# Helper function to run Django commands in prod (using exec if running, run --rm if not)
+run_django_cmd_prod() {
+    if docker compose -f docker-compose.prod.yml ps --services --filter "status=running" | grep -q "^backend$"; then
+        docker compose -f docker-compose.prod.yml exec backend python manage.py "$@"
+    else
+        docker compose -f docker-compose.prod.yml run --rm backend python manage.py "$@"
+    fi
+}
+
 show_help() {
     echo "Nectar Labs CLI"
     echo ""
@@ -47,6 +56,10 @@ show_help() {
     echo "  build                   - Build production images"
     echo "  up-prod                 - Start production environment"
     echo "  down-prod               - Stop production environment"
+    echo "  makemigrations-prod     - Generate database migrations (Prod)"
+    echo "  migrate-prod            - Run database migrations (Prod)"
+    echo "  createsuperuser-prod    - Create admin user (Prod)"
+    echo "  shell-prod              - Open backend shell (Prod)"
     echo "  collectstatic           - Run collectstatic in backend (Prod)"
     echo "  certbot                 - Request SSL certificate (Prod)"
     echo "  up-staging              - Start staging environment"
@@ -81,6 +94,18 @@ case $COMMAND in
     down-prod)
         echo "Stopping Production Environment..."
         docker compose -f docker-compose.prod.yml down "$@"
+        ;;
+    makemigrations-prod)
+        run_django_cmd_prod makemigrations "$@"
+        ;;
+    migrate-prod)
+        run_django_cmd_prod migrate "$@"
+        ;;
+    createsuperuser-prod)
+        run_django_cmd_prod createsuperuser "$@"
+        ;;
+    shell-prod)
+        run_django_cmd_prod shell "$@"
         ;;
     up-staging)
         echo "Starting Nectar Labs Staging Environment..."
