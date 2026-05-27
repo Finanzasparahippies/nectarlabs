@@ -5,9 +5,9 @@ from rest_framework.response import Response
 from django.db.models import Sum
 from django.utils import timezone
 
-from .models import Project, TimeLog, FAQ, ServerCost, BusinessExpense, ProjectAdvance
+from .models import Project, TimeLog, FAQ, ServerCost, BusinessExpense, ProjectAdvance, ProjectQuote
 from apps.shop.models import Contract, Order
-from .serializers import ProjectSerializer, TimeLogSerializer, FAQSerializer
+from .serializers import ProjectSerializer, TimeLogSerializer, FAQSerializer, ProjectQuoteSerializer
 
 class FAQViewSet(viewsets.ReadOnlyModelViewSet):
     # (FAQ code remains unchanged)
@@ -338,4 +338,90 @@ class BusinessStatsView(APIView):
             "server_billing": server_billing,
             "monthly_trend": monthly_trend
         })
+
+class ProjectQuoteViewSet(viewsets.ModelViewSet):
+    serializer_class = ProjectQuoteSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_staff or user.role == 'ADMIN':
+            return ProjectQuote.objects.all().order_by('-created_at')
+        return ProjectQuote.objects.filter(client=user).order_by('-created_at')
+
+    def check_permissions(self, request):
+        super().check_permissions(request)
+        user = request.user
+        is_admin_or_staff = user.is_staff or user.role == 'ADMIN'
+        
+        if self.action in ['create', 'update', 'partial_update', 'destroy'] and not is_admin_or_staff:
+            self.permission_denied(request, message="No tienes permisos para gestionar cotizaciones.")
+
+    @action(detail=True, methods=['post'])
+    def regenerate_pdf(self, request, pk=None):
+        quote = self.get_object()
+        from .utils import generate_quote_pdf
+        success = generate_quote_pdf(quote)
+        if success:
+            return Response({'detail': 'PDF regenerado con éxito.', 'pdf_url': quote.pdf_file.url if quote.pdf_file else None})
+        return Response({'error': 'Error al generar el PDF.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @action(detail=True, methods=['post'])
+    def change_status(self, request, pk=None):
+        quote = self.get_object()
+        new_status = request.data.get('status')
+        if new_status not in ProjectQuote.Status.values:
+            return Response({'error': 'Estado no válido.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        quote.status = new_status
+        quote.save(update_fields=['status'])
+
+        # Logical contract generation if APPROVED
+        if new_status == ProjectQuote.Status.APPROVED:
+            from apps.shop.models import Contract
+            if not Contract.objects.filter(project_quote=quote).exists():
+                from django.contrib.auth import get_user_model
+                User = get_user_model()
+                user = quote.client
+                if not user:
+                    user = User.objects.filter(email=quote.client_email).first()
+                if not user:
+                    # Create user account for the client
+                    username = quote.client_email.split('@')[0]
+                    base_username = username
+                    counter = 1
+                    while User.objects.filter(username=username).exists():
+                        username = f"{base_username}{counter}"
+                        counter += 1
+                    user = User.objects.create_user(
+                        email=quote.client_email,
+                        username=username,
+                        password=User.objects.make_random_password(),
+                        role=User.Role.BUSINESS
+                    )
+                
+                if user.role == User.Role.CUSTOMER:
+                    user.role = User.Role.BUSINESS
+                    user.save()
+
+                # Create the contract
+                contract = Contract.objects.create(
+                    user=user,
+                    full_name=quote.client_name,
+                    project_quote=quote,
+                    project_idea=quote.description or f"Desarrollo de proyecto modular: {quote.project_name}",
+                    is_fully_signed=False,  # Needs client signature!
+                    payment_commitment_method='SPEI'
+                )
+
+                # Generate contract PDF and notify client
+                from apps.shop.utils import generate_contract_pdf, send_contract_emails
+                if generate_contract_pdf(contract):
+                    try:
+                        send_contract_emails(contract)
+                    except Exception as email_err:
+                        import logging
+                        logging.getLogger(__name__).error(f"Error sending contract emails: {email_err}", exc_info=True)
+
+        return Response({'detail': f'Estado de cotización actualizado a {new_status}.', 'status': quote.status})
 

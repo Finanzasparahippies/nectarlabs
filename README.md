@@ -38,6 +38,25 @@ La plantilla incluye 4 roles predefinidos:
 
 ---
 
+## ⚡ Implementaciones Nuevas y Flujos de Negocio
+
+### 📦 1. Flujo de "Solo Add-ons"
+Los clientes pueden contratar add-ons individuales (módulos independientes) sin necesidad de firmar un contrato de desarrollo de 6 meses:
+- **Upgrade Automático**: El webhook de Stripe procesa la suscripción, actualiza el rol a `BUSINESS` y registra un contrato básico.
+- **Auto-Aprovisionamiento**: Crea automáticamente el `Tenant` (subdominio) del cliente y genera un ticket de soporte/implementación asignado para que los ingenieros conecten el módulo.
+- **Personalización de Marca**: Habilita la configuración de marca (logotipo, colores, textos y configuración de la IA de asistencia).
+
+### 🎨 2. Cotizador de Proyectos Modulares y Contratos Firmados
+Permite a Néctar Labs cotizar y desarrollar proyectos a la medida basados en módulos personalizados:
+- **Módulo Administrador**: Herramienta en la sección **Control de Negocio** para crear cotizaciones modulares completas con estimación de entrega en semanas y precios ajustables, autogenerando propuestas comerciales en PDF.
+- **Flujo de Firma Digital Doble**: 
+  - Al aprobar una cotización (`APPROVED`), el backend crea una cuenta `BUSINESS` para el cliente y genera un contrato inactivo (`is_fully_signed=False`).
+  - El cliente revisa, completa sus datos fiscales (RFC, Dirección) y firma digitalmente en la pantalla `/contract/sign/[id]`.
+  - El desarrollador (Jesus Saul) valida y firma digitalmente en `/contract/dev-sign/[id]`.
+- **Facturación del Proyecto (50/50)**: Una vez firmado por ambos lados, el sistema aprovisiona el Tenant, el Proyecto (MVP) y genera dos abonos correspondientes al 50% de Anticipo (inmediato) y 50% de Liquidación (contra entrega de semanas estimadas).
+
+---
+
 ## 📈 Escalabilidad y Nuevas Integraciones
 
 ### Añadir un Nuevo Módulo

@@ -8,6 +8,8 @@ import StagingStatus from '../../components/dashboard/StagingStatus';
 import WeeklyLogs from '../../components/dashboard/WeeklyLogs';
 import BusinessCommander from '../../components/dashboard/BusinessCommander';
 import DashboardSidebar from '../../components/DashboardSidebar';
+import Toast from '../../components/ui/Toast';
+import ConfirmModal from '../../components/ui/ConfirmModal';
 
 interface Project {
   id: number;
@@ -130,6 +132,15 @@ export default function DashboardPage() {
   const [currentUser, setCurrentUser] = useState<any | null>(null);
   const [contractFilter, setContractFilter] = useState<'all' | 'nectar' | 'custom' | 'addons_only'>('all');
 
+  // Premium custom notification & confirmation dialog states
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'warning' | 'info' } | null>(null);
+  const [confirmDlg, setConfirmDlg] = useState<{ title: string; message: string; onConfirm: () => void } | null>(null);
+  const [fetching, setFetching] = useState(true);
+
+  const showToast = (message: string, type: 'success' | 'error' | 'warning' | 'info' = 'success') => {
+    setToast({ message, type });
+  };
+
   const router = useRouter();
 
   const toggleContractExpanded = (id: number) => {
@@ -154,15 +165,15 @@ export default function DashboardPage() {
       if (!response.ok) throw new Error("Status update failed");
       const updated = await response.json();
       setInstallments(prev => prev.map(inst => inst.id === installmentId ? updated : inst));
-      alert(`Estado de la mensualidad actualizado a ${newStatus === 'PAID' ? 'PAGADO' : newStatus === 'CANCELLED' ? 'CANCELADO' : 'PENDIENTE'}.`);
+      showToast(`Estado de la mensualidad actualizado a ${newStatus === 'PAID' ? 'PAGADO' : newStatus === 'CANCELLED' ? 'CANCELADO' : 'PENDIENTE'}.`, 'success');
     } catch (err) {
-      alert("Error al actualizar el estado de la mensualidad.");
+      showToast("Error al actualizar el estado de la mensualidad.", 'error');
     }
   };
 
   const handleSaveCFDI = async (installmentId: number) => {
     const uuid = cfdiInputs[installmentId] || "";
-    if (!uuid.trim()) return alert("Por favor ingresa un folio fiscal válido.");
+    if (!uuid.trim()) return showToast("Por favor ingresa un folio fiscal válido.", 'warning');
     
     try {
       const token = localStorage.getItem('token');
@@ -178,35 +189,38 @@ export default function DashboardPage() {
       if (!response.ok) throw new Error("CFDI update failed");
       const updated = await response.json();
       setInstallments(prev => prev.map(inst => inst.id === installmentId ? updated : inst));
-      alert("Folio Fiscal CFDI guardado con éxito.");
+      showToast("Folio Fiscal CFDI guardado con éxito.", 'success');
     } catch (err) {
-      alert("Error al guardar CFDI.");
+      showToast("Error al guardar CFDI.", 'error');
     }
   };
 
-  const handleDeleteProject = async (projectId: number, projectName: string) => {
-    const confirmed = window.confirm(`¿Estás seguro de que deseas eliminar el proyecto "${projectName}"?\n\nEsta acción no se puede deshacer y borrará permanentemente todos los registros de horas y avances relacionados.`);
-    if (!confirmed) return;
+  const handleDeleteProject = (projectId: number, projectName: string) => {
+    setConfirmDlg({
+      title: "Eliminar Proyecto",
+      message: `¿Estás seguro de que deseas eliminar el proyecto "${projectName}"?\n\nEsta acción no se puede deshacer y borrará permanentemente todos los registros de horas y avances relacionados.`,
+      onConfirm: async () => {
+        try {
+          const token = localStorage.getItem('token');
+          const response = await fetch(`${API_URL}/projects/${projectId}/`, {
+            method: 'DELETE',
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
 
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/projects/${projectId}/`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
+          if (!response.ok) {
+            const errData = await response.json().catch(() => ({}));
+            throw new Error(errData.detail || "Error al eliminar el proyecto");
+          }
+
+          setProjects(prev => prev.filter(p => p.id !== projectId));
+          showToast(`El proyecto "${projectName}" ha sido eliminado correctamente.`, 'success');
+        } catch (err: any) {
+          showToast(err.message || "Error al eliminar el proyecto.", 'error');
         }
-      });
-
-      if (!response.ok) {
-        const errData = await response.json().catch(() => ({}));
-        throw new Error(errData.detail || "Error al eliminar el proyecto");
       }
-
-      setProjects(prev => prev.filter(p => p.id !== projectId));
-      alert(`El proyecto "${projectName}" ha sido eliminado correctamente.`);
-    } catch (err: any) {
-      alert(err.message || "Error al eliminar el proyecto.");
-    }
+    });
   };
   const searchParams = useSearchParams();
 
@@ -255,6 +269,7 @@ export default function DashboardPage() {
   const activeContract = selectedActiveContractId
     ? activeContracts.find(c => c.id === selectedActiveContractId) || activeContracts[0]
     : activeContracts[0];
+  const isAddonOnly = contracts.some(c => c.is_fully_signed && !c.plan);
 
   const handleApplyRetroactiveCode = async () => {
     if (!retroactiveCodeInput.trim() || !activeContract) return;
@@ -302,7 +317,7 @@ export default function DashboardPage() {
       });
       setContracts(prev => prev.map(c => c.id === contractId ? { ...c, payment_commitment_method: updated.payment_commitment_method } : c));
     } catch (err) {
-      alert("Error al actualizar método de pago");
+      showToast("Error al actualizar método de pago", 'error');
     } finally {
       setUpdatingContractId(null);
     }
@@ -317,7 +332,7 @@ export default function DashboardPage() {
       });
       setContracts(prev => prev.map(c => c.id === contractId ? { ...c, next_payment_date: updated.next_payment_date } : c));
     } catch (err) {
-      alert("Error al actualizar fecha de compromiso");
+      showToast("Error al actualizar fecha de compromiso", 'error');
     } finally {
       setUpdatingContractId(null);
     }
@@ -354,7 +369,7 @@ export default function DashboardPage() {
       const tenantsData = await fetcher('/tenants/');
       setTenants(tenantsData);
     } catch (err) {
-      alert("Error al actualizar los Add-ons del cliente.");
+      showToast("Error al actualizar los Add-ons del cliente.", 'error');
     }
   };
 
@@ -374,9 +389,9 @@ export default function DashboardPage() {
       if (!response.ok) throw new Error("Upload failed");
       const updated = await response.json();
       setInstallments(prev => prev.map(inst => inst.id === installmentId ? { ...inst, receipt_file: updated.receipt_file, status: updated.status } : inst));
-      alert("Comprobante subido con éxito. El equipo de administración lo validará a la brevedad.");
+      showToast("Comprobante subido con éxito. El equipo de administración lo validará a la brevedad.", 'success');
     } catch (err) {
-      alert("Error al subir el comprobante de pago");
+      showToast("Error al subir el comprobante de pago", 'error');
     }
   };
 
@@ -398,7 +413,7 @@ export default function DashboardPage() {
         window.location.href = data.url;
       }
     } catch (err: any) {
-      alert(err.message || "Error al conectar con Stripe");
+      showToast(err.message || "Error al conectar con Stripe", 'error');
     }
   };
 
@@ -420,7 +435,7 @@ export default function DashboardPage() {
         window.location.href = data.url;
       }
     } catch (err: any) {
-      alert(err.message || "Error al conectar con Stripe");
+      showToast(err.message || "Error al conectar con Stripe", 'error');
     }
   };
 
@@ -442,7 +457,7 @@ export default function DashboardPage() {
         window.location.href = data.url;
       }
     } catch (err: any) {
-      alert(err.message || "Error de conexión con Stripe");
+      showToast(err.message || "Error de conexión con Stripe", 'error');
     }
   };
 
@@ -458,53 +473,93 @@ export default function DashboardPage() {
       try {
         const staff = localStorage.getItem('is_staff') === 'true';
         const role = localStorage.getItem('user_role') || '';
-        const isCEO = role === 'ADMIN' || staff;
 
-        const [projectsData, ticketsData, logsData, contractsData, installmentsData, tenantsData, plansData, addonsData, meData] = await Promise.all([
-          fetcher('/projects/'),
-          fetcher('/tickets/'),
-          fetcher('/logs/'),
-          fetcher('/contracts/'),
-          fetcher('/installments/'),
-          fetcher('/tenants/'),
-          fetcher('/plans/'),
-          fetcher('/addons/'),
-          fetcher('/users/me/').catch(() => null)
-        ]);
-
-        setProjects(projectsData);
-        setTickets(ticketsData);
-        setLogs(logsData);
-        setContracts(contractsData);
-        setInstallments(installmentsData);
-        setTenants(tenantsData);
-        setPlans(plansData);
-        setAllAddons(addonsData || []);
+        // 1. Fetch user me first, quickly, to establish session details
+        const meData = await fetcher('/users/me/').catch(() => null);
         setCurrentUser(meData);
+        
+        // 2. Set loading to false immediately to render the Dashboard Shell (Sidebar/Header)
+        setLoading(false);
+        setFetching(true);
 
-        if (isCEO) {
-          const statsData = await fetcher('/dashboard/business-stats/');
+        // 3. Perform role-tailored API calls in background
+        if (role === 'ADMIN' || staff) {
+          // CEO / Admin - Load all operations, metrics, and administration panels
+          const [
+            projectsData, ticketsData, logsData, contractsData, 
+            installmentsData, tenantsData, plansData, addonsData, statsData,
+            referralData
+          ] = await Promise.all([
+            fetcher('/projects/').catch(() => []),
+            fetcher('/tickets/').catch(() => []),
+            fetcher('/logs/').catch(() => []),
+            fetcher('/contracts/').catch(() => []),
+            fetcher('/installments/').catch(() => []),
+            fetcher('/tenants/').catch(() => []),
+            fetcher('/plans/').catch(() => []),
+            fetcher('/addons/').catch(() => []),
+            fetcher('/dashboard/business-stats/').catch(() => null),
+            fetcher('/promo-codes/my-referral-code/').catch(() => null)
+          ]);
+
+          setProjects(projectsData);
+          setTickets(ticketsData);
+          setLogs(logsData);
+          setContracts(contractsData);
+          setInstallments(installmentsData);
+          setTenants(tenantsData);
+          setPlans(plansData);
+          setAllAddons(addonsData || []);
           setBusinessStats(statsData);
-        }
-
-        // Fetch salesperson or referral program data based on user role
-        if (role === 'SALES') {
+          setMyReferralCode(referralData);
+        } else if (role === 'SALES') {
+          // Sales Person - Load only commissions, referral summaries, and promo code metrics
           const [summaryData, commissionsData, referralData] = await Promise.all([
-            fetcher('/sales-commissions/summary/').catch(err => { console.error(err); return null; }),
-            fetcher('/sales-commissions/').catch(err => { console.error(err); return []; }),
-            fetcher('/promo-codes/my-referral-code/').catch(err => { console.error(err); return null; })
+            fetcher('/sales-commissions/summary/').catch(() => null),
+            fetcher('/sales-commissions/').catch(() => []),
+            fetcher('/promo-codes/my-referral-code/').catch(() => null)
           ]);
           setSalesSummary(summaryData);
           setSalesCommissions(commissionsData || []);
           setMyReferralCode(referralData);
+        } else if (role === 'DEVELOPER' || role === 'DESIGNER') {
+          // Staff Developers / Designers - Load only assigned projects, logs, and technical contracts
+          const [projectsData, ticketsData, logsData, contractsData] = await Promise.all([
+            fetcher('/projects/').catch(() => []),
+            fetcher('/tickets/').catch(() => []),
+            fetcher('/logs/').catch(() => []),
+            fetcher('/contracts/').catch(() => [])
+          ]);
+          setProjects(projectsData);
+          setTickets(ticketsData);
+          setLogs(logsData);
+          setContracts(contractsData);
         } else {
-          const referralData = await fetcher('/promo-codes/my-referral-code/').catch(err => { console.error(err); return null; });
+          // Client / Customers - Load their contracts, installments, projects, active addons, and tenants
+          const [projectsData, ticketsData, contractsData, installmentsData, addonsData, plansData, referralData, tenantsData] = await Promise.all([
+            fetcher('/projects/').catch(() => []),
+            fetcher('/tickets/').catch(() => []),
+            fetcher('/contracts/').catch(() => []),
+            fetcher('/installments/').catch(() => []),
+            fetcher('/addons/').catch(() => []),
+            fetcher('/plans/').catch(() => []),
+            fetcher('/promo-codes/my-referral-code/').catch(() => null),
+            fetcher('/tenants/').catch(() => [])
+          ]);
+          setProjects(projectsData);
+          setTickets(ticketsData);
+          setContracts(contractsData);
+          setInstallments(installmentsData);
+          setAllAddons(addonsData || []);
+          setPlans(plansData || []);
           setMyReferralCode(referralData);
+          setTenants(tenantsData || []);
         }
       } catch (err) {
         console.error("Error loading dashboard data:", err);
       } finally {
         setLoading(false);
+        setFetching(false);
       }
     };
 
@@ -1006,7 +1061,17 @@ export default function DashboardPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {(() => {
+                      {fetching ? (
+                        <tr>
+                          <td colSpan={7} className="py-8">
+                            <div className="space-y-3 animate-pulse">
+                              <div className="h-4 bg-foreground/10 rounded w-full"></div>
+                              <div className="h-4 bg-foreground/10 rounded w-5/6"></div>
+                              <div className="h-4 bg-foreground/10 rounded w-4/5"></div>
+                            </div>
+                          </td>
+                        </tr>
+                      ) : (() => {
                         const filteredContracts = contracts.filter(contract => {
                           const hasPlan = !!contract.plan;
                           const hasCustomDomain = !!contract.tenant_custom_domain;
@@ -1706,35 +1771,63 @@ export default function DashboardPage() {
               <section className="mb-16 p-10 rounded-[3rem] bg-card-bg border border-card-border shadow-xl relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-nectar-gold/5 rounded-full blur-3xl -mr-20 -mt-20"></div>
                 <h2 className="text-2xl font-black tracking-tighter mb-4">Contrataciones en Proceso</h2>
-                <p className="text-xs text-foreground/60 mb-6 uppercase tracking-wider">Hemos recibido tu firma. Nuestro equipo técnico está validando los detalles para activar tu nuevo ecosistema.</p>
+                <p className="text-xs text-foreground/60 mb-6 uppercase tracking-wider">
+                  Acciones requeridas o estatus de tus propuestas comerciales activas.
+                </p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {contracts.filter(c => !c.is_fully_signed).map(contract => (
-                    <div key={contract.id} className="bg-background/40 border border-card-border/60 p-6 rounded-2xl flex flex-col justify-between">
-                      <div>
-                        <span className="px-2.5 py-1 bg-nectar-gold/10 text-nectar-gold text-[8px] font-black uppercase tracking-widest rounded-full animate-pulse">
-                          Esperando Firma de Néctar Labs
-                        </span>
-                        <h4 className="font-black text-sm mt-3">{contract.plan_name || 'Plan de Ingeniería'}</h4>
-                        <p className="text-[9px] font-bold opacity-60 mt-2">Razón Social: {contract.full_name}</p>
-                        <p className="text-[8px] font-bold opacity-40 mt-1">Registrado: {contract.signed_at ? new Date(contract.signed_at).toLocaleDateString('es-ES') : '—'}</p>
+                  {contracts.filter(c => !c.is_fully_signed).map(contract => {
+                    const hasClientSignature = !!contract.signature_base64;
+                    return (
+                      <div key={contract.id} className="bg-background/40 border border-card-border/60 p-6 rounded-2xl flex flex-col justify-between">
+                        <div>
+                          {hasClientSignature ? (
+                            <span className="px-2.5 py-1 bg-nectar-gold/10 text-nectar-gold text-[8px] font-black uppercase tracking-widest rounded-full animate-pulse border border-nectar-gold/25">
+                              Esperando Firma de Néctar Labs
+                            </span>
+                          ) : (
+                            <span className="px-2.5 py-1 bg-red-500/10 text-red-400 text-[8px] font-black uppercase tracking-widest rounded-full border border-red-500/25">
+                              Acción Requerida: Pendiente de tu firma
+                            </span>
+                          )}
+                          <h4 className="font-black text-sm mt-3">{contract.plan_name || 'Plan de Ingeniería'}</h4>
+                          <p className="text-xs text-foreground/75 mt-2">
+                            {hasClientSignature 
+                              ? "Hemos recibido tu firma. Nuestro equipo técnico está validando los detalles para activar tu nuevo ecosistema."
+                              : "Tu propuesta comercial de proyecto ha sido aprobada. Revisa los términos y firma el contrato digitalmente."
+                            }
+                          </p>
+                          <p className="text-[9px] font-bold opacity-60 mt-2">Razón Social: {contract.full_name}</p>
+                          <p className="text-[8px] font-bold opacity-40 mt-1">Registrado: {contract.signed_at ? new Date(contract.signed_at).toLocaleDateString('es-ES') : '—'}</p>
+                        </div>
+                        <div className="flex gap-2 mt-6">
+                          {!hasClientSignature ? (
+                            <Link
+                              href={`/contract/sign/${contract.id}`}
+                              className="flex-1 py-2.5 bg-nectar-gold hover:bg-nectar-gold/90 text-background text-center rounded-xl text-[8.5px] font-black uppercase tracking-widest transition-all font-bold hover:scale-[1.02] active:scale-95 shadow-lg shadow-nectar-gold/10"
+                            >
+                              Revisar y Firmar Contrato
+                            </Link>
+                          ) : (
+                            contract.pdf_file && (
+                              <a
+                                href={contract.pdf_file}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="flex-1 py-2.5 bg-card-border hover:bg-foreground hover:text-background text-center rounded-xl text-[8px] font-black uppercase tracking-widest transition-all inline-block font-bold"
+                              >
+                                Ver Contrato Parcial (PDF)
+                              </a>
+                            )
+                          )}
+                        </div>
                       </div>
-                      {contract.pdf_file && (
-                        <a
-                          href={contract.pdf_file}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="mt-6 py-2.5 bg-card-border hover:bg-foreground hover:text-background text-center rounded-xl text-[8px] font-black uppercase tracking-widest transition-all inline-block font-bold"
-                        >
-                          Ver Contrato Parcial (PDF)
-                        </a>
-                      )}
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </section>
             )}
 
-            {!isStaff && projects.length === 0 && !contracts.some(c => !c.is_fully_signed) && (
+            {!isStaff && projects.length === 0 && contracts.length === 0 && (
               <section className="mb-16 p-12 rounded-[3.5rem] bg-nectar-forest text-nectar-cream border-4 border-nectar-gold shadow-2xl relative overflow-hidden group">
                 <div className="absolute top-[-20%] right-[-10%] w-64 h-64 bg-nectar-gold/20 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-1000"></div>
                 <div className="relative z-10 max-w-2xl">
@@ -1761,7 +1854,24 @@ export default function DashboardPage() {
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {projects.map(project => {
+                    {fetching ? (
+                      <>
+                        <div className="p-8 rounded-[2.5rem] bg-card-bg border border-card-border animate-pulse h-64 flex flex-col justify-between">
+                          <div className="space-y-4">
+                            <div className="h-6 bg-foreground/10 rounded w-1/2"></div>
+                            <div className="h-3 bg-foreground/10 rounded w-5/6"></div>
+                          </div>
+                          <div className="h-8 bg-foreground/10 rounded w-1/4"></div>
+                        </div>
+                        <div className="p-8 rounded-[2.5rem] bg-card-bg border border-card-border animate-pulse h-64 flex flex-col justify-between">
+                          <div className="space-y-4">
+                            <div className="h-6 bg-foreground/10 rounded w-1/2"></div>
+                            <div className="h-3 bg-foreground/10 rounded w-5/6"></div>
+                          </div>
+                          <div className="h-8 bg-foreground/10 rounded w-1/4"></div>
+                        </div>
+                      </>
+                    ) : projects.map(project => {
                       const isDesignerUser = userRole === 'DESIGNER';
                       const planHours = isDesignerUser ? (project.designer_plan_hours || 0) : (project.plan_hours || 0);
                       const usedHours = isDesignerUser ? (project.designer_used_hours_current_month || 0) : (project.used_hours_current_month || 0);
@@ -1855,9 +1965,83 @@ export default function DashboardPage() {
                       );
                     })}
                     {projects.length === 0 && (
-                      <div className="col-span-full py-20 text-center border-2 border-dashed border-card-border rounded-[2.5rem] opacity-30">
-                        <p className="font-bold uppercase tracking-widest text-xs">No hay proyectos activos registrados.</p>
-                      </div>
+                      isAddonOnly ? (
+                        <div className="col-span-full p-10 rounded-[3rem] bg-card-bg border border-card-border relative overflow-hidden group animate-in fade-in slide-in-from-bottom-4 duration-550">
+                          {/* Decorative blur elements */}
+                          <div className="absolute top-[-20%] right-[-10%] w-64 h-64 bg-nectar-gold/15 rounded-full blur-3xl group-hover:scale-110 transition-transform duration-1000"></div>
+                          <div className="absolute bottom-[-20%] left-[-10%] w-64 h-64 bg-nectar-forest/10 rounded-full blur-3xl"></div>
+                          
+                          <div className="relative z-10 space-y-6">
+                            <span className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold text-[8px] font-black uppercase tracking-widest rounded-full border border-nectar-gold/20">
+                              Servicio de Add-ons Activo
+                            </span>
+                            
+                            <h3 className="text-3xl font-black tracking-tighter text-foreground leading-none">
+                              ¡Bienvenido a tu Suite de Add-ons!
+                            </h3>
+                            
+                            <p className="text-sm font-bold text-foreground/75 leading-relaxed max-w-2xl">
+                              Tu portal de soporte y herramientas públicas ha sido aprovisionado de manera automática. Hemos asignado una dirección personalizada para tu negocio bajo el subdominio de Néctar Labs.
+                            </p>
+
+                            {tenants.length > 0 && (
+                              <div className="p-6 bg-background/50 border border-card-border/60 rounded-2xl space-y-4 max-w-xl">
+                                <div className="flex justify-between items-center text-xs text-foreground/80">
+                                  <span>Subdominio de tu Portal:</span>
+                                  <span className="font-mono text-nectar-gold font-bold select-all">
+                                    {(() => {
+                                      const tenant = tenants[0];
+                                      const host = typeof window !== 'undefined' ? window.location.hostname : '';
+                                      if (host.includes('localhost')) return `${tenant.subdomain}.localhost:3000`;
+                                      if (host.includes('staging.nectarlabs.dev')) return `${tenant.subdomain}.staging.nectarlabs.dev`;
+                                      return `${tenant.subdomain}.nectarlabs.dev`;
+                                    })()}
+                                  </span>
+                                </div>
+                                <div className="h-px bg-card-border/40"></div>
+                                <div className="text-[10px] leading-relaxed text-foreground/60">
+                                  <span className="text-nectar-gold font-black uppercase tracking-widest block mb-1">Nota sobre Dominios Personalizados</span>
+                                  Si prefieres mapear un dominio propio (ej. <span className="font-mono">soporte.tudominio.com</span>), podemos ayudarte a integrarlo mediante un contrato adicional. Los costos de dominio varían según disponibilidad y proveedor.
+                                </div>
+                              </div>
+                            )}
+
+                            <p className="text-xs text-foreground/60 leading-relaxed max-w-2xl">
+                              Puedes personalizar la marca (logotipo, colores, textos del pie de página y mensaje de bienvenida de tu asistente IA) ingresando a la sección de <strong className="text-nectar-gold">Configuración Soporte</strong> desde el menú lateral.
+                            </p>
+
+                            <div className="flex flex-wrap gap-4 pt-4">
+                              <Link 
+                                href="/dashboard/support-settings" 
+                                className="px-8 py-3 bg-nectar-gold text-background font-black uppercase tracking-widest text-[10px] rounded-xl hover:scale-105 active:scale-95 transition-all shadow-lg shadow-nectar-gold/15"
+                              >
+                                Personalizar Portal
+                              </Link>
+                              
+                              {tenants.length > 0 && (
+                                <a 
+                                  href={(() => {
+                                    const tenant = tenants[0];
+                                    const host = typeof window !== 'undefined' ? window.location.hostname : '';
+                                    if (host.includes('localhost')) return `http://${tenant.subdomain}.localhost:3000`;
+                                    if (host.includes('staging.nectarlabs.dev')) return `https://${tenant.subdomain}.staging.nectarlabs.dev`;
+                                    return `https://${tenant.subdomain}.nectarlabs.dev`;
+                                  })()}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="px-8 py-3 bg-card-border hover:bg-foreground hover:text-background text-foreground font-black uppercase tracking-widest text-[10px] rounded-xl transition-all border border-card-border"
+                                >
+                                  Abrir Portal Público ↗
+                                </a>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="col-span-full py-20 text-center border-2 border-dashed border-card-border rounded-[2.5rem] opacity-30">
+                          <p className="font-bold uppercase tracking-widest text-xs">No hay proyectos activos registrados.</p>
+                        </div>
+                      )
                     )}
                   </div>
                 </section>
@@ -1978,6 +2162,28 @@ export default function DashboardPage() {
           </div>
         )}
       </main>
+
+      {/* Premium UI Overlay Elements */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
+
+      {confirmDlg && (
+        <ConfirmModal
+          isOpen={true}
+          title={confirmDlg.title}
+          message={confirmDlg.message}
+          onConfirm={() => {
+            confirmDlg.onConfirm();
+            setConfirmDlg(null);
+          }}
+          onCancel={() => setConfirmDlg(null)}
+        />
+      )}
     </div>
   );
 }

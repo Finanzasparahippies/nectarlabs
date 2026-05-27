@@ -165,7 +165,7 @@ export default function DashboardSidebar() {
             </Link>
           )}
 
-          {isCEO && (
+          {(isCEO || userRole === 'BUSINESS' || contracts.some(c => c.is_fully_signed)) && (
             <Link
               href="/dashboard/support-settings"
               className={`flex items-center gap-4 px-6 py-4 w-full text-left rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all ${

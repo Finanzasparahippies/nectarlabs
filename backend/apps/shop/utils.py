@@ -51,7 +51,27 @@ def generate_contract_pdf(contract):
         pdf.set_font('helvetica', 'B', 11)
         pdf.cell(0, 10, '2. OBJETO Y PLAN SELECCIONADO', new_x="LMARGIN", new_y="NEXT")
         pdf.set_font('helvetica', '', 10)
-        if contract.plan:
+        if contract.project_quote:
+            quote = contract.project_quote
+            pdf.multi_cell(0, 6, f'EL CLIENTE ha contratado el desarrollo del proyecto modular "{quote.project_name}".\n'
+                                 f'Este proyecto tiene un tiempo estimado de entrega de {quote.estimated_delivery_weeks} semanas.\n'
+                                 f'El costo de inversión total es de ${quote.total_price:,.2f} MXN, dividido en dos exhibiciones obligatorias del 50% cada una (Anticipo contra firma y Liquidación contra entrega).')
+            pdf.ln(5)
+            
+            pdf.set_font('helvetica', 'B', 11)
+            pdf.cell(0, 10, 'MÓDULOS INCLUIDOS EN LA PROPUESTA:', new_x="LMARGIN", new_y="NEXT")
+            pdf.set_font('helvetica', '', 9)
+            for mod in quote.modules:
+                name = mod.get('name', 'Módulo')
+                desc = mod.get('description', '')
+                price = float(mod.get('price', 0))
+                pdf.set_font('helvetica', 'B', 9)
+                pdf.cell(0, 5, f'- {name} (${price:,.2f} MXN)', new_x="LMARGIN", new_y="NEXT")
+                pdf.set_font('helvetica', '', 9)
+                if desc:
+                    pdf.multi_cell(0, 5, f'  Descripción: {desc}')
+                pdf.ln(2)
+        elif contract.plan:
             pay_day_label = contract.get_payment_day_display()
             pdf.multi_cell(0, 6, f'EL CLIENTE ha seleccionado el plan {contract.plan.name}, el cual incluye un máximo de {contract.plan.hours} horas mensuales de desarrollo e ingeniería. El esquema de abonos periódicos elegido es: {pay_day_label}.')
         else:
@@ -303,6 +323,37 @@ def generate_installments_for_contract(contract):
     from apps.shop.models import PaymentInstallment
     
     if not contract.plan:
+        if contract.project_quote:
+            # Clean up previous installments
+            contract.installments.all().delete()
+            
+            start_date = contract.signed_at.date() if contract.signed_at else timezone.now().date()
+            base_amount_half = contract.project_quote.total_price / 2
+            
+            # Installment 1: Anticipo (50%)
+            PaymentInstallment.objects.create(
+                contract=contract,
+                installment_type=PaymentInstallment.InstallmentType.DEVELOPMENT,
+                installment_number=1,
+                due_date=start_date,
+                base_amount=base_amount_half,
+                amount=base_amount_half,
+                status=PaymentInstallment.Status.PENDING,
+                payment_method=contract.payment_commitment_method
+            )
+            
+            # Installment 2: Liquidación contra entrega (50%)
+            delivery_date = start_date + timedelta(weeks=contract.project_quote.estimated_delivery_weeks)
+            PaymentInstallment.objects.create(
+                contract=contract,
+                installment_type=PaymentInstallment.InstallmentType.DEVELOPMENT,
+                installment_number=2,
+                due_date=delivery_date,
+                base_amount=base_amount_half,
+                amount=base_amount_half,
+                status=PaymentInstallment.Status.PENDING,
+                payment_method=contract.payment_commitment_method
+            )
         return
         
     plan_price = contract.plan.price

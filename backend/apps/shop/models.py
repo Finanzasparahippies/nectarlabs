@@ -58,6 +58,13 @@ class Contract(models.Model):
     brand_design_price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     addons = models.ManyToManyField('AddOn', blank=True, related_name='contracts')
     promo_code = models.ForeignKey('PromoCode', on_delete=models.SET_NULL, null=True, blank=True, related_name='contracts')
+    project_quote = models.ForeignKey(
+        'dashboard.ProjectQuote', 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True, 
+        related_name='contracts'
+    )
 
     class PaymentMethod(models.TextChoices):
         STRIPE = 'STRIPE', 'Tarjeta (Stripe)'

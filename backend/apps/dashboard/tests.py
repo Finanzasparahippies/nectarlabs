@@ -178,3 +178,120 @@ class DashboardRoleAuthorizationTests(APITestCase):
             'name': 'Malicious Update Project'
         })
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+
+class ProjectQuoteAPITests(APITestCase):
+    def setUp(self):
+        self.ceo = User.objects.create_user(
+            username="saul_ceo",
+            email="saul@nectarlabs.dev",
+            password="securepassword",
+            role=User.Role.ADMIN,
+            is_staff=True
+        )
+        self.client_a = User.objects.create_user(
+            username="client_a",
+            email="client_a@example.com",
+            password="clientpassword",
+            role=User.Role.BUSINESS
+        )
+        self.client_b = User.objects.create_user(
+            username="client_b",
+            email="client_b@example.com",
+            password="clientpassword",
+            role=User.Role.BUSINESS
+        )
+
+    def test_create_project_quote_as_ceo(self):
+        from apps.dashboard.models import ProjectQuote
+        self.client.force_authenticate(user=self.ceo)
+        response = self.client.post(reverse('quote-list'), {
+            "client_name": "Prospect Client Ltd",
+            "client_email": "prospect@example.com",
+            "project_name": "E-Commerce custom portal",
+            "description": "Custom portal description",
+            "estimated_delivery_weeks": 8,
+            "modules": [
+                {"name": "Auth module", "description": "Auth desc", "price": 5000.00},
+                {"name": "Stripe module", "description": "Stripe desc", "price": 10000.00}
+            ]
+        }, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        quote = ProjectQuote.objects.get(project_name="E-Commerce custom portal")
+        self.assertEqual(quote.total_price, 15000.00)
+        self.assertEqual(quote.status, ProjectQuote.Status.DRAFT)
+
+    def test_create_project_quote_as_non_admin_fails(self):
+        self.client.force_authenticate(user=self.client_a)
+        response = self.client.post(reverse('quote-list'), {
+            "client_name": "Prospect Client Ltd",
+            "client_email": "prospect@example.com",
+            "project_name": "E-Commerce custom portal",
+            "estimated_delivery_weeks": 8,
+            "modules": [
+                {"name": "Auth module", "price": 5000.00}
+            ]
+        }, format='json')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_quote_status_approved_generates_contract_and_user(self):
+        from apps.dashboard.models import ProjectQuote
+        from apps.shop.models import Contract
+        
+        quote = ProjectQuote.objects.create(
+            client_name="New Prospect",
+            client_email="new_prospect@example.com",
+            project_name="Custom Mobile App",
+            estimated_delivery_weeks=6,
+            modules=[{"name": "Auth", "price": 8000.00}],
+            total_price=8000.00,
+            status=ProjectQuote.Status.DRAFT
+        )
+        
+        self.client.force_authenticate(user=self.ceo)
+        url = reverse('quote-change-status', kwargs={'pk': quote.id})
+        response = self.client.post(url, {'status': 'APPROVED'}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        
+        # Check user creation
+        new_user = User.objects.get(email="new_prospect@example.com")
+        self.assertEqual(new_user.role, User.Role.BUSINESS)
+        
+        # Check contract creation
+        contract = Contract.objects.get(project_quote=quote)
+        self.assertEqual(contract.user, new_user)
+        self.assertFalse(contract.is_fully_signed)
+        self.assertEqual(contract.full_name, "New Prospect")
+
+    def test_quote_view_isolation(self):
+        from apps.dashboard.models import ProjectQuote
+        quote_a = ProjectQuote.objects.create(
+            client=self.client_a,
+            client_name="Client A",
+            client_email="client_a@example.com",
+            project_name="Project A",
+            total_price=5000.00
+        )
+        quote_b = ProjectQuote.objects.create(
+            client=self.client_b,
+            client_name="Client B",
+            client_email="client_b@example.com",
+            project_name="Project B",
+            total_price=7000.00
+        )
+
+        # Client A views
+        self.client.force_authenticate(user=self.client_a)
+        response = self.client.get(reverse('quote-list'))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        quote_ids = [q['id'] for q in response.data]
+        self.assertIn(str(quote_a.id), quote_ids)
+        self.assertNotIn(str(quote_b.id), quote_ids)
+
+        # CEO views all
+        self.client.force_authenticate(user=self.ceo)
+        response = self.client.get(reverse('quote-list'))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        quote_ids = [q['id'] for q in response.data]
+        self.assertIn(str(quote_a.id), quote_ids)
+        self.assertIn(str(quote_b.id), quote_ids)

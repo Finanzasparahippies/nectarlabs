@@ -41,7 +41,7 @@ class SalesCommissionSerializer(serializers.ModelSerializer):
         return plan.name if plan else 'Sin Plan'
 
 class ContractSerializer(serializers.ModelSerializer):
-    plan_name = serializers.CharField(source='plan.name', read_only=True)
+    plan_name = serializers.SerializerMethodField(read_only=True)
     addons = serializers.SlugRelatedField(many=True, slug_field='slug', queryset=AddOn.objects.all(), required=False)
     addons_details = AddOnSerializer(source='addons', many=True, read_only=True)
     tenant_subdomain = serializers.SerializerMethodField(read_only=True)
@@ -54,6 +54,13 @@ class ContractSerializer(serializers.ModelSerializer):
         model = Contract
         fields = '__all__'
         read_only_fields = ('user', 'pdf_file', 'signed_at')
+
+    def get_plan_name(self, obj):
+        if obj.plan:
+            return obj.plan.name
+        if obj.project_quote:
+            return f"Proyecto: {obj.project_quote.project_name}"
+        return "Solo Add-ons / Complementos"
 
     def get_tenant_subdomain(self, obj):
         tenant = obj.user.owned_tenants.first()

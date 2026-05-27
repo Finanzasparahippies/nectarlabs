@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
+import Toast from '@/components/ui/Toast';
+import ConfirmModal from '@/components/ui/ConfirmModal';
 
 const ChatWidget = dynamic(() => import('@/components/addons/live-chat/ChatWidget'), { ssr: false });
 const BookingCanvas = dynamic(() => import('@/components/addons/booking-signature/BookingCanvas'), { ssr: false });
@@ -86,6 +88,14 @@ export default function TenantPortalPage() {
   const params = useParams();
   const rawSubdomain = params?.subdomain as string;
   const [subdomain, setSubdomain] = useState<string>('');
+
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'warning' | 'info' } | null>(null);
+  const [confirmDlg, setConfirmDlg] = useState<{ isOpen: boolean; title: string; message: string; onConfirm: () => void } | null>(null);
+  const [currentSection, setCurrentSection] = useState<'addons' | 'support'>('addons');
+
+  const showToast = (message: string, type: 'success' | 'error' | 'warning' | 'info' = 'success') => {
+    setToast({ message, type });
+  };
 
   useEffect(() => {
     if (rawSubdomain) {
@@ -332,8 +342,9 @@ export default function TenantPortalPage() {
       localStorage.setItem(`nectar_guest_email_${tenantConfig.id}`, data.email);
       setToken(data.token);
       setIsAuthenticated(true);
+      showToast('Sesión iniciada con éxito', 'success');
     } catch (err: any) {
-      alert(err.message || 'Error al iniciar sesión');
+      showToast(err.message || 'Error al iniciar sesión', 'error');
     } finally {
       setIsSubmittingAuth(false);
     }
@@ -359,9 +370,9 @@ export default function TenantPortalPage() {
       setTickets((prev) => [ticket, ...prev]);
       setNewTicketTitle('');
       setNewTicketDesc('');
-      alert('Ticket de soporte creado correctamente.');
+      showToast('Ticket de soporte creado correctamente.', 'success');
     } catch (err) {
-      alert('Error al crear el ticket.');
+      showToast('Error al crear el ticket.', 'error');
     } finally {
       setIsCreatingTicket(false);
     }
@@ -387,7 +398,7 @@ export default function TenantPortalPage() {
       });
       setTicketMessageText('');
     } catch (err) {
-      alert('Error al enviar respuesta al ticket.');
+      showToast('Error al enviar respuesta al ticket.', 'error');
     } finally {
       setIsSendingTicketMsg(false);
     }
@@ -403,7 +414,7 @@ export default function TenantPortalPage() {
       setActiveChat(chat);
       setChatMessages([]);
     } catch (err) {
-      alert('Error al iniciar sesión de chat.');
+      showToast('Error al iniciar sesión de chat.', 'error');
     }
   };
 
@@ -437,26 +448,33 @@ export default function TenantPortalPage() {
         });
       }
     } catch (err) {
-      alert('Error al enviar el mensaje.');
+      showToast('Error al enviar el mensaje.', 'error');
       setNewChatMessage(msgText);
     } finally {
       setIsSendingChat(false);
     }
   };
 
-  const handleCloseChat = async () => {
+  const handleCloseChat = () => {
     if (!activeChat) return;
-    if (!confirm('¿Deseas finalizar la sesión de chat?')) return;
-
-    try {
-      await portalFetch(`/api/support-chats/${activeChat.id}/close/`, {
-        method: 'POST',
-      });
-      setActiveChat(null);
-      setChatMessages([]);
-    } catch (err) {
-      alert('Error al finalizar el chat.');
-    }
+    setConfirmDlg({
+      isOpen: true,
+      title: 'Finalizar Chat',
+      message: '¿Deseas finalizar la sesión de chat?',
+      onConfirm: async () => {
+        setConfirmDlg(null);
+        try {
+          await portalFetch(`/api/support-chats/${activeChat.id}/close/`, {
+            method: 'POST',
+          });
+          setActiveChat(null);
+          setChatMessages([]);
+          showToast('Sesión de chat finalizada.', 'success');
+        } catch (err) {
+          showToast('Error al finalizar el chat.', 'error');
+        }
+      }
+    });
   };
 
   const handleLogout = () => {
@@ -469,6 +487,7 @@ export default function TenantPortalPage() {
     setActiveChat(null);
     setTickets([]);
     setSelectedTicket(null);
+    showToast('Sesión cerrada correctamente.', 'info');
   };
 
   if (loading) {
@@ -546,6 +565,32 @@ export default function TenantPortalPage() {
             </div>
           </div>
 
+          {/* Section Selector tabs */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setCurrentSection('addons')}
+              className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border cursor-pointer"
+              style={{
+                backgroundColor: currentSection === 'addons' ? `${primaryColor}15` : 'transparent',
+                borderColor: currentSection === 'addons' ? primaryColor : 'transparent',
+                color: currentSection === 'addons' ? primaryColor : 'rgba(255, 255, 255, 0.6)'
+              }}
+            >
+              🚀 Módulos Activos
+            </button>
+            <button
+              onClick={() => setCurrentSection('support')}
+              className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border cursor-pointer"
+              style={{
+                backgroundColor: currentSection === 'support' ? `${primaryColor}15` : 'transparent',
+                borderColor: currentSection === 'support' ? primaryColor : 'transparent',
+                color: currentSection === 'support' ? primaryColor : 'rgba(255, 255, 255, 0.6)'
+              }}
+            >
+              🛠️ Soporte Técnico
+            </button>
+          </div>
+
           {isAuthenticated && (
             <div className="flex items-center gap-4">
               <span className="text-[10px] text-white/40 font-bold hidden sm:inline">{email}</span>
@@ -562,411 +607,432 @@ export default function TenantPortalPage() {
 
       {/* 2. Main Portal Area */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-6 py-8 flex flex-col">
-        {!isAuthenticated ? (
-          /* Login Screen */
-          <div className="flex-1 flex items-center justify-center py-12">
-            <div className="max-w-md w-full backdrop-blur-md border rounded-[2.5rem] p-8 sm:p-10 shadow-2xl relative overflow-hidden tenant-card">
-              {/* Gold glow top right */}
+        {currentSection === 'addons' ? (
+          /* Seccion Publica de Add-ons Activos */
+          <div className="flex-1 flex flex-col space-y-8 animate-in fade-in duration-300">
+            {/* Hero / Welcome Panel */}
+            <div className="border rounded-[2rem] p-8 shadow-lg relative overflow-hidden tenant-card flex flex-col sm:flex-row items-center gap-6">
               <div
-                className="absolute -top-24 -right-24 w-48 h-48 rounded-full blur-3xl opacity-20"
+                className="absolute -top-32 -right-32 w-64 h-64 rounded-full blur-[100px] opacity-10 pointer-events-none"
                 style={{ backgroundColor: primaryColor }}
               ></div>
-
-              <div className="text-center mb-8">
-                <h2 className="text-xl font-black uppercase tracking-wider text-white">Acceso al Portal</h2>
-                <p className="text-xs text-white/50 mt-1 max-w-xs mx-auto">
-                  Introduce tu correo para ver tu historial de tickets y chatear con soporte.
-                </p>
+              
+              {tenantConfig.logo_url && (
+                <img src={tenantConfig.logo_url} alt={tenantConfig.name} className="w-20 h-20 rounded-3xl object-cover border-2 border-white/10" />
+              )}
+              <div className="flex-1 text-center sm:text-left space-y-2">
+                <span className="text-[9px] uppercase tracking-widest font-black text-white/40 block">Portal Oficial</span>
+                <h2 className="text-3xl font-black uppercase tracking-tight text-white">{tenantConfig.name}</h2>
+                <p className="text-sm text-white/70 max-w-2xl leading-relaxed">{tenantConfig.welcome_message}</p>
               </div>
+            </div>
 
-              <form onSubmit={handleAuthSubmit} className="space-y-4">
-                {tenantConfig.require_customer_info && (
-                  <div className="space-y-1">
-                    <label className="text-[9px] font-black uppercase tracking-widest text-white/40">Nombre Completo</label>
-                    <input
-                      type="text"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      placeholder="Ej. Carlos Mendoza"
-                      required
-                      className="w-full border rounded-2xl px-4.5 py-3.5 text-xs focus:outline-none transition-all tenant-input"
-                    />
+            {/* Content layout for Add-ons */}
+            {otherActiveAddons.length > 0 ? (
+              <div className="border rounded-[2.5rem] p-8 shadow-lg flex flex-col flex-1 relative overflow-hidden group tenant-card">
+                <div
+                  className="absolute -top-32 -right-32 w-64 h-64 rounded-full blur-[100px] opacity-10 transition-all duration-700 pointer-events-none group-hover:opacity-20"
+                  style={{ backgroundColor: primaryColor }}
+                ></div>
+
+                {/* Tabs */}
+                <div className="border-b pb-4 mb-6 tenant-border">
+                  <div className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar">
+                    {[
+                      { slug: 'booking-signature', label: 'Reservas', icon: '📅' },
+                      { slug: 'logistics-gps', label: 'Logística', icon: '📍' },
+                      { slug: 'patreon-sponsorship', label: 'Sponsorship', icon: '💎' },
+                      { slug: 'analytics-apm', label: 'Métricas APM', icon: '📊' },
+                      { slug: 'newsletter-campaigner', label: 'Boletín', icon: '✉️' },
+                    ]
+                      .filter(tab => activeAddonsList.includes(tab.slug))
+                      .map(tab => {
+                        const isActive = activeAddonTab === tab.slug;
+                        return (
+                          <button
+                            key={tab.slug}
+                            onClick={() => setActiveAddonTab(tab.slug)}
+                            className="px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer border"
+                            style={{
+                              backgroundColor: isActive ? `${primaryColor}15` : 'transparent',
+                              borderColor: isActive ? primaryColor : 'rgba(255, 255, 255, 0.05)',
+                              color: isActive ? primaryColor : 'rgba(255, 255, 255, 0.4)'
+                            }}
+                          >
+                            <span className="mr-1.5">{tab.icon}</span>
+                            {tab.label}
+                          </button>
+                        );
+                      })}
                   </div>
-                )}
-
-                <div className="space-y-1">
-                  <label className="text-[9px] font-black uppercase tracking-widest text-white/40">Correo Electrónico</label>
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="correo@ejemplo.com"
-                    required
-                    className="w-full border rounded-2xl px-4.5 py-3.5 text-xs focus:outline-none transition-all tenant-input"
-                  />
                 </div>
 
-                <button
-                  type="submit"
-                  disabled={isSubmittingAuth}
-                  className="w-full py-4 text-black font-black uppercase tracking-widest text-[10px] rounded-2xl transition-all hover:scale-[1.01] active:scale-95 disabled:opacity-50 mt-6 cursor-pointer"
+                {/* Tab Component Render */}
+                <div className="flex-1 min-h-[400px]">
+                  {[
+                    { slug: 'booking-signature', component: <BookingCanvas primaryColor={primaryColor} /> },
+                    { slug: 'logistics-gps', component: <FleetMap primaryColor={primaryColor} /> },
+                    { slug: 'patreon-sponsorship', component: <SponsorTiers primaryColor={primaryColor} /> },
+                    { slug: 'analytics-apm', component: <TelemetryDashboard primaryColor={primaryColor} /> },
+                    { slug: 'newsletter-campaigner', component: <SubscribeForm tenantId={tenantConfig.id} subdomain={subdomain} primaryColor={primaryColor} /> },
+                  ].find(tab => tab.slug === activeAddonTab)?.component}
+                </div>
+              </div>
+            ) : (
+              /* Fallback default public landing if no addons */
+              <div className="border rounded-[2rem] p-8 shadow-lg flex flex-col justify-between flex-1 relative overflow-hidden group tenant-card">
+                <div
+                  className="absolute -top-32 -right-32 w-64 h-64 rounded-full blur-[100px] opacity-10 transition-all duration-700 pointer-events-none group-hover:opacity-20"
                   style={{ backgroundColor: primaryColor }}
-                >
-                  {isSubmittingAuth ? 'Iniciando...' : 'Entrar al Centro de Soporte'}
-                </button>
-              </form>
-            </div>
+                ></div>
+
+                <div className="py-12 text-center max-w-md mx-auto space-y-6">
+                  <div className="w-16 h-16 rounded-3xl mx-auto flex items-center justify-center text-3xl" style={{ backgroundColor: `${primaryColor}15` }}>
+                    🚀
+                  </div>
+                  <h3 className="text-lg font-black uppercase text-white tracking-wider">
+                    Ecosistema Digital de {tenantConfig.name}
+                  </h3>
+                  <p className="text-xs text-white/50 leading-relaxed">
+                    Estamos trabajando de la mano con Néctar Labs para integrar módulos de reservas de citas, suscripción a boletines y herramientas exclusivas para ti.
+                  </p>
+                  <button
+                    onClick={() => setCurrentSection('support')}
+                    className="px-6 py-3.5 text-black font-black uppercase tracking-widest text-[9px] rounded-xl hover:scale-102 active:scale-95 transition-all inline-block"
+                    style={{ backgroundColor: primaryColor }}
+                  >
+                    Ir a Soporte Técnico
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         ) : (
-          /* Logged In Portal Dashboard */
-          <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
-            {/* Left side: Tickets (7 cols) */}
-            <div className="lg:col-span-7 flex flex-col space-y-6">
-              {/* Ticket Details Panel or Ticket Creation Form */}
-              {selectedTicket ? (
-                /* Ticket Detail View */
-                <div className="rounded-[2rem] p-6 flex flex-col flex-1 shadow-lg tenant-card border">
-                  <div className="flex justify-between items-start border-b pb-4 mb-4 tenant-border">
-                    <div>
-                      <button
-                        onClick={() => setSelectedTicket(null)}
-                        className="text-[9px] font-black uppercase tracking-wider text-white/40 hover:text-white mb-2 flex items-center gap-1"
-                      >
-                        ← Volver a la Lista
-                      </button>
-                      <h3 className="text-base font-black uppercase tracking-tight">{selectedTicket.title}</h3>
-                      <p className="text-[8.5px] uppercase tracking-widest mt-1 text-white/40 font-bold">
-                        Ticket #{selectedTicket.id} | Categoría: {selectedTicket.category}
-                      </p>
-                    </div>
-                    <span
-                      className="px-3.5 py-1.5 rounded-full text-[8.5px] font-black uppercase tracking-widest border"
-                      style={{
-                        borderColor: tenantConfig.border_color || 'rgba(255,255,255,0.1)',
-                        backgroundColor:
-                          selectedTicket.status === 'CLOSED'
-                            ? 'rgba(239, 68, 68, 0.1)'
-                            : selectedTicket.status === 'RESOLVED'
-                            ? 'rgba(16, 185, 129, 0.1)'
-                            : 'rgba(245, 158, 11, 0.1)',
-                        color:
-                          selectedTicket.status === 'CLOSED'
-                            ? '#ef4444'
-                            : selectedTicket.status === 'RESOLVED'
-                            ? '#10b981'
-                            : '#f59e0b',
-                      }}
-                    >
-                      {selectedTicket.status}
-                    </span>
+          /* Seccion Privada de Soporte Tecnico */
+          <div className="flex-1 flex flex-col animate-in fade-in duration-300">
+            {!isAuthenticated ? (
+              /* Login Screen for Support */
+              <div className="flex-1 flex items-center justify-center py-12">
+                <div className="max-w-md w-full backdrop-blur-md border rounded-[2.5rem] p-8 sm:p-10 shadow-2xl relative overflow-hidden tenant-card">
+                  <div
+                    className="absolute -top-24 -right-24 w-48 h-48 rounded-full blur-3xl opacity-20"
+                    style={{ backgroundColor: primaryColor }}
+                  ></div>
+
+                  <div className="text-center mb-8">
+                    <h2 className="text-xl font-black uppercase tracking-wider text-white">Acceso a Soporte</h2>
+                    <p className="text-xs text-white/50 mt-1 max-w-xs mx-auto">
+                      Introduce tu correo para ver tu historial de tickets y chatear con soporte técnico de {tenantConfig.name}.
+                    </p>
                   </div>
 
-                  {/* History of messages within the ticket */}
-                  <div className="flex-1 overflow-y-auto space-y-4 max-h-[300px] pr-2 custom-scrollbar">
-                    <div className="bg-white/5 border rounded-2xl p-4 tenant-border">
-                      <p className="text-[8.5px] font-black uppercase tracking-widest text-white/40">Descripción Inicial</p>
-                      <p className="text-xs text-white/80 mt-1 leading-relaxed whitespace-pre-wrap">{selectedTicket.description}</p>
-                      <p className="text-[7.5px] text-white/30 mt-2 font-bold">{new Date(selectedTicket.created_at).toLocaleString()}</p>
-                    </div>
+                  <form onSubmit={handleAuthSubmit} className="space-y-4">
+                    {tenantConfig.require_customer_info && (
+                      <div className="space-y-1">
+                        <label className="text-[9px] font-black uppercase tracking-widest text-white/40">Nombre Completo</label>
+                        <input
+                          type="text"
+                          value={name}
+                          onChange={(e) => setName(e.target.value)}
+                          placeholder="Ej. Carlos Mendoza"
+                          required
+                          className="w-full border rounded-2xl px-4.5 py-3.5 text-xs focus:outline-none transition-all tenant-input"
+                        />
+                      </div>
+                    )}
 
-                    {selectedTicket.messages &&
-                      selectedTicket.messages.map((msg) => (
-                        <div
-                          key={msg.id}
-                          className="p-4 border rounded-2xl tenant-border bg-white/[0.02]"
-                        >
-                          <p className="text-[8.5px] font-black uppercase tracking-widest" style={{ color: primaryColor }}>
-                            {msg.sender_email.toLowerCase() === email.toLowerCase() ? 'Yo' : '🛠️ Soporte Técnico'}
-                          </p>
-                          <p className="text-xs text-white/80 mt-1 leading-relaxed whitespace-pre-wrap">{msg.content}</p>
-                          <p className="text-[7.5px] text-white/30 mt-2 font-bold">{new Date(msg.created_at).toLocaleString()}</p>
-                        </div>
-                      ))}
-                  </div>
-
-                  {/* Add response form */}
-                  {selectedTicket.status !== 'CLOSED' && (
-                    <form onSubmit={handleSendTicketMessage} className="mt-4 pt-4 border-t flex gap-2 tenant-border">
+                    <div className="space-y-1">
+                      <label className="text-[9px] font-black uppercase tracking-widest text-white/40">Correo Electrónico</label>
                       <input
-                        type="text"
-                        value={ticketMessageText}
-                        onChange={(e) => setTicketMessageText(e.target.value)}
-                        placeholder="Escribe tu respuesta técnica aquí..."
-                        className="flex-1 border rounded-xl px-4 py-3 text-xs focus:outline-none transition-all tenant-input"
-                        disabled={isSendingTicketMsg}
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="correo@ejemplo.com"
                         required
+                        className="w-full border rounded-2xl px-4.5 py-3.5 text-xs focus:outline-none transition-all tenant-input"
                       />
-                      <button
-                        type="submit"
-                        disabled={!ticketMessageText.trim() || isSendingTicketMsg}
-                        className="px-5 py-3 text-black font-black uppercase tracking-widest text-[9px] rounded-xl hover:scale-105 transition-all disabled:opacity-50"
-                        style={{ backgroundColor: primaryColor }}
-                      >
-                        {isSendingTicketMsg ? 'Enviando...' : 'Responder'}
-                      </button>
-                    </form>
-                  )}
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={isSubmittingAuth}
+                      className="w-full py-4 text-black font-black uppercase tracking-widest text-[10px] rounded-2xl transition-all hover:scale-[1.01] active:scale-95 disabled:opacity-50 mt-6 cursor-pointer"
+                      style={{ backgroundColor: primaryColor }}
+                    >
+                      {isSubmittingAuth ? 'Iniciando...' : 'Entrar al Centro de Soporte'}
+                    </button>
+                  </form>
                 </div>
-              ) : (
-                /* Ticket List & Creation View */
-                <>
-                  {/* Ticket creation form */}
-                  <div className="border rounded-[2rem] p-6 shadow-lg tenant-card">
-                    <h3 className="text-sm font-black uppercase tracking-wider mb-4 text-white">Nuevo Ticket de Soporte</h3>
-                    <form onSubmit={handleCreateTicket} className="space-y-4">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-1">
-                          <label className="text-[8.5px] font-black uppercase tracking-wider text-white/40">Título del Problema</label>
+              </div>
+            ) : (
+              /* Support Dashboard */
+              <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+                {/* Tickets System (Left side - takes 7 columns) */}
+                <div className="lg:col-span-7 flex flex-col space-y-6">
+                  {selectedTicket ? (
+                    /* Ticket Detail View */
+                    <div className="rounded-[2rem] p-6 flex flex-col flex-1 shadow-lg tenant-card border">
+                      <div className="flex justify-between items-start border-b pb-4 mb-4 tenant-border">
+                        <div>
+                          <button
+                            onClick={() => setSelectedTicket(null)}
+                            className="text-[9px] font-black uppercase tracking-wider text-white/40 hover:text-white mb-2 flex items-center gap-1"
+                          >
+                            ← Volver a la Lista
+                          </button>
+                          <h3 className="text-base font-black uppercase tracking-tight">{selectedTicket.title}</h3>
+                          <p className="text-[8.5px] uppercase tracking-widest mt-1 text-white/40 font-bold">
+                            Ticket #{selectedTicket.id} | Categoría: {selectedTicket.category}
+                          </p>
+                        </div>
+                        <span
+                          className="px-3.5 py-1.5 rounded-full text-[8.5px] font-black uppercase tracking-widest border"
+                          style={{
+                            borderColor: tenantConfig.border_color || 'rgba(255,255,255,0.1)',
+                            backgroundColor:
+                              selectedTicket.status === 'CLOSED'
+                                ? 'rgba(239, 68, 68, 0.1)'
+                                : selectedTicket.status === 'RESOLVED'
+                                ? 'rgba(16, 185, 129, 0.1)'
+                                : 'rgba(245, 158, 11, 0.1)',
+                            color:
+                              selectedTicket.status === 'CLOSED'
+                                ? '#ef4444'
+                                : selectedTicket.status === 'RESOLVED'
+                                ? '#10b981'
+                                : '#f59e0b',
+                          }}
+                        >
+                          {selectedTicket.status}
+                        </span>
+                      </div>
+
+                      {/* History of messages within the ticket */}
+                      <div className="flex-1 overflow-y-auto space-y-4 max-h-[300px] pr-2 custom-scrollbar">
+                        <div className="bg-white/5 border rounded-2xl p-4 tenant-border">
+                          <p className="text-[8.5px] font-black uppercase tracking-widest text-white/40">Descripción Inicial</p>
+                          <p className="text-xs text-white/80 mt-1 leading-relaxed whitespace-pre-wrap">{selectedTicket.description}</p>
+                          <p className="text-[7.5px] text-white/30 mt-2 font-bold">{new Date(selectedTicket.created_at).toLocaleString()}</p>
+                        </div>
+
+                        {selectedTicket.messages &&
+                          selectedTicket.messages.map((msg) => (
+                            <div
+                              key={msg.id}
+                              className="p-4 border rounded-2xl tenant-border bg-white/[0.02]"
+                            >
+                              <p className="text-[8.5px] font-black uppercase tracking-widest" style={{ color: primaryColor }}>
+                                {msg.sender_email.toLowerCase() === email.toLowerCase() ? 'Yo' : '🛠️ Soporte Técnico'}
+                              </p>
+                              <p className="text-xs text-white/80 mt-1 leading-relaxed whitespace-pre-wrap">{msg.content}</p>
+                              <p className="text-[7.5px] text-white/30 mt-2 font-bold">{new Date(msg.created_at).toLocaleString()}</p>
+                            </div>
+                          ))}
+                      </div>
+
+                      {/* Add response form */}
+                      {selectedTicket.status !== 'CLOSED' && (
+                        <form onSubmit={handleSendTicketMessage} className="mt-4 pt-4 border-t flex gap-2 tenant-border">
                           <input
                             type="text"
-                            value={newTicketTitle}
-                            onChange={(e) => setNewTicketTitle(e.target.value)}
-                            placeholder="Ej. Error en pasarela de pagos"
+                            value={ticketMessageText}
+                            onChange={(e) => setTicketMessageText(e.target.value)}
+                            placeholder="Escribe tu respuesta técnica aquí..."
+                            className="flex-1 border rounded-xl px-4 py-3 text-xs focus:outline-none transition-all tenant-input"
+                            disabled={isSendingTicketMsg}
                             required
-                            className="w-full border rounded-xl px-3.5 py-3 text-xs focus:outline-none tenant-input"
                           />
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-2">
-                          <div className="space-y-1">
-                            <label className="text-[8.5px] font-black uppercase tracking-wider text-white/40">Categoría</label>
-                            <select
-                              value={newTicketCategory}
-                              onChange={(e) => setNewTicketCategory(e.target.value)}
-                              className="w-full border rounded-xl px-3.5 py-3 text-xs focus:outline-none tenant-input"
-                            >
-                              <option value="QUESTION">Pregunta</option>
-                              <option value="ISSUE">Problema Técnico</option>
-                              <option value="IMPLEMENTATION">Implementación</option>
-                              <option value="IDEA">Nueva Idea</option>
-                            </select>
-                          </div>
-                          <div className="space-y-1">
-                            <label className="text-[8.5px] font-black uppercase tracking-wider text-white/40">Prioridad</label>
-                            <select
-                              value={newTicketPriority}
-                              onChange={(e) => setNewTicketPriority(e.target.value)}
-                              className="w-full border rounded-xl px-3.5 py-3 text-xs focus:outline-none tenant-input"
-                            >
-                              <option value="LOW">Baja</option>
-                              <option value="MEDIUM">Media</option>
-                              <option value="HIGH">Alta</option>
-                              <option value="URGENT">Urgente</option>
-                            </select>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="space-y-1">
-                        <label className="text-[8.5px] font-black uppercase tracking-wider text-white/40">Detalle / Requerimientos</label>
-                        <textarea
-                          value={newTicketDesc}
-                          onChange={(e) => setNewTicketDesc(e.target.value)}
-                          placeholder="Describe con el mayor detalle técnico posible el inconveniente..."
-                          required
-                          rows={3}
-                          className="w-full border rounded-xl px-3.5 py-3 text-xs focus:outline-none resize-none tenant-input"
-                        ></textarea>
-                      </div>
-
-                      <button
-                        type="submit"
-                        disabled={isCreatingTicket}
-                        className="px-6 py-3.5 text-black font-black uppercase tracking-widest text-[9px] rounded-xl hover:scale-102 active:scale-95 transition-all disabled:opacity-50"
-                        style={{ backgroundColor: primaryColor }}
-                      >
-                        {isCreatingTicket ? 'Abriendo Ticket...' : 'Crear Ticket de Soporte'}
-                      </button>
-                    </form>
-                  </div>
-
-                  {/* List of existing tickets */}
-                  <div className="border rounded-[2rem] p-6 flex-1 shadow-lg overflow-hidden flex flex-col tenant-card">
-                    <h3 className="text-sm font-black uppercase tracking-wider mb-4 text-white">Mis Tickets Abiertos</h3>
-                    <div className="flex-1 overflow-y-auto space-y-3 custom-scrollbar pr-1 max-h-[300px]">
-                      {tickets.length === 0 ? (
-                        <p className="text-xs text-white/35 py-6 text-center">No has creado ningún ticket de soporte técnico aún.</p>
-                      ) : (
-                        tickets.map((t) => (
-                          <div
-                            key={t.id}
-                            onClick={() => setSelectedTicket(t)}
-                            className="bg-white/[0.02] hover:bg-white/5 border rounded-2xl p-4.5 flex justify-between items-center transition-all cursor-pointer tenant-border"
+                          <button
+                            type="submit"
+                            disabled={!ticketMessageText.trim() || isSendingTicketMsg}
+                            className="px-5 py-3 text-black font-black uppercase tracking-widest text-[9px] rounded-xl hover:scale-105 transition-all disabled:opacity-50"
+                            style={{ backgroundColor: primaryColor }}
                           >
-                            <div>
-                              <h4 className="text-xs font-black uppercase text-white tracking-tight">{t.title}</h4>
-                              <p className="text-[8px] uppercase tracking-widest text-white/40 mt-1 font-bold">
-                                Ticket #{t.id} | Categoría: {t.category} | Prioridad: {t.priority}
-                              </p>
-                            </div>
-                            <span
-                              className="px-2.5 py-1 rounded-full text-[7.5px] font-black uppercase tracking-widest"
-                              style={{
-                                border: '1px solid rgba(255, 255, 255, 0.1)',
-                                color: t.status === 'CLOSED' ? '#ef4444' : t.status === 'RESOLVED' ? '#10b981' : '#f59e0b',
-                              }}
-                            >
-                              {t.status}
-                            </span>
-                          </div>
-                        ))
+                            {isSendingTicketMsg ? 'Enviando...' : 'Responder'}
+                          </button>
+                        </form>
                       )}
                     </div>
-                  </div>
-                </>
-              )}
-            </div>
+                  ) : (
+                    /* Ticket List & Creation View */
+                    <>
+                      {/* Ticket creation form */}
+                      <div className="border rounded-[2rem] p-6 shadow-lg tenant-card">
+                        <h3 className="text-sm font-black uppercase tracking-wider mb-4 text-white">Nuevo Ticket de Soporte</h3>
+                        <form onSubmit={handleCreateTicket} className="space-y-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-1">
+                              <label className="text-[8.5px] font-black uppercase tracking-wider text-white/40">Título del Problema</label>
+                              <input
+                                type="text"
+                                value={newTicketTitle}
+                                onChange={(e) => setNewTicketTitle(e.target.value)}
+                                placeholder="Ej. Error en pasarela de pagos"
+                                required
+                                className="w-full border rounded-xl px-3.5 py-3 text-xs focus:outline-none tenant-input"
+                              />
+                            </div>
 
-            {/* Right side: Dynamic Addons panel (5 cols) */}
-            <div className="lg:col-span-5 flex flex-col space-y-6">
-              {otherActiveAddons.length > 0 ? (
-                <div className="border rounded-[2rem] p-6 shadow-lg flex flex-col flex-1 relative overflow-hidden group tenant-card">
-                  {/* Gold glow top right */}
-                  <div
-                    className="absolute -top-32 -right-32 w-64 h-64 rounded-full blur-[100px] opacity-10 transition-all duration-700 pointer-events-none group-hover:opacity-20"
-                    style={{ backgroundColor: primaryColor }}
-                  ></div>
+                            <div className="grid grid-cols-2 gap-2">
+                              <div className="space-y-1">
+                                <label className="text-[8.5px] font-black uppercase tracking-wider text-white/40">Categoría</label>
+                                <select
+                                  value={newTicketCategory}
+                                  onChange={(e) => setNewTicketCategory(e.target.value)}
+                                  className="w-full border rounded-xl px-3.5 py-3 text-xs focus:outline-none tenant-input"
+                                >
+                                  <option value="QUESTION">Pregunta</option>
+                                  <option value="ISSUE">Problema Técnico</option>
+                                  <option value="IMPLEMENTATION">Implementación</option>
+                                  <option value="IDEA">Nueva Idea</option>
+                                </select>
+                              </div>
+                              <div className="space-y-1">
+                                <label className="text-[8.5px] font-black uppercase tracking-wider text-white/40">Prioridad</label>
+                                <select
+                                  value={newTicketPriority}
+                                  onChange={(e) => setNewTicketPriority(e.target.value)}
+                                  className="w-full border rounded-xl px-3.5 py-3 text-xs focus:outline-none tenant-input"
+                                >
+                                  <option value="LOW">Baja</option>
+                                  <option value="MEDIUM">Media</option>
+                                  <option value="HIGH">Alta</option>
+                                  <option value="URGENT">Urgente</option>
+                                </select>
+                              </div>
+                            </div>
+                          </div>
 
-                  {/* Header & Tabs */}
-                  <div className="border-b pb-4 mb-6 tenant-border">
-                    <h3 className="text-sm font-black uppercase tracking-wider text-white mb-4">
-                      Módulos Adicionales
-                    </h3>
-                    
-                    {/* Horizontal scrollable tab buttons */}
-                    <div className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar">
-                      {[
-                        { slug: 'booking-signature', label: 'Reservas', icon: '📅', component: <BookingCanvas primaryColor={primaryColor} /> },
-                        { slug: 'logistics-gps', label: 'Logística', icon: '📍', component: <FleetMap primaryColor={primaryColor} /> },
-                        { slug: 'patreon-sponsorship', label: 'Sponsorship', icon: '💎', component: <SponsorTiers primaryColor={primaryColor} /> },
-                        { slug: 'analytics-apm', label: 'Métricas APM', icon: '📊', component: <TelemetryDashboard primaryColor={primaryColor} /> },
-                        { slug: 'newsletter-campaigner', label: 'Boletín', icon: '✉️', component: <SubscribeForm tenantId={tenantConfig.id} subdomain={subdomain} primaryColor={primaryColor} /> },
-                      ]
-                        .filter(tab => activeAddonsList.includes(tab.slug))
-                        .map(tab => {
-                          const isActive = activeAddonTab === tab.slug;
-                          return (
-                            <button
-                              key={tab.slug}
-                              onClick={() => setActiveAddonTab(tab.slug)}
-                              className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer border"
-                              style={{
-                                backgroundColor: isActive ? `${primaryColor}15` : 'transparent',
-                                borderColor: isActive ? primaryColor : 'rgba(255, 255, 255, 0.05)',
-                                color: isActive ? primaryColor : 'rgba(255, 255, 255, 0.4)'
-                              }}
-                            >
-                              <span className="mr-1.5">{tab.icon}</span>
-                              {tab.label}
-                            </button>
-                          );
-                        })}
+                          <div className="space-y-1">
+                            <label className="text-[8.5px] font-black uppercase tracking-wider text-white/40">Detalle / Requerimientos</label>
+                            <textarea
+                              value={newTicketDesc}
+                              onChange={(e) => setNewTicketDesc(e.target.value)}
+                              placeholder="Describe con el mayor detalle técnico posible el inconveniente..."
+                              required
+                              rows={3}
+                              className="w-full border rounded-xl px-3.5 py-3 text-xs focus:outline-none resize-none tenant-input"
+                            ></textarea>
+                          </div>
+
+                          <button
+                            type="submit"
+                            disabled={isCreatingTicket}
+                            className="px-6 py-3.5 text-black font-black uppercase tracking-widest text-[9px] rounded-xl hover:scale-102 active:scale-95 transition-all disabled:opacity-50"
+                            style={{ backgroundColor: primaryColor }}
+                          >
+                            {isCreatingTicket ? 'Abriendo Ticket...' : 'Crear Ticket de Soporte'}
+                          </button>
+                        </form>
+                      </div>
+
+                      {/* List of existing tickets */}
+                      <div className="border rounded-[2rem] p-6 flex-1 shadow-lg overflow-hidden flex flex-col tenant-card">
+                        <h3 className="text-sm font-black uppercase tracking-wider mb-4 text-white">Mis Tickets Abiertos</h3>
+                        <div className="flex-1 overflow-y-auto space-y-3 custom-scrollbar pr-1 max-h-[300px]">
+                          {tickets.length === 0 ? (
+                            <p className="text-xs text-white/35 py-6 text-center">No has creado ningún ticket de soporte técnico aún.</p>
+                          ) : (
+                            tickets.map((t) => (
+                              <div
+                                key={t.id}
+                                onClick={() => setSelectedTicket(t)}
+                                className="bg-white/[0.02] hover:bg-white/5 border rounded-2xl p-4.5 flex justify-between items-center transition-all cursor-pointer tenant-border"
+                              >
+                                <div>
+                                  <h4 className="text-xs font-black uppercase text-white tracking-tight">{t.title}</h4>
+                                  <p className="text-[8px] uppercase tracking-widest text-white/40 mt-1 font-bold">
+                                    Ticket #{t.id} | Categoría: {t.category} | Prioridad: {t.priority}
+                                  </p>
+                                </div>
+                                <span
+                                  className="px-2.5 py-1 rounded-full text-[7.5px] font-black uppercase tracking-widest"
+                                  style={{
+                                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                                    color: t.status === 'CLOSED' ? '#ef4444' : t.status === 'RESOLVED' ? '#10b981' : '#f59e0b',
+                                  }}
+                                >
+                                  {t.status}
+                                </span>
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                {/* Support Sidebar Info Guide (Right side - 5 cols) */}
+                <div className="lg:col-span-5 flex flex-col space-y-6">
+                  <div className="border rounded-[2rem] p-8 shadow-lg flex flex-col justify-between flex-1 relative overflow-hidden group tenant-card">
+                    <div
+                      className="absolute -top-32 -right-32 w-64 h-64 rounded-full blur-[100px] opacity-10 transition-all duration-700 pointer-events-none group-hover:opacity-20"
+                      style={{ backgroundColor: primaryColor }}
+                    ></div>
+
+                    <div>
+                      <h3 className="text-sm font-black uppercase tracking-wider text-white mb-6 border-b pb-4 tenant-border">
+                        Centro de Ayuda y Chat
+                      </h3>
+                      
+                      <div className="space-y-6">
+                        <div className="flex gap-4">
+                          <div 
+                            className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
+                            style={{ backgroundColor: `${primaryColor}10`, color: primaryColor }}
+                          >
+                            💬
+                          </div>
+                          <div>
+                            <h4 className="text-xs font-black uppercase text-white tracking-tight">Chat en Vivo con Operadores</h4>
+                            <p className="text-[11px] text-white/50 mt-1 leading-relaxed">
+                              {activeAddonsList.includes('live-chat') ? (
+                                <>
+                                  Soporte instantáneo por chat. Haz clic en el widget circular dorado en la esquina inferior derecha para chatear directamente.
+                                </>
+                              ) : (
+                                <>
+                                  Chat en vivo desactivado. Puedes levantar un ticket en el panel izquierdo y nuestro equipo te responderá a la brevedad.
+                                </>
+                              )}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex gap-4">
+                          <div 
+                            className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
+                            style={{ backgroundColor: `${primaryColor}10`, color: primaryColor }}
+                          >
+                            🛡️
+                          </div>
+                          <div>
+                            <h4 className="text-xs font-black uppercase text-white tracking-tight">SLA y Garantía Néctar</h4>
+                            <p className="text-[11px] text-white/50 mt-1 leading-relaxed">
+                              Nuestros ingenieros operan bajo un acuerdo de nivel de servicio (SLA) de menos de 2 horas para incidencias críticas de producción.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-8 pt-6 border-t flex flex-col items-stretch gap-4 tenant-border">
+                      <div className="flex justify-between items-center text-[9px] uppercase tracking-widest font-black text-white/30">
+                        <span>Sesión Activa</span>
+                        <span className="text-green-400">En Línea</span>
+                      </div>
                     </div>
                   </div>
-
-                  {/* Tab Body */}
-                  <div className="flex-1">
-                    {[
-                      { slug: 'booking-signature', component: <BookingCanvas primaryColor={primaryColor} /> },
-                      { slug: 'logistics-gps', component: <FleetMap primaryColor={primaryColor} /> },
-                      { slug: 'patreon-sponsorship', component: <SponsorTiers primaryColor={primaryColor} /> },
-                      { slug: 'analytics-apm', component: <TelemetryDashboard primaryColor={primaryColor} /> },
-                      { slug: 'newsletter-campaigner', component: <SubscribeForm tenantId={tenantConfig.id} subdomain={subdomain} primaryColor={primaryColor} /> },
-                    ].find(tab => tab.slug === activeAddonTab)?.component}
-                  </div>
                 </div>
-              ) : (
-                /* Fallback Support Hub Dashboard */
-                <div className="border rounded-[2rem] p-8 shadow-lg flex flex-col justify-between flex-1 relative overflow-hidden group tenant-card">
-                  {/* Gold glow top right */}
-                  <div
-                    className="absolute -top-32 -right-32 w-64 h-64 rounded-full blur-[100px] opacity-10 transition-all duration-700 pointer-events-none group-hover:opacity-20"
-                    style={{ backgroundColor: primaryColor }}
-                  ></div>
-
-                  <div>
-                    <h3 className="text-sm font-black uppercase tracking-wider text-white mb-6 border-b pb-4 tenant-border">
-                      Servicios del Portal
-                    </h3>
-                    
-                    <div className="space-y-6">
-                      <div className="flex gap-4">
-                        <div 
-                          className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
-                          style={{ backgroundColor: `${primaryColor}10`, color: primaryColor }}
-                        >
-                          🎫
-                        </div>
-                        <div>
-                          <h4 className="text-xs font-black uppercase text-white tracking-tight">Soporte Técnico Asignado</h4>
-                          <p className="text-[11px] text-white/50 mt-1 leading-relaxed">
-                            Crea tickets para comunicarte con tus ingenieros asignados. Resolveremos tus dudas e incidencias de forma prioritaria.
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="flex gap-4">
-                        <div 
-                          className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
-                          style={{ backgroundColor: `${primaryColor}10`, color: primaryColor }}
-                        >
-                          💬
-                        </div>
-                        <div>
-                          <h4 className="text-xs font-black uppercase text-white tracking-tight">Chat en Vivo y Tiempo Real</h4>
-                          <p className="text-[11px] text-white/50 mt-1 leading-relaxed">
-                            {activeAddonsList.includes('live-chat') ? (
-                              <>
-                                Soporte inmediato en tiempo real **activado**. Utiliza el botón de chat flotante que se encuentra en la esquina inferior derecha para iniciar una conversación.
-                              </>
-                            ) : (
-                              <>
-                                Comunicación directa por chat. Puedes solicitar la activación del Add-on `live-chat` en tu panel para habilitar esta funcionalidad.
-                              </>
-                            )}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="flex gap-4">
-                        <div 
-                          className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
-                          style={{ backgroundColor: `${primaryColor}10`, color: primaryColor }}
-                        >
-                          🧩
-                        </div>
-                        <div>
-                          <h4 className="text-xs font-black uppercase text-white tracking-tight">Ecosistema de Add-ons</h4>
-                          <p className="text-[11px] text-white/50 mt-1 leading-relaxed">
-                            Expande las capacidades de tu portal integrando módulos pre-construidos como agendas de citas, pasarelas de patrocinio, telemetría y campañas de newsletter.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="mt-8 pt-6 border-t flex flex-col sm:flex-row items-center justify-between gap-4 tenant-border">
-                    <p className="text-[9px] uppercase tracking-widest font-black text-white/30">
-                      Néctar Labs &copy; {new Date().getFullYear()}
-                    </p>
-                    <a
-                      href={getMainDomainUrl('/dashboard/addons')}
-                      className="px-5 py-3 border border-white/10 hover:bg-white/5 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all"
-                      style={{ color: primaryColor, borderColor: `${primaryColor}30` }}
-                    >
-                      Explorar Catálogo
-                    </a>
-                  </div>
-                </div>
-              )}
-            </div>
-
+              </div>
+            )}
           </div>
         )}
       </main>
 
-      {/* Floating Live Chat Widget */}
-      {isAuthenticated && activeAddonsList.includes('live-chat') && (
+      {/* Floating Live Chat Widget (Visible inside support tab if authenticated) */}
+      {currentSection === 'support' && isAuthenticated && activeAddonsList.includes('live-chat') && (
         <ChatWidget
           tenantId={tenantConfig.id}
           tenantName={tenantConfig.name}
@@ -994,6 +1060,20 @@ export default function TenantPortalPage() {
           </div>
         </div>
       </footer>
+
+      {/* Premium Toast & ConfirmModal Dialog Mounts */}
+      {toast && (
+        <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />
+      )}
+      {confirmDlg && (
+        <ConfirmModal
+          isOpen={confirmDlg.isOpen}
+          title={confirmDlg.title}
+          message={confirmDlg.message}
+          onConfirm={confirmDlg.onConfirm}
+          onCancel={() => setConfirmDlg(null)}
+        />
+      )}
     </div>
   );
 }

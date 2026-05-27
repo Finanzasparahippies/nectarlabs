@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import Toast from '@/components/ui/Toast';
+import ConfirmModal from '@/components/ui/ConfirmModal';
 
 interface Message {
   id: number;
@@ -44,6 +46,13 @@ export default function ChatWidget({
   const [token, setToken] = useState<string | null>(null);
   const [email, setEmail] = useState('');
   const [isOpen, setIsOpen] = useState(false);
+
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'warning' | 'info' } | null>(null);
+  const [confirmDlg, setConfirmDlg] = useState<{ isOpen: boolean; title: string; message: string; onConfirm: () => void } | null>(null);
+
+  const showToast = (message: string, type: 'success' | 'error' | 'warning' | 'info' = 'success') => {
+    setToast({ message, type });
+  };
   const [activeChat, setActiveChat] = useState<SupportChat | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
@@ -164,7 +173,7 @@ export default function ChatWidget({
       prevMessagesCountRef.current = 0;
       setIsOpen(true);
     } catch (err) {
-      alert('Error al iniciar el chat de soporte técnico');
+      showToast('Error al iniciar el chat de soporte técnico', 'error');
     } finally {
       setIsSubmitting(false);
     }
@@ -210,7 +219,7 @@ export default function ChatWidget({
         });
       }
     } catch (err) {
-      alert('Error al enviar el mensaje');
+      showToast('Error al enviar el mensaje', 'error');
       setNewMessage(messageText);
     } finally {
       setIsSubmitting(false);
@@ -218,20 +227,27 @@ export default function ChatWidget({
     }
   };
 
-  const handleCloseChat = async () => {
+  const handleCloseChat = () => {
     if (!activeChat) return;
-    if (!confirm('¿Deseas cerrar esta sesión de chat de soporte?')) return;
-
-    try {
-      await customFetch(`/api/support-chats/${activeChat.id}/close/`, {
-        method: 'POST',
-      });
-      setActiveChat(null);
-      setMessages([]);
-      prevMessagesCountRef.current = 0;
-    } catch (err) {
-      alert('Error al cerrar el chat');
-    }
+    setConfirmDlg({
+      isOpen: true,
+      title: 'Cerrar Chat',
+      message: '¿Deseas cerrar esta sesión de chat de soporte?',
+      onConfirm: async () => {
+        setConfirmDlg(null);
+        try {
+          await customFetch(`/api/support-chats/${activeChat.id}/close/`, {
+            method: 'POST',
+          });
+          setActiveChat(null);
+          setMessages([]);
+          prevMessagesCountRef.current = 0;
+          showToast('Sesión de chat cerrada.', 'success');
+        } catch (err) {
+          showToast('Error al cerrar el chat', 'error');
+        }
+      }
+    });
   };
 
   if (!token) return null;
@@ -511,6 +527,20 @@ export default function ChatWidget({
           </span>
         )}
       </button>
+
+      {/* Premium Toast & ConfirmModal Dialog Mounts */}
+      {toast && (
+        <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />
+      )}
+      {confirmDlg && (
+        <ConfirmModal
+          isOpen={confirmDlg.isOpen}
+          title={confirmDlg.title}
+          message={confirmDlg.message}
+          onConfirm={confirmDlg.onConfirm}
+          onCancel={() => setConfirmDlg(null)}
+        />
+      )}
     </div>
   );
 }

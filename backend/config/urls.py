@@ -9,7 +9,7 @@ from rest_framework_simplejwt.views import (
 
 
 from apps.shop.views import PlanViewSet, ProductViewSet, ContractViewSet, PaymentInstallmentViewSet, AddOnViewSet, PromoCodeViewSet, SalesCommissionViewSet
-from apps.dashboard.views import ProjectViewSet, FAQViewSet, TimeLogViewSet
+from apps.dashboard.views import ProjectViewSet, FAQViewSet, TimeLogViewSet, ProjectQuoteViewSet
 from apps.blog.views import PostViewSet
 from apps.tickets.views import TicketViewSet, SupportChatViewSet
 from apps.users.views import UserViewSet
@@ -22,6 +22,7 @@ router.register(r'addons', AddOnViewSet, basename='addon')
 router.register(r'contracts', ContractViewSet, basename='contract')
 router.register(r'installments', PaymentInstallmentViewSet, basename='installment')
 router.register(r'projects', ProjectViewSet, basename='project')
+router.register(r'quotes', ProjectQuoteViewSet, basename='quote')
 router.register(r'faqs', FAQViewSet)
 router.register(r'logs', TimeLogViewSet, basename='timelog')
 router.register(r'posts', PostViewSet)

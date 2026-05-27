@@ -1,3 +1,4 @@
+import uuid
 from django.db import models
 from django.conf import settings
 
@@ -188,4 +189,37 @@ class BusinessExpense(models.Model):
 
     def __str__(self):
         return f"{self.name} (${self.cost})"
+
+class ProjectQuote(models.Model):
+    class Status(models.TextChoices):
+        DRAFT = 'DRAFT', 'Borrador'
+        SENT = 'SENT', 'Enviado'
+        APPROVED = 'APPROVED', 'Aprobado'
+        REJECTED = 'REJECTED', 'Rechazado'
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    client = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True,
+        related_name='quotes'
+    )
+    client_name = models.CharField(max_length=200, help_text="Nombre o Razón Social del prospecto/cliente")
+    client_email = models.EmailField(help_text="Email de contacto para la cotización")
+    project_name = models.CharField(max_length=200)
+    description = models.TextField(blank=True, null=True, help_text="Descripción o alcance general")
+    modules = models.JSONField(
+        default=list, 
+        help_text="Listado de módulos de funcionalidad cotizados. Formato: [{'name': '...', 'description': '...', 'price': 123.00}]"
+    )
+    total_price = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    estimated_delivery_weeks = models.PositiveIntegerField(default=4, help_text="Semanas estimadas de desarrollo")
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.DRAFT)
+    pdf_file = models.FileField(upload_to='project_quotes_pdf/', blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Cotización: {self.project_name} - {self.client_name} (${self.total_price})"
 

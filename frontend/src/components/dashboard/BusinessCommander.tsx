@@ -1,5 +1,17 @@
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { fetcher, API_URL } from '@/lib/api';
+
+const PREDEFINED_MODULES = [
+  { key: 'auth', name: 'Autenticación y Perfiles de Usuario', description: 'Sistema de inicio de sesión seguro, registro, recuperación de contraseña y gestión de perfiles con roles de usuario (ADMIN, CLIENT, etc.).', price: 15000 },
+  { key: 'payments', name: 'Pasarela de Pagos y E-commerce', description: 'Integración de cobros recurrentes y pagos únicos a través de Stripe/PayPal con carrito de compras y facturación básica.', price: 25000 },
+  { key: 'notifications', name: 'Chat y Notificaciones en Tiempo Real', description: 'Sistema de notificaciones push, alertas en tiempo real y chat interactivo basado en WebSockets.', price: 18000 },
+  { key: 'cms', name: 'Panel de Administración y Gestor de Contenido (CMS)', description: 'Consola de administración a medida para publicar blogs, gestionar catálogos, y editar información general.', price: 20000 },
+  { key: 'booking', name: 'Calendario y Sistema de Reservas', description: 'Módulo de citas dinámico con asignación de horarios, recordatorios automáticos por email y pasarela de cobro.', price: 22000 },
+  { key: 'analytics', name: 'Dashboard de Analítica y Gráficas', description: 'Panel de métricas integrando gráficas en tiempo real de ventas, logs, y reportes procesados en base de datos.', price: 24000 },
+  { key: 'api', name: 'Integración de API y Servicios de Terceros', description: 'Conexión de sistemas externos (ej. CRM, ERP, API de envíos, Mapas) con endpoints documentados.', price: 16000 },
+  { key: 'saas', name: 'Arquitectura Multi-inquilino (SaaS)', description: 'Base estructurada para alojar múltiples subdominios de clientes independientes bajo un esquema SaaS premium.', price: 35000 },
+];
 
 const getMediaUrl = (url?: string) => {
   if (!url) return '';
@@ -74,27 +86,201 @@ export default function BusinessCommander({ stats, installments, setInstallments
   const [togglingUser, setTogglingUser] = useState<number | null>(null);
   const [salesLoading, setSalesLoading] = useState(true);
 
+  // Project Quotes States
+  const [quotes, setQuotes] = useState<any[]>([]);
+  const [quotesLoading, setQuotesLoading] = useState(true);
+  const [showQuoteModal, setShowQuoteModal] = useState(false);
+  const [isSubmittingQuote, setIsSubmittingQuote] = useState(false);
+  const [quoteError, setQuoteError] = useState('');
+  
+  // Quote Form State
+  const [quoteClientType, setQuoteClientType] = useState<'registered' | 'prospect'>('prospect');
+  const [selectedClientId, setSelectedClientId] = useState('');
+  const [prospectName, setProspectName] = useState('');
+  const [prospectEmail, setProspectEmail] = useState('');
+  const [projectName, setProjectName] = useState('');
+  const [projectDesc, setProjectDesc] = useState('');
+  const [deliveryWeeks, setDeliveryWeeks] = useState(4);
+  const [selectedModules, setSelectedModules] = useState<Array<{ name: string; description: string; price: number; key: string }>>([]);
+
   useEffect(() => {
     const loadSalesData = async () => {
       try {
-        const [commissionsData, summaryData, promoData, usersData] = await Promise.all([
+        const [commissionsData, summaryData, promoData, usersData, quotesData] = await Promise.all([
           fetcher('/sales-commissions/').catch(() => []),
           fetcher('/sales-commissions/summary/').catch(() => null),
           fetcher('/promo-codes/').catch(() => []),
           fetcher('/users/').catch(() => []),
+          fetcher('/quotes/').catch(() => []),
         ]);
         setCommissions(Array.isArray(commissionsData) ? commissionsData : []);
         setCommissionSummary(summaryData);
         setPromoCodes(Array.isArray(promoData) ? promoData : []);
         setUsers(Array.isArray(usersData) ? usersData : []);
+        setQuotes(Array.isArray(quotesData) ? quotesData : []);
       } catch (err) {
         console.error('Error loading sales data:', err);
       } finally {
         setSalesLoading(false);
+        setQuotesLoading(false);
       }
     };
     loadSalesData();
   }, []);
+
+  const handleUpdateQuoteStatus = async (quoteId: string, status: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/quotes/${quoteId}/change_status/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ status })
+      });
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || 'Error al cambiar el estado');
+      }
+      const data = await response.json();
+      setQuotes(prev => prev.map(q => q.id === quoteId ? { ...q, status: data.status } : q));
+      alert(`Estado de la cotización actualizado a ${status}.${status === 'APPROVED' ? ' Se ha generado un contrato en proceso y enviado por correo para la firma.' : ''}`);
+    } catch (err: any) {
+      alert(err.message || 'Error al cambiar estado.');
+    }
+  };
+
+  const handleRegenerateQuotePDF = async (quoteId: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/quotes/${quoteId}/regenerate_pdf/`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (!response.ok) throw new Error("PDF generation failed");
+      const data = await response.json();
+      setQuotes(prev => prev.map(q => q.id === quoteId ? { ...q, pdf_file: data.pdf_url } : q));
+      alert("PDF de la cotización regenerado con éxito.");
+    } catch (err) {
+      alert("Error al generar PDF de cotización.");
+    }
+  };
+
+  const handleDeleteQuote = async (quoteId: string) => {
+    if (!window.confirm("¿Estás seguro de que deseas eliminar esta cotización permanentemente?")) return;
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/quotes/${quoteId}/`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (!response.ok) throw new Error("Delete failed");
+      setQuotes(prev => prev.filter(q => q.id !== quoteId));
+      alert("Cotización eliminada con éxito.");
+    } catch (err) {
+      alert("Error al eliminar cotización.");
+    }
+  };
+
+  const handleToggleModuleTemplate = (template: typeof PREDEFINED_MODULES[0], isChecked: boolean) => {
+    if (isChecked) {
+      setSelectedModules(prev => [...prev, {
+        key: template.key,
+        name: template.name,
+        description: template.description,
+        price: template.price
+      }]);
+    } else {
+      setSelectedModules(prev => prev.filter(sm => sm.key !== template.key));
+    }
+  };
+
+  const handleAddCustomModule = () => {
+    setSelectedModules(prev => [...prev, {
+      key: `custom-${Date.now()}`,
+      name: 'Módulo Personalizado',
+      description: 'Detalles específicos de la funcionalidad a la medida.',
+      price: 10000
+    }]);
+  };
+
+  const handleRemoveSelectedModule = (key: string) => {
+    setSelectedModules(prev => prev.filter(sm => sm.key !== key));
+  };
+
+  const handleEditSelectedModule = (index: number, field: 'name' | 'description' | 'price', value: any) => {
+    setSelectedModules(prev => prev.map((m, idx) => {
+      if (idx === index) {
+        return { ...m, [field]: value };
+      }
+      return m;
+    }));
+  };
+
+  const handleCreateQuote = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setQuoteError('');
+    setIsSubmittingQuote(true);
+
+    try {
+      const token = localStorage.getItem('token');
+      
+      let clientName = prospectName;
+      let clientEmail = prospectEmail;
+      
+      if (quoteClientType === 'registered') {
+        const found = users.find(u => u.id === parseInt(selectedClientId));
+        if (found) {
+          clientName = found.username;
+          clientEmail = found.email;
+        } else {
+          throw new Error("Por favor selecciona un usuario válido.");
+        }
+      }
+
+      const payload = {
+        client: quoteClientType === 'registered' ? parseInt(selectedClientId) : null,
+        client_name: clientName,
+        client_email: clientEmail,
+        project_name: projectName,
+        description: projectDesc,
+        estimated_delivery_weeks: deliveryWeeks,
+        modules: selectedModules.map(m => ({
+          name: m.name,
+          description: m.description,
+          price: parseFloat(m.price as any) || 0
+        }))
+      };
+
+      const response = await fetch(`${API_URL}/quotes/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.detail || 'Error al guardar la cotización');
+      }
+
+      const newQuote = await response.json();
+      setQuotes(prev => [newQuote, ...prev]);
+      setShowQuoteModal(false);
+      alert("Cotización modular creada y PDF generado con éxito.");
+    } catch (err: any) {
+      setQuoteError(err.message || 'Ocurrió un error inesperado.');
+    } finally {
+      setIsSubmittingQuote(false);
+    }
+  };
 
   const handleToggleApproval = async (userId: number, currentApproved: boolean) => {
     setTogglingUser(userId);
@@ -755,6 +941,136 @@ export default function BusinessCommander({ stats, installments, setInstallments
         </div>
       </section>
 
+      {/* ── SECCIÓN DE COTIZACIONES MODULARES ── */}
+      <section className="bg-card-bg border border-card-border rounded-[2.5rem] p-8 md:p-10 shadow-lg mt-12">
+        <div className="mb-8 flex justify-between items-center flex-wrap gap-4 text-left">
+          <div>
+            <h3 className="text-xs font-black uppercase tracking-[0.3em] opacity-30">Cotizador de Proyectos Modulares</h3>
+            <p className="text-[9px] font-bold text-foreground/40 mt-1 uppercase tracking-wider">Generación de propuestas comerciales y PDFs formalizados para proyectos a la medida</p>
+          </div>
+          <button
+            onClick={() => {
+              setSelectedModules([]);
+              setProjectName('');
+              setProjectDesc('');
+              setProspectName('');
+              setProspectEmail('');
+              setSelectedClientId('');
+              setDeliveryWeeks(4);
+              setQuoteError('');
+              setShowQuoteModal(true);
+            }}
+            className="px-6 py-2.5 bg-nectar-gold text-background text-[9px] font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 transition-all shadow-lg shadow-nectar-gold/25 font-bold"
+          >
+            + Nueva Cotización
+          </button>
+        </div>
+
+        {quotesLoading ? (
+          <div className="py-10 flex justify-center">
+            <div className="w-8 h-8 border-2 border-nectar-gold border-t-transparent rounded-full animate-spin" />
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-card-border/50 text-[8px] font-black uppercase tracking-widest opacity-40">
+                  <th className="pb-4">Proyecto / Cliente</th>
+                  <th className="pb-4 text-center">Módulos</th>
+                  <th className="pb-4 text-center">Entrega Est.</th>
+                  <th className="pb-4 text-right">Total Cotizado</th>
+                  <th className="pb-4 text-center">Estado</th>
+                  <th className="pb-4 text-center">PDF</th>
+                  <th className="pb-4 text-center">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {quotes.map(quote => (
+                  <tr key={quote.id} className="border-b border-card-border/30 last:border-0 hover:bg-foreground/[0.02] transition-colors">
+                    <td className="py-4 pr-4 text-left">
+                      <h4 className="font-black text-sm">{quote.project_name}</h4>
+                      <span className="text-[9px] font-bold text-foreground/60">{quote.client_name}</span>
+                      <p className="text-[7.5px] font-mono text-foreground/40 mt-0.5">{quote.client_email}</p>
+                    </td>
+                    <td className="py-4 text-center font-mono font-bold text-xs">
+                      {quote.modules ? quote.modules.length : 0}
+                    </td>
+                    <td className="py-4 text-center text-[10px] font-bold opacity-60">
+                      {quote.estimated_delivery_weeks} sem
+                    </td>
+                    <td className="py-4 text-right font-black text-sm text-nectar-gold font-mono">
+                      ${parseFloat(quote.total_price || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                    </td>
+                    <td className="py-4 text-center">
+                      <select
+                        value={quote.status}
+                        onChange={(e) => handleUpdateQuoteStatus(quote.id, e.target.value)}
+                        className={`px-3 py-1.5 text-[7px] font-black uppercase tracking-wider rounded-full bg-background border focus:outline-none cursor-pointer transition-colors ${
+                          quote.status === 'APPROVED'
+                            ? 'border-green-500/30 text-green-500 bg-green-500/5'
+                            : quote.status === 'REJECTED'
+                            ? 'border-red-500/30 text-red-500 bg-red-500/5'
+                            : quote.status === 'SENT'
+                            ? 'border-blue-500/30 text-blue-500 bg-blue-500/5'
+                            : 'border-yellow-500/30 text-yellow-500 bg-yellow-500/5'
+                        }`}
+                      >
+                        <option value="DRAFT">Borrador</option>
+                        <option value="SENT">Enviado</option>
+                        <option value="APPROVED">Aprobado</option>
+                        <option value="REJECTED">Rechazado</option>
+                      </select>
+                    </td>
+                    <td className="py-4 text-center">
+                      {quote.pdf_file ? (
+                        <div className="flex flex-col items-center gap-1">
+                          <a
+                            href={quote.pdf_file}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="px-2.5 py-1 bg-nectar-gold/10 hover:bg-nectar-gold hover:text-background text-[8px] font-black uppercase tracking-widest rounded-full transition-all inline-block font-bold border border-nectar-gold/20"
+                          >
+                            Abrir PDF ↗
+                          </a>
+                          <button
+                            onClick={() => handleRegenerateQuotePDF(quote.id)}
+                            className="text-[7px] font-black uppercase tracking-widest opacity-40 hover:opacity-100 hover:text-nectar-gold transition-all"
+                          >
+                            Regenerar
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => handleRegenerateQuotePDF(quote.id)}
+                          className="px-2.5 py-1 bg-foreground/5 hover:bg-foreground hover:text-background text-[8px] font-black uppercase tracking-widest rounded-full transition-all"
+                        >
+                          Generar PDF
+                        </button>
+                      )}
+                    </td>
+                    <td className="py-4 text-center">
+                      <button
+                        onClick={() => handleDeleteQuote(quote.id)}
+                        className="px-3 py-1 bg-red-500/10 text-red-500 hover:bg-red-600 hover:text-white rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border border-red-500/20"
+                      >
+                        Eliminar
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+                {quotes.length === 0 && (
+                  <tr>
+                    <td colSpan={7} className="py-12 text-center text-[9px] font-black uppercase tracking-widest opacity-25">
+                      No hay cotizaciones generadas aún
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+
       {/* ── ADMIN SALES COMMAND CENTER ── */}
       <section id="ventas-section" className="space-y-10">
         <div>
@@ -1054,6 +1370,251 @@ export default function BusinessCommander({ stats, installments, setInstallments
           </div>
         </div>
       </section>
+
+      {/* ── MODAL NUEVA COTIZACIÓN MODULAR ── */}
+      {showQuoteModal && (
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-6 overflow-y-auto">
+          <div className="w-full max-w-4xl bg-card-bg border border-card-border p-8 md:p-10 rounded-[3rem] shadow-2xl relative max-h-[90vh] overflow-y-auto space-y-8 animate-in fade-in zoom-in-95 duration-200 text-left">
+            <button
+              onClick={() => setShowQuoteModal(false)}
+              className="absolute top-6 right-6 w-8 h-8 rounded-full border border-card-border text-foreground/40 hover:text-foreground flex items-center justify-center text-xl font-bold"
+            >
+              ×
+            </button>
+
+            <div>
+              <span className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold text-[8px] font-black uppercase tracking-widest rounded-full border border-nectar-gold/20">
+                Néctar Labs Cotizador
+              </span>
+              <h2 className="text-3xl font-black tracking-tighter mt-4 leading-none">Nueva Cotización Modular</h2>
+              <p className="text-xs opacity-40 uppercase tracking-widest mt-1">Configure los requerimientos del proyecto</p>
+            </div>
+
+            {quoteError && (
+              <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-500 text-xs font-bold rounded-xl text-center">
+                {quoteError}
+              </div>
+            )}
+
+            <form onSubmit={handleCreateQuote} className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {/* Left Side: General Info */}
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-4">Tipo de Cliente</label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setQuoteClientType('prospect')}
+                      className={`py-3 rounded-2xl border font-black text-[9px] uppercase tracking-wider transition-all ${
+                        quoteClientType === 'prospect'
+                          ? 'border-nectar-gold bg-nectar-gold/10 text-nectar-gold'
+                          : 'border-card-border text-foreground/50 hover:border-card-border/80 bg-background/50'
+                      }`}
+                    >
+                      Prospecto Libre
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setQuoteClientType('registered')}
+                      className={`py-3 rounded-2xl border font-black text-[9px] uppercase tracking-wider transition-all ${
+                        quoteClientType === 'registered'
+                          ? 'border-nectar-gold bg-nectar-gold/10 text-nectar-gold'
+                          : 'border-card-border text-foreground/50 hover:border-card-border/80 bg-background/50'
+                      }`}
+                    >
+                      Usuario Registrado
+                    </button>
+                  </div>
+                </div>
+
+                {quoteClientType === 'registered' ? (
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-4">Seleccionar Usuario</label>
+                    <select
+                      required
+                      value={selectedClientId}
+                      onChange={(e) => setSelectedClientId(e.target.value)}
+                      className="w-full px-6 py-4 bg-background border border-card-border rounded-2xl focus:border-nectar-gold outline-none transition-all font-bold text-xs text-foreground"
+                    >
+                      <option value="">-- Elige un Usuario --</option>
+                      {users.filter(u => u.role === 'BUSINESS' || u.role === 'CUSTOMER').map(u => (
+                        <option key={u.id} value={u.id}>
+                          {u.username} ({u.email})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                ) : (
+                  <>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-4">Nombre / Razón Social</label>
+                      <input
+                        type="text"
+                        required
+                        className="w-full px-6 py-4 bg-background border border-card-border rounded-2xl focus:border-nectar-gold outline-none transition-all font-bold text-xs text-foreground"
+                        placeholder="ej. Juan Pérez o Comercializadora S.A."
+                        value={prospectName}
+                        onChange={(e) => setProspectName(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-4">Email de Contacto</label>
+                      <input
+                        type="email"
+                        required
+                        className="w-full px-6 py-4 bg-background border border-card-border rounded-2xl focus:border-nectar-gold outline-none transition-all font-bold text-xs text-foreground"
+                        placeholder="nombre@correo.com"
+                        value={prospectEmail}
+                        onChange={(e) => setProspectEmail(e.target.value)}
+                      />
+                    </div>
+                  </>
+                )}
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-4">Nombre del Proyecto</label>
+                  <input
+                    type="text"
+                    required
+                    className="w-full px-6 py-4 bg-background border border-card-border rounded-2xl focus:border-nectar-gold outline-none transition-all font-bold text-xs text-foreground"
+                    placeholder="ej. Rediseño Web y Pasarela de Pagos"
+                    value={projectName}
+                    onChange={(e) => setProjectName(e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-4">Semanas Estimadas de Entrega</label>
+                  <input
+                    type="number"
+                    required
+                    min={1}
+                    className="w-full px-6 py-4 bg-background border border-card-border rounded-2xl focus:border-nectar-gold outline-none transition-all font-bold text-xs text-foreground"
+                    value={deliveryWeeks}
+                    onChange={(e) => setDeliveryWeeks(parseInt(e.target.value) || 1)}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-4">Alcance General (Opcional)</label>
+                  <textarea
+                    rows={4}
+                    className="w-full px-6 py-4 bg-background border border-card-border rounded-2xl focus:border-nectar-gold outline-none transition-all font-bold text-xs text-foreground"
+                    placeholder="Escriba los lineamientos o requerimientos clave del proyecto..."
+                    value={projectDesc}
+                    onChange={(e) => setProjectDesc(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              {/* Right Side: Modules selection */}
+              <div className="space-y-6 flex flex-col justify-between">
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-4">Módulos de Funcionalidad</label>
+                    <button
+                      type="button"
+                      onClick={handleAddCustomModule}
+                      className="text-[9px] font-black text-nectar-gold hover:underline uppercase tracking-widest font-bold"
+                    >
+                      + Agregar Personalizado
+                    </button>
+                  </div>
+
+                  {/* Predefined Templates */}
+                  <div className="space-y-3 max-h-[350px] overflow-y-auto pr-2">
+                    {PREDEFINED_MODULES.map(m => {
+                      const isChecked = selectedModules.some(sm => sm.key === m.key);
+                      return (
+                        <div key={m.key} className="p-4 bg-background/40 border border-card-border/80 rounded-2xl flex items-start gap-4 text-left">
+                          <input
+                            type="checkbox"
+                            className="mt-1"
+                            checked={isChecked}
+                            onChange={(e) => handleToggleModuleTemplate(m, e.target.checked)}
+                          />
+                          <div className="flex-1 space-y-1">
+                            <h4 className="text-xs font-black">{m.name}</h4>
+                            <p className="text-[8px] opacity-50 leading-relaxed">{m.description}</p>
+                            <span className="text-[9px] font-black text-nectar-gold block mt-1">${m.price.toLocaleString('es-MX')} MXN</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Customized / Custom Modules Inputs */}
+                  {selectedModules.length > 0 && (
+                    <div className="space-y-4 pt-4 border-t border-card-border/40 text-left">
+                      <label className="text-[9px] font-black uppercase tracking-widest opacity-40 block">Editar Costos y Descripciones:</label>
+                      <div className="space-y-3 max-h-[250px] overflow-y-auto pr-2">
+                        {selectedModules.map((sm, index) => (
+                          <div key={sm.key} className="p-4 bg-background border border-card-border/60 rounded-xl space-y-3 relative text-left">
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveSelectedModule(sm.key)}
+                              className="absolute top-2 right-3 text-red-500 hover:text-red-700 text-xs font-bold font-black"
+                            >
+                              remover
+                            </button>
+                            <div className="grid grid-cols-3 gap-2">
+                              <input
+                                type="text"
+                                className="col-span-2 px-3 py-1.5 bg-background border border-card-border rounded-lg text-[9px] font-bold text-foreground"
+                                placeholder="Nombre del Módulo"
+                                value={sm.name}
+                                onChange={(e) => handleEditSelectedModule(index, 'name', e.target.value)}
+                              />
+                              <input
+                                type="number"
+                                className="px-3 py-1.5 bg-background border border-card-border rounded-lg text-[9px] font-bold text-right text-foreground font-mono"
+                                placeholder="Precio"
+                                value={sm.price}
+                                onChange={(e) => handleEditSelectedModule(index, 'price', parseFloat(e.target.value) || 0)}
+                              />
+                            </div>
+                            <textarea
+                              rows={2}
+                              className="w-full px-3 py-1.5 bg-background border border-card-border rounded-lg text-[8px] text-foreground"
+                              placeholder="Descripción detallada de la entrega..."
+                              value={sm.description}
+                              onChange={(e) => handleEditSelectedModule(index, 'description', e.target.value)}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Total & Submit */}
+                <div className="pt-6 border-t border-card-border/60 flex items-center justify-between text-left">
+                  <div>
+                    <span className="text-[8px] font-black uppercase tracking-widest opacity-40 block">Precio Total Estimado</span>
+                    <span className="text-2xl font-black text-nectar-gold font-mono">${selectedModules.reduce((sum, m) => sum + (parseFloat(m.price as any) || 0), 0).toLocaleString('es-MX')} MXN</span>
+                  </div>
+                  <div className="flex gap-4">
+                    <button
+                      type="button"
+                      onClick={() => setShowQuoteModal(false)}
+                      className="px-6 py-3 bg-card-border hover:bg-card-border/80 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isSubmittingQuote || selectedModules.length === 0}
+                      className="px-8 py-3 bg-nectar-gold text-background text-[10px] font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 disabled:opacity-40 disabled:scale-100 transition-all shadow-lg shadow-nectar-gold/20 font-bold"
+                    >
+                      {isSubmittingQuote ? 'Generando...' : 'Guardar y Generar PDF'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

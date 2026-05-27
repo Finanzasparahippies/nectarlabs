@@ -6,6 +6,7 @@ import { fetcher } from '@/lib/api';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
+import Toast from '@/components/ui/Toast';
 
 interface Plan {
   id: number;
@@ -22,6 +23,29 @@ function OnboardingContent() {
 
   const [step, setStep] = useState(1);
   const [plans, setPlans] = useState<Plan[]>([]);
+
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'warning' | 'info' } | null>(null);
+  const [redirectCountdown, setRedirectCountdown] = useState(5);
+
+  const showToast = (message: string, type: 'success' | 'error' | 'warning' | 'info' = 'success') => {
+    setToast({ message, type });
+  };
+
+  useEffect(() => {
+    if (step === 4) {
+      const interval = setInterval(() => {
+        setRedirectCountdown(prev => {
+          if (prev <= 1) {
+            clearInterval(interval);
+            router.push('/dashboard');
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+      return () => clearInterval(interval);
+    }
+  }, [step, router]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
@@ -121,7 +145,7 @@ function OnboardingContent() {
 
   const handleSubmit = async () => {
     if (sigCanvas.current?.isEmpty()) {
-      alert("Por favor, firma el contrato antes de continuar.");
+      showToast("Por favor, firma el contrato antes de continuar.", "warning");
       return;
     }
 
@@ -140,7 +164,7 @@ function OnboardingContent() {
       setStep(4);
     } catch (err) {
       console.error("Error signing contract:", err);
-      alert("Hubo un error al procesar tu contrato. Verifica tu sesión y conexión.");
+      showToast("Hubo un error al procesar tu contrato. Verifica tu sesión y conexión.", "error");
     } finally {
       setSubmitting(false);
     }
@@ -561,6 +585,9 @@ function OnboardingContent() {
             <p className="text-xl opacity-60 max-w-md mx-auto">
               Tu contrato ha sido generado y firmado. En breve recibirás un correo con el PDF y los detalles de nuestra primera sesión de planeación.
             </p>
+            <div className="text-[10px] font-black uppercase tracking-widest text-nectar-gold animate-pulse">
+              Redirigiendo a tu Dashboard en {redirectCountdown} segundos...
+            </div>
             <div className="pt-12">
               <Link href="/dashboard" className="px-12 py-6 bg-foreground text-background font-black uppercase tracking-widest rounded-2xl hover:scale-105 transition-transform inline-block">
                 Ir al Dashboard
@@ -569,6 +596,9 @@ function OnboardingContent() {
           </div>
         )}
       </div>
+      {toast && (
+        <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />
+      )}
     </div>
   );
 }

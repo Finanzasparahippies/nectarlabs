@@ -445,3 +445,140 @@ class PromoCodeAndCommissionTests(APITestCase):
         
         # Verify NO commission is generated
         self.assertEqual(SalesCommission.objects.count(), 0)
+
+
+class ContractSignatureTests(APITestCase):
+    def setUp(self):
+        self.ceo = User.objects.create_user(
+            username="saul_ceo",
+            email="saul@nectarlabs.dev",
+            password="securepassword",
+            role=User.Role.ADMIN,
+            is_staff=True
+        )
+        self.client_user = User.objects.create_user(
+            username="client_a",
+            email="client_a@example.com",
+            password="clientpassword",
+            role=User.Role.BUSINESS
+        )
+        self.other_client = User.objects.create_user(
+            username="client_b",
+            email="client_b@example.com",
+            password="clientpassword",
+            role=User.Role.BUSINESS
+        )
+
+    def test_client_signature_flow(self):
+        from apps.dashboard.models import ProjectQuote
+        quote = ProjectQuote.objects.create(
+            client_name="Quote Client",
+            client_email="client_a@example.com",
+            project_name="Custom CRM",
+            total_price=50000.00,
+            estimated_delivery_weeks=12
+        )
+        contract = Contract.objects.create(
+            user=self.client_user,
+            project_quote=quote,
+            full_name="Original Name",
+            is_fully_signed=False
+        )
+
+        self.client.force_authenticate(user=self.client_user)
+        url = reverse('contract-client-sign', kwargs={'pk': contract.id})
+        response = self.client.post(url, {
+            'signature': 'data:image/png;base64,ClientSignatureBase64...',
+            'full_name': 'New Client Name',
+            'tax_id': 'RFCNEW999',
+            'address': 'Fiscal Address 123'
+        }, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        contract.refresh_from_db()
+        self.assertEqual(contract.signature_base64, 'data:image/png;base64,ClientSignatureBase64...')
+        self.assertEqual(contract.full_name, 'New Client Name')
+        self.assertEqual(contract.tax_id, 'RFCNEW999')
+        self.assertEqual(contract.address, 'Fiscal Address 123')
+        self.assertIsNotNone(contract.signed_at)
+        self.assertFalse(contract.is_fully_signed)
+        self.assertTrue(bool(contract.pdf_file))
+
+    def test_client_signature_permissions(self):
+        from apps.dashboard.models import ProjectQuote
+        quote = ProjectQuote.objects.create(
+            client_name="Quote Client",
+            client_email="client_a@example.com",
+            project_name="Custom CRM",
+            total_price=50000.00,
+            estimated_delivery_weeks=12
+        )
+        contract = Contract.objects.create(
+            user=self.client_user,
+            project_quote=quote,
+            full_name="Original Name",
+            is_fully_signed=False
+        )
+
+        self.client.force_authenticate(user=self.other_client)
+        url = reverse('contract-client-sign', kwargs={'pk': contract.id})
+        response = self.client.post(url, {
+            'signature': 'data:image/png;base64,ClientSignatureBase64...'
+        }, format='json')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_dev_signature_flow_for_quote_contract(self):
+        from apps.dashboard.models import ProjectQuote
+        from apps.tenants.models import Tenant
+        from apps.dashboard.models import Project
+        
+        quote = ProjectQuote.objects.create(
+            client_name="Quote Client",
+            client_email="client_a@example.com",
+            project_name="Custom CRM",
+            total_price=50000.00,
+            estimated_delivery_weeks=12
+        )
+        contract = Contract.objects.create(
+            user=self.client_user,
+            project_quote=quote,
+            full_name="Quote Client Company",
+            signature_base64="data:image/png;base64,ClientSignatureBase64...",
+            is_fully_signed=False
+        )
+
+        self.client.force_authenticate(user=self.ceo)
+        url = reverse('contract-dev-sign', kwargs={'pk': contract.id})
+        response = self.client.post(url, {
+            'signature': 'data:image/png;base64,DevSignatureBase64...'
+        }, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        contract.refresh_from_db()
+        self.assertEqual(contract.developer_signature, 'data:image/png;base64,DevSignatureBase64...')
+        self.assertTrue(contract.is_fully_signed)
+
+        # Check tenant creation
+        self.assertTrue(Tenant.objects.filter(owner=self.client_user).exists())
+
+        # Check project creation in MVP state
+        project = Project.objects.get(client=self.client_user)
+        self.assertEqual(project.status, Project.Status.MVP)
+
+        # Check exactly 2 50/50 installments
+        installments = contract.installments.all().order_by('installment_number')
+        self.assertEqual(installments.count(), 2)
+        
+        inst1 = installments[0]
+        self.assertEqual(inst1.installment_number, 1)
+        self.assertEqual(inst1.amount, 25000.00)
+        self.assertEqual(inst1.status, PaymentInstallment.Status.PENDING)
+        
+        inst2 = installments[1]
+        self.assertEqual(inst2.installment_number, 2)
+        self.assertEqual(inst2.amount, 25000.00)
+        self.assertEqual(inst2.status, PaymentInstallment.Status.PENDING)
+        
+        # Check due dates spacing (12 weeks)
+        due_diff = inst2.due_date - inst1.due_date
+        self.assertEqual(due_diff.days, 12 * 7)

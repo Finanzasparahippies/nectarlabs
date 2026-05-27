@@ -239,6 +239,42 @@ class ContractViewSet(viewsets.ModelViewSet):
         
         return Response({'error': 'Error al procesar el cierre'}, status=status.HTTP_400_BAD_REQUEST)
 
+    @action(detail=True, methods=['post'], url_path='client-sign', permission_classes=[permissions.IsAuthenticated])
+    def client_sign(self, request, pk=None):
+        contract = self.get_object()
+        if contract.user != request.user and not request.user.is_staff:
+            return Response({'error': 'No tienes permisos para firmar este contrato'}, status=status.HTTP_403_FORBIDDEN)
+            
+        signature = request.data.get('signature')
+        if not signature:
+            return Response({'error': 'Firma del cliente requerida'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        full_name = request.data.get('full_name')
+        tax_id = request.data.get('tax_id')
+        address = request.data.get('address')
+        
+        if full_name:
+            contract.full_name = full_name
+        if tax_id:
+            contract.tax_id = tax_id
+        if address:
+            contract.address = address
+            
+        contract.signature_base64 = signature
+        contract.signed_at = timezone.now()
+        contract.save()
+        
+        try:
+            if generate_contract_pdf(contract):
+                send_contract_emails(contract)
+                return Response({'message': 'Contrato firmado por el cliente. Pendiente de firma de Néctar Labs.'})
+        except Exception as e:
+            import logging
+            logging.error(f"Error in client_sign flow: {e}", exc_info=True)
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            
+        return Response({'error': 'Error al procesar la firma del cliente'}, status=status.HTTP_400_BAD_REQUEST)
+
     @action(detail=True, methods=['post'], url_path='apply-promo-code', permission_classes=[permissions.IsAuthenticated])
     def apply_promo_code(self, request, pk=None):
         contract = self.get_object()
@@ -386,13 +422,19 @@ def stripe_webhook(request):
             comments = session.get('metadata', {}).get('comments', '')
             if user_id and addon_id:
                 try:
+                    from django.contrib.auth import get_user_model
+                    User = get_user_model()
+                    user = User.objects.get(id=user_id)
+                    
+                    # Upgrade role to BUSINESS if they are currently a CUSTOMER
+                    if user.role == User.Role.CUSTOMER:
+                        user.role = User.Role.BUSINESS
+                        user.save()
+
                     # Buscar el contrato activo del usuario para agregarle el addon
-                    contract = Contract.objects.filter(user_id=user_id, is_active=True).first()
+                    contract = Contract.objects.filter(user=user, is_active=True).first()
                     if not contract:
                         # Si no tiene contrato activo, crear uno básico
-                        from django.contrib.auth import get_user_model
-                        User = get_user_model()
-                        user = User.objects.get(id=user_id)
                         contract = Contract.objects.create(
                             user=user,
                             full_name=user.get_full_name() or user.username,
@@ -401,6 +443,31 @@ def stripe_webhook(request):
                         )
                     contract.addons.add(addon_id)
                     
+                    # --- AUTO-CREATE TENANT ---
+                    try:
+                        from apps.tenants.models import Tenant
+                        from django.utils.text import slugify
+                        if not Tenant.objects.filter(owner=user).exists():
+                            base_subdomain = slugify(contract.full_name or user.username)
+                            if not base_subdomain:
+                                base_subdomain = slugify(user.username) or f"client-{user.id}"
+                            
+                            subdomain = base_subdomain
+                            counter = 1
+                            while Tenant.objects.filter(subdomain=subdomain).exists():
+                                subdomain = f"{base_subdomain}-{counter}"
+                                counter += 1
+                            
+                            Tenant.objects.create(
+                                owner=user,
+                                name=contract.full_name or f"Portal de {user.get_full_name() or user.username}",
+                                subdomain=subdomain,
+                                is_active=True
+                            )
+                    except Exception as tenant_err:
+                        import logging
+                        logging.getLogger(__name__).error(f"Error creating tenant automatically on addon subscription: {tenant_err}", exc_info=True)
+
                     # Enviar correo de confirmación de pago del Add-on (facturación)
                     try:
                         addon = AddOn.objects.get(id=addon_id)
@@ -431,7 +498,7 @@ def stripe_webhook(request):
                         )
                         Ticket.objects.create(
                             client=contract.user,
-                            tenant=contract.user.tenant,
+                            tenant=contract.user.owned_tenants.first() or contract.user.tenant,
                             title=ticket_title,
                             description=ticket_description,
                             category=Ticket.Category.IMPLEMENTATION,

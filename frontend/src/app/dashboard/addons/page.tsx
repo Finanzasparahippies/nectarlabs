@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { fetcher } from '@/lib/api';
 import DashboardSidebar from '@/components/DashboardSidebar';
+import Toast from '@/components/ui/Toast';
 
 interface Addon {
   id: string;
@@ -205,6 +206,12 @@ export default function AddonsPage() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [addonsList, setAddonsList] = useState<Addon[]>([]);
   const [hasPlanContract, setHasPlanContract] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'warning' | 'info' } | null>(null);
+  const [fetching, setFetching] = useState(true);
+
+  const showToast = (message: string, type: 'success' | 'error' | 'warning' | 'info' = 'success') => {
+    setToast({ message, type });
+  };
 
   // States for subdomains / tenants
   const [tenants, setTenants] = useState<any[]>([]);
@@ -218,6 +225,8 @@ export default function AddonsPage() {
     const role = localStorage.getItem('user_role') || '';
     setUserRole(role);
     setIsStaff((staff || role === 'ADMIN' || role === 'BUSINESS') && role !== 'DESIGNER');
+    setLoading(false);
+    setFetching(true);
 
     const loadAddons = async () => {
       try {
@@ -290,7 +299,7 @@ export default function AddonsPage() {
         console.error("Error loading addons, falling back to static config:", error);
         await useFallback();
       } finally {
-        setLoading(false);
+        setFetching(false);
       }
     };
 
@@ -363,7 +372,7 @@ export default function AddonsPage() {
 
       setContracts(prev => prev.map(c => c.id === contractId ? { ...c, addons: updated.addons } : c));
     } catch (err) {
-      alert("Error al actualizar los Add-ons del cliente.");
+      showToast("Error al actualizar los Add-ons del cliente.", 'error');
     } finally {
       setUpdatingContractId(null);
     }
@@ -584,7 +593,26 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
 
         {/* Add-ons Grid */}
         <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {addonsList.map((addon) => {
+          {fetching ? (
+            <>
+              {[1, 2, 3].map(i => (
+                <div key={i} className="bg-card-bg border border-card-border p-8 rounded-[2.5rem] animate-pulse flex flex-col justify-between min-h-[420px]">
+                  <div className="space-y-6">
+                    <div className="flex justify-between items-start">
+                      <div className="h-6 bg-foreground/10 rounded w-1/3"></div>
+                      <div className="w-10 h-10 bg-foreground/10 rounded-2xl"></div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="h-6 bg-foreground/10 rounded w-3/4"></div>
+                      <div className="h-4 bg-foreground/10 rounded w-5/6"></div>
+                      <div className="h-4 bg-foreground/10 rounded w-full"></div>
+                    </div>
+                  </div>
+                  <div className="h-10 bg-foreground/10 rounded-xl w-full"></div>
+                </div>
+              ))}
+            </>
+          ) : addonsList.map((addon) => {
             const price = billingCycle === 'monthly' ? addon.monthlyPrice : addon.yearlyPrice;
             const savings = billingCycle === 'yearly' ? addon.monthlyPrice * 2 : 0;
             return (
@@ -1031,6 +1059,15 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
           </div>
         )}
       </main>
+
+      {/* Premium UI Overlay Elements */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
     </div>
   );
 }
