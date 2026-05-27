@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { fetcher, API_URL } from '@/lib/api';
 
 const getMediaUrl = (url?: string) => {
   if (!url) return '';
@@ -63,6 +64,86 @@ interface BusinessCommanderProps {
 export default function BusinessCommander({ stats, installments, setInstallments }: BusinessCommanderProps) {
   const [activePoint, setActivePoint] = useState<number | null>(null);
   const [cfdiInputs, setCfdiInputs] = useState<Record<number, string>>({});
+
+  // Sales Admin Panel state
+  const [commissions, setCommissions] = useState<any[]>([]);
+  const [commissionSummary, setCommissionSummary] = useState<any | null>(null);
+  const [promoCodes, setPromoCodes] = useState<any[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
+  const [markingPaid, setMarkingPaid] = useState<number | null>(null);
+  const [togglingUser, setTogglingUser] = useState<number | null>(null);
+  const [salesLoading, setSalesLoading] = useState(true);
+
+  useEffect(() => {
+    const loadSalesData = async () => {
+      try {
+        const [commissionsData, summaryData, promoData, usersData] = await Promise.all([
+          fetcher('/sales-commissions/').catch(() => []),
+          fetcher('/sales-commissions/summary/').catch(() => null),
+          fetcher('/promo-codes/').catch(() => []),
+          fetcher('/users/').catch(() => []),
+        ]);
+        setCommissions(Array.isArray(commissionsData) ? commissionsData : []);
+        setCommissionSummary(summaryData);
+        setPromoCodes(Array.isArray(promoData) ? promoData : []);
+        setUsers(Array.isArray(usersData) ? usersData : []);
+      } catch (err) {
+        console.error('Error loading sales data:', err);
+      } finally {
+        setSalesLoading(false);
+      }
+    };
+    loadSalesData();
+  }, []);
+
+  const handleToggleApproval = async (userId: number, currentApproved: boolean) => {
+    setTogglingUser(userId);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/users/${userId}/`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ is_approved_seller: !currentApproved })
+      });
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.detail || 'Error al actualizar el estado de aprobación');
+      }
+      const updated = await response.json();
+      setUsers(prev => prev.map(u => u.id === userId ? updated : u));
+    } catch (err: any) {
+      alert(err.message || 'Error al actualizar estado del vendedor.');
+    } finally {
+      setTogglingUser(null);
+    }
+  };
+
+  const handleMarkCommissionPaid = async (commissionId: number) => {
+    setMarkingPaid(commissionId);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/sales-commissions/${commissionId}/mark-paid/`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+      });
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.error || 'Error al marcar como pagada');
+      }
+      const updated = await response.json();
+      setCommissions(prev => prev.map(c => c.id === commissionId ? updated : c));
+      // Refresh summary
+      const newSummary = await fetcher('/sales-commissions/summary/').catch(() => null);
+      setCommissionSummary(newSummary);
+    } catch (err: any) {
+      alert(err.message || 'Error al actualizar comisión.');
+    } finally {
+      setMarkingPaid(null);
+    }
+  };
 
   const handleUpdateInstallmentStatus = async (installmentId: number, newStatus: string) => {
     try {
@@ -130,6 +211,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
   );
 
   const { financials, client_billing, server_billing, monthly_trend } = stats;
+  const salesPeople = users.filter((u: any) => u.role === 'SALES');
 
   // Determinar los puntos de coordenadas para el gráfico SVG
   const maxSales = Math.max(...monthly_trend.map(t => t.sales)) || 1000;
@@ -670,6 +752,306 @@ export default function BusinessCommander({ stats, installments, setInstallments
               )}
             </tbody>
           </table>
+        </div>
+      </section>
+
+      {/* ── ADMIN SALES COMMAND CENTER ── */}
+      <section className="space-y-10">
+        <div>
+          <h2 className="text-xs font-black uppercase tracking-[0.4em] opacity-30 mb-1">Panel de Ventas</h2>
+          <p className="text-[9px] font-bold text-foreground/30 uppercase tracking-wider">Control global de vendedores, comisiones y códigos de referido</p>
+        </div>
+
+        {/* Sales KPI Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
+          <div className="p-6 rounded-[2rem] bg-card-bg border border-card-border relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-green-500/5 blur-3xl rounded-full" />
+            <span className="text-[8px] font-black uppercase tracking-widest opacity-40">Comisiones Pagadas</span>
+            <h3 className="text-2xl font-black tracking-tight mt-2 text-green-400 font-mono">
+              ${((commissionSummary?.paid_total) || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+              <span className="text-[9px] font-bold opacity-50 ml-1">MXN</span>
+            </h3>
+            <p className="text-[9px] text-foreground/40 mt-1 uppercase tracking-wider font-bold">Liquidadas a vendedores</p>
+          </div>
+          <div className="p-6 rounded-[2rem] bg-card-bg border border-card-border relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-yellow-500/5 blur-3xl rounded-full" />
+            <span className="text-[8px] font-black uppercase tracking-widest opacity-40">Comisiones Pendientes</span>
+            <h3 className="text-2xl font-black tracking-tight mt-2 text-yellow-400 font-mono">
+              ${((commissionSummary?.pending_total) || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+              <span className="text-[9px] font-bold opacity-50 ml-1">MXN</span>
+            </h3>
+            <p className="text-[9px] text-foreground/40 mt-1 uppercase tracking-wider font-bold">Por liquidar a vendedores</p>
+          </div>
+          <div className="p-6 rounded-[2rem] bg-card-bg border border-card-border relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-nectar-gold/5 blur-3xl rounded-full" />
+            <span className="text-[8px] font-black uppercase tracking-widest opacity-40">Contratos Referidos</span>
+            <h3 className="text-2xl font-black tracking-tight mt-2 text-nectar-gold font-mono">
+              {commissionSummary?.referred_contracts_count ?? 0}
+              <span className="text-[9px] font-bold opacity-50 ml-1">Contratos</span>
+            </h3>
+            <p className="text-[9px] text-foreground/40 mt-1 uppercase tracking-wider font-bold">Adquiridos por vendedores</p>
+          </div>
+          <div className="p-6 rounded-[2rem] bg-card-bg border border-card-border relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 blur-3xl rounded-full" />
+            <span className="text-[8px] font-black uppercase tracking-widest opacity-40">Vendedores Activos</span>
+            <h3 className="text-2xl font-black tracking-tight mt-2 text-blue-400 font-mono">
+              {commissionSummary?.active_sellers ?? 0}
+              <span className="text-[9px] font-bold opacity-50 ml-1">SALES</span>
+            </h3>
+            <p className="text-[9px] text-foreground/40 mt-1 uppercase tracking-wider font-bold">Usuarios con rol vendedor</p>
+          </div>
+        </div>
+
+        {/* Gestión de Vendedores Table */}
+        <div className="p-8 md:p-10 rounded-[3rem] bg-card-bg border border-card-border shadow-xl">
+          <div className="mb-8 flex items-center justify-between flex-wrap gap-4">
+            <div>
+              <h3 className="text-xs font-black uppercase tracking-[0.3em] opacity-30">Gestión de Vendedores</h3>
+              <p className="text-[9px] font-bold text-foreground/30 mt-1 uppercase tracking-wider">Aprobación y métricas de desempeño de vendedores</p>
+            </div>
+            <span className="px-4 py-1.5 bg-foreground/5 rounded-full text-[8px] font-black uppercase tracking-widest opacity-50">
+              {salesPeople.length} vendedores registrados
+            </span>
+          </div>
+          
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-card-border/50 text-[8px] font-black uppercase tracking-widest opacity-40">
+                  <th className="pb-4">Email Vendedor</th>
+                  <th className="pb-4 text-center">Código Referido</th>
+                  <th className="pb-4 text-center">Usos / Referidos</th>
+                  <th className="pb-4 text-right">Pendientes</th>
+                  <th className="pb-4 text-right">Cobradas</th>
+                  <th className="pb-4 text-center">Estatus</th>
+                  <th className="pb-4 text-center">Acción</th>
+                </tr>
+              </thead>
+              <tbody>
+                {salesPeople.map((u: any) => {
+                  const userCode = promoCodes.find((p: any) => p.referrer === u.id && p.code_type === 'SELLER');
+                  const referredCount = userCode ? userCode.used_count : 0;
+                  const userCommissions = commissions.filter((c: any) => c.salesperson === u.id);
+                  const paidTotal = userCommissions.filter((c: any) => c.status === 'PAID').reduce((sum, c) => sum + parseFloat(c.amount || 0), 0);
+                  const pendingTotal = userCommissions.filter((c: any) => c.status === 'PENDING').reduce((sum, c) => sum + parseFloat(c.amount || 0), 0);
+                  const isApproved = !!u.is_approved_seller;
+
+                  return (
+                    <tr key={u.id} className="border-b border-card-border/30 last:border-0 hover:bg-foreground/[0.02] transition-colors">
+                      <td className="py-3.5">
+                        <span className="font-black text-[10px] text-foreground">{u.username}</span>
+                        <p className="text-[8px] text-foreground/45 font-mono">{u.email}</p>
+                      </td>
+                      <td className="py-3.5 text-center">
+                        {userCode ? (
+                          <span className="font-mono font-black text-sm text-nectar-gold tracking-widest">{userCode.code}</span>
+                        ) : (
+                          <span className="text-[8px] text-foreground/30 italic font-bold">Sin Código</span>
+                        )}
+                      </td>
+                      <td className="py-3.5 text-center font-mono font-bold text-xs">{referredCount}</td>
+                      <td className="py-3.5 text-right font-mono font-bold text-[11px] text-yellow-500">
+                        ${pendingTotal.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                      </td>
+                      <td className="py-3.5 text-right font-mono font-bold text-[11px] text-green-400">
+                        ${paidTotal.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                      </td>
+                      <td className="py-3.5 text-center">
+                        {isApproved ? (
+                          <span className="px-3 py-1 bg-green-500/10 text-green-500 text-[7px] font-black uppercase tracking-widest rounded-full border border-green-500/20">Aprobado</span>
+                        ) : (
+                          <span className="px-3 py-1 bg-red-500/10 text-red-400 text-[7px] font-black uppercase tracking-widest rounded-full border border-red-500/20">Pendiente</span>
+                        )}
+                      </td>
+                      <td className="py-3.5 text-center">
+                        <button
+                          onClick={() => handleToggleApproval(u.id, isApproved)}
+                          disabled={togglingUser === u.id}
+                          className={`px-4 py-1.5 text-[7px] font-black uppercase tracking-widest rounded-xl transition-all hover:scale-105 active:scale-95 disabled:opacity-40 font-bold ${
+                            isApproved 
+                              ? 'bg-red-950/40 border border-red-500/30 hover:bg-red-900/40 text-red-400' 
+                              : 'bg-green-950/40 border border-green-500/30 hover:bg-green-900/40 text-green-400'
+                          }`}
+                        >
+                          {togglingUser === u.id ? '...' : (isApproved ? 'Revocar' : 'Aprobar')}
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+                {salesPeople.length === 0 && (
+                  <tr>
+                    <td colSpan={7} className="py-12 text-center text-[9px] font-black uppercase tracking-widest opacity-25">
+                      No hay vendedores registrados en el sistema
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Commissions Table */}
+        <div className="p-8 md:p-10 rounded-[3rem] bg-card-bg border border-card-border shadow-xl">
+          <div className="mb-8 flex items-center justify-between">
+            <div>
+              <h3 className="text-xs font-black uppercase tracking-[0.3em] opacity-30">Historial de Comisiones</h3>
+              <p className="text-[9px] font-bold text-foreground/30 mt-1 uppercase tracking-wider">Todas las comisiones generadas por ventas referidas</p>
+            </div>
+            <span className="px-4 py-1.5 bg-foreground/5 rounded-full text-[8px] font-black uppercase tracking-widest opacity-50">
+              {commissions.length} registros
+            </span>
+          </div>
+          {salesLoading ? (
+            <div className="py-10 flex justify-center">
+              <div className="w-8 h-8 border-2 border-nectar-gold border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-card-border/50 text-[8px] font-black uppercase tracking-widest opacity-40">
+                  <th className="pb-4">Vendedor</th>
+                  <th className="pb-4">Cliente</th>
+                  <th className="pb-4 text-center">Plan</th>
+                  <th className="pb-4 text-center">Mensualidad</th>
+                  <th className="pb-4 text-center">Vencimiento</th>
+                  <th className="pb-4 text-right">Monto Pagado</th>
+                  <th className="pb-4 text-center">Comisión %</th>
+                  <th className="pb-4 text-right">Tu Pago</th>
+                  <th className="pb-4 text-center">Estado</th>
+                  <th className="pb-4 text-center">Acción</th>
+                </tr>
+              </thead>
+              <tbody>
+                {commissions.map((comm) => (
+                  <tr key={comm.id} className="border-b border-card-border/30 last:border-0 hover:bg-foreground/[0.02] transition-colors">
+                    <td className="py-3.5">
+                      <div>
+                        <span className="font-black text-[10px] text-foreground">{comm.salesperson_email?.split('@')[0]}</span>
+                        <p className="text-[8px] text-foreground/40 font-mono">{comm.salesperson_email}</p>
+                      </div>
+                    </td>
+                    <td className="py-3.5 font-bold text-[11px] text-foreground/80">{comm.client_name}</td>
+                    <td className="py-3.5 text-center">
+                      <span className="px-2 py-0.5 bg-foreground/5 rounded-full text-[8px] font-black uppercase tracking-wider text-foreground/50">{comm.plan_name}</span>
+                    </td>
+                    <td className="py-3.5 text-center font-mono font-bold text-xs text-foreground/70">#{comm.installment_number}</td>
+                    <td className="py-3.5 text-center text-[10px] font-bold text-foreground/50">
+                      {comm.due_date ? new Date(comm.due_date + 'T00:00:00').toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: '2-digit' }) : '—'}
+                    </td>
+                    <td className="py-3.5 text-right font-mono font-bold text-[11px]">
+                      ${parseFloat(comm.installment_amount || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                    </td>
+                    <td className="py-3.5 text-center font-mono font-black text-sm text-nectar-gold">
+                      {parseFloat(comm.commission_percentage)}%
+                    </td>
+                    <td className="py-3.5 text-right font-mono font-black text-sm text-white">
+                      ${parseFloat(comm.amount || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                    </td>
+                    <td className="py-3.5 text-center">
+                      {comm.status === 'PAID' ? (
+                        <span className="px-3 py-1 bg-green-500/10 text-green-500 text-[7px] font-black uppercase tracking-widest rounded-full border border-green-500/20">Pagada</span>
+                      ) : (
+                        <span className="px-3 py-1 bg-yellow-500/10 text-yellow-500 text-[7px] font-black uppercase tracking-widest rounded-full border border-yellow-500/20">Pendiente</span>
+                      )}
+                    </td>
+                    <td className="py-3.5 text-center">
+                      {comm.status === 'PENDING' ? (
+                        <button
+                          onClick={() => handleMarkCommissionPaid(comm.id)}
+                          disabled={markingPaid === comm.id}
+                          className="px-4 py-1.5 bg-green-600 hover:bg-green-500 text-white text-[7px] font-black uppercase tracking-widest rounded-xl transition-all hover:scale-105 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
+                        >
+                          {markingPaid === comm.id ? '...' : 'Marcar Pagada'}
+                        </button>
+                      ) : (
+                        <span className="text-[8px] text-foreground/20 font-black">—</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+                {commissions.length === 0 && (
+                  <tr>
+                    <td colSpan={10} className="py-12 text-center text-[9px] font-black uppercase tracking-widest opacity-25">
+                      Sin comisiones registradas en el sistema
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+          )}
+        </div>
+
+        {/* Promo Codes Table */}
+        <div className="p-8 md:p-10 rounded-[3rem] bg-card-bg border border-card-border shadow-xl">
+          <div className="mb-8 flex items-center justify-between">
+            <div>
+              <h3 className="text-xs font-black uppercase tracking-[0.3em] opacity-30">Códigos de Referido</h3>
+              <p className="text-[9px] font-bold text-foreground/30 mt-1 uppercase tracking-wider">Todos los códigos del sistema — SELLER y CLIENT</p>
+            </div>
+            <span className="px-4 py-1.5 bg-foreground/5 rounded-full text-[8px] font-black uppercase tracking-widest opacity-50">
+              {promoCodes.length} códigos
+            </span>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-card-border/50 text-[8px] font-black uppercase tracking-widest opacity-40">
+                  <th className="pb-4">Código</th>
+                  <th className="pb-4 text-center">Tipo</th>
+                  <th className="pb-4">Referidor</th>
+                  <th className="pb-4 text-center">Descuento</th>
+                  <th className="pb-4 text-center">Usos</th>
+                  <th className="pb-4 text-center">Límite</th>
+                  <th className="pb-4 text-center">Estado</th>
+                  <th className="pb-4 text-right">Creado</th>
+                </tr>
+              </thead>
+              <tbody>
+                {promoCodes.map((code) => (
+                  <tr key={code.id} className="border-b border-card-border/30 last:border-0 hover:bg-foreground/[0.02] transition-colors">
+                    <td className="py-3.5">
+                      <span className="font-mono font-black text-sm text-nectar-gold tracking-widest">{code.code}</span>
+                    </td>
+                    <td className="py-3.5 text-center">
+                      <span className={`px-3 py-1 text-[7px] font-black uppercase tracking-widest rounded-full border ${
+                        code.code_type === 'SELLER'
+                          ? 'bg-blue-500/10 text-blue-400 border-blue-500/20'
+                          : 'bg-purple-500/10 text-purple-400 border-purple-500/20'
+                      }`}>
+                        {code.code_type === 'SELLER' ? '🏷️ Vendedor' : '👥 Cliente'}
+                      </span>
+                    </td>
+                    <td className="py-3.5 text-[10px] font-bold text-foreground/60">{code.referrer_email || '—'}</td>
+                    <td className="py-3.5 text-center font-mono font-black text-sm text-nectar-gold">{parseFloat(code.discount_percentage)}%</td>
+                    <td className="py-3.5 text-center font-mono font-bold text-sm">{code.used_count}</td>
+                    <td className="py-3.5 text-center text-[10px] font-bold text-foreground/50">{code.max_uses ?? '∞'}</td>
+                    <td className="py-3.5 text-center">
+                      <span className={`px-3 py-1 text-[7px] font-black uppercase tracking-widest rounded-full border ${
+                        code.is_active
+                          ? 'bg-green-500/10 text-green-500 border-green-500/20'
+                          : 'bg-red-500/10 text-red-400 border-red-500/20'
+                      }`}>
+                        {code.is_active ? 'Activo' : 'Inactivo'}
+                      </span>
+                    </td>
+                    <td className="py-3.5 text-right text-[9px] font-bold text-foreground/40">
+                      {new Date(code.created_at).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: '2-digit' })}
+                    </td>
+                  </tr>
+                ))}
+                {promoCodes.length === 0 && (
+                  <tr>
+                    <td colSpan={8} className="py-12 text-center text-[9px] font-black uppercase tracking-widest opacity-25">
+                      Sin códigos de referido registrados
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </section>
     </div>

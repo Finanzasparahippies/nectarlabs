@@ -6,6 +6,7 @@ import PricingCalculator from './landing/PricingCalculator';
 import SubscriptionCards from './landing/SubscriptionCards';
 import AddonShowcase from './landing/AddonShowcase';
 import AddonTutorial from './landing/AddonTutorial';
+import SellerProgram from './landing/SellerProgram';
 import Navbar from './Navbar';
 import Link from 'next/link';
 
@@ -80,6 +81,10 @@ export default function LandingPage() {
 
         <div className="py-48 bg-gradient-to-b from-transparent via-nectar-gold/5 to-transparent">
           <PricingCalculator />
+        </div>
+
+        <div id="seller-program" className="border-t border-card-border scroll-mt-24">
+          <SellerProgram />
         </div>
       </div>
 

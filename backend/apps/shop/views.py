@@ -464,9 +464,15 @@ def stripe_webhook(request):
 
 
 class PromoCodeViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = PromoCode.objects.filter(is_active=True)
     serializer_class = PromoCodeSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        # Staff/admin see ALL codes (including inactive), regular users see only active
+        user = self.request.user
+        if user.is_staff or getattr(user, 'role', '') in ['ADMIN', 'BUSINESS']:
+            return PromoCode.objects.all().order_by('-created_at')
+        return PromoCode.objects.filter(is_active=True)
 
     @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated])
     def validate(self, request):
@@ -539,13 +545,40 @@ class SalesCommissionViewSet(viewsets.ReadOnlyModelViewSet):
         pending_total = sum(c.amount for c in commissions.filter(status='PENDING'))
         
         # Referred contracts count
-        referred_contracts_count = Contract.objects.filter(
-            promo_code__referrer=user, 
-            promo_code__code_type='SELLER'
-        ).distinct().count()
+        if user.is_staff or user.role in ['ADMIN', 'BUSINESS']:
+            # Admin sees global: total unique sellers, total referred contracts
+            from apps.users.models import User as UserModel
+            active_sellers = UserModel.objects.filter(role='SALES').count()
+            referred_contracts_count = Contract.objects.filter(
+                promo_code__code_type='SELLER'
+            ).distinct().count()
+        else:
+            active_sellers = None
+            referred_contracts_count = Contract.objects.filter(
+                promo_code__referrer=user,
+                promo_code__code_type='SELLER'
+            ).distinct().count()
 
         return Response({
             'paid_total': float(paid_total),
             'pending_total': float(pending_total),
-            'referred_contracts_count': referred_contracts_count
+            'referred_contracts_count': referred_contracts_count,
+            'active_sellers': active_sellers,
         })
+
+    @action(detail=True, methods=['post'], url_path='mark-paid', permission_classes=[permissions.IsAuthenticated])
+    def mark_paid(self, request, pk=None):
+        """Admin-only: mark a SalesCommission as PAID."""
+        user = request.user
+        if not (user.is_staff or getattr(user, 'role', '') in ['ADMIN', 'BUSINESS']):
+            return Response({'error': 'No tienes permiso para realizar esta acción.'}, status=status.HTTP_403_FORBIDDEN)
+
+        commission = self.get_object()
+        if commission.status == SalesCommission.Status.PAID:
+            return Response({'error': 'Esta comisión ya fue marcada como pagada.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        commission.status = SalesCommission.Status.PAID
+        commission.save()
+
+        serializer = self.get_serializer(commission)
+        return Response(serializer.data, status=status.HTTP_200_OK)

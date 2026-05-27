@@ -343,11 +343,16 @@ class PromoCodeAndCommissionTests(APITestCase):
 
     def test_sales_commission_generation(self):
         """
-        Verify that marking an installment as PAID generates salesperson commissions:
-        - Month 1: 20%
-        - Month 2: 10%
-        - Month 3+: 5%
+        Verify that marking an installment as PAID generates salesperson commissions
+        for an APPROVED salesperson using the restructured rates:
+        - Month 1: 10%
+        - Month 2: 5%
+        - Month 3+: 2%
         """
+        # Approve the salesperson first
+        self.salesperson.is_approved_seller = True
+        self.salesperson.save()
+
         # Create contract with seller promo code
         contract = Contract.objects.create(
             user=self.client_user,
@@ -375,32 +380,68 @@ class PromoCodeAndCommissionTests(APITestCase):
         first_inst.status = PaymentInstallment.Status.PAID
         first_inst.save()
         
-        # Verify commission generated for Month 1 (20% of 8000.00 = 1600.00)
+        # Verify commission generated for Month 1 (10% of 8000.00 = 800.00)
         self.assertEqual(SalesCommission.objects.count(), 1)
         comm1 = SalesCommission.objects.first()
         self.assertEqual(comm1.salesperson, self.salesperson)
         self.assertEqual(comm1.installment, first_inst)
-        self.assertEqual(comm1.commission_percentage, 20.00)
-        self.assertEqual(comm1.amount, 1600.00)
+        self.assertEqual(comm1.commission_percentage, 10.00)
+        self.assertEqual(comm1.amount, 800.00)
         
         # Mark Month 2 installment as PAID
         second_inst = installments[1]
         second_inst.status = PaymentInstallment.Status.PAID
         second_inst.save()
         
-        # Verify commission generated for Month 2 (10% of 9500.00 = 950.00)
+        # Verify commission generated for Month 2 (5% of 9500.00 = 475.00)
         self.assertEqual(SalesCommission.objects.count(), 2)
         comm2 = SalesCommission.objects.filter(installment=second_inst).first()
-        self.assertEqual(comm2.commission_percentage, 10.00)
-        self.assertEqual(comm2.amount, 950.00)
+        self.assertEqual(comm2.commission_percentage, 5.00)
+        self.assertEqual(comm2.amount, 475.00)
 
         # Mark Month 3 installment as PAID
         third_inst = installments[2]
         third_inst.status = PaymentInstallment.Status.PAID
         third_inst.save()
         
-        # Verify commission generated for Month 3 (5% of 9500.00 = 475.00)
+        # Verify commission generated for Month 3 (2% of 9500.00 = 190.00)
         self.assertEqual(SalesCommission.objects.count(), 3)
         comm3 = SalesCommission.objects.filter(installment=third_inst).first()
-        self.assertEqual(comm3.commission_percentage, 5.00)
-        self.assertEqual(comm3.amount, 475.00)
+        self.assertEqual(comm3.commission_percentage, 2.00)
+        self.assertEqual(comm3.amount, 190.00)
+
+    def test_unapproved_sales_commission_generation(self):
+        """
+        Verify that marking an installment as PAID does NOT generate salesperson commissions
+        if the salesperson is NOT approved by the admin.
+        """
+        # Ensure salesperson is NOT approved (default)
+        self.salesperson.is_approved_seller = False
+        self.salesperson.save()
+
+        # Create contract with seller promo code
+        contract = Contract.objects.create(
+            user=self.client_user,
+            plan=self.plan,
+            full_name="Salesperson referred client",
+            tax_id="RFC123456789",
+            address="Av. Juarez 123",
+            project_idea="Build an e-commerce platform.",
+            payment_commitment_method="SPEI",
+            promo_code=self.seller_promo,
+            signed_at=timezone.now()
+        )
+        
+        # Sign contract to generate installments
+        self.client.force_authenticate(user=self.ceo)
+        url_sign = reverse('contract-dev-sign', kwargs={'pk': contract.id})
+        self.client.post(url_sign, {'signature': 'DeveloperSignatureXYZ'})
+        
+        # Get Month 1 installment and mark as PAID
+        installments = contract.installments.filter(installment_type='DEVELOPMENT').order_by('installment_number')
+        first_inst = installments.first()
+        first_inst.status = PaymentInstallment.Status.PAID
+        first_inst.save()
+        
+        # Verify NO commission is generated
+        self.assertEqual(SalesCommission.objects.count(), 0)

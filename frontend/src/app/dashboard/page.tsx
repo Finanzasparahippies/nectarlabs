@@ -125,6 +125,8 @@ export default function DashboardPage() {
   const [applyingRetroactiveCode, setApplyingRetroactiveCode] = useState(false);
   const [retroactiveSuccessMessage, setRetroactiveSuccessMessage] = useState('');
   const [retroactiveErrorMessage, setRetroactiveErrorMessage] = useState('');
+  const [currentUser, setCurrentUser] = useState<any | null>(null);
+  const [contractFilter, setContractFilter] = useState<'all' | 'nectar' | 'custom' | 'addons_only'>('all');
 
   const router = useRouter();
 
@@ -446,7 +448,7 @@ export default function DashboardPage() {
         const role = localStorage.getItem('user_role') || '';
         const isCEO = role === 'ADMIN' || staff;
 
-        const [projectsData, ticketsData, logsData, contractsData, installmentsData, tenantsData, plansData, addonsData] = await Promise.all([
+        const [projectsData, ticketsData, logsData, contractsData, installmentsData, tenantsData, plansData, addonsData, meData] = await Promise.all([
           fetcher('/projects/'),
           fetcher('/tickets/'),
           fetcher('/logs/'),
@@ -454,7 +456,8 @@ export default function DashboardPage() {
           fetcher('/installments/'),
           fetcher('/tenants/'),
           fetcher('/plans/'),
-          fetcher('/addons/')
+          fetcher('/addons/'),
+          fetcher('/users/me/').catch(() => null)
         ]);
 
         setProjects(projectsData);
@@ -465,6 +468,7 @@ export default function DashboardPage() {
         setTenants(tenantsData);
         setPlans(plansData);
         setAllAddons(addonsData || []);
+        setCurrentUser(meData);
 
         if (isCEO) {
           const statsData = await fetcher('/dashboard/business-stats/');
@@ -639,6 +643,32 @@ export default function DashboardPage() {
 
         {isSales ? (
           <div className="space-y-12 animate-fadeIn">
+            {/* Warning Banner for Unapproved Sellers */}
+            {currentUser && !currentUser.is_approved_seller && (
+              <div className="p-8 rounded-[2.5rem] bg-amber-500/10 border-2 border-dashed border-amber-500/40 relative overflow-hidden group shadow-2xl">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/5 rounded-full blur-3xl -mr-20 -mt-20"></div>
+                <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                  <div className="space-y-2 max-w-3xl">
+                    <span className="px-3 py-1 bg-amber-500/20 text-amber-400 text-[8px] font-black uppercase tracking-widest rounded-full border border-amber-500/30">
+                      Reunión de Inducción Pendiente
+                    </span>
+                    <h2 className="text-2xl font-black tracking-tight text-white mt-2">
+                      Tu Cuenta de Vendedor requiere aprobación
+                    </h2>
+                    <p className="text-xs text-foreground/60 leading-relaxed uppercase tracking-wider">
+                      Para activar tu cuenta y poder generar comisiones de referidos, es necesario agendar una llamada de inducción y aprobación previa con Néctar Labs.
+                    </p>
+                  </div>
+                  <a
+                    href="mailto:contacto@nectarlabs.dev?subject=Reunion%20de%20Aprobacion%20Vendedor%20Nectar%20Labs"
+                    className="px-8 py-4 bg-nectar-gold hover:bg-nectar-gold/90 text-background text-[10px] font-black uppercase tracking-widest rounded-xl hover:scale-[1.02] active:scale-95 transition-all shadow-lg shadow-nectar-gold/20 shrink-0 text-center font-bold"
+                  >
+                    Agendar Reunión 📅
+                  </a>
+                </div>
+              </div>
+            )}
+
             {/* Top Grid: Code & Commission Rules */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {/* Code Card */}
@@ -658,11 +688,11 @@ export default function DashboardPage() {
                       <div className="flex items-center gap-3 bg-background/50 border border-card-border/80 rounded-2xl p-4 justify-between">
                         <span className="font-mono text-lg font-black tracking-widest text-white select-all">{myReferralCode.code}</span>
                         <button
-                          onClick={() => {
-                            navigator.clipboard.writeText(myReferralCode.code);
-                            alert("¡Código de vendedor copiado al portapapeles!");
-                          }}
-                          className="px-6 py-3 bg-nectar-gold hover:bg-nectar-gold/90 text-background text-[10px] font-black uppercase tracking-widest rounded-xl transition-all hover:scale-[1.02] active:scale-95"
+                           onClick={() => {
+                             navigator.clipboard.writeText(myReferralCode.code);
+                             alert("¡Código de vendedor copiado al portapapeles!");
+                           }}
+                           className="px-6 py-3 bg-nectar-gold hover:bg-nectar-gold/90 text-background text-[10px] font-black uppercase tracking-widest rounded-xl transition-all hover:scale-[1.02] active:scale-95"
                         >
                           Copiar Código
                         </button>
@@ -684,17 +714,17 @@ export default function DashboardPage() {
                   <div className="grid grid-cols-3 gap-4">
                     <div className="p-4 bg-background/40 border border-card-border/60 rounded-2xl text-center">
                       <span className="text-[8px] font-black uppercase tracking-widest opacity-40 block">Mes 1</span>
-                      <span className="text-2xl font-black text-nectar-gold font-mono">20%</span>
+                      <span className="text-2xl font-black text-nectar-gold font-mono">10%</span>
                       <p className="text-[8px] font-bold text-foreground/50 mt-1 uppercase">Abono Inicial</p>
                     </div>
                     <div className="p-4 bg-background/40 border border-card-border/60 rounded-2xl text-center">
                       <span className="text-[8px] font-black uppercase tracking-widest opacity-40 block">Mes 2</span>
-                      <span className="text-2xl font-black text-nectar-gold font-mono">10%</span>
+                      <span className="text-2xl font-black text-nectar-gold font-mono">5%</span>
                       <p className="text-[8px] font-bold text-foreground/50 mt-1 uppercase">Segundo Mes</p>
                     </div>
                     <div className="p-4 bg-background/40 border border-card-border/60 rounded-2xl text-center">
                       <span className="text-[8px] font-black uppercase tracking-widest opacity-40 block">Mes 3+</span>
-                      <span className="text-2xl font-black text-nectar-gold font-mono">5%</span>
+                      <span className="text-2xl font-black text-nectar-gold font-mono">2%</span>
                       <p className="text-[8px] font-bold text-foreground/50 mt-1 uppercase">Permanente</p>
                     </div>
                   </div>
@@ -917,10 +947,36 @@ export default function DashboardPage() {
             {/* Developer Specific Section: Ecosystem Contracts */}
             {isCEO && (
               <section className="mb-16 p-8 md:p-10 rounded-[3rem] bg-card-bg border border-card-border shadow-xl relative">
-                <div className="flex justify-between items-center mb-8">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8 border-b border-card-border/40 pb-6">
                   <div>
                     <h3 className="text-xs font-black uppercase tracking-[0.3em] opacity-30">Contratos del Ecosistema</h3>
                     <p className="text-[9px] font-bold text-foreground/40 mt-1 uppercase tracking-wider">Historial completo de contratos de Partner Tecnológico</p>
+                  </div>
+                  
+                  {/* Premium segment tabs */}
+                  <div className="flex flex-wrap items-center gap-1.5 p-1 rounded-2xl bg-background/50 border border-card-border/80">
+                    {(['all', 'nectar', 'custom', 'addons_only'] as const).map((filter) => {
+                      const labels = {
+                        all: 'Todos',
+                        nectar: 'Contrato + Subdominio',
+                        custom: 'Contrato + Dominio Propio',
+                        addons_only: 'Solo Add-ons'
+                      };
+                      const isActive = contractFilter === filter;
+                      return (
+                        <button
+                          key={filter}
+                          onClick={() => setContractFilter(filter)}
+                          className={`px-4 py-2 rounded-xl text-[8.5px] font-black uppercase tracking-wider transition-all duration-300 ${
+                            isActive
+                              ? 'bg-nectar-gold text-background shadow-md shadow-nectar-gold/10 font-bold'
+                              : 'text-foreground/50 hover:text-foreground hover:bg-foreground/5 font-bold'
+                          }`}
+                        >
+                          {labels[filter]}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
 
@@ -938,63 +994,108 @@ export default function DashboardPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {contracts.map(contract => (
-                        <React.Fragment key={contract.id}>
-                          <tr className="border-b border-card-border/30 last:border-0 hover:bg-foreground/[0.02] transition-colors">
-                            <td className="py-4 text-center">
-                              <button
-                                onClick={() => toggleContractExpanded(contract.id)}
-                                className="text-nectar-gold hover:text-white transition-colors"
-                              >
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  fill="none"
-                                  viewBox="0 0 24 24"
-                                  strokeWidth="2.5"
-                                  stroke="currentColor"
-                                  className={`w-4 h-4 transition-transform duration-300 ${
-                                    expandedContracts[contract.id] ? 'rotate-90' : ''
-                                  }`}
+                      {(() => {
+                        const filteredContracts = contracts.filter(contract => {
+                          const hasPlan = !!contract.plan;
+                          const hasCustomDomain = !!contract.tenant_custom_domain;
+                          if (contractFilter === 'nectar') {
+                            return hasPlan && !hasCustomDomain;
+                          }
+                          if (contractFilter === 'custom') {
+                            return hasPlan && hasCustomDomain;
+                          }
+                          if (contractFilter === 'addons_only') {
+                            return !hasPlan;
+                          }
+                          return true;
+                        });
+
+                        if (filteredContracts.length === 0) {
+                          return (
+                            <tr>
+                              <td colSpan={8} className="py-12 text-center text-[9px] font-black uppercase tracking-widest opacity-25">
+                                No hay contratos que coincidan con el filtro
+                              </td>
+                            </tr>
+                          );
+                        }
+
+                        return filteredContracts.map(contract => (
+                          <React.Fragment key={contract.id}>
+                            <tr className="border-b border-card-border/30 last:border-0 hover:bg-foreground/[0.02] transition-colors">
+                              <td className="py-4 text-center">
+                                <button
+                                  onClick={() => toggleContractExpanded(contract.id)}
+                                  className="text-nectar-gold hover:text-white transition-colors"
                                 >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    d="M8.25 4.5l7.5 7.5-7.5 7.5"
-                                  />
-                                </svg>
-                              </button>
-                            </td>
-                            <td className="py-4 pr-4">
-                              <h4 className="font-black text-sm">{contract.full_name}</h4>
-                              <div className="flex flex-col gap-0.5 mt-0.5">
-                                <p className="text-[7px] font-bold text-foreground/45 uppercase tracking-wider">{contract.tax_id}</p>
-                                {contract.tenant_subdomain && (() => {
-                                  const host = typeof window !== 'undefined' ? window.location.hostname : '';
-                                  let domain = `https://${contract.tenant_subdomain}.nectarlabs.dev`;
-                                  let urlDisplay = `${contract.tenant_subdomain}.nectarlabs.dev`;
-                                  if (host.includes('localhost')) {
-                                    domain = `http://${contract.tenant_subdomain}.localhost:3000`;
-                                    urlDisplay = `${contract.tenant_subdomain}.localhost:3000`;
-                                  } else if (host.includes('staging.nectarlabs.dev')) {
-                                    domain = `https://${contract.tenant_subdomain}.staging.nectarlabs.dev`;
-                                    urlDisplay = `${contract.tenant_subdomain}.staging.nectarlabs.dev`;
-                                  }
-                                  return (
-                                    <a
-                                      href={domain}
-                                      target="_blank"
-                                      rel="noreferrer"
-                                      className="text-nectar-gold hover:underline font-extrabold text-[8px] mt-0.5"
-                                    >
-                                      🚀 {urlDisplay} ↗
-                                    </a>
-                                  );
-                                })()}
-                              </div>
-                            </td>
-                            <td className="py-4 font-bold text-xs">
-                              {contract.plan_name || 'Desconocido'}
-                            </td>
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    strokeWidth="2.5"
+                                    stroke="currentColor"
+                                    className={`w-4 h-4 transition-transform duration-300 ${
+                                      expandedContracts[contract.id] ? 'rotate-90' : ''
+                                    }`}
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      d="M8.25 4.5l7.5 7.5-7.5 7.5"
+                                    />
+                                  </svg>
+                                </button>
+                              </td>
+                              <td className="py-4 pr-4">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <h4 className="font-black text-sm">{contract.full_name}</h4>
+                                  {(() => {
+                                    const hasPlan = !!contract.plan;
+                                    const hasCustomDomain = !!contract.tenant_custom_domain;
+                                    if (!hasPlan) {
+                                      return <span className="px-1.5 py-0.5 bg-purple-500/10 text-purple-400 text-[6.5px] font-black uppercase tracking-widest rounded border border-purple-500/20">Solo Add-ons</span>;
+                                    } else if (hasCustomDomain) {
+                                      return <span className="px-1.5 py-0.5 bg-green-500/10 text-green-400 text-[6.5px] font-black uppercase tracking-widest rounded border border-green-500/20">Dominio Propio</span>;
+                                    } else {
+                                      return <span className="px-1.5 py-0.5 bg-nectar-gold/10 text-nectar-gold text-[6.5px] font-black uppercase tracking-widest rounded border border-nectar-gold/20">Néctar Subdominio</span>;
+                                    }
+                                  })()}
+                                </div>
+                                <div className="flex flex-col gap-0.5 mt-0.5">
+                                  <p className="text-[7px] font-bold text-foreground/45 uppercase tracking-wider">{contract.tax_id}</p>
+                                  {(contract.tenant_custom_domain || contract.tenant_subdomain) && (() => {
+                                    const host = typeof window !== 'undefined' ? window.location.hostname : '';
+                                    let domain = contract.tenant_custom_domain 
+                                      ? `https://${contract.tenant_custom_domain}` 
+                                      : `https://${contract.tenant_subdomain}.nectarlabs.dev`;
+                                    let urlDisplay = contract.tenant_custom_domain || `${contract.tenant_subdomain}.nectarlabs.dev`;
+                                    
+                                    if (!contract.tenant_custom_domain) {
+                                      if (host.includes('localhost')) {
+                                        domain = `http://${contract.tenant_subdomain}.localhost:3000`;
+                                        urlDisplay = `${contract.tenant_subdomain}.localhost:3000`;
+                                      } else if (host.includes('staging.nectarlabs.dev')) {
+                                        domain = `https://${contract.tenant_subdomain}.staging.nectarlabs.dev`;
+                                        urlDisplay = `${contract.tenant_subdomain}.staging.nectarlabs.dev`;
+                                      }
+                                    }
+                                    
+                                    return (
+                                      <a
+                                        href={domain}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="text-nectar-gold hover:underline font-extrabold text-[8px] mt-0.5"
+                                      >
+                                        🚀 {urlDisplay} ↗
+                                      </a>
+                                    );
+                                  })()}
+                                </div>
+                              </td>
+                              <td className="py-4 font-bold text-xs">
+                                {contract.plan_name || 'Solo Add-ons / Complementos'}
+                              </td>
                             <td className="py-4 text-center text-[10px] font-bold opacity-60">
                               {contract.signed_at ? new Date(contract.signed_at).toLocaleDateString('es-ES') : '—'}
                             </td>
@@ -1196,14 +1297,8 @@ export default function DashboardPage() {
                           </tr>
                         )}
                         </React.Fragment>
-                      ))}
-                      {contracts.length === 0 && (
-                        <tr>
-                          <td colSpan={8} className="py-12 text-center text-[9px] font-black uppercase tracking-widest opacity-25">
-                            No hay contratos registrados en el sistema
-                          </td>
-                        </tr>
-                      )}
+                        ));
+                      })()}
                     </tbody>
                   </table>
                 </div>

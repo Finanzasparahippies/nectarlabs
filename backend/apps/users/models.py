@@ -26,6 +26,10 @@ class User(AbstractUser):
         blank=True, 
         related_name='users'
     )
+    is_approved_seller = models.BooleanField(
+        default=False,
+        help_text="Indica si el vendedor está aprobado para generar comisiones."
+    )
     
     # Use email as the primary identifier
     USERNAME_FIELD = 'email'

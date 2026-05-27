@@ -196,6 +196,9 @@ export default function AddonsPage() {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
   const [selectedAddon, setSelectedAddon] = useState<Addon | null>(null);
   const [requestAddon, setRequestAddon] = useState<Addon | null>(null);
+  const [manageAddon, setManageAddon] = useState<Addon | null>(null);
+  const [contracts, setContracts] = useState<any[]>([]);
+  const [updatingContractId, setUpdatingContractId] = useState<number | null>(null);
   const [comments, setComments] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successTicketId, setSuccessTicketId] = useState<number | null>(null);
@@ -222,6 +225,7 @@ export default function AddonsPage() {
         try {
           const contractsData = await fetcher('/contracts/');
           if (Array.isArray(contractsData)) {
+            setContracts(contractsData);
             const planContractExists = contractsData.some(
               (c: any) => c.is_active && c.is_fully_signed && c.plan !== null && c.plan !== undefined
             );
@@ -294,6 +298,7 @@ export default function AddonsPage() {
       try {
         const contractsData = await fetcher('/contracts/');
         if (Array.isArray(contractsData)) {
+          setContracts(contractsData);
           const planContractExists = contractsData.some(
             (c: any) => c.is_active && c.is_fully_signed && c.plan !== null && c.plan !== undefined
           );
@@ -339,6 +344,30 @@ export default function AddonsPage() {
 
     loadAddons();
   }, []);
+
+  const handleToggleAddon = async (contractId: number, addonSlug: string, isCurrentlyActive: boolean) => {
+    try {
+      setUpdatingContractId(contractId);
+      const contract = contracts.find(c => c.id === contractId);
+      if (!contract) return;
+
+      const currentAddons = contract.addons || [];
+      const newAddons = isCurrentlyActive
+        ? currentAddons.filter((slug: string) => slug !== addonSlug)
+        : [...currentAddons, addonSlug];
+
+      const updated = await fetcher(`/contracts/${contractId}/`, {
+        method: 'PATCH',
+        body: JSON.stringify({ addons: newAddons })
+      });
+
+      setContracts(prev => prev.map(c => c.id === contractId ? { ...c, addons: updated.addons } : c));
+    } catch (err) {
+      alert("Error al actualizar los Add-ons del cliente.");
+    } finally {
+      setUpdatingContractId(null);
+    }
+  };
 
   const handleRequestIntegration = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -635,12 +664,21 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
                     >
                       Ver Ficha
                     </button>
-                    <button
-                      onClick={() => setRequestAddon(addon)}
-                      className="w-full py-4 text-[9px] font-black uppercase tracking-widest bg-nectar-gold text-background hover:scale-[1.03] active:scale-95 transition-all rounded-xl shadow-lg shadow-nectar-gold/10 hover:shadow-nectar-gold/25"
-                    >
-                      {hasPlanContract ? 'Solicitar Gratis' : 'Solicitar'}
-                    </button>
+                    {isStaff ? (
+                      <button
+                        onClick={() => setManageAddon(addon)}
+                        className="w-full py-4 text-[9px] font-black uppercase tracking-widest bg-nectar-gold text-background hover:scale-[1.03] active:scale-95 transition-all rounded-xl shadow-lg shadow-nectar-gold/10 hover:shadow-nectar-gold/25"
+                      >
+                        Asignar Cliente
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => setRequestAddon(addon)}
+                        className="w-full py-4 text-[9px] font-black uppercase tracking-widest bg-nectar-gold text-background hover:scale-[1.03] active:scale-95 transition-all rounded-xl shadow-lg shadow-nectar-gold/10 hover:shadow-nectar-gold/25"
+                      >
+                        {hasPlanContract ? 'Solicitar Gratis' : 'Solicitar'}
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -712,17 +750,29 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
               </div>
 
               <div className="flex gap-4">
-                <button
-                  onClick={() => {
-                    setRequestAddon(selectedAddon);
-                    setSelectedAddon(null);
-                  }}
-                  className="flex-1 py-4 text-xs font-black uppercase tracking-widest bg-nectar-gold text-background hover:scale-[1.02] active:scale-95 transition-all rounded-xl text-center shadow-lg"
-                >
-                  {hasPlanContract
-                    ? `Solicitar este Add-on Gratis (Incluido en tu Plan)`
-                    : `Solicitar este Add-on ($${billingCycle === 'monthly' ? selectedAddon.monthlyPrice.toLocaleString('es-MX') : selectedAddon.yearlyPrice.toLocaleString('es-MX')} MXN)`}
-                </button>
+                {isStaff ? (
+                  <button
+                    onClick={() => {
+                      setManageAddon(selectedAddon);
+                      setSelectedAddon(null);
+                    }}
+                    className="flex-1 py-4 text-xs font-black uppercase tracking-widest bg-nectar-gold text-background hover:scale-[1.02] active:scale-95 transition-all rounded-xl text-center shadow-lg"
+                  >
+                    Asignar este Add-on a Cliente
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => {
+                      setRequestAddon(selectedAddon);
+                      setSelectedAddon(null);
+                    }}
+                    className="flex-1 py-4 text-xs font-black uppercase tracking-widest bg-nectar-gold text-background hover:scale-[1.02] active:scale-95 transition-all rounded-xl text-center shadow-lg"
+                  >
+                    {hasPlanContract
+                      ? `Solicitar este Add-on Gratis (Incluido en tu Plan)`
+                      : `Solicitar este Add-on ($${billingCycle === 'monthly' ? selectedAddon.monthlyPrice.toLocaleString('es-MX') : selectedAddon.yearlyPrice.toLocaleString('es-MX')} MXN)`}
+                  </button>
+                )}
                 <button
                   onClick={() => setSelectedAddon(null)}
                   className="px-8 py-4 text-xs font-black uppercase tracking-widest hover:bg-foreground/5 rounded-xl border border-card-border text-center transition-all"
@@ -898,6 +948,85 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        )}
+
+        {/* Modal: Admin Manage Client Addons */}
+        {manageAddon && (
+          <div className="fixed inset-0 bg-background/80 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-premium">
+            <div className="bg-card-bg border border-card-border w-full max-w-xl rounded-[3rem] p-8 md:p-12 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+              <button
+                onClick={() => setManageAddon(null)}
+                className="absolute top-6 right-6 w-10 h-10 bg-foreground/5 hover:bg-foreground/10 text-foreground/60 hover:text-foreground rounded-full flex items-center justify-center text-lg font-bold transition-all"
+              >
+                ✕
+              </button>
+
+              <div className="mb-8">
+                <span className="text-[8px] font-black uppercase tracking-widest text-nectar-gold block mb-1 font-mono">
+                  Administración de Add-on
+                </span>
+                <h2 className="text-3xl font-black tracking-tight mb-2">Asignar {manageAddon.name}</h2>
+                <p className="text-xs text-muted leading-relaxed">
+                  Activa o desactiva este módulo para cualquier cliente activo del ecosistema. Los cambios se aprovisionarán automáticamente.
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                <div className="text-[10px] font-black uppercase tracking-widest text-nectar-gold border-b border-card-border pb-3 mb-2">
+                  Lista de Clientes / Contratos Activos
+                </div>
+                
+                <div className="space-y-3 max-h-[40vh] overflow-y-auto pr-1 text-left">
+                  {contracts
+                    .filter(c => c.is_fully_signed)
+                    .map(contract => {
+                      const isActive = (contract.addons || []).includes(manageAddon.id);
+                      const isUpdating = updatingContractId === contract.id;
+                      
+                      return (
+                        <div key={contract.id} className="flex items-center justify-between p-4 rounded-2xl bg-background/50 border border-card-border/60 hover:border-nectar-gold/30 transition-all">
+                          <div className="min-w-0 pr-3">
+                            <span className="font-bold text-xs text-foreground block truncate">
+                              {contract.full_name}
+                            </span>
+                            <span className="text-[8.5px] text-foreground/50 block font-semibold uppercase tracking-wider mt-0.5">
+                              {contract.plan_name || 'Contrato Personalizado'} (ID: #{contract.id})
+                            </span>
+                          </div>
+
+                          <button
+                            onClick={() => handleToggleAddon(contract.id, manageAddon.id, isActive)}
+                            disabled={isUpdating}
+                            className={`w-10 h-5 rounded-full p-0.5 transition-colors duration-300 focus:outline-none relative flex-shrink-0 ${
+                              isActive ? 'bg-nectar-gold' : 'bg-card-border'
+                            } ${isUpdating ? 'opacity-55 cursor-not-allowed' : ''}`}
+                          >
+                            <div className={`w-4 h-4 rounded-full bg-white shadow-md transform transition-transform duration-300 ${
+                              isActive ? 'translate-x-5' : 'translate-x-0'
+                            }`} />
+                          </button>
+                        </div>
+                      );
+                    })}
+
+                  {contracts.filter(c => c.is_fully_signed).length === 0 && (
+                    <p className="text-[9px] opacity-40 italic text-center py-6">
+                      No hay contratos firmados/activos registrados en el sistema.
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex justify-end pt-8 border-t border-card-border/50 mt-6">
+                <button
+                  onClick={() => setManageAddon(null)}
+                  className="px-8 py-3.5 text-xs font-black uppercase tracking-widest bg-nectar-gold text-background hover:scale-[1.02] active:scale-95 rounded-xl text-center shadow-lg transition-all"
+                >
+                  Listo
+                </button>
+              </div>
             </div>
           </div>
         )}

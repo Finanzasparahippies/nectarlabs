@@ -218,25 +218,27 @@ class PaymentInstallment(models.Model):
         if self.status == 'PAID' and (is_new or old_status != 'PAID'):
             contract = self.contract
             if contract.promo_code and contract.promo_code.code_type == 'SELLER' and contract.promo_code.referrer:
-                # Calculate salesperson commission
-                from .models import SalesCommission
-                if not SalesCommission.objects.filter(installment=self).exists():
-                    installment_number = self.installment_number
-                    if installment_number == 1:
-                        pct = Decimal('20.00')
-                    elif installment_number == 2:
-                        pct = Decimal('10.00')
-                    else:
-                        pct = Decimal('5.00')
-                    
-                    commission_amount = self.amount * (pct / Decimal('100'))
-                    SalesCommission.objects.create(
-                        salesperson=contract.promo_code.referrer,
-                        installment=self,
-                        commission_percentage=pct,
-                        amount=commission_amount,
-                        status=SalesCommission.Status.PENDING
-                    )
+                referrer = contract.promo_code.referrer
+                # Restructure: Commissions only for SALES role users approved by the owner directly
+                if referrer.role == 'SALES' and getattr(referrer, 'is_approved_seller', False):
+                    from .models import SalesCommission
+                    if not SalesCommission.objects.filter(installment=self).exists():
+                        installment_number = self.installment_number
+                        if installment_number == 1:
+                            pct = Decimal('10.00')
+                        elif installment_number == 2:
+                            pct = Decimal('5.00')
+                        else:
+                            pct = Decimal('2.00')
+                        
+                        commission_amount = self.amount * (pct / Decimal('100'))
+                        SalesCommission.objects.create(
+                            salesperson=referrer,
+                            installment=self,
+                            commission_percentage=pct,
+                            amount=commission_amount,
+                            status=SalesCommission.Status.PENDING
+                        )
 
     def __str__(self):
         return f"{self.get_installment_type_display()} #{self.installment_number} - {self.contract.full_name} (${self.amount})"

@@ -151,6 +151,17 @@ export default function DashboardSidebar() {
 
           {isCEO && (
             <Link
+              href="/dashboard?tab=business#ventas"
+              onClick={(e) => { e.preventDefault(); window.location.href = '/dashboard?tab=business'; setTimeout(() => { document.querySelector('[data-section="ventas"]')?.scrollIntoView({ behavior: 'smooth' }); }, 500); }}
+              className={`flex items-center gap-4 px-6 py-4 w-full text-left rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all hover:bg-foreground/5 text-foreground opacity-60 hover:opacity-100`}
+            >
+              <div className="w-2 h-2 bg-blue-400/40 rounded-full"></div>
+              Panel de Ventas
+            </Link>
+          )}
+
+          {isCEO && (
+            <Link
               href="/dashboard/support-settings"
               className={`flex items-center gap-4 px-6 py-4 w-full text-left rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all ${
                 pathname === '/dashboard/support-settings'

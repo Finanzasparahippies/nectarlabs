@@ -28,10 +28,17 @@ class SalesCommissionSerializer(serializers.ModelSerializer):
     installment_number = serializers.IntegerField(source='installment.installment_number', read_only=True)
     installment_amount = serializers.DecimalField(source='installment.amount', max_digits=10, decimal_places=2, read_only=True)
     salesperson_email = serializers.CharField(source='salesperson.email', read_only=True)
+    due_date = serializers.DateField(source='installment.due_date', read_only=True)
+    plan_name = serializers.SerializerMethodField(read_only=True)
+    contract_id = serializers.IntegerField(source='installment.contract.id', read_only=True)
 
     class Meta:
         model = SalesCommission
         fields = '__all__'
+
+    def get_plan_name(self, obj):
+        plan = obj.installment.contract.plan
+        return plan.name if plan else 'Sin Plan'
 
 class ContractSerializer(serializers.ModelSerializer):
     plan_name = serializers.CharField(source='plan.name', read_only=True)
@@ -39,6 +46,7 @@ class ContractSerializer(serializers.ModelSerializer):
     addons_details = AddOnSerializer(source='addons', many=True, read_only=True)
     tenant_subdomain = serializers.SerializerMethodField(read_only=True)
     tenant_name = serializers.SerializerMethodField(read_only=True)
+    tenant_custom_domain = serializers.SerializerMethodField(read_only=True)
     promo_code = serializers.SlugRelatedField(slug_field='code', queryset=PromoCode.objects.all(), required=False, allow_null=True)
     promo_code_details = PromoCodeSerializer(source='promo_code', read_only=True)
 
@@ -54,6 +62,10 @@ class ContractSerializer(serializers.ModelSerializer):
     def get_tenant_name(self, obj):
         tenant = obj.user.owned_tenants.first()
         return tenant.name if tenant else None
+
+    def get_tenant_custom_domain(self, obj):
+        tenant = obj.user.owned_tenants.first()
+        return tenant.custom_domain if (tenant and tenant.custom_domain) else None
 
 class PaymentInstallmentSerializer(serializers.ModelSerializer):
     client_name = serializers.CharField(source='contract.full_name', read_only=True)

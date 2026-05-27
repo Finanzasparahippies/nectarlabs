@@ -37,6 +37,10 @@ export default function Navbar() {
           <a href="/#formula" className="text-[10px] font-black uppercase tracking-widest text-foreground opacity-60 hover:opacity-100 transition-opacity">Hoja de Ruta</a>
           <a href="/#pricing" className="text-[10px] font-black uppercase tracking-widest text-foreground opacity-60 hover:opacity-100 transition-opacity">Planes</a>
           <a href="/#addons" className="text-[10px] font-black uppercase tracking-widest text-foreground opacity-60 hover:opacity-100 transition-opacity">Add-ons</a>
+          <a href="/#seller-program" className="text-[10px] font-black uppercase tracking-widest text-nectar-gold/70 hover:text-nectar-gold transition-colors flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-nectar-gold animate-pulse" />
+            Únete a Nosotros
+          </a>
           <Link href="/blog" className="text-[10px] font-black uppercase tracking-widest text-foreground opacity-60 hover:opacity-100 transition-opacity">Blog</Link>
           {isLoggedIn && (
             <Link href="/dashboard" className="text-[10px] font-black uppercase tracking-widest text-nectar-gold">Dashboard</Link>
