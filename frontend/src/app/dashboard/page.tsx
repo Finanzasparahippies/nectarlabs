@@ -1191,9 +1191,10 @@ export default function DashboardPage() {
                                     )}
                                   </div>
                                 </div>
-                              </td>
-                            </tr>
-                          )}
+                              </div>
+                            </td>
+                          </tr>
+                        )}
                         </React.Fragment>
                       ))}
                       {contracts.length === 0 && (
