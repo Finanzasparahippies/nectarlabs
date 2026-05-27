@@ -1,3 +1,4 @@
+from decimal import Decimal
 from django.db import models
 from django.conf import settings
 from django.utils import timezone
@@ -222,13 +223,13 @@ class PaymentInstallment(models.Model):
                 if not SalesCommission.objects.filter(installment=self).exists():
                     installment_number = self.installment_number
                     if installment_number == 1:
-                        pct = 20.00
+                        pct = Decimal('20.00')
                     elif installment_number == 2:
-                        pct = 10.00
+                        pct = Decimal('10.00')
                     else:
-                        pct = 5.00
+                        pct = Decimal('5.00')
                     
-                    commission_amount = self.amount * (pct / 100)
+                    commission_amount = self.amount * (pct / Decimal('100'))
                     SalesCommission.objects.create(
                         salesperson=contract.promo_code.referrer,
                         installment=self,

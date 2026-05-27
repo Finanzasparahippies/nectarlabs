@@ -79,7 +79,17 @@ class Tenant(models.Model):
 
     @property
     def active_addons(self):
-        from apps.shop.models import AddOn
+        from apps.shop.models import AddOn, Contract
+        # If tenant owner has an active, fully signed contract with a plan, return all active addons
+        has_plan = Contract.objects.filter(
+            user=self.owner,
+            is_active=True,
+            is_fully_signed=True,
+            plan__isnull=False
+        ).exists()
+        if has_plan:
+            return list(AddOn.objects.filter(is_active=True).values_list('slug', flat=True).distinct())
+
         # Return only the ones explicitly purchased or assigned via active, fully signed contracts
         return list(AddOn.objects.filter(
             is_active=True,
