@@ -19,6 +19,12 @@ class Plan(models.Model):
     description = models.TextField()
     is_recommended = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
+    discount_percentage = models.DecimalField(
+        max_digits=5, 
+        decimal_places=2, 
+        default=0.00,
+        help_text="Porcentaje de descuento de temporada (0 a 100)"
+    )
     
     def __str__(self):
         return self.name
@@ -77,8 +83,16 @@ class Contract(models.Model):
     ip_address = models.GenericIPAddressField(blank=True, null=True)
     is_active = models.BooleanField(default=True)
     next_payment_date = models.DateField(blank=True, null=True)
-
+    discount_percentage = models.DecimalField(
+        max_digits=5, 
+        decimal_places=2, 
+        default=0.00,
+        help_text="Porcentaje de descuento especial (0 a 100)"
+    )
+ 
     def save(self, *args, **kwargs):
+        if not self.pk and self.plan and self.discount_percentage == 0:
+            self.discount_percentage = self.plan.discount_percentage
         if self.plan:
             plan_name_lower = self.plan.name.lower()
             if any(kw in plan_name_lower for kw in ['basico', 'básico', 'basic']):

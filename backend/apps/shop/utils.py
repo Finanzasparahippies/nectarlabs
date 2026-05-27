@@ -306,6 +306,9 @@ def generate_installments_for_contract(contract):
         return
         
     plan_price = contract.plan.price
+    if contract.discount_percentage > 0:
+        plan_price = plan_price * (1 - contract.discount_percentage / 100)
+        
     start_date = contract.signed_at.date() if contract.signed_at else timezone.now().date()
     
     # Clean up previous installments

@@ -155,6 +155,11 @@ class ContractViewSet(viewsets.ModelViewSet):
         if contract.plan:
             from apps.shop.utils import generate_installments_for_contract
             generate_installments_for_contract(contract)
+            # Auto-populate next_payment_date with the due date of the first generated installment
+            first_inst = contract.installments.order_by('due_date').first()
+            if first_inst:
+                contract.next_payment_date = first_inst.due_date
+                contract.save()
         
         # --- AUTO-CREATE PROJECT ---
         try:
@@ -193,6 +198,12 @@ class PaymentInstallmentViewSet(viewsets.ModelViewSet):
             if contract.installments.count() == 0:
                 from apps.shop.utils import generate_installments_for_contract
                 generate_installments_for_contract(contract)
+            # Auto-healer for next_payment_date
+            if not contract.next_payment_date:
+                first_inst = contract.installments.order_by('due_date').first()
+                if first_inst:
+                    contract.next_payment_date = first_inst.due_date
+                    contract.save()
 
         is_admin_or_business = self.request.user.is_staff or self.request.user.role in ['ADMIN', 'BUSINESS']
         if is_admin_or_business:

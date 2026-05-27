@@ -68,6 +68,16 @@ const formatHoursToHM = (decimalHours: number): string => {
   return `${sign}${displayH}:${displayM.toString().padStart(2, '0')}`;
 };
 
+const formatDate = (dateStr: string) => {
+  if (!dateStr) return '—';
+  const dateObj = new Date(dateStr.includes('T') ? dateStr : `${dateStr}T00:00:00`);
+  return dateObj.toLocaleDateString('es-MX', {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric'
+  });
+};
+
 export default function DashboardPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [tickets, setTickets] = useState<Ticket[]>([]);
@@ -525,9 +535,35 @@ export default function DashboardPage() {
                   <div key={plan.id} className="p-8 rounded-[2rem] bg-background/50 border border-card-border flex flex-col justify-between hover:border-nectar-gold transition-all duration-300 group animate-in fade-in zoom-in-95">
                     <div>
                       <h3 className="text-2xl font-black tracking-tight mb-2">{plan.name}</h3>
-                      <div className="text-3xl font-black text-nectar-gold mb-6 font-mono">
-                        ${parseFloat(plan.price).toLocaleString()} <span className="text-[10px] text-foreground/50 uppercase tracking-widest">MXN / Mes</span>
-                      </div>
+                      {(() => {
+                        const discount = parseFloat(plan.discount_percentage || '0');
+                        const origPrice = parseFloat(plan.price);
+                        const finalPrice = discount > 0 ? origPrice * (1 - discount / 100) : origPrice;
+
+                        if (discount > 0) {
+                          return (
+                            <div className="mb-6">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="text-xs line-through opacity-50 font-mono">
+                                  ${origPrice.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                                </span>
+                                <span className="px-2 py-0.5 bg-red-500/10 text-red-500 text-[8px] font-black uppercase tracking-widest rounded-full border border-red-500/20">
+                                  -{discount}% OFF
+                                </span>
+                              </div>
+                              <div className="text-3xl font-black text-nectar-gold font-mono">
+                                ${finalPrice.toLocaleString('es-MX', { minimumFractionDigits: 2 })} <span className="text-[10px] text-foreground/50 uppercase tracking-widest">MXN / Mes</span>
+                              </div>
+                            </div>
+                          );
+                        }
+
+                        return (
+                          <div className="text-3xl font-black text-nectar-gold mb-6 font-mono">
+                            ${origPrice.toLocaleString('es-MX', { minimumFractionDigits: 2 })} <span className="text-[10px] text-foreground/50 uppercase tracking-widest">MXN / Mes</span>
+                          </div>
+                        );
+                      })()}
 
                       <ul className="space-y-3 mb-8 text-xs text-foreground/80">
                         <li className="flex items-center gap-2">
@@ -808,7 +844,7 @@ export default function DashboardPage() {
             )}
 
             {/* Client Specific Section: Payment Commitment & Details (Closed Deal) */}
-            {!isStaff && contracts.some(c => c.is_fully_signed) && (() => {
+            {contracts.some(c => c.is_fully_signed) && (() => {
               const activeContracts = contracts.filter(c => c.is_fully_signed);
               const activeContract = selectedActiveContractId
                 ? activeContracts.find(c => c.id === selectedActiveContractId) || activeContracts[0]
@@ -862,12 +898,21 @@ export default function DashboardPage() {
                       <div className="space-y-4">
                         <div className="space-y-2">
                           <label className="text-[9px] font-black uppercase tracking-widest opacity-40 ml-1">Fecha de Compromiso de Pago</label>
-                          <input
-                            type="date"
-                            value={nextPaymentDate}
-                            onChange={(e) => handleUpdatePaymentDate(activeContract.id, e.target.value)}
-                            className="w-full bg-background/50 border border-card-border rounded-xl p-4 focus:outline-none focus:border-nectar-gold transition-all text-xs font-bold text-foreground"
-                          />
+                          {isStaff ? (
+                            <input
+                              type="date"
+                              value={nextPaymentDate}
+                              onChange={(e) => handleUpdatePaymentDate(activeContract.id, e.target.value)}
+                              className="w-full bg-background/50 border border-card-border rounded-xl p-4 focus:outline-none focus:border-nectar-gold transition-all text-xs font-bold text-foreground"
+                            />
+                          ) : (
+                            <div className="w-full bg-background/30 border border-card-border rounded-xl p-4 flex items-center justify-between">
+                              <span className="text-xs font-bold text-foreground">{formatDate(nextPaymentDate)}</span>
+                              <span className="px-2.5 py-0.5 bg-nectar-gold/10 text-nectar-gold text-[8px] font-black uppercase tracking-widest rounded-full">
+                                Estipulado
+                              </span>
+                            </div>
+                          )}
                         </div>
 
                         <div className="space-y-2">
@@ -963,71 +1008,118 @@ export default function DashboardPage() {
                   <div className="mt-12 border-t border-card-border/50 pt-10">
                     <h3 className="text-lg font-black tracking-tight mb-6">Mensualidades Obligatorias (Compromiso a 6 Meses)</h3>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {installments.filter(inst => inst.contract === activeContract.id).map(inst => (
-                        <div key={inst.id} className="p-6 rounded-2xl bg-background/30 border border-card-border flex flex-col justify-between gap-4">
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <span className="text-[8px] font-black uppercase tracking-widest opacity-40">Mes {inst.installment_number} de 6</span>
-                              <h4 className="font-black text-lg mt-1">${parseFloat(inst.amount).toLocaleString('es-MX')} MXN</h4>
-                            </div>
-                            <span className={`px-2.5 py-1 text-[8px] font-black uppercase tracking-widest rounded-full ${inst.status === 'PAID' ? 'bg-green-500/10 text-green-500' :
-                                inst.receipt_file ? 'bg-orange-500/10 text-orange-500' : 'bg-yellow-500/10 text-yellow-500'
-                              }`}>
-                              {inst.status === 'PAID' ? 'Pagado' : inst.receipt_file ? 'En Revisión' : 'Pendiente'}
-                            </span>
-                          </div>
+                    <div className="flex flex-col gap-4">
+                      {installments
+                        .filter(inst => inst.contract === activeContract.id)
+                        .sort((a, b) => a.installment_number - b.installment_number)
+                        .map((inst, index, arr) => {
+                          const isPaid = inst.status === 'PAID';
+                          const isPendingReview = !isPaid && inst.receipt_file;
+                          const isPending = !isPaid && !inst.receipt_file;
 
-                          <div className="space-y-2 text-[10px]">
-                            {inst.project_name && (
-                              <div className="flex justify-between gap-4">
-                                <span className="opacity-60 shrink-0">Proyecto:</span>
-                                <span className="font-bold text-nectar-gold text-right truncate" title={inst.project_name}>{inst.project_name}</span>
-                              </div>
-                            )}
-                            <div className="flex justify-between opacity-60">
-                              <span>Fecha Límite:</span>
-                              <span className="font-bold">{inst.due_date}</span>
-                            </div>
-                            {inst.cfdi_uuid && (
-                              <div className="flex justify-between text-green-500 font-bold">
-                                <span>Folio Fiscal SAT:</span>
-                                <span className="text-[8px] tracking-tighter select-all">{inst.cfdi_uuid.slice(0, 8)}...</span>
-                              </div>
-                            )}
-                          </div>
+                          let statusColor = 'bg-yellow-500';
+                          let statusText = 'Pendiente';
+                          let bgClass = 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20';
+                          if (isPaid) {
+                            statusColor = 'bg-green-500';
+                            statusText = 'Pagado';
+                            bgClass = 'bg-green-500/10 text-green-500 border-green-500/20';
+                          } else if (isPendingReview) {
+                            statusColor = 'bg-orange-500';
+                            statusText = 'En Revisión';
+                            bgClass = 'bg-orange-500/10 text-orange-500 border-orange-500/20';
+                          }
 
-                          {inst.status !== 'PAID' && (
-                            <div className="mt-2 space-y-2">
-                              {chosenMethod === 'STRIPE' ? (
-                                <button
-                                  onClick={() => handlePayStripe(inst.id)}
-                                  className="w-full py-2.5 bg-[#635BFF] hover:bg-[#5b53e8] text-white text-center rounded-xl text-[8px] font-black uppercase tracking-widest transition-all shadow-md"
-                                >
-                                  Pagar con Stripe
-                                </button>
-                              ) : inst.receipt_file ? (
-                                <p className="text-[8px] text-center opacity-60 italic font-bold">Comprobante subido. Esperando validación.</p>
-                              ) : (
-                                <label className="w-full block py-2.5 border border-dashed border-nectar-gold/50 text-nectar-gold hover:bg-nectar-gold hover:text-background text-center rounded-xl text-[8px] font-black uppercase tracking-widest transition-all cursor-pointer">
-                                  Subir Comprobante
-                                  <input
-                                    type="file"
-                                    accept="image/*,application/pdf"
-                                    className="hidden"
-                                    onChange={(e) => {
-                                      const file = e.target.files?.[0];
-                                      if (file) handleUploadReceipt(inst.id, file);
-                                    }}
-                                  />
-                                </label>
-                              )}
+                          return (
+                            <div key={inst.id} className="relative flex flex-col md:flex-row md:items-center justify-between p-6 rounded-2xl bg-background/25 border border-card-border/60 hover:border-card-border transition-all duration-300 gap-6">
+                              {/* Left side: Timeline marker + Info */}
+                              <div className="flex items-center gap-4 flex-1 min-w-0">
+                                {/* Dot & Connector Line */}
+                                <div className="relative flex flex-col items-center justify-center">
+                                  <div className={`w-3.5 h-3.5 rounded-full ${statusColor} shadow-lg shadow-current/20 flex-shrink-0 z-10`} />
+                                  {index < arr.length - 1 && (
+                                    <div className="absolute top-4 w-[2px] h-16 bg-card-border/40 z-0" />
+                                  )}
+                                </div>
+
+                                <div className="min-w-0 ml-2">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-[9px] font-black uppercase tracking-widest opacity-40">
+                                      Mes {inst.installment_number} de 6
+                                    </span>
+                                    {inst.project_name && (
+                                      <span className="text-[9px] font-bold text-nectar-gold truncate max-w-[150px]">
+                                        • {inst.project_name}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <h4 className="font-bold text-sm text-foreground mt-0.5">
+                                    Mensualidad de Ingeniería
+                                  </h4>
+                                  <p className="text-[10px] text-foreground/50 mt-1">
+                                    Vencimiento: <span className="font-semibold text-foreground/80">{formatDate(inst.due_date)}</span>
+                                  </p>
+                                  {inst.cfdi_uuid && (
+                                    <p className="text-[9px] text-green-500 font-bold mt-1">
+                                      Folio Fiscal SAT: <span className="font-mono select-all text-[8px] tracking-tight">{inst.cfdi_uuid}</span>
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Right side: Status, Amount, & Action */}
+                              <div className="flex flex-wrap items-center md:justify-end gap-6">
+                                {/* Status badge */}
+                                <span className={`px-3 py-1 text-[8px] font-black uppercase tracking-widest rounded-full border ${bgClass}`}>
+                                  {statusText}
+                                </span>
+
+                                {/* Amount */}
+                                <div className="text-left md:text-right min-w-[120px]">
+                                  <span className="text-[8px] uppercase tracking-widest opacity-40 block">Monto</span>
+                                  <span className="font-black text-base text-foreground">
+                                    ${parseFloat(inst.amount).toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN
+                                  </span>
+                                </div>
+
+                                {/* Action */}
+                                <div className="w-full md:w-auto min-w-[150px] flex justify-end">
+                                  {!isPaid && (
+                                    <div className="w-full">
+                                      {chosenMethod === 'STRIPE' ? (
+                                        <button
+                                          onClick={() => handlePayStripe(inst.id)}
+                                          className="w-full py-2.5 bg-[#635BFF] hover:bg-[#5b53e8] text-white text-center rounded-xl text-[8px] font-black uppercase tracking-widest transition-all shadow-lg shadow-[#635BFF]/10 active:scale-95"
+                                        >
+                                          Pagar con Stripe
+                                        </button>
+                                      ) : isPendingReview ? (
+                                        <p className="text-[8px] text-center opacity-60 italic font-bold py-2 bg-background/40 rounded-xl border border-card-border/30">
+                                          Comprobante en validación
+                                        </p>
+                                      ) : (
+                                        <label className="w-full block py-2.5 border border-dashed border-nectar-gold/50 text-nectar-gold hover:bg-nectar-gold hover:text-background text-center rounded-xl text-[8px] font-black uppercase tracking-widest transition-all cursor-pointer hover:border-solid">
+                                          Subir Comprobante
+                                          <input
+                                            type="file"
+                                            accept="image/*,application/pdf"
+                                            className="hidden"
+                                            onChange={(e) => {
+                                              const file = e.target.files?.[0];
+                                              if (file) handleUploadReceipt(inst.id, file);
+                                            }}
+                                          />
+                                        </label>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
                             </div>
-                          )}
-                        </div>
-                      ))}
+                          );
+                        })}
                       {installments.filter(inst => inst.contract === activeContract.id).length === 0 && (
-                        <p className="col-span-full text-center text-xs opacity-40 font-bold py-6">Las mensualidades se generarán una vez que el trato sea firmado por el administrador.</p>
+                        <p className="text-center text-xs opacity-40 font-bold py-6">Las mensualidades se generarán una vez que el trato sea firmado por el administrador.</p>
                       )}
                     </div>
                   </div>

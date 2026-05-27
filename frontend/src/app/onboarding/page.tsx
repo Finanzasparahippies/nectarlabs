@@ -12,6 +12,7 @@ interface Plan {
   name: string;
   price: string;
   hours: number;
+  discount_percentage?: string;
 }
 
 function OnboardingContent() {
@@ -151,11 +152,39 @@ function OnboardingContent() {
                   className="w-full bg-card-bg border-2 border-card-border rounded-2xl p-6 font-bold focus:border-nectar-gold outline-none appearance-none"
                 >
                   <option value="">Selecciona un plan...</option>
-                  {plans.map(p => (
-                    <option key={p.id} value={p.id}>{p.name} - ${parseFloat(p.price).toLocaleString()} MXN</option>
-                  ))}
+                  {plans.map(p => {
+                    const discount = parseFloat(p.discount_percentage || '0');
+                    const origPrice = parseFloat(p.price);
+                    const discPrice = discount > 0 ? origPrice * (1 - discount / 100) : origPrice;
+                    return (
+                      <option key={p.id} value={p.id}>
+                        {p.name} - {discount > 0 ? `$${discPrice.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN (Promo: ${discount}% OFF, antes $${origPrice.toLocaleString('es-MX', { minimumFractionDigits: 2 })})` : `$${origPrice.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN`}
+                      </option>
+                    );
+                  })}
                 </select>
               </div>
+
+              {selectedPlanObj && (() => {
+                const discount = parseFloat(selectedPlanObj.discount_percentage || '0');
+                const origPrice = parseFloat(selectedPlanObj.price);
+                const discPrice = discount > 0 ? origPrice * (1 - discount / 100) : origPrice;
+                if (discount <= 0) return null;
+                return (
+                  <div className="p-5 rounded-2xl bg-green-500/5 border border-green-500/25 flex items-center justify-between text-xs animate-in fade-in zoom-in-95">
+                    <div>
+                      <span className="text-[8px] font-black uppercase tracking-widest text-green-500 block mb-1">¡Descuento Promocional Activado!</span>
+                      <p className="text-foreground/80 font-bold">
+                        Tienes un <span className="text-green-400 font-extrabold">{discount}% de descuento</span> en este plan de ingeniería.
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-[9px] line-through opacity-50 block font-mono">${origPrice.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN</span>
+                      <span className="text-sm font-black text-green-400 font-mono">${discPrice.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN</span>
+                    </div>
+                  </div>
+                );
+              })()}
 
               <div className="space-y-2">
                 <label className="text-[10px] font-black uppercase tracking-widest opacity-40">Esquema y Plazo de Pago (Definido por el Plan)</label>
@@ -326,10 +355,38 @@ function OnboardingContent() {
 
                   <section className="space-y-3">
                     <h3 className="text-lg font-black uppercase tracking-tight text-foreground">3. ESQUEMA DE INVERSIÓN SELECCIONADO</h3>
-                    <div className="p-4 border-2 border-nectar-gold bg-nectar-gold/5 rounded-xl font-black text-nectar-gold flex justify-between items-center">
-                      <span>Plan de Ingeniería: {selectedPlanObj ? selectedPlanObj.name : 'No seleccionado'}</span>
-                      <span>${selectedPlanObj ? parseFloat(selectedPlanObj.price).toLocaleString() : '0.00'} MXN / Mes</span>
-                    </div>
+                    {selectedPlanObj && (() => {
+                      const discount = parseFloat(selectedPlanObj.discount_percentage || '0');
+                      const origPrice = parseFloat(selectedPlanObj.price);
+                      const discPrice = discount > 0 ? origPrice * (1 - discount / 100) : origPrice;
+
+                      return (
+                        <div className="space-y-3">
+                          {discount > 0 ? (
+                            <div className="p-5 border-2 border-green-500/30 bg-green-500/5 rounded-xl font-black text-foreground space-y-2">
+                              <div className="flex justify-between items-center text-xs opacity-60">
+                                <span>Inversión Normal del Plan ({selectedPlanObj.name}):</span>
+                                <span className="line-through font-mono">${origPrice.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN / Mes</span>
+                              </div>
+                              <div className="flex justify-between items-center text-[10px] text-green-400">
+                                <span>Descuento Promocional Aplicado:</span>
+                                <span>-{discount}%</span>
+                              </div>
+                              <div className="h-[1px] bg-card-border/40 my-2" />
+                              <div className="flex justify-between items-center text-nectar-gold">
+                                <span>Inversión Mensual con Descuento:</span>
+                                <span className="font-mono text-lg">${discPrice.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN / Mes</span>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="p-4 border-2 border-nectar-gold bg-nectar-gold/5 rounded-xl font-black text-nectar-gold flex justify-between items-center">
+                              <span>Plan de Ingeniería: {selectedPlanObj.name}</span>
+                              <span className="font-mono">${origPrice.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN / Mes</span>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
                     <div className="p-4 border-2 border-foreground/20 bg-background/50 rounded-xl font-bold flex justify-between items-center text-xs">
                       <span>Frecuencia y Día de Pago:</span>
                       <span className="text-nectar-gold">
@@ -341,7 +398,7 @@ function OnboardingContent() {
                     {formData.brand_design_tier !== 'NONE' && (
                       <div className="p-4 border-2 border-foreground/20 bg-foreground/5 rounded-xl font-bold flex justify-between items-center text-xs">
                         <span>Complemento: Diseño de Marca ({formData.brand_design_tier})</span>
-                        <span>+ ${formData.brand_design_price.toLocaleString()} MXN</span>
+                        <span>+ ${formData.brand_design_price.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN</span>
                       </div>
                     )}
                   </section>
