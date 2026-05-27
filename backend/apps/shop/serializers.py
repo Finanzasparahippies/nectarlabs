@@ -20,11 +20,21 @@ class ContractSerializer(serializers.ModelSerializer):
     plan_name = serializers.CharField(source='plan.name', read_only=True)
     addons = serializers.SlugRelatedField(many=True, slug_field='slug', queryset=AddOn.objects.all(), required=False)
     addons_details = AddOnSerializer(source='addons', many=True, read_only=True)
+    tenant_subdomain = serializers.SerializerMethodField(read_only=True)
+    tenant_name = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Contract
         fields = '__all__'
         read_only_fields = ('user', 'pdf_file', 'signed_at')
+
+    def get_tenant_subdomain(self, obj):
+        tenant = obj.user.owned_tenants.first()
+        return tenant.subdomain if tenant else None
+
+    def get_tenant_name(self, obj):
+        tenant = obj.user.owned_tenants.first()
+        return tenant.name if tenant else None
 
 class PaymentInstallmentSerializer(serializers.ModelSerializer):
     client_name = serializers.CharField(source='contract.full_name', read_only=True)

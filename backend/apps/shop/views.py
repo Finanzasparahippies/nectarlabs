@@ -116,6 +116,32 @@ class ContractViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
+        # Auto-healer: ensure all signed contracts have a tenant
+        from apps.tenants.models import Tenant
+        from django.utils.text import slugify
+        for contract in Contract.objects.filter(is_fully_signed=True):
+            if not Tenant.objects.filter(owner=contract.user).exists():
+                try:
+                    base_subdomain = slugify(contract.full_name or contract.user.username)
+                    if not base_subdomain:
+                        base_subdomain = slugify(contract.user.username) or f"client-{contract.user.id}"
+                    
+                    subdomain = base_subdomain
+                    counter = 1
+                    while Tenant.objects.filter(subdomain=subdomain).exists():
+                        subdomain = f"{base_subdomain}-{counter}"
+                        counter += 1
+                    
+                    Tenant.objects.create(
+                        owner=contract.user,
+                        name=contract.full_name or f"Portal de {contract.user.get_full_name() or contract.user.username}",
+                        subdomain=subdomain,
+                        is_active=True
+                    )
+                except Exception as e:
+                    import logging
+                    logging.error(f"Error auto-healing tenant: {e}", exc_info=True)
+
         # El administrador (desarrollador) puede ver todos los contratos
         if self.request.user.is_staff:
             return Contract.objects.all()
@@ -161,6 +187,31 @@ class ContractViewSet(viewsets.ModelViewSet):
                 contract.next_payment_date = first_inst.due_date
                 contract.save()
         
+        # --- AUTO-CREATE TENANT ---
+        try:
+            from apps.tenants.models import Tenant
+            from django.utils.text import slugify
+            if not Tenant.objects.filter(owner=contract.user).exists():
+                base_subdomain = slugify(contract.full_name or contract.user.username)
+                if not base_subdomain:
+                    base_subdomain = slugify(contract.user.username) or f"client-{contract.user.id}"
+                
+                subdomain = base_subdomain
+                counter = 1
+                while Tenant.objects.filter(subdomain=subdomain).exists():
+                    subdomain = f"{base_subdomain}-{counter}"
+                    counter += 1
+                
+                Tenant.objects.create(
+                    owner=contract.user,
+                    name=contract.full_name or f"Portal de {contract.user.get_full_name() or contract.user.username}",
+                    subdomain=subdomain,
+                    is_active=True
+                )
+        except Exception as tenant_err:
+            import logging
+            logging.error(f"Error creating tenant automatically: {tenant_err}", exc_info=True)
+
         # --- AUTO-CREATE PROJECT ---
         try:
             from apps.dashboard.models import Project

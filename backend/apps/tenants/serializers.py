@@ -3,6 +3,7 @@ from .models import Tenant
 
 class TenantSerializer(serializers.ModelSerializer):
     logo = serializers.ImageField(required=False, allow_null=True)
+    active_addons = serializers.ReadOnlyField()
 
     class Meta:
         model = Tenant
@@ -10,6 +11,7 @@ class TenantSerializer(serializers.ModelSerializer):
             'id', 'name', 'subdomain', 'owner', 'api_key', 
             'allowed_origins', 'custom_domain', 'welcome_message', 'require_customer_info',
             'logo', 'logo_url', 'portal_title', 'footer_text', 'is_active', 'created_at', 'updated_at',
+            'active_addons',
             # 6-Color Palette
             'theme_color', 'accent_color', 'bg_color', 'card_bg_color', 'text_color', 'border_color'
         ]

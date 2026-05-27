@@ -40,6 +40,9 @@ interface Contract {
   pdf_file?: string;
   tax_id?: string;
   developer_signed_at?: string;
+  tenant_subdomain?: string;
+  tenant_name?: string;
+  addons?: string[];
 }
 
 interface Ticket {
@@ -78,6 +81,24 @@ const formatDate = (dateStr: string) => {
   });
 };
 
+const getMediaUrl = (url?: string) => {
+  if (!url) return '';
+  let path = url;
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    try {
+      const parsed = new URL(url);
+      if (parsed.pathname.startsWith('/media/')) {
+        path = parsed.pathname;
+      } else {
+        return url;
+      }
+    } catch (e) {
+      return url;
+    }
+  }
+  return path;
+};
+
 export default function DashboardPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [tickets, setTickets] = useState<Ticket[]>([]);
@@ -94,6 +115,7 @@ export default function DashboardPage() {
   const [selectedActiveContractId, setSelectedActiveContractId] = useState<number | null>(null);
   const [expandedContracts, setExpandedContracts] = useState<Record<number, boolean>>({});
   const [cfdiInputs, setCfdiInputs] = useState<Record<number, string>>({});
+  const [allAddons, setAllAddons] = useState<any[]>([]);
   const router = useRouter();
 
   const toggleContractExpanded = (id: number) => {
@@ -242,6 +264,41 @@ export default function DashboardPage() {
     }
   };
 
+  const handleToggleAddon = async (contractId: number, addonSlug: string, isCurrentlyActive: boolean) => {
+    try {
+      const contract = contracts.find(c => c.id === contractId);
+      if (!contract) return;
+
+      const currentAddons = contract.addons || [];
+      const newAddons = isCurrentlyActive
+        ? currentAddons.filter(slug => slug !== addonSlug)
+        : [...currentAddons, addonSlug];
+
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/contracts/${contractId}/`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ addons: newAddons })
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update addons");
+      }
+
+      const updated = await response.json();
+      setContracts(prev => prev.map(c => c.id === contractId ? { ...c, addons: updated.addons } : c));
+
+      // Refresh tenants because changes on contracts affect active_addons
+      const tenantsData = await fetcher('/tenants/');
+      setTenants(tenantsData);
+    } catch (err) {
+      alert("Error al actualizar los Add-ons del cliente.");
+    }
+  };
+
   const handleUploadReceipt = async (installmentId: number, file: File) => {
     try {
       const formData = new FormData();
@@ -344,14 +401,15 @@ export default function DashboardPage() {
         const role = localStorage.getItem('user_role') || '';
         const isCEO = role === 'ADMIN' || staff;
 
-        const [projectsData, ticketsData, logsData, contractsData, installmentsData, tenantsData, plansData] = await Promise.all([
+        const [projectsData, ticketsData, logsData, contractsData, installmentsData, tenantsData, plansData, addonsData] = await Promise.all([
           fetcher('/projects/'),
           fetcher('/tickets/'),
           fetcher('/logs/'),
           fetcher('/contracts/'),
           fetcher('/installments/'),
           fetcher('/tenants/'),
-          fetcher('/plans/')
+          fetcher('/plans/'),
+          fetcher('/addons/')
         ]);
 
         setProjects(projectsData);
@@ -361,6 +419,7 @@ export default function DashboardPage() {
         setInstallments(installmentsData);
         setTenants(tenantsData);
         setPlans(plansData);
+        setAllAddons(addonsData || []);
 
         if (isCEO) {
           const statsData = await fetcher('/dashboard/business-stats/');
@@ -675,7 +734,31 @@ export default function DashboardPage() {
                             </td>
                             <td className="py-4 pr-4">
                               <h4 className="font-black text-sm">{contract.full_name}</h4>
-                              <p className="text-[7px] font-bold text-foreground/45 uppercase tracking-wider mt-0.5">{contract.tax_id}</p>
+                              <div className="flex flex-col gap-0.5 mt-0.5">
+                                <p className="text-[7px] font-bold text-foreground/45 uppercase tracking-wider">{contract.tax_id}</p>
+                                {contract.tenant_subdomain && (() => {
+                                  const host = typeof window !== 'undefined' ? window.location.hostname : '';
+                                  let domain = `https://${contract.tenant_subdomain}.nectarlabs.dev`;
+                                  let urlDisplay = `${contract.tenant_subdomain}.nectarlabs.dev`;
+                                  if (host.includes('localhost')) {
+                                    domain = `http://${contract.tenant_subdomain}.localhost:3000`;
+                                    urlDisplay = `${contract.tenant_subdomain}.localhost:3000`;
+                                  } else if (host.includes('staging.nectarlabs.dev')) {
+                                    domain = `https://${contract.tenant_subdomain}.staging.nectarlabs.dev`;
+                                    urlDisplay = `${contract.tenant_subdomain}.staging.nectarlabs.dev`;
+                                  }
+                                  return (
+                                    <a
+                                      href={domain}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      className="text-nectar-gold hover:underline font-extrabold text-[8px] mt-0.5"
+                                    >
+                                      🚀 {urlDisplay} ↗
+                                    </a>
+                                  );
+                                })()}
+                              </div>
                             </td>
                             <td className="py-4 font-bold text-xs">
                               {contract.plan_name || 'Desconocido'}
@@ -721,17 +804,68 @@ export default function DashboardPage() {
                           {expandedContracts[contract.id] && (
                             <tr className="bg-background/40">
                               <td colSpan={8} className="p-8 border-b border-card-border/30">
-                                <div className="space-y-6">
-                                  <div className="flex justify-between items-center">
-                                    <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-nectar-gold">
-                                      Mensualidades Obligatorias del Contrato #{contract.id}
-                                    </h4>
-                                    <span className="text-[8px] font-black uppercase tracking-widest opacity-40">
-                                      {installments.filter(inst => inst.contract === contract.id && inst.status === 'PAID').length} de {installments.filter(inst => inst.contract === contract.id).length} Pagados
-                                    </span>
+                                <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+                                  {/* Col 1: Addons Toggle Control (1/3 width) */}
+                                  <div className="space-y-6">
+                                    <div className="flex justify-between items-center">
+                                      <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-nectar-gold">
+                                        Control de Add-ons / Complementos
+                                      </h4>
+                                    </div>
+                                    <div className="p-6 rounded-[2rem] bg-card-bg/95 border border-card-border/80 space-y-4">
+                                      <p className="text-[10.5px] text-foreground/60 leading-relaxed uppercase tracking-wider">
+                                        Activa o desactiva módulos de software específicos para este ecosistema. Se aprovisionarán automáticamente en su portal.
+                                      </p>
+                                      <div className="space-y-3 pt-2">
+                                        {allAddons.map(addon => {
+                                          const isActive = (contract.addons || []).includes(addon.slug);
+                                          return (
+                                            <div key={addon.id} className="flex items-center justify-between p-3.5 rounded-2xl bg-background/50 border border-card-border/50 hover:border-nectar-gold/30 transition-all group">
+                                              <div className="min-w-0 pr-3">
+                                                <div className="flex items-center gap-1.5 flex-wrap">
+                                                  <span className="font-black text-xs text-foreground group-hover:text-nectar-gold transition-colors">{addon.name}</span>
+                                                  <span className="px-1.5 py-0.5 bg-nectar-gold/10 text-nectar-gold text-[7px] font-black uppercase tracking-widest rounded border border-nectar-gold/20">
+                                                    {addon.category_badge}
+                                                  </span>
+                                                </div>
+                                                <p className="text-[8.5px] text-foreground/50 truncate mt-1" title={addon.description}>
+                                                  {addon.description}
+                                                </p>
+                                              </div>
+                                              
+                                              {/* Premium gold toggle switch */}
+                                              <button
+                                                onClick={() => handleToggleAddon(contract.id, addon.slug, isActive)}
+                                                className={`w-10 h-5 rounded-full p-0.5 transition-colors duration-300 focus:outline-none relative flex-shrink-0 ${
+                                                  isActive ? 'bg-nectar-gold' : 'bg-card-border'
+                                                }`}
+                                              >
+                                                <div className={`w-4 h-4 rounded-full bg-white shadow-md transform transition-transform duration-300 ${
+                                                  isActive ? 'translate-x-5' : 'translate-x-0'
+                                                }`} />
+                                              </button>
+                                            </div>
+                                          );
+                                        })}
+                                        {allAddons.length === 0 && (
+                                          <p className="text-[9px] opacity-40 italic text-center py-4">No hay Add-ons registrados en el catálogo.</p>
+                                        )}
+                                      </div>
+                                    </div>
                                   </div>
-                                  
-                                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+                                  {/* Col 2 & 3: Installments (2/3 width) */}
+                                  <div className="xl:col-span-2 space-y-6">
+                                    <div className="flex justify-between items-center">
+                                      <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-nectar-gold">
+                                        Mensualidades Obligatorias del Contrato #{contract.id}
+                                      </h4>
+                                      <span className="text-[8px] font-black uppercase tracking-widest opacity-40">
+                                        {installments.filter(inst => inst.contract === contract.id && inst.status === 'PAID').length} de {installments.filter(inst => inst.contract === contract.id).length} Pagados
+                                      </span>
+                                    </div>
+                                    
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     {installments
                                       .filter(inst => inst.contract === contract.id)
                                       .sort((a, b) => a.installment_number - b.installment_number)
@@ -770,7 +904,7 @@ export default function DashboardPage() {
                                               <div className="flex justify-between items-center py-0.5">
                                                 <span>Comprobante:</span>
                                                 <a 
-                                                  href={inst.receipt_file} 
+                                                  href={getMediaUrl(inst.receipt_file)} 
                                                   target="_blank" 
                                                   rel="noreferrer"
                                                   className="text-nectar-gold hover:underline font-bold"
@@ -1340,22 +1474,46 @@ export default function DashboardPage() {
                           urlDisplay = `${tenant.subdomain}.staging.nectarlabs.dev`;
                         }
                         return (
-                          <div key={tenant.id} className="p-5 rounded-2xl border border-card-border hover:border-nectar-gold/60 transition-all flex flex-col justify-between gap-3 bg-background/20 relative overflow-hidden group">
-                            <div className="flex justify-between items-center">
-                              <h4 className="font-bold text-xs text-foreground/80 group-hover:text-foreground transition-colors">{tenant.name}</h4>
-                              <span className={`px-2.5 py-1 text-[7px] font-black uppercase tracking-widest rounded-full ${tenant.is_active ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>
-                                {tenant.is_active ? 'Activo' : 'Inactivo'}
-                              </span>
+                          <div key={tenant.id} className="p-5 rounded-2xl border border-card-border hover:border-nectar-gold/60 transition-all flex flex-col justify-between gap-4 bg-background/20 relative overflow-hidden group">
+                            <div className="space-y-2">
+                              <div className="flex justify-between items-center">
+                                <h4 className="font-bold text-xs text-foreground/80 group-hover:text-foreground transition-colors">{tenant.name}</h4>
+                                <span className={`px-2.5 py-1 text-[7px] font-black uppercase tracking-widest rounded-full ${tenant.is_active ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>
+                                  {tenant.is_active ? 'Activo' : 'Inactivo'}
+                                </span>
+                              </div>
+                              <div className="flex justify-between items-center text-[10px] opacity-60">
+                                <span>URL:</span>
+                                <span className="font-mono text-[9px] text-nectar-gold font-bold">{urlDisplay}</span>
+                              </div>
+
+                              {/* Active Addons inside Tenant */}
+                              {tenant.active_addons && tenant.active_addons.length > 0 ? (
+                                <div className="pt-2 border-t border-card-border/40">
+                                  <span className="text-[7.5px] font-black uppercase tracking-widest opacity-40 block mb-1">Add-ons Activos:</span>
+                                  <div className="flex flex-wrap gap-1">
+                                    {tenant.active_addons.map((slug: string) => {
+                                      const addonObj = allAddons.find(a => a.slug === slug);
+                                      return (
+                                        <span key={slug} className="px-2 py-0.5 bg-nectar-gold/10 text-nectar-gold text-[7px] font-black uppercase tracking-widest rounded-md border border-nectar-gold/20" title={addonObj?.description || slug}>
+                                          {addonObj?.name || slug}
+                                        </span>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="pt-2 border-t border-card-border/40">
+                                  <span className="text-[7.5px] font-black uppercase tracking-widest opacity-35 block">Sin Add-ons Activos</span>
+                                </div>
+                              )}
                             </div>
-                            <div className="flex justify-between items-center text-[10px] opacity-60">
-                              <span>URL:</span>
-                              <span className="font-mono text-[9px] text-nectar-gold font-bold">{urlDisplay}</span>
-                            </div>
+
                             <a
                               href={domain}
                               target="_blank"
                               rel="noreferrer"
-                              className="w-full mt-2 py-2 bg-nectar-gold/10 hover:bg-nectar-gold hover:text-background border border-nectar-gold/20 hover:border-nectar-gold text-nectar-gold text-center rounded-xl text-[8px] font-black uppercase tracking-widest transition-all cursor-pointer"
+                              className="w-full py-2 bg-nectar-gold/10 hover:bg-nectar-gold hover:text-background border border-nectar-gold/20 hover:border-nectar-gold text-nectar-gold text-center rounded-xl text-[8px] font-black uppercase tracking-widest transition-all cursor-pointer font-bold"
                             >
                               Abrir Portal ↗
                             </a>

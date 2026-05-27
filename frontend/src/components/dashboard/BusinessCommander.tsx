@@ -1,5 +1,23 @@
 import React, { useState } from 'react';
 
+const getMediaUrl = (url?: string) => {
+  if (!url) return '';
+  let path = url;
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    try {
+      const parsed = new URL(url);
+      if (parsed.pathname.startsWith('/media/')) {
+        path = parsed.pathname;
+      } else {
+        return url;
+      }
+    } catch (e) {
+      return url;
+    }
+  }
+  return path;
+};
+
 interface Financials {
   gross_sales: number;
   contracts_mrr: number;
@@ -577,7 +595,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
                   <td className="py-4 text-center">
                     {inst.receipt_file ? (
                       <a 
-                        href={inst.receipt_file} 
+                        href={getMediaUrl(inst.receipt_file)} 
                         target="_blank" 
                         rel="noreferrer"
                         className="px-2.5 py-1 bg-nectar-gold/10 text-nectar-gold hover:bg-nectar-gold hover:text-background text-[8px] font-black uppercase tracking-widest rounded-full transition-all inline-block"

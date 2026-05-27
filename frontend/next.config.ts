@@ -14,10 +14,16 @@ const nextConfig: NextConfig = {
     '*.localhost:3002'
   ],
   async rewrites() {
+    const backendUrl = process.env.API_URL || 'http://backend:8000/api';
+    const backendBase = backendUrl.replace(/\/api\/?$/, '');
     return [
       {
         source: '/api/:path*',
-        destination: `${process.env.API_URL || 'http://backend:8000/api'}/:path*/`,
+        destination: `${backendUrl}/:path*/`,
+      },
+      {
+        source: '/media/:path*',
+        destination: `${backendBase}/media/:path*`,
       },
     ];
   },
