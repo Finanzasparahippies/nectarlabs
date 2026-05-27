@@ -25,6 +25,10 @@ function OnboardingContent() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [promoCodeInput, setPromoCodeInput] = useState('');
+  const [appliedPromo, setAppliedPromo] = useState<any | null>(null);
+  const [promoError, setPromoError] = useState('');
+  const [validatingPromo, setValidatingPromo] = useState(false);
 
   const [formData, setFormData] = useState({
     plan: '',
@@ -86,6 +90,27 @@ function OnboardingContent() {
       });
   }, [isMounted, router]);
 
+  const handleValidatePromo = async () => {
+    if (!promoCodeInput.trim()) return;
+    setValidatingPromo(true);
+    setPromoError('');
+    try {
+      const res = await fetcher(`/promo-codes/validate/?code=${promoCodeInput}`);
+      if (res.is_valid) {
+        setAppliedPromo(res);
+        setPromoError('');
+      } else {
+        setAppliedPromo(null);
+        setPromoError(res.message || 'Código promocional no válido.');
+      }
+    } catch (err: any) {
+      setAppliedPromo(null);
+      setPromoError('Error al validar el código.');
+    } finally {
+      setValidatingPromo(false);
+    }
+  };
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
@@ -109,6 +134,7 @@ function OnboardingContent() {
         body: JSON.stringify({
           ...formData,
           signature_base64: signatureBase64,
+          promo_code: appliedPromo ? appliedPromo.code : null,
         }),
       });
       setStep(4);
@@ -187,7 +213,7 @@ function OnboardingContent() {
               })()}
 
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-widest opacity-40">Esquema y Plazo de Pago (Definido por el Plan)</label>
+                <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-1">Esquema y Plazo de Pago (Definido por el Plan)</label>
                 <div className="w-full bg-card-bg/60 border-2 border-card-border/80 rounded-2xl p-6 font-bold flex justify-between items-center text-sm transition-all duration-300">
                   <span className="opacity-70 text-xs">Frecuencia de Abonos:</span>
                   <span className={`${formData.plan ? 'text-nectar-gold' : 'opacity-30'} font-black uppercase tracking-wider text-xs`}>
@@ -198,6 +224,40 @@ function OnboardingContent() {
                   El esquema de pagos está establecido según el nivel de ingeniería de tu plan para asegurar el flujo del desarrollo.
                 </p>
               </div>
+
+              {/* Promo Code Input Block */}
+              {formData.plan && (
+                <div className="space-y-3 p-6 rounded-2xl bg-card-bg/50 border border-card-border/80 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                  <label className="text-[10px] font-black uppercase tracking-widest opacity-40 block">¿Tienes un Código de Referido o Promocional?</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="CÓDIGO DE REFERIDO"
+                      value={promoCodeInput}
+                      onChange={(e) => setPromoCodeInput(e.target.value.toUpperCase())}
+                      className="flex-1 bg-background border border-card-border rounded-xl px-4 py-3.5 text-xs font-mono focus:outline-none focus:border-nectar-gold text-foreground uppercase font-bold"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleValidatePromo}
+                      disabled={validatingPromo}
+                      className="px-6 bg-foreground hover:bg-nectar-gold text-background rounded-xl text-[10px] font-black uppercase tracking-widest transition-all hover:scale-[1.02] active:scale-95"
+                    >
+                      {validatingPromo ? 'Validando...' : 'Aplicar'}
+                    </button>
+                  </div>
+                  {appliedPromo && (
+                    <div className="text-[10px] text-green-400 font-bold mt-2 flex items-center gap-1 bg-green-500/5 p-3 rounded-lg border border-green-500/10">
+                      <span>✓</span> Código promocional <span className="underline">{appliedPromo.code}</span> aplicado con éxito: <strong>-{appliedPromo.discount_percentage}% de descuento</strong> en tu primer pago.
+                    </div>
+                  )}
+                  {promoError && (
+                    <div className="text-[10px] text-red-500 font-bold mt-2 bg-red-500/5 p-3 rounded-lg border border-red-500/10">
+                      ✗ {promoError}
+                    </div>
+                  )}
+                </div>
+              )}
 
               <div className="space-y-2">
                 <label className="text-[10px] font-black uppercase tracking-widest opacity-40">Idea del Proyecto (Un párrafo)</label>
@@ -362,7 +422,35 @@ function OnboardingContent() {
 
                       return (
                         <div className="space-y-3">
-                          {discount > 0 ? (
+                          {appliedPromo ? (() => {
+                            const promoDisc = appliedPromo.discount_percentage;
+                            const promoPrice = origPrice * (1 - promoDisc / 100);
+                            return (
+                              <div className="p-5 border-2 border-green-500/30 bg-green-500/5 rounded-xl font-black text-foreground space-y-2 animate-fadeIn">
+                                <div className="flex justify-between items-center text-xs opacity-60">
+                                  <span>Inversión Base del Plan ({selectedPlanObj.name}):</span>
+                                  <span className="font-mono">${origPrice.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN / Mes</span>
+                                </div>
+                                <div className="flex justify-between items-center text-[10px] text-green-400">
+                                  <span>Descuento de Referido/Promo ({appliedPromo.code}) en primer pago:</span>
+                                  <span>-{promoDisc}%</span>
+                                </div>
+                                <div className="flex justify-between items-center text-[10px] opacity-60">
+                                  <span>Descuento Promocional Temporada meses 2-6:</span>
+                                  <span>-{discount}%</span>
+                                </div>
+                                <div className="h-[1px] bg-card-border/40 my-2" />
+                                <div className="flex justify-between items-center text-nectar-gold">
+                                  <span>Primer Pago con Código:</span>
+                                  <span className="font-mono text-base">${promoPrice.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN</span>
+                                </div>
+                                <div className="flex justify-between items-center text-foreground/80 text-[11px] pt-1">
+                                  <span>Mensualidades Restantes (Mes 2-6):</span>
+                                  <span className="font-mono">${discPrice.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN / Mes</span>
+                                </div>
+                              </div>
+                            );
+                          })() : discount > 0 ? (
                             <div className="p-5 border-2 border-green-500/30 bg-green-500/5 rounded-xl font-black text-foreground space-y-2">
                               <div className="flex justify-between items-center text-xs opacity-60">
                                 <span>Inversión Normal del Plan ({selectedPlanObj.name}):</span>

@@ -3,7 +3,7 @@ from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APITestCase
-from apps.shop.models import Plan, Contract, PaymentInstallment
+from apps.shop.models import Plan, Contract, PaymentInstallment, PromoCode, SalesCommission
 from datetime import date, timedelta
 
 User = get_user_model()
@@ -188,3 +188,219 @@ class ContractInstallmentGenerationTests(APITestCase):
         self.assertEqual(project.status, Project.Status.MVP)
         self.assertEqual(project.progress_percentage, 0)
         self.assertTrue(project.is_active)
+
+
+class PromoCodeAndCommissionTests(APITestCase):
+    def setUp(self):
+        self.ceo = User.objects.create_user(
+            username="saul_ceo",
+            email="saul@nectarlabs.dev",
+            password="securepassword",
+            role=User.Role.ADMIN,
+            is_staff=True
+        )
+        self.salesperson = User.objects.create_user(
+            username="vendedor_x",
+            email="vendedor@nectarlabs.dev",
+            password="vendedorpassword",
+            role=User.Role.SALES
+        )
+        self.client_user = User.objects.create_user(
+            username="client_b",
+            email="client_b@example.com",
+            password="clientpassword",
+            role=User.Role.CUSTOMER
+        )
+        
+        # Create a Plan
+        self.plan = Plan.objects.create(
+            name="Plan Premium-Dev",
+            price=10000.00,
+            hours=40,
+            description="Premium development plan",
+            discount_percentage=5.00  # 5% seasonal discount
+        )
+        
+        # Create promo codes
+        self.seller_promo = PromoCode.objects.create(
+            code="VENDEDOR20",
+            code_type=PromoCode.CodeType.SELLER,
+            discount_percentage=20.00,
+            referrer=self.salesperson
+        )
+        self.client_promo = PromoCode.objects.create(
+            code="CLIENTE10",
+            code_type=PromoCode.CodeType.CLIENT,
+            discount_percentage=10.00,
+            referrer=self.client_user
+        )
+
+    def test_promo_code_validation_endpoint(self):
+        """Verify that the validate promo code endpoint works."""
+        self.client.force_authenticate(user=self.client_user)
+        url = reverse('promocode-validate')
+        response = self.client.get(f"{url}?code=VENDEDOR20")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data['is_valid'])
+        self.assertEqual(response.data['discount_percentage'], 20.00)
+
+    def test_onboarding_promo_code_application(self):
+        """
+        Verify that creating a contract with a seller promo code:
+        1. Correctly saves the promo code reference on the contract.
+        2. Applies the promo discount to the first installment only.
+        3. Applies the plan seasonal discount to the remaining installments.
+        """
+        # Create contract with promo code
+        contract = Contract.objects.create(
+            user=self.client_user,
+            plan=self.plan,
+            full_name="Referral Customer Co",
+            tax_id="RFC123456789",
+            address="Av. Juarez 123",
+            project_idea="Build an e-commerce platform.",
+            payment_commitment_method="SPEI",
+            promo_code=self.seller_promo,
+            signed_at=timezone.now()
+        )
+        
+        # Sign the contract to trigger installment generation
+        self.client.force_authenticate(user=self.ceo)
+        url = reverse('contract-dev-sign', kwargs={'pk': contract.id})
+        response = self.client.post(url, {'signature': 'DeveloperSignatureXYZ'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        
+        contract.refresh_from_db()
+        self.assertEqual(contract.promo_code, self.seller_promo)
+        
+        # Verify installments
+        installments = contract.installments.filter(installment_type='DEVELOPMENT').order_by('installment_number')
+        self.assertEqual(installments.count(), 6)
+        
+        # First installment: 20% discount (seller promo code) -> base amount 10000.00 -> final 8000.00
+        first_inst = installments.first()
+        self.assertEqual(first_inst.installment_number, 1)
+        self.assertEqual(first_inst.discount_percentage, 20.00)
+        self.assertEqual(first_inst.amount, 8000.00)
+        
+        # Second installment: 5% discount (plan seasonal discount) -> base amount 10000.00 -> final 9500.00
+        second_inst = installments[1]
+        self.assertEqual(second_inst.installment_number, 2)
+        self.assertEqual(second_inst.discount_percentage, 5.00)
+        self.assertEqual(second_inst.amount, 9500.00)
+
+    def test_retroactive_promo_code_application(self):
+        """
+        Verify that applying a promo code retroactively:
+        1. Correctly sets the promo code on the contract.
+        2. Recalculates the amount only for the NEXT pending installment.
+        """
+        # Create normal contract (no promo code)
+        contract = Contract.objects.create(
+            user=self.client_user,
+            plan=self.plan,
+            full_name="Retroactive Co",
+            tax_id="RFC123456789",
+            address="Av. Juarez 123",
+            project_idea="Build an e-commerce platform.",
+            payment_commitment_method="SPEI",
+            signed_at=timezone.now()
+        )
+        
+        # Sign the contract to trigger installment generation
+        self.client.force_authenticate(user=self.ceo)
+        url_sign = reverse('contract-dev-sign', kwargs={'pk': contract.id})
+        self.client.post(url_sign, {'signature': 'DeveloperSignatureXYZ'})
+        
+        # Retrieve generated installments
+        installments = contract.installments.filter(installment_type='DEVELOPMENT').order_by('installment_number')
+        first_inst = installments.first()
+        second_inst = installments[1]
+        
+        # Before applying promo code retroactively, verify both have plan discount
+        self.assertEqual(first_inst.discount_percentage, 5.00)
+        self.assertEqual(first_inst.amount, 9500.00)
+        self.assertEqual(second_inst.discount_percentage, 5.00)
+        
+        # Apply promo code retroactively via endpoint
+        self.client.force_authenticate(user=self.client_user)
+        url_apply = reverse('contract-apply-promo-code', kwargs={'pk': contract.id})
+        response = self.client.post(url_apply, {'code': 'CLIENTE10'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        
+        contract.refresh_from_db()
+        self.assertEqual(contract.promo_code, self.client_promo)
+        
+        # Verify first pending installment has updated discount and amount
+        first_inst.refresh_from_db()
+        self.assertEqual(first_inst.discount_percentage, 10.00)
+        self.assertEqual(first_inst.amount, 9000.00)
+        
+        # Verify second installment remains unchanged (plan discount of 5%)
+        second_inst.refresh_from_db()
+        self.assertEqual(second_inst.discount_percentage, 5.00)
+        self.assertEqual(second_inst.amount, 9500.00)
+
+    def test_sales_commission_generation(self):
+        """
+        Verify that marking an installment as PAID generates salesperson commissions:
+        - Month 1: 20%
+        - Month 2: 10%
+        - Month 3+: 5%
+        """
+        # Create contract with seller promo code
+        contract = Contract.objects.create(
+            user=self.client_user,
+            plan=self.plan,
+            full_name="Salesperson referred client",
+            tax_id="RFC123456789",
+            address="Av. Juarez 123",
+            project_idea="Build an e-commerce platform.",
+            payment_commitment_method="SPEI",
+            promo_code=self.seller_promo,
+            signed_at=timezone.now()
+        )
+        
+        # Sign contract to generate installments
+        self.client.force_authenticate(user=self.ceo)
+        url_sign = reverse('contract-dev-sign', kwargs={'pk': contract.id})
+        self.client.post(url_sign, {'signature': 'DeveloperSignatureXYZ'})
+        
+        # Verify no commissions exist initially
+        self.assertEqual(SalesCommission.objects.count(), 0)
+        
+        # Get Month 1 installment and mark as PAID
+        installments = contract.installments.filter(installment_type='DEVELOPMENT').order_by('installment_number')
+        first_inst = installments.first()
+        first_inst.status = PaymentInstallment.Status.PAID
+        first_inst.save()
+        
+        # Verify commission generated for Month 1 (20% of 8000.00 = 1600.00)
+        self.assertEqual(SalesCommission.objects.count(), 1)
+        comm1 = SalesCommission.objects.first()
+        self.assertEqual(comm1.salesperson, self.salesperson)
+        self.assertEqual(comm1.installment, first_inst)
+        self.assertEqual(comm1.commission_percentage, 20.00)
+        self.assertEqual(comm1.amount, 1600.00)
+        
+        # Mark Month 2 installment as PAID
+        second_inst = installments[1]
+        second_inst.status = PaymentInstallment.Status.PAID
+        second_inst.save()
+        
+        # Verify commission generated for Month 2 (10% of 9500.00 = 950.00)
+        self.assertEqual(SalesCommission.objects.count(), 2)
+        comm2 = SalesCommission.objects.filter(installment=second_inst).first()
+        self.assertEqual(comm2.commission_percentage, 10.00)
+        self.assertEqual(comm2.amount, 950.00)
+
+        # Mark Month 3 installment as PAID
+        third_inst = installments[2]
+        third_inst.status = PaymentInstallment.Status.PAID
+        third_inst.save()
+        
+        # Verify commission generated for Month 3 (5% of 9500.00 = 475.00)
+        self.assertEqual(SalesCommission.objects.count(), 3)
+        comm3 = SalesCommission.objects.filter(installment=third_inst).first()
+        self.assertEqual(comm3.commission_percentage, 5.00)
+        self.assertEqual(comm3.amount, 475.00)

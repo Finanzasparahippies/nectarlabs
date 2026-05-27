@@ -35,6 +35,7 @@ export default function DashboardSidebar() {
     
     const isDev = role === 'DEVELOPER';
     const isDes = role === 'DESIGNER';
+    const isSal = role === 'SALES';
     
     // CEO is explicit role ADMIN or is_staff is true (excluding developer/designer)
     const ceo = role === 'ADMIN' || (staff && !isDev && !isDes);
@@ -43,8 +44,8 @@ export default function DashboardSidebar() {
     const staffAllowed = (staff || role === 'ADMIN' || role === 'BUSINESS') && role !== 'DESIGNER';
     setIsStaff(staffAllowed);
     
-    // Client is anyone who is NOT CEO, NOT Developer, NOT Designer
-    const client = !ceo && !isDev && !isDes;
+    // Client is anyone who is NOT CEO, NOT Developer, NOT Designer, NOT Salesperson
+    const client = !ceo && !isDev && !isDes && !isSal;
     setIsClient(client);
 
     // Fetch contracts to check if payment commitment is needed for client

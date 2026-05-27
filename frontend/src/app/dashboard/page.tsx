@@ -116,6 +116,16 @@ export default function DashboardPage() {
   const [expandedContracts, setExpandedContracts] = useState<Record<number, boolean>>({});
   const [cfdiInputs, setCfdiInputs] = useState<Record<number, string>>({});
   const [allAddons, setAllAddons] = useState<any[]>([]);
+  
+  // Salesperson and Referral Program states
+  const [salesSummary, setSalesSummary] = useState<any | null>(null);
+  const [salesCommissions, setSalesCommissions] = useState<any[]>([]);
+  const [myReferralCode, setMyReferralCode] = useState<any | null>(null);
+  const [retroactiveCodeInput, setRetroactiveCodeInput] = useState('');
+  const [applyingRetroactiveCode, setApplyingRetroactiveCode] = useState(false);
+  const [retroactiveSuccessMessage, setRetroactiveSuccessMessage] = useState('');
+  const [retroactiveErrorMessage, setRetroactiveErrorMessage] = useState('');
+
   const router = useRouter();
 
   const toggleContractExpanded = (id: number) => {
@@ -223,7 +233,42 @@ export default function DashboardPage() {
   const isCEO = userRole === 'ADMIN' || (isStaff && userRole !== 'DEVELOPER' && userRole !== 'DESIGNER');
   const isDeveloper = userRole === 'DEVELOPER';
   const isDesigner = userRole === 'DESIGNER';
-  const isClient = !isCEO && !isDeveloper && !isDesigner;
+  const isSales = userRole === 'SALES';
+  const isClient = !isCEO && !isDeveloper && !isDesigner && !isSales;
+
+  // Active contracts and contract at component scope for reference in handlers
+  const activeContracts = contracts.filter(c => c.is_fully_signed);
+  const activeContract = selectedActiveContractId
+    ? activeContracts.find(c => c.id === selectedActiveContractId) || activeContracts[0]
+    : activeContracts[0];
+
+  const handleApplyRetroactiveCode = async () => {
+    if (!retroactiveCodeInput.trim() || !activeContract) return;
+    setApplyingRetroactiveCode(true);
+    setRetroactiveSuccessMessage('');
+    setRetroactiveErrorMessage('');
+
+    try {
+      const res = await fetcher(`/contracts/${activeContract.id}/apply-promo-code/`, {
+        method: 'POST',
+        body: JSON.stringify({ code: retroactiveCodeInput })
+      });
+      setRetroactiveSuccessMessage(res.message || 'Código aplicado con éxito.');
+      setRetroactiveCodeInput('');
+      
+      // Refresh installments and contracts
+      const [updatedInstallments, updatedContracts] = await Promise.all([
+        fetcher('/installments/'),
+        fetcher('/contracts/')
+      ]);
+      setInstallments(updatedInstallments);
+      setContracts(updatedContracts);
+    } catch (err: any) {
+      setRetroactiveErrorMessage(err.message || 'Error al aplicar el código.');
+    } finally {
+      setApplyingRetroactiveCode(false);
+    }
+  };
 
   // Custom states for portals and notifications
   const [tenants, setTenants] = useState<any[]>([]);
@@ -425,6 +470,21 @@ export default function DashboardPage() {
           const statsData = await fetcher('/dashboard/business-stats/');
           setBusinessStats(statsData);
         }
+
+        // Fetch salesperson or referral program data based on user role
+        if (role === 'SALES') {
+          const [summaryData, commissionsData, referralData] = await Promise.all([
+            fetcher('/sales-commissions/summary/').catch(err => { console.error(err); return null; }),
+            fetcher('/sales-commissions/').catch(err => { console.error(err); return []; }),
+            fetcher('/promo-codes/my-referral-code/').catch(err => { console.error(err); return null; })
+          ]);
+          setSalesSummary(summaryData);
+          setSalesCommissions(commissionsData || []);
+          setMyReferralCode(referralData);
+        } else {
+          const referralData = await fetcher('/promo-codes/my-referral-code/').catch(err => { console.error(err); return null; });
+          setMyReferralCode(referralData);
+        }
       } catch (err) {
         console.error("Error loading dashboard data:", err);
       } finally {
@@ -565,17 +625,189 @@ export default function DashboardPage() {
             {isCEO ? (activeTab === 'business' ? 'Control de Negocio' : 'Consola del CEO') :
               isDeveloper ? 'Consola de Ingeniería' :
                 isDesigner ? 'Centro de Diseño' :
-                  activeTab === 'hire-plan' ? 'Escala tu Ecosistema' : 'Centro de Control'}
+                  isSales ? 'Consola de Ventas' :
+                    activeTab === 'hire-plan' ? 'Escala tu Ecosistema' : 'Centro de Control'}
           </h1>
           <p className="text-[10px] font-black uppercase tracking-[0.5em] text-nectar-gold opacity-80">
             {isCEO ? (activeTab === 'business' ? 'Consola Financiera y de Infraestructura' : 'Panel de Operaciones Néctar Labs') :
               isDeveloper ? 'Workspace de Desarrollo y Soporte' :
                 isDesigner ? 'Activos y Proyectos Creativos' :
-                  activeTab === 'hire-plan' ? 'Elige tu Plan de Ingeniería Dedicado' : 'Workspace / Cliente Principal'}
+                  isSales ? 'Comisiones, Referidos y Métricas de Rendimiento' :
+                    activeTab === 'hire-plan' ? 'Elige tu Plan de Ingeniería Dedicado' : 'Workspace / Cliente Principal'}
           </p>
         </header>
 
-        {activeTab === 'business' && isCEO ? (
+        {isSales ? (
+          <div className="space-y-12 animate-fadeIn">
+            {/* Top Grid: Code & Commission Rules */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Code Card */}
+              {myReferralCode && (
+                <div className="p-8 rounded-[2.5rem] bg-card-bg border border-card-border shadow-xl relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-nectar-gold/5 rounded-full blur-3xl -mr-20 -mt-20"></div>
+                  <div className="relative z-10 flex flex-col justify-between h-full space-y-6">
+                    <div>
+                      <span className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold text-[8px] font-black uppercase tracking-widest rounded-full">Código de Vendedor</span>
+                      <h2 className="text-3xl font-black tracking-tighter mt-4 mb-2">Tu Enlace de Referido</h2>
+                      <p className="text-xs text-foreground/60 leading-relaxed uppercase tracking-wider">
+                        Comparte este código exclusivo con tus clientes prospectos. Al ingresarlo durante su registro, obtendrán un <strong>10% de descuento</strong> en su primer abono y se vincularán a tu cuenta para comisiones recurrentes.
+                      </p>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-3 bg-background/50 border border-card-border/80 rounded-2xl p-4 justify-between">
+                        <span className="font-mono text-lg font-black tracking-widest text-white select-all">{myReferralCode.code}</span>
+                        <button
+                          onClick={() => {
+                            navigator.clipboard.writeText(myReferralCode.code);
+                            alert("¡Código de vendedor copiado al portapapeles!");
+                          }}
+                          className="px-6 py-3 bg-nectar-gold hover:bg-nectar-gold/90 text-background text-[10px] font-black uppercase tracking-widest rounded-xl transition-all hover:scale-[1.02] active:scale-95"
+                        >
+                          Copiar Código
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Commission Rules */}
+              <div className="p-8 rounded-[2.5rem] bg-card-bg border border-card-border shadow-xl relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-nectar-forest/5 rounded-full blur-3xl -mr-20 -mt-20"></div>
+                <div className="relative z-10 space-y-6">
+                  <div>
+                    <span className="px-3 py-1 bg-nectar-forest/10 text-nectar-forest text-[8px] font-black uppercase tracking-widest rounded-full">Esquema de Comisiones</span>
+                    <h2 className="text-3xl font-black tracking-tighter mt-4 mb-2">Estructura Néctar Labs</h2>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="p-4 bg-background/40 border border-card-border/60 rounded-2xl text-center">
+                      <span className="text-[8px] font-black uppercase tracking-widest opacity-40 block">Mes 1</span>
+                      <span className="text-2xl font-black text-nectar-gold font-mono">20%</span>
+                      <p className="text-[8px] font-bold text-foreground/50 mt-1 uppercase">Abono Inicial</p>
+                    </div>
+                    <div className="p-4 bg-background/40 border border-card-border/60 rounded-2xl text-center">
+                      <span className="text-[8px] font-black uppercase tracking-widest opacity-40 block">Mes 2</span>
+                      <span className="text-2xl font-black text-nectar-gold font-mono">10%</span>
+                      <p className="text-[8px] font-bold text-foreground/50 mt-1 uppercase">Segundo Mes</p>
+                    </div>
+                    <div className="p-4 bg-background/40 border border-card-border/60 rounded-2xl text-center">
+                      <span className="text-[8px] font-black uppercase tracking-widest opacity-40 block">Mes 3+</span>
+                      <span className="text-2xl font-black text-nectar-gold font-mono">5%</span>
+                      <p className="text-[8px] font-bold text-foreground/50 mt-1 uppercase">Permanente</p>
+                    </div>
+                  </div>
+
+                  <div className="p-4 rounded-xl bg-nectar-gold/5 border border-nectar-gold/15 text-[10px] leading-relaxed text-foreground/70 font-medium">
+                    ⚠️ <strong>Información importante:</strong> Este beneficio por comisión es el único esquema compensatorio para vendedores registrados en esta modalidad. No se contemplan seguros, prestaciones de ley u otros adicionales por el momento.
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Metrics Row */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Earnings Paid */}
+              <div className="p-6 rounded-[2rem] bg-card-bg border border-card-border flex flex-col justify-between gap-4 relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-green-500/5 rounded-full blur-2xl -mr-10 -mt-10"></div>
+                <div className="relative z-10">
+                  <span className="text-[8px] font-black uppercase tracking-widest opacity-40">Comisiones Cobradas</span>
+                  <h3 className="text-3xl font-black tracking-tight mt-2 text-green-400 font-mono">
+                    ${(salesSummary?.paid_total || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })} <span className="text-xs font-bold text-foreground/50">MXN</span>
+                  </h3>
+                  <p className="text-[9px] text-foreground/50 mt-1 uppercase tracking-wider font-bold">Transferido a tu cuenta bancaria registrada</p>
+                </div>
+              </div>
+
+              {/* Earnings Pending */}
+              <div className="p-6 rounded-[2rem] bg-card-bg border border-card-border flex flex-col justify-between gap-4 relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-500/5 rounded-full blur-2xl -mr-10 -mt-10"></div>
+                <div className="relative z-10">
+                  <span className="text-[8px] font-black uppercase tracking-widest opacity-40">Comisiones Pendientes</span>
+                  <h3 className="text-3xl font-black tracking-tight mt-2 text-yellow-500 font-mono">
+                    ${(salesSummary?.pending_total || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })} <span className="text-xs font-bold text-foreground/50">MXN</span>
+                  </h3>
+                  <p className="text-[9px] text-foreground/50 mt-1 uppercase tracking-wider font-bold">Por liquidar tras validación del pago del cliente</p>
+                </div>
+              </div>
+
+              {/* Total Referrals */}
+              <div className="p-6 rounded-[2rem] bg-card-bg border border-card-border flex flex-col justify-between gap-4 relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-nectar-gold/5 rounded-full blur-2xl -mr-10 -mt-10"></div>
+                <div className="relative z-10">
+                  <span className="text-[8px] font-black uppercase tracking-widest opacity-40">Clientes Adquiridos</span>
+                  <h3 className="text-3xl font-black tracking-tight mt-2 text-nectar-gold font-mono">
+                    {salesSummary?.referred_contracts_count || 0} <span className="text-xs font-bold text-foreground/50">Ecosistemas</span>
+                  </h3>
+                  <p className="text-[9px] text-foreground/50 mt-1 uppercase tracking-wider font-bold">Contratos activos vinculados a tu código</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Commissions History Table */}
+            <section className="p-8 md:p-10 rounded-[3rem] bg-card-bg border border-card-border shadow-xl relative">
+              <div className="mb-8">
+                <h3 className="text-xs font-black uppercase tracking-[0.3em] opacity-30">Historial de Comisiones</h3>
+                <p className="text-[9px] font-bold text-foreground/40 mt-1 uppercase tracking-wider">Seguimiento de abonos de tus referidos y estado de pagos</p>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-card-border/50 text-[8px] font-black uppercase tracking-widest opacity-40">
+                      <th className="pb-4">Cliente</th>
+                      <th className="pb-4 text-center">Mensualidad</th>
+                      <th className="pb-4 text-right">Monto Recibido</th>
+                      <th className="pb-4 text-center">Porcentaje</th>
+                      <th className="pb-4 text-right">Tu Comisión</th>
+                      <th className="pb-4 text-center">Estatus</th>
+                      <th className="pb-4 text-right">Fecha Registro</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {salesCommissions.map((comm) => (
+                      <tr key={comm.id} className="border-b border-card-border/30 last:border-0 hover:bg-foreground/[0.02] transition-colors">
+                        <td className="py-4 font-black text-sm">
+                          {comm.client_name}
+                        </td>
+                        <td className="py-4 text-center font-bold text-xs opacity-80">
+                          Mes {comm.installment_number}
+                        </td>
+                        <td className="py-4 text-right font-mono font-bold text-xs">
+                          ${parseFloat(comm.installment_amount).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                        </td>
+                        <td className="py-4 text-center font-mono font-bold text-xs text-nectar-gold">
+                          {parseFloat(comm.commission_percentage)}%
+                        </td>
+                        <td className="py-4 text-right font-mono font-bold text-xs text-white">
+                          ${parseFloat(comm.amount).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                        </td>
+                        <td className="py-4 text-center">
+                          {comm.status === 'PAID' ? (
+                            <span className="px-3 py-1 bg-green-500/10 text-green-500 text-[7px] font-black uppercase tracking-widest rounded-full border border-green-500/20">Liquidada</span>
+                          ) : (
+                            <span className="px-3 py-1 bg-yellow-500/10 text-yellow-500 text-[7px] font-black uppercase tracking-widest rounded-full border border-yellow-500/20">En Espera</span>
+                          )}
+                        </td>
+                        <td className="py-4 text-right text-[10px] font-bold opacity-60">
+                          {new Date(comm.created_at).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })}
+                        </td>
+                      </tr>
+                    ))}
+                    {salesCommissions.length === 0 && (
+                      <tr>
+                        <td colSpan={7} className="py-12 text-center text-[9px] font-black uppercase tracking-widest opacity-25">
+                          No tienes comisiones registradas aún
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          </div>
+        ) : activeTab === 'business' && isCEO ? (
           <BusinessCommander stats={businessStats} installments={installments} setInstallments={setInstallments} />
         ) : activeTab === 'hire-plan' && isClient ? (
           <div className="space-y-12 animate-fadeIn">
@@ -1137,6 +1369,106 @@ export default function DashboardPage() {
                       )}
                     </div>
                   </div>
+
+                  {/* Referral and Promo Code Row */}
+                  {(() => {
+                    const nextPendingInstallment = installments.find(inst => inst.contract === activeContract.id && inst.installment_type === 'DEVELOPMENT' && inst.status === 'PENDING');
+                    const showRetroactiveCouponInput = nextPendingInstallment && !nextPendingInstallment.promo_code && parseFloat(nextPendingInstallment.discount_percentage || '0') === 0;
+
+                    if (!myReferralCode && !showRetroactiveCouponInput) return null;
+
+                    return (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-12 border-t border-card-border/50 pt-10">
+                        {/* Referral Card */}
+                        {myReferralCode && (
+                          <div className="p-6 rounded-2xl bg-background/40 border border-card-border/50 relative overflow-hidden group shadow-lg flex flex-col justify-between">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-nectar-gold/5 rounded-full blur-2xl -mr-10 -mt-10"></div>
+                            <div className="relative z-10 space-y-4">
+                              <div className="flex justify-between items-start">
+                                <div>
+                                  <span className="px-2 py-0.5 bg-nectar-gold/10 text-nectar-gold text-[7.5px] font-black uppercase tracking-widest rounded-full">Programa de Referidos</span>
+                                  <h4 className="text-lg font-black tracking-tight mt-2">Invita a un amigo y ambos ganan</h4>
+                                  <p className="text-[10px] text-foreground/60 mt-1 leading-relaxed">
+                                    Comparte tu código: tu referido obtiene un <strong>10% de descuento</strong> en su primer mes, y tú recibes un <strong>10% de descuento</strong> en tu siguiente mensualidad.
+                                  </p>
+                                </div>
+                                <div className="text-right shrink-0">
+                                  <span className="text-[8px] uppercase tracking-widest opacity-40 block font-black">Referidos</span>
+                                  <span className="text-2xl font-black text-nectar-gold font-mono">{myReferralCode.used_count || 0}</span>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2 bg-background/50 border border-card-border/60 rounded-xl p-3 justify-between">
+                                <span className="font-mono text-sm font-black tracking-wider text-white select-all">{myReferralCode.code}</span>
+                                <button
+                                  onClick={() => {
+                                    navigator.clipboard.writeText(myReferralCode.code);
+                                    alert("¡Código de referido copiado al portapapeles!");
+                                  }}
+                                  className="px-4 py-2 bg-nectar-gold hover:bg-nectar-gold/90 text-background text-[9px] font-black uppercase tracking-widest rounded-lg transition-all active:scale-95 shrink-0"
+                                >
+                                  Copiar Código
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Retroactive Coupon Input Card */}
+                        {showRetroactiveCouponInput ? (
+                          <div className="p-6 rounded-2xl bg-background/40 border border-card-border/50 relative overflow-hidden group shadow-lg flex flex-col justify-between">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-nectar-gold/5 rounded-full blur-2xl -mr-10 -mt-10"></div>
+                            <div className="relative z-10 space-y-4">
+                              <div>
+                                <span className="px-2 py-0.5 bg-nectar-gold/10 text-nectar-gold text-[7.5px] font-black uppercase tracking-widest rounded-full">Descuento Especial</span>
+                                <h4 className="text-lg font-black tracking-tight mt-2">Aplicar Cupón a tu Siguiente Pago</h4>
+                                <p className="text-[10px] text-foreground/60 mt-1 leading-relaxed">
+                                  Aplica un código promocional o de referido para descontar tu próxima mensualidad (Mes {nextPendingInstallment.installment_number}).
+                                </p>
+                              </div>
+                              
+                              <div className="flex gap-2">
+                                <input
+                                  type="text"
+                                  placeholder="CÓDIGO CUPÓN"
+                                  value={retroactiveCodeInput}
+                                  onChange={(e) => setRetroactiveCodeInput(e.target.value.toUpperCase())}
+                                  className="flex-1 bg-background border border-card-border rounded-xl px-4 py-3 text-xs font-mono focus:outline-none focus:border-nectar-gold text-foreground uppercase font-bold"
+                                />
+                                <button
+                                  onClick={handleApplyRetroactiveCode}
+                                  disabled={applyingRetroactiveCode || !retroactiveCodeInput.trim()}
+                                  className="px-6 bg-nectar-gold hover:bg-nectar-gold/90 text-background rounded-xl text-[9px] font-black uppercase tracking-widest transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50"
+                                >
+                                  {applyingRetroactiveCode ? 'Aplicando...' : 'Aplicar'}
+                                </button>
+                              </div>
+                              {retroactiveSuccessMessage && (
+                                <p className="text-[9px] text-green-400 font-bold bg-green-500/5 p-2 rounded border border-green-500/10 animate-in fade-in">
+                                  ✓ {retroactiveSuccessMessage}
+                                </p>
+                              )}
+                              {retroactiveErrorMessage && (
+                                <p className="text-[9px] text-red-500 font-bold bg-red-500/5 p-2 rounded border border-red-500/10 animate-in fade-in">
+                                  ✗ {retroactiveErrorMessage}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="p-6 rounded-2xl bg-background/25 border border-card-border/40 relative overflow-hidden group shadow-lg flex flex-col justify-between">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-nectar-forest/5 rounded-full blur-2xl -mr-10 -mt-10"></div>
+                            <div className="relative z-10">
+                              <span className="px-2 py-0.5 bg-nectar-forest/10 text-nectar-forest text-[7.5px] font-black uppercase tracking-widest rounded-full">Información</span>
+                              <h4 className="text-lg font-black tracking-tight mt-2">Ecosistema Néctar Labs</h4>
+                              <p className="text-[10px] text-foreground/60 mt-1 leading-relaxed">
+                                Tu infraestructura de Partner Tecnológico se aprovisiona y mantiene activa las 24 horas del día. Si requieres más ayuda, abre un ticket de soporte.
+                              </p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
 
                   {/* Monthly Payments (6 months commitment) */}
                   <div className="mt-12 border-t border-card-border/50 pt-10">

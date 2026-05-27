@@ -12,6 +12,7 @@ export default function RegisterPage() {
     email: '',
     password: '',
     confirm_password: '',
+    role: 'CUSTOMER',
   });
   const [error, setError] = useState('');
   const router = useRouter();
@@ -31,7 +32,8 @@ export default function RegisterPage() {
         body: JSON.stringify({
           email: formData.email,
           username: formData.username,
-          password: formData.password
+          password: formData.password,
+          role: formData.role
         }),
       });
       
@@ -110,6 +112,34 @@ export default function RegisterPage() {
               value={formData.confirm_password}
               onChange={(e) => setFormData({ ...formData, confirm_password: e.target.value })}
             />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-4">Tipo de Cuenta</label>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, role: 'CUSTOMER' })}
+                className={`py-3.5 rounded-2xl border font-black text-[10px] uppercase tracking-wider transition-all ${
+                  formData.role === 'CUSTOMER' 
+                    ? 'border-nectar-gold bg-nectar-gold/10 text-nectar-gold animate-in fade-in zoom-in-95 duration-200' 
+                    : 'border-card-border text-foreground/50 hover:border-card-border/80 bg-background/50'
+                }`}
+              >
+                Cliente
+              </button>
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, role: 'SALES' })}
+                className={`py-3.5 rounded-2xl border font-black text-[10px] uppercase tracking-wider transition-all ${
+                  formData.role === 'SALES' 
+                    ? 'border-nectar-gold bg-nectar-gold/10 text-nectar-gold animate-in fade-in zoom-in-95 duration-200' 
+                    : 'border-card-border text-foreground/50 hover:border-card-border/80 bg-background/50'
+                }`}
+              >
+                Vendedor
+              </button>
+            </div>
           </div>
 
           <button

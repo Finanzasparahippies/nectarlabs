@@ -7,8 +7,8 @@ from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse
 import stripe
-from .models import Plan, Product, Contract, PaymentInstallment, AddOn
-from .serializers import PlanSerializer, ProductSerializer, ContractSerializer, PaymentInstallmentSerializer, AddOnSerializer
+from .models import Plan, Product, Contract, PaymentInstallment, AddOn, PromoCode, SalesCommission
+from .serializers import PlanSerializer, ProductSerializer, ContractSerializer, PaymentInstallmentSerializer, AddOnSerializer, PromoCodeSerializer, SalesCommissionSerializer
 from .utils import generate_contract_pdf, send_contract_emails, send_payment_receipt_email, send_addon_payment_receipt_email
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
@@ -239,6 +239,36 @@ class ContractViewSet(viewsets.ModelViewSet):
         
         return Response({'error': 'Error al procesar el cierre'}, status=status.HTTP_400_BAD_REQUEST)
 
+    @action(detail=True, methods=['post'], url_path='apply-promo-code', permission_classes=[permissions.IsAuthenticated])
+    def apply_promo_code(self, request, pk=None):
+        contract = self.get_object()
+        code_str = request.data.get('code', '').strip().upper()
+        
+        if not code_str:
+            return Response({'error': 'Código promocional no especificado.'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        try:
+            promo = PromoCode.objects.get(code=code_str)
+            if not promo.is_valid():
+                return Response({'error': 'Este código promocional ya no es válido o ha expirado.'}, status=status.HTTP_400_BAD_REQUEST)
+                
+            # Override contract's discount percentage with promo code's discount percentage
+            contract.promo_code = promo
+            contract.discount_percentage = promo.discount_percentage
+            contract.save()
+            
+            # Recalculate only the next pending installment's amount
+            from .utils import update_remaining_installments_amounts
+            update_remaining_installments_amounts(contract)
+            
+            return Response({
+                'message': f'Código {promo.code} aplicado con éxito. El próximo pago pendiente ha sido recalculado.',
+                'discount_percentage': float(promo.discount_percentage),
+                'contract_discount': float(contract.discount_percentage)
+            })
+        except PromoCode.DoesNotExist:
+            return Response({'error': 'Código promocional no encontrado.'}, status=status.HTTP_404_NOT_FOUND)
+
 class PaymentInstallmentViewSet(viewsets.ModelViewSet):
     serializer_class = PaymentInstallmentSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -431,3 +461,91 @@ def stripe_webhook(request):
                 pass
 
     return HttpResponse(status=200)
+
+
+class PromoCodeViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = PromoCode.objects.filter(is_active=True)
+    serializer_class = PromoCodeSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated])
+    def validate(self, request):
+        code_str = request.query_params.get('code', '').strip().upper()
+        if not code_str:
+            return Response({'is_valid': False, 'message': 'Código promocional no especificado.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            promo = PromoCode.objects.get(code=code_str)
+            if promo.is_valid():
+                return Response({
+                    'is_valid': True,
+                    'code': promo.code,
+                    'discount_percentage': float(promo.discount_percentage),
+                    'code_type': promo.code_type,
+                    'message': f'Código {promo.code} aplicado con éxito (-{promo.discount_percentage}% en tu primer mes).'
+                })
+            else:
+                return Response({
+                    'is_valid': False,
+                    'message': 'Este código promocional ya no es válido o ha expirado.'
+                })
+        except PromoCode.DoesNotExist:
+            return Response({
+                'is_valid': False,
+                'message': 'Código promocional no encontrado.'
+            })
+
+    @action(detail=False, methods=['get'], url_path='my-referral-code')
+    def my_referral_code(self, request):
+        user = request.user
+        code_str = f"NECTAR-{user.username.upper()}"
+        
+        # Determine code type based on user role
+        code_type = PromoCode.CodeType.SELLER if user.role == 'SALES' else PromoCode.CodeType.CLIENT
+        discount = 10.00
+        
+        promo, created = PromoCode.objects.get_or_create(
+            referrer=user,
+            defaults={
+                'code': code_str,
+                'code_type': code_type,
+                'discount_percentage': discount,
+                'is_active': True,
+            }
+        )
+        return Response({
+            'code': promo.code,
+            'code_type': promo.code_type,
+            'discount_percentage': float(promo.discount_percentage),
+            'used_count': promo.used_count
+        })
+
+
+class SalesCommissionViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = SalesCommissionSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_staff or user.role in ['ADMIN', 'BUSINESS']:
+            return SalesCommission.objects.all().order_by('-created_at')
+        return SalesCommission.objects.filter(salesperson=user).order_by('-created_at')
+
+    @action(detail=False, methods=['get'], url_path='summary')
+    def summary(self, request):
+        user = request.user
+        commissions = self.get_queryset()
+        paid_total = sum(c.amount for c in commissions.filter(status='PAID'))
+        pending_total = sum(c.amount for c in commissions.filter(status='PENDING'))
+        
+        # Referred contracts count
+        referred_contracts_count = Contract.objects.filter(
+            promo_code__referrer=user, 
+            promo_code__code_type='SELLER'
+        ).distinct().count()
+
+        return Response({
+            'paid_total': float(paid_total),
+            'pending_total': float(pending_total),
+            'referred_contracts_count': referred_contracts_count
+        })

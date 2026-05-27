@@ -56,6 +56,7 @@ class Contract(models.Model):
     )
     brand_design_price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     addons = models.ManyToManyField('AddOn', blank=True, related_name='contracts')
+    promo_code = models.ForeignKey('PromoCode', on_delete=models.SET_NULL, null=True, blank=True, related_name='contracts')
 
     class PaymentMethod(models.TextChoices):
         STRIPE = 'STRIPE', 'Tarjeta (Stripe)'
@@ -91,8 +92,34 @@ class Contract(models.Model):
     )
  
     def save(self, *args, **kwargs):
-        if not self.pk and self.plan and self.discount_percentage == 0:
-            self.discount_percentage = self.plan.discount_percentage
+        if not self.pk:
+            if self.promo_code and self.promo_code.is_valid():
+                self.discount_percentage = self.promo_code.discount_percentage
+                self.promo_code.used_count += 1
+                self.promo_code.save()
+            elif self.plan:
+                self.discount_percentage = self.plan.discount_percentage
+            else:
+                self.discount_percentage = 0.00
+
+            # Reward referrer if it's a CLIENT promo code
+            if self.promo_code and self.promo_code.code_type == 'CLIENT' and self.promo_code.referrer:
+                try:
+                    ref_contract = Contract.objects.filter(user=self.promo_code.referrer, is_active=True).first()
+                    if ref_contract:
+                        next_inst = ref_contract.installments.filter(
+                            installment_type='DEVELOPMENT', 
+                            status='PENDING'
+                        ).order_by('due_date').first()
+                        if next_inst:
+                            next_inst.discount_percentage = self.promo_code.discount_percentage
+                            next_inst.promo_code = self.promo_code
+                            next_inst.amount = next_inst.base_amount * (1 - self.promo_code.discount_percentage / 100)
+                            next_inst.save()
+                except Exception as e:
+                    import logging
+                    logging.error(f"Error rewarding referrer in contract save: {e}", exc_info=True)
+
         if self.plan:
             plan_name_lower = self.plan.name.lower()
             if any(kw in plan_name_lower for kw in ['basico', 'básico', 'basic']):
@@ -151,7 +178,12 @@ class PaymentInstallment(models.Model):
     )
     installment_number = models.IntegerField(help_text="Número de abono (1 de 6, 2 de 24, etc.)")
     due_date = models.DateField(help_text="Fecha límite de pago")
-    amount = models.DecimalField(max_digits=10, decimal_places=2, help_text="Monto del abono")
+    
+    base_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00, help_text="Monto base sin descuentos")
+    discount_percentage = models.DecimalField(max_digits=5, decimal_places=2, default=0.00, help_text="Porcentaje de descuento aplicado a este pago")
+    promo_code = models.ForeignKey('PromoCode', on_delete=models.SET_NULL, null=True, blank=True, related_name='installments')
+    amount = models.DecimalField(max_digits=10, decimal_places=2, help_text="Monto final a pagar (después de descuentos)")
+    
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
     payment_method = models.CharField(max_length=50, blank=True, null=True, help_text="Método usado para este pago")
     receipt_file = models.FileField(upload_to='receipts/%Y/%m/', blank=True, null=True, help_text="Comprobante de SPEI/Depósito subido por cliente")
@@ -159,6 +191,51 @@ class PaymentInstallment(models.Model):
     cfdi_uuid = models.CharField(max_length=100, blank=True, null=True, help_text="Folio Fiscal / UUID CFDI del SAT")
     paid_at = models.DateTimeField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    def apply_discount(self, pct, promo=None):
+        self.discount_percentage = pct
+        self.promo_code = promo
+        self.amount = self.base_amount * (1 - pct / 100)
+        self.save()
+
+    def save(self, *args, **kwargs):
+        is_new = not self.pk
+        old_status = None
+        if not is_new:
+            try:
+                old_status = PaymentInstallment.objects.get(pk=self.pk).status
+            except PaymentInstallment.DoesNotExist:
+                pass
+                
+        # Auto-compute amount if not set
+        if self.amount is None or self.amount == 0:
+            self.amount = self.base_amount * (1 - self.discount_percentage / 100)
+
+        super().save(*args, **kwargs)
+
+        # Trigger commission generation for Salespeople on PAID transition
+        if self.status == 'PAID' and (is_new or old_status != 'PAID'):
+            contract = self.contract
+            if contract.promo_code and contract.promo_code.code_type == 'SELLER' and contract.promo_code.referrer:
+                # Calculate salesperson commission
+                from .models import SalesCommission
+                if not SalesCommission.objects.filter(installment=self).exists():
+                    installment_number = self.installment_number
+                    if installment_number == 1:
+                        pct = 20.00
+                    elif installment_number == 2:
+                        pct = 10.00
+                    else:
+                        pct = 5.00
+                    
+                    commission_amount = self.amount * (pct / 100)
+                    SalesCommission.objects.create(
+                        salesperson=contract.promo_code.referrer,
+                        installment=self,
+                        commission_percentage=pct,
+                        amount=commission_amount,
+                        status=SalesCommission.Status.PENDING
+                    )
 
     def __str__(self):
         return f"{self.get_installment_type_display()} #{self.installment_number} - {self.contract.full_name} (${self.amount})"
@@ -194,3 +271,81 @@ class AddOn(models.Model):
 
     def __str__(self):
         return f"{self.name} (${self.monthly_price}/mes)"
+
+
+class PromoCode(models.Model):
+    class CodeType(models.TextChoices):
+        CLIENT = 'CLIENT', 'Cliente'
+        SELLER = 'SELLER', 'Vendedor'
+
+    code = models.CharField(max_length=50, unique=True, help_text="Código único de la promoción (ej: AMIGO10)")
+    code_type = models.CharField(max_length=20, choices=CodeType.choices, default=CodeType.CLIENT, help_text="Tipo de referido")
+    discount_percentage = models.DecimalField(
+        max_digits=5, 
+        decimal_places=2, 
+        default=0.00,
+        help_text="Porcentaje de descuento que otorga (0 a 100)"
+    )
+    is_active = models.BooleanField(default=True, help_text="Indica si el código está activo")
+    max_uses = models.PositiveIntegerField(null=True, blank=True, help_text="Límite de usos permitidos (nulo para ilimitado)")
+    used_count = models.PositiveIntegerField(default=0, help_text="Veces que ha sido utilizado")
+    valid_until = models.DateField(null=True, blank=True, help_text="Fecha límite de validez")
+    referrer = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True, 
+        related_name='referred_promo_codes',
+        help_text="Usuario que refirió este código (si aplica)"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def is_valid(self):
+        if not self.is_active:
+            return False
+        if self.max_uses is not None and self.used_count >= self.max_uses:
+            return False
+        if self.valid_until is not None and self.valid_until < timezone.now().date():
+            return False
+        return True
+
+    def save(self, *args, **kwargs):
+        self.code = self.code.upper().strip()
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.code} ({self.get_code_type_display()} - {self.discount_percentage}%)"
+
+
+class SalesCommission(models.Model):
+    class Status(models.TextChoices):
+        PENDING = 'PENDING', 'Pendiente de Pago'
+        PAID = 'PAID', 'Pagado al Vendedor'
+
+    salesperson = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.CASCADE, 
+        related_name='sales_commissions'
+    )
+    installment = models.ForeignKey(
+        'PaymentInstallment', 
+        on_delete=models.CASCADE, 
+        related_name='commissions'
+    )
+    commission_percentage = models.DecimalField(
+        max_digits=5, 
+        decimal_places=2
+    )
+    amount = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2
+    )
+    status = models.CharField(
+        max_length=20, 
+        choices=Status.choices, 
+        default=Status.PENDING
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Comisión {self.salesperson.email} - Mes {self.installment.installment_number} (${self.amount})"

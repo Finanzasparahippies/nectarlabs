@@ -16,12 +16,31 @@ class AddOnSerializer(serializers.ModelSerializer):
         model = AddOn
         fields = '__all__'
 
+class PromoCodeSerializer(serializers.ModelSerializer):
+    referrer_email = serializers.CharField(source='referrer.email', read_only=True)
+
+    class Meta:
+        model = PromoCode
+        fields = '__all__'
+
+class SalesCommissionSerializer(serializers.ModelSerializer):
+    client_name = serializers.CharField(source='installment.contract.full_name', read_only=True)
+    installment_number = serializers.IntegerField(source='installment.installment_number', read_only=True)
+    installment_amount = serializers.DecimalField(source='installment.amount', max_digits=10, decimal_places=2, read_only=True)
+    salesperson_email = serializers.CharField(source='salesperson.email', read_only=True)
+
+    class Meta:
+        model = SalesCommission
+        fields = '__all__'
+
 class ContractSerializer(serializers.ModelSerializer):
     plan_name = serializers.CharField(source='plan.name', read_only=True)
     addons = serializers.SlugRelatedField(many=True, slug_field='slug', queryset=AddOn.objects.all(), required=False)
     addons_details = AddOnSerializer(source='addons', many=True, read_only=True)
     tenant_subdomain = serializers.SerializerMethodField(read_only=True)
     tenant_name = serializers.SerializerMethodField(read_only=True)
+    promo_code = serializers.SlugRelatedField(slug_field='code', queryset=PromoCode.objects.all(), required=False, allow_null=True)
+    promo_code_details = PromoCodeSerializer(source='promo_code', read_only=True)
 
     class Meta:
         model = Contract
@@ -42,6 +61,7 @@ class PaymentInstallmentSerializer(serializers.ModelSerializer):
     project_name = serializers.SerializerMethodField(read_only=True)
     project_id = serializers.SerializerMethodField(read_only=True)
     installment_type_display = serializers.CharField(source='get_installment_type_display', read_only=True)
+    promo_code = serializers.SlugRelatedField(slug_field='code', queryset=PromoCode.objects.all(), required=False, allow_null=True)
 
     class Meta:
         model = PaymentInstallment

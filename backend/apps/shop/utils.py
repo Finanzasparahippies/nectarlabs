@@ -306,9 +306,9 @@ def generate_installments_for_contract(contract):
         return
         
     plan_price = contract.plan.price
-    if contract.discount_percentage > 0:
-        plan_price = plan_price * (1 - contract.discount_percentage / 100)
-        
+    plan_discount = contract.plan.discount_percentage if contract.plan else 0
+    promo = contract.promo_code if (contract.promo_code and contract.promo_code.is_valid()) else None
+    
     start_date = contract.signed_at.date() if contract.signed_at else timezone.now().date()
     
     # Clean up previous installments
@@ -318,7 +318,7 @@ def generate_installments_for_contract(contract):
     
     # 1. Development Installments
     if contract.payment_day == 'WEEKLY_MONDAY':
-        weekly_amount = plan_price / 4
+        base_inst_amount = plan_price / 4
         days_ahead = 0 - start_date.weekday()
         if days_ahead < 0:
             days_ahead += 7
@@ -326,19 +326,28 @@ def generate_installments_for_contract(contract):
         
         for i in range(1, 25):
             due_date = first_monday + timedelta(weeks=i - 1)
+            is_promo = (i == 1 and promo is not None)
+            discount = promo.discount_percentage if is_promo else plan_discount
+            promo_obj = promo if is_promo else None
+            
+            inst_amount = base_inst_amount * (1 - discount / 100)
+            
             installments_to_create.append(
                 PaymentInstallment(
                     contract=contract,
                     installment_type=PaymentInstallment.InstallmentType.DEVELOPMENT,
                     installment_number=i,
                     due_date=due_date,
-                    amount=weekly_amount,
+                    base_amount=base_inst_amount,
+                    discount_percentage=discount,
+                    promo_code=promo_obj,
+                    amount=inst_amount,
                     status=PaymentInstallment.Status.PENDING,
                     payment_method=contract.payment_commitment_method
                 )
             )
     elif contract.payment_day == 'FORTNIGHTLY_1ST_15TH':
-        fortnightly_amount = plan_price / 2
+        base_inst_amount = plan_price / 2
         due_dates = []
         candidate_m = start_date.month
         candidate_y = start_date.year
@@ -357,18 +366,29 @@ def generate_installments_for_contract(contract):
                 candidate_y += 1
         
         for i, due_date in enumerate(due_dates, 1):
+            is_promo = (i == 1 and promo is not None)
+            discount = promo.discount_percentage if is_promo else plan_discount
+            promo_obj = promo if is_promo else None
+            
+            inst_amount = base_inst_amount * (1 - discount / 100)
+            
             installments_to_create.append(
                 PaymentInstallment(
                     contract=contract,
                     installment_type=PaymentInstallment.InstallmentType.DEVELOPMENT,
                     installment_number=i,
                     due_date=due_date,
-                    amount=fortnightly_amount,
+                    base_amount=base_inst_amount,
+                    discount_percentage=discount,
+                    promo_code=promo_obj,
+                    amount=inst_amount,
                     status=PaymentInstallment.Status.PENDING,
                     payment_method=contract.payment_commitment_method
                 )
             )
     else:
+        # Monthly
+        base_inst_amount = plan_price
         due_dates = []
         candidate_m = start_date.month
         candidate_y = start_date.year
@@ -384,13 +404,22 @@ def generate_installments_for_contract(contract):
                 candidate_y += 1
         
         for i, due_date in enumerate(due_dates, 1):
+            is_promo = (i == 1 and promo is not None)
+            discount = promo.discount_percentage if is_promo else plan_discount
+            promo_obj = promo if is_promo else None
+            
+            inst_amount = base_inst_amount * (1 - discount / 100)
+            
             installments_to_create.append(
                 PaymentInstallment(
                     contract=contract,
                     installment_type=PaymentInstallment.InstallmentType.DEVELOPMENT,
                     installment_number=i,
                     due_date=due_date,
-                    amount=plan_price,
+                    base_amount=base_inst_amount,
+                    discount_percentage=discount,
+                    promo_code=promo_obj,
+                    amount=inst_amount,
                     status=PaymentInstallment.Status.PENDING,
                     payment_method=contract.payment_commitment_method
                 )
@@ -413,6 +442,7 @@ def generate_installments_for_contract(contract):
                         installment_type=PaymentInstallment.InstallmentType.DESIGN,
                         installment_number=i,
                         due_date=due_date,
+                        base_amount=design_amount,
                         amount=design_amount,
                         status=PaymentInstallment.Status.PENDING,
                         payment_method=contract.payment_commitment_method
@@ -444,6 +474,7 @@ def generate_installments_for_contract(contract):
                         installment_type=PaymentInstallment.InstallmentType.DESIGN,
                         installment_number=i,
                         due_date=due_date,
+                        base_amount=design_amount,
                         amount=design_amount,
                         status=PaymentInstallment.Status.PENDING,
                         payment_method=contract.payment_commitment_method
@@ -472,6 +503,7 @@ def generate_installments_for_contract(contract):
                         installment_type=PaymentInstallment.InstallmentType.DESIGN,
                         installment_number=i,
                         due_date=due_date,
+                        base_amount=design_amount,
                         amount=design_amount,
                         status=PaymentInstallment.Status.PENDING,
                         payment_method=contract.payment_commitment_method
@@ -479,4 +511,21 @@ def generate_installments_for_contract(contract):
                 )
                 
     PaymentInstallment.objects.bulk_create(installments_to_create)
+
+
+def update_remaining_installments_amounts(contract):
+    """
+    Recalculates the amount for the next PENDING development installment of a contract
+    when a promo code is retroactively applied. Note: only updates the next pending installment.
+    """
+    if not contract.plan:
+        return
+        
+    next_inst = contract.installments.filter(
+        installment_type='DEVELOPMENT', 
+        status='PENDING'
+    ).order_by('due_date').first()
+    
+    if next_inst and contract.promo_code:
+        next_inst.apply_discount(contract.promo_code.discount_percentage, contract.promo_code)
 

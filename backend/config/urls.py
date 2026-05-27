@@ -8,7 +8,7 @@ from rest_framework_simplejwt.views import (
 )
 
 
-from apps.shop.views import PlanViewSet, ProductViewSet, ContractViewSet, PaymentInstallmentViewSet, AddOnViewSet
+from apps.shop.views import PlanViewSet, ProductViewSet, ContractViewSet, PaymentInstallmentViewSet, AddOnViewSet, PromoCodeViewSet, SalesCommissionViewSet
 from apps.dashboard.views import ProjectViewSet, FAQViewSet, TimeLogViewSet
 from apps.blog.views import PostViewSet
 from apps.tickets.views import TicketViewSet, SupportChatViewSet
@@ -29,6 +29,8 @@ router.register(r'tickets', TicketViewSet, basename='ticket')
 router.register(r'support-chats', SupportChatViewSet, basename='support-chat')
 router.register(r'users', UserViewSet, basename='user')
 router.register(r'tenants', TenantViewSet, basename='tenant')
+router.register(r'promo-codes', PromoCodeViewSet, basename='promocode')
+router.register(r'sales-commissions', SalesCommissionViewSet, basename='salescommission')
 
 
 from django.conf import settings
