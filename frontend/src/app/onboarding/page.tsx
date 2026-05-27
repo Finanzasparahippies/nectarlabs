@@ -38,6 +38,25 @@ function OnboardingContent() {
 
   const selectedPlanObj = plans.find(p => p.id.toString() === formData.plan.toString());
 
+  const getPlanPaymentSchedule = (planObj?: Plan) => {
+    if (!planObj) return { value: 'MONTHLY_1ST', label: 'Mensual', desc: 'Día 1ero de cada mes (Mensual)' };
+    const name = planObj.name.toLowerCase();
+    if (name.includes('basico') || name.includes('básico') || name.includes('basic')) {
+      return { value: 'WEEKLY_MONDAY', label: 'Semanal', desc: 'Lunes de cada semana (Semanal)' };
+    } else if (name.includes('mid') || name.includes('pro') || name.includes('medio')) {
+      return { value: 'FORTNIGHTLY_1ST_15TH', label: 'Quincenal', desc: 'Días 1 y 15 de cada mes (Quincenal)' };
+    } else {
+      return { value: 'MONTHLY_1ST', label: 'Mensual', desc: 'Día 1ero de cada mes (Mensual)' };
+    }
+  };
+
+  useEffect(() => {
+    if (selectedPlanObj) {
+      const schedule = getPlanPaymentSchedule(selectedPlanObj);
+      setFormData(prev => ({ ...prev, payment_day: schedule.value }));
+    }
+  }, [formData.plan, plans]);
+
   useEffect(() => {
     setIsMounted(true);
     const planFromUrl = searchParams.get('plan');
@@ -139,18 +158,16 @@ function OnboardingContent() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-widest opacity-40">Esquema y Día de Pago Preferido</label>
-                <select
-                  name="payment_day"
-                  value={formData.payment_day}
-                  onChange={handleInputChange}
-                  className="w-full bg-card-bg border-2 border-card-border rounded-2xl p-6 font-bold focus:border-nectar-gold outline-none appearance-none"
-                >
-                  <option value="MONTHLY_1ST">Mensual - Día 1ero de cada mes</option>
-                  <option value="FORTNIGHTLY_1ST_15TH">Quincenal - Días 1 y 15 de cada mes</option>
-                  <option value="WEEKLY_MONDAY">Semanal - Lunes de cada semana</option>
-                </select>
-                <p className="text-[9px] text-foreground/40 mt-1 uppercase font-bold">Elige el esquema de abonos periódicos que mejor se adapte al flujo de tu negocio.</p>
+                <label className="text-[10px] font-black uppercase tracking-widest opacity-40">Esquema y Plazo de Pago (Definido por el Plan)</label>
+                <div className="w-full bg-card-bg/60 border-2 border-card-border/80 rounded-2xl p-6 font-bold flex justify-between items-center text-sm transition-all duration-300">
+                  <span className="opacity-70 text-xs">Frecuencia de Abonos:</span>
+                  <span className={`${formData.plan ? 'text-nectar-gold' : 'opacity-30'} font-black uppercase tracking-wider text-xs`}>
+                    {formData.plan ? getPlanPaymentSchedule(selectedPlanObj).desc : 'Selecciona un plan para ver el plazo'}
+                  </span>
+                </div>
+                <p className="text-[9px] text-foreground/40 mt-1 uppercase font-bold">
+                  El esquema de pagos está establecido según el nivel de ingeniería de tu plan para asegurar el flujo del desarrollo.
+                </p>
               </div>
 
               <div className="space-y-2">

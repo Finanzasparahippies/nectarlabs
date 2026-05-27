@@ -13,20 +13,48 @@ interface Plan {
   is_recommended: boolean;
 }
 
+const fallbackPlans: Plan[] = [
+  {
+    id: 1,
+    name: "Plan Basico",
+    price: "3000.00",
+    hours: 8,
+    description: "Ideales para prototipos y MVPs. Incluye desarrollo, diseño, hosting, base de datos y dominio .com.",
+    is_recommended: false
+  },
+  {
+    id: 2,
+    name: "Plan Staging",
+    price: "29999.00",
+    hours: 90,
+    description: "Nuestro plan insignia. Desarrollo continuo de producto, arquitectura serverless escalable y optimizaciones Premium.",
+    is_recommended: true
+  },
+  {
+    id: 3,
+    name: "Plan Producción",
+    price: "49999.00",
+    hours: 160,
+    description: "Ingeniería de software dedicada, soporte 24/7 y control total de infraestructura de alta disponibilidad.",
+    is_recommended: false
+  }
+];
+
 export default function SubscriptionCards() {
-  const [plans, setPlans] = useState<Plan[]>([]);
+  const [plans, setPlans] = useState<Plan[]>(fallbackPlans);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetcher('/plans/', { isPublic: true })
       .then(data => {
-
-        setPlans(data);
+        if (Array.isArray(data)) {
+          setPlans(data);
+        }
         setLoading(false);
       })
       .catch(err => {
-
         console.error("Error fetching plans:", err);
+        setPlans(fallbackPlans);
         setLoading(false);
       });
   }, []);
@@ -71,7 +99,7 @@ export default function SubscriptionCards() {
                   </span>
                   <span className="text-nectar-gold text-sm font-black uppercase tracking-widest">MXN</span>
                 </div>
-                
+
                 {!plan.is_recommended && (
                   <div className="inline-flex items-center gap-3 px-5 py-2.5 rounded-2xl bg-foreground/[0.03] border border-foreground/[0.08] self-start transition-colors hover:bg-foreground/[0.05]">
                     <span className="text-[10px] font-bold text-foreground/50 tracking-[0.2em] uppercase">Total al mes</span>

@@ -30,10 +30,15 @@ class ProjectViewSet(viewsets.ModelViewSet):
     def check_permissions(self, request):
         super().check_permissions(request)
         user = request.user
-        is_staff_or_dev_or_des = user.is_staff or user.role in ['ADMIN', 'DEVELOPER', 'DESIGNER']
+        is_admin_or_business = user.is_staff or user.role in ['ADMIN', 'BUSINESS']
         
-        if self.action in ['create', 'update', 'partial_update', 'destroy'] and not is_staff_or_dev_or_des:
-            self.permission_denied(request, message="No tienes permisos para crear o modificar proyectos.")
+        if self.action == 'destroy' and not is_admin_or_business:
+            self.permission_denied(request, message="No tienes permisos para eliminar proyectos.")
+            
+        if self.action in ['create', 'update', 'partial_update']:
+            is_allowed = is_admin_or_business or (user.role == 'DESIGNER' and self.action in ['update', 'partial_update'])
+            if not is_allowed:
+                self.permission_denied(request, message="No tienes permisos para realizar esta acción sobre proyectos.")
 
     def perform_create(self, serializer):
         user = self.request.user

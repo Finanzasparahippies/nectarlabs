@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { fetcher } from '../../lib/api';
+import DashboardSidebar from '../../components/DashboardSidebar';
 
 interface Advance {
   id: number;
@@ -280,60 +281,12 @@ export default function ProjectsPage() {
     );
   }
 
-  const canWork = isStaff || userRole === 'DESIGNER';
+  const canWork = isStaff || userRole === 'DESIGNER' || userRole === 'DEVELOPER';
   const designers = users.filter(u => u.role === 'DESIGNER');
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col lg:flex-row">
-      {/* Sidebar - Consistent with Dashboard */}
-      <aside className="w-full lg:w-72 bg-card-bg border-b lg:border-r border-card-border p-8 flex flex-col justify-between">
-        <div>
-          <Link href="/" className="inline-block text-xl font-black tracking-tighter mb-16">
-            NECTAR <span className="text-nectar-gold">LABS</span>
-          </Link>
-
-          <nav className="space-y-4">
-            <Link href="/dashboard" className="flex items-center gap-4 px-6 py-4 hover:bg-foreground/5 text-foreground opacity-60 hover:opacity-100 transition-all rounded-2xl font-black uppercase tracking-widest text-[10px]">
-              <div className="w-2 h-2 bg-foreground/20 rounded-full"></div>
-              Dashboard
-            </Link>
-
-            {isStaff && userRole !== 'DESIGNER' && (
-              <Link href="/dashboard?tab=business" className="flex items-center gap-4 px-6 py-4 hover:bg-foreground/5 text-foreground opacity-60 hover:opacity-100 transition-all rounded-2xl font-black uppercase tracking-widest text-[10px]">
-                <div className="w-2 h-2 bg-foreground/20 rounded-full"></div>
-                Control Negocio
-              </Link>
-            )}
-
-            {isStaff && userRole !== 'DESIGNER' && (
-              <Link href="/dashboard/performance" className="flex items-center gap-4 px-6 py-4 hover:bg-foreground/5 text-foreground opacity-60 hover:opacity-100 transition-all rounded-2xl font-black uppercase tracking-widest text-[10px]">
-                <div className="w-2 h-2 bg-foreground/20 rounded-full"></div>
-                Rendimiento
-              </Link>
-            )}
-
-            <Link href="/tickets" className="flex items-center gap-4 px-6 py-4 hover:bg-foreground/5 text-foreground opacity-60 hover:opacity-100 transition-all rounded-2xl font-black uppercase tracking-widest text-[10px]">
-              <div className="w-2 h-2 bg-foreground/20 rounded-full"></div>
-              {isStaff ? 'Gestión Tickets' : 'Soporte'}
-            </Link>
-            <Link href="/projects" className="flex items-center gap-4 px-6 py-4 bg-nectar-gold/10 text-nectar-gold rounded-2xl font-black uppercase tracking-widest text-[10px]">
-              <div className="w-2 h-2 bg-nectar-gold rounded-full"></div>
-              Proyectos
-            </Link>
-            <Link href="/dashboard/addons" className="flex items-center gap-4 px-6 py-4 hover:bg-foreground/5 text-foreground opacity-60 hover:opacity-100 transition-all rounded-2xl font-black uppercase tracking-widest text-[10px]">
-              <div className="w-2 h-2 bg-foreground/20 rounded-full"></div>
-              Catálogo Add-ons
-            </Link>
-          </nav>
-        </div>
-
-        <button
-          onClick={() => { localStorage.clear(); window.location.href = '/login'; }}
-          className="mt-20 flex items-center gap-4 px-6 py-4 text-red-500/60 hover:text-red-500 hover:bg-red-500/5 transition-all rounded-2xl font-black uppercase tracking-widest text-[10px]"
-        >
-          <span>Cerrar Sesión</span>
-        </button>
-      </aside>
+      <DashboardSidebar />
 
       <main className="flex-1 p-8 md:p-12 lg:p-16 overflow-y-auto">
         <header className="mb-16 flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
@@ -346,7 +299,7 @@ export default function ProjectsPage() {
             </p>
           </div>
 
-          {(isStaff || userRole === 'DESIGNER') && (
+          {isStaff && (
             <div className="flex flex-wrap gap-4">
               <button
                 onClick={() => {

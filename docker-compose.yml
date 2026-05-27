@@ -1,16 +1,4 @@
 services:
-  nectar-db-staging:
-    image: postgres:16-alpine
-    container_name: nectar_db_staging
-    volumes:
-      - postgres_data_staging:/var/lib/postgresql/data/:z
-    environment:
-      - POSTGRES_DB=nectarlabs_staging
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-    networks:
-      - prod_network
-
   backend:
     container_name: nectar_backend
     image: nectar-labs-backend:dev
@@ -24,8 +12,12 @@ services:
       - ENVIRONMENT=local
     ports:
       - "8001:8000"
-    depends_on:
-      - nectar-db-staging
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/addons/')"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
     networks:
       - prod_network
 
@@ -48,6 +40,9 @@ services:
       - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-/api}
       - API_URL=http://backend:8000/api
       - NEXT_DISABLE_SOURCEMAPS=0
+    depends_on:
+      backend:
+        condition: service_healthy
     networks:
       - prod_network
 
@@ -62,13 +57,12 @@ services:
       - ./backend/staticfiles:/app/staticfiles:z
       - ./backend/media:/app/media:z
     depends_on:
-      - backend
-      - frontend
+      backend:
+        condition: service_healthy
+      frontend:
+        condition: service_started
     networks:
       - prod_network
-
-volumes:
-  postgres_data_staging:
 
 networks:
   prod_network:

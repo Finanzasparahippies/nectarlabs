@@ -78,6 +78,17 @@ class Contract(models.Model):
     is_active = models.BooleanField(default=True)
     next_payment_date = models.DateField(blank=True, null=True)
 
+    def save(self, *args, **kwargs):
+        if self.plan:
+            plan_name_lower = self.plan.name.lower()
+            if any(kw in plan_name_lower for kw in ['basico', 'básico', 'basic']):
+                self.payment_day = Contract.PaymentDay.WEEKLY_MONDAY
+            elif any(kw in plan_name_lower for kw in ['mid', 'pro', 'medio', 'quincenal']):
+                self.payment_day = Contract.PaymentDay.FORTNIGHTLY_1ST_15TH
+            else:
+                self.payment_day = Contract.PaymentDay.MONTHLY_1ST
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return f"Contrato {self.id} - {self.full_name}"
 
@@ -114,10 +125,19 @@ class PaymentInstallment(models.Model):
         PAID = 'PAID', 'Pagado'
         CANCELLED = 'CANCELLED', 'Cancelado'
 
+    class InstallmentType(models.TextChoices):
+        DEVELOPMENT = 'DEVELOPMENT', 'Desarrollo/Plan'
+        DESIGN = 'DESIGN', 'Diseño de Marca'
+
     contract = models.ForeignKey(Contract, on_delete=models.CASCADE, related_name='installments')
-    installment_number = models.IntegerField(help_text="Mes de pago (1 de 6, 2 de 6, etc.)")
+    installment_type = models.CharField(
+        max_length=20,
+        choices=InstallmentType.choices,
+        default=InstallmentType.DEVELOPMENT
+    )
+    installment_number = models.IntegerField(help_text="Número de abono (1 de 6, 2 de 24, etc.)")
     due_date = models.DateField(help_text="Fecha límite de pago")
-    amount = models.DecimalField(max_digits=10, decimal_places=2, help_text="Monto mensual total (Plan + Adiciones)")
+    amount = models.DecimalField(max_digits=10, decimal_places=2, help_text="Monto del abono")
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
     payment_method = models.CharField(max_length=50, blank=True, null=True, help_text="Método usado para este pago")
     receipt_file = models.FileField(upload_to='receipts/%Y/%m/', blank=True, null=True, help_text="Comprobante de SPEI/Depósito subido por cliente")
@@ -127,7 +147,7 @@ class PaymentInstallment(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"Mensualidad {self.installment_number}/6 - {self.contract.full_name} (${self.amount})"
+        return f"{self.get_installment_type_display()} #{self.installment_number} - {self.contract.full_name} (${self.amount})"
 
 
 class AddOn(models.Model):

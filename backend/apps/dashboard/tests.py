@@ -132,3 +132,49 @@ class DashboardRoleAuthorizationTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn('total_projects', response.data)
         self.assertIn('active_projects', response.data)
+
+    def test_project_deletion_permissions(self):
+        """
+        Verify that only the CEO/Admin can delete projects, while other roles get 403.
+        """
+        # Client tries to delete project_a -> expect 403
+        self.client.force_authenticate(user=self.client_a)
+        url = reverse('project-detail', kwargs={'pk': self.project_a.id})
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        
+        # Designer tries to delete project_a -> expect 403
+        self.client.force_authenticate(user=self.designer)
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+        # Developer tries to delete project_a -> expect 403
+        self.client.force_authenticate(user=self.developer)
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+        # CEO/Admin deletes project_a -> expect 204 No Content
+        self.client.force_authenticate(user=self.ceo)
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(Project.objects.filter(id=self.project_a.id).exists())
+
+    def test_developer_cannot_create_or_update_project(self):
+        """
+        Verify that developers cannot create or update projects directly since they are supervised under the CEO.
+        """
+        self.client.force_authenticate(user=self.developer)
+        
+        # Try to create a project -> expect 403
+        response = self.client.post(reverse('project-list'), {
+            'name': 'New Supervised Project',
+            'client': self.client_a.id
+        })
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        
+        # Try to update a project -> expect 403
+        url = reverse('project-detail', kwargs={'pk': self.project_a.id})
+        response = self.client.put(url, {
+            'name': 'Malicious Update Project'
+        })
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)

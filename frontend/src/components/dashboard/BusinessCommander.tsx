@@ -46,7 +46,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
   const [activePoint, setActivePoint] = useState<number | null>(null);
   const [cfdiInputs, setCfdiInputs] = useState<Record<number, string>>({});
 
-  const handleApproveInstallment = async (installmentId: number) => {
+  const handleUpdateInstallmentStatus = async (installmentId: number, newStatus: string) => {
     try {
       const token = localStorage.getItem('token');
       const origin = window.location.origin;
@@ -60,15 +60,18 @@ export default function BusinessCommander({ stats, installments, setInstallments
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ status: 'PAID', paid_at: new Date().toISOString() })
+        body: JSON.stringify({ 
+          status: newStatus,
+          paid_at: newStatus === 'PAID' ? new Date().toISOString() : null
+        })
       });
       
-      if (!response.ok) throw new Error("Approval failed");
+      if (!response.ok) throw new Error("Status update failed");
       const updated = await response.json();
       setInstallments(prev => prev.map(inst => inst.id === installmentId ? updated : inst));
-      alert("Mensualidad marcada como PAGADA con éxito.");
+      alert(`Estado de la mensualidad actualizado a ${newStatus === 'PAID' ? 'PAGADO' : newStatus === 'CANCELLED' ? 'CANCELADO' : 'PENDIENTE'}.`);
     } catch (err) {
-      alert("Error al aprobar mensualidad.");
+      alert("Error al actualizar el estado de la mensualidad.");
     }
   };
 
@@ -557,7 +560,13 @@ export default function BusinessCommander({ stats, installments, setInstallments
                 <tr key={inst.id} className="border-b border-card-border/30 last:border-0 hover:bg-foreground/[0.02] transition-colors">
                   <td className="py-4 pr-4">
                     <h4 className="font-black text-sm">Contrato #{inst.contract}</h4>
-                    <p className="text-[7px] font-bold text-nectar-gold uppercase tracking-wider mt-0.5">Mensualidad {inst.installment_number} de 6</p>
+                    {inst.client_name && (
+                      <p className="text-[9px] font-black text-foreground mt-0.5">{inst.client_name}</p>
+                    )}
+                    {inst.project_name && (
+                      <p className="text-[8px] font-bold text-nectar-gold opacity-80 mt-0.5">{inst.project_name}</p>
+                    )}
+                    <p className="text-[7px] font-bold text-white/40 uppercase tracking-wider mt-1">Mensualidad {inst.installment_number} de 6</p>
                   </td>
                   <td className="py-4 text-right font-bold text-sm">
                     ${parseFloat(inst.amount).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
@@ -580,21 +589,33 @@ export default function BusinessCommander({ stats, installments, setInstallments
                     )}
                   </td>
                   <td className="py-4 text-center">
-                    {inst.status === 'PAID' ? (
-                      <span className="px-3 py-1 bg-green-500/10 text-green-500 text-[7px] font-black uppercase tracking-widest rounded-full">Pagado</span>
-                    ) : (
-                      <div className="flex flex-col items-center gap-1">
-                        <span className="px-3 py-1 bg-yellow-500/10 text-yellow-500 text-[7px] font-black uppercase tracking-widest rounded-full">Pendiente</span>
-                        {inst.receipt_file && (
-                          <button
-                            onClick={() => handleApproveInstallment(inst.id)}
-                            className="mt-1 px-2.5 py-1 bg-green-600 hover:bg-green-500 text-white text-[7px] font-black uppercase tracking-widest rounded-md hover:scale-105 active:scale-95 transition-all"
-                          >
-                            Aprobar Pago
-                          </button>
-                        )}
-                      </div>
-                    )}
+                    <div className="flex flex-col items-center gap-1.5">
+                      <select
+                        value={inst.status}
+                        onChange={(e) => handleUpdateInstallmentStatus(inst.id, e.target.value)}
+                        className={`px-2.5 py-1 text-[7px] font-black uppercase tracking-wider rounded-full bg-background border focus:outline-none cursor-pointer transition-colors ${
+                          inst.status === 'PAID' 
+                            ? 'border-green-500/30 text-green-500 bg-green-500/5' 
+                            : inst.status === 'CANCELLED'
+                            ? 'border-red-500/30 text-red-500 bg-red-500/5'
+                            : inst.receipt_file 
+                            ? 'border-orange-500/30 text-orange-500 bg-orange-500/5' 
+                            : 'border-yellow-500/30 text-yellow-500 bg-yellow-500/5'
+                        }`}
+                      >
+                        <option value="PENDING" className="text-yellow-500">Pendiente</option>
+                        <option value="PAID" className="text-green-500">Pagado</option>
+                        <option value="CANCELLED" className="text-red-500">Cancelado</option>
+                      </select>
+                      {inst.status !== 'PAID' && inst.receipt_file && (
+                        <button
+                          onClick={() => handleUpdateInstallmentStatus(inst.id, 'PAID')}
+                          className="mt-1 px-2 py-0.5 bg-green-600 hover:bg-green-500 text-white text-[7px] font-black uppercase tracking-widest rounded-md hover:scale-105 active:scale-95 transition-all shadow-sm"
+                        >
+                          Aprobar Pago
+                        </button>
+                      )}
+                    </div>
                   </td>
                   <td className="py-4 text-right">
                     {inst.cfdi_uuid ? (

@@ -151,102 +151,10 @@ class ContractViewSet(viewsets.ModelViewSet):
         contract.is_fully_signed = True
         contract.save()
 
-        # Generar automáticamente abonos obligatorios según el día de pago elegido (solo si hay plan contratado)
+        # Generar automáticamente abonos obligatorios de forma independiente para desarrollo y diseño
         if contract.plan:
-            from datetime import date, timedelta
-            plan_price = contract.plan.price
-            monthly_amount = plan_price + (contract.brand_design_price or 0)
-            start_date = contract.signed_at.date() if contract.signed_at else timezone.now().date()
-            
-            # Eliminar mensualidades previas si existían por re-firma para evitar duplicados
-            contract.installments.all().delete()
-            
-            installments_to_create = []
-            
-            if contract.payment_day == 'WEEKLY_MONDAY':
-                # Generar 24 abonos semanales (1/4 de la mensualidad cada uno)
-                weekly_amount = monthly_amount / 4
-                # Encontrar el primer lunes (hoy mismo si es lunes, o el próximo)
-                days_ahead = 0 - start_date.weekday()
-                if days_ahead < 0:
-                    days_ahead += 7
-                first_monday = start_date + timedelta(days=days_ahead)
-                
-                for i in range(1, 25):
-                    due_date = first_monday + timedelta(weeks=i - 1)
-                    installments_to_create.append(
-                        PaymentInstallment(
-                            contract=contract,
-                            installment_number=i,
-                            due_date=due_date,
-                            amount=weekly_amount,
-                            status=PaymentInstallment.Status.PENDING,
-                            payment_method=contract.payment_commitment_method
-                        )
-                    )
-            elif contract.payment_day == 'FORTNIGHTLY_1ST_15TH':
-                # Generar 12 abonos quincenales (1/2 de la mensualidad cada uno, vencimientos los días 1 y 15)
-                fortnightly_amount = monthly_amount / 2
-                due_dates = []
-                candidate_m = start_date.month
-                candidate_y = start_date.year
-                
-                while len(due_dates) < 12:
-                    d1 = date(candidate_y, candidate_m, 1)
-                    d15 = date(candidate_y, candidate_m, 15)
-                    if d1 >= start_date:
-                        due_dates.append(d1)
-                    if len(due_dates) < 12 and d15 >= start_date:
-                        due_dates.append(d15)
-                    
-                    candidate_m += 1
-                    if candidate_m > 12:
-                        candidate_m = 1
-                        candidate_y += 1
-                
-                for i, due_date in enumerate(due_dates, 1):
-                    installments_to_create.append(
-                        PaymentInstallment(
-                            contract=contract,
-                            installment_number=i,
-                            due_date=due_date,
-                            amount=fortnightly_amount,
-                            status=PaymentInstallment.Status.PENDING,
-                            payment_method=contract.payment_commitment_method
-                        )
-                    )
-            else:
-                # Generar 6 abonos mensuales (mensualidad completa, vencimiento el día 1)
-                due_dates = []
-                candidate_m = start_date.month
-                candidate_y = start_date.year
-                
-                while len(due_dates) < 6:
-                    d1 = date(candidate_y, candidate_m, 1)
-                    if d1 >= start_date:
-                        due_dates.append(d1)
-                    
-                    candidate_m += 1
-                    if candidate_m > 12:
-                        candidate_m = 1
-                        candidate_y += 1
-                
-                for i, due_date in enumerate(due_dates, 1):
-                    installments_to_create.append(
-                        PaymentInstallment(
-                            contract=contract,
-                            installment_number=i,
-                            due_date=due_date,
-                            amount=monthly_amount,
-                            status=PaymentInstallment.Status.PENDING,
-                            payment_method=contract.payment_commitment_method
-                        )
-                    )
-            
-            PaymentInstallment.objects.bulk_create(installments_to_create)
-        else:
-            # Si no hay plan (adquisición individual de add-ons), no generamos las mensualidades fijas.
-            pass
+            from apps.shop.utils import generate_installments_for_contract
+            generate_installments_for_contract(contract)
         
         # --- AUTO-CREATE PROJECT ---
         try:
@@ -283,24 +191,8 @@ class PaymentInstallmentViewSet(viewsets.ModelViewSet):
         # Auto-healer: generate missing installments for already signed contracts (only if they have a plan)
         for contract in Contract.objects.filter(is_fully_signed=True, plan__isnull=False):
             if contract.installments.count() == 0:
-                plan_price = contract.plan.price
-                monthly_amount = plan_price + (contract.brand_design_price or 0)
-                start_date = contract.signed_at.date() if contract.signed_at else timezone.now().date()
-                
-                installments_to_create = []
-                for i in range(1, 7):
-                    due_date = start_date + timedelta(days=30 * (i - 1))
-                    installments_to_create.append(
-                        PaymentInstallment(
-                            contract=contract,
-                            installment_number=i,
-                            due_date=due_date,
-                            amount=monthly_amount,
-                            status=PaymentInstallment.Status.PENDING,
-                            payment_method=contract.payment_commitment_method
-                        )
-                    )
-                PaymentInstallment.objects.bulk_create(installments_to_create)
+                from apps.shop.utils import generate_installments_for_contract
+                generate_installments_for_contract(contract)
 
         is_admin_or_business = self.request.user.is_staff or self.request.user.role in ['ADMIN', 'BUSINESS']
         if is_admin_or_business:

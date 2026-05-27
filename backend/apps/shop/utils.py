@@ -293,3 +293,187 @@ def send_addon_payment_receipt_email(user, addon, session):
     except Exception as e:
         logging.error(f"Error sending addon payment receipt email for addon {addon.id} and user {user.id}: {e}", exc_info=True)
 
+
+def generate_installments_for_contract(contract):
+    """
+    Generates payment installments for development and design independently.
+    """
+    from datetime import date, timedelta
+    from django.utils import timezone
+    from apps.shop.models import PaymentInstallment
+    
+    if not contract.plan:
+        return
+        
+    plan_price = contract.plan.price
+    start_date = contract.signed_at.date() if contract.signed_at else timezone.now().date()
+    
+    # Clean up previous installments
+    contract.installments.all().delete()
+    
+    installments_to_create = []
+    
+    # 1. Development Installments
+    if contract.payment_day == 'WEEKLY_MONDAY':
+        weekly_amount = plan_price / 4
+        days_ahead = 0 - start_date.weekday()
+        if days_ahead < 0:
+            days_ahead += 7
+        first_monday = start_date + timedelta(days=days_ahead)
+        
+        for i in range(1, 25):
+            due_date = first_monday + timedelta(weeks=i - 1)
+            installments_to_create.append(
+                PaymentInstallment(
+                    contract=contract,
+                    installment_type=PaymentInstallment.InstallmentType.DEVELOPMENT,
+                    installment_number=i,
+                    due_date=due_date,
+                    amount=weekly_amount,
+                    status=PaymentInstallment.Status.PENDING,
+                    payment_method=contract.payment_commitment_method
+                )
+            )
+    elif contract.payment_day == 'FORTNIGHTLY_1ST_15TH':
+        fortnightly_amount = plan_price / 2
+        due_dates = []
+        candidate_m = start_date.month
+        candidate_y = start_date.year
+        
+        while len(due_dates) < 12:
+            d1 = date(candidate_y, candidate_m, 1)
+            d15 = date(candidate_y, candidate_m, 15)
+            if d1 >= start_date:
+                due_dates.append(d1)
+            if len(due_dates) < 12 and d15 >= start_date:
+                due_dates.append(d15)
+            
+            candidate_m += 1
+            if candidate_m > 12:
+                candidate_m = 1
+                candidate_y += 1
+        
+        for i, due_date in enumerate(due_dates, 1):
+            installments_to_create.append(
+                PaymentInstallment(
+                    contract=contract,
+                    installment_type=PaymentInstallment.InstallmentType.DEVELOPMENT,
+                    installment_number=i,
+                    due_date=due_date,
+                    amount=fortnightly_amount,
+                    status=PaymentInstallment.Status.PENDING,
+                    payment_method=contract.payment_commitment_method
+                )
+            )
+    else:
+        due_dates = []
+        candidate_m = start_date.month
+        candidate_y = start_date.year
+        
+        while len(due_dates) < 6:
+            d1 = date(candidate_y, candidate_m, 1)
+            if d1 >= start_date:
+                due_dates.append(d1)
+            
+            candidate_m += 1
+            if candidate_m > 12:
+                candidate_m = 1
+                candidate_y += 1
+        
+        for i, due_date in enumerate(due_dates, 1):
+            installments_to_create.append(
+                PaymentInstallment(
+                    contract=contract,
+                    installment_type=PaymentInstallment.InstallmentType.DEVELOPMENT,
+                    installment_number=i,
+                    due_date=due_date,
+                    amount=plan_price,
+                    status=PaymentInstallment.Status.PENDING,
+                    payment_method=contract.payment_commitment_method
+                )
+            )
+
+    # 2. Design Installments
+    if contract.brand_design_tier != 'NONE' and contract.brand_design_price > 0:
+        if contract.brand_design_tier == 'WEEKLY':
+            design_amount = 500
+            days_ahead = 0 - start_date.weekday()
+            if days_ahead < 0:
+                days_ahead += 7
+            first_monday = start_date + timedelta(days=days_ahead)
+            
+            for i in range(1, 25):
+                due_date = first_monday + timedelta(weeks=i - 1)
+                installments_to_create.append(
+                    PaymentInstallment(
+                        contract=contract,
+                        installment_type=PaymentInstallment.InstallmentType.DESIGN,
+                        installment_number=i,
+                        due_date=due_date,
+                        amount=design_amount,
+                        status=PaymentInstallment.Status.PENDING,
+                        payment_method=contract.payment_commitment_method
+                    )
+                )
+        elif contract.brand_design_tier == 'BIWEEKLY':
+            design_amount = 900
+            due_dates = []
+            candidate_m = start_date.month
+            candidate_y = start_date.year
+            
+            while len(due_dates) < 12:
+                d1 = date(candidate_y, candidate_m, 1)
+                d15 = date(candidate_y, candidate_m, 15)
+                if d1 >= start_date:
+                    due_dates.append(d1)
+                if len(due_dates) < 12 and d15 >= start_date:
+                    due_dates.append(d15)
+                
+                candidate_m += 1
+                if candidate_m > 12:
+                    candidate_m = 1
+                    candidate_y += 1
+            
+            for i, due_date in enumerate(due_dates, 1):
+                installments_to_create.append(
+                    PaymentInstallment(
+                        contract=contract,
+                        installment_type=PaymentInstallment.InstallmentType.DESIGN,
+                        installment_number=i,
+                        due_date=due_date,
+                        amount=design_amount,
+                        status=PaymentInstallment.Status.PENDING,
+                        payment_method=contract.payment_commitment_method
+                    )
+                )
+        elif contract.brand_design_tier == 'MONTHLY':
+            design_amount = 1600
+            due_dates = []
+            candidate_m = start_date.month
+            candidate_y = start_date.year
+            
+            while len(due_dates) < 6:
+                d1 = date(candidate_y, candidate_m, 1)
+                if d1 >= start_date:
+                    due_dates.append(d1)
+                
+                candidate_m += 1
+                if candidate_m > 12:
+                    candidate_m = 1
+                    candidate_y += 1
+            
+            for i, due_date in enumerate(due_dates, 1):
+                installments_to_create.append(
+                    PaymentInstallment(
+                        contract=contract,
+                        installment_type=PaymentInstallment.InstallmentType.DESIGN,
+                        installment_number=i,
+                        due_date=due_date,
+                        amount=design_amount,
+                        status=PaymentInstallment.Status.PENDING,
+                        payment_method=contract.payment_commitment_method
+                    )
+                )
+                
+    PaymentInstallment.objects.bulk_create(installments_to_create)
+

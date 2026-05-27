@@ -38,14 +38,19 @@ class ContractInstallmentGenerationTests(APITestCase):
         Verify that signing a contract with WEEKLY_MONDAY generates 24 weekly installments,
         each being 1/4 of the total monthly amount, with due dates on Mondays.
         """
+        weekly_plan = Plan.objects.create(
+            name="Plan Basico",
+            price=20000.00,
+            hours=40,
+            description="Dedicated developer plan"
+        )
         contract = Contract.objects.create(
             user=self.client_user,
-            plan=self.plan,
+            plan=weekly_plan,
             full_name="Client Company SA",
             tax_id="RFC123456789",
             address="Av. Juarez 123",
             project_idea="Build an e-commerce platform.",
-            payment_day="WEEKLY_MONDAY",
             payment_commitment_method="SPEI",
             signed_at=timezone.now()
         )
@@ -84,7 +89,6 @@ class ContractInstallmentGenerationTests(APITestCase):
             tax_id="RFC123456789",
             address="Av. Juarez 123",
             project_idea="Build an e-commerce platform.",
-            payment_day="FORTNIGHTLY_1ST_15TH",
             payment_commitment_method="SPEI",
             signed_at=timezone.now()
         )
@@ -112,14 +116,19 @@ class ContractInstallmentGenerationTests(APITestCase):
         Verify that signing a contract with MONTHLY_1ST generates 6 monthly installments,
         each being the full monthly amount, due strictly on the 1st of each month.
         """
+        monthly_plan = Plan.objects.create(
+            name="Plan Premium",
+            price=20000.00,
+            hours=40,
+            description="Dedicated developer plan"
+        )
         contract = Contract.objects.create(
             user=self.client_user,
-            plan=self.plan,
+            plan=monthly_plan,
             full_name="Client Company SA",
             tax_id="RFC123456789",
             address="Av. Juarez 123",
             project_idea="Build an e-commerce platform.",
-            payment_day="MONTHLY_1ST",
             payment_commitment_method="SPEI",
             signed_at=timezone.now()
         )
@@ -141,3 +150,41 @@ class ContractInstallmentGenerationTests(APITestCase):
             self.assertEqual(inst.due_date.day, 1)
             # Verify they are chronologically ordered and >= today
             self.assertTrue(inst.due_date >= timezone.now().date())
+
+    def test_automatic_project_generation_on_signature(self):
+        """
+        Verify that signing a contract automatically creates a Project
+        associated with the client, status MVP, progress 0%, and matching plan.
+        """
+        from apps.dashboard.models import Project
+        
+        contract = Contract.objects.create(
+            user=self.client_user,
+            plan=self.plan,
+            full_name="Auto Project Co",
+            tax_id="RFC123456789",
+            address="Av. Reforma 456",
+            project_idea="Build a high performance SaaS.",
+            payment_day="MONTHLY_1ST",
+            payment_commitment_method="SPEI",
+            signed_at=timezone.now()
+        )
+        
+        # Ensure no project exists yet
+        self.assertFalse(Project.objects.filter(client=self.client_user, plan=self.plan).exists())
+        
+        self.client.force_authenticate(user=self.ceo)
+        url = reverse('contract-dev-sign', kwargs={'pk': contract.id})
+        response = self.client.post(url, {'signature': 'DevSignatureABC'})
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        contract.refresh_from_db()
+        self.assertTrue(contract.is_fully_signed)
+        
+        # Verify that project was automatically generated
+        project = Project.objects.filter(client=self.client_user, plan=self.plan).first()
+        self.assertIsNotNone(project)
+        self.assertEqual(project.name, f"Ecosistema {self.plan.name} - {contract.full_name}")
+        self.assertEqual(project.status, Project.Status.MVP)
+        self.assertEqual(project.progress_percentage, 0)
+        self.assertTrue(project.is_active)
