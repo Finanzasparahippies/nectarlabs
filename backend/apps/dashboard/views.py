@@ -30,9 +30,10 @@ class ProjectViewSet(viewsets.ModelViewSet):
     def check_permissions(self, request):
         super().check_permissions(request)
         user = request.user
-        is_admin_or_business = user.is_staff or user.role in ['ADMIN', 'BUSINESS']
+        is_admin = user.is_staff or user.role == 'ADMIN'
+        is_admin_or_business = is_admin or user.role == 'BUSINESS'
         
-        if self.action == 'destroy' and not is_admin_or_business:
+        if self.action == 'destroy' and not is_admin:
             self.permission_denied(request, message="No tienes permisos para eliminar proyectos.")
             
         if self.action in ['create', 'update', 'partial_update']:
