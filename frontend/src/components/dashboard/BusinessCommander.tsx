@@ -756,7 +756,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
       </section>
 
       {/* ── ADMIN SALES COMMAND CENTER ── */}
-      <section className="space-y-10">
+      <section id="ventas-section" className="space-y-10">
         <div>
           <h2 className="text-xs font-black uppercase tracking-[0.4em] opacity-30 mb-1">Panel de Ventas</h2>
           <p className="text-[9px] font-bold text-foreground/30 uppercase tracking-wider">Control global de vendedores, comisiones y códigos de referido</p>

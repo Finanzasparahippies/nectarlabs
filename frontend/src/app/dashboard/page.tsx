@@ -231,6 +231,16 @@ export default function DashboardPage() {
           if (retryEl) retryEl.scrollIntoView({ behavior: 'smooth' });
         }, 100);
       }
+    } else if (scroll === 'ventas') {
+      const el = document.getElementById('ventas-section');
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth' });
+      } else if (!loading) {
+        setTimeout(() => {
+          const retryEl = document.getElementById('ventas-section');
+          if (retryEl) retryEl.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+      }
     }
   }, [searchParams, loading]);
 
