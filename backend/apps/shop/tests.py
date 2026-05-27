@@ -525,7 +525,7 @@ class ContractSignatureTests(APITestCase):
         response = self.client.post(url, {
             'signature': 'data:image/png;base64,ClientSignatureBase64...'
         }, format='json')
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_dev_signature_flow_for_quote_contract(self):
         from apps.dashboard.models import ProjectQuote

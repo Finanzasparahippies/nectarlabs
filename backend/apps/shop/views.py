@@ -178,7 +178,7 @@ class ContractViewSet(viewsets.ModelViewSet):
         contract.save()
 
         # Generar automáticamente abonos obligatorios de forma independiente para desarrollo y diseño
-        if contract.plan:
+        if contract.plan or contract.project_quote:
             from apps.shop.utils import generate_installments_for_contract
             generate_installments_for_contract(contract)
             # Auto-populate next_payment_date with the due date of the first generated installment
