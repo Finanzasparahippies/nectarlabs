@@ -1,4 +1,5 @@
 'use client';
+import { Suspense } from 'react';
 
 import React, { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -103,7 +104,7 @@ const getMediaUrl = (url?: string) => {
   return path;
 };
 
-export default function DashboardPage() {
+function DashboardPageOriginal() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [contracts, setContracts] = useState<Contract[]>([]);
@@ -2185,5 +2186,13 @@ export default function DashboardPage() {
         />
       )}
     </div>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-background text-xs opacity-50">Cargando panel...</div>}>
+      <DashboardPageOriginal />
+    </Suspense>
   );
 }
