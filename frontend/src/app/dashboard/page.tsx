@@ -43,6 +43,8 @@ interface Contract {
   tenant_subdomain?: string;
   tenant_name?: string;
   addons?: string[];
+  plan?: any;
+  tenant_custom_domain?: string | null;
 }
 
 interface Ticket {
