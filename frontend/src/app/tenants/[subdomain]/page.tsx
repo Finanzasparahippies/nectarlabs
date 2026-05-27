@@ -61,6 +61,27 @@ interface SupportChat {
   messages: Message[];
 }
 
+const getMainDomainUrl = (path: string) => {
+  if (typeof window === 'undefined') return path;
+  const hostname = window.location.hostname;
+  const protocol = window.location.protocol;
+  const port = window.location.port;
+
+  let mainDomain = 'nectarlabs.dev';
+  if (hostname.includes('.staging.nectarlabs.dev')) {
+    mainDomain = 'staging.nectarlabs.dev';
+  } else if (hostname.includes('.nectarlabs.dev')) {
+    mainDomain = 'nectarlabs.dev';
+  } else if (hostname.includes('localhost')) {
+    mainDomain = 'localhost';
+  } else if (hostname.includes('127.0.0.1')) {
+    mainDomain = '127.0.0.1';
+  }
+
+  const portSuffix = port ? `:${port}` : '';
+  return `${protocol}//${mainDomain}${portSuffix}${path}`;
+};
+
 export default function TenantPortalPage() {
   const params = useParams();
   const rawSubdomain = params?.subdomain as string;
@@ -929,7 +950,7 @@ export default function TenantPortalPage() {
                       Néctar Labs &copy; {new Date().getFullYear()}
                     </p>
                     <a
-                      href="/dashboard/addons"
+                      href={getMainDomainUrl('/dashboard/addons')}
                       className="px-5 py-3 border border-white/10 hover:bg-white/5 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all"
                       style={{ color: primaryColor, borderColor: `${primaryColor}30` }}
                     >
