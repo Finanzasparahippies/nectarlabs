@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Plan, Product, Contract, PaymentInstallment, AddOn
+from .models import Plan, Product, Contract, PaymentInstallment, AddOn, PromoCode, SalesCommission
 
 class PlanSerializer(serializers.ModelSerializer):
     class Meta:
