@@ -31,6 +31,7 @@ class PlanViewSet(viewsets.ReadOnlyModelViewSet):
     authentication_classes = []
 
 class ProductViewSet(viewsets.ModelViewSet):
+    queryset = Product.objects.all()
     serializer_class = ProductSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 

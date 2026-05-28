@@ -17,7 +17,7 @@ from apps.tenants.views import TenantViewSet, public_config, guest_auth
 
 router = DefaultRouter()
 router.register(r'plans', PlanViewSet)
-router.register(r'products', ProductViewSet)
+router.register(r'products', ProductViewSet, basename='product')
 router.register(r'addons', AddOnViewSet, basename='addon')
 router.register(r'contracts', ContractViewSet, basename='contract')
 router.register(r'installments', PaymentInstallmentViewSet, basename='installment')
