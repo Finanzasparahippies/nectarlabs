@@ -38,8 +38,6 @@ services:
         max-file: "3"
     networks:
       - prod_network
-    volumes:
-      - ./frontend/.next:/app/.next
 
 volumes:
   static_volume:
