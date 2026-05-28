@@ -1752,17 +1752,18 @@ export default function BusinessCommander({ stats, installments, setInstallments
               </div>
             </form>
           </div>
-          )}
-          {/* Modal Crear Código de Descuento/Referido */}
-          {showPromoModal && (
-            <div
-              onClick={() => setShowPromoModal(false)}
-              className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-6 cursor-pointer"
-            >
-              <div
-                onClick={(e) => e.stopPropagation()}
-                className="w-full max-w-lg bg-card-bg border border-card-border p-8 md:p-10 rounded-[3rem] shadow-2xl relative space-y-6 text-left cursor-default animate-in fade-in zoom-in-95 duration-200"
-              >
+        </div>
+      )}
+      {/* Modal Crear Código de Descuento/Referido */}
+      {showPromoModal && (
+        <div
+          onClick={() => setShowPromoModal(false)}
+          className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-6 cursor-pointer"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-lg bg-card-bg border border-card-border p-8 md:p-10 rounded-[3rem] shadow-2xl relative space-y-6 text-left cursor-default animate-in fade-in zoom-in-95 duration-200"
+          >
                 <button
                   onClick={() => setShowPromoModal(false)}
                   className="absolute top-6 right-6 w-8 h-8 rounded-full border border-card-border text-foreground/40 hover:text-foreground flex items-center justify-center text-xl font-bold"
@@ -1879,19 +1880,19 @@ export default function BusinessCommander({ stats, installments, setInstallments
                     >
                       {isSubmittingPromo ? 'Creando...' : 'Crear Código'}
                     </button>
-                  </div>
-                </form>
-              </div>
+                </div>
+              </form>
             </div>
-          )}
+          </div>
+        )}
 
-          {toast && (
-            <Toast
-              message={toast.message}
-              type={toast.type}
-              onClose={() => setToast(null)}
-            />
-          )}
-        </div>
-      );
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
+    </div>
+  );
 }
