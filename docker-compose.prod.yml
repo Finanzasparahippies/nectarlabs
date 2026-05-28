@@ -28,6 +28,8 @@ services:
     restart: always
     networks:
       - prod_network
+    volumes:
+      - ./frontend/.next:/app/.next
 
 volumes:
   static_volume:
