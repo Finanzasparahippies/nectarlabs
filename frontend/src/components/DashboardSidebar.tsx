@@ -264,7 +264,7 @@ export default function DashboardSidebar() {
   ];
 
   // Generador de enlaces a portales públicos de Tenants
-  const tenantLinks = tenants.filter(t => t.is_active).map(tenant => {
+  const tenantLinks = tenants.filter(t => t.is_active).flatMap(tenant => {
     const tenantUrl = tenant.custom_domain 
       ? `https://${tenant.custom_domain}`
       : (() => {
@@ -273,19 +273,37 @@ export default function DashboardSidebar() {
           if (host.includes('staging.nectarlabs.dev')) return `https://${tenant.subdomain}.staging.nectarlabs.dev`;
           return `https://${tenant.subdomain}.nectarlabs.dev`;
         })();
-    return {
-      label: 'Ver Portal Público',
-      href: tenantUrl,
-      isExternal: true,
-      icon: () => (
-        <div className="w-2.5 h-2.5 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)] animate-pulse shrink-0"></div>
-      ),
-      badge: (
-        <svg className="w-3.5 h-3.5 text-nectar-gold shrink-0 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-        </svg>
-      )
-    };
+    return [
+      {
+        label: `Portal Público (${tenant.name})`,
+        href: tenantUrl,
+        isExternal: true,
+        icon: () => (
+          <div className="w-2.5 h-2.5 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)] animate-pulse shrink-0"></div>
+        ),
+        badge: (
+          <svg className="w-3.5 h-3.5 text-nectar-gold shrink-0 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+          </svg>
+        )
+      },
+      {
+        label: `Administrar Portal (${tenant.name})`,
+        href: `${tenantUrl}/admin`,
+        isExternal: true,
+        icon: () => (
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5" className="w-4 h-4 text-nectar-gold shrink-0 transition-all duration-300 group-hover:scale-110">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.3 1-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+        ),
+        badge: (
+          <span className="px-2 py-0.5 text-[6px] font-black uppercase tracking-widest rounded-full bg-nectar-gold/10 text-nectar-gold border border-nectar-gold/20 shrink-0">
+            ADMIN
+          </span>
+        )
+      }
+    ];
   });
 
   // Renderizador común del listado de navegación

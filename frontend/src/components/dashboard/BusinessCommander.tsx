@@ -110,6 +110,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
   const [promoReferrer, setPromoReferrer] = useState('');
   const [isSubmittingPromo, setIsSubmittingPromo] = useState(false);
   const [promoError, setPromoError] = useState('');
+  const [editingPromoId, setEditingPromoId] = useState<number | null>(null);
 
   // Project Quotes States
   const [quotes, setQuotes] = useState<any[]>([]);
@@ -424,6 +425,10 @@ export default function BusinessCommander({ stats, installments, setInstallments
     setIsSubmittingPromo(true);
 
     const token = localStorage.getItem('token');
+    const isEditing = editingPromoId !== null;
+    const url = isEditing ? `${API_URL}/promo-codes/${editingPromoId}/` : `${API_URL}/promo-codes/`;
+    const method = isEditing ? 'PUT' : 'POST';
+
     const payload = {
       code: promoCode.trim().toUpperCase(),
       code_type: promoCodeType,
@@ -435,8 +440,8 @@ export default function BusinessCommander({ stats, installments, setInstallments
     };
 
     try {
-      const response = await fetch(`${API_URL}/promo-codes/`, {
-        method: 'POST',
+      const response = await fetch(url, {
+        method: method,
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
@@ -449,10 +454,16 @@ export default function BusinessCommander({ stats, installments, setInstallments
         throw new Error(err.detail || 'Error al guardar el código promocional');
       }
 
-      const newPromo = await response.json();
-      setPromoCodes(prev => [newPromo, ...prev]);
+      const savedPromo = await response.json();
+      if (isEditing) {
+        setPromoCodes(prev => prev.map(p => p.id === editingPromoId ? savedPromo : p));
+        showToast(`Código ${savedPromo.code} modificado con éxito.`, "success");
+      } else {
+        setPromoCodes(prev => [savedPromo, ...prev]);
+        showToast(`Código ${savedPromo.code} creado con éxito.`, "success");
+      }
       setShowPromoModal(false);
-      showToast(`Código ${newPromo.code} creado con éxito.`, "success");
+      setEditingPromoId(null);
     } catch (err: any) {
       setPromoError(err.message || 'Ocurrió un error inesperado.');
     } finally {
@@ -1425,6 +1436,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
                   setPromoValidUntil('');
                   setPromoReferrer('');
                   setPromoError('');
+                  setEditingPromoId(null);
                   setShowPromoModal(true);
                 }}
                 className="px-5 py-2.5 bg-nectar-gold text-background text-[8px] font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 transition-all shadow-md font-bold"
@@ -1483,7 +1495,23 @@ export default function BusinessCommander({ stats, installments, setInstallments
                     <td className="py-3.5 text-center text-[9px] font-bold text-foreground/45">
                       {new Date(code.created_at).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: '2-digit' })}
                     </td>
-                    <td className="py-3.5 text-right">
+                    <td className="py-3.5 text-right space-x-2">
+                      <button
+                        onClick={() => {
+                          setPromoCode(code.code);
+                          setPromoCodeType(code.code_type);
+                          setPromoDiscount(parseFloat(code.discount_percentage));
+                          setPromoMaxUses(code.max_uses !== null && code.max_uses !== undefined ? String(code.max_uses) : '');
+                          setPromoValidUntil(code.valid_until || '');
+                          setPromoReferrer(code.referrer !== null && code.referrer !== undefined ? String(code.referrer) : '');
+                          setEditingPromoId(code.id);
+                          setPromoError('');
+                          setShowPromoModal(true);
+                        }}
+                        className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold hover:bg-nectar-gold hover:text-background rounded-xl text-[7px] font-black uppercase tracking-widest transition-all border border-nectar-gold/20 font-bold"
+                      >
+                        Editar
+                      </button>
                       <button
                         onClick={() => handleDeletePromoCode(code.id, code.code)}
                         className="px-3 py-1 bg-red-500/10 text-red-500 hover:bg-red-600 hover:text-white rounded-xl text-[7px] font-black uppercase tracking-widest transition-all border border-red-500/20 font-bold"
@@ -1775,8 +1803,12 @@ export default function BusinessCommander({ stats, installments, setInstallments
                   <span className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold text-[8px] font-black uppercase tracking-widest rounded-full border border-nectar-gold/20">
                     Administración
                   </span>
-                  <h2 className="text-2xl font-black tracking-tighter mt-4 leading-none">Nuevo Código Promocional</h2>
-                  <p className="text-[10px] opacity-40 uppercase tracking-widest mt-1">Crea códigos de referidos o de descuento general</p>
+                  <h2 className="text-2xl font-black tracking-tighter mt-4 leading-none">
+                    {editingPromoId !== null ? 'Editar Código Promocional' : 'Nuevo Código Promocional'}
+                  </h2>
+                  <p className="text-[10px] opacity-40 uppercase tracking-widest mt-1">
+                    {editingPromoId !== null ? 'Modifica los valores del código seleccionado' : 'Crea códigos de referidos o de descuento general'}
+                  </p>
                 </div>
 
                 {promoError && (
@@ -1878,7 +1910,9 @@ export default function BusinessCommander({ stats, installments, setInstallments
                       disabled={isSubmittingPromo}
                       className="px-6 py-3 bg-nectar-gold text-background text-[9px] font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 disabled:opacity-40 disabled:scale-100 transition-all font-bold shadow-lg shadow-nectar-gold/25"
                     >
-                      {isSubmittingPromo ? 'Creando...' : 'Crear Código'}
+                      {isSubmittingPromo 
+                        ? (editingPromoId !== null ? 'Guardando...' : 'Creando...') 
+                        : (editingPromoId !== null ? 'Guardar Cambios' : 'Crear Código')}
                     </button>
                 </div>
               </form>

@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Plan, Product, Order, AddOn, Contract, PaymentInstallment
+from .models import Plan, Product, Order, AddOn, Contract, PaymentInstallment, PromoCode
 
 @admin.register(Plan)
 class PlanAdmin(admin.ModelAdmin):
@@ -43,4 +43,11 @@ class PaymentInstallmentAdmin(admin.ModelAdmin):
     list_display = ('id', 'contract', 'installment_number', 'due_date', 'amount', 'status', 'paid_at')
     list_filter = ('status', 'due_date', 'paid_at')
     search_fields = ('contract__full_name', 'stripe_invoice_id', 'cfdi_uuid')
+
+@admin.register(PromoCode)
+class PromoCodeAdmin(admin.ModelAdmin):
+    list_display = ('code', 'code_type', 'discount_percentage', 'is_active', 'used_count', 'max_uses', 'valid_until', 'referrer')
+    list_filter = ('code_type', 'is_active', 'valid_until')
+    search_fields = ('code', 'referrer__email')
+    ordering = ('-created_at',)
 
