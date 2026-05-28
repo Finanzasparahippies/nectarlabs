@@ -462,7 +462,8 @@ class ProjectQuoteViewSet(viewsets.ModelViewSet):
             from django.http import HttpResponse
             return HttpResponse("No autorizado.", status=401)
 
-        quote = self.get_object()
+        from django.shortcuts import get_object_or_404
+        quote = get_object_or_404(ProjectQuote, pk=pk)
         
         is_admin_or_staff = user.is_staff or user.role == 'ADMIN'
         is_sales = user.role == 'SALES'

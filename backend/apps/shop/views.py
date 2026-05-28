@@ -372,7 +372,8 @@ class ContractViewSet(viewsets.ModelViewSet):
             from django.http import HttpResponse
             return HttpResponse("No autorizado.", status=401)
 
-        contract = self.get_object()
+        from django.shortcuts import get_object_or_404
+        contract = get_object_or_404(Contract, pk=pk)
         
         if not user.is_staff and contract.user != user:
             from django.http import HttpResponse
@@ -477,7 +478,8 @@ class PaymentInstallmentViewSet(viewsets.ModelViewSet):
             from django.http import HttpResponse
             return HttpResponse("No autorizado.", status=401)
 
-        installment = self.get_object()
+        from django.shortcuts import get_object_or_404
+        installment = get_object_or_404(PaymentInstallment, pk=pk)
         
         is_admin_or_business = user.is_staff or user.role in ['ADMIN', 'BUSINESS']
         if not is_admin_or_business and installment.contract.user != user:
