@@ -42,8 +42,11 @@ class UserViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        if user.is_staff or user.role in [User.Role.ADMIN, User.Role.BUSINESS]:
+        if user.is_staff or user.role == User.Role.ADMIN:
             return User.objects.all().order_by('username')
+        elif user.role == User.Role.BUSINESS:
+            # Business owners can only see users of their own tenants
+            return User.objects.filter(tenant__in=user.owned_tenants.all()).order_by('username')
         elif user.role == User.Role.DESIGNER:
             return User.objects.filter(role=User.Role.CUSTOMER).order_by('username')
         else:
@@ -57,15 +60,23 @@ class UserViewSet(viewsets.ModelViewSet):
         if self.action in ['list', 'create'] and not is_allowed_role:
             self.permission_denied(request, message="No tienes permisos para realizar esta acción.")
         elif self.action in ['update', 'partial_update', 'destroy']:
-            is_admin_or_business = user.is_staff or user.role in [User.Role.ADMIN, User.Role.BUSINESS]
-            if not is_admin_or_business and not (self.action in ['update', 'partial_update'] and self.get_object() == user):
+            is_admin = user.is_staff or user.role == User.Role.ADMIN
+            is_business = user.role == User.Role.BUSINESS
+            
+            if not is_admin and not is_business and not (self.action in ['update', 'partial_update'] and self.get_object() == user):
                 self.permission_denied(request, message="No tienes permisos para modificar o eliminar este usuario.")
+            
+            # If business owner, verify they own the tenant of the user they want to modify
+            if is_business:
+                obj = self.get_object()
+                if obj != user and (not obj.tenant or obj.tenant not in user.owned_tenants.all()):
+                    self.permission_denied(request, message="No tienes permisos para modificar o eliminar un usuario de otro negocio.")
 
     def perform_create(self, serializer):
         user = self.request.user
         role_to_assign = serializer.validated_data.get('role', User.Role.CUSTOMER)
         
-        is_super_admin = user.is_superuser or user.role in [User.Role.ADMIN, User.Role.BUSINESS]
+        is_super_admin = user.is_superuser or user.role == User.Role.ADMIN
         
         if not is_super_admin:
             role_to_assign = User.Role.CUSTOMER
@@ -73,8 +84,16 @@ class UserViewSet(viewsets.ModelViewSet):
         else:
             is_staff_to_assign = role_to_assign in [User.Role.ADMIN, User.Role.BUSINESS]
             
+        # Associate user with the business owner's tenant if created by BUSINESS role
+        tenant_to_assign = None
+        if user.role == User.Role.BUSINESS:
+            tenant_to_assign = user.owned_tenants.first()
+        else:
+            tenant_to_assign = serializer.validated_data.get('tenant', None)
+            
         serializer.save(
             role=role_to_assign,
             is_staff=is_staff_to_assign,
-            is_superuser=False
+            is_superuser=False,
+            tenant=tenant_to_assign
         )

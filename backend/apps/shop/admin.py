@@ -8,13 +8,14 @@ class PlanAdmin(admin.ModelAdmin):
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ('name', 'price', 'stock')
+    list_display = ('name', 'price', 'stock', 'tenant')
+    list_filter = ('tenant',)
     search_fields = ('name',)
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ('id', 'user', 'total', 'status', 'created_at')
-    list_filter = ('status', 'created_at')
+    list_display = ('id', 'user', 'total', 'status', 'tenant', 'created_at')
+    list_filter = ('status', 'tenant', 'created_at')
     search_fields = ('user__email', 'stripe_payment_intent')
 
 @admin.register(AddOn)

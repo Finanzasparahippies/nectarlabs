@@ -31,9 +31,55 @@ class PlanViewSet(viewsets.ReadOnlyModelViewSet):
     authentication_classes = []
 
 class ProductViewSet(viewsets.ModelViewSet):
-    queryset = Product.objects.all()
     serializer_class = ProductSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+    def get_queryset(self):
+        queryset = Product.objects.all()
+        
+        # Filter by tenant parameter if present
+        tenant_id = self.request.query_params.get('tenant_id')
+        subdomain = self.request.query_params.get('subdomain')
+        
+        from apps.tenants.models import Tenant
+        import uuid
+        from apps.users.models import User
+
+        if tenant_id:
+            try:
+                queryset = queryset.filter(tenant_id=uuid.UUID(str(tenant_id)))
+            except (ValueError, TypeError):
+                queryset = queryset.none()
+        elif subdomain:
+            queryset = queryset.filter(tenant__subdomain=subdomain.lower())
+        else:
+            # Fallback to user context if authenticated
+            user = self.request.user
+            if user and user.is_authenticated:
+                if user.is_staff or user.role == User.Role.ADMIN:
+                    # Admins see everything
+                    pass
+                elif user.role == User.Role.BUSINESS:
+                    # Business owner sees products of their owned tenants
+                    queryset = queryset.filter(tenant__in=user.owned_tenants.all())
+                elif user.tenant:
+                    queryset = queryset.filter(tenant=user.tenant)
+                else:
+                    queryset = queryset.none()
+            else:
+                # If anonymous and no tenant context is provided, return empty
+                queryset = queryset.none()
+                
+        return queryset
+
+    def perform_create(self, serializer):
+        user = self.request.user
+        from apps.users.models import User as UserModel
+        if user and user.is_authenticated and user.role == UserModel.Role.BUSINESS:
+            tenant = user.owned_tenants.first()
+            serializer.save(tenant=tenant)
+        else:
+            serializer.save()
 
 class AddOnViewSet(viewsets.ModelViewSet):
     queryset = AddOn.objects.all()

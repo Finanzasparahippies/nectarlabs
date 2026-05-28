@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Project, TimeLog, FAQ, ProjectAdvance, ProjectQuote
+from .models import Project, TimeLog, FAQ, ProjectAdvance, ProjectQuote, Lead
 
 class FAQSerializer(serializers.ModelSerializer):
     class Meta:
@@ -42,7 +42,7 @@ class ProjectQuoteSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProjectQuote
         fields = '__all__'
-        read_only_fields = ('total_price', 'pdf_file')
+        read_only_fields = ('total_price', 'pdf_file', 'salesperson')
 
     def validate(self, attrs):
         # Calculate total price dynamically from modules list
@@ -67,3 +67,13 @@ class ProjectQuoteSerializer(serializers.ModelSerializer):
         quote = super().update(instance, validated_data)
         generate_quote_pdf(quote)
         return quote
+
+
+class LeadSerializer(serializers.ModelSerializer):
+    salesperson_email = serializers.EmailField(source='salesperson.email', read_only=True)
+
+    class Meta:
+        model = Lead
+        fields = '__all__'
+        read_only_fields = ('salesperson',)
+

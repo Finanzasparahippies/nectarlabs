@@ -252,12 +252,13 @@ export default function SupportSettingsPage() {
     );
   }
 
-  // Redirect if not staff/business and has no tenant
-  if (!isStaff && tenants.length === 0) {
+  // Redirect if not global admin/staff
+  const isGlobalAdmin = isStaff && userRole !== 'BUSINESS';
+  if (!isGlobalAdmin) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background p-6 text-center">
         <h1 className="text-xl font-black text-red-500 uppercase tracking-widest mb-2">Acceso Denegado</h1>
-        <p className="text-xs text-white/50 max-w-sm mb-6">No tienes privilegios para administrar centros de soporte.</p>
+        <p className="text-xs text-white/50 max-w-sm mb-6">No tienes privilegios para administrar centros de soporte globales.</p>
         <Link href="/dashboard" className="px-6 py-3 bg-white/5 border border-white/10 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-white/10 transition-all">
           Volver al Dashboard
         </Link>

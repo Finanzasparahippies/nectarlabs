@@ -5,9 +5,9 @@ from rest_framework.response import Response
 from django.db.models import Sum
 from django.utils import timezone
 
-from .models import Project, TimeLog, FAQ, ServerCost, BusinessExpense, ProjectAdvance, ProjectQuote
+from .models import Project, TimeLog, FAQ, ServerCost, BusinessExpense, ProjectAdvance, ProjectQuote, Lead
 from apps.shop.models import Contract, Order
-from .serializers import ProjectSerializer, TimeLogSerializer, FAQSerializer, ProjectQuoteSerializer
+from .serializers import ProjectSerializer, TimeLogSerializer, FAQSerializer, ProjectQuoteSerializer, LeadSerializer
 
 class FAQViewSet(viewsets.ReadOnlyModelViewSet):
     # (FAQ code remains unchanged)
@@ -347,15 +347,31 @@ class ProjectQuoteViewSet(viewsets.ModelViewSet):
         user = self.request.user
         if user.is_staff or user.role == 'ADMIN':
             return ProjectQuote.objects.all().order_by('-created_at')
+        if user.role == 'SALES':
+            return ProjectQuote.objects.filter(salesperson=user).order_by('-created_at')
         return ProjectQuote.objects.filter(client=user).order_by('-created_at')
 
     def check_permissions(self, request):
         super().check_permissions(request)
         user = request.user
         is_admin_or_staff = user.is_staff or user.role == 'ADMIN'
+        is_sales = user.role == 'SALES'
         
-        if self.action in ['create', 'update', 'partial_update', 'destroy'] and not is_admin_or_staff:
+        if self.action in ['create', 'update', 'partial_update', 'destroy'] and not (is_admin_or_staff or is_sales):
             self.permission_denied(request, message="No tienes permisos para gestionar cotizaciones.")
+
+    def check_object_permissions(self, request, obj):
+        super().check_object_permissions(request, obj)
+        user = request.user
+        if user.role == 'SALES' and obj.salesperson != user:
+            self.permission_denied(request, message="No tienes acceso a esta cotización.")
+
+    def perform_create(self, serializer):
+        user = self.request.user
+        if user.role == 'SALES':
+            serializer.save(salesperson=user)
+        else:
+            serializer.save()
 
     @action(detail=True, methods=['post'])
     def regenerate_pdf(self, request, pk=None):
@@ -424,4 +440,37 @@ class ProjectQuoteViewSet(viewsets.ModelViewSet):
                         logging.getLogger(__name__).error(f"Error sending contract emails: {email_err}", exc_info=True)
 
         return Response({'detail': f'Estado de cotización actualizado a {new_status}.', 'status': quote.status})
+
+
+class LeadViewSet(viewsets.ModelViewSet):
+    serializer_class = LeadSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_staff or user.role == 'ADMIN':
+            return Lead.objects.all().order_by('-created_at')
+        if user.role == 'SALES':
+            return Lead.objects.filter(salesperson=user).order_by('-created_at')
+        return Lead.objects.none()
+
+    def check_permissions(self, request):
+        super().check_permissions(request)
+        user = request.user
+        if not (user.is_staff or user.role in ['ADMIN', 'SALES']):
+            self.permission_denied(request, message="No tienes permisos para gestionar prospectos.")
+
+    def check_object_permissions(self, request, obj):
+        super().check_object_permissions(request, obj)
+        user = request.user
+        if user.role == 'SALES' and obj.salesperson != user:
+            self.permission_denied(request, message="No tienes acceso a este prospecto.")
+
+    def perform_create(self, serializer):
+        if self.request.user.is_staff or self.request.user.role == 'ADMIN':
+            salesperson = serializer.validated_data.get('salesperson') or self.request.user
+            serializer.save(salesperson=salesperson)
+        else:
+            serializer.save(salesperson=self.request.user)
+
 

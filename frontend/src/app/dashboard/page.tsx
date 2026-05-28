@@ -8,6 +8,7 @@ import { fetcher, API_URL } from '../../lib/api';
 import StagingStatus from '../../components/dashboard/StagingStatus';
 import WeeklyLogs from '../../components/dashboard/WeeklyLogs';
 import BusinessCommander from '../../components/dashboard/BusinessCommander';
+import SalesCommander from '../../components/dashboard/SalesCommander';
 import DashboardSidebar from '../../components/DashboardSidebar';
 import Toast from '../../components/ui/Toast';
 import ConfirmModal from '../../components/ui/ConfirmModal';
@@ -842,6 +843,9 @@ function DashboardPageOriginal() {
                 </div>
               </div>
             </div>
+
+            {/* CRM Leads Pipeline (Kanban) & Modular Quotes Builder */}
+            <SalesCommander />
 
             {/* Commissions History Table */}
             <section className="p-8 md:p-10 rounded-[3rem] bg-card-bg border border-card-border shadow-xl relative">
@@ -1828,7 +1832,7 @@ function DashboardPageOriginal() {
               </section>
             )}
 
-            {!isStaff && projects.length === 0 && contracts.length === 0 && (
+            {!isStaff && !loading && !fetching && projects.length === 0 && contracts.length === 0 && (
               <section className="mb-16 p-12 rounded-[3.5rem] bg-nectar-forest text-nectar-cream border-4 border-nectar-gold shadow-2xl relative overflow-hidden group">
                 <div className="absolute top-[-20%] right-[-10%] w-64 h-64 bg-nectar-gold/20 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-1000"></div>
                 <div className="relative z-10 max-w-2xl">
@@ -2008,12 +2012,12 @@ function DashboardPageOriginal() {
                             )}
 
                             <p className="text-xs text-foreground/60 leading-relaxed max-w-2xl">
-                              Puedes personalizar la marca (logotipo, colores, textos del pie de página y mensaje de bienvenida de tu asistente IA) ingresando a la sección de <strong className="text-nectar-gold">Configuración Soporte</strong> desde el menú lateral.
+                              Puedes personalizar la marca (logotipo, colores, textos del pie de página y mensaje de bienvenida de tu asistente IA) ingresando a la sección de <strong className="text-nectar-gold">Configuración Negocio</strong> desde el menú lateral.
                             </p>
 
                             <div className="flex flex-wrap gap-4 pt-4">
                               <Link 
-                                href="/dashboard/support-settings" 
+                                href="/dashboard/tenant-settings" 
                                 className="px-8 py-3 bg-nectar-gold text-background font-black uppercase tracking-widest text-[10px] rounded-xl hover:scale-105 active:scale-95 transition-all shadow-lg shadow-nectar-gold/15"
                               >
                                 Personalizar Portal
@@ -2155,7 +2159,7 @@ function DashboardPageOriginal() {
                           <div className="flex gap-2">
                             {!isStaff && (
                               <Link
-                                href="/dashboard/support-settings"
+                                href="/dashboard/tenant-settings"
                                 className="flex-1 py-2 bg-background border border-card-border hover:border-foreground text-foreground text-center rounded-xl text-[8px] font-black uppercase tracking-widest transition-all cursor-pointer font-bold flex items-center justify-center"
                               >
                                 Personalizar Marca

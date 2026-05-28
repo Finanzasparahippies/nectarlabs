@@ -205,6 +205,14 @@ class ProjectQuote(models.Model):
         blank=True,
         related_name='quotes'
     )
+    salesperson = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='assigned_quotes',
+        help_text="Vendedor asignado"
+    )
     client_name = models.CharField(max_length=200, help_text="Nombre o Razón Social del prospecto/cliente")
     client_email = models.EmailField(help_text="Email de contacto para la cotización")
     project_name = models.CharField(max_length=200)
@@ -222,4 +230,33 @@ class ProjectQuote(models.Model):
 
     def __str__(self):
         return f"Cotización: {self.project_name} - {self.client_name} (${self.total_price})"
+
+
+class Lead(models.Model):
+    class Status(models.TextChoices):
+        PROSPECT = 'PROSPECT', 'Prospecto'
+        CONTACTED = 'CONTACTED', 'Contactado'
+        PROPOSAL = 'PROPOSAL', 'Propuesta Presentada'
+        WON = 'WON', 'Ganado'
+        LOST = 'LOST', 'Perdido'
+
+    name = models.CharField(max_length=200)
+    email = models.EmailField(blank=True, null=True)
+    phone = models.CharField(max_length=50, blank=True, null=True)
+    project_idea = models.TextField(blank=True, null=True)
+    estimated_value = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.PROSPECT)
+    notes = models.TextField(blank=True, null=True)
+    salesperson = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='leads',
+        help_text="Vendedor asignado a este prospecto"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.name} - {self.status} (${self.estimated_value})"
+
 

@@ -190,7 +190,7 @@ export default function DashboardSidebar() {
             </Link>
           )}
 
-          {(isCEO || userRole === 'BUSINESS' || contracts.some(c => c.is_fully_signed) || tenants.length > 0) && (
+          {isCEO && (
             <Link
               href="/dashboard/support-settings"
               className={`flex items-center gap-4 px-6 py-4 w-full text-left rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all ${
@@ -202,7 +202,23 @@ export default function DashboardSidebar() {
               <div className={`w-2 h-2 rounded-full ${pathname === '/dashboard/support-settings' ? 'bg-nectar-gold' : 'bg-foreground/20'}`}></div>
               <div className="flex-1 flex items-center justify-between gap-2 min-w-0">
                 <span className="truncate">Configuración Soporte</span>
-                {!isStaff && tenants[0] && (
+              </div>
+            </Link>
+          )}
+
+          {(userRole === 'BUSINESS' || tenants.length > 0) && !isCEO && (
+            <Link
+              href="/dashboard/tenant-settings"
+              className={`flex items-center gap-4 px-6 py-4 w-full text-left rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all ${
+                pathname === '/dashboard/tenant-settings'
+                  ? 'bg-nectar-gold/10 text-nectar-gold'
+                  : 'hover:bg-foreground/5 text-foreground opacity-60 hover:opacity-100'
+              }`}
+            >
+              <div className={`w-2 h-2 rounded-full ${pathname === '/dashboard/tenant-settings' ? 'bg-nectar-gold' : 'bg-foreground/20'}`}></div>
+              <div className="flex-1 flex items-center justify-between gap-2 min-w-0">
+                <span className="truncate">Configuración Negocio</span>
+                {tenants[0] && (
                   <span className={`px-2 py-0.5 text-[7px] font-black uppercase tracking-widest rounded-full shrink-0 ${
                     tenants[0].is_active 
                       ? 'bg-green-500/10 text-green-400 border border-green-500/20' 

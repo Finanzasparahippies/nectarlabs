@@ -295,3 +295,141 @@ class ProjectQuoteAPITests(APITestCase):
         quote_ids = [q['id'] for q in response.data]
         self.assertIn(str(quote_a.id), quote_ids)
         self.assertIn(str(quote_b.id), quote_ids)
+
+
+class LeadAndSalespersonQuoteTests(APITestCase):
+    def setUp(self):
+        self.ceo = User.objects.create_user(
+            username="saul_ceo_sales",
+            email="saul_sales@nectarlabs.dev",
+            password="securepassword",
+            role=User.Role.ADMIN,
+            is_staff=True
+        )
+        self.salesperson_a = User.objects.create_user(
+            username="seller_a",
+            email="seller_a@example.com",
+            password="password123",
+            role=User.Role.SALES
+        )
+        self.salesperson_b = User.objects.create_user(
+            username="seller_b",
+            email="seller_b@example.com",
+            password="password123",
+            role=User.Role.SALES
+        )
+        self.client_customer = User.objects.create_user(
+            username="client_cust",
+            email="client_cust@example.com",
+            password="password123",
+            role=User.Role.CUSTOMER
+        )
+
+    def test_lead_crud_as_salesperson(self):
+        from apps.dashboard.models import Lead
+        # 1. Authenticate as salesperson A
+        self.client.force_authenticate(user=self.salesperson_a)
+        
+        # 2. Create a lead -> salesperson should be auto-assigned
+        response = self.client.post(reverse('lead-list'), {
+            "name": "Acme Inc",
+            "email": "acme@example.com",
+            "phone": "123456",
+            "project_idea": "Build a SaaS",
+            "estimated_value": "50000.00",
+            "status": "PROSPECT",
+            "notes": "Spoke on phone"
+        }, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['salesperson'], self.salesperson_a.id)
+        
+        lead_id = response.data['id']
+        lead = Lead.objects.get(id=lead_id)
+        self.assertEqual(lead.name, "Acme Inc")
+        self.assertEqual(lead.salesperson, self.salesperson_a)
+        
+        # 3. Update the lead -> status change (simulates Kanban drag and drop)
+        response = self.client.patch(reverse('lead-detail', kwargs={'pk': lead_id}), {
+            "status": "CONTACTED"
+        }, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        lead.refresh_from_db()
+        self.assertEqual(lead.status, "CONTACTED")
+
+    def test_lead_access_isolation(self):
+        from apps.dashboard.models import Lead
+        # Create lead for salesperson A
+        lead_a = Lead.objects.create(
+            name="Lead A",
+            salesperson=self.salesperson_a,
+            estimated_value=10000.00
+        )
+        # Create lead for salesperson B
+        lead_b = Lead.objects.create(
+            name="Lead B",
+            salesperson=self.salesperson_b,
+            estimated_value=20000.00
+        )
+
+        # 1. Salesperson A views leads -> should see lead_a but not lead_b
+        self.client.force_authenticate(user=self.salesperson_a)
+        response = self.client.get(reverse('lead-list'))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        lead_ids = [l['id'] for l in response.data]
+        self.assertIn(lead_a.id, lead_ids)
+        self.assertNotIn(lead_b.id, lead_ids)
+
+        # 2. Salesperson A tries to read lead_b detail -> 404 Not Found
+        response = self.client.get(reverse('lead-detail', kwargs={'pk': lead_b.id}))
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+        # 3. Salesperson A tries to patch lead_b -> 404 Not Found
+        response = self.client.patch(reverse('lead-detail', kwargs={'pk': lead_b.id}), {"status": "WON"})
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+        # 4. Customer tries to list leads -> 403 Forbidden
+        self.client.force_authenticate(user=self.client_customer)
+        response = self.client.get(reverse('lead-list'))
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+        # 5. CEO (Admin) views leads -> should see both
+        self.client.force_authenticate(user=self.ceo)
+        response = self.client.get(reverse('lead-list'))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        lead_ids = [l['id'] for l in response.data]
+        self.assertIn(lead_a.id, lead_ids)
+        self.assertIn(lead_b.id, lead_ids)
+
+    def test_salesperson_project_quote_flow(self):
+        from apps.dashboard.models import ProjectQuote
+        self.client.force_authenticate(user=self.salesperson_a)
+        
+        # 1. Salesperson A creates a quote
+        response = self.client.post(reverse('quote-list'), {
+            "client_name": "Prospect A",
+            "client_email": "prospect_a@example.com",
+            "project_name": "Mobile app",
+            "description": "App description",
+            "estimated_delivery_weeks": 4,
+            "modules": [
+                {"name": "Database", "price": 10000.00}
+            ]
+        }, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        quote_id = response.data['id']
+        quote = ProjectQuote.objects.get(id=quote_id)
+        self.assertEqual(quote.salesperson, self.salesperson_a)
+        self.assertEqual(quote.total_price, 10000.00)
+
+        # 2. Salesperson B views quotes -> should not see salesperson A's quote
+        self.client.force_authenticate(user=self.salesperson_b)
+        response = self.client.get(reverse('quote-list'))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        quote_ids = [q['id'] for q in response.data]
+        self.assertNotIn(str(quote.id), quote_ids)
+
+        # 3. Salesperson B tries to delete salesperson A's quote -> 404 Not Found
+        url = reverse('quote-detail', kwargs={'pk': quote.id})
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
