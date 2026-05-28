@@ -3,13 +3,13 @@ import Link from 'next/link';
 import { fetcher, API_URL } from '@/lib/api';
 
 const PREDEFINED_MODULES = [
-  { key: 'auth', name: 'Autenticación y Perfiles de Usuario', description: 'Sistema de inicio de sesión seguro, registro, recuperación de contraseña y gestión de perfiles con roles de usuario (ADMIN, CLIENT, etc.).', price: 15000 },
-  { key: 'payments', name: 'Pasarela de Pagos y E-commerce', description: 'Integración de cobros recurrentes y pagos únicos a través de Stripe/PayPal con carrito de compras y facturación básica.', price: 25000 },
-  { key: 'notifications', name: 'Chat y Notificaciones en Tiempo Real', description: 'Sistema de notificaciones push, alertas en tiempo real y chat interactivo basado en WebSockets.', price: 18000 },
-  { key: 'cms', name: 'Panel de Administración y Gestor de Contenido (CMS)', description: 'Consola de administración a medida para publicar blogs, gestionar catálogos, y editar información general.', price: 20000 },
-  { key: 'booking', name: 'Calendario y Sistema de Reservas', description: 'Módulo de citas dinámico con asignación de horarios, recordatorios automáticos por email y pasarela de cobro.', price: 22000 },
-  { key: 'analytics', name: 'Dashboard de Analítica y Gráficas', description: 'Panel de métricas integrando gráficas en tiempo real de ventas, logs, y reportes procesados en base de datos.', price: 24000 },
-  { key: 'api', name: 'Integración de API y Servicios de Terceros', description: 'Conexión de sistemas externos (ej. CRM, ERP, API de envíos, Mapas) con endpoints documentados.', price: 16000 },
+  { key: 'auth', name: 'Autenticación y Perfiles de Usuario', description: 'Sistema de inicio de sesión seguro, registro, recuperación de contraseña y gestión de perfiles con roles de usuario (ADMIN, CLIENT, etc.).', price: 11000 },
+  { key: 'payments', name: 'Pasarela de Pagos y E-commerce', description: 'Integración de cobros recurrentes y pagos únicos a través de Stripe/PayPal con carrito de compras y facturación básica.', price: 20000 },
+  { key: 'notifications', name: 'Chat y Notificaciones en Tiempo Real', description: 'Sistema de notificaciones push, alertas en tiempo real y chat interactivo basado en WebSockets.', price: 15000 },
+  { key: 'cms', name: 'Panel de Administración y Gestor de Contenido (CMS)', description: 'Consola de administración a medida para publicar blogs, gestionar catálogos, y editar información general.', price: 11000 },
+  { key: 'booking', name: 'Calendario y Sistema de Reservas', description: 'Módulo de citas dinámico con asignación de horarios, recordatorios automáticos por email y pasarela de cobro.', price: 25000 },
+  { key: 'analytics', name: 'Dashboard de Analítica y Gráficas', description: 'Panel de métricas integrando gráficas en tiempo real de ventas, logs, y reportes procesados en base de datos.', price: 20000 },
+  { key: 'api', name: 'Integración de API y Servicios de Terceros', description: 'Conexión de sistemas externos (ej. CRM, ERP, API de envíos, Mapas) con endpoints documentados.', price: 12000 },
   { key: 'saas', name: 'Arquitectura Multi-inquilino (SaaS)', description: 'Base estructurada para alojar múltiples subdominios de clientes independientes bajo un esquema SaaS premium.', price: 35000 },
 ];
 
@@ -92,7 +92,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
   const [showQuoteModal, setShowQuoteModal] = useState(false);
   const [isSubmittingQuote, setIsSubmittingQuote] = useState(false);
   const [quoteError, setQuoteError] = useState('');
-  
+
   // Quote Form State
   const [quoteClientType, setQuoteClientType] = useState<'registered' | 'prospect'>('prospect');
   const [selectedClientId, setSelectedClientId] = useState('');
@@ -229,10 +229,10 @@ export default function BusinessCommander({ stats, installments, setInstallments
 
     try {
       const token = localStorage.getItem('token');
-      
+
       let clientName = prospectName;
       let clientEmail = prospectEmail;
-      
+
       if (quoteClientType === 'registered') {
         const found = users.find(u => u.id === parseInt(selectedClientId));
         if (found) {
@@ -335,22 +335,22 @@ export default function BusinessCommander({ stats, installments, setInstallments
     try {
       const token = localStorage.getItem('token');
       const origin = window.location.origin;
-      const API_URL = origin.includes("github.dev") 
+      const API_URL = origin.includes("github.dev")
         ? origin.replace("-3000", "-8080").replace("-3002", "-8080") + "/api"
         : "/api";
-      
+
       const response = await fetch(`${API_URL}/installments/${installmentId}/`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           status: newStatus,
           paid_at: newStatus === 'PAID' ? new Date().toISOString() : null
         })
       });
-      
+
       if (!response.ok) throw new Error("Status update failed");
       const updated = await response.json();
       setInstallments(prev => prev.map(inst => inst.id === installmentId ? updated : inst));
@@ -363,14 +363,14 @@ export default function BusinessCommander({ stats, installments, setInstallments
   const handleSaveCFDI = async (installmentId: number) => {
     const uuid = cfdiInputs[installmentId] || "";
     if (!uuid.trim()) return alert("Por favor ingresa un folio fiscal válido.");
-    
+
     try {
       const token = localStorage.getItem('token');
       const origin = window.location.origin;
-      const API_URL = origin.includes("github.dev") 
+      const API_URL = origin.includes("github.dev")
         ? origin.replace("-3000", "-8080").replace("-3002", "-8080") + "/api"
         : "/api";
-      
+
       const response = await fetch(`${API_URL}/installments/${installmentId}/`, {
         method: 'PATCH',
         headers: {
@@ -379,7 +379,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
         },
         body: JSON.stringify({ cfdi_uuid: uuid })
       });
-      
+
       if (!response.ok) throw new Error("CFDI update failed");
       const updated = await response.json();
       setInstallments(prev => prev.map(inst => inst.id === installmentId ? updated : inst));
@@ -404,7 +404,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
   const padding = 40;
   const chartHeight = 180;
   const chartWidth = 500;
-  
+
   const getCoordinates = (type: 'sales' | 'costs') => {
     return monthly_trend.map((point, index) => {
       const x = padding + (index * (chartWidth - padding * 2)) / (monthly_trend.length - 1);
@@ -441,7 +441,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
               Ingresos Consolidados de Néctar Labs
             </p>
           </div>
-          
+
           {/* Desglose de Ventas */}
           <div className="pt-4 border-t border-card-border/40 grid grid-cols-3 gap-2 text-[8px] font-black uppercase tracking-wider">
             <div>
@@ -556,7 +556,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
       <section className="p-8 md:p-10 rounded-[3rem] bg-card-bg border border-card-border shadow-xl relative">
         <div className="flex justify-between items-center mb-8">
           <h3 className="text-xs font-black uppercase tracking-[0.3em] opacity-30">Tendencia Financiera Trimestral</h3>
-          
+
           {/* Instrucción visual */}
           <span className="text-[8px] font-black text-nectar-gold uppercase tracking-widest bg-nectar-gold/5 px-3 py-1 rounded-full">
             Desliza el cursor para explorar
@@ -640,14 +640,14 @@ export default function BusinessCommander({ stats, installments, setInstallments
                     fillOpacity={isActive ? 1.0 : 0.6}
                     className="transition-all duration-300 pointer-events-none"
                   />
-                  
+
                   {/* Month Label */}
-                  <text 
-                    x={x} 
-                    y={chartHeight - 12} 
-                    textAnchor="middle" 
-                    fill="var(--foreground)" 
-                    fillOpacity={isActive ? 0.9 : 0.3} 
+                  <text
+                    x={x}
+                    y={chartHeight - 12}
+                    textAnchor="middle"
+                    fill="var(--foreground)"
+                    fillOpacity={isActive ? 0.9 : 0.3}
                     className="text-[8px] font-black uppercase tracking-wider transition-all duration-300"
                   >
                     {point.month}
@@ -862,9 +862,9 @@ export default function BusinessCommander({ stats, installments, setInstallments
                   </td>
                   <td className="py-4 text-center">
                     {inst.receipt_file ? (
-                      <a 
-                        href={getMediaUrl(inst.receipt_file)} 
-                        target="_blank" 
+                      <a
+                        href={getMediaUrl(inst.receipt_file)}
+                        target="_blank"
                         rel="noreferrer"
                         className="px-2.5 py-1 bg-nectar-gold/10 text-nectar-gold hover:bg-nectar-gold hover:text-background text-[8px] font-black uppercase tracking-widest rounded-full transition-all inline-block"
                       >
@@ -879,15 +879,14 @@ export default function BusinessCommander({ stats, installments, setInstallments
                       <select
                         value={inst.status}
                         onChange={(e) => handleUpdateInstallmentStatus(inst.id, e.target.value)}
-                        className={`px-2.5 py-1 text-[7px] font-black uppercase tracking-wider rounded-full bg-background border focus:outline-none cursor-pointer transition-colors ${
-                          inst.status === 'PAID' 
-                            ? 'border-green-500/30 text-green-500 bg-green-500/5' 
-                            : inst.status === 'CANCELLED'
+                        className={`px-2.5 py-1 text-[7px] font-black uppercase tracking-wider rounded-full bg-background border focus:outline-none cursor-pointer transition-colors ${inst.status === 'PAID'
+                          ? 'border-green-500/30 text-green-500 bg-green-500/5'
+                          : inst.status === 'CANCELLED'
                             ? 'border-red-500/30 text-red-500 bg-red-500/5'
-                            : inst.receipt_file 
-                            ? 'border-orange-500/30 text-orange-500 bg-orange-500/5' 
-                            : 'border-yellow-500/30 text-yellow-500 bg-yellow-500/5'
-                        }`}
+                            : inst.receipt_file
+                              ? 'border-orange-500/30 text-orange-500 bg-orange-500/5'
+                              : 'border-yellow-500/30 text-yellow-500 bg-yellow-500/5'
+                          }`}
                       >
                         <option value="PENDING" className="text-yellow-500">Pendiente</option>
                         <option value="PAID" className="text-green-500">Pagado</option>
@@ -1005,15 +1004,14 @@ export default function BusinessCommander({ stats, installments, setInstallments
                       <select
                         value={quote.status}
                         onChange={(e) => handleUpdateQuoteStatus(quote.id, e.target.value)}
-                        className={`px-3 py-1.5 text-[7px] font-black uppercase tracking-wider rounded-full bg-background border focus:outline-none cursor-pointer transition-colors ${
-                          quote.status === 'APPROVED'
-                            ? 'border-green-500/30 text-green-500 bg-green-500/5'
-                            : quote.status === 'REJECTED'
+                        className={`px-3 py-1.5 text-[7px] font-black uppercase tracking-wider rounded-full bg-background border focus:outline-none cursor-pointer transition-colors ${quote.status === 'APPROVED'
+                          ? 'border-green-500/30 text-green-500 bg-green-500/5'
+                          : quote.status === 'REJECTED'
                             ? 'border-red-500/30 text-red-500 bg-red-500/5'
                             : quote.status === 'SENT'
-                            ? 'border-blue-500/30 text-blue-500 bg-blue-500/5'
-                            : 'border-yellow-500/30 text-yellow-500 bg-yellow-500/5'
-                        }`}
+                              ? 'border-blue-500/30 text-blue-500 bg-blue-500/5'
+                              : 'border-yellow-500/30 text-yellow-500 bg-yellow-500/5'
+                          }`}
                       >
                         <option value="DRAFT">Borrador</option>
                         <option value="SENT">Enviado</option>
@@ -1129,7 +1127,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
               {salesPeople.length} vendedores registrados
             </span>
           </div>
-          
+
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
@@ -1183,11 +1181,10 @@ export default function BusinessCommander({ stats, installments, setInstallments
                         <button
                           onClick={() => handleToggleApproval(u.id, isApproved)}
                           disabled={togglingUser === u.id}
-                          className={`px-4 py-1.5 text-[7px] font-black uppercase tracking-widest rounded-xl transition-all hover:scale-105 active:scale-95 disabled:opacity-40 font-bold ${
-                            isApproved 
-                              ? 'bg-red-950/40 border border-red-500/30 hover:bg-red-900/40 text-red-400' 
-                              : 'bg-green-950/40 border border-green-500/30 hover:bg-green-900/40 text-green-400'
-                          }`}
+                          className={`px-4 py-1.5 text-[7px] font-black uppercase tracking-widest rounded-xl transition-all hover:scale-105 active:scale-95 disabled:opacity-40 font-bold ${isApproved
+                            ? 'bg-red-950/40 border border-red-500/30 hover:bg-red-900/40 text-red-400'
+                            : 'bg-green-950/40 border border-green-500/30 hover:bg-green-900/40 text-green-400'
+                            }`}
                         >
                           {togglingUser === u.id ? '...' : (isApproved ? 'Revocar' : 'Aprobar')}
                         </button>
@@ -1223,80 +1220,80 @@ export default function BusinessCommander({ stats, installments, setInstallments
               <div className="w-8 h-8 border-2 border-nectar-gold border-t-transparent rounded-full animate-spin" />
             </div>
           ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-card-border/50 text-[8px] font-black uppercase tracking-widest opacity-40">
-                  <th className="pb-4">Vendedor</th>
-                  <th className="pb-4">Cliente</th>
-                  <th className="pb-4 text-center">Plan</th>
-                  <th className="pb-4 text-center">Mensualidad</th>
-                  <th className="pb-4 text-center">Vencimiento</th>
-                  <th className="pb-4 text-right">Monto Pagado</th>
-                  <th className="pb-4 text-center">Comisión %</th>
-                  <th className="pb-4 text-right">Tu Pago</th>
-                  <th className="pb-4 text-center">Estado</th>
-                  <th className="pb-4 text-center">Acción</th>
-                </tr>
-              </thead>
-              <tbody>
-                {commissions.map((comm) => (
-                  <tr key={comm.id} className="border-b border-card-border/30 last:border-0 hover:bg-foreground/[0.02] transition-colors">
-                    <td className="py-3.5">
-                      <div>
-                        <span className="font-black text-[10px] text-foreground">{comm.salesperson_email?.split('@')[0]}</span>
-                        <p className="text-[8px] text-foreground/40 font-mono">{comm.salesperson_email}</p>
-                      </div>
-                    </td>
-                    <td className="py-3.5 font-bold text-[11px] text-foreground/80">{comm.client_name}</td>
-                    <td className="py-3.5 text-center">
-                      <span className="px-2 py-0.5 bg-foreground/5 rounded-full text-[8px] font-black uppercase tracking-wider text-foreground/50">{comm.plan_name}</span>
-                    </td>
-                    <td className="py-3.5 text-center font-mono font-bold text-xs text-foreground/70">#{comm.installment_number}</td>
-                    <td className="py-3.5 text-center text-[10px] font-bold text-foreground/50">
-                      {comm.due_date ? new Date(comm.due_date + 'T00:00:00').toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: '2-digit' }) : '—'}
-                    </td>
-                    <td className="py-3.5 text-right font-mono font-bold text-[11px]">
-                      ${parseFloat(comm.installment_amount || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
-                    </td>
-                    <td className="py-3.5 text-center font-mono font-black text-sm text-nectar-gold">
-                      {parseFloat(comm.commission_percentage)}%
-                    </td>
-                    <td className="py-3.5 text-right font-mono font-black text-sm text-white">
-                      ${parseFloat(comm.amount || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
-                    </td>
-                    <td className="py-3.5 text-center">
-                      {comm.status === 'PAID' ? (
-                        <span className="px-3 py-1 bg-green-500/10 text-green-500 text-[7px] font-black uppercase tracking-widest rounded-full border border-green-500/20">Pagada</span>
-                      ) : (
-                        <span className="px-3 py-1 bg-yellow-500/10 text-yellow-500 text-[7px] font-black uppercase tracking-widest rounded-full border border-yellow-500/20">Pendiente</span>
-                      )}
-                    </td>
-                    <td className="py-3.5 text-center">
-                      {comm.status === 'PENDING' ? (
-                        <button
-                          onClick={() => handleMarkCommissionPaid(comm.id)}
-                          disabled={markingPaid === comm.id}
-                          className="px-4 py-1.5 bg-green-600 hover:bg-green-500 text-white text-[7px] font-black uppercase tracking-widest rounded-xl transition-all hover:scale-105 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
-                        >
-                          {markingPaid === comm.id ? '...' : 'Marcar Pagada'}
-                        </button>
-                      ) : (
-                        <span className="text-[8px] text-foreground/20 font-black">—</span>
-                      )}
-                    </td>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-card-border/50 text-[8px] font-black uppercase tracking-widest opacity-40">
+                    <th className="pb-4">Vendedor</th>
+                    <th className="pb-4">Cliente</th>
+                    <th className="pb-4 text-center">Plan</th>
+                    <th className="pb-4 text-center">Mensualidad</th>
+                    <th className="pb-4 text-center">Vencimiento</th>
+                    <th className="pb-4 text-right">Monto Pagado</th>
+                    <th className="pb-4 text-center">Comisión %</th>
+                    <th className="pb-4 text-right">Tu Pago</th>
+                    <th className="pb-4 text-center">Estado</th>
+                    <th className="pb-4 text-center">Acción</th>
                   </tr>
-                ))}
-                {commissions.length === 0 && (
-                  <tr>
-                    <td colSpan={10} className="py-12 text-center text-[9px] font-black uppercase tracking-widest opacity-25">
-                      Sin comisiones registradas en el sistema
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {commissions.map((comm) => (
+                    <tr key={comm.id} className="border-b border-card-border/30 last:border-0 hover:bg-foreground/[0.02] transition-colors">
+                      <td className="py-3.5">
+                        <div>
+                          <span className="font-black text-[10px] text-foreground">{comm.salesperson_email?.split('@')[0]}</span>
+                          <p className="text-[8px] text-foreground/40 font-mono">{comm.salesperson_email}</p>
+                        </div>
+                      </td>
+                      <td className="py-3.5 font-bold text-[11px] text-foreground/80">{comm.client_name}</td>
+                      <td className="py-3.5 text-center">
+                        <span className="px-2 py-0.5 bg-foreground/5 rounded-full text-[8px] font-black uppercase tracking-wider text-foreground/50">{comm.plan_name}</span>
+                      </td>
+                      <td className="py-3.5 text-center font-mono font-bold text-xs text-foreground/70">#{comm.installment_number}</td>
+                      <td className="py-3.5 text-center text-[10px] font-bold text-foreground/50">
+                        {comm.due_date ? new Date(comm.due_date + 'T00:00:00').toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: '2-digit' }) : '—'}
+                      </td>
+                      <td className="py-3.5 text-right font-mono font-bold text-[11px]">
+                        ${parseFloat(comm.installment_amount || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                      </td>
+                      <td className="py-3.5 text-center font-mono font-black text-sm text-nectar-gold">
+                        {parseFloat(comm.commission_percentage)}%
+                      </td>
+                      <td className="py-3.5 text-right font-mono font-black text-sm text-white">
+                        ${parseFloat(comm.amount || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                      </td>
+                      <td className="py-3.5 text-center">
+                        {comm.status === 'PAID' ? (
+                          <span className="px-3 py-1 bg-green-500/10 text-green-500 text-[7px] font-black uppercase tracking-widest rounded-full border border-green-500/20">Pagada</span>
+                        ) : (
+                          <span className="px-3 py-1 bg-yellow-500/10 text-yellow-500 text-[7px] font-black uppercase tracking-widest rounded-full border border-yellow-500/20">Pendiente</span>
+                        )}
+                      </td>
+                      <td className="py-3.5 text-center">
+                        {comm.status === 'PENDING' ? (
+                          <button
+                            onClick={() => handleMarkCommissionPaid(comm.id)}
+                            disabled={markingPaid === comm.id}
+                            className="px-4 py-1.5 bg-green-600 hover:bg-green-500 text-white text-[7px] font-black uppercase tracking-widest rounded-xl transition-all hover:scale-105 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
+                          >
+                            {markingPaid === comm.id ? '...' : 'Marcar Pagada'}
+                          </button>
+                        ) : (
+                          <span className="text-[8px] text-foreground/20 font-black">—</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                  {commissions.length === 0 && (
+                    <tr>
+                      <td colSpan={10} className="py-12 text-center text-[9px] font-black uppercase tracking-widest opacity-25">
+                        Sin comisiones registradas en el sistema
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
 
@@ -1332,11 +1329,10 @@ export default function BusinessCommander({ stats, installments, setInstallments
                       <span className="font-mono font-black text-sm text-nectar-gold tracking-widest">{code.code}</span>
                     </td>
                     <td className="py-3.5 text-center">
-                      <span className={`px-3 py-1 text-[7px] font-black uppercase tracking-widest rounded-full border ${
-                        code.code_type === 'SELLER'
-                          ? 'bg-blue-500/10 text-blue-400 border-blue-500/20'
-                          : 'bg-purple-500/10 text-purple-400 border-purple-500/20'
-                      }`}>
+                      <span className={`px-3 py-1 text-[7px] font-black uppercase tracking-widest rounded-full border ${code.code_type === 'SELLER'
+                        ? 'bg-blue-500/10 text-blue-400 border-blue-500/20'
+                        : 'bg-purple-500/10 text-purple-400 border-purple-500/20'
+                        }`}>
                         {code.code_type === 'SELLER' ? '🏷️ Vendedor' : '👥 Cliente'}
                       </span>
                     </td>
@@ -1345,11 +1341,10 @@ export default function BusinessCommander({ stats, installments, setInstallments
                     <td className="py-3.5 text-center font-mono font-bold text-sm">{code.used_count}</td>
                     <td className="py-3.5 text-center text-[10px] font-bold text-foreground/50">{code.max_uses ?? '∞'}</td>
                     <td className="py-3.5 text-center">
-                      <span className={`px-3 py-1 text-[7px] font-black uppercase tracking-widest rounded-full border ${
-                        code.is_active
-                          ? 'bg-green-500/10 text-green-500 border-green-500/20'
-                          : 'bg-red-500/10 text-red-400 border-red-500/20'
-                      }`}>
+                      <span className={`px-3 py-1 text-[7px] font-black uppercase tracking-widest rounded-full border ${code.is_active
+                        ? 'bg-green-500/10 text-green-500 border-green-500/20'
+                        : 'bg-red-500/10 text-red-400 border-red-500/20'
+                        }`}>
                         {code.is_active ? 'Activo' : 'Inactivo'}
                       </span>
                     </td>
@@ -1373,11 +1368,11 @@ export default function BusinessCommander({ stats, installments, setInstallments
 
       {/* ── MODAL NUEVA COTIZACIÓN MODULAR ── */}
       {showQuoteModal && (
-        <div 
+        <div
           onClick={() => setShowQuoteModal(false)}
           className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-6 overflow-y-auto cursor-pointer"
         >
-          <div 
+          <div
             onClick={(e) => e.stopPropagation()}
             className="w-full max-w-4xl bg-card-bg border border-card-border p-8 md:p-10 rounded-[3rem] shadow-2xl relative max-h-[90vh] overflow-y-auto space-y-8 animate-in fade-in zoom-in-95 duration-200 text-left cursor-default"
           >
@@ -1411,22 +1406,20 @@ export default function BusinessCommander({ stats, installments, setInstallments
                     <button
                       type="button"
                       onClick={() => setQuoteClientType('prospect')}
-                      className={`py-3 rounded-2xl border font-black text-[9px] uppercase tracking-wider transition-all ${
-                        quoteClientType === 'prospect'
-                          ? 'border-nectar-gold bg-nectar-gold/10 text-nectar-gold'
-                          : 'border-card-border text-foreground/50 hover:border-card-border/80 bg-background/50'
-                      }`}
+                      className={`py-3 rounded-2xl border font-black text-[9px] uppercase tracking-wider transition-all ${quoteClientType === 'prospect'
+                        ? 'border-nectar-gold bg-nectar-gold/10 text-nectar-gold'
+                        : 'border-card-border text-foreground/50 hover:border-card-border/80 bg-background/50'
+                        }`}
                     >
                       Prospecto Libre
                     </button>
                     <button
                       type="button"
                       onClick={() => setQuoteClientType('registered')}
-                      className={`py-3 rounded-2xl border font-black text-[9px] uppercase tracking-wider transition-all ${
-                        quoteClientType === 'registered'
-                          ? 'border-nectar-gold bg-nectar-gold/10 text-nectar-gold'
-                          : 'border-card-border text-foreground/50 hover:border-card-border/80 bg-background/50'
-                      }`}
+                      className={`py-3 rounded-2xl border font-black text-[9px] uppercase tracking-wider transition-all ${quoteClientType === 'registered'
+                        ? 'border-nectar-gold bg-nectar-gold/10 text-nectar-gold'
+                        : 'border-card-border text-foreground/50 hover:border-card-border/80 bg-background/50'
+                        }`}
                     >
                       Usuario Registrado
                     </button>

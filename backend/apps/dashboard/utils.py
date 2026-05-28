@@ -106,7 +106,7 @@ def generate_quote_pdf(quote):
         pdf.multi_cell(0, 5, 
             "1. FORMA DE PAGO: 50% de anticipo al inicio y 50% contra entrega de la fase final en Staging.\n"
             "2. INFRAESTRUCTURA: El cliente cubrirá costos de servidores y dominios requeridos para producción.\n"
-            "3. GARANTÍA: Incluye 30 días de garantía post-entrega contra errores y fallas de funcionamiento.\n"
+            "3. GARANTÍA: Incluye 60 días de garantía post-entrega contra errores y fallas de funcionamiento.\n"
             "4. PROPIEDAD INTELECTUAL: Los derechos del código fuente se transfieren al cliente tras liquidar el 100% de la cotización."
         )
 
