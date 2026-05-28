@@ -12,6 +12,11 @@ services:
       - ENVIRONMENT=local
     ports:
       - "8001:8000"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/addons/')"]
       interval: 5s
@@ -34,6 +39,11 @@ services:
       - /app/.next
     ports:
       - "3002:3000"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     env_file:
       - .env.staging
     environment:
@@ -51,6 +61,11 @@ services:
     image: nginx:alpine
     ports:
       - "80:80"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     volumes:
       - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro,z
       # Montamos los estáticos si se requieren servir por nginx

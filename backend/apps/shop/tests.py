@@ -447,6 +447,93 @@ class PromoCodeAndCommissionTests(APITestCase):
         # Verify NO commission is generated
         self.assertEqual(SalesCommission.objects.count(), 0)
 
+    def test_promo_code_crud_as_admin(self):
+        """Verify that an admin (CEO) can list, create, retrieve, update, and delete promo codes."""
+        self.client.force_authenticate(user=self.ceo)
+        url = reverse('promocode-list')
+        
+        # 1. List
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertGreaterEqual(len(response.data), 2)
+        
+        # 2. Create
+        create_data = {
+            'code': 'NUEVO50',
+            'code_type': 'CLIENT',
+            'discount_percentage': '50.00',
+            'max_uses': 5,
+            'valid_until': '2026-12-31'
+        }
+        response = self.client.post(url, create_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        new_promo_id = response.data['id']
+        
+        # 3. Retrieve
+        detail_url = reverse('promocode-detail', kwargs={'pk': new_promo_id})
+        response = self.client.get(detail_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['code'], 'NUEVO50')
+        self.assertEqual(float(response.data['discount_percentage']), 50.00)
+        
+        # 4. Update (PUT)
+        update_data = {
+            'code': 'NUEVO50_MOD',
+            'code_type': 'CLIENT',
+            'discount_percentage': '40.00',
+            'max_uses': 10,
+            'valid_until': '2027-01-01'
+        }
+        response = self.client.put(detail_url, update_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['code'], 'NUEVO50_MOD')
+        self.assertEqual(float(response.data['discount_percentage']), 40.00)
+        self.assertEqual(response.data['max_uses'], 10)
+        
+        # 5. Delete
+        response = self.client.delete(detail_url)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        
+        # Verify it is deleted from DB
+        response = self.client.get(detail_url)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_promo_code_crud_forbidden_for_regular_user(self):
+        """Verify that a regular user or customer cannot create, update, or delete promo codes."""
+        self.client.force_authenticate(user=self.client_user)
+        url = reverse('promocode-list')
+        
+        # 1. Attempt create (POST) -> 403
+        create_data = {
+            'code': 'HACKED99',
+            'code_type': 'CLIENT',
+            'discount_percentage': '99.00'
+        }
+        response = self.client.post(url, create_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        
+        # 2. Attempt update (PUT) -> 403
+        detail_url = reverse('promocode-detail', kwargs={'pk': self.seller_promo.id})
+        response = self.client.put(detail_url, {
+            'code': 'VENDEDOR20_HACKED',
+            'code_type': 'SELLER',
+            'discount_percentage': '90.00'
+        }, format='json')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        
+        # 3. Attempt delete (DELETE) -> 403
+        response = self.client.delete(detail_url)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_validate_promo_code_not_found(self):
+        """Verify validate endpoint returns proper error response when code is not found."""
+        self.client.force_authenticate(user=self.client_user)
+        url = reverse('promocode-validate')
+        response = self.client.get(f"{url}?code=NONEXISTENT")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertFalse(response.data['is_valid'])
+        self.assertIn("no encontrado", response.data['message'].lower())
+
 
 class ContractSignatureTests(APITestCase):
     def setUp(self):

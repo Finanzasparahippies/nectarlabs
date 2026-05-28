@@ -338,6 +338,25 @@ class TenantsCoreTests(BaseTenantAddonTestCase):
             
         logger.info("Test passed: Missing credentials correctly fallback to default connection.")
 
+    def test_non_owner_cannot_patch_tenant(self):
+        """
+        Verify that a user who is not the owner of the tenant (and not staff/admin)
+        cannot customize or patch the tenant configuration (returns 404).
+        """
+        logger.info("Executing test_non_owner_cannot_patch_tenant...")
+        # Authenticate as owner B (who doesn't own tenant A)
+        self.client.force_authenticate(user=self.owner_b)
+        
+        url = reverse('tenant-detail', kwargs={'pk': str(self.tenant_a.id)})
+        response = self.client.patch(
+            url,
+            data={'name': 'Hacked Tenant A Name'},
+            format='json'
+        )
+        # It should return 404 because get_queryset() filters by owner=user
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        logger.info("Test passed: Non-owner was blocked from editing tenant (returned 404).")
+
 
 class TenantActivationTests(APITestCase):
     def setUp(self):

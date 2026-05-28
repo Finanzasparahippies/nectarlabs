@@ -12,6 +12,11 @@ services:
     environment:
       - DJANGO_SETTINGS_MODULE=config.settings
       - DEBUG=True
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     networks:
       - prod_network
 
@@ -32,6 +37,11 @@ services:
     environment:
       - NEXT_PUBLIC_API_URL=https://staging.nectarlabs.dev/api
       - API_URL=http://backend-staging:8000/api
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     networks:
       - prod_network
 

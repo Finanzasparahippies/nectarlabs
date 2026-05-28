@@ -1252,7 +1252,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
 
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
-              <thead>
+                            <thead>
                 <tr className="border-b border-card-border/50 text-[8px] font-black uppercase tracking-widest opacity-40">
                   <th className="pb-4">Email Vendedor</th>
                   <th className="pb-4 text-center">Código Referido</th>
@@ -1260,12 +1260,12 @@ export default function BusinessCommander({ stats, installments, setInstallments
                   <th className="pb-4 text-right">Pendientes</th>
                   <th className="pb-4 text-right">Cobradas</th>
                   <th className="pb-4 text-center">Estatus</th>
-                  <th className="pb-4 text-center">Acción</th>
+                  <th className="pb-4 text-center">Acciones</th>
                 </tr>
               </thead>
               <tbody>
                 {salesPeople.map((u: any) => {
-                  const userCode = promoCodes.find((p: any) => p.referrer === u.id && p.code_type === 'SELLER');
+                  const userCode = promoCodes.find((p: any) => (p.referrer === u.id || p.referrer?.id === u.id || (p.referrer && Number(p.referrer) === Number(u.id))) && p.code_type === 'SELLER');
                   const referredCount = userCode ? userCode.used_count : 0;
                   const userCommissions = commissions.filter((c: any) => c.salesperson === u.id);
                   const paidTotal = userCommissions.filter((c: any) => c.status === 'PAID').reduce((sum, c) => sum + parseFloat(c.amount || 0), 0);
@@ -1280,9 +1280,46 @@ export default function BusinessCommander({ stats, installments, setInstallments
                       </td>
                       <td className="py-3.5 text-center">
                         {userCode ? (
-                          <span className="font-mono font-black text-sm text-nectar-gold tracking-widest">{userCode.code}</span>
+                          <div className="flex items-center justify-center gap-2">
+                            <span className="font-mono font-black text-sm text-nectar-gold tracking-widest">{userCode.code}</span>
+                            <button
+                              onClick={() => {
+                                setPromoCode(userCode.code);
+                                setPromoCodeType(userCode.code_type);
+                                setPromoDiscount(parseFloat(userCode.discount_percentage));
+                                setPromoMaxUses(userCode.max_uses !== null && userCode.max_uses !== undefined ? String(userCode.max_uses) : '');
+                                setPromoValidUntil(userCode.valid_until || '');
+                                setPromoReferrer(String(u.id));
+                                setEditingPromoId(userCode.id);
+                                setPromoError('');
+                                setShowPromoModal(true);
+                              }}
+                              className="p-1 hover:text-nectar-gold text-foreground/40 transition-colors"
+                              title="Editar Código"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5">
+                                <path d="M5.433 13.917l1.262-3.155A4 4 0 017.58 9.42l6.92-6.918a2.121 2.121 0 013 3l-6.92 6.918c-.383.383-.84.685-1.343.886l-3.155 1.262a.5.5 0 01-.65-.65z" />
+                                <path d="M3.5 5.75c0-.69.56-1.25 1.25-1.25H10A.75.75 0 0010 3H4.75A2.75 2.75 0 002 5.75v9.5A2.75 2.75 0 004.75 18h9.5A2.75 2.75 0 0017 15.25V10a.75.75 0 00-1.5 0v5.25c0 .69-.56 1.25-1.25 1.25h-9.5c-.69 0-1.25-.56-1.25-1.25v-9.5z" />
+                              </svg>
+                            </button>
+                          </div>
                         ) : (
-                          <span className="text-[8px] text-foreground/30 italic font-bold">Sin Código</span>
+                          <button
+                            onClick={() => {
+                              setPromoCode(`NECTAR-${u.username.toUpperCase()}`);
+                              setPromoCodeType('SELLER');
+                              setPromoDiscount(10);
+                              setPromoMaxUses('');
+                              setPromoValidUntil('');
+                              setPromoReferrer(String(u.id));
+                              setEditingPromoId(null);
+                              setPromoError('');
+                              setShowPromoModal(true);
+                            }}
+                            className="px-3 py-1 bg-nectar-gold/10 hover:bg-nectar-gold hover:text-background text-[7px] font-black uppercase tracking-widest rounded-xl border border-nectar-gold/20 transition-all font-bold"
+                          >
+                            + Crear Código
+                          </button>
                         )}
                       </td>
                       <td className="py-3.5 text-center font-mono font-bold text-xs">{referredCount}</td>

@@ -11,6 +11,11 @@ services:
     env_file:
       - .env.prod
     restart: always
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     networks:
       - prod_network
 
@@ -26,6 +31,11 @@ services:
     env_file:
       - .env.prod
     restart: always
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     networks:
       - prod_network
     volumes:
