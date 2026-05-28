@@ -354,8 +354,9 @@ class ProjectQuoteViewSet(viewsets.ModelViewSet):
     def check_permissions(self, request):
         super().check_permissions(request)
         user = request.user
-        is_admin_or_staff = user.is_staff or user.role == 'ADMIN'
-        is_sales = user.role == 'SALES'
+        is_authenticated = user and user.is_authenticated
+        is_admin_or_staff = is_authenticated and (user.is_staff or getattr(user, 'role', '') == 'ADMIN')
+        is_sales = is_authenticated and getattr(user, 'role', '') == 'SALES'
         
         if self.action in ['create', 'update', 'partial_update', 'destroy'] and not (is_admin_or_staff or is_sales):
             self.permission_denied(request, message="No tienes permisos para gestionar cotizaciones.")
@@ -363,7 +364,7 @@ class ProjectQuoteViewSet(viewsets.ModelViewSet):
     def check_object_permissions(self, request, obj):
         super().check_object_permissions(request, obj)
         user = request.user
-        if user.role == 'SALES' and obj.salesperson != user:
+        if getattr(user, 'role', '') == 'SALES' and obj.salesperson != user:
             self.permission_denied(request, message="No tienes acceso a esta cotización.")
 
     def perform_create(self, serializer):
