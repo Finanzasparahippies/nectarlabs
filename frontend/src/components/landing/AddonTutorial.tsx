@@ -131,32 +131,32 @@ export default function AddonTutorial() {
   };
 
   return (
-    <section className="w-full py-32 px-6 max-w-7xl mx-auto border-t border-card-border/50">
+    <section className="w-full py-16 sm:py-32 px-6 max-w-7xl mx-auto border-t border-card-border/50">
       
       {/* Header section */}
-      <div className="text-center mb-24 relative">
-        <div className="absolute -top-40 left-1/2 -translate-x-1/2 text-[10rem] md:text-[20rem] font-black text-punch opacity-60 dark:opacity-80 select-none pointer-events-none whitespace-nowrap z-0">
+      <div className="text-center mb-16 sm:mb-24 relative">
+        <div className="absolute -top-16 sm:-top-32 md:-top-40 left-1/2 -translate-x-1/2 text-[4.5rem] sm:text-[10rem] md:text-[16rem] lg:text-[20rem] font-black text-punch opacity-60 dark:opacity-80 select-none pointer-events-none whitespace-nowrap z-0">
           FLOW
         </div>
-        <h2 className="relative text-6xl md:text-8xl font-black mb-4 tracking-tighter text-nectar-forest dark:text-nectar-cream leading-none z-10">
+        <h2 className="relative text-3xl sm:text-5xl md:text-8xl font-black mb-4 tracking-tighter text-nectar-forest dark:text-nectar-cream leading-none z-10">
           Contratación <span className="text-nectar-gold">Flexible</span>
         </h2>
-        <p className="text-[10px] text-nectar-gold font-black uppercase tracking-[0.5em] relative z-10 mb-12">
+        <p className="text-[10px] text-nectar-gold font-black uppercase tracking-[0.5em] relative z-10 mb-6 sm:mb-12">
           Sin plazos forzosos • Todo bajo tu control
         </p>
       </div>
 
       {/* Grid: 3 Steps On-Demand Tutorial */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-32 relative z-10">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 mb-16 sm:mb-32 relative z-10">
         {tutorialSteps.map((step, idx) => (
           <div 
             key={idx} 
-            className="p-10 rounded-[2.5rem] border border-card-border bg-card-bg/60 dark:bg-card-bg/40 glass hover:-translate-y-2 transition-all duration-500 relative overflow-hidden group"
+            className="p-6 sm:p-10 rounded-[2rem] sm:rounded-[2.5rem] border border-card-border bg-card-bg/60 dark:bg-card-bg/40 glass hover:-translate-y-2 transition-all duration-500 relative overflow-hidden group"
           >
-            <div className="absolute top-6 right-8 text-5xl font-black text-nectar-gold/10 group-hover:text-nectar-gold/20 transition-all duration-500 select-none">
+            <div className="absolute top-4 right-6 sm:top-6 sm:right-8 text-4xl sm:text-5xl font-black text-nectar-gold/10 group-hover:text-nectar-gold/20 transition-all duration-500 select-none">
               {step.number}
             </div>
-            <h3 className="text-xl font-black mb-4 tracking-tight text-foreground">{step.title}</h3>
+            <h3 className="text-lg sm:text-xl font-black mb-4 tracking-tight text-foreground">{step.title}</h3>
             <p className="text-xs text-muted leading-relaxed">
               {step.description}
             </p>
@@ -165,8 +165,8 @@ export default function AddonTutorial() {
       </div>
 
       {/* Simulator Section Header */}
-      <div className="mb-16 text-center md:text-left">
-        <h3 className="text-3xl font-black tracking-tight mb-2 text-foreground">
+      <div className="mb-10 sm:mb-16 text-center md:text-left">
+        <h3 className="text-xl sm:text-3xl font-black tracking-tight mb-2 text-foreground">
           Simulador en Tiempo Real
         </h3>
         <p className="text-xs text-muted">
@@ -175,15 +175,15 @@ export default function AddonTutorial() {
       </div>
 
       {/* Interactive Simulator Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-stretch relative z-10">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-12 items-stretch relative z-10">
         
         {/* Left Column: Selector Menu */}
-        <div className="lg:col-span-5 flex flex-col gap-4 justify-center">
+        <div className="lg:col-span-5 flex flex-col gap-3 sm:gap-4 justify-center">
           {addonsConfig.map((config) => (
             <button
               key={config.id}
               onClick={() => setActiveAddon(config.id)}
-              className={`p-6 rounded-[2rem] border transition-all duration-500 text-left flex flex-col justify-between relative overflow-hidden group ${
+              className={`p-4 sm:p-6 rounded-[1.5rem] sm:rounded-[2rem] border transition-all duration-500 text-left flex flex-col justify-between relative overflow-hidden group ${
                 activeAddon === config.id
                   ? 'border-nectar-gold bg-card-bg shadow-[var(--shadow-premium)] scale-[1.02]'
                   : 'border-card-border bg-card-bg/30 hover:bg-card-bg/70 hover:scale-[1.01]'
@@ -204,7 +204,7 @@ export default function AddonTutorial() {
                 </span>
               </div>
               
-              <h4 className="text-lg font-black tracking-tight mb-1 text-foreground">
+              <h4 className="text-base sm:text-lg font-black tracking-tight mb-1 text-foreground">
                 {config.name}
               </h4>
               <p className="text-[11px] text-muted leading-relaxed">
@@ -216,7 +216,7 @@ export default function AddonTutorial() {
 
         {/* Right Column: Visual Mockup Phone / Screen */}
         <div className="lg:col-span-7 flex items-center justify-center">
-          <div className="w-full max-w-lg aspect-[9/16] rounded-[3.5rem] bg-[#020403] border-[10px] border-neutral-800 p-5 flex flex-col justify-between relative overflow-hidden shadow-2xl">
+          <div className="w-full max-w-lg aspect-[9/16] rounded-[2.5rem] sm:rounded-[3.5rem] bg-[#020403] border-[6px] sm:border-[10px] border-neutral-800 p-4 sm:p-5 flex flex-col justify-between relative overflow-hidden shadow-2xl">
             
             {/* Dynamic Status Bar (Signal, Wifi, Time, Battery) */}
             <div className="absolute top-2 left-0 right-0 px-8 flex justify-between items-center z-20 text-[9px] text-white/40 font-bold select-none">

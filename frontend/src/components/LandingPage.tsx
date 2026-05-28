@@ -17,35 +17,35 @@ export default function LandingPage() {
 
       {/* Hero Section */}
 
-      <section className="w-full relative overflow-hidden pt-48 pb-32 px-6 flex flex-col items-center text-center">
+      <section className="w-full relative overflow-hidden pt-32 sm:pt-48 pb-20 sm:pb-32 px-6 flex flex-col items-center text-center">
         {/* Subtle Ambient Glows */}
         <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-nectar-gold/10 rounded-full blur-[150px] -z-10 animate-glow"></div>
         <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-nectar-forest/10 rounded-full blur-[150px] -z-10 animate-glow" style={{ animationDelay: '2s' }}></div>
 
-        <div className="inline-block px-10 py-3 mb-12 text-sm font-black tracking-[0.5em] text-nectar-gold uppercase border-2 border-nectar-gold/20 rounded-full bg-white/50 dark:bg-nectar-forest/50 glass animate-premium">
+        <div className="inline-block px-6 py-2.5 sm:px-10 sm:py-3 mb-10 sm:mb-12 text-[10px] sm:text-sm font-black tracking-[0.3em] sm:tracking-[0.5em] text-nectar-gold uppercase border-2 border-nectar-gold/20 rounded-full bg-white/50 dark:bg-nectar-forest/50 glass animate-premium">
           Nectar-Labs • Soluciones a tu Medida
         </div>
 
-        <div className="relative mb-12">
-          <div className="absolute -top-64 left-1/2 -translate-x-1/2 text-[12rem] md:text-[26rem] font-black text-punch opacity-60 dark:opacity-80 select-none pointer-events-none whitespace-nowrap z-0">
+        <div className="relative mb-10 sm:mb-12 w-full max-w-4xl">
+          <div className="absolute -top-16 sm:-top-32 md:-top-48 lg:-top-64 left-1/2 -translate-x-1/2 text-[5rem] sm:text-[10rem] md:text-[18rem] lg:text-[26rem] font-black text-punch opacity-60 dark:opacity-80 select-none pointer-events-none whitespace-nowrap z-0">
             NECTAR
           </div>
-          <h1 className="text-7xl md:text-[11rem] font-black tracking-tighter leading-[0.75] animate-premium text-foreground relative z-10" style={{ animationDelay: '0.1s' }}>
+          <h1 className="text-4xl sm:text-7xl md:text-[9rem] lg:text-[11rem] font-black tracking-tighter leading-[0.8] sm:leading-[0.75] animate-premium text-foreground relative z-10" style={{ animationDelay: '0.1s' }}>
             Software <br />
             <span className="text-nectar-gold italic pr-4">Artesanal</span>
           </h1>
         </div>
 
-        <p className="text-2xl md:text-4xl text-foreground opacity-80 max-w-6xl mb-24 animate-premium leading-[1.1] font-bold tracking-tight text-balance" style={{ animationDelay: '0.2s' }}>
+        <p className="text-base sm:text-2xl md:text-4xl text-foreground opacity-80 max-w-6xl mb-16 sm:mb-24 animate-premium leading-[1.2] sm:leading-[1.1] font-bold tracking-tight text-balance px-4" style={{ animationDelay: '0.2s' }}>
           Ingeniería de software de alta fidelidad y diseño de marca estratégico. <br className="hidden md:block" />
-          Construimos <span className="text-nectar-gold underline decoration-nectar-gold/30 underline-offset-[12px]">independencia técnica</span> con rendimiento industrial.
+          Construimos <span className="text-nectar-gold underline decoration-nectar-gold/30 underline-offset-[8px] sm:underline-offset-[12px]">independencia técnica</span> con rendimiento industrial.
         </p>
 
-        <div className="flex flex-col md:flex-row gap-8 animate-premium" style={{ animationDelay: '0.3s' }}>
-          <a href="#pricing" className="px-16 py-8 bg-nectar-forest text-nectar-cream font-black rounded-[2rem] hover:bg-nectar-gold hover:scale-105 transition-all duration-500 text-xl uppercase tracking-widest shadow-2xl shadow-nectar-forest/20 text-center">
+        <div className="flex flex-col sm:flex-row gap-4 sm:gap-8 animate-premium w-full sm:w-auto px-6 sm:px-0" style={{ animationDelay: '0.3s' }}>
+          <a href="#pricing" className="px-8 py-4 sm:px-16 sm:py-8 bg-nectar-forest text-nectar-cream font-black rounded-[1.5rem] sm:rounded-[2rem] hover:bg-nectar-gold hover:scale-105 transition-all duration-500 text-sm sm:text-xl uppercase tracking-widest shadow-2xl shadow-nectar-forest/20 text-center">
             Elegir Plan
           </a>
-          <a href="#formula" className="px-16 py-8 border-4 border-foreground/5 text-foreground font-black rounded-[2rem] hover:bg-foreground hover:text-nectar-gold transition-all duration-500 text-xl uppercase tracking-widest glass text-center">
+          <a href="#formula" className="px-8 py-4 sm:px-16 sm:py-8 border-2 sm:border-4 border-foreground/5 text-foreground font-black rounded-[1.5rem] sm:rounded-[2rem] hover:bg-foreground hover:text-nectar-gold transition-all duration-500 text-sm sm:text-xl uppercase tracking-widest glass text-center">
             Nuestra Fórmula
           </a>
         </div>

@@ -3,16 +3,16 @@
 import React from 'react';
 
 const BentoCard = ({ title, description, icon, className, color }: { title: string, description: string, icon: React.ReactNode, className?: string, color: string }) => (
-  <div className={`p-10 rounded-[2.5rem] border-2 border-card-border bg-card-bg flex flex-col justify-between group shadow-xl hover:shadow-[var(--shadow-premium)] hover:-translate-y-2 hover:border-nectar-gold transition-all duration-700 relative overflow-hidden ${className}`}>
+  <div className={`p-6 sm:p-10 rounded-[2rem] sm:rounded-[2.5rem] border-2 border-card-border bg-card-bg flex flex-col justify-between group shadow-xl hover:shadow-[var(--shadow-premium)] hover:-translate-y-2 hover:border-nectar-gold transition-all duration-700 relative overflow-hidden ${className}`}>
     {/* Hover Accent Glow - More prominent */}
     <div className={`absolute -top-24 -right-24 w-96 h-96 bg-nectar-gold/20 blur-[100px] opacity-0 group-hover:opacity-100 transition-opacity duration-1000`}></div>
     
-    <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-10 text-nectar-cream bg-nectar-forest group-hover:bg-nectar-gold group-hover:rotate-12 transition-all duration-500 shadow-lg relative z-10`}>
+    <div className={`w-12 h-12 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center mb-6 sm:mb-10 text-nectar-cream bg-nectar-forest group-hover:bg-nectar-gold group-hover:rotate-12 transition-all duration-500 shadow-lg relative z-10`}>
       {icon}
     </div>
     <div className="relative z-10">
-      <h3 className="text-3xl md:text-4xl font-black mb-6 tracking-tighter text-foreground leading-[0.9] group-hover:text-nectar-gold transition-colors duration-500">{title}</h3>
-      <p className="text-foreground opacity-80 leading-relaxed text-lg font-bold">{description}</p>
+      <h3 className="text-xl sm:text-3xl md:text-4xl font-black mb-4 sm:mb-6 tracking-tighter text-foreground leading-[0.9] group-hover:text-nectar-gold transition-colors duration-500">{title}</h3>
+      <p className="text-foreground opacity-80 leading-relaxed text-sm sm:text-lg font-bold">{description}</p>
     </div>
   </div>
 );
@@ -20,8 +20,8 @@ const BentoCard = ({ title, description, icon, className, color }: { title: stri
 
 export default function BentoGrid() {
   return (
-    <section className="w-full py-32 px-6 max-w-7xl mx-auto">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-12 auto-rows-[520px]">
+    <section className="w-full py-16 sm:py-32 px-6 max-w-7xl mx-auto">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-12 md:auto-rows-[520px] auto-rows-auto">
         
         {/* Software de Alto Rendimiento */}
         <BentoCard 

@@ -108,11 +108,11 @@ export default function SellerProgram() {
       <div className="max-w-7xl mx-auto relative z-10">
 
         {/* ── HERO HEADER ── */}
-        <div className={`text-center mb-20 transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-          <span className="inline-block px-8 py-3 mb-8 text-[9px] font-black tracking-[0.6em] text-nectar-gold uppercase border border-nectar-gold/25 rounded-full bg-nectar-gold/5 backdrop-blur-sm">
+        <div className={`text-center mb-16 sm:mb-20 transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+          <span className="inline-block px-6 py-2.5 sm:px-8 sm:py-3 mb-6 sm:mb-8 text-[9px] font-black tracking-[0.4em] sm:tracking-[0.6em] text-nectar-gold uppercase border border-nectar-gold/25 rounded-full bg-nectar-gold/5 backdrop-blur-sm">
             ✦ Programa de Afiliados Néctar Labs ✦
           </span>
-          <h2 className="text-5xl md:text-8xl font-black tracking-tighter leading-[0.85] mb-8 text-foreground">
+          <h2 className="text-3xl sm:text-5xl md:text-8xl font-black tracking-tighter leading-[0.9] sm:leading-[0.85] mb-6 sm:mb-8 text-foreground">
             Únete a{' '}
             <span className="relative inline-block">
               <span className="text-nectar-gold italic">Néctar Labs</span>
@@ -120,7 +120,7 @@ export default function SellerProgram() {
             </span>
             {' '}y Gana
           </h2>
-          <p className="text-lg md:text-2xl text-foreground/60 max-w-3xl mx-auto leading-relaxed font-medium">
+          <p className="text-base sm:text-xl md:text-2xl text-foreground/60 max-w-3xl mx-auto leading-relaxed font-medium px-4">
             Refiere clientes a nuestro ecosistema de Software Artesanal y genera{' '}
             <strong className="text-foreground">comisiones recurrentes de por vida</strong>{' '}
             sin límite de clientes, sin inversión, sin techos.
@@ -128,30 +128,30 @@ export default function SellerProgram() {
         </div>
 
         {/* ── COMMISSION TIERS ── */}
-        <div className={`mb-24 transition-all duration-1000 delay-200 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-          <div className="text-center mb-12">
+        <div className={`mb-16 sm:mb-24 transition-all duration-1000 delay-200 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+          <div className="text-center mb-8 sm:mb-12">
             <h3 className="text-xs font-black uppercase tracking-[0.5em] text-foreground/40 mb-2">Estructura de Comisiones</h3>
-            <p className="text-sm text-foreground/50 max-w-xl mx-auto">Por cada mensualidad que pague tu cliente referido, recibes un porcentaje escalonado.</p>
+            <p className="text-xs sm:text-sm text-foreground/50 max-w-xl mx-auto px-4">Por cada mensualidad que pague tu cliente referido, recibes un porcentaje escalonado.</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {commissionTiers.map((tier, i) => (
               <div
                 key={tier.month}
-                className={`relative group p-8 rounded-[2.5rem] border border-card-border bg-card-bg overflow-hidden transition-all duration-500 hover:scale-[1.02] hover:border-nectar-gold/30 hover:shadow-2xl hover:shadow-nectar-gold/10`}
+                className={`relative group p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] border border-card-border bg-card-bg overflow-hidden transition-all duration-500 hover:scale-[1.02] hover:border-nectar-gold/30 hover:shadow-2xl hover:shadow-nectar-gold/10`}
                 style={{ transitionDelay: `${i * 100}ms` }}
               >
                 {/* Ambient glow */}
                 <div className={`absolute top-0 right-0 w-48 h-48 ${tier.glow} rounded-full blur-3xl -mr-16 -mt-16 group-hover:scale-125 transition-transform duration-700`} />
 
                 <div className="relative z-10">
-                  <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center justify-between mb-4 sm:mb-6">
                     <span className="text-[9px] font-black uppercase tracking-widest text-foreground/40">{tier.month}</span>
-                    <div className={`w-9 h-9 rounded-full bg-gradient-to-br ${tier.color} text-background flex items-center justify-center shadow-lg`}>
+                    <div className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-gradient-to-br ${tier.color} text-background flex items-center justify-center shadow-lg`}>
                       {tier.icon}
                     </div>
                   </div>
 
-                  <div className={`text-6xl md:text-7xl font-black tracking-tighter bg-gradient-to-r ${tier.color} bg-clip-text text-transparent mb-2 font-mono`}>
+                  <div className={`text-5xl sm:text-6xl md:text-7xl font-black tracking-tighter bg-gradient-to-r ${tier.color} bg-clip-text text-transparent mb-2 font-mono`}>
                     {tier.pct}
                   </div>
                   <p className="text-[10px] font-black uppercase tracking-widest text-foreground/50 mb-4">{tier.label}</p>
@@ -162,7 +162,7 @@ export default function SellerProgram() {
           </div>
 
           {/* Disclaimer */}
-          <div className="mt-6 p-5 rounded-2xl bg-foreground/[0.03] border border-card-border/50 flex items-start gap-4 max-w-3xl mx-auto">
+          <div className="mt-6 p-4 sm:p-5 rounded-2xl bg-foreground/[0.03] border border-card-border/50 flex items-start gap-4 max-w-3xl mx-auto">
             <span className="text-nectar-gold text-lg shrink-0 mt-0.5">ℹ️</span>
             <p className="text-[10px] text-foreground/50 leading-relaxed font-medium">
               <strong className="text-foreground/70">Nota:</strong> La comisión se genera automáticamente con cada pago confirmado del cliente referido.
@@ -174,10 +174,10 @@ export default function SellerProgram() {
         </div>
 
         {/* ── HOW IT WORKS ── */}
-        <div className={`mb-24 transition-all duration-1000 delay-300 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-          <div className="text-center mb-14">
+        <div className={`mb-16 sm:mb-24 transition-all duration-1000 delay-300 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+          <div className="text-center mb-10 sm:mb-14">
             <h3 className="text-xs font-black uppercase tracking-[0.5em] text-foreground/40 mb-2">Cómo Funciona</h3>
-            <p className="text-2xl md:text-4xl font-black tracking-tight text-foreground">4 pasos para empezar a ganar</p>
+            <p className="text-xl sm:text-2xl md:text-4xl font-black tracking-tight text-foreground">4 pasos para empezar a ganar</p>
           </div>
           <div className="relative">
             {/* Connecting line */}
@@ -185,7 +185,7 @@ export default function SellerProgram() {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
               {steps.map((step, i) => (
                 <div key={step.number} className="relative flex flex-col items-center text-center group">
-                  <div className={`relative w-16 h-16 rounded-full border-2 border-card-border bg-card-bg flex items-center justify-center mb-6 group-hover:border-nectar-gold/50 transition-all duration-300 z-10`}>
+                  <div className={`relative w-14 h-14 sm:w-16 sm:h-16 rounded-full border-2 border-card-border bg-card-bg flex items-center justify-center mb-4 sm:mb-6 group-hover:border-nectar-gold/50 transition-all duration-300 z-10`}>
                     <span className={`font-black text-xl font-mono ${step.color}`}>{step.number}</span>
                   </div>
                   <h4 className="font-black text-base mb-2 text-foreground">{step.title}</h4>
@@ -197,16 +197,16 @@ export default function SellerProgram() {
         </div>
 
         {/* ── BENEFITS GRID ── */}
-        <div className={`mb-24 transition-all duration-1000 delay-400 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-          <div className="text-center mb-12">
+        <div className={`mb-16 sm:mb-24 transition-all duration-1000 delay-400 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+          <div className="text-center mb-10 sm:mb-12">
             <h3 className="text-xs font-black uppercase tracking-[0.5em] text-foreground/40 mb-2">Por Qué Elegir Este Programa</h3>
-            <p className="text-2xl md:text-4xl font-black tracking-tight text-foreground">Sin riesgos. <span className="text-nectar-gold italic">Sin límites.</span></p>
+            <p className="text-xl sm:text-2xl md:text-4xl font-black tracking-tight text-foreground">Sin riesgos. <span className="text-nectar-gold italic">Sin límites.</span></p>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
             {benefits.map((b, i) => (
               <div
                 key={b.title}
-                className="group p-7 rounded-[2rem] bg-card-bg border border-card-border hover:border-nectar-gold/25 transition-all duration-300 hover:shadow-xl hover:shadow-nectar-gold/5 flex items-start gap-5"
+                className="group p-5 sm:p-7 rounded-[1.5rem] sm:rounded-[2rem] bg-card-bg border border-card-border hover:border-nectar-gold/25 transition-all duration-300 hover:shadow-xl hover:shadow-nectar-gold/5 flex items-start gap-5"
                 style={{ transitionDelay: `${i * 60}ms` }}
               >
                 <div className="w-11 h-11 rounded-2xl bg-nectar-gold/8 flex items-center justify-center text-xl shrink-0 group-hover:scale-110 transition-transform duration-300">
@@ -222,8 +222,8 @@ export default function SellerProgram() {
         </div>
 
         {/* ── EXAMPLE EARNING CALCULATOR ── */}
-        <div className={`mb-24 transition-all duration-1000 delay-500 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-          <div className="p-10 md:p-14 rounded-[3rem] bg-card-bg border border-card-border relative overflow-hidden">
+        <div className={`mb-16 sm:mb-24 transition-all duration-1000 delay-500 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+          <div className="p-6 sm:p-10 md:p-14 rounded-[2rem] sm:rounded-[3rem] bg-card-bg border border-card-border relative overflow-hidden">
             <div className="absolute top-0 left-0 w-72 h-72 bg-nectar-gold/8 rounded-full blur-3xl -ml-24 -mt-24" />
             <div className="absolute bottom-0 right-0 w-72 h-72 bg-nectar-forest/8 rounded-full blur-3xl -mr-24 -mb-24" />
 
@@ -232,12 +232,12 @@ export default function SellerProgram() {
                 <span className="inline-block px-4 py-1.5 mb-6 text-[9px] font-black tracking-[0.4em] text-nectar-gold uppercase border border-nectar-gold/20 rounded-full bg-nectar-gold/5">
                   Ejemplo Real de Ganancias
                 </span>
-                <h3 className="text-3xl md:text-5xl font-black tracking-tighter leading-tight mb-4 text-foreground">
+                <h3 className="text-xl sm:text-3xl md:text-5xl font-black tracking-tighter leading-tight mb-4 text-foreground">
                   1 cliente = hasta{' '}
                   <span className="text-nectar-gold italic">$2,300 MXN</span>
                   {' '}en 6 meses
                 </h3>
-                <p className="text-sm text-foreground/60 leading-relaxed">
+                <p className="text-xs sm:text-sm text-foreground/60 leading-relaxed">
                   Con un plan mensual de $10,000 MXN y un cliente referido activo durante 6 meses, esto es lo que ganarías automáticamente:
                 </p>
               </div>
@@ -253,7 +253,7 @@ export default function SellerProgram() {
                 ].map((row, i) => (
                   <div
                     key={i}
-                    className={`flex justify-between items-center p-4 rounded-2xl transition-all ${
+                    className={`flex justify-between items-center p-3 sm:p-4 rounded-2xl transition-all ${
                       row.highlight
                         ? 'bg-nectar-gold/10 border border-nectar-gold/30'
                         : 'bg-foreground/[0.03] border border-card-border/50'
@@ -262,14 +262,14 @@ export default function SellerProgram() {
                     <span className={`text-[11px] font-black uppercase tracking-wider ${row.highlight ? 'text-nectar-gold' : 'text-foreground/60'}`}>
                       {row.label}
                     </span>
-                    <span className={`font-mono font-black text-sm ${row.highlight ? 'text-nectar-gold' : 'text-foreground/80'}`}>
+                    <span className={`font-mono font-black text-xs sm:text-sm ${row.highlight ? 'text-nectar-gold' : 'text-foreground/80'}`}>
                       {row.amount} <span className="text-[9px] font-bold opacity-50">MXN</span>
                     </span>
                   </div>
                 ))}
-                <div className="flex justify-between items-center p-4 rounded-2xl bg-nectar-gold text-background mt-2">
+                <div className="flex justify-between items-center p-3 sm:p-4 rounded-2xl bg-nectar-gold text-background mt-2">
                   <span className="text-[11px] font-black uppercase tracking-wider">Total 6 Meses</span>
-                  <span className="font-mono font-black text-base">$2,300.00 <span className="text-[9px] opacity-70">MXN</span></span>
+                  <span className="font-mono font-black text-sm sm:text-base">$2,300.00 <span className="text-[9px] opacity-70">MXN</span></span>
                 </div>
                 <p className="text-[9px] text-foreground/40 leading-relaxed px-1">
                   * Basado en plan de $10,000 MXN/mes. El ingreso residual del 2% continúa indefinidamente después del mes 3.
@@ -282,23 +282,23 @@ export default function SellerProgram() {
 
         {/* ── FINAL CTA ── */}
         <div className={`text-center transition-all duration-1000 delay-600 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-          <div className="inline-flex flex-col items-center">
+          <div className="inline-flex flex-col items-center w-full sm:w-auto px-4 sm:px-0">
             <div className="w-px h-16 bg-gradient-to-b from-transparent to-nectar-gold/40 mb-8" />
             <span className="text-[9px] font-black uppercase tracking-[0.5em] text-foreground/30 mb-6">
               Empieza hoy — es gratis
             </span>
-            <div className="flex flex-col sm:flex-row gap-4 items-center">
+            <div className="flex flex-col sm:flex-row gap-4 items-center w-full sm:w-auto">
               <Link
                 href="/register"
                 id="seller-cta-register"
-                className="group relative px-14 py-6 bg-nectar-gold text-background font-black uppercase tracking-widest text-sm rounded-[2rem] hover:scale-105 active:scale-95 transition-all duration-300 shadow-2xl shadow-nectar-gold/30 overflow-hidden"
+                className="group relative w-full sm:w-auto px-8 py-4 sm:px-14 sm:py-6 bg-nectar-gold text-background font-black uppercase tracking-widest text-xs sm:text-sm rounded-[1.5rem] sm:rounded-[2rem] hover:scale-105 active:scale-95 transition-all duration-300 shadow-2xl shadow-nectar-gold/30 overflow-hidden text-center"
               >
                 <span className="absolute inset-0 bg-white/0 group-hover:bg-white/10 transition-all duration-300" />
                 <span className="relative">Unirse al Programa →</span>
               </Link>
               <a
                 href="#pricing"
-                className="px-10 py-6 border-2 border-card-border text-foreground/60 font-black uppercase tracking-widest text-sm rounded-[2rem] hover:border-nectar-gold/40 hover:text-foreground transition-all duration-300"
+                className="w-full sm:w-auto px-6 py-4 sm:px-10 sm:py-6 border-2 border-card-border text-foreground/60 font-black uppercase tracking-widest text-xs sm:text-sm rounded-[1.5rem] sm:rounded-[2rem] hover:border-nectar-gold/40 hover:text-foreground transition-all duration-300 text-center"
               >
                 Ver Planes Primero
               </a>

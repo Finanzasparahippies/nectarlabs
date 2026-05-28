@@ -210,16 +210,16 @@ export default function AddonShowcase() {
   }, []);
 
   return (
-    <section className="w-full py-32 px-6 max-w-7xl mx-auto">
+    <section className="w-full py-16 sm:py-32 px-6 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="text-center mb-16 relative">
-        <div className="absolute -top-44 left-1/2 -translate-x-1/2 text-[10rem] md:text-[20rem] font-black text-punch opacity-60 dark:opacity-80 select-none pointer-events-none whitespace-nowrap z-0">
+      <div className="text-center mb-10 sm:mb-16 relative">
+        <div className="absolute -top-16 sm:-top-32 md:-top-44 left-1/2 -translate-x-1/2 text-[4.5rem] sm:text-[10rem] md:text-[16rem] lg:text-[20rem] font-black text-punch opacity-60 dark:opacity-80 select-none pointer-events-none whitespace-nowrap z-0">
           ADDONS
         </div>
-        <h2 className="relative text-6xl md:text-8xl font-black mb-4 tracking-tighter text-nectar-forest dark:text-nectar-cream leading-none z-10">
+        <h2 className="relative text-3xl sm:text-5xl md:text-8xl font-black mb-4 tracking-tighter text-nectar-forest dark:text-nectar-cream leading-none z-10">
           Módulos <span className="text-nectar-gold">Adicionales</span>
         </h2>
-        <p className="text-[10px] text-nectar-gold font-black uppercase tracking-[0.5em] relative z-10 mb-12">
+        <p className="text-[10px] text-nectar-gold font-black uppercase tracking-[0.5em] relative z-10 mb-6 sm:mb-12">
           Microservicios Independientes a la Carta
         </p>
 
@@ -249,21 +249,21 @@ export default function AddonShowcase() {
       </div>
 
       {/* Add-ons Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 relative z-10">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-12 relative z-10">
         {addonsList.map((addon) => {
           const price = billingCycle === 'monthly' ? addon.monthlyPrice : addon.yearlyPrice;
           const savings = billingCycle === 'yearly' ? addon.monthlyPrice * 2 : 0;
           return (
             <div
               key={addon.id}
-              className="p-10 rounded-[3.5rem] border-2 border-card-border bg-card-bg flex flex-col justify-between hover:shadow-[var(--shadow-premium)] hover:-translate-y-3 hover:border-nectar-gold/45 transition-all duration-700 group relative overflow-hidden min-h-[440px]"
+              className="p-6 sm:p-10 rounded-[2.5rem] sm:rounded-[3.5rem] border-2 border-card-border bg-card-bg flex flex-col justify-between hover:shadow-[var(--shadow-premium)] hover:-translate-y-3 hover:border-nectar-gold/45 transition-all duration-700 group relative overflow-hidden min-h-[auto] md:min-h-[440px]"
             >
               {/* Gold Ambient Glow on Hover */}
               <div className="absolute -top-32 -right-32 w-64 h-64 bg-nectar-gold/5 blur-[80px] rounded-full group-hover:bg-nectar-gold/10 transition-all duration-700 pointer-events-none -z-10"></div>
 
               <div>
                 {/* Category Badge & Icon */}
-                <div className="flex justify-between items-start mb-8">
+                <div className="flex justify-between items-start mb-6 sm:mb-8">
                   <span className="text-[8px] font-black uppercase tracking-widest text-nectar-gold bg-nectar-gold/5 border border-nectar-gold/15 px-3 py-1.5 rounded-full">
                     {addon.categoryBadge}
                   </span>
@@ -273,7 +273,7 @@ export default function AddonShowcase() {
                 </div>
 
                 {/* Title & Description */}
-                <h3 className="text-2xl font-black tracking-tight mb-4 group-hover:text-nectar-gold transition-colors duration-300">
+                <h3 className="text-xl sm:text-2xl font-black tracking-tight mb-4 group-hover:text-nectar-gold transition-colors duration-300">
                   {addon.name}
                 </h3>
                 <p className="text-xs text-muted leading-relaxed mb-6">
@@ -286,8 +286,8 @@ export default function AddonShowcase() {
                 <div className="border-t border-card-border/80 pt-6 mb-6 flex items-baseline justify-between">
                   <div>
                     <div className="flex items-baseline gap-1">
-                      <span className="text-4xl font-black tracking-tighter text-foreground">${price.toLocaleString('es-MX')}</span>
-                      <span className="text-[10px] font-bold opacity-50 uppercase tracking-wider text-muted">
+                      <span className="text-3xl sm:text-4xl font-black tracking-tighter text-foreground">${price.toLocaleString('es-MX')}</span>
+                      <span className="text-[9px] font-bold opacity-50 uppercase tracking-wider text-muted">
                         MXN / {billingCycle === 'monthly' ? 'mes' : 'año'}
                       </span>
                     </div>
@@ -308,7 +308,7 @@ export default function AddonShowcase() {
                   </span>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-3 sm:gap-4">
                   <button
                     onClick={() => setSelectedAddon(addon)}
                     className="w-full py-4 text-[9px] font-black uppercase tracking-widest text-nectar-gold hover:text-foreground hover:bg-foreground/5 rounded-2xl border border-nectar-gold/20 hover:border-transparent transition-all duration-300 text-center"
@@ -337,12 +337,12 @@ export default function AddonShowcase() {
         >
           <div 
             onClick={(e) => e.stopPropagation()}
-            className="bg-card-bg border border-card-border w-full max-w-2xl rounded-[3rem] p-8 md:p-12 shadow-2xl relative max-h-[90vh] overflow-y-auto cursor-default"
+            className="bg-card-bg border border-card-border w-full max-w-2xl rounded-[2rem] sm:rounded-[3rem] p-6 sm:p-12 shadow-2xl relative max-h-[90vh] overflow-y-auto cursor-default"
           >
             {/* Close Button */}
             <button
               onClick={() => setSelectedAddon(null)}
-              className="absolute top-6 right-6 w-10 h-10 bg-foreground/5 hover:bg-foreground/10 text-foreground/60 hover:text-foreground rounded-full flex items-center justify-center text-lg font-bold transition-all"
+              className="absolute top-4 right-4 sm:top-6 sm:right-6 w-10 h-10 bg-foreground/5 hover:bg-foreground/10 text-foreground/60 hover:text-foreground rounded-full flex items-center justify-center text-lg font-bold transition-all"
             >
               ✕
             </button>
@@ -355,7 +355,7 @@ export default function AddonShowcase() {
                 <span className="text-[8px] font-black uppercase tracking-widest text-nectar-gold block mb-1">
                   Ficha Técnica de Módulo
                 </span>
-                <h2 className="text-3xl font-black tracking-tight">{selectedAddon.name}</h2>
+                <h2 className="text-xl sm:text-3xl font-black tracking-tight">{selectedAddon.name}</h2>
               </div>
             </div>
 
@@ -398,17 +398,17 @@ export default function AddonShowcase() {
               </div>
             </div>
 
-            <div className="flex gap-4">
-              <Link href={`/dashboard/addons?request=${selectedAddon.id}`} className="flex-1">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+              <Link href={`/dashboard/addons?request=${selectedAddon.id}`} className="w-full sm:flex-1">
                 <button
                   className="w-full py-4 text-xs font-black uppercase tracking-widest bg-nectar-gold text-background hover:scale-[1.02] active:scale-95 transition-all rounded-xl text-center shadow-lg"
                 >
-                  Adquirir e Integrar (${billingCycle === 'monthly' ? selectedAddon.monthlyPrice : selectedAddon.yearlyPrice} MXN)
+                  Adquirir (${billingCycle === 'monthly' ? selectedAddon.monthlyPrice : selectedAddon.yearlyPrice} MXN)
                 </button>
               </Link>
               <button
                 onClick={() => setSelectedAddon(null)}
-                className="px-8 py-4 text-xs font-black uppercase tracking-widest hover:bg-foreground/5 rounded-xl border border-card-border text-center transition-all animate-premium"
+                className="w-full sm:w-auto px-8 py-4 text-xs font-black uppercase tracking-widest hover:bg-foreground/5 rounded-xl border border-card-border text-center transition-all animate-premium"
               >
                 Cerrar
               </button>

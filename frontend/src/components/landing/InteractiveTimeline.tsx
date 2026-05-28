@@ -29,10 +29,10 @@ export default function InteractiveTimeline() {
   return (
     <section className="w-full px-6 max-w-7xl mx-auto" id="formula">
       <div className="text-center mb-16 relative">
-        <div className="absolute -top-44 left-1/2 -translate-x-1/2 text-[10rem] md:text-[20rem] font-black text-punch opacity-60 dark:opacity-80 select-none pointer-events-none whitespace-nowrap z-0">
+        <div className="absolute -top-16 sm:-top-32 md:-top-44 left-1/2 -translate-x-1/2 text-[4.5rem] sm:text-[10rem] md:text-[16rem] lg:text-[20rem] font-black text-punch opacity-60 dark:opacity-80 select-none pointer-events-none whitespace-nowrap z-0">
           BITACORA
         </div>
-        <h2 className="relative text-6xl md:text-8xl font-black mb-4 tracking-tighter text-nectar-forest dark:text-nectar-cream leading-none z-10">
+        <h2 className="relative text-3xl sm:text-5xl md:text-8xl font-black mb-4 tracking-tighter text-nectar-forest dark:text-nectar-cream leading-none z-10">
           Nuestra <span className="text-nectar-gold">Hoja de Ruta</span>
         </h2>
         <p className="text-[10px] text-nectar-gold font-black uppercase tracking-[0.5em] relative z-10">Ingeniería Predictiva</p>
@@ -59,10 +59,10 @@ export default function InteractiveTimeline() {
               </div>
 
               {/* Step Card Content */}
-              <div className={`p-10 md:p-12 rounded-[3.5rem] border-2 transition-all duration-500 w-full shadow-lg flex flex-col items-center ${activeStep === index ? 'border-nectar-gold bg-nectar-forest text-nectar-cream shadow-[var(--shadow-premium)]' : 'border-card-border bg-card-bg text-foreground'}`}>
+              <div className={`p-6 sm:p-10 md:p-12 rounded-[2rem] sm:rounded-[3.5rem] border-2 transition-all duration-500 w-full shadow-lg flex flex-col items-center ${activeStep === index ? 'border-nectar-gold bg-nectar-forest text-nectar-cream shadow-[var(--shadow-premium)]' : 'border-card-border bg-card-bg text-foreground'}`}>
                 <h4 className={`text-xs uppercase tracking-[0.4em] mb-4 font-black ${activeStep === index ? 'text-nectar-gold' : 'text-nectar-gold/60'}`}>{step.month}</h4>
-                <h3 className={`text-3xl md:text-4xl font-black mb-8 tracking-tighter leading-none ${activeStep === index ? 'text-nectar-cream' : 'text-foreground'}`}>{step.title}</h3>
-                <p className={`leading-relaxed text-lg font-bold ${activeStep === index ? 'text-nectar-cream/90' : 'text-foreground opacity-80'}`}>
+                <h3 className={`text-xl sm:text-3xl md:text-4xl font-black mb-4 sm:mb-8 tracking-tighter leading-none ${activeStep === index ? 'text-nectar-cream' : 'text-foreground'}`}>{step.title}</h3>
+                <p className={`leading-relaxed text-sm sm:text-lg font-bold ${activeStep === index ? 'text-nectar-cream/90' : 'text-foreground opacity-80'}`}>
                   {step.description}
                 </p>
               </div>

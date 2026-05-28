@@ -21,26 +21,26 @@ export default function PricingCalculator() {
   const totalHours = hours + brandDesignPricing[brandDesignType].hours;
 
   return (
-    <section className="w-full px-6 max-w-6xl mx-auto py-32 bg-card-bg rounded-[3.5rem] border border-nectar-forest/5 shadow-2xl relative overflow-hidden">
+    <section className="w-full px-6 max-w-6xl mx-auto py-12 sm:py-32 bg-card-bg rounded-[2rem] sm:rounded-[3.5rem] border border-nectar-forest/5 shadow-2xl relative overflow-hidden">
       <div className="absolute top-0 right-0 w-64 h-64 bg-nectar-gold/5 blur-[100px] -z-10"></div>
 
-      <div className="text-center mb-20">
-        <h2 className="text-4xl md:text-6xl font-black mb-6 tracking-tighter text-foreground">Inversor Inteligente</h2>
-        <p className="text-xl text-foreground opacity-40 uppercase tracking-widest text-[10px] font-black">Optimiza tu capital con ingeniería de alto rendimiento.</p>
+      <div className="text-center mb-10 sm:mb-20">
+        <h2 className="text-3xl sm:text-6xl font-black mb-4 sm:mb-6 tracking-tighter text-foreground">Inversor Inteligente</h2>
+        <p className="text-xl text-foreground opacity-40 uppercase tracking-widest text-[9px] sm:text-[10px] font-black">Optimiza tu capital con ingeniería de alto rendimiento.</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-start">
-        <div className="space-y-16">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-20 items-start">
+        <div className="space-y-8 sm:space-y-16">
           {/* Horas de Ingeniería */}
           <div>
-            <div className="flex justify-between items-end mb-8">
+            <div className="flex justify-between items-end mb-6 sm:mb-8">
               <div>
                 <label className="text-xs font-black uppercase tracking-[0.3em] text-nectar-gold block mb-2">
                   Ingeniería de Software
                 </label>
                 <p className="text-foreground/40 text-xs font-bold">Desarrollo, DevOps y Consultoría</p>
               </div>
-              <span className="text-5xl font-black text-nectar-forest">{hours}h</span>
+              <span className="text-4xl sm:text-5xl font-black text-nectar-forest">{hours}h</span>
             </div>
             <input
               type="range"
@@ -54,26 +54,26 @@ export default function PricingCalculator() {
           </div>
 
           {/* Diseño de Marca Add-on */}
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             <label className="text-xs font-black uppercase tracking-[0.3em] text-nectar-gold block">
               Complemento: Diseño de Marca
             </label>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4">
               {(['none', 'weekly', 'biweekly', 'monthly'] as const).map((type) => (
                 <button
                   key={type}
                   onClick={() => setBrandDesignType(type)}
-                  className={`p-6 rounded-3xl border-2 transition-all text-left group ${brandDesignType === type
+                  className={`p-4 sm:p-6 rounded-[1.5rem] sm:rounded-3xl border-2 transition-all text-left group ${brandDesignType === type
                       ? 'border-nectar-gold bg-nectar-gold/5 shadow-lg'
                       : 'border-card-border hover:border-nectar-gold/30'
                     }`}
                 >
-                  <p className={`text-[10px] font-black uppercase tracking-widest mb-1 ${brandDesignType === type ? 'text-nectar-gold' : 'text-foreground/30'}`}>
+                  <p className={`text-[9px] sm:text-[10px] font-black uppercase tracking-widest mb-1 ${brandDesignType === type ? 'text-nectar-gold' : 'text-foreground/30'}`}>
                     {type === 'none' ? 'Básico' : 'Premium'}
                   </p>
-                  <p className="text-sm font-black text-foreground">{brandDesignPricing[type].label}</p>
+                  <p className="text-xs sm:text-sm font-black text-foreground">{brandDesignPricing[type].label}</p>
                   {brandDesignPricing[type].price > 0 && (
-                    <p className="text-xs font-black text-nectar-gold mt-2">
+                    <p className="text-[10px] sm:text-xs font-black text-nectar-gold mt-2">
                       {brandDesignPricing[type].displayPrice} MXN
                     </p>
                   )}
@@ -84,35 +84,35 @@ export default function PricingCalculator() {
         </div>
 
         {/* Card de Resultados */}
-        <div className="p-12 rounded-[3rem] bg-nectar-forest text-white relative overflow-hidden shadow-2xl lg:sticky lg:top-8">
-          <div className="absolute top-0 right-0 p-8">
-            <div className="w-14 h-14 rounded-full border border-white/10 flex items-center justify-center text-nectar-gold font-black italic text-xl">
+        <div className="p-6 sm:p-12 rounded-[2rem] sm:rounded-[3rem] bg-nectar-forest text-white relative overflow-hidden shadow-2xl lg:sticky lg:top-8">
+          <div className="absolute top-0 right-0 p-6 sm:p-8">
+            <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-full border border-white/10 flex items-center justify-center text-nectar-gold font-black italic text-base sm:text-xl">
               N
             </div>
           </div>
 
-          <h4 className="text-xs font-black uppercase tracking-[0.4em] mb-12 text-nectar-gold">Resumen de Inversión</h4>
+          <h4 className="text-xs font-black uppercase tracking-[0.4em] mb-6 sm:mb-12 text-nectar-gold">Resumen de Inversión</h4>
 
-          <div className="space-y-10">
+          <div className="space-y-6 sm:space-y-10">
             <div>
-              <p className="text-white/40 text-xs font-bold uppercase tracking-widest mb-3">Inversión Mensual Total</p>
-              <p className="text-7xl font-black text-white tracking-tighter">
-                ${totalMonthly.toLocaleString()} <span className="text-lg font-medium text-nectar-gold">MXN</span>
+              <p className="text-white/40 text-xs font-bold uppercase tracking-widest mb-2 sm:mb-3">Inversión Mensual Total</p>
+              <p className="text-3xl sm:text-5xl md:text-7xl font-black text-white tracking-tighter flex items-baseline gap-2 flex-wrap">
+                ${totalMonthly.toLocaleString()} <span className="text-sm sm:text-lg font-medium text-nectar-gold">MXN</span>
               </p>
-              <p className="text-xs font-bold text-nectar-gold/60 mt-4 uppercase tracking-widest">
+              <p className="text-xs font-bold text-nectar-gold/60 mt-3 sm:mt-4 uppercase tracking-widest">
                 {totalHours} horas totales de talento experto
               </p>
             </div>
 
-            <div className="pt-10 border-t border-white/10">
-              <p className="text-white/40 text-xs font-bold uppercase tracking-widest mb-3">Eficiencia vs Agencia Tradicional</p>
-              <p className="text-4xl font-black text-nectar-gold">
+            <div className="pt-6 sm:pt-10 border-t border-white/10">
+              <p className="text-white/40 text-xs font-bold uppercase tracking-widest mb-2 sm:mb-3">Eficiencia vs Agencia Tradicional</p>
+              <p className="text-2xl sm:text-4xl font-black text-nectar-gold">
                 -${(hours * (agencyRate - nectarRate)).toLocaleString()} MXN
               </p>
               <p className="text-[10px] text-white/30 mt-2 italic">Ahorro proyectado basado en tarifas de mercado de CDMX/Guadalajara.</p>
             </div>
 
-            <button className="w-full py-6 bg-white text-nectar-forest font-black uppercase tracking-widest rounded-2xl hover:bg-nectar-gold hover:text-white transition-all shadow-xl">
+            <button className="w-full py-4 sm:py-6 bg-white text-nectar-forest font-black uppercase tracking-widest rounded-2xl hover:bg-nectar-gold hover:text-white transition-all shadow-xl text-xs sm:text-sm">
               Solicitar Cotización
             </button>
           </div>
