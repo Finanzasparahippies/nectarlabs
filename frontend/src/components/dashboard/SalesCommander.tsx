@@ -2,6 +2,14 @@
 
 import React, { useState, useEffect } from 'react';
 import { fetcher, API_URL } from '../../lib/api';
+import Toast from '../ui/Toast';
+
+const getInlineViewUrl = (url: string | null, type: 'quote' | 'contract' | 'receipt', id: string | number) => {
+  if (!url) return '';
+  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+  const endpoint = type === 'quote' ? `quotes/${id}/view_pdf` : type === 'contract' ? `contracts/${id}/view_pdf` : `installments/${id}/view_receipt`;
+  return `${API_URL}/${endpoint}/${token ? `?token=${token}` : ''}`;
+};
 
 const PREDEFINED_MODULES = [
   { key: 'auth', name: 'Autenticación y Perfiles de Usuario', description: 'Sistema de inicio de sesión seguro, registro, recuperación de contraseña y gestión de perfiles con roles de usuario (ADMIN, CLIENT, etc.).', price: 11000 },
@@ -45,6 +53,11 @@ export default function SalesCommander() {
   const [quotes, setQuotes] = useState<ProjectQuote[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeDragOverColumn, setActiveDragOverColumn] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'warning' | 'info' } | null>(null);
+
+  const showToast = (message: string, type: 'success' | 'error' | 'warning' | 'info' = 'success') => {
+    setToast({ message, type });
+  };
 
   // Modals
   const [showLeadModal, setShowLeadModal] = useState(false);
@@ -162,8 +175,9 @@ export default function SalesCommander() {
         setLeads(prev => [savedLead, ...prev]);
       }
       setShowLeadModal(false);
+      showToast(editingLead ? 'Prospecto actualizado con éxito.' : 'Prospecto creado con éxito.', 'success');
     } catch (err) {
-      alert('Hubo un error al guardar el prospecto.');
+      showToast('Hubo un error al guardar el prospecto.', 'error');
     }
   };
 
@@ -179,8 +193,9 @@ export default function SalesCommander() {
       });
       if (!response.ok) throw new Error('Error al eliminar prospecto');
       setLeads(prev => prev.filter(l => l.id !== leadId));
+      showToast('Prospecto eliminado correctamente.', 'success');
     } catch (err) {
-      alert('Error al eliminar el prospecto.');
+      showToast('Error al eliminar el prospecto.', 'error');
     }
   };
 
@@ -207,8 +222,9 @@ export default function SalesCommander() {
       const updated = await response.json();
       setLeads(prev => prev.map(l => l.id === notesLead.id ? updated : l));
       setShowNotesModal(false);
+      showToast('Notas del prospecto guardadas.', 'success');
     } catch (err) {
-      alert('Error al guardar las notas.');
+      showToast('Error al guardar las notas.', 'error');
     }
   };
 
@@ -255,7 +271,7 @@ export default function SalesCommander() {
       setLeads(prev => prev.map(l => l.id === leadId ? updated : l));
     } catch (err) {
       // Revert if error
-      alert('Error al actualizar estado en el servidor. Revirtiendo...');
+      showToast('Error al actualizar estado en el servidor. Revirtiendo...', 'error');
       loadData();
     }
   };
@@ -362,7 +378,7 @@ export default function SalesCommander() {
         }
       }
 
-      alert('Cotización creada y PDF generado con éxito.');
+      showToast('Cotización creada y PDF generado con éxito.', 'success');
     } catch (err: any) {
       setQuoteError(err.message || 'Ocurrió un error inesperado.');
     } finally {
@@ -410,9 +426,9 @@ export default function SalesCommander() {
         }
       }
       
-      alert(`Estado de la cotización actualizado a ${status}.${status === 'APPROVED' ? ' Se ha generado un contrato en proceso y enviado por correo para la firma.' : ''}`);
+      showToast(`Estado de la cotización actualizado a ${status}.${status === 'APPROVED' ? ' Se ha generado un contrato en proceso y enviado por correo para la firma.' : ''}`, 'success');
     } catch (err: any) {
-      alert(err.message || 'Error al cambiar estado.');
+      showToast(err.message || 'Error al cambiar estado.', 'error');
     }
   };
 
@@ -428,9 +444,9 @@ export default function SalesCommander() {
       if (!response.ok) throw new Error('PDF generation failed');
       const data = await response.json();
       setQuotes(prev => prev.map(q => q.id === quoteId ? { ...q, pdf_file: data.pdf_url } : q));
-      alert('PDF de la cotización regenerado con éxito.');
+      showToast('PDF de la cotización regenerado con éxito.', 'success');
     } catch (err) {
-      alert('Error al generar PDF de cotización.');
+      showToast('Error al generar PDF de cotización.', 'error');
     }
   };
 
@@ -446,9 +462,9 @@ export default function SalesCommander() {
       });
       if (!response.ok) throw new Error('Delete failed');
       setQuotes(prev => prev.filter(q => q.id !== quoteId));
-      alert('Cotización eliminada con éxito.');
+      showToast('Cotización eliminada con éxito.', 'success');
     } catch (err) {
-      alert('Error al eliminar cotización.');
+      showToast('Error al eliminar cotización.', 'error');
     }
   };
 
@@ -730,7 +746,7 @@ export default function SalesCommander() {
 
                       {quote.pdf_file ? (
                         <a
-                          href={quote.pdf_file}
+                          href={getInlineViewUrl(quote.pdf_file, 'quote', quote.id)}
                           target="_blank"
                           rel="noreferrer"
                           className="px-2.5 py-1.5 bg-nectar-gold hover:bg-nectar-gold/90 text-background text-[8px] font-black uppercase tracking-widest rounded-lg transition-all inline-block font-bold"
@@ -1140,6 +1156,13 @@ export default function SalesCommander() {
             </form>
           </div>
         </div>
+      )}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
       )}
     </div>
   );

@@ -352,6 +352,44 @@ class ContractViewSet(viewsets.ModelViewSet):
         except PromoCode.DoesNotExist:
             return Response({'error': 'Código promocional no encontrado.'}, status=status.HTTP_404_NOT_FOUND)
 
+    @action(detail=True, methods=['get'], permission_classes=[permissions.AllowAny])
+    def view_pdf(self, request, pk=None):
+        user = request.user
+        if not user or not user.is_authenticated:
+            token = request.query_params.get('token')
+            if token:
+                from rest_framework_simplejwt.authentication import JWTAuthentication
+                try:
+                    validated_token = JWTAuthentication().get_validated_token(token)
+                    user = JWTAuthentication().get_user(validated_token)
+                except Exception:
+                    from django.http import HttpResponse
+                    return HttpResponse("Token no válido o expirado.", status=401)
+        
+        if not user or not user.is_authenticated:
+            from django.http import HttpResponse
+            return HttpResponse("No autorizado.", status=401)
+
+        contract = self.get_object()
+        
+        if not user.is_staff and contract.user != user:
+            from django.http import HttpResponse
+            return HttpResponse("No tienes acceso a este contrato.", status=403)
+
+        if not contract.pdf_file:
+            from django.http import HttpResponse
+            return HttpResponse("PDF no generado para este contrato.", status=404)
+        
+        import requests
+        from django.http import HttpResponse
+        try:
+            response = requests.get(contract.pdf_file.url, timeout=10)
+            django_response = HttpResponse(response.content, content_type='application/pdf')
+            django_response['Content-Disposition'] = f'inline; filename="Contrato_{contract.id}.pdf"'
+            return django_response
+        except Exception as e:
+            return HttpResponse(f"Error al recuperar el archivo PDF: {e}", status=500)
+
 class PaymentInstallmentViewSet(viewsets.ModelViewSet):
     serializer_class = PaymentInstallmentSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -416,6 +454,54 @@ class PaymentInstallmentViewSet(viewsets.ModelViewSet):
             return Response({'url': session.url}, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @action(detail=True, methods=['get'], permission_classes=[permissions.AllowAny])
+    def view_receipt(self, request, pk=None):
+        user = request.user
+        if not user or not user.is_authenticated:
+            token = request.query_params.get('token')
+            if token:
+                from rest_framework_simplejwt.authentication import JWTAuthentication
+                try:
+                    validated_token = JWTAuthentication().get_validated_token(token)
+                    user = JWTAuthentication().get_user(validated_token)
+                except Exception:
+                    from django.http import HttpResponse
+                    return HttpResponse("Token no válido o expirado.", status=401)
+        
+        if not user or not user.is_authenticated:
+            from django.http import HttpResponse
+            return HttpResponse("No autorizado.", status=401)
+
+        installment = self.get_object()
+        
+        is_admin_or_business = user.is_staff or user.role in ['ADMIN', 'BUSINESS']
+        if not is_admin_or_business and installment.contract.user != user:
+            from django.http import HttpResponse
+            return HttpResponse("No tienes acceso a esta mensualidad.", status=403)
+
+        if not installment.receipt_file:
+            from django.http import HttpResponse
+            return HttpResponse("No hay comprobante cargado para esta mensualidad.", status=404)
+        
+        import requests
+        from django.http import HttpResponse
+        try:
+            response = requests.get(installment.receipt_file.url, timeout=10)
+            content_type = response.headers.get('Content-Type', 'application/octet-stream')
+            filename = f"Comprobante_{installment.id}"
+            if "pdf" in content_type:
+                filename += ".pdf"
+            elif "png" in content_type:
+                filename += ".png"
+            elif "jpeg" in content_type or "jpg" in content_type:
+                filename += ".jpg"
+                
+            django_response = HttpResponse(response.content, content_type=content_type)
+            django_response['Content-Disposition'] = f'inline; filename="{filename}"'
+            return django_response
+        except Exception as e:
+            return HttpResponse(f"Error al recuperar el archivo: {e}", status=500)
 
 
 @csrf_exempt
@@ -620,9 +706,17 @@ def stripe_webhook(request):
     return HttpResponse(status=200)
 
 
-class PromoCodeViewSet(viewsets.ReadOnlyModelViewSet):
+class PromoCodeViewSet(viewsets.ModelViewSet):
     serializer_class = PromoCodeSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+    def check_permissions(self, request):
+        super().check_permissions(request)
+        if self.action in ['create', 'update', 'partial_update', 'destroy']:
+            user = request.user
+            is_admin = user.is_staff or getattr(user, 'role', '') == 'ADMIN'
+            if not is_admin:
+                self.permission_denied(request, message="No tienes permisos para administrar códigos de referido.")
 
     def get_queryset(self):
         # Staff/admin see ALL codes (including inactive), regular users see only active

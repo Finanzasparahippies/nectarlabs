@@ -441,6 +441,51 @@ class ProjectQuoteViewSet(viewsets.ModelViewSet):
 
         return Response({'detail': f'Estado de cotización actualizado a {new_status}.', 'status': quote.status})
 
+    @action(detail=True, methods=['get'], permission_classes=[permissions.AllowAny])
+    def view_pdf(self, request, pk=None):
+        user = request.user
+        if not user or not user.is_authenticated:
+            token = request.query_params.get('token')
+            if token:
+                from rest_framework_simplejwt.authentication import JWTAuthentication
+                try:
+                    validated_token = JWTAuthentication().get_validated_token(token)
+                    user = JWTAuthentication().get_user(validated_token)
+                except Exception:
+                    from django.http import HttpResponse
+                    return HttpResponse("Token no válido o expirado.", status=401)
+        
+        if not user or not user.is_authenticated:
+            from django.http import HttpResponse
+            return HttpResponse("No autorizado.", status=401)
+
+        quote = self.get_object()
+        
+        is_admin_or_staff = user.is_staff or user.role == 'ADMIN'
+        is_sales = user.role == 'SALES'
+        
+        if user.role == 'SALES' and quote.salesperson != user:
+            from django.http import HttpResponse
+            return HttpResponse("No tienes acceso a esta cotización.", status=403)
+        elif not is_admin_or_staff and not is_sales and quote.client != user and quote.client_email != user.email:
+            from django.http import HttpResponse
+            return HttpResponse("No tienes acceso a esta cotización.", status=403)
+
+        if not quote.pdf_file:
+            from django.http import HttpResponse
+            return HttpResponse("PDF no generado para esta cotización.", status=404)
+        
+        import requests
+        from django.http import HttpResponse
+        try:
+            response = requests.get(quote.pdf_file.url, timeout=10)
+            django_response = HttpResponse(response.content, content_type='application/pdf')
+            django_response['Content-Disposition'] = f'inline; filename="Cotizacion_{quote.id}.pdf"'
+            return django_response
+        except Exception as e:
+            return HttpResponse(f"Error al recuperar el archivo PDF: {e}", status=500)
+
+
 
 class LeadViewSet(viewsets.ModelViewSet):
     serializer_class = LeadSerializer

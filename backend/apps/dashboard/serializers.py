@@ -57,9 +57,10 @@ class ProjectQuoteSerializer(serializers.ModelSerializer):
         return attrs
 
     def create(self, validated_data):
-        from .utils import generate_quote_pdf
+        from .utils import generate_quote_pdf, send_quote_email
         quote = super().create(validated_data)
-        generate_quote_pdf(quote)
+        if generate_quote_pdf(quote):
+            send_quote_email(quote)
         return quote
 
     def update(self, instance, validated_data):

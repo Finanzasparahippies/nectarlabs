@@ -105,6 +105,14 @@ const getMediaUrl = (url?: string) => {
   return path;
 };
 
+const getInlineViewUrl = (url: string | undefined, type: 'quote' | 'contract' | 'receipt', id: string | number) => {
+  if (!url) return '';
+  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+  const endpoint = type === 'quote' ? `quotes/${id}/view_pdf` : type === 'contract' ? `contracts/${id}/view_pdf` : `installments/${id}/view_receipt`;
+  return `${API_URL}/${endpoint}/${token ? `?token=${token}` : ''}`;
+};
+
+
 function DashboardPageOriginal() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [tickets, setTickets] = useState<Ticket[]>([]);
@@ -1203,7 +1211,7 @@ function DashboardPageOriginal() {
                                 )}
                                 {contract.pdf_file ? (
                                   <a
-                                    href={contract.pdf_file}
+                                    href={getInlineViewUrl(contract.pdf_file, 'contract', contract.id)}
                                     target="_blank"
                                     rel="noreferrer"
                                     className="px-3 py-1.5 bg-card-border hover:bg-foreground hover:text-background text-[8px] font-black uppercase tracking-widest rounded-lg transition-all inline-block"
@@ -1319,7 +1327,7 @@ function DashboardPageOriginal() {
                                               <div className="flex justify-between items-center py-0.5">
                                                 <span>Comprobante:</span>
                                                 <a 
-                                                  href={getMediaUrl(inst.receipt_file)} 
+                                                  href={getInlineViewUrl(inst.receipt_file, 'receipt', inst.id)} 
                                                   target="_blank" 
                                                   rel="noreferrer"
                                                   className="text-nectar-gold hover:underline font-bold"
@@ -1413,7 +1421,7 @@ function DashboardPageOriginal() {
                         {activeContract.pdf_file && (
                           <div className="mt-2">
                             <a
-                              href={activeContract.pdf_file}
+                              href={getInlineViewUrl(activeContract.pdf_file, 'contract', activeContract.id)}
                               target="_blank"
                               rel="noreferrer"
                               className="inline-flex items-center gap-2 text-[9px] font-black uppercase tracking-widest text-nectar-gold hover:underline"
@@ -1815,7 +1823,7 @@ function DashboardPageOriginal() {
                           ) : (
                             contract.pdf_file && (
                               <a
-                                href={contract.pdf_file}
+                                href={getInlineViewUrl(contract.pdf_file, 'contract', contract.id)}
                                 target="_blank"
                                 rel="noreferrer"
                                 className="flex-1 py-2.5 bg-card-border hover:bg-foreground hover:text-background text-center rounded-xl text-[8px] font-black uppercase tracking-widest transition-all inline-block font-bold"

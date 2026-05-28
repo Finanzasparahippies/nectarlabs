@@ -122,3 +122,92 @@ def generate_quote_pdf(quote):
     except Exception as e:
         logging.error(f"Error generating quote PDF: {e}", exc_info=True)
         return False
+
+
+def send_quote_email(quote):
+    try:
+        from django.core.mail import EmailMultiAlternatives
+        from apps.tenants.utils import get_platform_sender
+        from django.conf import settings
+        
+        subject = f"📋 Tu Propuesta Tecnológica de Néctar Labs - {quote.project_name}"
+        
+        # Build a beautiful, styled HTML email
+        html_content = f"""
+        <html>
+        <body style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #1e1e1e; background-color: #f9f9f9; padding: 30px; margin: 0;">
+            <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 20px; border: 1px solid #e5e7eb; overflow: hidden; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05);">
+                <div style="background-color: #0F1B15; padding: 30px; text-align: center; border-bottom: 4px solid #C68A1E;">
+                    <h1 style="color: #ffffff; margin: 0; font-size: 22px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase;">Néctar Labs</h1>
+                    <p style="color: #C68A1E; margin: 5px 0 0 0; font-size: 11px; font-weight: bold; letter-spacing: 0.2em; text-transform: uppercase;">Partner Tecnológico</p>
+                </div>
+                <div style="padding: 40px 30px;">
+                    <h2 style="font-size: 20px; font-weight: 800; color: #0F1B15; margin-top: 0; margin-bottom: 20px; text-transform: uppercase;">Propuesta Comercial</h2>
+                    <p style="font-size: 14px; line-height: 1.6; color: #4b5563; margin-bottom: 30px;">
+                        Hola <strong>{quote.client_name}</strong>,
+                    </p>
+                    <p style="font-size: 14px; line-height: 1.6; color: #4b5563; margin-bottom: 30px;">
+                        Hemos generado la propuesta formal de servicios de desarrollo de software para el proyecto <strong>"{quote.project_name}"</strong>. 
+                        Adjunto a este correo encontrarás el PDF formalizado con el desglose de los módulos cotizados, tiempos de entrega y condiciones de soporte.
+                    </p>
+                    
+                    <div style="background-color: #f3f4f6; border-radius: 12px; padding: 25px; margin-bottom: 30px; border: 1px solid #e5e7eb;">
+                        <table style="width: 100%; font-size: 13px; color: #4b5563;">
+                            <tr>
+                                <td style="padding-bottom: 10px; font-weight: bold;">Proyecto:</td>
+                                <td style="padding-bottom: 10px; text-align: right; color: #0f172a; font-weight: bold;">{quote.project_name}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding-bottom: 10px; font-weight: bold;">Inversión Total:</td>
+                                <td style="padding-bottom: 10px; text-align: right; color: #C68A1E; font-weight: bold; font-size: 15px;">${float(quote.total_price):,.2f} MXN</td>
+                            </tr>
+                            <tr>
+                                <td style="font-weight: bold;">Tiempo Estimado:</td>
+                                <td style="text-align: right; color: #0f172a; font-weight: bold;">{quote.estimated_delivery_weeks} semanas</td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <p style="font-size: 14px; line-height: 1.6; color: #4b5563; margin-bottom: 30px;">
+                        Si estás de acuerdo con la propuesta, por favor responde a este correo para proceder con la firma del contrato y el aprovisionamiento de tu ecosistema.
+                    </p>
+                    
+                    <div style="text-align: center; margin-top: 30px; margin-bottom: 10px;">
+                        <a href="{quote.pdf_file.url if quote.pdf_file else '#'}" style="background-color: #C68A1E; color: #ffffff; padding: 15px 35px; border-radius: 12px; text-decoration: none; font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.1em; display: inline-block;">Ver Propuesta en Línea</a>
+                    </div>
+                </div>
+                <div style="background-color: #f9fafb; padding: 20px 30px; border-top: 1px solid #e5e7eb; text-align: center; font-size: 11px; color: #9ca3af;">
+                    Este es un correo automático enviado por la consola de ventas de Néctar Labs.<br>
+                    Si tienes dudas contáctanos a soporte@nectarlabs.dev
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+        
+        text_content = f"Propuesta Comercial Néctar Labs para {quote.client_name}. Proyecto: {quote.project_name}. Inversión: ${float(quote.total_price):,.2f} MXN."
+        
+        from_email = get_platform_sender("Néctar Labs Propuestas")
+        recipients = [quote.client_email, 'soporte@nectarlabs.dev']
+        
+        email = EmailMultiAlternatives(
+            subject=subject,
+            body=text_content,
+            from_email=from_email,
+            to=recipients,
+            reply_to=['soporte@nectarlabs.dev']
+        )
+        email.attach_alternative(html_content, "text/html")
+        
+        if quote.pdf_file:
+            quote.pdf_file.open('rb')
+            email.attach(f"Cotizacion_Nectar_{quote.id}.pdf", quote.pdf_file.read(), 'application/pdf')
+            quote.pdf_file.close()
+            
+        email.send()
+        return True
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).error(f"Error sending quote email: {e}", exc_info=True)
+        return False
+

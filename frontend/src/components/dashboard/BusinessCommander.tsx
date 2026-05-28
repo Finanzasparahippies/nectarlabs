@@ -1,6 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { fetcher, API_URL } from '@/lib/api';
+import Toast from '../ui/Toast';
+
+const getInlineViewUrl = (url: string | null | undefined, type: 'quote' | 'contract' | 'receipt', id: string | number) => {
+  if (!url) return '';
+  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+  const endpoint = type === 'quote' ? `quotes/${id}/view_pdf` : type === 'contract' ? `contracts/${id}/view_pdf` : `installments/${id}/view_receipt`;
+  return `${API_URL}/${endpoint}/${token ? `?token=${token}` : ''}`;
+};
 
 const PREDEFINED_MODULES = [
   { key: 'auth', name: 'Autenticación y Perfiles de Usuario', description: 'Sistema de inicio de sesión seguro, registro, recuperación de contraseña y gestión de perfiles con roles de usuario (ADMIN, CLIENT, etc.).', price: 11000 },
@@ -86,6 +94,23 @@ export default function BusinessCommander({ stats, installments, setInstallments
   const [togglingUser, setTogglingUser] = useState<number | null>(null);
   const [salesLoading, setSalesLoading] = useState(true);
 
+  // Toast notifications state
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'warning' | 'info' } | null>(null);
+  const showToast = (message: string, type: 'success' | 'error' | 'warning' | 'info' = 'success') => {
+    setToast({ message, type });
+  };
+
+  // Promo & Discount Codes CRUD state
+  const [showPromoModal, setShowPromoModal] = useState(false);
+  const [promoCode, setPromoCode] = useState('');
+  const [promoCodeType, setPromoCodeType] = useState<'CLIENT' | 'SELLER'>('CLIENT');
+  const [promoDiscount, setPromoDiscount] = useState(10);
+  const [promoMaxUses, setPromoMaxUses] = useState('');
+  const [promoValidUntil, setPromoValidUntil] = useState('');
+  const [promoReferrer, setPromoReferrer] = useState('');
+  const [isSubmittingPromo, setIsSubmittingPromo] = useState(false);
+  const [promoError, setPromoError] = useState('');
+
   // Project Quotes States
   const [quotes, setQuotes] = useState<any[]>([]);
   const [quotesLoading, setQuotesLoading] = useState(true);
@@ -145,9 +170,9 @@ export default function BusinessCommander({ stats, installments, setInstallments
       }
       const data = await response.json();
       setQuotes(prev => prev.map(q => q.id === quoteId ? { ...q, status: data.status } : q));
-      alert(`Estado de la cotización actualizado a ${status}.${status === 'APPROVED' ? ' Se ha generado un contrato en proceso y enviado por correo para la firma.' : ''}`);
+      showToast(`Estado de la cotización actualizado a ${status}.${status === 'APPROVED' ? ' Se ha generado un contrato en proceso y enviado por correo para la firma.' : ''}`, 'success');
     } catch (err: any) {
-      alert(err.message || 'Error al cambiar estado.');
+      showToast(err.message || 'Error al cambiar estado.', 'error');
     }
   };
 
@@ -163,9 +188,9 @@ export default function BusinessCommander({ stats, installments, setInstallments
       if (!response.ok) throw new Error("PDF generation failed");
       const data = await response.json();
       setQuotes(prev => prev.map(q => q.id === quoteId ? { ...q, pdf_file: data.pdf_url } : q));
-      alert("PDF de la cotización regenerado con éxito.");
+      showToast("PDF de la cotización regenerado con éxito.", 'success');
     } catch (err) {
-      alert("Error al generar PDF de cotización.");
+      showToast("Error al generar PDF de cotización.", 'error');
     }
   };
 
@@ -181,9 +206,9 @@ export default function BusinessCommander({ stats, installments, setInstallments
       });
       if (!response.ok) throw new Error("Delete failed");
       setQuotes(prev => prev.filter(q => q.id !== quoteId));
-      alert("Cotización eliminada con éxito.");
+      showToast("Cotización eliminada con éxito.", 'success');
     } catch (err) {
-      alert("Error al eliminar cotización.");
+      showToast("Error al eliminar cotización.", 'error');
     }
   };
 
@@ -274,7 +299,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
       const newQuote = await response.json();
       setQuotes(prev => [newQuote, ...prev]);
       setShowQuoteModal(false);
-      alert("Cotización modular creada y PDF generado con éxito.");
+      showToast("Cotización modular creada y PDF generado con éxito.", 'success');
     } catch (err: any) {
       setQuoteError(err.message || 'Ocurrió un error inesperado.');
     } finally {
@@ -300,8 +325,9 @@ export default function BusinessCommander({ stats, installments, setInstallments
       }
       const updated = await response.json();
       setUsers(prev => prev.map(u => u.id === userId ? updated : u));
+      showToast(updated.is_approved_seller ? 'Vendedor aprobado con éxito.' : 'Aprobación de vendedor revocada.', 'success');
     } catch (err: any) {
-      alert(err.message || 'Error al actualizar estado del vendedor.');
+      showToast(err.message || 'Error al actualizar estado del vendedor.', 'error');
     } finally {
       setTogglingUser(null);
     }
@@ -324,8 +350,9 @@ export default function BusinessCommander({ stats, installments, setInstallments
       // Refresh summary
       const newSummary = await fetcher('/sales-commissions/summary/').catch(() => null);
       setCommissionSummary(newSummary);
+      showToast('Comisión marcada como pagada con éxito.', 'success');
     } catch (err: any) {
-      alert(err.message || 'Error al actualizar comisión.');
+      showToast(err.message || 'Error al actualizar comisión.', 'error');
     } finally {
       setMarkingPaid(null);
     }
@@ -354,15 +381,15 @@ export default function BusinessCommander({ stats, installments, setInstallments
       if (!response.ok) throw new Error("Status update failed");
       const updated = await response.json();
       setInstallments(prev => prev.map(inst => inst.id === installmentId ? updated : inst));
-      alert(`Estado de la mensualidad actualizado a ${newStatus === 'PAID' ? 'PAGADO' : newStatus === 'CANCELLED' ? 'CANCELADO' : 'PENDIENTE'}.`);
+      showToast(`Estado de la mensualidad actualizado a ${newStatus === 'PAID' ? 'PAGADO' : newStatus === 'CANCELLED' ? 'CANCELADO' : 'PENDIENTE'}.`, 'success');
     } catch (err) {
-      alert("Error al actualizar el estado de la mensualidad.");
+      showToast("Error al actualizar el estado de la mensualidad.", 'error');
     }
   };
 
   const handleSaveCFDI = async (installmentId: number) => {
     const uuid = cfdiInputs[installmentId] || "";
-    if (!uuid.trim()) return alert("Por favor ingresa un folio fiscal válido.");
+    if (!uuid.trim()) return showToast("Por favor ingresa un folio fiscal válido.", 'warning');
 
     try {
       const token = localStorage.getItem('token');
@@ -383,9 +410,93 @@ export default function BusinessCommander({ stats, installments, setInstallments
       if (!response.ok) throw new Error("CFDI update failed");
       const updated = await response.json();
       setInstallments(prev => prev.map(inst => inst.id === installmentId ? updated : inst));
-      alert("Folio Fiscal / CFDI guardado con éxito.");
+      showToast("Folio Fiscal / CFDI guardado con éxito.", 'success');
     } catch (err) {
-      alert("Error al guardar Folio Fiscal.");
+      showToast("Error al guardar Folio Fiscal.", 'error');
+    }
+  };
+
+  const handleCreatePromoCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!promoCode.trim()) return showToast("Por favor ingresa un código.", "warning");
+    
+    setPromoError('');
+    setIsSubmittingPromo(true);
+    
+    const token = localStorage.getItem('token');
+    const payload = {
+      code: promoCode.trim().toUpperCase(),
+      code_type: promoCodeType,
+      discount_percentage: parseFloat(promoDiscount as any) || 0,
+      max_uses: promoMaxUses ? parseInt(promoMaxUses) : null,
+      valid_until: promoValidUntil || null,
+      referrer: promoReferrer ? parseInt(promoReferrer) : null,
+      is_active: true
+    };
+    
+    try {
+      const response = await fetch(`${API_URL}/promo-codes/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+      });
+      
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.detail || 'Error al guardar el código promocional');
+      }
+      
+      const newPromo = await response.json();
+      setPromoCodes(prev => [newPromo, ...prev]);
+      setShowPromoModal(false);
+      showToast(`Código ${newPromo.code} creado con éxito.`, "success");
+    } catch (err: any) {
+      setPromoError(err.message || 'Ocurrió un error inesperado.');
+    } finally {
+      setIsSubmittingPromo(false);
+    }
+  };
+
+  const handleTogglePromoCodeActive = async (codeId: number, currentActive: boolean) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/promo-codes/${codeId}/`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ is_active: !currentActive })
+      });
+      
+      if (!response.ok) throw new Error("Error al cambiar estado");
+      const updated = await response.json();
+      setPromoCodes(prev => prev.map(p => p.id === codeId ? updated : p));
+      showToast(`Código ${updated.code} ${updated.is_active ? 'activado' : 'desactivado'}.`, "success");
+    } catch (err) {
+      showToast("Error al actualizar el estado del código.", "error");
+    }
+  };
+
+  const handleDeletePromoCode = async (codeId: number, codeStr: string) => {
+    if (!window.confirm(`¿Estás seguro de que deseas eliminar el código ${codeStr}?`)) return;
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/promo-codes/${codeId}/`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (!response.ok) throw new Error("Error al eliminar");
+      setPromoCodes(prev => prev.filter(p => p.id !== codeId));
+      showToast(`Código ${codeStr} eliminado con éxito.`, "success");
+    } catch (err) {
+      showToast("Error al eliminar el código.", "error");
     }
   };
 
@@ -863,10 +974,10 @@ export default function BusinessCommander({ stats, installments, setInstallments
                   <td className="py-4 text-center">
                     {inst.receipt_file ? (
                       <a
-                        href={getMediaUrl(inst.receipt_file)}
+                        href={getInlineViewUrl(inst.receipt_file, 'receipt', inst.id)}
                         target="_blank"
                         rel="noreferrer"
-                        className="px-2.5 py-1 bg-nectar-gold/10 text-nectar-gold hover:bg-nectar-gold hover:text-background text-[8px] font-black uppercase tracking-widest rounded-full transition-all inline-block"
+                        className="px-2.5 py-1 bg-nectar-gold/10 text-nectar-gold hover:bg-nectar-gold hover:text-background text-[8px] font-black uppercase tracking-widest rounded-full transition-all inline-block font-bold border border-nectar-gold/20"
                       >
                         Ver Comprobante
                       </a>
@@ -1023,7 +1134,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
                       {quote.pdf_file ? (
                         <div className="flex flex-col items-center gap-1">
                           <a
-                            href={quote.pdf_file}
+                            href={getInlineViewUrl(quote.pdf_file, 'quote', quote.id)}
                             target="_blank"
                             rel="noreferrer"
                             className="px-2.5 py-1 bg-nectar-gold/10 hover:bg-nectar-gold hover:text-background text-[8px] font-black uppercase tracking-widest rounded-full transition-all inline-block font-bold border border-nectar-gold/20"
@@ -1299,14 +1410,31 @@ export default function BusinessCommander({ stats, installments, setInstallments
 
         {/* Promo Codes Table */}
         <div className="p-8 md:p-10 rounded-[3rem] bg-card-bg border border-card-border shadow-xl">
-          <div className="mb-8 flex items-center justify-between">
+          <div className="mb-8 flex items-center justify-between flex-wrap gap-4 text-left">
             <div>
-              <h3 className="text-xs font-black uppercase tracking-[0.3em] opacity-30">Códigos de Referido</h3>
+              <h3 className="text-xs font-black uppercase tracking-[0.3em] opacity-30">Códigos de Descuento y Referido</h3>
               <p className="text-[9px] font-bold text-foreground/30 mt-1 uppercase tracking-wider">Todos los códigos del sistema — SELLER y CLIENT</p>
             </div>
-            <span className="px-4 py-1.5 bg-foreground/5 rounded-full text-[8px] font-black uppercase tracking-widest opacity-50">
-              {promoCodes.length} códigos
-            </span>
+            <div className="flex gap-4 items-center">
+              <button
+                onClick={() => {
+                  setPromoCode('');
+                  setPromoCodeType('CLIENT');
+                  setPromoDiscount(10);
+                  setPromoMaxUses('');
+                  setPromoValidUntil('');
+                  setPromoReferrer('');
+                  setPromoError('');
+                  setShowPromoModal(true);
+                }}
+                className="px-5 py-2.5 bg-nectar-gold text-background text-[8px] font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 transition-all shadow-md font-bold"
+              >
+                + Crear Código
+              </button>
+              <span className="px-4 py-1.5 bg-foreground/5 rounded-full text-[8px] font-black uppercase tracking-widest opacity-50 font-bold">
+                {promoCodes.length} códigos
+              </span>
+            </div>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
@@ -1319,7 +1447,8 @@ export default function BusinessCommander({ stats, installments, setInstallments
                   <th className="pb-4 text-center">Usos</th>
                   <th className="pb-4 text-center">Límite</th>
                   <th className="pb-4 text-center">Estado</th>
-                  <th className="pb-4 text-right">Creado</th>
+                  <th className="pb-4 text-center">Creado</th>
+                  <th className="pb-4 text-right">Acción</th>
                 </tr>
               </thead>
               <tbody>
@@ -1341,21 +1470,32 @@ export default function BusinessCommander({ stats, installments, setInstallments
                     <td className="py-3.5 text-center font-mono font-bold text-sm">{code.used_count}</td>
                     <td className="py-3.5 text-center text-[10px] font-bold text-foreground/50">{code.max_uses ?? '∞'}</td>
                     <td className="py-3.5 text-center">
-                      <span className={`px-3 py-1 text-[7px] font-black uppercase tracking-widest rounded-full border ${code.is_active
-                        ? 'bg-green-500/10 text-green-500 border-green-500/20'
-                        : 'bg-red-500/10 text-red-400 border-red-500/20'
-                        }`}>
+                      <button
+                        onClick={() => handleTogglePromoCodeActive(code.id, code.is_active)}
+                        className={`px-3 py-1 text-[7px] font-black uppercase tracking-widest rounded-full border hover:scale-105 active:scale-95 transition-all ${code.is_active
+                          ? 'bg-green-500/10 text-green-500 border-green-500/20'
+                          : 'bg-red-500/10 text-red-400 border-red-500/20'
+                          }`}
+                      >
                         {code.is_active ? 'Activo' : 'Inactivo'}
-                      </span>
+                      </button>
                     </td>
-                    <td className="py-3.5 text-right text-[9px] font-bold text-foreground/40">
+                    <td className="py-3.5 text-center text-[9px] font-bold text-foreground/45">
                       {new Date(code.created_at).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: '2-digit' })}
+                    </td>
+                    <td className="py-3.5 text-right">
+                      <button
+                        onClick={() => handleDeletePromoCode(code.id, code.code)}
+                        className="px-3 py-1 bg-red-500/10 text-red-500 hover:bg-red-600 hover:text-white rounded-xl text-[7px] font-black uppercase tracking-widest transition-all border border-red-500/20 font-bold"
+                      >
+                        Eliminar
+                      </button>
                     </td>
                   </tr>
                 ))}
                 {promoCodes.length === 0 && (
                   <tr>
-                    <td colSpan={8} className="py-12 text-center text-[9px] font-black uppercase tracking-widest opacity-25">
+                    <td colSpan={9} className="py-12 text-center text-[9px] font-black uppercase tracking-widest opacity-25">
                       Sin códigos de referido registrados
                     </td>
                   </tr>
@@ -1612,7 +1752,144 @@ export default function BusinessCommander({ stats, installments, setInstallments
               </div>
             </form>
           </div>
+      {/* Modal Crear Código de Descuento/Referido */}
+      {showPromoModal && (
+        <div
+          onClick={() => setShowPromoModal(false)}
+          className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-6 cursor-pointer"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-lg bg-card-bg border border-card-border p-8 md:p-10 rounded-[3rem] shadow-2xl relative space-y-6 text-left cursor-default animate-in fade-in zoom-in-95 duration-200"
+          >
+            <button
+              onClick={() => setShowPromoModal(false)}
+              className="absolute top-6 right-6 w-8 h-8 rounded-full border border-card-border text-foreground/40 hover:text-foreground flex items-center justify-center text-xl font-bold"
+            >
+              ×
+            </button>
+
+            <div>
+              <span className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold text-[8px] font-black uppercase tracking-widest rounded-full border border-nectar-gold/20">
+                Administración
+              </span>
+              <h2 className="text-2xl font-black tracking-tighter mt-4 leading-none">Nuevo Código Promocional</h2>
+              <p className="text-[10px] opacity-40 uppercase tracking-widest mt-1">Crea códigos de referidos o de descuento general</p>
+            </div>
+
+            {promoError && (
+              <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-500 text-[10px] font-bold rounded-xl text-center uppercase tracking-wider">
+                {promoError}
+              </div>
+            )}
+
+            <form onSubmit={handleCreatePromoCode} className="space-y-5">
+              <div className="space-y-1.5">
+                <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Código promocional</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="ej: AMIGO10, NECTAR20"
+                  value={promoCode}
+                  onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                  className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-nectar-gold text-foreground font-mono uppercase tracking-widest"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Tipo de Código</label>
+                  <select
+                    value={promoCodeType}
+                    onChange={(e) => setPromoCodeType(e.target.value as any)}
+                    className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-nectar-gold text-foreground"
+                  >
+                    <option value="CLIENT">👥 Cliente / Descuento General</option>
+                    <option value="SELLER">🏷️ Vendedor / Referido</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Descuento (%)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="0.01"
+                    required
+                    value={promoDiscount}
+                    onChange={(e) => setPromoDiscount(parseFloat(e.target.value) || 0)}
+                    className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-nectar-gold text-foreground font-mono"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Usuario Referidor (Opcional)</label>
+                <select
+                  value={promoReferrer}
+                  onChange={(e) => setPromoReferrer(e.target.value)}
+                  className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-nectar-gold text-foreground"
+                >
+                  <option value="">Ninguno (Descuento General)</option>
+                  {users.map(u => (
+                    <option key={u.id} value={u.id}>
+                      {u.username} ({u.role} - {u.email})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Límite de Usos (Opcional)</label>
+                  <input
+                    type="number"
+                    placeholder="Sin límite"
+                    value={promoMaxUses}
+                    onChange={(e) => setPromoMaxUses(e.target.value)}
+                    className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-nectar-gold text-foreground font-mono"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Vence El (Opcional)</label>
+                  <input
+                    type="date"
+                    value={promoValidUntil}
+                    onChange={(e) => setPromoValidUntil(e.target.value)}
+                    className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-nectar-gold text-foreground font-mono"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-6 border-t border-card-border/65 flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowPromoModal(false)}
+                  className="px-5 py-3 border border-card-border hover:bg-foreground hover:text-background text-[9px] font-black uppercase tracking-widest rounded-xl transition-all"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmittingPromo}
+                  className="px-6 py-3 bg-nectar-gold text-background text-[9px] font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 disabled:opacity-40 disabled:scale-100 transition-all font-bold shadow-lg shadow-nectar-gold/25"
+                >
+                  {isSubmittingPromo ? 'Creando...' : 'Crear Código'}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
+      )}
+
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
       )}
     </div>
   );

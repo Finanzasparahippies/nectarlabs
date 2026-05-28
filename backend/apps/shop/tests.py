@@ -585,6 +585,119 @@ class ContractSignatureTests(APITestCase):
         self.assertEqual(due_diff.days, 12 * 7)
 
 
+class SecureFileViewerTests(APITestCase):
+    def setUp(self):
+        self.ceo = User.objects.create_user(
+            username="saul_ceo",
+            email="saul@nectarlabs.dev",
+            password="securepassword",
+            role=User.Role.ADMIN,
+            is_staff=True
+        )
+        self.client_user = User.objects.create_user(
+            username="client_a",
+            email="client_a@example.com",
+            password="clientpassword",
+            role=User.Role.BUSINESS
+        )
+        self.other_client = User.objects.create_user(
+            username="client_b",
+            email="client_b@example.com",
+            password="clientpassword",
+            role=User.Role.BUSINESS
+        )
+        
+        # Create quote, contract, installment with dummy files
+        from apps.dashboard.models import ProjectQuote
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        
+        self.quote = ProjectQuote.objects.create(
+            client_name="Quote Client",
+            client_email="client_a@example.com",
+            project_name="Custom CRM",
+            total_price=50000.00,
+            estimated_delivery_weeks=12,
+            pdf_file=SimpleUploadedFile('test_quote.pdf', b'fake pdf content', content_type='application/pdf')
+        )
+        self.contract = Contract.objects.create(
+            user=self.client_user,
+            full_name="Quote Client Company",
+            project_quote=self.quote,
+            pdf_file=SimpleUploadedFile('test_contract.pdf', b'fake pdf content', content_type='application/pdf'),
+            is_fully_signed=True
+        )
+        self.installment = PaymentInstallment.objects.create(
+            contract=self.contract,
+            installment_number=1,
+            amount=25000.00,
+            due_date=timezone.now().date(),
+            receipt_file=SimpleUploadedFile('receipt.png', b'fake image content', content_type='image/png')
+        )
+
+    @patch('requests.get')
+    def test_view_quote_pdf_success_with_token(self, mock_get):
+        class MockResponse:
+            content = b"fake pdf content"
+            headers = {'Content-Type': 'application/pdf'}
+        mock_get.return_value = MockResponse()
+
+        from rest_framework_simplejwt.tokens import AccessToken
+        token = str(AccessToken.for_user(self.client_user))
+
+        url = reverse('quote-view-pdf', kwargs={'pk': self.quote.id})
+        response = self.client.get(f"{url}?token={token}")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.content, b"fake pdf content")
+        self.assertEqual(response['Content-Type'], 'application/pdf')
+        self.assertIn('inline', response['Content-Disposition'])
+
+    @patch('requests.get')
+    def test_view_contract_pdf_success_with_token(self, mock_get):
+        class MockResponse:
+            content = b"fake pdf content"
+            headers = {'Content-Type': 'application/pdf'}
+        mock_get.return_value = MockResponse()
+
+        from rest_framework_simplejwt.tokens import AccessToken
+        token = str(AccessToken.for_user(self.client_user))
+
+        url = reverse('contract-view-pdf', kwargs={'pk': self.contract.id})
+        response = self.client.get(f"{url}?token={token}")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.content, b"fake pdf content")
+        self.assertEqual(response['Content-Type'], 'application/pdf')
+
+    @patch('requests.get')
+    def test_view_receipt_success_with_token(self, mock_get):
+        class MockResponse:
+            content = b"fake image content"
+            headers = {'Content-Type': 'image/png'}
+        mock_get.return_value = MockResponse()
+
+        from rest_framework_simplejwt.tokens import AccessToken
+        token = str(AccessToken.for_user(self.client_user))
+
+        url = reverse('installment-view-receipt', kwargs={'pk': self.installment.id})
+        response = self.client.get(f"{url}?token={token}")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.content, b"fake image content")
+        self.assertEqual(response['Content-Type'], 'image/png')
+        self.assertIn('Comprobante', response['Content-Disposition'])
+
+    def test_view_file_unauthorized_token(self):
+        url = reverse('quote-view-pdf', kwargs={'pk': self.quote.id})
+        response = self.client.get(f"{url}?token=invalid_token")
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_view_file_forbidden_access(self):
+        from rest_framework_simplejwt.tokens import AccessToken
+        token = str(AccessToken.for_user(self.other_client))
+
+        url = reverse('contract-view-pdf', kwargs={'pk': self.contract.id})
+        response = self.client.get(f"{url}?token={token}")
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+
 class StripeAddonSubscriptionTests(APITestCase):
     def setUp(self):
         self.user = User.objects.create_user(
