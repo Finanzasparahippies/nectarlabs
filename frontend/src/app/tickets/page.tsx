@@ -597,8 +597,14 @@ export default function TicketsPage() {
 
       {/* Create Ticket Modal */}
       {isCreateModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 backdrop-blur-xl bg-background/80">
-          <div className="w-full max-w-2xl bg-card-bg border border-card-border rounded-[3.5rem] p-10 md:p-16 relative shadow-2xl">
+        <div 
+          onClick={() => setIsCreateModalOpen(false)}
+          className="fixed inset-0 z-50 flex items-center justify-center p-6 backdrop-blur-xl bg-background/80 cursor-pointer"
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-2xl bg-card-bg border border-card-border rounded-[3.5rem] p-10 md:p-16 relative shadow-2xl cursor-default"
+          >
             <button 
               type="button"
               onClick={() => setIsCreateModalOpen(false)}

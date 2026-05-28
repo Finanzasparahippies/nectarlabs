@@ -12,34 +12,39 @@ class HasAddOnPermission(permissions.BasePermission):
 
         # Determinar el contexto del Tenant actual
         tenant = None
-        if request.user and request.user.is_authenticated:
+        tenant_id = request.query_params.get('tenant_id') or request.data.get('tenant_id')
+        subdomain = request.query_params.get('subdomain') or request.data.get('subdomain')
+        
+        from apps.tenants.models import Tenant
+        import uuid
+        
+        if tenant_id:
+            try:
+                tenant = Tenant.objects.filter(id=uuid.UUID(str(tenant_id))).first()
+            except (ValueError, TypeError):
+                pass
+        elif subdomain:
+            tenant = Tenant.objects.filter(subdomain=subdomain.lower()).first()
+
+        if not tenant and request.user and request.user.is_authenticated:
             if getattr(request.user, 'tenant', None):
                 tenant = request.user.tenant
             elif getattr(request.user, 'role', None) == 'BUSINESS':
-                # Si el dueño del negocio realiza la petición
                 tenant = request.user.owned_tenants.first()
 
-        # Si no se pudo obtener del usuario (por ejemplo, en vistas públicas y anónimas),
-        # intentar extraer de los parámetros de la consulta o del cuerpo de la petición.
-        if not tenant:
-            tenant_id = request.query_params.get('tenant_id') or request.data.get('tenant_id')
-            subdomain = request.query_params.get('subdomain') or request.data.get('subdomain')
-            from apps.tenants.models import Tenant
-            import uuid
-            if tenant_id:
-                try:
-                    tenant = Tenant.objects.filter(id=uuid.UUID(str(tenant_id)), is_active=True).first()
-                except (ValueError, TypeError):
-                    pass
-            elif subdomain:
-                tenant = Tenant.objects.filter(subdomain=subdomain.lower(), is_active=True).first()
-            else:
-                # No tenant parameters supplied; allow access for the main/host platform
-                return True
+        # If no tenant could be resolved from parameters or user context, allow access for the main platform
+        if not tenant_id and not subdomain and not tenant:
+            return True
 
         # Si no se puede resolver un inquilino válido (pero se especificó uno), denegar acceso
         if not tenant:
             return False
+
+        # Gated access: If tenant is inactive, raise PermissionDenied with descriptive message
+        if not tenant.is_active:
+            raise PermissionDenied(
+                "Tu portal se encuentra en estado 'Reservado'. El acceso estará suspendido hasta verificar el pago del plan correspondiente."
+            )
 
         # Obtener el slug del add-on requerido para esta vista
         addon_slug = getattr(view, 'addon_slug', None)

@@ -9,7 +9,7 @@ services:
       - static_volume:/app/staticfiles
       - media_volume:/app/media
     env_file:
-      - .env
+      - .env.prod
     restart: always
     networks:
       - prod_network
@@ -24,7 +24,7 @@ services:
         INTERNAL_API_URL: ${INTERNAL_API_URL}
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
     env_file:
-      - .env
+      - .env.prod
     restart: always
     networks:
       - prod_network

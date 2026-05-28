@@ -252,8 +252,8 @@ export default function SupportSettingsPage() {
     );
   }
 
-  // Redirect if not staff/business
-  if (!isStaff) {
+  // Redirect if not staff/business and has no tenant
+  if (!isStaff && tenants.length === 0) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background p-6 text-center">
         <h1 className="text-xl font-black text-red-500 uppercase tracking-widest mb-2">Acceso Denegado</h1>

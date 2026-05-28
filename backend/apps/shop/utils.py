@@ -26,6 +26,25 @@ class ContractPDF(FPDF):
         self.set_text_color(128, 128, 128)
         self.cell(0, 10, f'Página {self.page_no()} - Generado digitalmente en nectarlabs.dev', align='C')
 
+def safe_b64decode(b64_string):
+    if not b64_string:
+        return None
+    # Handle base64 headers if present
+    if "," in b64_string:
+        _, b64_string = b64_string.split(",", 1)
+    
+    b64_string = b64_string.strip()
+    
+    # Fix padding
+    missing_padding = len(b64_string) % 4
+    if missing_padding:
+        b64_string += '=' * (4 - missing_padding)
+        
+    try:
+        return base64.b64decode(b64_string)
+    except Exception:
+        return None
+
 def generate_contract_pdf(contract):
     try:
         pdf = ContractPDF()
@@ -108,10 +127,10 @@ def generate_contract_pdf(contract):
         # Firma Desarrollador (Jesus Saul)
         if contract.developer_signature:
             try:
-                header, encoded = contract.developer_signature.split(",", 1)
-                sig_data = base64.b64decode(encoded)
-                sig_img = BytesIO(sig_data)
-                pdf.image(sig_img, x=25, y=y_before_sig - 10, w=50)
+                sig_data = safe_b64decode(contract.developer_signature)
+                if sig_data:
+                    sig_img = BytesIO(sig_data)
+                    pdf.image(sig_img, x=25, y=y_before_sig - 10, w=50)
                 if contract.developer_signed_at:
                     pdf.set_xy(10, y_before_sig + 15)
                     pdf.set_font('helvetica', 'I', 7)
@@ -129,10 +148,10 @@ def generate_contract_pdf(contract):
         # Firma Cliente
         if contract.signature_base64:
             try:
-                header, encoded = contract.signature_base64.split(",", 1)
-                sig_data = base64.b64decode(encoded)
-                sig_img = BytesIO(sig_data)
-                pdf.image(sig_img, x=125, y=y_before_sig - 10, w=50)
+                sig_data = safe_b64decode(contract.signature_base64)
+                if sig_data:
+                    sig_img = BytesIO(sig_data)
+                    pdf.image(sig_img, x=125, y=y_before_sig - 10, w=50)
                 pdf.set_xy(110, y_before_sig + 15)
                 pdf.set_font('helvetica', 'I', 7)
                 pdf.cell(80, 5, f'Firmado el: {contract.signed_at.strftime("%d/%m/%Y %H:%M")}', align='C')

@@ -223,6 +223,17 @@ class PaymentInstallment(models.Model):
 
         # Trigger commission generation for Salespeople on PAID transition
         if self.status == 'PAID' and (is_new or old_status != 'PAID'):
+            # Activate tenant of the contract owner
+            try:
+                from apps.tenants.models import Tenant
+                tenant = Tenant.objects.filter(owner=self.contract.user).first()
+                if tenant and not tenant.is_active:
+                    tenant.is_active = True
+                    tenant.save()
+            except Exception as tenant_act_err:
+                import logging
+                logging.getLogger(__name__).error(f"Error activating tenant on paid installment: {tenant_act_err}", exc_info=True)
+
             contract = self.contract
             if contract.promo_code and contract.promo_code.code_type == 'SELLER' and contract.promo_code.referrer:
                 referrer = contract.promo_code.referrer
@@ -278,6 +289,46 @@ class AddOn(models.Model):
     is_active = models.BooleanField(default=True, verbose_name="Activo")
     stripe_price_id = models.CharField(max_length=100, blank=True, null=True, help_text="ID de precio mensual de Stripe para suscripciones directas")
     stripe_yearly_price_id = models.CharField(max_length=100, blank=True, null=True, help_text="ID de precio anual de Stripe para suscripciones directas")
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        
+        updated = False
+        if getattr(settings, "STRIPE_SECRET_KEY", None) and (not self.stripe_price_id or not self.stripe_yearly_price_id):
+            import stripe
+            stripe.api_key = settings.STRIPE_SECRET_KEY
+            try:
+                # Create Stripe Product
+                product = stripe.Product.create(
+                    name=f"[Nectar Labs Add-on] {self.name}",
+                    description=self.description,
+                )
+                
+                if not self.stripe_price_id:
+                    monthly_price = stripe.Price.create(
+                        unit_amount=int(self.monthly_price * 100),
+                        currency="mxn",
+                        product=product.id,
+                        recurring={"interval": "month"},
+                    )
+                    self.stripe_price_id = monthly_price.id
+                    updated = True
+                    
+                if not self.stripe_yearly_price_id:
+                    yearly_price = stripe.Price.create(
+                        unit_amount=int(self.yearly_price * 100),
+                        currency="mxn",
+                        product=product.id,
+                        recurring={"interval": "year"},
+                    )
+                    self.stripe_yearly_price_id = yearly_price.id
+                    updated = True
+            except Exception as e:
+                import logging
+                logging.getLogger("apps").error(f"Error creating Stripe Product for AddOn {self.slug}: {e}")
+                
+        if updated:
+            super().save(update_fields=['stripe_price_id', 'stripe_yearly_price_id'])
 
     def __str__(self):
         return f"{self.name} (${self.monthly_price}/mes)"

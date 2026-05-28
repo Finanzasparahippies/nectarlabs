@@ -1373,8 +1373,14 @@ export default function BusinessCommander({ stats, installments, setInstallments
 
       {/* ── MODAL NUEVA COTIZACIÓN MODULAR ── */}
       {showQuoteModal && (
-        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-6 overflow-y-auto">
-          <div className="w-full max-w-4xl bg-card-bg border border-card-border p-8 md:p-10 rounded-[3rem] shadow-2xl relative max-h-[90vh] overflow-y-auto space-y-8 animate-in fade-in zoom-in-95 duration-200 text-left">
+        <div 
+          onClick={() => setShowQuoteModal(false)}
+          className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-6 overflow-y-auto cursor-pointer"
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-4xl bg-card-bg border border-card-border p-8 md:p-10 rounded-[3rem] shadow-2xl relative max-h-[90vh] overflow-y-auto space-y-8 animate-in fade-in zoom-in-95 duration-200 text-left cursor-default"
+          >
             <button
               onClick={() => setShowQuoteModal(false)}
               className="absolute top-6 right-6 w-8 h-8 rounded-full border border-card-border text-foreground/40 hover:text-foreground flex items-center justify-center text-xl font-bold"

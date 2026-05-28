@@ -7,8 +7,12 @@ from datetime import timedelta
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 env = environ.Env()
-# Look for .env in the parent directory of backend/
-environ.Env.read_env(os.path.join(BASE_DIR.parent, ".env"))
+# Look for the correct env file based on environment
+env_name = ".env.prod" if os.environ.get("ENVIRONMENT") == "production" else ".env.staging"
+env_path = os.path.join(BASE_DIR.parent, env_name)
+if not os.path.exists(env_path):
+    env_path = os.path.join(BASE_DIR.parent, ".env.local")
+environ.Env.read_env(env_path)
 
 # Quick-start development settings - unsuitable for production
 ENVIRONMENT = env("ENVIRONMENT", default="local")
@@ -65,6 +69,9 @@ INSTALLED_APPS = [
     "apps.tickets",
     "apps.performance",
     "apps.tenants",
+    "apps.bookings",
+    "apps.delivery",
+    "apps.sponsorship",
 ]
 
 FRONTEND_URL = env("FRONTEND_URL", default="http://localhost:3000")
@@ -126,6 +133,15 @@ if 'test' in sys.argv:
             "NAME": BASE_DIR / "db.sqlite3",
         }
     }
+    # Override storage during tests to avoid Cloudinary HTTP requests
+    STORAGES = {
+        "default": {
+            "BACKEND": "django.core.files.storage.FileSystemStorage",
+        },
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        },
+    }
 
 
 # Password validation
@@ -167,14 +183,24 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / "staticfiles"
 # Storages (Django 5.0 style)
-STORAGES = {
-    "default": {
-        "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
-    },
-    "staticfiles": {
-        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage" if DEBUG else "whitenoise.storage.CompressedManifestStaticFilesStorage",
-    },
-}
+if 'test' in sys.argv:
+    STORAGES = {
+        "default": {
+            "BACKEND": "django.core.files.storage.FileSystemStorage",
+        },
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        },
+    }
+else:
+    STORAGES = {
+        "default": {
+            "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
+        },
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage" if DEBUG else "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        },
+    }
 
 # Media files & Cloudinary
 MEDIA_URL = "/media/"

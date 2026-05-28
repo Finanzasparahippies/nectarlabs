@@ -61,6 +61,13 @@ services:
         condition: service_healthy
       frontend:
         condition: service_started
+    command: >
+      /bin/sh -c "
+      NS=$$(awk '/nameserver/ {print $$2; exit}' /etc/resolv.conf);
+      [ -z \"$$NS\" ] && NS=\"127.0.0.11\";
+      echo \"resolver $$NS valid=5s;\" > /etc/nginx/conf.d/resolver.conf &&
+      exec nginx -g 'daemon off;'
+      "
     networks:
       - prod_network
 

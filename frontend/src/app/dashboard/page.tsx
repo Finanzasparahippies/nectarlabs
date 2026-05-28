@@ -2083,74 +2083,106 @@ function DashboardPageOriginal() {
                   </div>
                 </section>
 
-                {!isStaff && (
-                  <section className="bg-card-bg border border-card-border rounded-[2.5rem] p-8">
-                    <h2 className="text-xs font-black tracking-[0.3em] uppercase opacity-30 mb-8">Mis Portales (Subdominios)</h2>
-                    <div className="space-y-4">
-                      {tenants.map(tenant => {
-                        const host = typeof window !== 'undefined' ? window.location.hostname : '';
-                        let domain = `https://${tenant.subdomain}.nectarlabs.dev`;
-                        let urlDisplay = `${tenant.subdomain}.nectarlabs.dev`;
-                        if (host.includes('localhost')) {
-                          domain = `http://${tenant.subdomain}.localhost:3000`;
-                          urlDisplay = `${tenant.subdomain}.localhost:3000`;
-                        } else if (host.includes('staging.nectarlabs.dev')) {
-                          domain = `https://${tenant.subdomain}.staging.nectarlabs.dev`;
-                          urlDisplay = `${tenant.subdomain}.staging.nectarlabs.dev`;
-                        }
-                        return (
-                          <div key={tenant.id} className="p-5 rounded-2xl border border-card-border hover:border-nectar-gold/60 transition-all flex flex-col justify-between gap-4 bg-background/20 relative overflow-hidden group">
-                            <div className="space-y-2">
-                              <div className="flex justify-between items-center">
+                <section className="bg-card-bg border border-card-border rounded-[2.5rem] p-8">
+                  <h2 className="text-xs font-black tracking-[0.3em] uppercase opacity-30 mb-8">
+                    {isStaff ? 'Administración de Portales (Tenants)' : 'Mis Portales (Subdominios)'}
+                  </h2>
+                  <div className="space-y-4">
+                    {tenants.map(tenant => {
+                      const host = typeof window !== 'undefined' ? window.location.hostname : '';
+                      let domain = `https://${tenant.subdomain}.nectarlabs.dev`;
+                      let urlDisplay = `${tenant.subdomain}.nectarlabs.dev`;
+                      if (host.includes('localhost')) {
+                        domain = `http://${tenant.subdomain}.localhost:3000`;
+                        urlDisplay = `${tenant.subdomain}.localhost:3000`;
+                      } else if (host.includes('staging.nectarlabs.dev')) {
+                        domain = `https://${tenant.subdomain}.staging.nectarlabs.dev`;
+                        urlDisplay = `${tenant.subdomain}.staging.nectarlabs.dev`;
+                      }
+                      return (
+                        <div key={tenant.id} className="p-5 rounded-2xl border border-card-border hover:border-nectar-gold/60 transition-all flex flex-col justify-between gap-4 bg-background/20 relative overflow-hidden group">
+                          <div className="space-y-2">
+                            <div className="flex justify-between items-start gap-4">
+                              <div>
                                 <h4 className="font-bold text-xs text-foreground/80 group-hover:text-foreground transition-colors">{tenant.name}</h4>
-                                <span className={`px-2.5 py-1 text-[7px] font-black uppercase tracking-widest rounded-full ${tenant.is_active ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>
-                                  {tenant.is_active ? 'Activo' : 'Inactivo'}
-                                </span>
+                                {isStaff && tenant.owner_email && (
+                                  <span className="block text-[8px] font-bold text-nectar-gold opacity-60 mt-1 lowercase font-mono">
+                                    Owner: {tenant.owner_email}
+                                  </span>
+                                )}
                               </div>
-                              <div className="flex justify-between items-center text-[10px] opacity-60">
-                                <span>URL:</span>
-                                <span className="font-mono text-[9px] text-nectar-gold font-bold">{urlDisplay}</span>
-                              </div>
-
-                              {/* Active Addons inside Tenant */}
-                              {tenant.active_addons && tenant.active_addons.length > 0 ? (
-                                <div className="pt-2 border-t border-card-border/40">
-                                  <span className="text-[7.5px] font-black uppercase tracking-widest opacity-40 block mb-1">Add-ons Activos:</span>
-                                  <div className="flex flex-wrap gap-1">
-                                    {tenant.active_addons.map((slug: string) => {
-                                      const addonObj = allAddons.find(a => a.slug === slug);
-                                      return (
-                                        <span key={slug} className="px-2 py-0.5 bg-nectar-gold/10 text-nectar-gold text-[7px] font-black uppercase tracking-widest rounded-md border border-nectar-gold/20" title={addonObj?.description || slug}>
-                                          {addonObj?.name || slug}
-                                        </span>
-                                      );
-                                    })}
-                                  </div>
-                                </div>
-                              ) : (
-                                <div className="pt-2 border-t border-card-border/40">
-                                  <span className="text-[7.5px] font-black uppercase tracking-widest opacity-35 block">Sin Add-ons Activos</span>
-                                </div>
-                              )}
+                              <span className={`px-2.5 py-1 text-[7px] font-black uppercase tracking-widest rounded-full border shrink-0 ${
+                                tenant.is_active 
+                                  ? 'bg-green-500/10 text-green-500 border-green-500/20' 
+                                  : 'bg-amber-500/10 text-amber-500 border-amber-500/20'
+                              }`}>
+                                {tenant.is_active ? 'Activo' : 'Reservado'}
+                              </span>
+                            </div>
+                            <div className="flex justify-between items-center text-[10px] opacity-60">
+                              <span>URL:</span>
+                              <span className="font-mono text-[9px] text-nectar-gold font-bold">{urlDisplay}</span>
                             </div>
 
+                            {/* Active Addons inside Tenant */}
+                            {tenant.active_addons && tenant.active_addons.length > 0 ? (
+                              <div className="pt-2 border-t border-card-border/40">
+                                <span className="text-[7.5px] font-black uppercase tracking-widest opacity-40 block mb-1">Add-ons Activos:</span>
+                                <div className="flex flex-wrap gap-1">
+                                  {tenant.active_addons.map((slug: string) => {
+                                    const addonObj = allAddons.find(a => a.slug === slug);
+                                    return (
+                                      <span key={slug} className="px-2 py-0.5 bg-nectar-gold/10 text-nectar-gold text-[7px] font-black uppercase tracking-widest rounded-md border border-nectar-gold/20" title={addonObj?.description || slug}>
+                                        {addonObj?.name || slug}
+                                      </span>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="pt-2 border-t border-card-border/40">
+                                <span className="text-[7.5px] font-black uppercase tracking-widest opacity-35 block">Sin Add-ons Activos</span>
+                              </div>
+                            )}
+
+                            {!tenant.is_active && (
+                              <div className="pt-2 text-[8px] font-bold text-amber-500 opacity-80 leading-relaxed uppercase tracking-wider">
+                                ⚠️ Aprovisionado en estado reservado. Se activará de forma automática al detectar el pago de la mensualidad.
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="flex gap-2">
+                            {!isStaff && (
+                              <Link
+                                href="/dashboard/support-settings"
+                                className="flex-1 py-2 bg-background border border-card-border hover:border-foreground text-foreground text-center rounded-xl text-[8px] font-black uppercase tracking-widest transition-all cursor-pointer font-bold flex items-center justify-center"
+                              >
+                                Personalizar Marca
+                              </Link>
+                            )}
                             <a
                               href={domain}
                               target="_blank"
                               rel="noreferrer"
-                              className="w-full py-2 bg-nectar-gold/10 hover:bg-nectar-gold hover:text-background border border-nectar-gold/20 hover:border-nectar-gold text-nectar-gold text-center rounded-xl text-[8px] font-black uppercase tracking-widest transition-all cursor-pointer font-bold"
+                              className={`flex-1 py-2 text-center rounded-xl text-[8px] font-black uppercase tracking-widest transition-all cursor-pointer font-bold ${
+                                tenant.is_active 
+                                  ? 'bg-nectar-gold/10 hover:bg-nectar-gold hover:text-background border border-nectar-gold/20 hover:border-nectar-gold text-nectar-gold'
+                                  : 'bg-card-border text-foreground/40 cursor-not-allowed pointer-events-none'
+                              }`}
+                              title={tenant.is_active ? 'Abrir Portal' : 'El portal está en estado reservado hasta recibir el pago.'}
                             >
-                              Abrir Portal ↗
+                              {tenant.is_active ? 'Abrir Portal ↗' : 'Portal Reservado 🔒'}
                             </a>
                           </div>
-                        );
-                      })}
-                      {tenants.length === 0 && (
-                        <p className="text-center py-10 opacity-20 font-bold uppercase tracking-widest text-[10px]">Sin subdominios registrados</p>
-                      )}
-                    </div>
-                  </section>
-                )}
+                        </div>
+                      );
+                    })}
+                    {tenants.length === 0 && (
+                      <p className="text-center py-10 opacity-20 font-bold uppercase tracking-widest text-[10px]">Sin subdominios registrados</p>
+                    )}
+                  </div>
+                </section>
 
                 {projects[0] && (
                   <section className="bg-card-bg border border-card-border rounded-[2.5rem] p-8">

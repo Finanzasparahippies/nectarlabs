@@ -331,8 +331,14 @@ export default function AddonShowcase() {
 
       {/* Modal: View Details / Ficha Técnica */}
       {selectedAddon && (
-        <div className="fixed inset-0 bg-background/80 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-premium">
-          <div className="bg-card-bg border border-card-border w-full max-w-2xl rounded-[3rem] p-8 md:p-12 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+        <div 
+          onClick={() => setSelectedAddon(null)}
+          className="fixed inset-0 bg-background/80 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-premium cursor-pointer"
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className="bg-card-bg border border-card-border w-full max-w-2xl rounded-[3rem] p-8 md:p-12 shadow-2xl relative max-h-[90vh] overflow-y-auto cursor-default"
+          >
             {/* Close Button */}
             <button
               onClick={() => setSelectedAddon(null)}

@@ -14,8 +14,14 @@ export default function ConfirmModal({ isOpen, title, message, onConfirm, onCanc
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-background/80 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="max-w-md w-full bg-card-bg/95 border border-card-border p-8 rounded-[2.5rem] shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-200">
+    <div 
+      onClick={onCancel}
+      className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-background/80 backdrop-blur-sm animate-in fade-in duration-200 cursor-pointer"
+    >
+      <div 
+        onClick={(e) => e.stopPropagation()}
+        className="max-w-md w-full bg-card-bg/95 border border-card-border p-8 rounded-[2.5rem] shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-200 cursor-default"
+      >
         {/* Glow */}
         <div className="absolute -top-24 -right-24 w-48 h-48 bg-nectar-gold/5 rounded-full blur-3xl"></div>
         

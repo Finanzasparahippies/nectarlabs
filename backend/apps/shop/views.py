@@ -136,7 +136,7 @@ class ContractViewSet(viewsets.ModelViewSet):
                         owner=contract.user,
                         name=contract.full_name or f"Portal de {contract.user.get_full_name() or contract.user.username}",
                         subdomain=subdomain,
-                        is_active=True
+                        is_active=False
                     )
                 except Exception as e:
                     import logging
@@ -206,7 +206,7 @@ class ContractViewSet(viewsets.ModelViewSet):
                     owner=contract.user,
                     name=contract.full_name or f"Portal de {contract.user.get_full_name() or contract.user.username}",
                     subdomain=subdomain,
-                    is_active=True
+                    is_active=False
                 )
         except Exception as tenant_err:
             import logging
@@ -447,7 +447,8 @@ def stripe_webhook(request):
                     try:
                         from apps.tenants.models import Tenant
                         from django.utils.text import slugify
-                        if not Tenant.objects.filter(owner=user).exists():
+                        tenant = Tenant.objects.filter(owner=user).first()
+                        if not tenant:
                             base_subdomain = slugify(contract.full_name or user.username)
                             if not base_subdomain:
                                 base_subdomain = slugify(user.username) or f"client-{user.id}"
@@ -464,9 +465,13 @@ def stripe_webhook(request):
                                 subdomain=subdomain,
                                 is_active=True
                             )
+                        else:
+                            if not tenant.is_active:
+                                tenant.is_active = True
+                                tenant.save()
                     except Exception as tenant_err:
                         import logging
-                        logging.getLogger(__name__).error(f"Error creating tenant automatically on addon subscription: {tenant_err}", exc_info=True)
+                        logging.getLogger(__name__).error(f"Error creating/activating tenant on addon subscription: {tenant_err}", exc_info=True)
 
                     # Enviar correo de confirmación de pago del Add-on (facturación)
                     try:
@@ -510,6 +515,44 @@ def stripe_webhook(request):
                         logging.error(f"Error creating ticket on webhook: {ticket_err}", exc_info=True)
                 except Exception:
                     pass
+
+        # Caso 3: Suscripción / Pago de Sponsorship (Patreon) para un cliente del Tenant
+        elif session.get('metadata', {}).get('type') == 'patreon_sponsorship':
+            tenant_id = session.get('metadata', {}).get('tenant_id')
+            user_id = session.get('metadata', {}).get('user_id')
+            tier_id = session.get('metadata', {}).get('tier_id')
+            target_id = session.get('metadata', {}).get('target_id')
+            billing_cycle = session.get('metadata', {}).get('billing_cycle', 'MONTHLY')
+            
+            if tenant_id and user_id and tier_id:
+                try:
+                    from apps.tenants.models import Tenant
+                    from apps.sponsorship.models import SponsorshipTier, SponsorTarget, Sponsorship
+                    from django.contrib.auth import get_user_model
+                    
+                    User = get_user_model()
+                    tenant = Tenant.objects.get(id=tenant_id)
+                    user = User.objects.get(id=user_id)
+                    tier = SponsorshipTier.objects.get(id=tier_id, tenant=tenant)
+                    
+                    target = None
+                    if target_id:
+                        target = SponsorTarget.objects.filter(id=target_id, tenant=tenant).first()
+                        
+                    Sponsorship.objects.create(
+                        tenant=tenant,
+                        user=user,
+                        target=target,
+                        tier=tier,
+                        billing_cycle=billing_cycle,
+                        amount=tier.price_annual if billing_cycle == 'ANNUAL' else tier.price,
+                        stripe_subscription_id=session.get('subscription'),
+                        stripe_payment_intent=session.get('payment_intent'),
+                        active=True
+                    )
+                except Exception as webhook_err:
+                    import logging
+                    logging.getLogger("apps").error(f"Error handling patreon_sponsorship webhook: {webhook_err}", exc_info=True)
 
     # Procesar cancelación de suscripción
     elif event['type'] == 'customer.subscription.deleted':

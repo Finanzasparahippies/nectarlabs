@@ -4,11 +4,12 @@ from .models import Tenant
 class TenantSerializer(serializers.ModelSerializer):
     logo = serializers.ImageField(required=False, allow_null=True)
     active_addons = serializers.ReadOnlyField()
+    owner_email = serializers.SerializerMethodField()
 
     class Meta:
         model = Tenant
         fields = [
-            'id', 'name', 'subdomain', 'owner', 'api_key', 
+            'id', 'name', 'subdomain', 'owner', 'owner_email', 'api_key', 
             'allowed_origins', 'custom_domain', 'welcome_message', 'require_customer_info',
             'logo', 'logo_url', 'portal_title', 'footer_text', 'is_active', 'created_at', 'updated_at',
             'active_addons',
@@ -16,6 +17,9 @@ class TenantSerializer(serializers.ModelSerializer):
             'theme_color', 'accent_color', 'bg_color', 'card_bg_color', 'text_color', 'border_color'
         ]
         read_only_fields = ['id', 'owner', 'api_key', 'created_at', 'updated_at']
+
+    def get_owner_email(self, obj):
+        return obj.owner.email if obj.owner else None
 
     def to_representation(self, instance):
         ret = super().to_representation(instance)

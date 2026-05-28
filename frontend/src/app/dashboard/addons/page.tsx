@@ -716,8 +716,14 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
 
         {/* Modal: View Details / Ficha Técnica */}
         {selectedAddon && (
-          <div className="fixed inset-0 bg-background/80 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-premium">
-            <div className="bg-card-bg border border-card-border w-full max-w-2xl rounded-[3rem] p-8 md:p-12 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+          <div 
+            onClick={() => setSelectedAddon(null)}
+            className="fixed inset-0 bg-background/80 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-premium cursor-pointer"
+          >
+            <div 
+              onClick={(e) => e.stopPropagation()}
+              className="bg-card-bg border border-card-border w-full max-w-2xl rounded-[3rem] p-8 md:p-12 shadow-2xl relative max-h-[90vh] overflow-y-auto cursor-default"
+            >
               {/* Close Button */}
               <button
                 onClick={() => setSelectedAddon(null)}
@@ -814,8 +820,14 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
 
         {/* Modal: Request / Solicitar Integración Form */}
         {requestAddon && (
-          <div className="fixed inset-0 bg-background/80 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-premium">
-            <div className="bg-card-bg border border-card-border w-full max-w-xl rounded-[3rem] p-8 md:p-12 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+          <div 
+            onClick={() => setRequestAddon(null)}
+            className="fixed inset-0 bg-background/80 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-premium cursor-pointer"
+          >
+            <div 
+              onClick={(e) => e.stopPropagation()}
+              className="bg-card-bg border border-card-border w-full max-w-xl rounded-[3rem] p-8 md:p-12 shadow-2xl relative max-h-[90vh] overflow-y-auto cursor-default"
+            >
               <button
                 onClick={() => setRequestAddon(null)}
                 className="absolute top-6 right-6 w-10 h-10 bg-foreground/5 hover:bg-foreground/10 text-foreground/60 hover:text-foreground rounded-full flex items-center justify-center text-lg font-bold transition-all"
@@ -982,8 +994,14 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
 
         {/* Modal: Admin Manage Client Addons */}
         {manageAddon && (
-          <div className="fixed inset-0 bg-background/80 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-premium">
-            <div className="bg-card-bg border border-card-border w-full max-w-xl rounded-[3rem] p-8 md:p-12 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+          <div 
+            onClick={() => setManageAddon(null)}
+            className="fixed inset-0 bg-background/80 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-premium cursor-pointer"
+          >
+            <div 
+              onClick={(e) => e.stopPropagation()}
+              className="bg-card-bg border border-card-border w-full max-w-xl rounded-[3rem] p-8 md:p-12 shadow-2xl relative max-h-[90vh] overflow-y-auto cursor-default"
+            >
               <button
                 onClick={() => setManageAddon(null)}
                 className="absolute top-6 right-6 w-10 h-10 bg-foreground/5 hover:bg-foreground/10 text-foreground/60 hover:text-foreground rounded-full flex items-center justify-center text-lg font-bold transition-all"

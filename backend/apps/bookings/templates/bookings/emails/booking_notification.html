@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nueva Solicitud de Booking</title>
+</head>
+<body style="background-color: #090F19; color: #FDFBF7; font-family: 'Outfit', 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 40px 20px; margin: 0; min-height: 100vh; -webkit-font-smoothing: antialiased;">
+    <div style="max-width: 600px; margin: 0 auto; background-color: #121815; border: 1px solid {{ theme_color|default:'#C68A1E' }}; padding: 40px; border-radius: 24px; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);">
+        
+        <!-- Header -->
+        <div style="text-align: center; margin-bottom: 40px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 30px;">
+            <div style="display: inline-block; font-size: 24px; font-weight: 900; letter-spacing: -0.05em; color: {{ theme_color|default:'#C68A1E' }};">
+                {{ tenant_name|upper }}
+            </div>
+            <div style="color: {{ theme_color|default:'#C68A1E' }}; font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 3px; margin-top: 5px;">
+                Notificación Interna
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div style="font-size: 15px; line-height: 1.8; color: #E5E7EB; margin-bottom: 40px;">
+            <h2 style="color: #FDFBF7; font-size: 22px; font-weight: 700; line-height: 1.3; margin-top: 0; margin-bottom: 20px; text-align: center;">
+                Nueva Solicitud de Booking
+            </h2>
+
+            <p style="text-align: center;">
+                Se ha registrado una nueva solicitud de booking en tu portal.
+            </p>
+
+            <!-- Details -->
+            <div style="background-color: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 20px; padding: 25px; margin: 30px 0;">
+                <h3 style="color: {{ theme_color|default:'#C68A1E' }}; font-size: 16px; font-weight: 800; margin-top: 0; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px;">Detalles de la Solicitud</h3>
+                
+                <table style="width: 100%; border-collapse: collapse; font-size: 14px; color: rgba(255, 255, 255, 0.8);">
+                    <tr>
+                        <td style="padding: 8px 0; color: rgba(255, 255, 255, 0.4); width: 35%;">Organizador:</td>
+                        <td style="padding: 8px 0; font-weight: bold; color: #ffffff;">{{ inquiry.name }}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px 0; color: rgba(255, 255, 255, 0.4);">Email:</td>
+                        <td style="padding: 8px 0; font-weight: bold; color: #ffffff;">{{ inquiry.email }}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px 0; color: rgba(255, 255, 255, 0.4);">Teléfono:</td>
+                        <td style="padding: 8px 0; font-weight: bold; color: #ffffff;">{{ inquiry.phone }}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px 0; color: rgba(255, 255, 255, 0.4);">Fecha:</td>
+                        <td style="padding: 8px 0; font-weight: bold; color: #ffffff;">{{ inquiry.date|date:"d \d\e F \d\e Y" }}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px 0; color: rgba(255, 255, 255, 0.4);">Venue:</td>
+                        <td style="padding: 8px 0; font-weight: bold; color: #ffffff;">{{ inquiry.get_venue_type_display }}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px 0; color: rgba(255, 255, 255, 0.4);">Honorarios:</td>
+                        <td style="padding: 8px 0; font-weight: bold; color: {{ theme_color|default:'#C68A1E' }};">${{ contract.fee }} MXN</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px 0; color: rgba(255, 255, 255, 0.4);">Mensaje:</td>
+                        <td style="padding: 8px 0; color: #ffffff;">{{ inquiry.message }}</td>
+                    </tr>
+                </table>
+            </div>
+
+            <p style="text-align: center;">
+                El cliente ha recibido automáticamente la propuesta de contrato en PDF y el enlace para estampar su firma digital.
+            </p>
+        </div>
+
+        <!-- Footer -->
+        <div style="text-align: center; border-top: 1px solid rgba(255, 255, 255, 0.05); padding-top: 30px; color: #9CA3AF; font-size: 11px; line-height: 1.5;">
+            <p style="margin: 0;">© {% now "Y" %} {{ tenant_name }}. Notificaciones de Néctar Labs.</p>
+        </div>
+
+    </div>
+</body>
+</html>

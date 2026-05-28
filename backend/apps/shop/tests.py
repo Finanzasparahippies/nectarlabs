@@ -3,8 +3,9 @@ from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APITestCase
-from apps.shop.models import Plan, Contract, PaymentInstallment, PromoCode, SalesCommission
+from apps.shop.models import Plan, Contract, PaymentInstallment, AddOn, PromoCode, SalesCommission
 from datetime import date, timedelta
+from unittest.mock import patch
 
 User = get_user_model()
 
@@ -582,3 +583,110 @@ class ContractSignatureTests(APITestCase):
         # Check due dates spacing (12 weeks)
         due_diff = inst2.due_date - inst1.due_date
         self.assertEqual(due_diff.days, 12 * 7)
+
+
+class StripeAddonSubscriptionTests(APITestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="addon-client",
+            email="addon_client@example.com",
+            password="password123",
+            role=User.Role.CUSTOMER
+        )
+        self.addon = AddOn.objects.create(
+            slug="live-chat-test",
+            name="Test Live Chat",
+            category_badge="CHAT",
+            description="Short desc",
+            detailed_description="Long desc",
+            monthly_price=100.00,
+            yearly_price=1000.00,
+            origin_project="project",
+            source_reference="ref",
+            complexity=AddOn.Complexity.LOW,
+            server_requirements="none",
+            technical_details=[],
+            stripe_price_id="price_mock_123",
+            stripe_yearly_price_id="price_mock_yearly_123"
+        )
+
+    @patch('stripe.checkout.Session.create')
+    def test_addon_subscribe_creates_checkout_session(self, mock_checkout_create):
+        mock_checkout_create.return_value.url = "https://checkout.stripe.com/pay/mock_session_123"
+        
+        self.client.force_authenticate(user=self.user)
+        url = reverse('addon-subscribe', kwargs={'pk': self.addon.id})
+        response = self.client.post(url, {'billing_cycle': 'monthly', 'comments': 'Please install ASAP'}, format='json')
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['url'], "https://checkout.stripe.com/pay/mock_session_123")
+        
+        # Verify Stripe SDK was called with correct payload
+        mock_checkout_create.assert_called_once()
+        args, kwargs = mock_checkout_create.call_args
+        self.assertEqual(kwargs['line_items'][0]['price'], 'price_mock_123')
+        self.assertEqual(kwargs['mode'], 'subscription')
+        self.assertEqual(kwargs['metadata']['user_id'], self.user.id)
+        self.assertEqual(kwargs['metadata']['addon_id'], self.addon.id)
+        self.assertEqual(kwargs['metadata']['comments'], 'Please install ASAP')
+
+    @patch('stripe.Webhook.construct_event')
+    def test_stripe_webhook_addon_subscription_activation(self, mock_construct_event):
+        # Verify user is initially CUSTOMER and has no contract / tenant
+        self.assertEqual(self.user.role, User.Role.CUSTOMER)
+        self.assertFalse(Contract.objects.filter(user=self.user).exists())
+        
+        from apps.tenants.models import Tenant
+        self.assertFalse(Tenant.objects.filter(owner=self.user).exists())
+
+        # Mock webhook payload
+        webhook_payload = {
+            "type": "checkout.session.completed",
+            "data": {
+                "object": {
+                    "id": "cs_test_123",
+                    "metadata": {
+                        "type": "addon_subscription",
+                        "user_id": str(self.user.id),
+                        "addon_id": str(self.addon.id),
+                        "comments": "Need live chat module config"
+                    }
+                }
+            }
+        }
+        mock_construct_event.return_value = webhook_payload
+
+        # Call Stripe webhook endpoint
+        url = reverse('stripe_webhook')
+        response = self.client.post(
+            url,
+            data=webhook_payload,
+            format='json',
+            HTTP_STRIPE_SIGNATURE='t=123,v1=mock_sig'
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # 1. Verify user upgraded to BUSINESS
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.role, User.Role.BUSINESS)
+
+        # 2. Verify Contract was created and includes the addon
+        contract = Contract.objects.filter(user=self.user).first()
+        self.assertIsNotNone(contract)
+        self.assertTrue(contract.is_fully_signed)
+        self.assertIn(self.addon, contract.addons.all())
+
+        # 3. Verify Tenant was created and is active (Reserved-to-Active status gating checks)
+        tenant = Tenant.objects.filter(owner=self.user).first()
+        self.assertIsNotNone(tenant)
+        self.assertTrue(tenant.is_active)
+        self.assertEqual(tenant.subdomain, "addon-client") # slugified username
+
+        # 4. Verify support/implementation Ticket was automatically generated
+        from apps.tickets.models import Ticket
+        ticket = Ticket.objects.filter(client=self.user).first()
+        self.assertIsNotNone(ticket)
+        self.assertEqual(ticket.category, Ticket.Category.IMPLEMENTATION)
+        self.assertEqual(ticket.priority, Ticket.Priority.HIGH)
+        self.assertIn(self.addon.name, ticket.title)
+        self.assertIn("Need live chat module config", ticket.description)
