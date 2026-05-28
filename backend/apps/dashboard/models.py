@@ -1,6 +1,7 @@
 import uuid
 from django.db import models
 from django.conf import settings
+from apps.shop.storage import R2QuoteStorage
 
 class Project(models.Model):
     class Status(models.TextChoices):
@@ -224,7 +225,7 @@ class ProjectQuote(models.Model):
     total_price = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
     estimated_delivery_weeks = models.PositiveIntegerField(default=4, help_text="Semanas estimadas de desarrollo")
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.DRAFT)
-    pdf_file = models.FileField(upload_to='project_quotes_pdf/', blank=True, null=True)
+    pdf_file = models.FileField(upload_to='project_quotes_pdf/', storage=R2QuoteStorage(), blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

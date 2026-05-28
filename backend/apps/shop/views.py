@@ -383,11 +383,12 @@ class ContractViewSet(viewsets.ModelViewSet):
             from django.http import HttpResponse
             return HttpResponse("PDF no generado para este contrato.", status=404)
         
-        import requests
         from django.http import HttpResponse
         try:
-            response = requests.get(contract.pdf_file.url, timeout=10)
-            django_response = HttpResponse(response.content, content_type='application/pdf')
+            contract.pdf_file.open('rb')
+            pdf_content = contract.pdf_file.read()
+            contract.pdf_file.close()
+            django_response = HttpResponse(pdf_content, content_type='application/pdf')
             django_response['Content-Disposition'] = f'inline; filename="Contrato_{contract.id}.pdf"'
             return django_response
         except Exception as e:

@@ -479,11 +479,12 @@ class ProjectQuoteViewSet(viewsets.ModelViewSet):
             from django.http import HttpResponse
             return HttpResponse("PDF no generado para esta cotización.", status=404)
         
-        import requests
         from django.http import HttpResponse
         try:
-            response = requests.get(quote.pdf_file.url, timeout=10)
-            django_response = HttpResponse(response.content, content_type='application/pdf')
+            quote.pdf_file.open('rb')
+            pdf_content = quote.pdf_file.read()
+            quote.pdf_file.close()
+            django_response = HttpResponse(pdf_content, content_type='application/pdf')
             django_response['Content-Disposition'] = f'inline; filename="Cotizacion_{quote.id}.pdf"'
             return django_response
         except Exception as e:

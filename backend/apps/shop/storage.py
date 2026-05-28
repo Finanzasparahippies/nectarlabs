@@ -31,3 +31,34 @@ class R2ContractStorage:
             'addressing_style': 'path',
         })
         return S3Boto3Storage(*args, **kwargs)
+
+
+class R2QuoteStorage:
+    def __new__(cls, *args, **kwargs):
+        # En modo DEBUG (Local) o si falta configuración crítica, usamos el disco duro
+        config = settings.R2_STORAGE_OPTIONS
+        has_r2_config = all([config.get('access_key'), config.get('secret_key'), config.get('endpoint_url')])
+
+        if settings.DEBUG or not has_r2_config:
+            if not settings.DEBUG:
+                logging.warning("STORAGE: R2 configuration incomplete, falling back to local storage")
+            else:
+                logging.info("STORAGE: Using Local FileSystemStorage (DEBUG MODE) for quotes")
+            
+            return FileSystemStorage(location=settings.MEDIA_ROOT / 'project_quotes_pdf', base_url='/media/project_quotes_pdf/')
+        
+        # En producción/staging con configuración completa, usamos Cloudflare R2
+        logging.info("STORAGE: Using Cloudflare R2 Storage (PRODUCTION/STAGING MODE) for quotes")
+        kwargs.update({
+            'access_key': config.get('access_key'),
+            'secret_key': config.get('secret_key'),
+            'bucket_name': config.get('bucket_name'),
+            'endpoint_url': config.get('endpoint_url'),
+            'region_name': config.get('region_name', 'auto'),
+            'file_overwrite': False,
+            'default_acl': 'private',
+            'signature_version': 's3v4',
+            'addressing_style': 'path',
+        })
+        return S3Boto3Storage(*args, **kwargs)
+
