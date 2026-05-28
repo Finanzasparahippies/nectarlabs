@@ -451,6 +451,8 @@ class ProjectQuoteViewSet(viewsets.ModelViewSet):
                 try:
                     validated_token = JWTAuthentication().get_validated_token(token)
                     user = JWTAuthentication().get_user(validated_token)
+                    request.user = user
+                    self.request.user = user
                 except Exception:
                     from django.http import HttpResponse
                     return HttpResponse("Token no válido o expirado.", status=401)
