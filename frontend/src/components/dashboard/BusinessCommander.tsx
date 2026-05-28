@@ -419,10 +419,10 @@ export default function BusinessCommander({ stats, installments, setInstallments
   const handleCreatePromoCode = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!promoCode.trim()) return showToast("Por favor ingresa un código.", "warning");
-    
+
     setPromoError('');
     setIsSubmittingPromo(true);
-    
+
     const token = localStorage.getItem('token');
     const payload = {
       code: promoCode.trim().toUpperCase(),
@@ -433,7 +433,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
       referrer: promoReferrer ? parseInt(promoReferrer) : null,
       is_active: true
     };
-    
+
     try {
       const response = await fetch(`${API_URL}/promo-codes/`, {
         method: 'POST',
@@ -443,12 +443,12 @@ export default function BusinessCommander({ stats, installments, setInstallments
         },
         body: JSON.stringify(payload)
       });
-      
+
       if (!response.ok) {
         const err = await response.json();
         throw new Error(err.detail || 'Error al guardar el código promocional');
       }
-      
+
       const newPromo = await response.json();
       setPromoCodes(prev => [newPromo, ...prev]);
       setShowPromoModal(false);
@@ -471,7 +471,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
         },
         body: JSON.stringify({ is_active: !currentActive })
       });
-      
+
       if (!response.ok) throw new Error("Error al cambiar estado");
       const updated = await response.json();
       setPromoCodes(prev => prev.map(p => p.id === codeId ? updated : p));
@@ -491,7 +491,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
           'Authorization': `Bearer ${token}`
         }
       });
-      
+
       if (!response.ok) throw new Error("Error al eliminar");
       setPromoCodes(prev => prev.filter(p => p.id !== codeId));
       showToast(`Código ${codeStr} eliminado con éxito.`, "success");
@@ -1752,145 +1752,146 @@ export default function BusinessCommander({ stats, installments, setInstallments
               </div>
             </form>
           </div>
-      {/* Modal Crear Código de Descuento/Referido */}
-      {showPromoModal && (
-        <div
-          onClick={() => setShowPromoModal(false)}
-          className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-6 cursor-pointer"
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-lg bg-card-bg border border-card-border p-8 md:p-10 rounded-[3rem] shadow-2xl relative space-y-6 text-left cursor-default animate-in fade-in zoom-in-95 duration-200"
-          >
-            <button
+          )}
+          {/* Modal Crear Código de Descuento/Referido */}
+          {showPromoModal && (
+            <div
               onClick={() => setShowPromoModal(false)}
-              className="absolute top-6 right-6 w-8 h-8 rounded-full border border-card-border text-foreground/40 hover:text-foreground flex items-center justify-center text-xl font-bold"
+              className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-6 cursor-pointer"
             >
-              ×
-            </button>
-
-            <div>
-              <span className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold text-[8px] font-black uppercase tracking-widest rounded-full border border-nectar-gold/20">
-                Administración
-              </span>
-              <h2 className="text-2xl font-black tracking-tighter mt-4 leading-none">Nuevo Código Promocional</h2>
-              <p className="text-[10px] opacity-40 uppercase tracking-widest mt-1">Crea códigos de referidos o de descuento general</p>
-            </div>
-
-            {promoError && (
-              <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-500 text-[10px] font-bold rounded-xl text-center uppercase tracking-wider">
-                {promoError}
-              </div>
-            )}
-
-            <form onSubmit={handleCreatePromoCode} className="space-y-5">
-              <div className="space-y-1.5">
-                <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Código promocional</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="ej: AMIGO10, NECTAR20"
-                  value={promoCode}
-                  onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
-                  className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-nectar-gold text-foreground font-mono uppercase tracking-widest"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Tipo de Código</label>
-                  <select
-                    value={promoCodeType}
-                    onChange={(e) => setPromoCodeType(e.target.value as any)}
-                    className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-nectar-gold text-foreground"
-                  >
-                    <option value="CLIENT">👥 Cliente / Descuento General</option>
-                    <option value="SELLER">🏷️ Vendedor / Referido</option>
-                  </select>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Descuento (%)</label>
-                  <input
-                    type="number"
-                    min="0"
-                    max="100"
-                    step="0.01"
-                    required
-                    value={promoDiscount}
-                    onChange={(e) => setPromoDiscount(parseFloat(e.target.value) || 0)}
-                    className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-nectar-gold text-foreground font-mono"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Usuario Referidor (Opcional)</label>
-                <select
-                  value={promoReferrer}
-                  onChange={(e) => setPromoReferrer(e.target.value)}
-                  className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-nectar-gold text-foreground"
-                >
-                  <option value="">Ninguno (Descuento General)</option>
-                  {users.map(u => (
-                    <option key={u.id} value={u.id}>
-                      {u.username} ({u.role} - {u.email})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Límite de Usos (Opcional)</label>
-                  <input
-                    type="number"
-                    placeholder="Sin límite"
-                    value={promoMaxUses}
-                    onChange={(e) => setPromoMaxUses(e.target.value)}
-                    className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-nectar-gold text-foreground font-mono"
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Vence El (Opcional)</label>
-                  <input
-                    type="date"
-                    value={promoValidUntil}
-                    onChange={(e) => setPromoValidUntil(e.target.value)}
-                    className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-nectar-gold text-foreground font-mono"
-                  />
-                </div>
-              </div>
-
-              <div className="pt-6 border-t border-card-border/65 flex justify-end gap-3">
+              <div
+                onClick={(e) => e.stopPropagation()}
+                className="w-full max-w-lg bg-card-bg border border-card-border p-8 md:p-10 rounded-[3rem] shadow-2xl relative space-y-6 text-left cursor-default animate-in fade-in zoom-in-95 duration-200"
+              >
                 <button
-                  type="button"
                   onClick={() => setShowPromoModal(false)}
-                  className="px-5 py-3 border border-card-border hover:bg-foreground hover:text-background text-[9px] font-black uppercase tracking-widest rounded-xl transition-all"
+                  className="absolute top-6 right-6 w-8 h-8 rounded-full border border-card-border text-foreground/40 hover:text-foreground flex items-center justify-center text-xl font-bold"
                 >
-                  Cancelar
+                  ×
                 </button>
-                <button
-                  type="submit"
-                  disabled={isSubmittingPromo}
-                  className="px-6 py-3 bg-nectar-gold text-background text-[9px] font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 disabled:opacity-40 disabled:scale-100 transition-all font-bold shadow-lg shadow-nectar-gold/25"
-                >
-                  {isSubmittingPromo ? 'Creando...' : 'Crear Código'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
-      {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={() => setToast(null)}
-        />
-      )}
-    </div>
-  );
+                <div>
+                  <span className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold text-[8px] font-black uppercase tracking-widest rounded-full border border-nectar-gold/20">
+                    Administración
+                  </span>
+                  <h2 className="text-2xl font-black tracking-tighter mt-4 leading-none">Nuevo Código Promocional</h2>
+                  <p className="text-[10px] opacity-40 uppercase tracking-widest mt-1">Crea códigos de referidos o de descuento general</p>
+                </div>
+
+                {promoError && (
+                  <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-500 text-[10px] font-bold rounded-xl text-center uppercase tracking-wider">
+                    {promoError}
+                  </div>
+                )}
+
+                <form onSubmit={handleCreatePromoCode} className="space-y-5">
+                  <div className="space-y-1.5">
+                    <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Código promocional</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="ej: AMIGO10, NECTAR20"
+                      value={promoCode}
+                      onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                      className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-nectar-gold text-foreground font-mono uppercase tracking-widest"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Tipo de Código</label>
+                      <select
+                        value={promoCodeType}
+                        onChange={(e) => setPromoCodeType(e.target.value as any)}
+                        className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-nectar-gold text-foreground"
+                      >
+                        <option value="CLIENT">👥 Cliente / Descuento General</option>
+                        <option value="SELLER">🏷️ Vendedor / Referido</option>
+                      </select>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Descuento (%)</label>
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="0.01"
+                        required
+                        value={promoDiscount}
+                        onChange={(e) => setPromoDiscount(parseFloat(e.target.value) || 0)}
+                        className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-nectar-gold text-foreground font-mono"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Usuario Referidor (Opcional)</label>
+                    <select
+                      value={promoReferrer}
+                      onChange={(e) => setPromoReferrer(e.target.value)}
+                      className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-nectar-gold text-foreground"
+                    >
+                      <option value="">Ninguno (Descuento General)</option>
+                      {users.map(u => (
+                        <option key={u.id} value={u.id}>
+                          {u.username} ({u.role} - {u.email})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Límite de Usos (Opcional)</label>
+                      <input
+                        type="number"
+                        placeholder="Sin límite"
+                        value={promoMaxUses}
+                        onChange={(e) => setPromoMaxUses(e.target.value)}
+                        className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-nectar-gold text-foreground font-mono"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Vence El (Opcional)</label>
+                      <input
+                        type="date"
+                        value={promoValidUntil}
+                        onChange={(e) => setPromoValidUntil(e.target.value)}
+                        className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-nectar-gold text-foreground font-mono"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="pt-6 border-t border-card-border/65 flex justify-end gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setShowPromoModal(false)}
+                      className="px-5 py-3 border border-card-border hover:bg-foreground hover:text-background text-[9px] font-black uppercase tracking-widest rounded-xl transition-all"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isSubmittingPromo}
+                      className="px-6 py-3 bg-nectar-gold text-background text-[9px] font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 disabled:opacity-40 disabled:scale-100 transition-all font-bold shadow-lg shadow-nectar-gold/25"
+                    >
+                      {isSubmittingPromo ? 'Creando...' : 'Crear Código'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {toast && (
+            <Toast
+              message={toast.message}
+              type={toast.type}
+              onClose={() => setToast(null)}
+            />
+          )}
+        </div>
+      );
 }
