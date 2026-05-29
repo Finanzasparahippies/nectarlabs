@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { fetcher } from '@/lib/api';
@@ -17,7 +17,7 @@ interface Contract {
   next_payment_date: string;
 }
 
-export default function DashboardSidebar() {
+function DashboardSidebarContent() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -652,5 +652,13 @@ export default function DashboardSidebar() {
         </div>
       </aside>
     </>
+  );
+}
+
+export default function DashboardSidebar() {
+  return (
+    <Suspense fallback={null}>
+      <DashboardSidebarContent />
+    </Suspense>
   );
 }
