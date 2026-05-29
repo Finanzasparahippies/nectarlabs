@@ -1,0 +1,203 @@
+================================================================================
+          N É C T A R   L A B S   -   P L A N   D E   N E G O C I O S
+================================================================================
+                    SIMULADOR DE PROYECCIÓN FINANCIERA (SPF)
+              "Néctar Financial Oracle & ROI Analytics Add-on"
+================================================================================
+Fecha de Emisión: 2026-05-29
+Estado: Aprobado / Confidencial
+Versión: 1.0.0
+Autor: Antigravity AI & Néctar Labs Core Team
+
+--------------------------------------------------------------------------------
+ÍNDICE
+--------------------------------------------------------------------------------
+1. Resumen Ejecutivo (Executive Summary)
+2. Propuesta de Valor y Objetivos Comerciales
+3. Arquitectura del Módulo y Características Clave
+4. Modelo Financiero y Algoritmo de Proyección (Fórmulas)
+5. Estructura de Precios y Estrategia de Monetización
+6. Especificaciones de Diseño UX/UI (Alineación Premium Néctar Labs)
+7. Plan de Implementación y Roadmap Técnico
+
+================================================================================
+1. RESUMEN EJECUTIVO (EXECUTIVE SUMMARY)
+================================================================================
+Néctar Labs se ha consolidado como un partner de ingeniería y desarrollo 
+artesanal de software bajo un modelo premium enfocado en alta eficiencia. Con el 
+fin de maximizar la conversión en el embudo de ventas y ofrecer herramientas de 
+toma de decisiones de nivel empresarial, se presenta el "Simulador de 
+Proyección Financiera" (SPF).
+
+Este módulo es una herramienta analítica e interactiva diseñada tanto para 
+prospectos en la landing page pública (versión Lite) como para dueños de 
+negocio (rol BUSINESS) y el equipo interno de ventas (rol SALES) en su consola 
+de control (versión Pro). El SPF simula el impacto financiero de integrar las 
+soluciones de Néctar Labs en el flujo de caja del cliente, calculando el 
+Retorno de Inversión (ROI), el ahorro en desarrollo comparado con agencias 
+tradicionales, y modelando la dispersión de comisiones para la red de ventas.
+
+================================================================================
+2. PROPUESTA DE VALOR Y OBJETIVOS COMERCIALES
+================================================================================
+El principal reto al vender desarrollo de software premium es tangibilizar el 
+retorno económico del código. El software no es solo un costo operativo, es un 
+habilitador de ingresos.
+
+*   Para el Prospecto (Lead Generation): 
+    Permite calcular exactamente el ahorro en nómina tecnológica e 
+    infraestructura al contratar un "Partner Tecnológico" de Néctar Labs en 
+    comparación con formar un equipo interno de ingeniería (Dev + Designer + QA + 
+    PM) o subcontratar a una agencia tradicional (tarifa promedio de $1,200 MXN/h).
+    
+*   Para el Cliente Activo (SaaS Business Expansion):
+    Permite calcular el impacto incremental en ingresos que genera la suite de 
+    Add-ons de Néctar Labs (por ejemplo, cómo el módulo "Néctar Live Chat" 
+    aumenta la conversión de leads o cómo "Logistics & GPS" optimiza los costos 
+    de transporte).
+    
+*   Para el Vendedor (Salesperson Enablement):
+    Permite proyectar las comisiones del 10%, 5%, 2% (para planes regulares) y el 
+    20% inmediato (para cotizaciones personalizadas de proyectos), mostrando de 
+    forma transparente su ingreso residual proyectado a 6 y 12 meses.
+
+================================================================================
+3. ARCHITECTURA DEL MÓDULO Y CARACTERÍSTICAS CLAVE
+================================================================================
+El Simulador opera con tres motores de cálculo principales:
+
+A. MOTOR DE COMPARACIÓN DE COSTOS DE INGENIERÍA
+   Determina el Costo Total de Propiedad (TCO) de tres opciones de desarrollo:
+   1. Equipo Interno (Nómina de ingenieros, diseñadores, prestaciones, equipo).
+   2. Agencia Tradicional (Horas estimadas cobradas a tarifa fija de mercado).
+   3. Néctar Labs (Tarifas fijas de planes: Básico, Staging, Producción).
+
+B. MOTOR DE IMPACTO OPERATIVO DE ADD-ONS
+   Simula los ingresos adicionales generados por la suite de complementos:
+   - Live Chat: Simula incremento en tasa de conversión web (+0.5% a +3%).
+   - Booking & Signature: Reduce el tiempo de cierre de contratos y cartera vencida.
+   - Logistics & GPS: Simula reducción en costos de ruta y combustible (-10% a -25%).
+   - Newsletter Campaigner: Retención de clientes y aumento del Valor del Cliente (LTV).
+
+C. MOTOR DE PROYECCIÓN DE COMISIONES (CRM VENTAS)
+   Calculadora interna para el dashboard `/dashboard/sales`:
+   - Permite al vendedor capturar contratos estimados para visualizar su flujo 
+     de caja por mes.
+   - Modela comisiones según la periodicidad del pago de los clientes y el 
+     esquema del 20% único por cotizaciones de proyectos (`ProjectQuote`).
+
+================================================================================
+4. MODELO FINANCIERO Y ALGORITMO DE PROYECCIÓN (FÓRMULAS)
+================================================================================
+Para asegurar la rigurosidad matemática del simulador, se implementarán los 
+siguientes modelos financieros en tiempo real:
+
+1. FÓRMULA DE AHORRO NETO DE INGENIERÍA (Ah):
+   Ah = (Hi * Ta) - Cp
+   * Hi = Horas de ingeniería mensuales requeridas.
+   * Ta = Tarifa promedio de agencia tradicional ($1,200 MXN/h).
+   * Cp = Costo del plan de Néctar Labs elegido (Básico: $3,000, Staging: $29,999, Producción: $49,999).
+
+2. MODELADO DE INCREMENTO DE INGRESOS POR CONVERSIÓN (Ic) - (Módulo Live Chat/Newsletter):
+   Ic = T * (Cv_nueva - Cv_base) * Tm
+   * T = Tráfico mensual promedio del negocio del cliente.
+   * Cv_base = Tasa de conversión de ventas inicial (%).
+   * Cv_nueva = Tasa de conversión de ventas estimada tras integración (+1.5% promedio).
+   * Tm = Ticket medio del cliente en MXN.
+
+3. RETORNO DE INVERSIÓN (ROI):
+   ROI (%) = [ (Ic + Ah - Costo_Addons) / Costo_Total_Inversion ] * 100
+
+4. PROYECCIÓN DE INGRESO RESIDUAL PARA VENDEDORES (Ir) a N meses:
+   Ir(m) = Suma_por_contrato [ Pago_Installment(m) * Pct_Comision(m) ]
+   * Para contratos de plan regular:
+     - Mes 1: Pct_Comision = 10%
+     - Mes 2: Pct_Comision = 5%
+     - Meses 3 a 6: Pct_Comision = 2%
+   * Para cotizaciones personalizadas (ProjectQuote):
+     - Mes 1 (Anticipo): Pct_Comision = 20% del total de la cotización.
+     - Meses 2+: Pct_Comision = 0%
+
+================================================================================
+5. ESTRUCTURA DE PRECIOS Y ESTRATEGIA DE MONETIZACIÓN
+================================================================================
+El SPF se comercializará bajo una estructura híbrida:
+
+1. ACCESO PÚBLICO (Versión LITE):
+   - Gratuito en la sección de inicio (/calculator) para captación de leads. 
+   - Objetivo: Actuar como "Lead Magnet". Para ver el PDF con la proyección 
+     financiera completa, el prospecto debe registrar su correo (integración 
+     directa con Néctar Newsletter).
+
+2. ACCESO COMERCIAL (Versión PRO):
+   - Integrado como un Add-on Premium para clientes BUSINESS: "Néctar Financial Oracle".
+   - Precio Mensual: $249 MXN / mes.
+   - Precio Anual: $2,490 MXN / año (Ahorro de 2 meses).
+   - Características Pro: Conexión vía API para extraer datos de Stripe reales 
+     del cliente, gráficos de tendencias interactivas, integración de logs de 
+     APM para mapear costo de servidor vs ganancias.
+
+3. HERRAMIENTA INTERNA (Vendedores):
+   - 100% gratuita y habilitada por defecto para cualquier usuario con rol 
+     `SALES` aprobado (`is_approved_seller = True`).
+
+================================================================================
+6. ESPECIFICACIONES DE DISEÑO UX/UI (ESTILO ULTRA-PREMIUM)
+================================================================================
+Para encajar con la dirección estética de Néctar Labs, la página del simulador 
+debe evocar un panel financiero premium de nivel institucional (como Bloomberg o 
+Stripe Billing), utilizando Vanilla CSS y micro-animaciones personalizadas:
+
+A. PALETA DE COLORES (Dark Mode HSL)
+   - Fondo Base: #020403 (Negro absoluto orgánico).
+   - Cartas y Paneles: #050a06 (Verde bosque extremadamente oscuro).
+   - Acento Principal: #10B981 (Verde esmeralda neón para indicadores positivos).
+   - Resaltes de Marca: #C68A1E (Oro Néctar premium para métricas clave e hitos).
+   - Bordes: #151F18 (Verde oliva oscuro para divisiones sutiles).
+
+B. TIPOGRAFÍA Y COMPONENTES
+   - Encabezados: Tipografía geométrica sans-serif (e.g., Outfit o Space Grotesk) 
+     en mayúsculas con tracking ancho para sub-badges.
+   - Controles Deslizantes (Range Sliders): Estilo minimalista con barra en color 
+     verde oscuro y el selector en Oro Néctar, con snapping animado y feedback 
+     háptico/visual instantáneo.
+   - Gráficos de Proyección: Implementación de área de gráfico interactiva en 
+     SVG con gradientes degradados desde verde esmeralda hasta transparente, y 
+     tooltips flotantes ultra-ligeros.
+
+C. DISTRIBUCIÓN DE PANTALLA (Layout)
+   - El simulador se distribuirá en una pantalla dividida (2 columnas en desktop):
+     * Columna Izquierda: Panel de control con inputs y sliders de métricas 
+       operativas del negocio (Tráfico, Ticket Medio, Tasa de Conversión).
+     * Columna Derecha: Tarjeta de Recibo e Impacto Financiero flotante (Sticky).
+       Muestra en tiempo real:
+       1. Ahorro Anual Neto (en Oro Néctar).
+       2. ROI Estimado (en color verde esmeralda).
+       3. Gráfico de línea temporal de ingresos proyectados a 12 meses.
+       4. Botón de CTA premium ("Iniciar Alianza Tecnológica" o "Suscribirse a Oracle").
+
+================================================================================
+7. PLAN DE IMPLEMENTACIÓN Y ROADMAP TÉCNICO
+================================================================================
+El desarrollo del SPF se llevará a cabo en tres fases de desarrollo ágil:
+
+*   FASE 1: Maquetación y Lógica del Simulador Lite (Landing Page)
+    - Implementar el componente React `FinancialSimulator.tsx` en el frontend.
+    - Conectar los sliders con las fórmulas matemáticas en memoria del lado del cliente.
+    - Diseñar los gráficos en SVG/CSS puro con animaciones fluidas al cambiar valores.
+
+*   FASE 2: Backend e Integración del Modelo Pro
+    - Agregar modelo `FinancialProjection` en `apps.dashboard` si se decide persistir 
+      las proyecciones guardadas de los clientes.
+    - Crear la API para exportación de PDF de proyección financiera utilizando ReportLab.
+    - Agregar el endpoint para vincular las métricas reales del negocio desde Stripe.
+
+*   FASE 3: Consola de Ventas (SALES)
+    - Integrar la calculadora de ingresos por comisiones dentro del dashboard de 
+      vendedores.
+    - Generar el gráfico interactivo de comisiones históricas y proyectadas 
+      para facilitar la transparencia en los pagos mensuales de afiliados.
+
+================================================================================
+Néctar Labs Ecosystem - Todos los derechos reservados. 2026.
+================================================================================

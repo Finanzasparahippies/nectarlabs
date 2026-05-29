@@ -70,7 +70,7 @@ export default function TenantSettingsPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [origin, setOrigin] = useState('https://nectarlabs.dev');
   const [activeSubTab, setActiveSubTab] = useState<'branding' | 'colors' | 'products' | 'users'>('branding');
-  
+
   // DNS verification states
   const [isValidatingDomain, setIsValidatingDomain] = useState(false);
   const [domainValidationResult, setDomainValidationResult] = useState<{ is_valid: boolean; resolved_ip?: string; message: string } | null>(null);
@@ -78,7 +78,7 @@ export default function TenantSettingsPage() {
   // New Tenant Form State
   const [newTenantName, setNewTenantName] = useState('');
   const [newTenantSubdomain, setNewTenantSubdomain] = useState('');
-  
+
   // Edit tenant fields
   const [editName, setEditName] = useState('');
   const [editSubdomain, setEditSubdomain] = useState('');
@@ -89,7 +89,7 @@ export default function TenantSettingsPage() {
   const [editCardBgColor, setEditCardBgColor] = useState('#050a06');
   const [editTextColor, setEditTextColor] = useState('#FFFFFF');
   const [editBorderColor, setEditBorderColor] = useState('#151F18');
-  
+
   // Light Mode Palette
   const [editThemeColorLight, setEditThemeColorLight] = useState('#C68A1E');
   const [editAccentColorLight, setEditAccentColorLight] = useState('#10B981');
@@ -173,7 +173,7 @@ export default function TenantSettingsPage() {
     if (undoStackRef.current.length === 0) return;
     const previousState = undoStackRef.current.pop();
     setHistoryLength(undoStackRef.current.length);
-    
+
     if (previousState) {
       setEditName(previousState.editName);
       setEditSubdomain(previousState.editSubdomain);
@@ -184,20 +184,20 @@ export default function TenantSettingsPage() {
       setEditCardBgColor(previousState.editCardBgColor);
       setEditTextColor(previousState.editTextColor);
       setEditBorderColor(previousState.editBorderColor);
-      
+
       setEditThemeColorLight(previousState.editThemeColorLight);
       setEditAccentColorLight(previousState.editAccentColorLight);
       setEditBgColorLight(previousState.editBgColorLight);
       setEditCardBgColorLight(previousState.editCardBgColorLight);
       setEditTextColorLight(previousState.editTextColorLight);
       setEditBorderColorLight(previousState.editBorderColorLight);
-      
+
       setEditPollenActive(previousState.editPollenActive);
       setEditPollenIcon(previousState.editPollenIcon);
       setEditPollenColor(previousState.editPollenColor);
       setEditPollenCount(previousState.editPollenCount);
       setEditPollenBlur(previousState.editPollenBlur);
-      
+
       setEditLogoUrl(previousState.editLogoUrl);
       setEditWelcomeMessage(previousState.editWelcomeMessage);
       setEditPortalTitle(previousState.editPortalTitle);
@@ -250,7 +250,7 @@ export default function TenantSettingsPage() {
   const showToast = (message: string, type: 'success' | 'error' | 'warning' | 'info' = 'success') => {
     setToast({ message, type });
   };
-  
+
   const router = useRouter();
 
   useEffect(() => {
@@ -280,7 +280,7 @@ export default function TenantSettingsPage() {
           }
           setSelectedTenant(activeTenant);
           initTenantFields(activeTenant);
-          
+
           // Load products and users scoped to this tenant
           const [productsData, usersData] = await Promise.all([
             fetcher('/products/').catch(() => []),
@@ -482,7 +482,7 @@ export default function TenantSettingsPage() {
       formData.append('description', productDesc.trim());
       formData.append('price', productPrice);
       formData.append('stock', productStock);
-      
+
       if (productImageFile) {
         formData.append('image', productImageFile);
       }
@@ -556,7 +556,7 @@ export default function TenantSettingsPage() {
         username: userUsername.trim(),
         role: userRoleSelect,
       };
-      
+
       if (userPassword) {
         payload.password = userPassword;
       }
@@ -628,7 +628,7 @@ export default function TenantSettingsPage() {
           /* Empty State - Create Tenant Settings */
           <div className="max-w-xl bg-card-bg border border-card-border rounded-[3rem] p-8 md:p-10 shadow-2xl relative overflow-hidden">
             <div className="absolute -top-24 -right-24 w-48 h-48 rounded-full bg-nectar-gold/5 blur-3xl"></div>
-            
+
             <div className="text-center mb-8">
               <div className="w-14 h-14 bg-nectar-gold/10 text-nectar-gold rounded-full flex items-center justify-center mx-auto mb-4">
                 <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -689,36 +689,32 @@ export default function TenantSettingsPage() {
                 <div className="flex border-b border-card-border pb-px mb-8 gap-6 overflow-x-auto">
                   <button
                     onClick={() => setActiveSubTab('branding')}
-                    className={`pb-3 text-[10px] font-black uppercase tracking-widest relative transition-all whitespace-nowrap ${
-                      activeSubTab === 'branding' ? 'text-nectar-gold' : 'text-foreground/45 hover:text-foreground'
-                    }`}
+                    className={`pb-3 text-[10px] font-black uppercase tracking-widest relative transition-all whitespace-nowrap ${activeSubTab === 'branding' ? 'text-nectar-gold' : 'text-foreground/45 hover:text-foreground'
+                      }`}
                   >
                     Portal y Negocio
                     {activeSubTab === 'branding' && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-nectar-gold"></span>}
                   </button>
                   <button
                     onClick={() => setActiveSubTab('colors')}
-                    className={`pb-3 text-[10px] font-black uppercase tracking-widest relative transition-all whitespace-nowrap ${
-                      activeSubTab === 'colors' ? 'text-nectar-gold' : 'text-foreground/45 hover:text-foreground'
-                    }`}
+                    className={`pb-3 text-[10px] font-black uppercase tracking-widest relative transition-all whitespace-nowrap ${activeSubTab === 'colors' ? 'text-nectar-gold' : 'text-foreground/45 hover:text-foreground'
+                      }`}
                   >
                     Colores y Branding
                     {activeSubTab === 'colors' && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-nectar-gold"></span>}
                   </button>
                   <button
                     onClick={() => setActiveSubTab('products')}
-                    className={`pb-3 text-[10px] font-black uppercase tracking-widest relative transition-all whitespace-nowrap ${
-                      activeSubTab === 'products' ? 'text-nectar-gold' : 'text-foreground/45 hover:text-foreground'
-                    }`}
+                    className={`pb-3 text-[10px] font-black uppercase tracking-widest relative transition-all whitespace-nowrap ${activeSubTab === 'products' ? 'text-nectar-gold' : 'text-foreground/45 hover:text-foreground'
+                      }`}
                   >
                     Productos
                     {activeSubTab === 'products' && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-nectar-gold"></span>}
                   </button>
                   <button
                     onClick={() => setActiveSubTab('users')}
-                    className={`pb-3 text-[10px] font-black uppercase tracking-widest relative transition-all whitespace-nowrap ${
-                      activeSubTab === 'users' ? 'text-nectar-gold' : 'text-foreground/45 hover:text-foreground'
-                    }`}
+                    className={`pb-3 text-[10px] font-black uppercase tracking-widest relative transition-all whitespace-nowrap ${activeSubTab === 'users' ? 'text-nectar-gold' : 'text-foreground/45 hover:text-foreground'
+                      }`}
                   >
                     Usuarios
                     {activeSubTab === 'users' && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-nectar-gold"></span>}
@@ -733,7 +729,7 @@ export default function TenantSettingsPage() {
                         <h4 className="text-xs font-black uppercase tracking-widest text-nectar-gold">Portal y Negocio</h4>
                         <p className="text-[8px] text-foreground/45 uppercase tracking-wider mt-1">Configuración general de tu portal público</p>
                       </div>
-                      
+
                       {/* History controls */}
                       <div className="flex gap-2">
                         <button
@@ -873,7 +869,7 @@ export default function TenantSettingsPage() {
                         <p className="text-[8px] text-foreground/30 uppercase mt-1">
                           Apunta tu CNAME en tu proveedor de DNS hacia <span className="text-nectar-gold">nectarlabs.dev</span>.
                         </p>
-                        
+
                         {editCustomDomain.trim() && (
                           <div className="mt-3 space-y-3">
                             <button
@@ -886,11 +882,10 @@ export default function TenantSettingsPage() {
                             </button>
                             {domainValidationResult && (
                               <div
-                                className={`p-3 rounded-lg border text-[10px] ${
-                                  domainValidationResult.is_valid
+                                className={`p-3 rounded-lg border text-[10px] ${domainValidationResult.is_valid
                                     ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
                                     : 'bg-red-500/10 border-red-500/30 text-red-400'
-                                }`}
+                                  }`}
                               >
                                 <p className="font-bold">
                                   {domainValidationResult.is_valid ? '✓ DNS Correcto' : '✗ Configuración DNS incompleta'}
@@ -943,7 +938,7 @@ export default function TenantSettingsPage() {
                           <div className="w-11 h-6 bg-card-border peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-nectar-gold"></div>
                         </label>
                       </div>
-                      
+
                       <div className="space-y-1">
                         <label className="text-[9px] font-black uppercase tracking-widest text-foreground/40">Orígenes Permitidos (Widget CORS Security)</label>
                         <textarea
@@ -977,7 +972,7 @@ export default function TenantSettingsPage() {
                         <h4 className="text-xs font-black uppercase tracking-widest text-nectar-gold">Colores y Branding</h4>
                         <p className="text-[8px] text-foreground/45 uppercase tracking-wider mt-1">Configura la identidad de marca de tu Colmena</p>
                       </div>
-                      
+
                       {/* History controls */}
                       <div className="flex gap-2">
                         <button
@@ -1291,7 +1286,7 @@ export default function TenantSettingsPage() {
                             ></span>
                           </div>
                         </div>
-                        
+
                         <div
                           className="p-6 rounded-2xl border space-y-3 transition-all duration-300"
                           style={{
@@ -1341,7 +1336,7 @@ export default function TenantSettingsPage() {
                         <h4 className="text-xs font-black uppercase tracking-widest text-nectar-gold">Efecto Visual de la Colmena</h4>
                         <p className="text-[8px] text-foreground/45 uppercase tracking-wider mt-1">Configura las partículas animadas que caen en tu portal público</p>
                       </div>
-                      
+
                       <div className="flex items-center gap-3 p-4 bg-foreground/[0.01] border border-card-border/40 rounded-2xl">
                         <input
                           type="checkbox"
@@ -1380,7 +1375,7 @@ export default function TenantSettingsPage() {
                             <option value="🐝">🐝 Abeja Forrajera</option>
                             <option value="custom">✨ Personalizado (Emoji / Carácter)</option>
                           </select>
-                          
+
                           {!predefinedIcons.includes(editPollenIcon) && (
                             <div className="mt-2 space-y-1">
                               <label className="text-[8px] font-black uppercase tracking-widest text-foreground/40">Emoji o Carácter Personalizado</label>
@@ -1502,7 +1497,7 @@ export default function TenantSettingsPage() {
                               </div>
                             </div>
                           </div>
-                          
+
                           <div className="flex gap-2">
                             <button
                               onClick={() => openEditProduct(prod)}
@@ -1558,11 +1553,10 @@ export default function TenantSettingsPage() {
                               <td className="py-4 font-bold text-xs">{userItem.username}</td>
                               <td className="py-4 text-xs opacity-80 select-all">{userItem.email}</td>
                               <td className="py-4">
-                                <span className={`px-2.5 py-0.5 text-[7px] font-black uppercase tracking-widest rounded-full ${
-                                  userItem.role === 'BUSINESS' 
-                                    ? 'bg-nectar-gold/10 text-nectar-gold border border-nectar-gold/20' 
+                                <span className={`px-2.5 py-0.5 text-[7px] font-black uppercase tracking-widest rounded-full ${userItem.role === 'BUSINESS'
+                                    ? 'bg-nectar-gold/10 text-nectar-gold border border-nectar-gold/20'
                                     : 'bg-foreground/5 text-foreground/70 border border-card-border/50'
-                                }`}>
+                                  }`}>
                                   {userItem.role}
                                 </span>
                               </td>
@@ -1597,7 +1591,7 @@ export default function TenantSettingsPage() {
               {(activeSubTab === 'branding' || activeSubTab === 'colors') && (
                 <div className="w-full lg:w-80 bg-card-bg border border-card-border rounded-[3rem] p-6 flex flex-col items-center justify-between shrink-0 shadow-lg relative overflow-hidden h-[450px]">
                   <div className="absolute top-0 left-0 right-0 h-2" style={{ backgroundColor: editThemeColor }}></div>
-                  
+
                   <div className="text-center pt-4">
                     <span className="text-[8px] font-black uppercase tracking-widest text-foreground/30">Vista Previa Visual</span>
                     <h4 className="text-xs font-black uppercase text-foreground tracking-tight mt-2">Portal Comercial</h4>
@@ -1686,7 +1680,7 @@ export default function TenantSettingsPage() {
             className="bg-card-bg border border-card-border rounded-[2rem] max-w-md w-full p-8 relative space-y-6 cursor-default"
           >
             <h3 className="text-xl font-black uppercase tracking-wide text-foreground">{editingProduct ? 'Editar Producto' : 'Nuevo Producto'}</h3>
-            
+
             <form onSubmit={handleSaveProduct} className="space-y-4">
               <div className="space-y-1">
                 <label className="text-[9px] font-black uppercase tracking-widest text-foreground/45">Nombre del Producto</label>
@@ -1792,7 +1786,7 @@ export default function TenantSettingsPage() {
             className="bg-card-bg border border-card-border rounded-[2rem] max-w-md w-full p-8 relative space-y-6 cursor-default"
           >
             <h3 className="text-xl font-black uppercase tracking-wide text-foreground">{editingUser ? 'Editar Usuario' : 'Nuevo Usuario'}</h3>
-            
+
             <form onSubmit={handleSaveUser} className="space-y-4">
               <div className="space-y-1">
                 <label className="text-[9px] font-black uppercase tracking-widest text-foreground/45">Username</label>
