@@ -166,12 +166,28 @@ class NewsletterAddonTests(BaseTenantAddonTestCase):
         with self.assertRaises(ValueError):
             send_newsletter_email("Test Subject", "welcome", {}, recipients, tenant=self.tenant_a)
             
-        # Verify that send_newsletter_email succeeds if they have an active contract
+        # Verify that send_newsletter_email succeeds if they have an active contract (limit is 10k)
         contract_a.is_active = True
         contract_a.save()
         mail.outbox = []
         send_newsletter_email("Test Subject", "welcome", {}, recipients, tenant=self.tenant_a)
         self.assertTrue(len(mail.outbox) > 0)
+
+        # Verify that send_newsletter_email fails if they exceed 10k on PREMIUM/contract plan
+        large_recipients = [f"rec{i}@example.com" for i in range(10001)]
+        with self.assertRaises(ValueError):
+            send_newsletter_email("Test Subject", "welcome", {}, large_recipients, tenant=self.tenant_a)
+
+        # Verify that adding extra credits allows sending over 10k
+        self.tenant_a.newsletter_extra_credits = 10000 # Adds 10k extra capacity, making total 20k
+        self.tenant_a.save()
+        mail.outbox = []
+        send_newsletter_email("Test Subject", "welcome", {}, large_recipients, tenant=self.tenant_a)
+        self.assertTrue(len(mail.outbox) > 0)
+
+        # Reset extra credits
+        self.tenant_a.newsletter_extra_credits = 0
+        self.tenant_a.save()
         
         # Verify that send_newsletter_email succeeds if they have no active contract but newsletter_plan is PREMIUM
         contract_a.is_active = False
@@ -182,6 +198,10 @@ class NewsletterAddonTests(BaseTenantAddonTestCase):
         mail.outbox = []
         send_newsletter_email("Test Subject", "welcome", {}, recipients, tenant=self.tenant_a)
         self.assertTrue(len(mail.outbox) > 0)
+
+        # Verify limit of 10k for PREMIUM plan too
+        with self.assertRaises(ValueError):
+            send_newsletter_email("Test Subject", "welcome", {}, large_recipients, tenant=self.tenant_a)
 
         # Now test the view:
         # If newsletter_plan is PREMIUM, they should be able to subscribe contacts without active contract

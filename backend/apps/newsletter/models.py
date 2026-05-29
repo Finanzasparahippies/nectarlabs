@@ -47,15 +47,18 @@ def send_newsletter_email(subject, template_name, context, recipient_list, tenan
             has_active_contract = Contract.objects.filter(user=tenant.owner, is_active=True).exists()
             has_paid_addon = tenant.newsletter_plan == 'PREMIUM'
 
-            if not (has_active_contract or has_paid_addon):
-                # Only enforce limits for trial/free tenants without an active partner contract
-                base_limit = 1000
-                total_limit = base_limit + tenant.newsletter_extra_credits
+            if has_active_contract or has_paid_addon:
+                base_limit = 10000
+            else:
+                base_limit = 1000  # TRIAL plan without active contract
 
-                if tenant.newsletter_sent_this_month + len(recipient_list) > total_limit:
-                    raise ValueError(
-                        f"Límite mensual de correos alcanzado para plan de prueba. Has enviado {tenant.newsletter_sent_this_month} de {total_limit} correos."
-                    )
+            total_limit = base_limit + tenant.newsletter_extra_credits
+
+            if tenant.newsletter_sent_this_month + len(recipient_list) > total_limit:
+                raise ValueError(
+                    f"Límite mensual de correos alcanzado. Has enviado {tenant.newsletter_sent_this_month} de {total_limit} correos. "
+                    "Puedes contratar un paquete adicional de 10,000 correos por $79 MXN en tu panel de control."
+                )
 
     html_content = render_to_string(f"newsletter/{template_name}.html", context)
     text_content = f"Visita nuestra web para ver las novedades: {settings.FRONTEND_URL}"
