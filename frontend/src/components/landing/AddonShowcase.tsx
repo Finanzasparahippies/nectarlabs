@@ -169,10 +169,6 @@ const fallbackAddons: Omit<Addon, 'icon'>[] = [
       'Soporte multi-idioma de plantillas'
     ]
   }
-];',
-      'Soporte multi-idioma de plantillas'
-    ]
-  }
 ];
 
 export default function AddonShowcase() {
