@@ -346,8 +346,9 @@ def generate_installments_for_contract(contract):
             # Clean up previous installments
             contract.installments.all().delete()
             
+            from decimal import Decimal
             start_date = contract.signed_at.date() if contract.signed_at else timezone.now().date()
-            base_amount_half = contract.project_quote.total_price / 2
+            base_amount_half = Decimal(str(contract.project_quote.total_price)) / Decimal('2')
             
             # Installment 1: Anticipo (50%)
             PaymentInstallment.objects.create(

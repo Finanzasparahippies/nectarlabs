@@ -259,7 +259,7 @@ class PaymentInstallment(models.Model):
                             # Custom project commission: 20% of the entire quote total_price, paid ONLY at installment 1 (anticipo)
                             if self.installment_number == 1:
                                 pct = Decimal('20.00')
-                                commission_amount = contract.project_quote.total_price * (pct / Decimal('100'))
+                                commission_amount = Decimal(str(contract.project_quote.total_price)) * (pct / Decimal('100'))
                                 SalesCommission.objects.create(
                                     salesperson=referrer,
                                     installment=self,

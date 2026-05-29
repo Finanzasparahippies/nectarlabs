@@ -96,7 +96,7 @@ siguientes modelos financieros en tiempo real:
    Ah = (Hi * Ta) - Cp
    * Hi = Horas de ingeniería mensuales requeridas.
    * Ta = Tarifa promedio de agencia tradicional ($1,200 MXN/h).
-   * Cp = Costo del plan de Néctar Labs elegido (Básico: $3,000, Staging: $29,999, Producción: $49,999).
+   * Cp = Costo del plan de Néctar Labs elegido (Básico: $3,000, Mid: $2800, Premium: $2500).
 
 2. MODELADO DE INCREMENTO DE INGRESOS POR CONVERSIÓN (Ic) - (Módulo Live Chat/Newsletter):
    Ic = T * (Cv_nueva - Cv_base) * Tm
@@ -201,3 +201,4 @@ El desarrollo del SPF se llevará a cabo en tres fases de desarrollo ágil:
 ================================================================================
 Néctar Labs Ecosystem - Todos los derechos reservados. 2026.
 ================================================================================
+
