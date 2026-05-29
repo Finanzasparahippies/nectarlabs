@@ -72,6 +72,7 @@ INSTALLED_APPS = [
     "apps.bookings",
     "apps.delivery",
     "apps.sponsorship",
+    "apps.billing",
 ]
 
 FRONTEND_URL = env("FRONTEND_URL", default="http://localhost:3000")

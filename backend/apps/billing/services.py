@@ -1,0 +1,259 @@
+import uuid
+from decimal import Decimal
+import logging
+from django.conf import settings
+from django.core.files.base import ContentFile
+import requests
+
+logger = logging.getLogger(__name__)
+
+class PACError(Exception):
+    """Excepción base para errores de comunicación con el PAC"""
+    pass
+
+class LCOSyncError(PACError):
+    """Excepción específica cuando el certificado digital aún no se sincroniza en la LCO del SAT"""
+    pass
+
+
+class PACServiceBase:
+    def create_organization(self, tax_profile):
+        """Crea una organización/contribuyente en el PAC y retorna su ID de PAC"""
+        raise NotImplementedError()
+
+    def upload_sello(self, organization_id, cer_file, key_file, password):
+        """Sube y resguarda los sellos CSD (.cer, .key) en el portal del PAC"""
+        raise NotImplementedError()
+
+    def create_invoice(self, invoice, tax_profile, customer_info, items):
+        """Genera y timbra una factura CFDI 4.0 en el PAC"""
+        raise NotImplementedError()
+
+    def cancel_invoice(self, invoice):
+        """Solicita la cancelación del CFDI ante el SAT"""
+        raise NotImplementedError()
+
+    def check_invoice_status(self, invoice):
+        """Verifica el estado actual de la factura (timbrado/cancelado) en el PAC"""
+        raise NotImplementedError()
+
+
+class MockPACService(PACServiceBase):
+    """
+    PAC de simulación para desarrollo local y ejecución de pruebas unitarias.
+    """
+    def create_organization(self, tax_profile):
+        logger.info(f"[MockPAC] Creando organización para RFC: {tax_profile.rfc}")
+        return f"org_mock_{uuid.uuid4().hex[:12]}"
+
+    def upload_sello(self, organization_id, cer_file, key_file, password):
+        logger.info(f"[MockPAC] Subiendo sellos para la organización {organization_id}")
+        if password == "invalid_sello":
+            raise PACError("Clave de CSD incorrecta o certificado dañado.")
+        return True
+
+    def create_invoice(self, invoice, tax_profile, customer_info, items):
+        logger.info(f"[MockPAC] Generando factura por ${invoice.total} en org {tax_profile.facturapi_organization_id}")
+        
+        # Simulación del caso de sincronización LCO (sello nuevo)
+        # RFC especial para forzar el error de sincronización de sellos (LCO)
+        if tax_profile.rfc == "LCO999999AAA":
+            raise LCOSyncError("El certificado digital (CSD) no está activo en la LCO del SAT. Tarda de 24 a 72 horas.")
+
+        # Simulación de error de centavos si el redondeo es impreciso
+        total_items = Decimal('0.00')
+        for item in items:
+            total_items += Decimal(str(item['quantity'])) * Decimal(str(item['unit_price']))
+        
+        if abs(Decimal(str(invoice.total)) - total_items) > Decimal('0.05'):
+            raise PACError("Error del SAT: El total no coincide con el desglose de conceptos por discrepancia de centavos.")
+
+        mock_uuid = uuid.uuid4()
+        # Generar archivos mock representativos
+        xml_content = f"<cfdi:Comprobante Version='4.0' UUID='{mock_uuid}' Total='{invoice.total}'></cfdi:Comprobante>"
+        pdf_content = b"PDF Mock Representation"
+
+        return {
+            "facturapi_invoice_id": f"inv_mock_{uuid.uuid4().hex[:12]}",
+            "uuid_sat": mock_uuid,
+            "xml_file": ContentFile(xml_content.encode('utf-8'), name=f"{mock_uuid}.xml"),
+            "pdf_file": ContentFile(pdf_content, name=f"{mock_uuid}.pdf"),
+        }
+
+    def cancel_invoice(self, invoice):
+        logger.info(f"[MockPAC] Solicitando cancelación para CFDI SAT UUID: {invoice.uuid_sat}")
+        # Si el total es muy alto, simulamos que requiere aceptación del receptor
+        if invoice.total >= Decimal('5000.00'):
+            return "CANCEL_REQUESTED"
+        return "CANCELLED"
+
+    def check_invoice_status(self, invoice):
+        logger.info(f"[MockPAC] Revisando estado del CFDI: {invoice.uuid_sat}")
+        if invoice.status == "CANCEL_REQUESTED":
+            # Simula aceptación del receptor al consultar status
+            return "CANCELLED"
+        return "PAID"
+
+
+class FacturapiPACService(PACServiceBase):
+    """
+    Integración real de la API REST del PAC Facturapi
+    """
+    def __init__(self):
+        self.api_key = getattr(settings, 'PAC_API_KEY', '')
+        self.base_url = "https://www.facturapi.3.mx/v1" # Sandbox de Facturapi
+        self.headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json"
+        }
+
+    def create_organization(self, tax_profile):
+        url = f"{self.base_url}/organizations"
+        payload = {
+            "name": tax_profile.razon_social,
+            "rfc": tax_profile.rfc,
+            "tax_system": tax_profile.regimen_fiscal,
+            "zip_code": tax_profile.codigo_postal
+        }
+        try:
+            response = requests.post(url, json=payload, headers=self.headers, timeout=10)
+            if response.status_code != 201:
+                raise PACError(f"Error al crear organización en Facturapi: {response.text}")
+            return response.json().get("id")
+        except Exception as e:
+            raise PACError(f"Fallo de conexión al PAC: {e}")
+
+    def upload_sello(self, organization_id, cer_file, key_file, password):
+        url = f"{self.base_url}/organizations/{organization_id}/sello"
+        # Facturapi requiere multipart form data para los sellos
+        files = {
+            "cer": (cer_file.name, cer_file.read(), "application/x-x509-ca-cert"),
+            "key": (key_file.name, key_file.read(), "application/octet-stream"),
+        }
+        data = {"password": password}
+        try:
+            # Facturapi requiere enviar archivos con Multipart
+            response = requests.put(url, files=files, data=data, headers={"Authorization": f"Bearer {self.api_key}"}, timeout=15)
+            if response.status_code not in [200, 201, 204]:
+                raise PACError(f"Error al subir sellos CSD a Facturapi: {response.text}")
+            return True
+        except Exception as e:
+            raise PACError(f"Fallo de conexión para carga de sellos: {e}")
+
+    def create_invoice(self, invoice, tax_profile, customer_info, items):
+        # Para timbrar a nombre de la organización subordinada, Facturapi requiere el header "Facturapi-Organization"
+        headers = self.headers.copy()
+        headers["Facturapi-Organization"] = tax_profile.facturapi_organization_id
+        
+        url = f"{self.base_url}/invoices"
+        
+        # Mapeamos los conceptos redondeando rigurosamente a 2 decimales usando aritmética decimal
+        desglose_items = []
+        for it in items:
+            qty = Decimal(str(it['quantity']))
+            price = Decimal(str(it['unit_price'])).quantize(Decimal('0.01'))
+            desglose_items.append({
+                "quantity": int(qty),
+                "product": {
+                    "description": it['description'],
+                    "product_key": "43231500", # Llave SAT por defecto para Software
+                    "price": float(price),
+                    "taxes": [
+                        {
+                            "rate": 0.16,
+                            "type": "IVA",
+                            "factor": "Tasa"
+                        }
+                    ]
+                }
+            })
+
+        payload = {
+            "customer": {
+                "legal_name": customer_info.get("razon_social"),
+                "rfc": customer_info.get("rfc"),
+                "tax_system": customer_info.get("regimen_fiscal", "601"),
+                "zip_code": customer_info.get("codigo_postal"),
+                "email": customer_info.get("email")
+            },
+            "items": desglose_items,
+            "payment_form": customer_info.get("payment_form", "04"), # Tarjeta de crédito
+            "payment_method": "PUE",
+            "use": customer_info.get("use", "G03") # Gastos en general
+        }
+
+        try:
+            response = requests.post(url, json=payload, headers=headers, timeout=20)
+            res_data = response.json()
+            
+            if response.status_code != 201:
+                error_msg = res_data.get("message", response.text)
+                if "LCO" in error_msg or "lista de contribuyentes" in error_msg.lower() or "no activo" in error_msg.lower():
+                    raise LCOSyncError(f"Sello digital no sincronizado en LCO: {error_msg}")
+                raise PACError(f"Error al timbrar factura en Facturapi: {error_msg}")
+
+            invoice_id = res_data.get("id")
+            uuid_sat = res_data.get("uuid")
+
+            # Descargar archivos XML y PDF de Facturapi para almacenarlos localmente/S3
+            xml_resp = requests.get(f"{url}/{invoice_id}/xml", headers=headers, timeout=10)
+            pdf_resp = requests.get(f"{url}/{invoice_id}/pdf", headers=headers, timeout=10)
+
+            return {
+                "facturapi_invoice_id": invoice_id,
+                "uuid_sat": uuid_sat,
+                "xml_file": ContentFile(xml_resp.content, name=f"{uuid_sat}.xml"),
+                "pdf_file": ContentFile(pdf_resp.content, name=f"{uuid_sat}.pdf"),
+            }
+        except LCOSyncError:
+            raise
+        except Exception as e:
+            raise PACError(f"Error en flujo de timbrado Facturapi: {e}")
+
+    def cancel_invoice(self, invoice):
+        # Requiere el header de la organización correspondiente
+        headers = self.headers.copy()
+        tax_profile = invoice.tenant.tax_profile
+        headers["Facturapi-Organization"] = tax_profile.facturapi_organization_id
+
+        url = f"{self.base_url}/invoices/{invoice.facturapi_invoice_id}"
+        try:
+            # Facturapi requiere DELETE para cancelar facturas
+            response = requests.delete(url, headers=headers, timeout=15)
+            res_data = response.json()
+            if response.status_code != 200:
+                raise PACError(f"Error al solicitar cancelación: {res_data.get('message', response.text)}")
+            
+            sat_status = res_data.get("status")
+            if sat_status == "cancelled":
+                return "CANCELLED"
+            return "CANCEL_REQUESTED"
+        except Exception as e:
+            raise PACError(f"Fallo al cancelar factura en Facturapi: {e}")
+
+    def check_invoice_status(self, invoice):
+        headers = self.headers.copy()
+        tax_profile = invoice.tenant.tax_profile
+        headers["Facturapi-Organization"] = tax_profile.facturapi_organization_id
+
+        url = f"{self.base_url}/invoices/{invoice.facturapi_invoice_id}"
+        try:
+            response = requests.get(url, headers=headers, timeout=10)
+            res_data = response.json()
+            sat_status = res_data.get("status")
+            if sat_status == "cancelled":
+                return "CANCELLED"
+            elif sat_status == "valid":
+                return "PAID"
+            return "PENDING"
+        except Exception as e:
+            logger.error(f"Error al verificar estado de la factura en el PAC: {e}")
+            return invoice.status
+
+
+def get_pac_service():
+    """Retorna la instancia del PAC service configurado en settings.py"""
+    provider = getattr(settings, 'PAC_PROVIDER', 'mock').lower()
+    if provider == 'facturapi':
+        return FacturapiPACService()
+    return MockPACService()

@@ -130,6 +130,7 @@ function DashboardPageOriginal() {
   const [selectedActiveContractId, setSelectedActiveContractId] = useState<number | null>(null);
   const [expandedContracts, setExpandedContracts] = useState<Record<number, boolean>>({});
   const [cfdiInputs, setCfdiInputs] = useState<Record<number, string>>({});
+  const [wantsInvoiceMap, setWantsInvoiceMap] = useState<Record<number, boolean>>({});
   const [allAddons, setAllAddons] = useState<any[]>([]);
   
   // Salesperson and Referral Program states
@@ -411,11 +412,14 @@ function DashboardPageOriginal() {
   const handlePayStripe = async (installmentId: number) => {
     try {
       const token = localStorage.getItem('token');
+      const wantsInvoice = !!wantsInvoiceMap[installmentId];
       const response = await fetch(`${API_URL}/installments/${installmentId}/checkout_session/`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`
-        }
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ wants_invoice: wantsInvoice })
       });
       if (!response.ok) {
         const errData = await response.json();
@@ -1764,11 +1768,28 @@ function DashboardPageOriginal() {
                                   <div className="text-left md:text-right min-w-[120px]">
                                     <span className="text-[8px] uppercase tracking-widest opacity-40 block font-black">Monto</span>
                                     <span className="font-black text-base text-foreground font-mono">
-                                      ${parseFloat(nextPending.amount).toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN
+                                      ${(parseFloat(nextPending.amount) * (wantsInvoiceMap[nextPending.id] ? 1.16 : 1.0)).toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN
                                     </span>
+                                    {wantsInvoiceMap[nextPending.id] && (
+                                      <span className="text-[7px] text-green-400 block font-bold uppercase mt-0.5">Con 16% IVA</span>
+                                    )}
                                   </div>
 
-                                  <div className="w-full md:w-auto min-w-[150px] flex justify-end">
+                                  <div className="w-full md:w-auto min-w-[150px] flex flex-col gap-2 justify-end">
+                                    {chosenMethod === 'STRIPE' && (
+                                      <div className="flex items-center gap-2 justify-end">
+                                        <input
+                                          type="checkbox"
+                                          id={`wants-invoice-${nextPending.id}`}
+                                          checked={!!wantsInvoiceMap[nextPending.id]}
+                                          onChange={(e) => setWantsInvoiceMap(prev => ({ ...prev, [nextPending.id]: e.target.checked }))}
+                                          className="rounded border-white/20 bg-black/40 text-nectar-gold focus:ring-nectar-gold w-3 h-3 cursor-pointer"
+                                        />
+                                        <label htmlFor={`wants-invoice-${nextPending.id}`} className="text-[8px] uppercase tracking-wider font-bold text-white/60 cursor-pointer select-none">
+                                          Facturar (+16% IVA)
+                                        </label>
+                                      </div>
+                                    )}
                                     {chosenMethod === 'STRIPE' ? (
                                       <button
                                         onClick={() => handlePayStripe(nextPending.id)}
@@ -1854,7 +1875,12 @@ function DashboardPageOriginal() {
                                             {formatDate(inst.due_date)}
                                           </td>
                                           <td className="p-4 text-right font-mono font-bold text-xs text-foreground">
-                                            ${parseFloat(inst.amount).toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN
+                                            <div>
+                                              ${(parseFloat(inst.amount) * (wantsInvoiceMap[inst.id] ? 1.16 : 1.0)).toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN
+                                            </div>
+                                            {wantsInvoiceMap[inst.id] && (
+                                              <span className="text-[7.5px] text-green-400 font-bold uppercase block mt-0.5">Con 16% IVA</span>
+                                            )}
                                           </td>
                                           <td className="p-4 text-center">
                                             <span className={`px-2.5 py-0.5 text-[7px] font-black uppercase tracking-widest rounded-full border ${bgClass}`}>
@@ -1863,7 +1889,21 @@ function DashboardPageOriginal() {
                                           </td>
                                           <td className="p-4 text-right pr-6">
                                             {!isPaid ? (
-                                              <div className="flex justify-end gap-2">
+                                              <div className="flex flex-col items-end gap-1.5 justify-end">
+                                                {chosenMethod === 'STRIPE' && (
+                                                  <div className="flex items-center gap-1.5 justify-end">
+                                                    <input
+                                                      type="checkbox"
+                                                      id={`wants-invoice-${inst.id}`}
+                                                      checked={!!wantsInvoiceMap[inst.id]}
+                                                      onChange={(e) => setWantsInvoiceMap(prev => ({ ...prev, [inst.id]: e.target.checked }))}
+                                                      className="rounded border-white/20 bg-black/40 text-nectar-gold focus:ring-nectar-gold w-3 h-3 cursor-pointer"
+                                                    />
+                                                    <label htmlFor={`wants-invoice-${inst.id}`} className="text-[7.5px] uppercase font-bold text-white/50 cursor-pointer select-none">
+                                                      Facturar (+16%)
+                                                    </label>
+                                                  </div>
+                                                )}
                                                 {chosenMethod === 'STRIPE' ? (
                                                   <button
                                                     onClick={() => handlePayStripe(inst.id)}

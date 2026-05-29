@@ -40,7 +40,7 @@ export default function TenantAdminPage() {
   const [loading, setLoading] = useState(true);
   const [authorized, setAuthorized] = useState(false);
   const [userMe, setUserMe] = useState<any | null>(null);
-  const [activeTab, setActiveTab] = useState<'metrics' | 'branding'>('metrics');
+  const [activeTab, setActiveTab] = useState<'metrics' | 'branding' | 'billing'>('metrics');
 
   // Customization Form State
   const [editName, setEditName] = useState('');
@@ -60,6 +60,118 @@ export default function TenantAdminPage() {
   const [editLogoFile, setEditLogoFile] = useState<File | null>(null);
   const [editLogoPreview, setEditLogoPreview] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+
+  // Billing tab states
+  const [taxProfile, setTaxProfile] = useState<any | null>(null);
+  const [invoices, setInvoices] = useState<any[]>([]);
+  const [loadingBilling, setLoadingBilling] = useState(false);
+  const [isSavingTaxProfile, setIsSavingTaxProfile] = useState(false);
+  const [taxProfileError, setTaxProfileError] = useState<string | null>(null);
+
+  // Tax Profile Form State
+  const [rfc, setRfc] = useState('');
+  const [razonSocial, setRazonSocial] = useState('');
+  const [regimenFiscal, setRegimenFiscal] = useState('601');
+  const [codigoPostal, setCodigoPostal] = useState('');
+  const [cerFile, setCerFile] = useState<File | null>(null);
+  const [keyFile, setKeyFile] = useState<File | null>(null);
+  const [privateKeyPassword, setPrivateKeyPassword] = useState('');
+
+  const loadBillingData = async () => {
+    if (!tenantConfig) return;
+    setLoadingBilling(true);
+    try {
+      try {
+        const profile = await fetcher(`/billing/tax-profile/?tenant_id=${tenantConfig.id}`);
+        setTaxProfile(profile);
+        setRfc(profile.rfc || '');
+        setRazonSocial(profile.razon_social || '');
+        setRegimenFiscal(profile.regimen_fiscal || '601');
+        setCodigoPostal(profile.codigo_postal || '');
+      } catch (err: any) {
+        if (err.status !== 404) {
+          console.error('Error fetching tax profile:', err);
+        }
+      }
+
+      const invs = await fetcher(`/billing/invoices/?tenant_id=${tenantConfig.id}`);
+      setInvoices(invs.results || invs || []);
+    } catch (err: any) {
+      console.error('Error loading billing data:', err);
+    } finally {
+      setLoadingBilling(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'billing' && tenantConfig) {
+      loadBillingData();
+    }
+  }, [activeTab, tenantConfig]);
+
+  const handleSaveTaxProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!tenantConfig) return;
+    setIsSavingTaxProfile(true);
+    setTaxProfileError(null);
+
+    try {
+      const formData = new FormData();
+      formData.append('rfc', rfc.trim().toUpperCase());
+      formData.append('razon_social', razonSocial.trim());
+      formData.append('regimen_fiscal', regimenFiscal);
+      formData.append('codigo_postal', codigoPostal.trim());
+
+      if (cerFile && keyFile && privateKeyPassword) {
+        formData.append('cer_file', cerFile);
+        formData.append('key_file', keyFile);
+        formData.append('password', privateKeyPassword);
+      }
+
+      const profile = await fetcher(`/billing/tax-profile/?tenant_id=${tenantConfig.id}`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      setTaxProfile(profile);
+      setPrivateKeyPassword('');
+      setCerFile(null);
+      setKeyFile(null);
+      showToast('Perfil fiscal y certificados CSD guardados con éxito.', 'success');
+      loadBillingData();
+    } catch (err: any) {
+      const msg = err.message || 'Error al guardar perfil fiscal';
+      setTaxProfileError(msg);
+      showToast(msg, 'error');
+    } finally {
+      setIsSavingTaxProfile(false);
+    }
+  };
+
+  const handleCancelInvoice = async (invoiceId: number) => {
+    if (!confirm('¿Estás seguro de que deseas cancelar esta factura ante el SAT?')) return;
+    try {
+      const updatedInvoice = await fetcher(`/billing/invoices/${invoiceId}/cancel/?tenant_id=${tenantConfig?.id}`, {
+        method: 'POST',
+      });
+      showToast('Cancelación solicitada con éxito.', 'success');
+      setInvoices(invoices.map(inv => inv.id === invoiceId ? updatedInvoice : inv));
+    } catch (err: any) {
+      showToast(err.message || 'Error al solicitar la cancelación.', 'error');
+    }
+  };
+
+  const handleRetryInvoice = async (invoiceId: number) => {
+    try {
+      const updatedInvoice = await fetcher(`/billing/invoices/${invoiceId}/retry/?tenant_id=${tenantConfig?.id}`, {
+        method: 'POST',
+      });
+      showToast('Factura timbrada con éxito.', 'success');
+      setInvoices(invoices.map(inv => inv.id === invoiceId ? updatedInvoice : inv));
+    } catch (err: any) {
+      showToast(err.message || 'Error al reintentar el timbrado.', 'error');
+    }
+  };
 
   // Parse Subdomain from Route or Hostname
   useEffect(() => {
@@ -288,6 +400,17 @@ export default function TenantAdminPage() {
             >
               🎨 Personalizar Portal
             </button>
+            <button
+              onClick={() => setActiveTab('billing')}
+              className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border cursor-pointer"
+              style={{
+                backgroundColor: activeTab === 'billing' ? `${primaryColor}15` : 'transparent',
+                borderColor: activeTab === 'billing' ? primaryColor : 'transparent',
+                color: activeTab === 'billing' ? primaryColor : 'rgba(255, 255, 255, 0.6)'
+              }}
+            >
+              🧾 Facturación CFDI
+            </button>
           </div>
 
           <div className="flex items-center gap-4">
@@ -304,7 +427,7 @@ export default function TenantAdminPage() {
 
       {/* Main Container */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-6 py-8 flex flex-col">
-        {activeTab === 'metrics' ? (
+        {activeTab === 'metrics' && (
           /* Metrics Dashboard */
           <div className="space-y-8 animate-in fade-in duration-300">
             {/* Header info */}
@@ -545,7 +668,9 @@ export default function TenantAdminPage() {
 
             </div>
           </div>
-        ) : (
+        )}
+
+        {activeTab === 'branding' && (
           /* Portal Customization Form */
           <div className="max-w-4xl mx-auto animate-in fade-in duration-300">
             <form onSubmit={handleSaveConfig} className="space-y-8">
@@ -727,6 +852,280 @@ export default function TenantAdminPage() {
 
               </div>
             </form>
+          </div>
+        )}
+
+        {activeTab === 'billing' && (
+          <div className="space-y-8 animate-in fade-in duration-300">
+            {/* Header card */}
+            <div className="admin-card border rounded-[2rem] p-8 relative overflow-hidden flex flex-col md:flex-row items-center gap-6">
+              <div className="absolute -top-32 -right-32 w-64 h-64 rounded-full blur-[100px] opacity-10 pointer-events-none" style={{ backgroundColor: primaryColor }}></div>
+              <div className="w-14 h-14 rounded-2xl bg-foreground/[0.03] flex items-center justify-center text-3xl border border-white/5">
+                🧾
+              </div>
+              <div className="flex-1 text-center md:text-left space-y-1">
+                <h2 className="text-xl font-black uppercase tracking-tight text-white">Facturación CFDI 4.0</h2>
+                <p className="text-xs text-white/50 leading-relaxed">
+                  Configura tu perfil fiscal emisor ante el SAT, sube tus sellos CSD y administra tus facturas timbradas de forma automática.
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+              {/* Form Column */}
+              <div className="lg:col-span-5 space-y-6">
+                <div className="admin-card border rounded-[2rem] p-6 shadow-lg space-y-6">
+                  <div className="border-b border-white/5 pb-4">
+                    <h3 className="text-xs font-black uppercase tracking-widest text-white">Configuración Fiscal</h3>
+                    <p className="text-[8px] text-white/40 uppercase tracking-wider mt-1">Perfil emisor registrado ante el SAT</p>
+                  </div>
+
+                  {taxProfileError && (
+                    <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-400 text-[9px] uppercase tracking-wider font-bold rounded-xl">
+                      ⚠️ {taxProfileError}
+                    </div>
+                  )}
+
+                  <form onSubmit={handleSaveTaxProfile} className="space-y-4">
+                    <div className="space-y-1">
+                      <label className="text-[8px] uppercase tracking-wider font-black text-white/50">Razón Social o Nombre Oficial</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Ej. NÉCTAR LABS SA DE CV"
+                        value={razonSocial}
+                        onChange={(e) => setRazonSocial(e.target.value)}
+                        className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <label className="text-[8px] uppercase tracking-wider font-black text-white/50">RFC</label>
+                        <input
+                          type="text"
+                          required
+                          maxLength={13}
+                          placeholder="Ej. NLA260529AAA"
+                          value={rfc}
+                          onChange={(e) => setRfc(e.target.value.toUpperCase())}
+                          className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input font-mono"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[8px] uppercase tracking-wider font-black text-white/50">Código Postal</label>
+                        <input
+                          type="text"
+                          required
+                          maxLength={5}
+                          placeholder="Ej. 06000"
+                          value={codigoPostal}
+                          onChange={(e) => setCodigoPostal(e.target.value.replace(/\D/g, ''))}
+                          className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input font-mono"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[8px] uppercase tracking-wider font-black text-white/50">Régimen Fiscal (SAT)</label>
+                      <select
+                        value={regimenFiscal}
+                        onChange={(e) => setRegimenFiscal(e.target.value)}
+                        className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input"
+                      >
+                        <option value="601">601 - General de Ley Personas Morales</option>
+                        <option value="603">603 - Personas Morales con Fines no Lucrativos</option>
+                        <option value="605">605 - Sueldos y Salarios e Ingresos Asimilados a Salarios</option>
+                        <option value="606">606 - Arrendamiento</option>
+                        <option value="612">612 - Personas Físicas con Actividades Empresariales y Profesionales</option>
+                        <option value="616">616 - Sin obligaciones fiscales</option>
+                        <option value="621">621 - Incorporación Fiscal</option>
+                        <option value="626">626 - Régimen Simplificado de Confianza (RESICO)</option>
+                      </select>
+                    </div>
+
+                    <div className="border-t border-white/5 pt-4 mt-6 space-y-4">
+                      <div>
+                        <h4 className="text-[9px] font-black uppercase tracking-wide text-white">Certificados de Sello Digital (CSD)</h4>
+                        <p className="text-[7px] text-white/40 leading-relaxed mt-1">
+                          Sube tus archivos de sellos para timbrar. Néctar Labs delega de forma segura el resguardo directamente al PAC (Facturapi) a través de su API. Las llaves nunca tocan nuestros servidores.
+                        </p>
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-[8px] uppercase tracking-wider font-black text-white/50 block">Archivo Certificado (.cer)</label>
+                        <input
+                          type="file"
+                          accept=".cer"
+                          onChange={(e) => setCerFile(e.target.files?.[0] || null)}
+                          className="text-[9px] text-white/60 block w-full file:mr-4 file:py-1 file:px-3 file:rounded-xl file:border-0 file:text-[8px] file:font-black file:uppercase file:bg-white/5 file:text-white file:cursor-pointer hover:file:bg-white/10"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-[8px] uppercase tracking-wider font-black text-white/50 block">Archivo Llave Privada (.key)</label>
+                        <input
+                          type="file"
+                          accept=".key"
+                          onChange={(e) => setKeyFile(e.target.files?.[0] || null)}
+                          className="text-[9px] text-white/60 block w-full file:mr-4 file:py-1 file:px-3 file:rounded-xl file:border-0 file:text-[8px] file:font-black file:uppercase file:bg-white/5 file:text-white file:cursor-pointer hover:file:bg-white/10"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[8px] uppercase tracking-wider font-black text-white/50">Contraseña de la Llave Privada</label>
+                        <input
+                          type="password"
+                          placeholder="••••••••••••"
+                          value={privateKeyPassword}
+                          onChange={(e) => setPrivateKeyPassword(e.target.value)}
+                          className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="pt-4 border-t border-white/5 flex justify-end">
+                      <button
+                        type="submit"
+                        disabled={isSavingTaxProfile}
+                        className="px-6 py-2.5 text-[9px] font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 disabled:opacity-40 disabled:scale-100 transition-all font-bold shadow-lg"
+                        style={{ backgroundColor: primaryColor, color: '#000000' }}
+                      >
+                        {isSavingTaxProfile ? 'Guardando Ajustes...' : 'Guardar Configuración'}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+
+              {/* Invoices List Column */}
+              <div className="lg:col-span-7 space-y-6">
+                <div className="admin-card border rounded-[2rem] p-6 shadow-lg space-y-6">
+                  <div className="flex justify-between items-center border-b border-white/5 pb-4">
+                    <div>
+                      <h3 className="text-xs font-black uppercase tracking-widest text-white">Historial de CFDIs</h3>
+                      <p className="text-[8px] text-white/40 uppercase tracking-wider mt-1">Facturas emitidas y timbradas</p>
+                    </div>
+                    <button
+                      onClick={loadBillingData}
+                      disabled={loadingBilling}
+                      className="px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/5 rounded-lg text-[8px] font-black uppercase tracking-wider transition-all text-white/80"
+                    >
+                      {loadingBilling ? 'Sincronizando...' : '🔄 Actualizar'}
+                    </button>
+                  </div>
+
+                  {loadingBilling ? (
+                    <div className="py-12 flex flex-col items-center justify-center space-y-3">
+                      <span className="w-6 h-6 rounded-full border-2 border-t-white border-white/10 animate-spin"></span>
+                      <p className="text-[8px] font-black uppercase tracking-widest text-white/40">Cargando Facturas...</p>
+                    </div>
+                  ) : invoices.length === 0 ? (
+                    <div className="py-16 text-center text-white/40 uppercase font-black tracking-widest text-[9px]">
+                      No se han emitido facturas para este portal aún.
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left text-[9px] border-collapse">
+                        <thead>
+                          <tr className="border-b border-white/5 text-white/40 uppercase tracking-widest">
+                            <th className="py-3 px-2">Fecha</th>
+                            <th className="py-3 px-2">UUID SAT</th>
+                            <th className="py-3 px-2 text-right">Total</th>
+                            <th className="py-3 px-2 text-center">Estado</th>
+                            <th className="py-3 px-2 text-center">Documentos</th>
+                            <th className="py-3 px-2 text-right">Acciones</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {invoices.map((inv) => (
+                            <tr key={inv.id} className="border-b border-white/5 hover:bg-white/[0.01] transition-all">
+                              <td className="py-3 px-2 text-white/60 font-mono">
+                                {new Date(inv.created_at).toLocaleDateString('es-MX', { year: 'numeric', month: '2-digit', day: '2-digit' })}
+                              </td>
+                              <td className="py-3 px-2 font-mono text-white/80 select-all" title={inv.uuid_sat || 'No timbrado'}>
+                                {inv.uuid_sat ? `${inv.uuid_sat.substring(0, 8)}...` : <span className="text-white/30 italic">No disponible</span>}
+                              </td>
+                              <td className="py-3 px-2 text-right font-black text-white font-mono">
+                                ${parseFloat(inv.total).toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN
+                              </td>
+                              <td className="py-3 px-2 text-center">
+                                <span className={`px-2 py-0.5 border text-[7px] font-black uppercase tracking-widest rounded-full ${
+                                  inv.status === 'PAID'
+                                    ? 'bg-green-500/10 text-green-400 border-green-500/20'
+                                    : inv.status === 'LCO_SYNC_PENDING'
+                                    ? 'bg-amber-500/10 text-amber-400 border-amber-500/20 animate-pulse'
+                                    : inv.status === 'FAILED'
+                                    ? 'bg-red-500/10 text-red-400 border-red-500/20'
+                                    : inv.status === 'CANCELLED'
+                                    ? 'bg-white/5 text-white/40 border-white/10'
+                                    : 'bg-orange-500/10 text-orange-400 border-orange-500/20'
+                                }`}>
+                                  {inv.status_display}
+                                </span>
+                                {inv.error_message && inv.status !== 'PAID' && (
+                                  <div className="text-[6px] text-red-400/80 mt-1 max-w-[120px] mx-auto truncate font-mono" title={inv.error_message}>
+                                    {inv.error_message}
+                                  </div>
+                                )}
+                              </td>
+                              <td className="py-3 px-2 text-center">
+                                <div className="flex items-center justify-center gap-1.5">
+                                  {inv.xml_url ? (
+                                    <a
+                                      href={inv.xml_url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="px-2 py-1 bg-white/5 hover:bg-white/10 border border-white/5 text-white text-[7px] font-black uppercase tracking-widest rounded transition-all"
+                                    >
+                                      XML
+                                    </a>
+                                  ) : (
+                                    <span className="text-white/20 select-none text-[7px]">-</span>
+                                  )}
+                                  {inv.pdf_url ? (
+                                    <a
+                                      href={inv.pdf_url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="px-2 py-1 bg-white/5 hover:bg-white/10 border border-white/5 text-white text-[7px] font-black uppercase tracking-widest rounded transition-all"
+                                    >
+                                      PDF
+                                    </a>
+                                  ) : (
+                                    <span className="text-white/20 select-none text-[7px]">-</span>
+                                  )}
+                                </div>
+                              </td>
+                              <td className="py-3 px-2 text-right">
+                                <div className="flex items-center justify-end gap-1.5">
+                                  {(inv.status === 'LCO_SYNC_PENDING' || inv.status === 'FAILED') && (
+                                    <button
+                                      onClick={() => handleRetryInvoice(inv.id)}
+                                      className="px-2 py-1 bg-green-500/10 hover:bg-green-500/20 border border-green-500/20 text-green-400 text-[7.5px] font-black uppercase tracking-widest rounded transition-all"
+                                    >
+                                      Reintentar
+                                    </button>
+                                  )}
+                                  {(inv.status === 'PAID' || inv.status === 'CANCEL_REQUESTED') && (
+                                    <button
+                                      onClick={() => handleCancelInvoice(inv.id)}
+                                      className="px-2 py-1 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-[7.5px] font-black uppercase tracking-widest rounded transition-all"
+                                    >
+                                      Cancelar
+                                    </button>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </main>

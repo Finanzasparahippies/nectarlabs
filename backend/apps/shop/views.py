@@ -434,6 +434,18 @@ class PaymentInstallmentViewSet(viewsets.ModelViewSet):
         if installment.status == PaymentInstallment.Status.PAID:
             return Response({'error': 'Esta mensualidad ya ha sido pagada.'}, status=status.HTTP_400_BAD_REQUEST)
             
+        wants_invoice = request.data.get('wants_invoice', False)
+        
+        # Calcular monto final agregando 16% IVA si eligen facturar
+        from decimal import Decimal
+        base_amount = Decimal(str(installment.amount))
+        if wants_invoice:
+            final_amount = (base_amount * Decimal('1.16')).quantize(Decimal('0.01'))
+            product_name = f"Mensualidad {installment.installment_number}/6 (Con Factura) - Nectar Labs"
+        else:
+            final_amount = base_amount.quantize(Decimal('0.01'))
+            product_name = f"Mensualidad {installment.installment_number}/6 - Nectar Labs"
+
         try:
             session = stripe.checkout.Session.create(
                 payment_method_types=['card'],
@@ -441,10 +453,10 @@ class PaymentInstallmentViewSet(viewsets.ModelViewSet):
                     'price_data': {
                         'currency': 'mxn',
                         'product_data': {
-                            'name': f"Mensualidad {installment.installment_number}/6 - Nectar Labs",
+                            'name': product_name,
                             'description': f"Cliente: {installment.contract.full_name}",
                         },
-                        'unit_amount': int(installment.amount * 100),  # Stripe requiere centavos (ej: $1000.00 -> 100000)
+                        'unit_amount': int(final_amount * 100),  # Stripe requiere centavos
                     },
                     'quantity': 1,
                 }],
@@ -452,7 +464,8 @@ class PaymentInstallmentViewSet(viewsets.ModelViewSet):
                 success_url=f"{get_frontend_origin(request)}/dashboard?payment=success&installment_id={installment.id}",
                 cancel_url=f"{get_frontend_origin(request)}/dashboard?payment=cancel",
                 metadata={
-                    'installment_id': installment.id
+                    'installment_id': installment.id,
+                    'wants_invoice': 'true' if wants_invoice else 'false'
                 }
             )
             return Response({'url': session.url}, status=status.HTTP_200_OK)
@@ -556,6 +569,75 @@ def stripe_webhook(request):
                 contract = installment.contract
                 contract.next_payment_date = installment.due_date + timedelta(days=30)
                 contract.save()
+                
+                # Generar factura CFDI automática si solicitaron facturar y hay perfil fiscal configurado
+                wants_invoice = session.get('metadata', {}).get('wants_invoice') == 'true'
+                if wants_invoice:
+                    try:
+                        from apps.tenants.models import Tenant
+                        from apps.billing.models import Invoice
+                        from apps.billing.services import get_pac_service, PACError, LCOSyncError
+                        
+                        user = contract.user
+                        tenant = Tenant.objects.filter(owner=user).first()
+                        if tenant and hasattr(tenant, 'tax_profile') and tenant.tax_profile.facturapi_organization_id:
+                            profile = tenant.tax_profile
+                            
+                            # El total de la factura incrementa un 16% por el IVA
+                            from decimal import Decimal
+                            invoice_total = (installment.amount * Decimal('1.16')).quantize(Decimal('0.01'))
+                            
+                            # Crear registro de factura
+                            invoice = Invoice.objects.create(
+                                tenant=tenant,
+                                stripe_invoice_id=session.get('id'),
+                                total=invoice_total,
+                                status=Invoice.Status.PENDING
+                            )
+                            
+                            customer_info = {
+                                "razon_social": user.get_full_name() or user.username,
+                                "rfc": profile.rfc,
+                                "regimen_fiscal": profile.regimen_fiscal,
+                                "codigo_postal": profile.codigo_postal,
+                                "email": user.email
+                            }
+                            
+                            # La unidad precio de los conceptos se pasa sin IVA (Base), ya que el PAC calcula e incrementa el IVA del 16% automáticamente
+                            items = [{
+                                "quantity": 1,
+                                "unit_price": float(installment.amount),
+                                "description": f"Abono #{installment.installment_number} - Contrato de Ecosistema Digital ({tenant.name})"
+                            }]
+                            
+                            pac = get_pac_service()
+                            try:
+                                res = pac.create_invoice(invoice, profile, customer_info, items)
+                                invoice.facturapi_invoice_id = res["facturapi_invoice_id"]
+                                invoice.uuid_sat = res["uuid_sat"]
+                                
+                                # Asignar y guardar archivos del PAC
+                                invoice.xml_file.save(res["xml_file"].name, res["xml_file"], save=False)
+                                invoice.pdf_file.save(res["pdf_file"].name, res["pdf_file"], save=False)
+                                
+                                invoice.status = Invoice.Status.PAID
+                                invoice.error_message = None
+                                invoice.save()
+                                
+                                # Vincular UUID al abono
+                                installment.cfdi_uuid = str(res["uuid_sat"])
+                                installment.save(update_fields=['cfdi_uuid'])
+                            except LCOSyncError as e:
+                                invoice.status = Invoice.Status.LCO_SYNC_PENDING
+                                invoice.error_message = str(e)
+                                invoice.save()
+                            except PACError as e:
+                                invoice.status = Invoice.Status.FAILED
+                                invoice.error_message = str(e)
+                                invoice.save()
+                    except Exception as cfdi_err:
+                        import logging
+                        logging.getLogger(__name__).error(f"Error en facturación automática: {cfdi_err}", exc_info=True)
                 
                 # Enviar correo de confirmación de pago (facturación)
                 try:

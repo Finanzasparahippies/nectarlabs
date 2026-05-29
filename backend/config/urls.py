@@ -14,6 +14,7 @@ from apps.blog.views import PostViewSet
 from apps.tickets.views import TicketViewSet, SupportChatViewSet
 from apps.users.views import UserViewSet
 from apps.tenants.views import TenantViewSet, public_config, guest_auth
+from apps.billing.views import TaxProfileView, InvoiceViewSet
 
 router = DefaultRouter()
 router.register(r'plans', PlanViewSet)
@@ -33,6 +34,7 @@ router.register(r'users', UserViewSet, basename='user')
 router.register(r'tenants', TenantViewSet, basename='tenant')
 router.register(r'promo-codes', PromoCodeViewSet, basename='promocode')
 router.register(r'sales-commissions', SalesCommissionViewSet, basename='salescommission')
+router.register(r'billing/invoices', InvoiceViewSet, basename='billing-invoice')
 
 
 from django.conf import settings
@@ -60,6 +62,7 @@ urlpatterns = [
     path('api/auth/', include('rest_framework.urls')),
     path("ckeditor5/", include('django_ckeditor_5.urls')),
     path('api/shop/stripe-webhook/', stripe_webhook, name='stripe_webhook'),
+    path('api/billing/tax-profile/', TaxProfileView.as_view(), name='billing_tax_profile'),
 ]
 
 
