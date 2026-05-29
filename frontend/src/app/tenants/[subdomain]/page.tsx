@@ -632,7 +632,6 @@ export default function TenantPortalPage() {
           text-shadow: 0 0 8px ${pollenColor};
         }
       `}</style>
-      `}</style>
 
       {/* 1. Header Navigation */}
       <header className="border-b backdrop-blur-md sticky top-0 z-50 tenant-header">
