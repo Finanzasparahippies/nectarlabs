@@ -22,9 +22,17 @@ interface Tenant {
   card_bg_color: string;
   text_color: string;
   border_color: string;
+  theme_color_light?: string;
+  accent_color_light?: string;
+  bg_color_light?: string;
+  card_bg_color_light?: string;
+  text_color_light?: string;
+  border_color_light?: string;
   pollen_active: boolean;
   pollen_icon: string;
   pollen_color: string;
+  pollen_count?: number;
+  pollen_blur?: number;
   logo_url: string | null;
   welcome_message: string;
   portal_title: string | null;
@@ -81,9 +89,21 @@ export default function TenantSettingsPage() {
   const [editCardBgColor, setEditCardBgColor] = useState('#050a06');
   const [editTextColor, setEditTextColor] = useState('#FFFFFF');
   const [editBorderColor, setEditBorderColor] = useState('#151F18');
+  
+  // Light Mode Palette
+  const [editThemeColorLight, setEditThemeColorLight] = useState('#C68A1E');
+  const [editAccentColorLight, setEditAccentColorLight] = useState('#10B981');
+  const [editBgColorLight, setEditBgColorLight] = useState('#FAFAFA');
+  const [editCardBgColorLight, setEditCardBgColorLight] = useState('#FFFFFF');
+  const [editTextColorLight, setEditTextColorLight] = useState('#111827');
+  const [editBorderColorLight, setEditBorderColorLight] = useState('#E5E7EB');
+
   const [editPollenActive, setEditPollenActive] = useState(true);
   const [editPollenIcon, setEditPollenIcon] = useState('⚫');
   const [editPollenColor, setEditPollenColor] = useState('#C68A1E');
+  const [editPollenCount, setEditPollenCount] = useState(6);
+  const [editPollenBlur, setEditPollenBlur] = useState(0.2);
+
   const [editLogoUrl, setEditLogoUrl] = useState('');
   const [editLogoFile, setEditLogoFile] = useState<File | null>(null);
   const [editLogoPreview, setEditLogoPreview] = useState<string | null>(null);
@@ -92,6 +112,115 @@ export default function TenantSettingsPage() {
   const [editFooterText, setEditFooterText] = useState('');
   const [editRequireCustomerInfo, setEditRequireCustomerInfo] = useState(true);
   const [editAllowedOrigins, setEditAllowedOrigins] = useState('');
+
+  // Undo History & Custom Particle settings
+  const [historyLength, setHistoryLength] = useState(0);
+  const [customPollenIcon, setCustomPollenIcon] = useState('');
+  const [previewDarkMode, setPreviewDarkMode] = useState(true);
+
+  const formStateRef = React.useRef<any>(null);
+  const undoStackRef = React.useRef<any[]>([]);
+
+  const getFormSnapshot = () => ({
+    editName,
+    editSubdomain,
+    editCustomDomain,
+    editThemeColor,
+    editAccentColor,
+    editBgColor,
+    editCardBgColor,
+    editTextColor,
+    editBorderColor,
+    editThemeColorLight,
+    editAccentColorLight,
+    editBgColorLight,
+    editCardBgColorLight,
+    editTextColorLight,
+    editBorderColorLight,
+    editPollenActive,
+    editPollenIcon,
+    editPollenColor,
+    editPollenCount,
+    editPollenBlur,
+    editLogoUrl,
+    editWelcomeMessage,
+    editPortalTitle,
+    editFooterText,
+    editRequireCustomerInfo,
+    editAllowedOrigins,
+  });
+
+  useEffect(() => {
+    formStateRef.current = getFormSnapshot();
+  }, [
+    editName, editSubdomain, editCustomDomain, editThemeColor, editAccentColor, editBgColor, editCardBgColor, editTextColor, editBorderColor,
+    editThemeColorLight, editAccentColorLight, editBgColorLight, editCardBgColorLight, editTextColorLight, editBorderColorLight,
+    editPollenActive, editPollenIcon, editPollenColor, editPollenCount, editPollenBlur,
+    editLogoUrl, editWelcomeMessage, editPortalTitle, editFooterText, editRequireCustomerInfo, editAllowedOrigins
+  ]);
+
+  const pushToHistory = () => {
+    if (formStateRef.current) {
+      undoStackRef.current.push(formStateRef.current);
+      if (undoStackRef.current.length > 50) {
+        undoStackRef.current.shift();
+      }
+      setHistoryLength(undoStackRef.current.length);
+    }
+  };
+
+  const handleUndo = () => {
+    if (undoStackRef.current.length === 0) return;
+    const previousState = undoStackRef.current.pop();
+    setHistoryLength(undoStackRef.current.length);
+    
+    if (previousState) {
+      setEditName(previousState.editName);
+      setEditSubdomain(previousState.editSubdomain);
+      setEditCustomDomain(previousState.editCustomDomain);
+      setEditThemeColor(previousState.editThemeColor);
+      setEditAccentColor(previousState.editAccentColor);
+      setEditBgColor(previousState.editBgColor);
+      setEditCardBgColor(previousState.editCardBgColor);
+      setEditTextColor(previousState.editTextColor);
+      setEditBorderColor(previousState.editBorderColor);
+      
+      setEditThemeColorLight(previousState.editThemeColorLight);
+      setEditAccentColorLight(previousState.editAccentColorLight);
+      setEditBgColorLight(previousState.editBgColorLight);
+      setEditCardBgColorLight(previousState.editCardBgColorLight);
+      setEditTextColorLight(previousState.editTextColorLight);
+      setEditBorderColorLight(previousState.editBorderColorLight);
+      
+      setEditPollenActive(previousState.editPollenActive);
+      setEditPollenIcon(previousState.editPollenIcon);
+      setEditPollenColor(previousState.editPollenColor);
+      setEditPollenCount(previousState.editPollenCount);
+      setEditPollenBlur(previousState.editPollenBlur);
+      
+      setEditLogoUrl(previousState.editLogoUrl);
+      setEditWelcomeMessage(previousState.editWelcomeMessage);
+      setEditPortalTitle(previousState.editPortalTitle);
+      setEditFooterText(previousState.editFooterText);
+      setEditRequireCustomerInfo(previousState.editRequireCustomerInfo);
+      setEditAllowedOrigins(previousState.editAllowedOrigins);
+    }
+  };
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+        e.preventDefault();
+        handleUndo();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+
+  const predefinedIcons = ['⚫', '🌸', '❄️', '✨', '🍂', '🐝'];
 
   // Product Modals & Forms States
   const [showProductModal, setShowProductModal] = useState(false);
@@ -181,9 +310,27 @@ export default function TenantSettingsPage() {
     setEditCardBgColor(tenant.card_bg_color || '#050a06');
     setEditTextColor(tenant.text_color || '#FFFFFF');
     setEditBorderColor(tenant.border_color || '#151F18');
+
+    setEditThemeColorLight(tenant.theme_color_light || '#C68A1E');
+    setEditAccentColorLight(tenant.accent_color_light || '#10B981');
+    setEditBgColorLight(tenant.bg_color_light || '#FAFAFA');
+    setEditCardBgColorLight(tenant.card_bg_color_light || '#FFFFFF');
+    setEditTextColorLight(tenant.text_color_light || '#111827');
+    setEditBorderColorLight(tenant.border_color_light || '#E5E7EB');
+
     setEditPollenActive(tenant.pollen_active !== false); // default to true if undefined
     setEditPollenIcon(tenant.pollen_icon || '⚫');
     setEditPollenColor(tenant.pollen_color || '#C68A1E');
+    setEditPollenCount(tenant.pollen_count !== undefined ? tenant.pollen_count : 6);
+    setEditPollenBlur(tenant.pollen_blur !== undefined ? tenant.pollen_blur : 0.2);
+
+    const isCustom = !predefinedIcons.includes(tenant.pollen_icon || '⚫');
+    if (isCustom) {
+      setCustomPollenIcon(tenant.pollen_icon);
+    } else {
+      setCustomPollenIcon('');
+    }
+
     setEditLogoUrl(tenant.logo_url || '');
     setEditLogoFile(null);
     setEditLogoPreview(null);
@@ -193,6 +340,9 @@ export default function TenantSettingsPage() {
     setEditRequireCustomerInfo(tenant.require_customer_info);
     setEditAllowedOrigins(tenant.allowed_origins || '');
     setDomainValidationResult(null);
+
+    undoStackRef.current = [];
+    setHistoryLength(0);
   };
 
   const handleCreateTenant = async (e: React.FormEvent) => {
@@ -237,9 +387,19 @@ export default function TenantSettingsPage() {
       formData.append('card_bg_color', editCardBgColor);
       formData.append('text_color', editTextColor);
       formData.append('border_color', editBorderColor);
+
+      formData.append('theme_color_light', editThemeColorLight);
+      formData.append('accent_color_light', editAccentColorLight);
+      formData.append('bg_color_light', editBgColorLight);
+      formData.append('card_bg_color_light', editCardBgColorLight);
+      formData.append('text_color_light', editTextColorLight);
+      formData.append('border_color_light', editBorderColorLight);
+
       formData.append('pollen_active', String(editPollenActive));
       formData.append('pollen_icon', editPollenIcon);
       formData.append('pollen_color', editPollenColor);
+      formData.append('pollen_count', String(editPollenCount));
+      formData.append('pollen_blur', String(editPollenBlur));
       formData.append('welcome_message', editWelcomeMessage.trim());
       formData.append('portal_title', editPortalTitle.trim());
       formData.append('footer_text', editFooterText.trim());
@@ -568,12 +728,43 @@ export default function TenantSettingsPage() {
                 {/* Sub Tab Content */}
                 {activeSubTab === 'branding' && (
                   <form onSubmit={handleSaveSettings} className="space-y-6">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-card-border pb-4 mb-6">
+                      <div>
+                        <h4 className="text-xs font-black uppercase tracking-widest text-nectar-gold">Portal y Negocio</h4>
+                        <p className="text-[8px] text-foreground/45 uppercase tracking-wider mt-1">Configuración general de tu portal público</p>
+                      </div>
+                      
+                      {/* History controls */}
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          disabled={historyLength === 0}
+                          onClick={handleUndo}
+                          className="px-3 py-1.5 bg-foreground/5 hover:bg-foreground/10 border border-card-border text-foreground text-[8px] font-black uppercase tracking-widest rounded-xl transition-all disabled:opacity-30 cursor-pointer"
+                        >
+                          ↩ Deshacer (Ctrl+Z)
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            pushToHistory();
+                            initTenantFields(selectedTenant!);
+                            showToast('Configuración original restaurada.', 'info');
+                          }}
+                          className="px-3 py-1.5 bg-red-500/5 hover:bg-red-500/10 border border-red-500/20 text-red-400 text-[8px] font-black uppercase tracking-widest rounded-xl transition-all cursor-pointer"
+                        >
+                          ↺ Restaurar Original
+                        </button>
+                      </div>
+                    </div>
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-1">
                         <label className="text-[9px] font-black uppercase tracking-widest text-foreground/40">Nombre del Negocio / Portal</label>
                         <input
                           type="text"
                           value={editName}
+                          onFocus={pushToHistory}
                           onChange={(e) => setEditName(e.target.value)}
                           required
                           className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-foreground focus:outline-none focus:border-nectar-gold transition-all"
@@ -585,6 +776,7 @@ export default function TenantSettingsPage() {
                         <input
                           type="text"
                           value={editPortalTitle}
+                          onFocus={pushToHistory}
                           onChange={(e) => setEditPortalTitle(e.target.value)}
                           placeholder="Ej. Mi Tienda Néctar"
                           className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-foreground focus:outline-none focus:border-nectar-gold transition-all"
@@ -612,6 +804,7 @@ export default function TenantSettingsPage() {
                               type="file"
                               accept="image/*"
                               onChange={(e) => {
+                                pushToHistory();
                                 const file = e.target.files?.[0];
                                 if (file) {
                                   setEditLogoFile(file);
@@ -624,6 +817,7 @@ export default function TenantSettingsPage() {
                               <button
                                 type="button"
                                 onClick={() => {
+                                  pushToHistory();
                                   setEditLogoFile(null);
                                   setEditLogoPreview(null);
                                   setEditLogoUrl('');
@@ -642,6 +836,7 @@ export default function TenantSettingsPage() {
                         <input
                           type="url"
                           value={editLogoUrl}
+                          onFocus={pushToHistory}
                           onChange={(e) => setEditLogoUrl(e.target.value)}
                           placeholder="https://ejemplo.com/logo.png"
                           className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-foreground focus:outline-none focus:border-nectar-gold transition-all"
@@ -656,6 +851,7 @@ export default function TenantSettingsPage() {
                           <input
                             type="text"
                             value={editSubdomain}
+                            onFocus={pushToHistory}
                             onChange={(e) => setEditSubdomain(e.target.value)}
                             required
                             className="flex-1 bg-transparent text-xs text-foreground focus:outline-none"
@@ -669,6 +865,7 @@ export default function TenantSettingsPage() {
                         <input
                           type="text"
                           value={editCustomDomain}
+                          onFocus={pushToHistory}
                           onChange={(e) => setEditCustomDomain(e.target.value)}
                           placeholder="Ej. tienda.minegocio.com"
                           className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-foreground focus:outline-none focus:border-nectar-gold transition-all"
@@ -711,6 +908,7 @@ export default function TenantSettingsPage() {
                         <label className="text-[9px] font-black uppercase tracking-widest text-foreground/40">Mensaje de Bienvenida del Portal</label>
                         <textarea
                           value={editWelcomeMessage}
+                          onFocus={pushToHistory}
                           onChange={(e) => setEditWelcomeMessage(e.target.value)}
                           rows={3}
                           className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-foreground focus:outline-none focus:border-nectar-gold transition-all resize-none"
@@ -721,6 +919,7 @@ export default function TenantSettingsPage() {
                         <label className="text-[9px] font-black uppercase tracking-widest text-foreground/40">Texto de Pie de Página (Footer)</label>
                         <textarea
                           value={editFooterText}
+                          onFocus={pushToHistory}
                           onChange={(e) => setEditFooterText(e.target.value)}
                           rows={3}
                           className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-foreground focus:outline-none focus:border-nectar-gold transition-all resize-none"
@@ -738,7 +937,7 @@ export default function TenantSettingsPage() {
                           <input
                             type="checkbox"
                             checked={editRequireCustomerInfo}
-                            onChange={(e) => setEditRequireCustomerInfo(e.target.checked)}
+                            onChange={(e) => { pushToHistory(); setEditRequireCustomerInfo(e.target.checked); }}
                             className="sr-only peer"
                           />
                           <div className="w-11 h-6 bg-card-border peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-nectar-gold"></div>
@@ -749,6 +948,7 @@ export default function TenantSettingsPage() {
                         <label className="text-[9px] font-black uppercase tracking-widest text-foreground/40">Orígenes Permitidos (Widget CORS Security)</label>
                         <textarea
                           value={editAllowedOrigins}
+                          onFocus={pushToHistory}
                           onChange={(e) => setEditAllowedOrigins(e.target.value)}
                           placeholder="https://minegocio.com, https://app.minegocio.com"
                           rows={2}
@@ -772,144 +972,362 @@ export default function TenantSettingsPage() {
 
                 {activeSubTab === 'colors' && (
                   <form onSubmit={handleSaveSettings} className="space-y-8 animate-fadeIn">
-                    <div className="flex justify-between items-center border-b border-card-border pb-4">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-card-border pb-4 mb-6">
                       <div>
-                        <h4 className="text-xs font-black uppercase tracking-widest text-nectar-gold">Paleta de Colores</h4>
+                        <h4 className="text-xs font-black uppercase tracking-widest text-nectar-gold">Colores y Branding</h4>
                         <p className="text-[8px] text-foreground/45 uppercase tracking-wider mt-1">Configura la identidad de marca de tu Colmena</p>
+                      </div>
+                      
+                      {/* History controls */}
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          disabled={historyLength === 0}
+                          onClick={handleUndo}
+                          className="px-3 py-1.5 bg-foreground/5 hover:bg-foreground/10 border border-card-border text-foreground text-[8px] font-black uppercase tracking-widest rounded-xl transition-all disabled:opacity-30 cursor-pointer"
+                        >
+                          ↩ Deshacer (Ctrl+Z)
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            pushToHistory();
+                            initTenantFields(selectedTenant!);
+                            showToast('Configuración original restaurada.', 'info');
+                          }}
+                          className="px-3 py-1.5 bg-red-500/5 hover:bg-red-500/10 border border-red-500/20 text-red-400 text-[8px] font-black uppercase tracking-widest rounded-xl transition-all cursor-pointer"
+                        >
+                          ↺ Restaurar Original
+                        </button>
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                      {/* 1. Theme Color */}
-                      <div className="p-4 bg-foreground/[0.01] border border-card-border/40 rounded-2xl space-y-3">
-                        <label className="text-[8px] font-black uppercase tracking-widest text-foreground/45 block">Primario (Tema)</label>
-                        <div className="flex items-center gap-3">
-                          <input
-                            type="color"
-                            value={editThemeColor}
-                            onChange={(e) => setEditThemeColor(e.target.value)}
-                            className="shrink-0 w-11 h-11 rounded-xl cursor-pointer border border-card-border bg-transparent p-0 overflow-hidden [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:border-0 [&::-webkit-color-swatch]:rounded-xl transition-transform hover:scale-105"
-                          />
-                          <input
-                            type="text"
-                            value={editThemeColor}
-                            onChange={(e) => setEditThemeColor(e.target.value)}
-                            className="flex-1 bg-background border border-card-border rounded-xl px-3 py-2.5 text-xs text-foreground focus:outline-none focus:border-nectar-gold uppercase text-center font-mono font-bold tracking-wider"
-                          />
+                    {/* Modo Oscuro */}
+                    <div className="space-y-4">
+                      <h5 className="text-[10px] font-black uppercase tracking-widest text-foreground/70">Paleta de Colores (Modo Oscuro)</h5>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+                        {/* 1. Theme Color */}
+                        <div className="p-4 bg-foreground/[0.01] border border-card-border/40 rounded-2xl space-y-3">
+                          <label className="text-[8px] font-black uppercase tracking-widest text-foreground/45 block">Primario (Tema)</label>
+                          <div className="flex items-center gap-3">
+                            <input
+                              type="color"
+                              value={editThemeColor}
+                              onChange={(e) => { pushToHistory(); setEditThemeColor(e.target.value); }}
+                              className="shrink-0 w-11 h-11 rounded-xl cursor-pointer border border-card-border bg-transparent p-0 overflow-hidden [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:border-0 [&::-webkit-color-swatch]:rounded-xl transition-transform hover:scale-105"
+                            />
+                            <input
+                              type="text"
+                              value={editThemeColor}
+                              onFocus={pushToHistory}
+                              onChange={(e) => setEditThemeColor(e.target.value)}
+                              className="flex-1 bg-background border border-card-border rounded-xl px-3 py-2.5 text-xs text-foreground focus:outline-none focus:border-nectar-gold uppercase text-center font-mono font-bold tracking-wider"
+                            />
+                          </div>
+                        </div>
+
+                        {/* 2. Accent Color */}
+                        <div className="p-4 bg-foreground/[0.01] border border-card-border/40 rounded-2xl space-y-3">
+                          <label className="text-[8px] font-black uppercase tracking-widest text-foreground/45 block">Acento</label>
+                          <div className="flex items-center gap-3">
+                            <input
+                              type="color"
+                              value={editAccentColor}
+                              onChange={(e) => { pushToHistory(); setEditAccentColor(e.target.value); }}
+                              className="shrink-0 w-11 h-11 rounded-xl cursor-pointer border border-card-border bg-transparent p-0 overflow-hidden [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:border-0 [&::-webkit-color-swatch]:rounded-xl transition-transform hover:scale-105"
+                            />
+                            <input
+                              type="text"
+                              value={editAccentColor}
+                              onFocus={pushToHistory}
+                              onChange={(e) => setEditAccentColor(e.target.value)}
+                              className="flex-1 bg-background border border-card-border rounded-xl px-3 py-2.5 text-xs text-foreground focus:outline-none focus:border-nectar-gold uppercase text-center font-mono font-bold tracking-wider"
+                            />
+                          </div>
+                        </div>
+
+                        {/* 3. Text Color */}
+                        <div className="p-4 bg-foreground/[0.01] border border-card-border/40 rounded-2xl space-y-3">
+                          <label className="text-[8px] font-black uppercase tracking-widest text-foreground/45 block">Texto Principal</label>
+                          <div className="flex items-center gap-3">
+                            <input
+                              type="color"
+                              value={editTextColor}
+                              onChange={(e) => { pushToHistory(); setEditTextColor(e.target.value); }}
+                              className="shrink-0 w-11 h-11 rounded-xl cursor-pointer border border-card-border bg-transparent p-0 overflow-hidden [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:border-0 [&::-webkit-color-swatch]:rounded-xl transition-transform hover:scale-105"
+                            />
+                            <input
+                              type="text"
+                              value={editTextColor}
+                              onFocus={pushToHistory}
+                              onChange={(e) => setEditTextColor(e.target.value)}
+                              className="flex-1 bg-background border border-card-border rounded-xl px-3 py-2.5 text-xs text-foreground focus:outline-none focus:border-nectar-gold uppercase text-center font-mono font-bold tracking-wider"
+                            />
+                          </div>
+                        </div>
+
+                        {/* 4. Canvas BG Color */}
+                        <div className="p-4 bg-foreground/[0.01] border border-card-border/40 rounded-2xl space-y-3">
+                          <label className="text-[8px] font-black uppercase tracking-widest text-foreground/45 block">Fondo Lienzo</label>
+                          <div className="flex items-center gap-3">
+                            <input
+                              type="color"
+                              value={editBgColor}
+                              onChange={(e) => { pushToHistory(); setEditBgColor(e.target.value); }}
+                              className="shrink-0 w-11 h-11 rounded-xl cursor-pointer border border-card-border bg-transparent p-0 overflow-hidden [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:border-0 [&::-webkit-color-swatch]:rounded-xl transition-transform hover:scale-105"
+                            />
+                            <input
+                              type="text"
+                              value={editBgColor}
+                              onFocus={pushToHistory}
+                              onChange={(e) => setEditBgColor(e.target.value)}
+                              className="flex-1 bg-background border border-card-border rounded-xl px-3 py-2.5 text-xs text-foreground focus:outline-none focus:border-nectar-gold uppercase text-center font-mono font-bold tracking-wider"
+                            />
+                          </div>
+                        </div>
+
+                        {/* 5. Card BG Color */}
+                        <div className="p-4 bg-foreground/[0.01] border border-card-border/40 rounded-2xl space-y-3">
+                          <label className="text-[8px] font-black uppercase tracking-widest text-foreground/45 block">Fondo Tarjetas</label>
+                          <div className="flex items-center gap-3">
+                            <input
+                              type="color"
+                              value={editCardBgColor}
+                              onChange={(e) => { pushToHistory(); setEditCardBgColor(e.target.value); }}
+                              className="shrink-0 w-11 h-11 rounded-xl cursor-pointer border border-card-border bg-transparent p-0 overflow-hidden [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:border-0 [&::-webkit-color-swatch]:rounded-xl transition-transform hover:scale-105"
+                            />
+                            <input
+                              type="text"
+                              value={editCardBgColor}
+                              onFocus={pushToHistory}
+                              onChange={(e) => setEditCardBgColor(e.target.value)}
+                              className="flex-1 bg-background border border-card-border rounded-xl px-3 py-2.5 text-xs text-foreground focus:outline-none focus:border-nectar-gold uppercase text-center font-mono font-bold tracking-wider"
+                            />
+                          </div>
+                        </div>
+
+                        {/* 6. Border Color */}
+                        <div className="p-4 bg-foreground/[0.01] border border-card-border/40 rounded-2xl space-y-3">
+                          <label className="text-[8px] font-black uppercase tracking-widest text-foreground/45 block">Bordes y Divisiones</label>
+                          <div className="flex items-center gap-3">
+                            <input
+                              type="color"
+                              value={editBorderColor}
+                              onChange={(e) => { pushToHistory(); setEditBorderColor(e.target.value); }}
+                              className="shrink-0 w-11 h-11 rounded-xl cursor-pointer border border-card-border bg-transparent p-0 overflow-hidden [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:border-0 [&::-webkit-color-swatch]:rounded-xl transition-transform hover:scale-105"
+                            />
+                            <input
+                              type="text"
+                              value={editBorderColor}
+                              onFocus={pushToHistory}
+                              onChange={(e) => setEditBorderColor(e.target.value)}
+                              className="flex-1 bg-background border border-card-border rounded-xl px-3 py-2.5 text-xs text-foreground focus:outline-none focus:border-nectar-gold uppercase text-center font-mono font-bold tracking-wider"
+                            />
+                          </div>
                         </div>
                       </div>
+                    </div>
 
-                      {/* 2. Accent Color */}
-                      <div className="p-4 bg-foreground/[0.01] border border-card-border/40 rounded-2xl space-y-3">
-                        <label className="text-[8px] font-black uppercase tracking-widest text-foreground/45 block">Acento</label>
-                        <div className="flex items-center gap-3">
-                          <input
-                            type="color"
-                            value={editAccentColor}
-                            onChange={(e) => setEditAccentColor(e.target.value)}
-                            className="shrink-0 w-11 h-11 rounded-xl cursor-pointer border border-card-border bg-transparent p-0 overflow-hidden [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:border-0 [&::-webkit-color-swatch]:rounded-xl transition-transform hover:scale-105"
-                          />
-                          <input
-                            type="text"
-                            value={editAccentColor}
-                            onChange={(e) => setEditAccentColor(e.target.value)}
-                            className="flex-1 bg-background border border-card-border rounded-xl px-3 py-2.5 text-xs text-foreground focus:outline-none focus:border-nectar-gold uppercase text-center font-mono font-bold tracking-wider"
-                          />
+                    {/* Modo Claro */}
+                    <div className="space-y-4 pt-6 border-t border-card-border">
+                      <h5 className="text-[10px] font-black uppercase tracking-widest text-foreground/70">Paleta de Colores (Modo Claro)</h5>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+                        {/* 1. Theme Color Light */}
+                        <div className="p-4 bg-foreground/[0.01] border border-card-border/40 rounded-2xl space-y-3">
+                          <label className="text-[8px] font-black uppercase tracking-widest text-foreground/45 block">Primario (Tema) Claro</label>
+                          <div className="flex items-center gap-3">
+                            <input
+                              type="color"
+                              value={editThemeColorLight}
+                              onChange={(e) => { pushToHistory(); setEditThemeColorLight(e.target.value); }}
+                              className="shrink-0 w-11 h-11 rounded-xl cursor-pointer border border-card-border bg-transparent p-0 overflow-hidden [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:border-0 [&::-webkit-color-swatch]:rounded-xl transition-transform hover:scale-105"
+                            />
+                            <input
+                              type="text"
+                              value={editThemeColorLight}
+                              onFocus={pushToHistory}
+                              onChange={(e) => setEditThemeColorLight(e.target.value)}
+                              className="flex-1 bg-background border border-card-border rounded-xl px-3 py-2.5 text-xs text-foreground focus:outline-none focus:border-nectar-gold uppercase text-center font-mono font-bold tracking-wider"
+                            />
+                          </div>
+                        </div>
+
+                        {/* 2. Accent Color Light */}
+                        <div className="p-4 bg-foreground/[0.01] border border-card-border/40 rounded-2xl space-y-3">
+                          <label className="text-[8px] font-black uppercase tracking-widest text-foreground/45 block">Acento Claro</label>
+                          <div className="flex items-center gap-3">
+                            <input
+                              type="color"
+                              value={editAccentColorLight}
+                              onChange={(e) => { pushToHistory(); setEditAccentColorLight(e.target.value); }}
+                              className="shrink-0 w-11 h-11 rounded-xl cursor-pointer border border-card-border bg-transparent p-0 overflow-hidden [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:border-0 [&::-webkit-color-swatch]:rounded-xl transition-transform hover:scale-105"
+                            />
+                            <input
+                              type="text"
+                              value={editAccentColorLight}
+                              onFocus={pushToHistory}
+                              onChange={(e) => setEditAccentColorLight(e.target.value)}
+                              className="flex-1 bg-background border border-card-border rounded-xl px-3 py-2.5 text-xs text-foreground focus:outline-none focus:border-nectar-gold uppercase text-center font-mono font-bold tracking-wider"
+                            />
+                          </div>
+                        </div>
+
+                        {/* 3. Text Color Light */}
+                        <div className="p-4 bg-foreground/[0.01] border border-card-border/40 rounded-2xl space-y-3">
+                          <label className="text-[8px] font-black uppercase tracking-widest text-foreground/45 block">Texto Principal Claro</label>
+                          <div className="flex items-center gap-3">
+                            <input
+                              type="color"
+                              value={editTextColorLight}
+                              onChange={(e) => { pushToHistory(); setEditTextColorLight(e.target.value); }}
+                              className="shrink-0 w-11 h-11 rounded-xl cursor-pointer border border-card-border bg-transparent p-0 overflow-hidden [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:border-0 [&::-webkit-color-swatch]:rounded-xl transition-transform hover:scale-105"
+                            />
+                            <input
+                              type="text"
+                              value={editTextColorLight}
+                              onFocus={pushToHistory}
+                              onChange={(e) => setEditTextColorLight(e.target.value)}
+                              className="flex-1 bg-background border border-card-border rounded-xl px-3 py-2.5 text-xs text-foreground focus:outline-none focus:border-nectar-gold uppercase text-center font-mono font-bold tracking-wider"
+                            />
+                          </div>
+                        </div>
+
+                        {/* 4. Canvas BG Color Light */}
+                        <div className="p-4 bg-foreground/[0.01] border border-card-border/40 rounded-2xl space-y-3">
+                          <label className="text-[8px] font-black uppercase tracking-widest text-foreground/45 block">Fondo Lienzo Claro</label>
+                          <div className="flex items-center gap-3">
+                            <input
+                              type="color"
+                              value={editBgColorLight}
+                              onChange={(e) => { pushToHistory(); setEditBgColorLight(e.target.value); }}
+                              className="shrink-0 w-11 h-11 rounded-xl cursor-pointer border border-card-border bg-transparent p-0 overflow-hidden [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:border-0 [&::-webkit-color-swatch]:rounded-xl transition-transform hover:scale-105"
+                            />
+                            <input
+                              type="text"
+                              value={editBgColorLight}
+                              onFocus={pushToHistory}
+                              onChange={(e) => setEditBgColorLight(e.target.value)}
+                              className="flex-1 bg-background border border-card-border rounded-xl px-3 py-2.5 text-xs text-foreground focus:outline-none focus:border-nectar-gold uppercase text-center font-mono font-bold tracking-wider"
+                            />
+                          </div>
+                        </div>
+
+                        {/* 5. Card BG Color Light */}
+                        <div className="p-4 bg-foreground/[0.01] border border-card-border/40 rounded-2xl space-y-3">
+                          <label className="text-[8px] font-black uppercase tracking-widest text-foreground/45 block">Fondo Tarjetas Claro</label>
+                          <div className="flex items-center gap-3">
+                            <input
+                              type="color"
+                              value={editCardBgColorLight}
+                              onChange={(e) => { pushToHistory(); setEditCardBgColorLight(e.target.value); }}
+                              className="shrink-0 w-11 h-11 rounded-xl cursor-pointer border border-card-border bg-transparent p-0 overflow-hidden [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:border-0 [&::-webkit-color-swatch]:rounded-xl transition-transform hover:scale-105"
+                            />
+                            <input
+                              type="text"
+                              value={editCardBgColorLight}
+                              onFocus={pushToHistory}
+                              onChange={(e) => setEditCardBgColorLight(e.target.value)}
+                              className="flex-1 bg-background border border-card-border rounded-xl px-3 py-2.5 text-xs text-foreground focus:outline-none focus:border-nectar-gold uppercase text-center font-mono font-bold tracking-wider"
+                            />
+                          </div>
+                        </div>
+
+                        {/* 6. Border Color Light */}
+                        <div className="p-4 bg-foreground/[0.01] border border-card-border/40 rounded-2xl space-y-3">
+                          <label className="text-[8px] font-black uppercase tracking-widest text-foreground/45 block">Bordes y Divisiones Claro</label>
+                          <div className="flex items-center gap-3">
+                            <input
+                              type="color"
+                              value={editBorderColorLight}
+                              onChange={(e) => { pushToHistory(); setEditBorderColorLight(e.target.value); }}
+                              className="shrink-0 w-11 h-11 rounded-xl cursor-pointer border border-card-border bg-transparent p-0 overflow-hidden [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:border-0 [&::-webkit-color-swatch]:rounded-xl transition-transform hover:scale-105"
+                            />
+                            <input
+                              type="text"
+                              value={editBorderColorLight}
+                              onFocus={pushToHistory}
+                              onChange={(e) => setEditBorderColorLight(e.target.value)}
+                              className="flex-1 bg-background border border-card-border rounded-xl px-3 py-2.5 text-xs text-foreground focus:outline-none focus:border-nectar-gold uppercase text-center font-mono font-bold tracking-wider"
+                            />
+                          </div>
                         </div>
                       </div>
+                    </div>
 
-                      {/* 3. Text Color */}
-                      <div className="p-4 bg-foreground/[0.01] border border-card-border/40 rounded-2xl space-y-3">
-                        <label className="text-[8px] font-black uppercase tracking-widest text-foreground/45 block">Texto Principal</label>
-                        <div className="flex items-center gap-3">
-                          <input
-                            type="color"
-                            value={editTextColor}
-                            onChange={(e) => setEditTextColor(e.target.value)}
-                            className="shrink-0 w-11 h-11 rounded-xl cursor-pointer border border-card-border bg-transparent p-0 overflow-hidden [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:border-0 [&::-webkit-color-swatch]:rounded-xl transition-transform hover:scale-105"
-                          />
-                          <input
-                            type="text"
-                            value={editTextColor}
-                            onChange={(e) => setEditTextColor(e.target.value)}
-                            className="flex-1 bg-background border border-card-border rounded-xl px-3 py-2.5 text-xs text-foreground focus:outline-none focus:border-nectar-gold uppercase text-center font-mono font-bold tracking-wider"
-                          />
-                        </div>
-                      </div>
-
-                      {/* 4. Canvas BG Color */}
-                      <div className="p-4 bg-foreground/[0.01] border border-card-border/40 rounded-2xl space-y-3">
-                        <label className="text-[8px] font-black uppercase tracking-widest text-foreground/45 block">Fondo Lienzo</label>
-                        <div className="flex items-center gap-3">
-                          <input
-                            type="color"
-                            value={editBgColor}
-                            onChange={(e) => setEditBgColor(e.target.value)}
-                            className="shrink-0 w-11 h-11 rounded-xl cursor-pointer border border-card-border bg-transparent p-0 overflow-hidden [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:border-0 [&::-webkit-color-swatch]:rounded-xl transition-transform hover:scale-105"
-                          />
-                          <input
-                            type="text"
-                            value={editBgColor}
-                            onChange={(e) => setEditBgColor(e.target.value)}
-                            className="flex-1 bg-background border border-card-border rounded-xl px-3 py-2.5 text-xs text-foreground focus:outline-none focus:border-nectar-gold uppercase text-center font-mono font-bold tracking-wider"
-                          />
-                        </div>
-                      </div>
-
-                      {/* 5. Card BG Color */}
-                      <div className="p-4 bg-foreground/[0.01] border border-card-border/40 rounded-2xl space-y-3">
-                        <label className="text-[8px] font-black uppercase tracking-widest text-foreground/45 block">Fondo Tarjetas</label>
-                        <div className="flex items-center gap-3">
-                          <input
-                            type="color"
-                            value={editCardBgColor}
-                            onChange={(e) => setEditCardBgColor(e.target.value)}
-                            className="shrink-0 w-11 h-11 rounded-xl cursor-pointer border border-card-border bg-transparent p-0 overflow-hidden [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:border-0 [&::-webkit-color-swatch]:rounded-xl transition-transform hover:scale-105"
-                          />
-                          <input
-                            type="text"
-                            value={editCardBgColor}
-                            onChange={(e) => setEditCardBgColor(e.target.value)}
-                            className="flex-1 bg-background border border-card-border rounded-xl px-3 py-2.5 text-xs text-foreground focus:outline-none focus:border-nectar-gold uppercase text-center font-mono font-bold tracking-wider"
-                          />
-                        </div>
-                      </div>
-
-                      {/* 6. Border Color */}
-                      <div className="p-4 bg-foreground/[0.01] border border-card-border/40 rounded-2xl space-y-3">
-                        <label className="text-[8px] font-black uppercase tracking-widest text-foreground/45 block">Bordes y Divisiones</label>
-                        <div className="flex items-center gap-3">
-                          <input
-                            type="color"
-                            value={editBorderColor}
-                            onChange={(e) => setEditBorderColor(e.target.value)}
-                            className="shrink-0 w-11 h-11 rounded-xl cursor-pointer border border-card-border bg-transparent p-0 overflow-hidden [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:border-0 [&::-webkit-color-swatch]:rounded-xl transition-transform hover:scale-105"
-                          />
-                          <input
-                            type="text"
-                            value={editBorderColor}
-                            onChange={(e) => setEditBorderColor(e.target.value)}
-                            className="flex-1 bg-background border border-card-border rounded-xl px-3 py-2.5 text-xs text-foreground focus:outline-none focus:border-nectar-gold uppercase text-center font-mono font-bold tracking-wider"
-                          />
-                        </div>
-                      </div>
-
-                      {/* Interactive Mockup Preview */}
-                      <div className="md:col-span-3 mt-4 p-6 rounded-[2rem] border transition-all duration-500 shadow-xl" style={{ backgroundColor: editBgColor, borderColor: editBorderColor }}>
+                    {/* Interactive Mockup Preview */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6 pt-6 border-t border-card-border">
+                      <div
+                        className="sm:col-span-2 xl:col-span-3 p-6 rounded-[2rem] border transition-all duration-500 shadow-xl"
+                        style={{
+                          backgroundColor: previewDarkMode ? editBgColor : editBgColorLight,
+                          borderColor: previewDarkMode ? editBorderColor : editBorderColorLight
+                        }}
+                      >
                         <div className="flex justify-between items-center mb-4">
-                          <span className="text-[8px] font-black uppercase tracking-widest opacity-60" style={{ color: editTextColor }}>Vista Previa en Tiempo Real</span>
-                          <span className="w-3 h-3 rounded-full animate-pulse" style={{ backgroundColor: editThemeColor, boxShadow: `0 0 12px ${editThemeColor}` }}></span>
+                          <span
+                            className="text-[8px] font-black uppercase tracking-widest opacity-60"
+                            style={{ color: previewDarkMode ? editTextColor : editTextColorLight }}
+                          >
+                            Vista Previa en Tiempo Real
+                          </span>
+                          <div className="flex items-center gap-3">
+                            <button
+                              type="button"
+                              onClick={() => setPreviewDarkMode(!previewDarkMode)}
+                              className="px-2.5 py-1 rounded-lg border text-[8px] font-black uppercase tracking-widest transition-all hover:bg-foreground/5"
+                              style={{
+                                color: previewDarkMode ? editTextColor : editTextColorLight,
+                                borderColor: previewDarkMode ? editBorderColor : editBorderColorLight
+                              }}
+                            >
+                              {previewDarkMode ? '☀️ Preview Modo Claro' : '🌙 Preview Modo Oscuro'}
+                            </button>
+                            <span
+                              className="w-3 h-3 rounded-full animate-pulse"
+                              style={{
+                                backgroundColor: previewDarkMode ? editThemeColor : editThemeColorLight,
+                                boxShadow: `0 0 12px ${previewDarkMode ? editThemeColor : editThemeColorLight}`
+                              }}
+                            ></span>
+                          </div>
                         </div>
-                        <div className="p-6 rounded-2xl border space-y-3 transition-all duration-300" style={{ backgroundColor: editCardBgColor, borderColor: editBorderColor }}>
-                          <h5 className="text-xs font-black uppercase tracking-widest" style={{ color: editThemeColor }}>Módulo Principal</h5>
-                          <p className="text-[10px] leading-relaxed font-semibold" style={{ color: editTextColor }}>
+                        
+                        <div
+                          className="p-6 rounded-2xl border space-y-3 transition-all duration-300"
+                          style={{
+                            backgroundColor: previewDarkMode ? editCardBgColor : editCardBgColorLight,
+                            borderColor: previewDarkMode ? editBorderColor : editBorderColorLight
+                          }}
+                        >
+                          <h5
+                            className="text-xs font-black uppercase tracking-widest"
+                            style={{ color: previewDarkMode ? editThemeColor : editThemeColorLight }}
+                          >
+                            Módulo Principal
+                          </h5>
+                          <p
+                            className="text-[10px] leading-relaxed font-semibold"
+                            style={{ color: previewDarkMode ? editTextColor : editTextColorLight }}
+                          >
                             Esta tarjeta simula la combinación exacta de colores para el fondo, bordes, tarjetas y fuentes de tu portal público.
                           </p>
                           <div className="flex gap-2 pt-2">
-                            <span className="px-4 py-2 rounded-xl text-[8px] font-black uppercase tracking-widest transition-all" style={{ backgroundColor: editAccentColor, color: '#FFFFFF' }}>
+                            <span
+                              className="px-4 py-2 rounded-xl text-[8px] font-black uppercase tracking-widest transition-all"
+                              style={{
+                                backgroundColor: previewDarkMode ? editAccentColor : editAccentColorLight,
+                                color: '#FFFFFF'
+                              }}
+                            >
                               Botón de Acción
                             </span>
-                            <span className="px-4 py-2 rounded-xl text-[8px] font-black uppercase tracking-widest border transition-all" style={{ borderColor: editBorderColor, color: editTextColor }}>
+                            <span
+                              className="px-4 py-2 rounded-xl text-[8px] font-black uppercase tracking-widest border transition-all"
+                              style={{
+                                borderColor: previewDarkMode ? editBorderColor : editBorderColorLight,
+                                color: previewDarkMode ? editTextColor : editTextColorLight
+                              }}
+                            >
                               Secundario
                             </span>
                           </div>
@@ -929,7 +1347,7 @@ export default function TenantSettingsPage() {
                           type="checkbox"
                           id="pollen-active"
                           checked={editPollenActive}
-                          onChange={(e) => setEditPollenActive(e.target.checked)}
+                          onChange={(e) => { pushToHistory(); setEditPollenActive(e.target.checked); }}
                           className="w-4 h-4 rounded border-card-border bg-background text-nectar-gold focus:ring-nectar-gold cursor-pointer"
                         />
                         <label htmlFor="pollen-active" className="text-[10px] font-black uppercase tracking-widest text-foreground cursor-pointer select-none">
@@ -942,17 +1360,44 @@ export default function TenantSettingsPage() {
                         <div className="space-y-2 p-4 bg-foreground/[0.01] border border-card-border/40 rounded-2xl">
                           <label className="text-[8px] font-black uppercase tracking-widest text-foreground/45 block">Icono del Efecto</label>
                           <select
-                            value={editPollenIcon}
-                            onChange={(e) => setEditPollenIcon(e.target.value)}
+                            value={predefinedIcons.includes(editPollenIcon) ? editPollenIcon : 'custom'}
+                            onChange={(e) => {
+                              pushToHistory();
+                              const val = e.target.value;
+                              if (val === 'custom') {
+                                setEditPollenIcon(customPollenIcon || '⭐');
+                              } else {
+                                setEditPollenIcon(val);
+                              }
+                            }}
                             className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-foreground focus:outline-none focus:border-nectar-gold font-bold appearance-none cursor-pointer"
                           >
-                            <option value="•">⚫ Punto Clásico</option>
+                            <option value="⚫">⚫ Punto Clásico</option>
                             <option value="🌸">🌸 Pétalo de Flor</option>
                             <option value="❄️">❄️ Copo de Nieve</option>
                             <option value="✨">✨ Destello Mágico</option>
                             <option value="🍂">🍂 Hoja de Otoño</option>
                             <option value="🐝">🐝 Abeja Forrajera</option>
+                            <option value="custom">✨ Personalizado (Emoji / Carácter)</option>
                           </select>
+                          
+                          {!predefinedIcons.includes(editPollenIcon) && (
+                            <div className="mt-2 space-y-1">
+                              <label className="text-[8px] font-black uppercase tracking-widest text-foreground/40">Emoji o Carácter Personalizado</label>
+                              <input
+                                type="text"
+                                maxLength={10}
+                                value={editPollenIcon}
+                                onFocus={pushToHistory}
+                                onChange={(e) => {
+                                  setEditPollenIcon(e.target.value);
+                                  setCustomPollenIcon(e.target.value);
+                                }}
+                                placeholder="Ej: ⭐, 🍯, 🎈"
+                                className="w-full bg-background border border-card-border rounded-xl px-4 py-2.5 text-xs text-foreground focus:outline-none focus:border-nectar-gold font-bold"
+                              />
+                            </div>
+                          )}
                         </div>
 
                         {/* Particle Color Picker */}
@@ -962,16 +1407,53 @@ export default function TenantSettingsPage() {
                             <input
                               type="color"
                               value={editPollenColor}
-                              onChange={(e) => setEditPollenColor(e.target.value)}
+                              onChange={(e) => { pushToHistory(); setEditPollenColor(e.target.value); }}
                               className="shrink-0 w-11 h-11 rounded-xl cursor-pointer border border-card-border bg-transparent p-0 overflow-hidden [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:border-0 [&::-webkit-color-swatch]:rounded-xl transition-transform hover:scale-105"
                             />
                             <input
                               type="text"
                               value={editPollenColor}
+                              onFocus={pushToHistory}
                               onChange={(e) => setEditPollenColor(e.target.value)}
                               className="flex-1 bg-background border border-card-border rounded-xl px-3 py-2.5 text-xs text-foreground focus:outline-none focus:border-nectar-gold uppercase text-center font-mono font-bold tracking-wider"
                             />
                           </div>
+                        </div>
+
+                        {/* Particle Count Input */}
+                        <div className="space-y-2 p-4 bg-foreground/[0.01] border border-card-border/40 rounded-2xl">
+                          <label className="text-[8px] font-black uppercase tracking-widest text-foreground/45 block">Cantidad de Partículas</label>
+                          <input
+                            type="number"
+                            min={1}
+                            max={100}
+                            value={editPollenCount}
+                            onFocus={pushToHistory}
+                            onChange={(e) => setEditPollenCount(parseInt(e.target.value) || 6)}
+                            className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-foreground focus:outline-none focus:border-nectar-gold font-bold"
+                          />
+                          <p className="text-[8px] text-foreground/30 uppercase mt-1">Controla cuántas partículas flotan simultáneamente en la pantalla.</p>
+                        </div>
+
+                        {/* Particle Blur Strength */}
+                        <div className="space-y-2 p-4 bg-foreground/[0.01] border border-card-border/40 rounded-2xl">
+                          <label className="text-[8px] font-black uppercase tracking-widest text-foreground/45 block">Desenfoque de Partículas (Blur en px)</label>
+                          <div className="flex items-center gap-3">
+                            <input
+                              type="range"
+                              min={0}
+                              max={10}
+                              step={0.1}
+                              value={editPollenBlur}
+                              onFocus={pushToHistory}
+                              onChange={(e) => setEditPollenBlur(parseFloat(e.target.value) || 0)}
+                              className="flex-1 accent-nectar-gold cursor-pointer"
+                            />
+                            <span className="w-12 bg-background border border-card-border rounded-xl py-2 text-center text-xs font-mono font-bold text-foreground">
+                              {editPollenBlur}px
+                            </span>
+                          </div>
+                          <p className="text-[8px] text-foreground/30 uppercase mt-1">Nivel de desenfoque aplicado a cada partícula para dar profundidad.</p>
                         </div>
                       </div>
                     </div>
@@ -1195,60 +1677,66 @@ export default function TenantSettingsPage() {
 
       {/* Product Creation/Editing Modal */}
       {showProductModal && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-card-bg border border-card-border rounded-[2rem] max-w-md w-full p-8 relative space-y-6">
-            <h3 className="text-xl font-black uppercase tracking-wide text-white">{editingProduct ? 'Editar Producto' : 'Nuevo Producto'}</h3>
+        <div
+          onClick={() => setShowProductModal(false)}
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 cursor-pointer"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-card-bg border border-card-border rounded-[2rem] max-w-md w-full p-8 relative space-y-6 cursor-default"
+          >
+            <h3 className="text-xl font-black uppercase tracking-wide text-foreground">{editingProduct ? 'Editar Producto' : 'Nuevo Producto'}</h3>
             
             <form onSubmit={handleSaveProduct} className="space-y-4">
               <div className="space-y-1">
-                <label className="text-[9px] font-black uppercase tracking-widest text-white/40">Nombre del Producto</label>
+                <label className="text-[9px] font-black uppercase tracking-widest text-foreground/45">Nombre del Producto</label>
                 <input
                   type="text"
                   value={productName}
                   onChange={(e) => setProductName(e.target.value)}
                   required
-                  className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-nectar-gold transition-all"
+                  className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-foreground focus:outline-none focus:border-nectar-gold transition-all"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-[9px] font-black uppercase tracking-widest text-white/40">Descripción</label>
+                <label className="text-[9px] font-black uppercase tracking-widest text-foreground/45">Descripción</label>
                 <textarea
                   value={productDesc}
                   onChange={(e) => setProductDesc(e.target.value)}
                   rows={2}
-                  className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-nectar-gold transition-all resize-none"
+                  className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-foreground focus:outline-none focus:border-nectar-gold transition-all resize-none"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="text-[9px] font-black uppercase tracking-widest text-white/40">Precio (MXN)</label>
+                  <label className="text-[9px] font-black uppercase tracking-widest text-foreground/45">Precio (MXN)</label>
                   <input
                     type="number"
                     value={productPrice}
                     onChange={(e) => setProductPrice(e.target.value)}
                     required
                     min="0"
-                    className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-nectar-gold transition-all"
+                    className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-foreground focus:outline-none focus:border-nectar-gold transition-all"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[9px] font-black uppercase tracking-widest text-white/40">Stock</label>
+                  <label className="text-[9px] font-black uppercase tracking-widest text-foreground/45">Stock</label>
                   <input
                     type="number"
                     value={productStock}
                     onChange={(e) => setProductStock(e.target.value)}
                     required
                     min="0"
-                    className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-nectar-gold transition-all"
+                    className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-foreground focus:outline-none focus:border-nectar-gold transition-all"
                   />
                 </div>
               </div>
 
               <div className="space-y-1">
-                <label className="text-[9px] font-black uppercase tracking-widest text-white/40">Imagen del Producto (Archivo)</label>
+                <label className="text-[9px] font-black uppercase tracking-widest text-foreground/45">Imagen del Producto (Archivo)</label>
                 <div className="flex gap-4 items-center bg-background border border-card-border rounded-xl p-3">
                   <div className="w-10 h-10 bg-card-bg rounded-lg border border-card-border overflow-hidden flex items-center justify-center shrink-0">
                     {productImagePreview ? (
@@ -1267,7 +1755,7 @@ export default function TenantSettingsPage() {
                         setProductImagePreview(URL.createObjectURL(file));
                       }
                     }}
-                    className="text-xs text-white w-full"
+                    className="text-xs text-foreground w-full file:mr-4 file:py-1 file:px-3 file:rounded-xl file:border-0 file:text-[9px] file:font-black file:uppercase file:bg-foreground/5 file:text-foreground hover:file:bg-foreground/10"
                   />
                 </div>
               </div>
@@ -1276,7 +1764,7 @@ export default function TenantSettingsPage() {
                 <button
                   type="button"
                   onClick={() => setShowProductModal(false)}
-                  className="flex-1 py-3 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
+                  className="flex-1 py-3 bg-foreground/5 hover:bg-foreground/10 border border-card-border text-foreground rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
                 >
                   Cancelar
                 </button>
@@ -1295,53 +1783,59 @@ export default function TenantSettingsPage() {
 
       {/* User Creation/Editing Modal */}
       {showUserModal && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-card-bg border border-card-border rounded-[2rem] max-w-md w-full p-8 relative space-y-6">
-            <h3 className="text-xl font-black uppercase tracking-wide text-white">{editingUser ? 'Editar Usuario' : 'Nuevo Usuario'}</h3>
+        <div
+          onClick={() => setShowUserModal(false)}
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 cursor-pointer"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-card-bg border border-card-border rounded-[2rem] max-w-md w-full p-8 relative space-y-6 cursor-default"
+          >
+            <h3 className="text-xl font-black uppercase tracking-wide text-foreground">{editingUser ? 'Editar Usuario' : 'Nuevo Usuario'}</h3>
             
             <form onSubmit={handleSaveUser} className="space-y-4">
               <div className="space-y-1">
-                <label className="text-[9px] font-black uppercase tracking-widest text-white/40">Username</label>
+                <label className="text-[9px] font-black uppercase tracking-widest text-foreground/45">Username</label>
                 <input
                   type="text"
                   value={userUsername}
                   onChange={(e) => setUserUsername(e.target.value)}
                   required
-                  className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-nectar-gold transition-all"
+                  className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-foreground focus:outline-none focus:border-nectar-gold transition-all"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-[9px] font-black uppercase tracking-widest text-white/40">Correo Electrónico</label>
+                <label className="text-[9px] font-black uppercase tracking-widest text-foreground/45">Correo Electrónico</label>
                 <input
                   type="email"
                   value={userEmail}
                   onChange={(e) => setUserEmail(e.target.value)}
                   required
-                  className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-nectar-gold transition-all"
+                  className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-foreground focus:outline-none focus:border-nectar-gold transition-all"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-[9px] font-black uppercase tracking-widest text-white/40">Contraseña {editingUser && '(Dejar vacío para mantener)'}</label>
+                <label className="text-[9px] font-black uppercase tracking-widest text-foreground/45">Contraseña {editingUser && '(Dejar vacío para mantener)'}</label>
                 <input
                   type="password"
                   value={userPassword}
                   onChange={(e) => setUserPassword(e.target.value)}
                   required={!editingUser}
-                  className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-nectar-gold transition-all"
+                  className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-foreground focus:outline-none focus:border-nectar-gold transition-all"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-[9px] font-black uppercase tracking-widest text-white/40">Rol de Usuario</label>
+                <label className="text-[9px] font-black uppercase tracking-widest text-foreground/45">Rol de Usuario</label>
                 <select
                   value={userRoleSelect}
                   onChange={(e) => setUserRoleSelect(e.target.value)}
-                  className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-nectar-gold transition-all appearance-none"
+                  className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-foreground focus:outline-none focus:border-nectar-gold transition-all appearance-none"
                 >
-                  <option value="CUSTOMER">Cliente Final / Customer</option>
-                  <option value="ANALYST">Analista / Analyst</option>
+                  <option value="CUSTOMER" className="bg-background text-foreground">Cliente Final / Customer</option>
+                  <option value="ANALYST" className="bg-background text-foreground">Analista / Analyst</option>
                 </select>
               </div>
 
@@ -1349,7 +1843,7 @@ export default function TenantSettingsPage() {
                 <button
                   type="button"
                   onClick={() => setShowUserModal(false)}
-                  className="flex-1 py-3 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
+                  className="flex-1 py-3 bg-foreground/5 hover:bg-foreground/10 border border-card-border text-foreground rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
                 >
                   Cancelar
                 </button>

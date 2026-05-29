@@ -124,6 +124,68 @@ class TenantsCoreTests(BaseTenantAddonTestCase):
                 pass
         logger.info("Test passed: Logo upload and fallback behavior verified successfully.")
 
+    def test_tenant_branding_light_mode_and_particles(self):
+        """
+        Verify tenant light-mode branding custom colors, pollen count, and blur settings.
+        """
+        logger.info("Executing test_tenant_branding_light_mode_and_particles...")
+        self.client.force_authenticate(user=self.owner_a)
+
+        url = reverse('tenant-detail', kwargs={'pk': str(self.tenant_a.id)})
+
+        # 1. Update fields via API
+        response = self.client.patch(
+            url,
+            data={
+                'theme_color_light': '#FF9900',
+                'accent_color_light': '#0099FF',
+                'bg_color_light': '#F0F0F0',
+                'card_bg_color_light': '#FFFFFF',
+                'text_color_light': '#222222',
+                'border_color_light': '#DDDDDD',
+                'pollen_active': False,
+                'pollen_icon': '🌸',
+                'pollen_color': '#FFC0CB',
+                'pollen_count': 12,
+                'pollen_blur': 0.5,
+            },
+            format='json'
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # Verify db updated
+        self.tenant_a.refresh_from_db()
+        self.assertEqual(self.tenant_a.theme_color_light, '#FF9900')
+        self.assertEqual(self.tenant_a.pollen_count, 12)
+        self.assertEqual(self.tenant_a.pollen_blur, 0.5)
+
+        # 2. Get via public config API and check fields
+        response = self.client.get(
+            reverse('tenant_public_config'),
+            {'tenant_id': str(self.tenant_a.id)}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['theme_color_light'], "#FF9900")
+        self.assertEqual(response.data['accent_color_light'], "#0099FF")
+        self.assertEqual(response.data['bg_color_light'], "#F0F0F0")
+        self.assertEqual(response.data['card_bg_color_light'], "#FFFFFF")
+        self.assertEqual(response.data['text_color_light'], "#222222")
+        self.assertEqual(response.data['border_color_light'], "#DDDDDD")
+        self.assertEqual(response.data['pollen_active'], False)
+        self.assertEqual(response.data['pollen_icon'], "🌸")
+        self.assertEqual(response.data['pollen_color'], "#FFC0CB")
+        self.assertEqual(response.data['pollen_count'], 12)
+        self.assertEqual(response.data['pollen_blur'], 0.5)
+
+        # 3. Try to set negative pollen_count (should fail validation)
+        response = self.client.patch(
+            url,
+            data={'pollen_count': -5},
+            format='json'
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        logger.info("Test passed: Light-mode branding and particle settings validated successfully.")
+
     def test_tenant_public_config_lookup_methods(self):
         """
         Verify that public config endpoint resolves the tenant using different parameters:

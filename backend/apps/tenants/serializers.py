@@ -13,10 +13,11 @@ class TenantSerializer(serializers.ModelSerializer):
             'allowed_origins', 'custom_domain', 'welcome_message', 'require_customer_info',
             'logo', 'logo_url', 'portal_title', 'footer_text', 'is_active', 'created_at', 'updated_at',
             'active_addons',
-            # 6-Color Palette
+            # 6-Color Palette (Dark & Light)
             'theme_color', 'accent_color', 'bg_color', 'card_bg_color', 'text_color', 'border_color',
+            'theme_color_light', 'accent_color_light', 'bg_color_light', 'card_bg_color_light', 'text_color_light', 'border_color_light',
             # Pollen/Nectar Falling settings
-            'pollen_active', 'pollen_icon', 'pollen_color'
+            'pollen_active', 'pollen_icon', 'pollen_color', 'pollen_count', 'pollen_blur'
         ]
         read_only_fields = ['id', 'owner', 'api_key', 'created_at', 'updated_at']
 
@@ -44,10 +45,11 @@ class TenantPublicSerializer(serializers.ModelSerializer):
             'id', 'name', 'subdomain', 'logo_url', 
             'welcome_message', 'require_customer_info', 'active_addons',
             'portal_title', 'footer_text',
-            # 6-Color Palette
+            # 6-Color Palette (Dark & Light)
             'theme_color', 'accent_color', 'bg_color', 'card_bg_color', 'text_color', 'border_color',
+            'theme_color_light', 'accent_color_light', 'bg_color_light', 'card_bg_color_light', 'text_color_light', 'border_color_light',
             # Pollen/Nectar Falling settings
-            'pollen_active', 'pollen_icon', 'pollen_color'
+            'pollen_active', 'pollen_icon', 'pollen_color', 'pollen_count', 'pollen_blur'
         ]
 
     def get_logo_url(self, obj):

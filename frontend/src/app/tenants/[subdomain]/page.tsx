@@ -28,9 +28,17 @@ interface TenantConfig {
   card_bg_color: string;
   text_color: string;
   border_color: string;
+  theme_color_light?: string;
+  accent_color_light?: string;
+  bg_color_light?: string;
+  card_bg_color_light?: string;
+  text_color_light?: string;
+  border_color_light?: string;
   pollen_active?: boolean;
   pollen_icon?: string;
   pollen_color?: string;
+  pollen_count?: number;
+  pollen_blur?: number;
   active_addons?: string[];
 }
 
@@ -518,7 +526,7 @@ export default function TenantPortalPage() {
     );
   }
 
-  const primaryColor = tenantConfig.theme_color || '#C68A1E';
+  const primaryColor = isDarkMode ? (tenantConfig.theme_color || '#C68A1E') : (tenantConfig.theme_color_light || '#C68A1E');
   const pollenColor = tenantConfig.pollen_color || primaryColor;
   const pollenIcon = tenantConfig.pollen_icon || '•';
 
@@ -527,38 +535,50 @@ export default function TenantPortalPage() {
       {/* 🐝 Néctar Pollen Particles Effect */}
       {tenantConfig.pollen_active !== false && (
         <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-          <div className="pollen-particle animate-[float-pollen_10s_infinite_linear]" style={{ left: '10%' }}>{pollenIcon}</div>
-          <div className="pollen-particle animate-[float-pollen_14s_infinite_linear]" style={{ left: '25%', animationDelay: '2s' }}>{pollenIcon}</div>
-          <div className="pollen-particle animate-[float-pollen_8s_infinite_linear]" style={{ left: '45%', animationDelay: '4s' }}>{pollenIcon}</div>
-          <div className="pollen-particle animate-[float-pollen_16s_infinite_linear]" style={{ left: '60%', animationDelay: '1s' }}>{pollenIcon}</div>
-          <div className="pollen-particle animate-[float-pollen_12s_infinite_linear]" style={{ left: '80%', animationDelay: '3.2s' }}>{pollenIcon}</div>
-          <div className="pollen-particle animate-[float-pollen_20s_infinite_linear]" style={{ left: '95%', animationDelay: '5.5s' }}>{pollenIcon}</div>
+          {Array.from({ length: tenantConfig.pollen_count || 6 }).map((_, idx) => {
+            const left = `${(idx * (100 / (tenantConfig.pollen_count || 6))) + 5}%`;
+            const duration = `${8 + (idx * 3) % 15}s`;
+            const delay = `${(idx * 1.5) % 6}s`;
+            return (
+              <div
+                key={idx}
+                className="pollen-particle animate-[float-pollen_10s_infinite_linear]"
+                style={{
+                  left,
+                  animation: `float-pollen ${duration} infinite linear`,
+                  animationDelay: delay,
+                }}
+              >
+                {pollenIcon}
+              </div>
+            );
+          })}
         </div>
       )}
       <style>{`
         #tenant-portal-root {
-          background-color: ${isDarkMode ? (tenantConfig.bg_color || '#020403') : '#FAFAFA'} !important;
-          color: ${isDarkMode ? (tenantConfig.text_color || '#FFFFFF') : '#111827'} !important;
+          background-color: ${isDarkMode ? (tenantConfig.bg_color || '#020403') : (tenantConfig.bg_color_light || '#FAFAFA')} !important;
+          color: ${isDarkMode ? (tenantConfig.text_color || '#FFFFFF') : (tenantConfig.text_color_light || '#111827')} !important;
         }
         #tenant-portal-root .tenant-header {
-          background-color: ${isDarkMode ? (tenantConfig.card_bg_color || '#050a06') + '80' : '#FFFFFF80'} !important;
-          border-color: ${isDarkMode ? (tenantConfig.border_color || '#151F18') : '#E5E7EB'} !important;
+          background-color: ${isDarkMode ? (tenantConfig.card_bg_color || '#050a06') + '80' : (tenantConfig.card_bg_color_light || '#FFFFFF') + '80'} !important;
+          border-color: ${isDarkMode ? (tenantConfig.border_color || '#151F18') : (tenantConfig.border_color_light || '#E5E7EB')} !important;
         }
         #tenant-portal-root .tenant-card {
-          background-color: ${isDarkMode ? (tenantConfig.card_bg_color || '#050a06') + 'a0' : '#FFFFFF'} !important;
-          border-color: ${isDarkMode ? (tenantConfig.border_color || '#151F18') : '#E5E7EB'} !important;
+          background-color: ${isDarkMode ? (tenantConfig.card_bg_color || '#050a06') + 'a0' : (tenantConfig.card_bg_color_light || '#FFFFFF')} !important;
+          border-color: ${isDarkMode ? (tenantConfig.border_color || '#151F18') : (tenantConfig.border_color_light || '#E5E7EB')} !important;
         }
         #tenant-portal-root .tenant-input {
-          background-color: ${isDarkMode ? (tenantConfig.bg_color || '#020403') : '#FFFFFF'} !important;
-          border-color: ${isDarkMode ? (tenantConfig.border_color || '#151F18') : '#E5E7EB'} !important;
-          color: ${isDarkMode ? (tenantConfig.text_color || '#FFFFFF') : '#111827'} !important;
+          background-color: ${isDarkMode ? (tenantConfig.bg_color || '#020403') : (tenantConfig.card_bg_color_light || '#FFFFFF')} !important;
+          border-color: ${isDarkMode ? (tenantConfig.border_color || '#151F18') : (tenantConfig.border_color_light || '#E5E7EB')} !important;
+          color: ${isDarkMode ? (tenantConfig.text_color || '#FFFFFF') : (tenantConfig.text_color_light || '#111827')} !important;
         }
         #tenant-portal-root .tenant-border {
-          border-color: ${isDarkMode ? (tenantConfig.border_color || '#151F18') : '#E5E7EB'} !important;
+          border-color: ${isDarkMode ? (tenantConfig.border_color || '#151F18') : (tenantConfig.border_color_light || '#E5E7EB')} !important;
         }
         #tenant-portal-root .tenant-footer {
-          background-color: ${isDarkMode ? (tenantConfig.card_bg_color || '#050a06') + 'a0' : '#F3F4F6'} !important;
-          border-color: ${isDarkMode ? (tenantConfig.border_color || '#151F18') : '#E5E7EB'} !important;
+          background-color: ${isDarkMode ? (tenantConfig.card_bg_color || '#050a06') + 'a0' : (tenantConfig.card_bg_color_light || '#FFFFFF')} !important;
+          border-color: ${isDarkMode ? (tenantConfig.border_color || '#151F18') : (tenantConfig.border_color_light || '#E5E7EB')} !important;
         }
         #tenant-portal-root .text-white {
           color: ${isDarkMode ? '#FFFFFF' : '#111827'} !important;
@@ -608,9 +628,10 @@ export default function TenantPortalPage() {
           color: ${pollenColor} !important;
           pointer-events: none;
           user-select: none;
-          filter: blur(0.2px);
+          filter: blur(${tenantConfig.pollen_blur !== undefined ? tenantConfig.pollen_blur : 0.2}px);
           text-shadow: 0 0 8px ${pollenColor};
         }
+      `}</style>
       `}</style>
 
       {/* 1. Header Navigation */}

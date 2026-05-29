@@ -37,18 +37,28 @@ class Tenant(models.Model):
         help_text="Whether to require customer Name and Email before starting a support session."
     )
     
-    # 6-Color Palette Customization
+    # 6-Color Palette Customization (Dark Mode)
     theme_color = models.CharField(max_length=7, default="#C68A1E")     # Primary / Nectar Gold
     accent_color = models.CharField(max_length=7, default="#10B981")    # Secondary / Emerald Green
     bg_color = models.CharField(max_length=7, default="#020403")        # General Canvas Background
     card_bg_color = models.CharField(max_length=7, default="#050a06")   # Cards / Modals Background
     text_color = models.CharField(max_length=7, default="#FFFFFF")      # Main Text color
     border_color = models.CharField(max_length=7, default="#151F18")    # Borders / Dividers color
+
+    # Light Mode Palette Customization
+    theme_color_light = models.CharField(max_length=7, default="#C68A1E")
+    accent_color_light = models.CharField(max_length=7, default="#10B981")
+    bg_color_light = models.CharField(max_length=7, default="#FAFAFA")
+    card_bg_color_light = models.CharField(max_length=7, default="#FFFFFF")
+    text_color_light = models.CharField(max_length=7, default="#111827")
+    border_color_light = models.CharField(max_length=7, default="#E5E7EB")
     
     # 🐝 Pollen/Nectar Falling Effect Settings
     pollen_active = models.BooleanField(default=True)
     pollen_icon = models.CharField(max_length=50, default="⚫")
     pollen_color = models.CharField(max_length=7, default="#C68A1E")
+    pollen_count = models.PositiveIntegerField(default=6)
+    pollen_blur = models.FloatField(default=0.2)
     
     # Newsletter Billing & Limits Configuration
     NEWSLETTER_PLANS = [
