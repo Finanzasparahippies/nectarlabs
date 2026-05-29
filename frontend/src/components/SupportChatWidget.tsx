@@ -266,6 +266,7 @@ export default function SupportChatWidget() {
   };
 
   const confirmCloseChat = async () => {
+    if (!activeChat) return;
     setShowCloseConfirm(false);
     try {
       await fetcher(`/support-chats/${activeChat.id}/close/`, {

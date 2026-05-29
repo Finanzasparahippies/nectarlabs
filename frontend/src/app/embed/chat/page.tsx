@@ -316,6 +316,7 @@ function ChatWidgetContent() {
   };
 
   const confirmCloseChat = async () => {
+    if (!activeChat) return;
     setShowCloseConfirm(false);
     try {
       await embedFetch(`/api/support-chats/${activeChat.id}/close/`, {
