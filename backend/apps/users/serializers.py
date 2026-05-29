@@ -2,7 +2,7 @@ from rest_framework import serializers
 from .models import User
 
 class UserSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True)
+    password = serializers.CharField(write_only=True, required=False)
 
     class Meta:
         model = User
@@ -37,4 +37,10 @@ class UserSerializer(serializers.ModelSerializer):
             # Only admin, business or staff can update approval status
             if not (request and (request.user.is_staff or request.user.role in ['ADMIN', 'BUSINESS'])):
                 validated_data.pop('is_approved_seller')
-        return super().update(instance, validated_data)
+        
+        password = validated_data.pop('password', None)
+        user = super().update(instance, validated_data)
+        if password:
+            user.set_password(password)
+            user.save()
+        return user

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import Toast from "@/components/ui/Toast";
 import SignaturePad from "react-signature-canvas";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
@@ -16,6 +17,11 @@ export default function DevSignPage() {
   const [error, setError] = useState("");
 
   const [success, setSuccess] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'warning' | 'info' } | null>(null);
+
+  const showToast = (message: string, type: 'success' | 'error' | 'warning' | 'info' = 'success') => {
+    setToast({ message, type });
+  };
 
   useEffect(() => {
     async function fetchContract() {
@@ -32,7 +38,7 @@ export default function DevSignPage() {
   }, [id]);
 
   const handleSign = async () => {
-    if (!sigPad.current || sigPad.current.isEmpty()) return alert("Por favor firma antes de continuar");
+    if (!sigPad.current || sigPad.current.isEmpty()) return showToast("Por favor firma antes de continuar", "warning");
     
     setSaving(true);
     const signatureBase64 = sigPad.current.getTrimmedCanvas().toDataURL("image/png");
@@ -149,6 +155,13 @@ export default function DevSignPage() {
           </div>
         </div>
       </div>
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
     </div>
   );
 }

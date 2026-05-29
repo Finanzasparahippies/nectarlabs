@@ -45,6 +45,11 @@ class Tenant(models.Model):
     text_color = models.CharField(max_length=7, default="#FFFFFF")      # Main Text color
     border_color = models.CharField(max_length=7, default="#151F18")    # Borders / Dividers color
     
+    # 🐝 Pollen/Nectar Falling Effect Settings
+    pollen_active = models.BooleanField(default=True)
+    pollen_icon = models.CharField(max_length=50, default="⚫")
+    pollen_color = models.CharField(max_length=7, default="#C68A1E")
+    
     # Newsletter Billing & Limits Configuration
     NEWSLETTER_PLANS = [
         ('TRIAL', 'Periodo de prueba'),

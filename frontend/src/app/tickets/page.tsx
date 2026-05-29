@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { fetcher } from '../../lib/api';
 import DashboardSidebar from '../../components/DashboardSidebar';
+import Toast from '../../components/ui/Toast';
+import ConfirmModal from '../../components/ui/ConfirmModal';
 
 interface Message {
   id: number;
@@ -51,6 +53,17 @@ export default function TicketsPage() {
 
   const [newMessage, setNewMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'warning' | 'info' } | null>(null);
+  const [confirmModal, setConfirmModal] = useState<{
+    title: string;
+    message: string;
+    onConfirm: () => void;
+  } | null>(null);
+
+  const showToast = (message: string, type: 'success' | 'error' | 'warning' | 'info' = 'success') => {
+    setToast({ message, type });
+  };
 
   const router = useRouter();
 
@@ -136,8 +149,9 @@ export default function TicketsPage() {
       setIsCreateModalOpen(false);
       setNewTicket({ title: '', description: '', category: 'QUESTION', priority: 'MEDIUM' });
       loadTickets();
+      showToast("Ticket creado correctamente.", "success");
     } catch (err) {
-      alert("Error al crear el ticket");
+      showToast("Error al crear el ticket", "error");
     } finally {
       setIsSubmitting(false);
     }
@@ -154,8 +168,9 @@ export default function TicketsPage() {
       });
       setNewMessage('');
       loadTickets();
+      showToast("Mensaje enviado con éxito.", "success");
     } catch (err) {
-      alert("Error al enviar el mensaje");
+      showToast("Error al enviar el mensaje", "error");
     } finally {
       setIsSubmitting(false);
     }
@@ -168,8 +183,9 @@ export default function TicketsPage() {
         body: JSON.stringify({ status: newStatus })
       });
       loadTickets();
+      showToast("Estado actualizado correctamente.", "success");
     } catch (err) {
-      alert("Error al actualizar el estado");
+      showToast("Error al actualizar el estado", "error");
     }
   };
 
@@ -186,7 +202,7 @@ export default function TicketsPage() {
       });
       loadSupportChats();
     } catch (err) {
-      alert("Error al enviar el mensaje de chat");
+      showToast("Error al enviar el mensaje de chat", "error");
       setChatMessageText(content);
     } finally {
       setIsSubmitting(false);
@@ -199,22 +215,29 @@ export default function TicketsPage() {
         method: 'POST'
       });
       loadSupportChats();
+      showToast("Te has unido al chat.", "success");
     } catch (err) {
-      alert("Error al unirse al chat de soporte");
+      showToast("Error al unirse al chat de soporte", "error");
     }
   };
 
   const handleCloseChat = async (chatId: number) => {
-    if (!confirm("¿Cerrar sesión de chat de soporte?")) return;
-    try {
-      await fetcher(`/support-chats/${chatId}/close/`, {
-        method: 'POST'
-      });
-      setSelectedChat(null);
-      loadSupportChats();
-    } catch (err) {
-      alert("Error al cerrar el chat de soporte");
-    }
+    setConfirmModal({
+      title: 'Cerrar Chat de Soporte',
+      message: '¿Estás seguro de que deseas cerrar esta sesión de chat de soporte? El cliente será desconectado.',
+      onConfirm: async () => {
+        try {
+          await fetcher(`/support-chats/${chatId}/close/`, {
+            method: 'POST'
+          });
+          setSelectedChat(null);
+          loadSupportChats();
+          showToast("Chat de soporte cerrado con éxito.", "success");
+        } catch (err) {
+          showToast("Error al cerrar el chat de soporte", "error");
+        }
+      }
+    });
   };
 
   if (loading) return (
@@ -682,6 +705,27 @@ export default function TicketsPage() {
             </form>
           </div>
         </div>
+      )}
+
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
+
+      {confirmModal && (
+        <ConfirmModal
+          isOpen={true}
+          title={confirmModal.title}
+          message={confirmModal.message}
+          onConfirm={() => {
+            confirmModal.onConfirm();
+            setConfirmModal(null);
+          }}
+          onCancel={() => setConfirmModal(null)}
+        />
       )}
     </div>
   );

@@ -29,24 +29,54 @@ export default function DashboardSidebar() {
   const [userRole, setUserRole] = useState('');
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [tenants, setTenants] = useState<any[]>([]);
-  
+
   // Responsive navigation and mobile drawer state
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setIsCollapsed(localStorage.getItem('sidebar_collapsed') === 'true');
+    }
+  }, []);
+
+  const toggleCollapse = () => {
+    const nextState = !isCollapsed;
+    setIsCollapsed(nextState);
+    localStorage.setItem('sidebar_collapsed', String(nextState));
+  };
+
+  // Accordion state for tenants/ecosystems
+  const [openTenants, setOpenTenants] = useState<Record<number, boolean>>({});
+  const [ecosystemsExpanded, setEcosystemsExpanded] = useState(true);
+
+  useEffect(() => {
+    if (tenants.length > 0) {
+      const activeT = tenants.filter(t => t.is_active);
+      if (activeT.length === 1) {
+        setOpenTenants({ [activeT[0].id]: true });
+      }
+    }
+  }, [tenants]);
+
+  const toggleTenant = (id: number) => {
+    setOpenTenants(prev => ({ ...prev, [id]: !prev[id] }));
+  };
 
   useEffect(() => {
     const checkAuth = (role: string, staff: boolean) => {
       setUserRole(role);
-      
+
       const isDev = role === 'DEVELOPER';
       const isDes = role === 'DESIGNER';
       const isSal = role === 'SALES';
-      
+
       const ceo = role === 'ADMIN' || (staff && !isDev && !isDes);
       setIsCEO(ceo);
-      
+
       const staffAllowed = (staff || role === 'ADMIN' || role === 'BUSINESS') && role !== 'DESIGNER';
       setIsStaff(staffAllowed);
-      
+
       const client = !ceo && !isDev && !isDes && !isSal;
       setIsClient(client);
     };
@@ -85,7 +115,7 @@ export default function DashboardSidebar() {
         console.error("Error loading tenants in sidebar:", err);
       }
     };
-    
+
     loadData();
   }, [pathname]);
 
@@ -148,7 +178,7 @@ export default function DashboardSidebar() {
       )
     },
     {
-      label: 'Control Negocio',
+      label: 'Control de la Colmena',
       href: '/dashboard?tab=business',
       show: isCEO,
       active: pathname === '/dashboard' && activeTab === 'business',
@@ -172,7 +202,7 @@ export default function DashboardSidebar() {
       )
     },
     {
-      label: 'Panel de Ventas',
+      label: 'Panel de Recolección',
       href: '/dashboard?tab=business&scroll=ventas',
       onClick: (e: any) => {
         if (pathname === '/dashboard' && activeTab === 'business') {
@@ -203,7 +233,7 @@ export default function DashboardSidebar() {
       )
     },
     {
-      label: 'Configuración Negocio',
+      label: 'Ajustes de la Colmena',
       href: '/dashboard/tenant-settings',
       show: (userRole === 'BUSINESS' || tenants.length > 0) && !isCEO,
       active: pathname === '/dashboard/tenant-settings',
@@ -217,11 +247,10 @@ export default function DashboardSidebar() {
         </svg>
       ),
       badge: tenants[0] && (
-        <span className={`px-2 py-0.5 text-[7px] font-black uppercase tracking-widest rounded-full shrink-0 ${
-          tenants[0].is_active 
-            ? 'bg-green-500/10 text-green-400 border border-green-500/20' 
+        <span className={`px-2 py-0.5 text-[7px] font-black uppercase tracking-widest rounded-full shrink-0 ${tenants[0].is_active
+            ? 'bg-green-500/10 text-green-400 border border-green-500/20'
             : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-        }`}>
+          }`}>
           {tenants[0].is_active ? 'Activo' : 'Reservado'}
         </span>
       )
@@ -249,7 +278,7 @@ export default function DashboardSidebar() {
       )
     },
     {
-      label: 'Catálogo Add-ons',
+      label: 'Celdas del Panal (Add-ons)',
       href: '/dashboard/addons',
       show: true,
       active: pathname === '/dashboard/addons',
@@ -260,86 +289,228 @@ export default function DashboardSidebar() {
           <line x1="12" y1="22.08" x2="12" y2="12"></line>
         </svg>
       )
+    },
+    {
+      label: 'Perfil',
+      href: '/dashboard/profile',
+      show: true,
+      active: pathname === '/dashboard/profile',
+      icon: (active: boolean) => (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={`w-4 h-4 transition-all duration-300 group-hover:scale-110 ${active ? 'text-nectar-gold' : 'text-foreground/45 group-hover:text-foreground'}`}>
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+      )
     }
   ];
 
-  // Generador de enlaces a portales públicos de Tenants
-  const tenantLinks = tenants.filter(t => t.is_active).flatMap(tenant => {
-    const tenantUrl = tenant.custom_domain 
-      ? `https://${tenant.custom_domain}`
-      : (() => {
-          const host = typeof window !== 'undefined' ? window.location.hostname : '';
-          if (host.includes('localhost')) return `http://${tenant.subdomain}.localhost:3000`;
-          if (host.includes('staging.nectarlabs.dev')) return `https://${tenant.subdomain}.staging.nectarlabs.dev`;
-          return `https://${tenant.subdomain}.nectarlabs.dev`;
-        })();
-    return [
-      {
-        label: `Portal Público (${tenant.name})`,
-        href: tenantUrl,
-        isExternal: true,
-        icon: () => (
-          <div className="w-2.5 h-2.5 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)] animate-pulse shrink-0"></div>
-        ),
-        badge: (
-          <svg className="w-3.5 h-3.5 text-nectar-gold shrink-0 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-          </svg>
-        )
-      },
-      {
-        label: `Administrar Portal (${tenant.name})`,
-        href: `${tenantUrl}/admin`,
-        isExternal: true,
-        icon: () => (
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5" className="w-4 h-4 text-nectar-gold shrink-0 transition-all duration-300 group-hover:scale-110">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.3 1-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-          </svg>
-        ),
-        badge: (
-          <span className="px-2 py-0.5 text-[6px] font-black uppercase tracking-widest rounded-full bg-nectar-gold/10 text-nectar-gold border border-nectar-gold/20 shrink-0">
-            ADMIN
+  const renderTenantAccordion = () => {
+    const activeTenants = tenants.filter(t => t.is_active);
+    if (activeTenants.length === 0) return null;
+
+    if (isCollapsed) {
+      return (
+        <div className="pt-6 border-t border-card-border/40 mt-4 flex flex-col items-center gap-4">
+          <button
+            onClick={toggleCollapse}
+            title="Mis Colmenas"
+            className="flex items-center justify-center w-10 h-10 rounded-2xl bg-foreground/[0.02] text-nectar-gold hover:text-nectar-gold/80 transition-all cursor-pointer"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5" className="w-5 h-5 shrink-0 animate-pulse">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+            </svg>
+          </button>
+        </div>
+      );
+    }
+
+    return (
+      <div className="pt-6 border-t border-card-border/40 mt-4 space-y-3">
+        {/* Accordion header for the entire section */}
+        <button
+          onClick={() => setEcosystemsExpanded(!ecosystemsExpanded)}
+          className="flex justify-between items-center w-full px-6 mb-2 text-left group"
+        >
+          <span className="text-[8px] font-black uppercase tracking-[0.2em] text-foreground/30 group-hover:text-foreground/60 transition-colors">
+            Mis Colmenas
           </span>
-        )
-      }
-    ];
-  });
+          <div className="flex items-center gap-2">
+            <span className="text-[7.5px] font-black text-nectar-gold bg-nectar-gold/5 border border-nectar-gold/10 px-2 py-0.5 rounded-full font-mono">
+              {activeTenants.length}
+            </span>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="3"
+              className={`w-2.5 h-2.5 text-foreground/30 group-hover:text-foreground/60 transition-transform duration-300 ${ecosystemsExpanded ? 'rotate-90 text-nectar-gold' : ''}`}
+            >
+              <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+          </div>
+        </button>
+
+        {ecosystemsExpanded && (
+          <div className="space-y-1 animate-fadeIn">
+            {activeTenants.map(tenant => {
+              const tenantUrl = tenant.custom_domain
+                ? `https://${tenant.custom_domain}`
+                : (() => {
+                  const host = typeof window !== 'undefined' ? window.location.hostname : '';
+                  if (host.includes('localhost')) return `http://nectarlabs.localhost/tenants/${tenant.subdomain}`;
+                  if (host.includes('staging.nectarlabs.dev')) return `https://${tenant.subdomain}.staging.nectarlabs.dev`;
+                  return `https://${tenant.subdomain}.nectarlabs.dev`;
+                })();
+
+              const isOpen = !!openTenants[tenant.id];
+
+              return (
+                <div key={`tenant-group-${tenant.id}`} className="space-y-1">
+                  {/* Accordion Trigger */}
+                  <button
+                    onClick={() => toggleTenant(tenant.id)}
+                    className={`flex items-center gap-3.5 px-6 py-3 w-full text-left rounded-2xl font-black uppercase tracking-widest text-[9px] transition-all duration-300 group ${isOpen
+                        ? 'bg-foreground/[0.02] text-foreground'
+                        : 'text-foreground/60 hover:text-foreground hover:bg-foreground/[0.02]'
+                      }`}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5" className="w-4 h-4 text-nectar-gold shrink-0 transition-transform duration-300 group-hover:rotate-12">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                    </svg>
+
+                    <div className="flex-1 min-w-0">
+                      <span className="block truncate font-black text-[9px] uppercase tracking-widest">{tenant.name}</span>
+                      <span className="block text-[6.5px] font-mono text-foreground/35 lowercase tracking-normal truncate">{tenant.custom_domain || `${tenant.subdomain}.nectarlabs.dev`}</span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)] animate-pulse shrink-0"></div>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="3"
+                        className={`w-2.5 h-2.5 transition-transform duration-300 ${isOpen ? 'rotate-90 text-nectar-gold' : 'text-foreground/30'}`}
+                      >
+                        <polyline points="9 18 15 12 9 6"></polyline>
+                      </svg>
+                    </div>
+                  </button>
+
+                  {/* Sublinks */}
+                  {isOpen && (
+                    <div className="pl-[27px] ml-7 border-l border-card-border/50 py-1 space-y-1.5">
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          window.open(tenantUrl, '_blank', 'noopener,noreferrer');
+                        }}
+                        className="flex items-center justify-between py-2 pr-6 text-foreground/50 hover:text-nectar-gold transition-all duration-300 text-[8px] font-black uppercase tracking-widest hover:translate-x-1 group/sub w-full text-left bg-transparent border-0 cursor-pointer"
+                      >
+                        <span className="flex items-center gap-2">
+                          <span className="w-1 h-1 rounded-full bg-foreground/20 group-hover/sub:bg-nectar-gold"></span>
+                          Portal Público
+                        </span>
+                        <svg className="w-3 h-3 opacity-0 group-hover/sub:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          router.push(`/dashboard/tenant-settings?tenant=${tenant.id}`);
+                        }}
+                        className="flex items-center justify-between py-2 pr-6 text-foreground/50 hover:text-nectar-gold transition-all duration-300 text-[8px] font-black uppercase tracking-widest hover:translate-x-1 group/sub w-full text-left bg-transparent border-0 cursor-pointer"
+                      >
+                        <span className="flex items-center gap-2">
+                          <span className="w-1 h-1 rounded-full bg-foreground/20 group-hover/sub:bg-nectar-gold"></span>
+                          Consola Admin
+                        </span>
+                        <span className="px-1.5 py-0.5 text-[5.5px] font-black uppercase tracking-wider rounded-md bg-nectar-gold/10 text-nectar-gold border border-nectar-gold/20 font-bold">
+                          Config
+                        </span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    );
+  };
 
   // Renderizador común del listado de navegación
   const renderNavLinks = () => {
-    return (
-      <div className="space-y-2">
-        {navLinks.filter(link => link.show).map((link, idx) => (
-          <Link
-            key={`nav-${idx}`}
-            href={link.href}
-            onClick={link.onClick}
-            className={`flex items-center gap-4 px-6 py-3.5 w-full text-left rounded-2xl font-black uppercase tracking-widest text-[9px] transition-all duration-300 group ${
-              link.active
-                ? 'bg-nectar-gold/10 text-nectar-gold'
-                : 'hover:bg-foreground/[0.04] text-foreground/60 hover:text-foreground'
-            }`}
-          >
-            {link.icon(link.active)}
-            <span className="flex-1 min-w-0 truncate">{link.label}</span>
-            {link.badge}
-          </Link>
-        ))}
+    const workspaceLabels = ['Dashboard', 'Compromiso de Pago', 'Contratar Plan', 'Control de la Colmena', 'Rendimiento', 'Panel de Recolección', 'Configuración Soporte', 'Ajustes de la Colmena', 'Perfil'];
+    const workspaceLinks = navLinks.filter(link => link.show && workspaceLabels.includes(link.label));
+    const operationsLinks = navLinks.filter(link => link.show && !workspaceLabels.includes(link.label));
 
-        {tenantLinks.map((link, idx) => (
-          <a
-            key={`tenant-nav-${idx}`}
-            href={link.href}
-            target="_blank"
-            rel="noreferrer"
-            className="flex items-center gap-4 px-6 py-3.5 w-full text-left rounded-2xl font-black uppercase tracking-widest text-[9px] transition-all duration-300 group hover:bg-foreground/[0.04] text-foreground/60 hover:text-foreground"
-          >
-            {link.icon()}
-            <span className="flex-1 min-w-0 truncate">{link.label}</span>
-            {link.badge}
-          </a>
-        ))}
+    return (
+      <div className="space-y-6">
+        {/* Workspace Category */}
+        {workspaceLinks.length > 0 && (
+          <div className="space-y-2">
+            {!isCollapsed && (
+              <span className="px-6 text-[8px] font-black uppercase tracking-[0.2em] text-foreground/30 block mb-3">
+                Control de Mando
+              </span>
+            )}
+            {workspaceLinks.map((link, idx) => (
+              <Link
+                key={`nav-work-${idx}`}
+                href={link.href}
+                onClick={link.onClick}
+                title={link.label}
+                className={`flex items-center gap-4 rounded-2xl font-black uppercase tracking-widest text-[9px] transition-all duration-300 group ${
+                  isCollapsed ? 'justify-center px-0 py-3.5 w-full' : 'px-6 py-3.5 w-full text-left'
+                } ${link.active
+                    ? 'bg-nectar-gold/10 text-nectar-gold'
+                    : 'hover:bg-foreground/[0.04] text-foreground/60 hover:text-foreground'
+                  }`}
+              >
+                {link.icon(link.active)}
+                {!isCollapsed && <span className="flex-1 min-w-0 truncate">{link.label}</span>}
+                {!isCollapsed && link.badge}
+              </Link>
+            ))}
+          </div>
+        )}
+
+        {/* Ecosistemas (Tenants Accordion) */}
+        {renderTenantAccordion()}
+
+        {/* Operations Category */}
+        {operationsLinks.length > 0 && (
+          <div className="space-y-2 pt-4 border-t border-card-border/40">
+            {!isCollapsed && (
+              <span className="px-6 text-[8px] font-black uppercase tracking-[0.2em] text-foreground/30 block mb-3">
+                Operaciones
+              </span>
+            )}
+            {operationsLinks.map((link, idx) => (
+              <Link
+                key={`nav-oper-${idx}`}
+                href={link.href}
+                onClick={link.onClick}
+                title={link.label}
+                className={`flex items-center gap-4 rounded-2xl font-black uppercase tracking-widest text-[9px] transition-all duration-300 group ${
+                  isCollapsed ? 'justify-center px-0 py-3.5 w-full' : 'px-6 py-3.5 w-full text-left'
+                } ${link.active
+                    ? 'bg-nectar-gold/10 text-nectar-gold'
+                    : 'hover:bg-foreground/[0.04] text-foreground/60 hover:text-foreground'
+                  }`}
+              >
+                {link.icon(link.active)}
+                {!isCollapsed && <span className="flex-1 min-w-0 truncate">{link.label}</span>}
+                {!isCollapsed && link.badge}
+              </Link>
+            ))}
+          </div>
+        )}
       </div>
     );
   };
@@ -373,15 +544,14 @@ export default function DashboardSidebar() {
 
       {/* 2. MOBILE DRAWER NAVIGATION OVERLAY */}
       {isMobileMenuOpen && (
-        <div 
+        <div
           onClick={() => setIsMobileMenuOpen(false)}
           className="lg:hidden fixed inset-0 z-45 bg-background/60 backdrop-blur-sm transition-opacity duration-300"
         />
       )}
       <div
-        className={`lg:hidden fixed inset-y-0 left-0 w-80 max-w-[85vw] bg-card-bg/95 backdrop-blur-md border-r border-card-border p-8 flex flex-col justify-between z-50 transform transition-transform duration-300 ease-out ${
-          isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
+        className={`lg:hidden fixed inset-y-0 left-0 w-80 max-w-[85vw] bg-card-bg/95 backdrop-blur-md border-r border-card-border p-8 flex flex-col justify-between z-50 transform transition-transform duration-300 ease-out ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
+          }`}
       >
         <div className="space-y-12">
           <div className="flex justify-between items-center">
@@ -406,7 +576,7 @@ export default function DashboardSidebar() {
             className="flex items-center gap-3 py-3 text-red-500/60 hover:text-red-500 transition-all font-black uppercase tracking-widest text-[9px]"
           >
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" />
             </svg>
             Cerrar Sesión
           </button>
@@ -414,29 +584,71 @@ export default function DashboardSidebar() {
       </div>
 
       {/* 3. CLASSIC DESKTOP SIDEBAR */}
-      <aside className="hidden lg:flex w-72 bg-card-bg border-r border-card-border p-8 flex-col justify-between shrink-0 min-h-screen sticky top-0 h-screen">
-        <div className="space-y-12">
-          <Link href="/" className="inline-block text-xl font-black tracking-tighter">
-            NECTAR <span className="text-nectar-gold">LABS</span>
-          </Link>
-          
-          <nav className="h-[65vh] overflow-y-auto pr-1 custom-scrollbar">
+      <aside className={`hidden lg:flex ${isCollapsed ? 'w-24 px-4 py-8 items-center' : 'w-72 p-8'} bg-card-bg border-r border-card-border flex-col shrink-0 min-h-screen sticky top-0 h-screen transition-all duration-300`}>
+        {/* Header (Logo + Collapse Button) */}
+        {!isCollapsed ? (
+          <div className="flex justify-between items-center w-full mb-8">
+            <Link href="/" className="text-xl font-black tracking-tighter truncate">
+              NECTAR <span className="text-nectar-gold">LABS</span>
+            </Link>
+            <button
+              onClick={toggleCollapse}
+              title="Contraer Menú"
+              className="w-8 h-8 rounded-xl border border-card-border flex items-center justify-center text-foreground/50 hover:text-nectar-gold hover:border-nectar-gold/40 transition-all shrink-0 ml-2 cursor-pointer"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5} className="w-4 h-4">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+              </svg>
+            </button>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center gap-4 w-full mb-8">
+            <Link href="/" className="text-xl font-black tracking-tighter text-nectar-gold">
+              N.
+            </Link>
+            <button
+              onClick={toggleCollapse}
+              title="Expandir Menú"
+              className="w-8 h-8 rounded-xl border border-card-border flex items-center justify-center text-foreground/50 hover:text-nectar-gold hover:border-nectar-gold/40 transition-all shrink-0 cursor-pointer"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5} className="w-4 h-4">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+              </svg>
+            </button>
+          </div>
+        )}
+
+        {/* Scrollable Navigation Area containing the relative footer */}
+        <div className="w-full flex-1 overflow-y-auto pr-1 custom-scrollbar flex flex-col justify-start gap-8">
+          <nav className="flex-1">
             {renderNavLinks()}
           </nav>
-        </div>
+          
+          <div className={`pt-6 border-t border-card-border/60 flex ${isCollapsed ? 'flex-col items-center gap-4' : 'items-center justify-between gap-2'} w-full`}>
+            {!isCollapsed ? (
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-3 py-3 text-red-500/60 hover:text-red-500 transition-all font-black uppercase tracking-widest text-[9px] group cursor-pointer"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-0.5">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" />
+                </svg>
+                <span>Cerrar Sesión</span>
+              </button>
+            ) : (
+              <button
+                onClick={handleLogout}
+                title="Cerrar Sesión"
+                className="flex items-center justify-center w-10 h-10 rounded-2xl text-red-500/60 hover:text-red-500 hover:bg-red-500/10 transition-all cursor-pointer"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" />
+                </svg>
+              </button>
+            )}
 
-        <div className="pt-6 border-t border-card-border/60 flex items-center justify-between">
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-3 py-3 text-red-500/60 hover:text-red-500 transition-all font-black uppercase tracking-widest text-[9px] group"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-0.5">
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>
-            </svg>
-            <span>Cerrar Sesión</span>
-          </button>
-
-          <ThemeToggle />
+            <ThemeToggle />
+          </div>
         </div>
       </aside>
     </>

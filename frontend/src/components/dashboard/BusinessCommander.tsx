@@ -974,7 +974,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
                     {inst.project_name && (
                       <p className="text-[8px] font-bold text-nectar-gold opacity-80 mt-0.5">{inst.project_name}</p>
                     )}
-                    <p className="text-[7px] font-bold text-white/40 uppercase tracking-wider mt-1">Mensualidad {inst.installment_number} de 6</p>
+                    <p className="text-[7px] font-bold text-foreground/40 uppercase tracking-wider mt-1">Mensualidad {inst.installment_number} de 6</p>
                   </td>
                   <td className="py-4 text-right font-bold text-sm">
                     ${parseFloat(inst.amount).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
@@ -1418,7 +1418,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
                       <td className="py-3.5 text-center font-mono font-black text-sm text-nectar-gold">
                         {parseFloat(comm.commission_percentage)}%
                       </td>
-                      <td className="py-3.5 text-right font-mono font-black text-sm text-white">
+                      <td className="py-3.5 text-right font-mono font-black text-sm text-foreground">
                         ${parseFloat(comm.amount || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
                       </td>
                       <td className="py-3.5 text-center">

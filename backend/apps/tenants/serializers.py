@@ -14,7 +14,9 @@ class TenantSerializer(serializers.ModelSerializer):
             'logo', 'logo_url', 'portal_title', 'footer_text', 'is_active', 'created_at', 'updated_at',
             'active_addons',
             # 6-Color Palette
-            'theme_color', 'accent_color', 'bg_color', 'card_bg_color', 'text_color', 'border_color'
+            'theme_color', 'accent_color', 'bg_color', 'card_bg_color', 'text_color', 'border_color',
+            # Pollen/Nectar Falling settings
+            'pollen_active', 'pollen_icon', 'pollen_color'
         ]
         read_only_fields = ['id', 'owner', 'api_key', 'created_at', 'updated_at']
 
@@ -43,7 +45,9 @@ class TenantPublicSerializer(serializers.ModelSerializer):
             'welcome_message', 'require_customer_info', 'active_addons',
             'portal_title', 'footer_text',
             # 6-Color Palette
-            'theme_color', 'accent_color', 'bg_color', 'card_bg_color', 'text_color', 'border_color'
+            'theme_color', 'accent_color', 'bg_color', 'card_bg_color', 'text_color', 'border_color',
+            # Pollen/Nectar Falling settings
+            'pollen_active', 'pollen_icon', 'pollen_color'
         ]
 
     def get_logo_url(self, obj):

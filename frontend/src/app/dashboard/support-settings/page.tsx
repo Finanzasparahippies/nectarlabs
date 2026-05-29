@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { fetcher } from '../../../lib/api';
 import DashboardSidebar from '../../../components/DashboardSidebar';
+import Toast from '../../../components/ui/Toast';
+import ConfirmModal from '../../../components/ui/ConfirmModal';
 
 interface Tenant {
   id: string;
@@ -40,6 +42,17 @@ export default function SupportSettingsPage() {
   const [origin, setOrigin] = useState('https://nectarlabs.dev');
   const [activeSubTab, setActiveSubTab] = useState<'branding' | 'routing' | 'widget'>('branding');
   const [copied, setCopied] = useState(false);
+
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'warning' | 'info' } | null>(null);
+  const [confirmModal, setConfirmModal] = useState<{
+    title: string;
+    message: string;
+    onConfirm: () => void;
+  } | null>(null);
+
+  const showToast = (message: string, type: 'success' | 'error' | 'warning' | 'info' = 'success') => {
+    setToast({ message, type });
+  };
   
   // DNS verification states
   const [isValidatingDomain, setIsValidatingDomain] = useState(false);
@@ -139,9 +152,9 @@ export default function SupportSettingsPage() {
       selectTenant(created);
       setNewTenantName('');
       setNewTenantSubdomain('');
-      alert('Configuración de soporte iniciada correctamente.');
+      showToast('Configuración de soporte iniciada correctamente.', 'success');
     } catch (err: any) {
-      alert(err.message || 'Error al inicializar la configuración de soporte.');
+      showToast(err.message || 'Error al inicializar la configuración de soporte.', 'error');
     } finally {
       setIsSubmitting(false);
     }
@@ -187,9 +200,9 @@ export default function SupportSettingsPage() {
       }
       setEditLogoFile(null);
       setEditLogoPreview(null);
-      alert('Configuración guardada correctamente.');
+      showToast('Configuración guardada correctamente.', 'success');
     } catch (err: any) {
-      alert(err.message || 'Error al guardar los cambios.');
+      showToast(err.message || 'Error al guardar los cambios.', 'error');
     } finally {
       setIsSubmitting(false);
     }
@@ -217,24 +230,23 @@ export default function SupportSettingsPage() {
 
   const handleRegenerateKey = async () => {
     if (!selectedTenant) return;
-    if (
-      !confirm(
-        '¿Estás seguro de que deseas regenerar la API Key de soporte? Esto romperá inmediatamente cualquier integración que esté usando la API Key actual.'
-      )
-    )
-      return;
-
-    try {
-      const res = await fetcher(`/tenants/${selectedTenant.id}/regenerate_api_key/`, {
-        method: 'POST',
-      });
-      const updatedTenant = { ...selectedTenant, api_key: res.api_key };
-      setSelectedTenant(updatedTenant);
-      setTenants((prev) => prev.map((t) => (t.id === updatedTenant.id ? updatedTenant : t)));
-      alert('API Key regenerada con éxito.');
-    } catch (err: any) {
-      alert(err.message || 'Error al regenerar la API Key.');
-    }
+    setConfirmModal({
+      title: 'Regenerar API Key',
+      message: '¿Estás seguro de que deseas regenerar la API Key de soporte? Esto romperá inmediatamente cualquier integración que esté usando la API Key actual.',
+      onConfirm: async () => {
+        try {
+          const res = await fetcher(`/tenants/${selectedTenant.id}/regenerate_api_key/`, {
+            method: 'POST',
+          });
+          const updatedTenant = { ...selectedTenant, api_key: res.api_key };
+          setSelectedTenant(updatedTenant);
+          setTenants((prev) => prev.map((t) => (t.id === updatedTenant.id ? updatedTenant : t)));
+          showToast('API Key regenerada con éxito.', 'success');
+        } catch (err: any) {
+          showToast(err.message || 'Error al regenerar la API Key.', 'error');
+        }
+      }
+    });
   };
 
   const copyToClipboard = (text: string) => {
@@ -489,125 +501,125 @@ export default function SupportSettingsPage() {
                       </div>
 
                       {/* 6-Color Palette Grid */}
-                      <div className="space-y-3 pt-4 border-t border-card-border">
+                      <div className="space-y-4 pt-4 border-t border-card-border">
                         <h4 className="text-[10px] font-black uppercase tracking-widest text-nectar-gold">Paleta de Colores Corporativa (6 Colores)</h4>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                           {/* 1. Theme Color */}
-                          <div className="space-y-1">
-                            <label className="text-[8px] font-black uppercase tracking-widest text-white/45">Primario (Tema)</label>
-                            <div className="flex gap-2">
+                          <div className="p-4 bg-foreground/[0.01] border border-card-border/40 rounded-2xl space-y-3">
+                            <label className="text-[8px] font-black uppercase tracking-widest text-white/45 block">Primario (Tema)</label>
+                            <div className="flex items-center gap-3">
                               <input
                                 type="color"
                                 value={editThemeColor}
                                 onChange={(e) => setEditThemeColor(e.target.value)}
-                                className="w-10 h-10 bg-background border border-card-border rounded-xl cursor-pointer p-1"
+                                className="shrink-0 w-11 h-11 rounded-xl cursor-pointer border border-card-border bg-transparent p-0 overflow-hidden [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:border-0 [&::-webkit-color-swatch]:rounded-xl transition-transform hover:scale-105"
                               />
                               <input
                                 type="text"
                                 value={editThemeColor}
                                 onChange={(e) => setEditThemeColor(e.target.value)}
                                 placeholder="#C68A1E"
-                                className="flex-1 bg-background border border-card-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-nectar-gold uppercase text-center font-mono"
+                                className="flex-1 bg-background border border-card-border rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-nectar-gold uppercase text-center font-mono font-bold tracking-wider"
                               />
                             </div>
                           </div>
 
                           {/* 2. Accent Color */}
-                          <div className="space-y-1">
-                            <label className="text-[8px] font-black uppercase tracking-widest text-white/45">Acento</label>
-                            <div className="flex gap-2">
+                          <div className="p-4 bg-foreground/[0.01] border border-card-border/40 rounded-2xl space-y-3">
+                            <label className="text-[8px] font-black uppercase tracking-widest text-white/45 block">Acento</label>
+                            <div className="flex items-center gap-3">
                               <input
                                 type="color"
                                 value={editAccentColor}
                                 onChange={(e) => setEditAccentColor(e.target.value)}
-                                className="w-10 h-10 bg-background border border-card-border rounded-xl cursor-pointer p-1"
+                                className="shrink-0 w-11 h-11 rounded-xl cursor-pointer border border-card-border bg-transparent p-0 overflow-hidden [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:border-0 [&::-webkit-color-swatch]:rounded-xl transition-transform hover:scale-105"
                               />
                               <input
                                 type="text"
                                 value={editAccentColor}
                                 onChange={(e) => setEditAccentColor(e.target.value)}
                                 placeholder="#10B981"
-                                className="flex-1 bg-background border border-card-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-nectar-gold uppercase text-center font-mono"
+                                className="flex-1 bg-background border border-card-border rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-nectar-gold uppercase text-center font-mono font-bold tracking-wider"
                               />
                             </div>
                           </div>
 
                           {/* 3. Text Color */}
-                          <div className="space-y-1">
-                            <label className="text-[8px] font-black uppercase tracking-widest text-white/45">Texto</label>
-                            <div className="flex gap-2">
+                          <div className="p-4 bg-foreground/[0.01] border border-card-border/40 rounded-2xl space-y-3">
+                            <label className="text-[8px] font-black uppercase tracking-widest text-white/45 block">Texto Principal</label>
+                            <div className="flex items-center gap-3">
                               <input
                                 type="color"
                                 value={editTextColor}
                                 onChange={(e) => setEditTextColor(e.target.value)}
-                                className="w-10 h-10 bg-background border border-card-border rounded-xl cursor-pointer p-1"
+                                className="shrink-0 w-11 h-11 rounded-xl cursor-pointer border border-card-border bg-transparent p-0 overflow-hidden [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:border-0 [&::-webkit-color-swatch]:rounded-xl transition-transform hover:scale-105"
                               />
                               <input
                                 type="text"
                                 value={editTextColor}
                                 onChange={(e) => setEditTextColor(e.target.value)}
                                 placeholder="#FFFFFF"
-                                className="flex-1 bg-background border border-card-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-nectar-gold uppercase text-center font-mono"
+                                className="flex-1 bg-background border border-card-border rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-nectar-gold uppercase text-center font-mono font-bold tracking-wider"
                               />
                             </div>
                           </div>
 
                           {/* 4. Canvas BG Color */}
-                          <div className="space-y-1">
-                            <label className="text-[8px] font-black uppercase tracking-widest text-white/45">Fondo Lienzo</label>
-                            <div className="flex gap-2">
+                          <div className="p-4 bg-foreground/[0.01] border border-card-border/40 rounded-2xl space-y-3">
+                            <label className="text-[8px] font-black uppercase tracking-widest text-white/45 block">Fondo Lienzo</label>
+                            <div className="flex items-center gap-3">
                               <input
                                 type="color"
                                 value={editBgColor}
                                 onChange={(e) => setEditBgColor(e.target.value)}
-                                className="w-10 h-10 bg-background border border-card-border rounded-xl cursor-pointer p-1"
+                                className="shrink-0 w-11 h-11 rounded-xl cursor-pointer border border-card-border bg-transparent p-0 overflow-hidden [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:border-0 [&::-webkit-color-swatch]:rounded-xl transition-transform hover:scale-105"
                               />
                               <input
                                 type="text"
                                 value={editBgColor}
                                 onChange={(e) => setEditBgColor(e.target.value)}
                                 placeholder="#020403"
-                                className="flex-1 bg-background border border-card-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-nectar-gold uppercase text-center font-mono"
+                                className="flex-1 bg-background border border-card-border rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-nectar-gold uppercase text-center font-mono font-bold tracking-wider"
                               />
                             </div>
                           </div>
 
                           {/* 5. Card BG Color */}
-                          <div className="space-y-1">
-                            <label className="text-[8px] font-black uppercase tracking-widest text-white/45">Fondo Tarjetas</label>
-                            <div className="flex gap-2">
+                          <div className="p-4 bg-foreground/[0.01] border border-card-border/40 rounded-2xl space-y-3">
+                            <label className="text-[8px] font-black uppercase tracking-widest text-white/45 block">Fondo Tarjetas</label>
+                            <div className="flex items-center gap-3">
                               <input
                                 type="color"
                                 value={editCardBgColor}
                                 onChange={(e) => setEditCardBgColor(e.target.value)}
-                                className="w-10 h-10 bg-background border border-card-border rounded-xl cursor-pointer p-1"
+                                className="shrink-0 w-11 h-11 rounded-xl cursor-pointer border border-card-border bg-transparent p-0 overflow-hidden [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:border-0 [&::-webkit-color-swatch]:rounded-xl transition-transform hover:scale-105"
                               />
                               <input
                                 type="text"
                                 value={editCardBgColor}
                                 onChange={(e) => setEditCardBgColor(e.target.value)}
                                 placeholder="#050a06"
-                                className="flex-1 bg-background border border-card-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-nectar-gold uppercase text-center font-mono"
+                                className="flex-1 bg-background border border-card-border rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-nectar-gold uppercase text-center font-mono font-bold tracking-wider"
                               />
                             </div>
                           </div>
 
                           {/* 6. Border Color */}
-                          <div className="space-y-1">
-                            <label className="text-[8px] font-black uppercase tracking-widest text-white/45">Bordes / Divisiones</label>
-                            <div className="flex gap-2">
+                          <div className="p-4 bg-foreground/[0.01] border border-card-border/40 rounded-2xl space-y-3">
+                            <label className="text-[8px] font-black uppercase tracking-widest text-white/45 block">Bordes / Divisiones</label>
+                            <div className="flex items-center gap-3">
                               <input
                                 type="color"
                                 value={editBorderColor}
                                 onChange={(e) => setEditBorderColor(e.target.value)}
-                                className="w-10 h-10 bg-background border border-card-border rounded-xl cursor-pointer p-1"
+                                className="shrink-0 w-11 h-11 rounded-xl cursor-pointer border border-card-border bg-transparent p-0 overflow-hidden [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:border-0 [&::-webkit-color-swatch]:rounded-xl transition-transform hover:scale-105"
                               />
                               <input
                                 type="text"
                                 value={editBorderColor}
                                 onChange={(e) => setEditBorderColor(e.target.value)}
                                 placeholder="#151F18"
-                                className="flex-1 bg-background border border-card-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-nectar-gold uppercase text-center font-mono"
+                                className="flex-1 bg-background border border-card-border rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-nectar-gold uppercase text-center font-mono font-bold tracking-wider"
                               />
                             </div>
                           </div>
@@ -879,6 +891,27 @@ export default function SupportSettingsPage() {
           </div>
         )}
       </main>
+
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
+
+      {confirmModal && (
+        <ConfirmModal
+          isOpen={true}
+          title={confirmModal.title}
+          message={confirmModal.message}
+          onConfirm={() => {
+            confirmModal.onConfirm();
+            setConfirmModal(null);
+          }}
+          onCancel={() => setConfirmModal(null)}
+        />
+      )}
     </div>
   );
 }

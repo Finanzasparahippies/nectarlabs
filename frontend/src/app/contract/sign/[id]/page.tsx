@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import Toast from "@/components/ui/Toast";
 import SignaturePad from "react-signature-canvas";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
@@ -15,6 +16,11 @@ export default function ClientSignPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'warning' | 'info' } | null>(null);
+
+  const showToast = (message: string, type: 'success' | 'error' | 'warning' | 'info' = 'success') => {
+    setToast({ message, type });
+  };
 
   // Billing states
   const [fullName, setFullName] = useState("");
@@ -42,16 +48,16 @@ export default function ClientSignPage() {
 
   const handleSign = async () => {
     if (!fullName.trim()) {
-      return alert("El Nombre Completo o Razón Social es requerido para el contrato.");
+      return showToast("El Nombre Completo o Razón Social es requerido para el contrato.", "warning");
     }
     if (!taxId.trim()) {
-      return alert("El RFC o Tax ID es requerido para la facturación.");
+      return showToast("El RFC o Tax ID es requerido para la facturación.", "warning");
     }
     if (!address.trim()) {
-      return alert("La Dirección Fiscal es requerida.");
+      return showToast("La Dirección Fiscal es requerida.", "warning");
     }
     if (!sigPad.current || sigPad.current.isEmpty()) {
-      return alert("Por favor, dibuja tu firma antes de continuar.");
+      return showToast("Por favor, dibuja tu firma antes de continuar.", "warning");
     }
     
     setSaving(true);
@@ -269,6 +275,13 @@ export default function ClientSignPage() {
           </div>
         </div>
       </div>
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
     </div>
   );
 }

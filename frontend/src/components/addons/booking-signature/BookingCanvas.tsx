@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
+import Toast from '../../ui/Toast';
 
 interface BookingCanvasProps {
   primaryColor: string;
@@ -10,6 +11,7 @@ export default function BookingCanvas({ primaryColor }: BookingCanvasProps) {
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedTime, setSelectedTime] = useState('');
   const [name, setName] = useState('');
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'warning' | 'info' } | null>(null);
   const [isSigned, setIsSigned] = useState(false);
   const [isBooked, setIsBooked] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -79,7 +81,7 @@ export default function BookingCanvas({ primaryColor }: BookingCanvasProps) {
   const handleBooking = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedDate || !selectedTime || !name || !isSigned) {
-      alert('Por favor completa todos los campos y firma la propuesta.');
+      setToast({ message: 'Por favor completa todos los campos y firma la propuesta.', type: 'warning' });
       return;
     }
     setIsBooked(true);
@@ -216,6 +218,14 @@ export default function BookingCanvas({ primaryColor }: BookingCanvasProps) {
             Reservar Cita y Firmar Propuesta
           </button>
         </form>
+      )}
+
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
       )}
     </div>
   );

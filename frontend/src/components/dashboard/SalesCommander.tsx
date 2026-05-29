@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { fetcher, API_URL } from '../../lib/api';
 import Toast from '../ui/Toast';
+import ConfirmModal from '../ui/ConfirmModal';
 
 const getInlineViewUrl = (url: string | null, type: 'quote' | 'contract' | 'receipt', id: string | number) => {
   if (!url) return '';
@@ -54,6 +55,11 @@ export default function SalesCommander() {
   const [loading, setLoading] = useState(true);
   const [activeDragOverColumn, setActiveDragOverColumn] = useState<string | null>(null);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'warning' | 'info' } | null>(null);
+  const [confirmModal, setConfirmModal] = useState<{
+    title: string;
+    message: string;
+    onConfirm: () => void;
+  } | null>(null);
 
   const showToast = (message: string, type: 'success' | 'error' | 'warning' | 'info' = 'success') => {
     setToast({ message, type });
@@ -181,22 +187,27 @@ export default function SalesCommander() {
     }
   };
 
-  const handleDeleteLead = async (leadId: number) => {
-    if (!window.confirm('¿Estás seguro de que deseas eliminar este prospecto?')) return;
-    const token = localStorage.getItem('token');
-    try {
-      const response = await fetch(`${API_URL}/leads/${leadId}/`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
+  const handleDeleteLead = (leadId: number) => {
+    setConfirmModal({
+      title: 'Eliminar Prospecto',
+      message: '¿Estás seguro de que deseas eliminar este prospecto?',
+      onConfirm: async () => {
+        const token = localStorage.getItem('token');
+        try {
+          const response = await fetch(`${API_URL}/leads/${leadId}/`, {
+            method: 'DELETE',
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+          if (!response.ok) throw new Error('Error al eliminar prospecto');
+          setLeads(prev => prev.filter(l => l.id !== leadId));
+          showToast('Prospecto eliminado correctamente.', 'success');
+        } catch (err) {
+          showToast('Error al eliminar el prospecto.', 'error');
         }
-      });
-      if (!response.ok) throw new Error('Error al eliminar prospecto');
-      setLeads(prev => prev.filter(l => l.id !== leadId));
-      showToast('Prospecto eliminado correctamente.', 'success');
-    } catch (err) {
-      showToast('Error al eliminar el prospecto.', 'error');
-    }
+      }
+    });
   };
 
   // Quick Notes modal
@@ -450,22 +461,27 @@ export default function SalesCommander() {
     }
   };
 
-  const handleDeleteQuote = async (quoteId: string) => {
-    if (!window.confirm('¿Estás seguro de que deseas eliminar esta cotización permanentemente?')) return;
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/quotes/${quoteId}/`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
+  const handleDeleteQuote = (quoteId: string) => {
+    setConfirmModal({
+      title: 'Eliminar Cotización',
+      message: '¿Estás seguro de que deseas eliminar esta cotización permanentemente?',
+      onConfirm: async () => {
+        try {
+          const token = localStorage.getItem('token');
+          const response = await fetch(`${API_URL}/quotes/${quoteId}/`, {
+            method: 'DELETE',
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+          if (!response.ok) throw new Error('Delete failed');
+          setQuotes(prev => prev.filter(q => q.id !== quoteId));
+          showToast('Cotización eliminada con éxito.', 'success');
+        } catch (err) {
+          showToast('Error al eliminar cotización.', 'error');
         }
-      });
-      if (!response.ok) throw new Error('Delete failed');
-      setQuotes(prev => prev.filter(q => q.id !== quoteId));
-      showToast('Cotización eliminada con éxito.', 'success');
-    } catch (err) {
-      showToast('Error al eliminar cotización.', 'error');
-    }
+      }
+    });
   };
 
   // Helper values
@@ -473,10 +489,23 @@ export default function SalesCommander() {
     return leads.filter(l => l.status === status);
   };
 
+  const calculateLeadCommission = (lead: Lead) => {
+    const val = parseFloat(lead.estimated_value) || 0;
+    // Commission model: 6 installments.
+    // Month 1: 10% of monthly payment (estimated_value / 6)
+    // Month 2: 5% of monthly payment
+    // Months 3-6: 2% of monthly payment each (total 4 months)
+    const monthlyPayment = val / 6;
+    const m1 = monthlyPayment * 0.10;
+    const m2 = monthlyPayment * 0.05;
+    const m3to6 = (monthlyPayment * 0.02) * 4;
+    return m1 + m2 + m3to6;
+  };
+
   const calculateTotalSalesWon = () => {
     return leads
       .filter(l => l.status === 'WON')
-      .reduce((sum, l) => sum + parseFloat(l.estimated_value), 0);
+      .reduce((sum, l) => sum + calculateLeadCommission(l), 0);
   };
 
   const calculateActiveProspects = () => {
@@ -493,11 +522,11 @@ export default function SalesCommander() {
   }
 
   const columns: Array<{ status: Lead['status']; title: string; color: string; bg: string }> = [
-    { status: 'PROSPECT', title: 'Prospectos', color: 'text-blue-400 border-blue-400/20', bg: 'bg-blue-500/5' },
-    { status: 'CONTACTED', title: 'Contactados', color: 'text-purple-400 border-purple-400/20', bg: 'bg-purple-500/5' },
-    { status: 'PROPOSAL', title: 'Propuesta Presentada', color: 'text-amber-400 border-amber-400/20', bg: 'bg-amber-500/5' },
-    { status: 'WON', title: 'Ganados (Won)', color: 'text-green-400 border-green-400/20', bg: 'bg-green-500/5' },
-    { status: 'LOST', title: 'Perdidos (Lost)', color: 'text-red-400 border-red-400/20', bg: 'bg-red-500/5' },
+    { status: 'PROSPECT', title: '🌸 Brotes de Flor (Prospectos)', color: 'text-blue-400 border-blue-400/20', bg: 'bg-blue-500/5' },
+    { status: 'CONTACTED', title: '🐝 Polinización (Contactados)', color: 'text-purple-400 border-purple-400/20', bg: 'bg-purple-500/5' },
+    { status: 'PROPOSAL', title: '🍯 Extracción de Néctar (Propuesta)', color: 'text-amber-400 border-amber-400/20', bg: 'bg-amber-500/5' },
+    { status: 'WON', title: '🏡 Miel en Panal (Ganados)', color: 'text-green-400 border-green-400/20', bg: 'bg-green-500/5' },
+    { status: 'LOST', title: '🥀 Flor Marchita (Perdidos)', color: 'text-red-400 border-red-400/20', bg: 'bg-red-500/5' },
   ];
 
   return (
@@ -507,22 +536,22 @@ export default function SalesCommander() {
         <div className="p-8 rounded-[2.5rem] bg-card-bg border border-card-border flex flex-col justify-between gap-4 relative overflow-hidden group shadow-lg min-h-[160px]">
           <div className="absolute top-0 right-0 w-32 h-32 bg-green-500/5 rounded-full blur-2xl -mr-10 -mt-10"></div>
           <div className="relative z-10">
-            <span className="text-[8px] font-black uppercase tracking-widest opacity-40">Valor Total Ganado</span>
+            <span className="text-[8px] font-black uppercase tracking-widest opacity-40">Néctar Cosechado (Comisiones)</span>
             <h3 className="text-3xl font-black tracking-tight mt-2 text-green-400 font-mono">
               ${calculateTotalSalesWon().toLocaleString('es-MX', { minimumFractionDigits: 2 })} <span className="text-xs font-bold text-foreground/50">MXN</span>
             </h3>
-            <p className="text-[9px] text-foreground/50 mt-1 uppercase tracking-wider font-bold">Suma de valores estimados de prospectos cerrados</p>
+            <p className="text-[9px] text-foreground/50 mt-1 uppercase tracking-wider font-bold">Porcentaje de ganancia correspondiente sobre miel en panal</p>
           </div>
         </div>
 
         <div className="p-8 rounded-[2.5rem] bg-card-bg border border-card-border flex flex-col justify-between gap-4 relative overflow-hidden group shadow-lg min-h-[160px]">
           <div className="absolute top-0 right-0 w-32 h-32 bg-nectar-gold/5 rounded-full blur-2xl -mr-10 -mt-10"></div>
           <div className="relative z-10">
-            <span className="text-[8px] font-black uppercase tracking-widest opacity-40">Prospectos Activos</span>
+            <span className="text-[8px] font-black uppercase tracking-widest opacity-40">Flores en Monitoreo (Prospectos)</span>
             <h3 className="text-3xl font-black tracking-tight mt-2 text-nectar-gold font-mono">
-              {calculateActiveProspects()} <span className="text-xs font-bold text-foreground/50">Clientes potenciales</span>
+              {calculateActiveProspects()} <span className="text-xs font-bold text-foreground/50">Flores activas</span>
             </h3>
-            <p className="text-[9px] text-foreground/50 mt-1 uppercase tracking-wider font-bold">Leads en seguimiento del pipeline</p>
+            <p className="text-[9px] text-foreground/50 mt-1 uppercase tracking-wider font-bold">Prospectos en la ruta de recolección</p>
           </div>
         </div>
 
@@ -530,13 +559,13 @@ export default function SalesCommander() {
           <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full blur-2xl -mr-10 -mt-10"></div>
           <div className="relative z-10 flex flex-col justify-between h-full">
             <div>
-              <span className="text-[8px] font-black uppercase tracking-widest opacity-40">Gestión de Pipeline</span>
-              <h3 className="text-xl font-black tracking-tight mt-2 text-white">
-                Agregar Nuevo Prospecto
+              <span className="text-[8px] font-black uppercase tracking-widest opacity-40">Ruta del Néctar</span>
+              <h3 className="text-xl font-black tracking-tight mt-2 text-foreground">
+                Sembrar Nueva Flor
               </h3>
             </div>
             <span className="text-[9px] text-nectar-gold uppercase tracking-wider font-black flex items-center gap-1 mt-4">
-              CREAR CLIENTE POTENCIAL ➔
+              INICIAR RUTA DE POLINIZACIÓN ➔
             </span>
           </div>
         </div>
@@ -546,127 +575,153 @@ export default function SalesCommander() {
       <section className="space-y-6">
         <div className="flex justify-between items-center">
           <div>
-            <h2 className="text-xs font-black uppercase tracking-[0.3em] opacity-30">Sales Pipeline (Kanban)</h2>
-            <p className="text-[9px] font-bold text-foreground/40 mt-1 uppercase tracking-wider">Arrastra y suelta las tarjetas para actualizar la etapa de venta</p>
+            <h2 className="text-xs font-black uppercase tracking-[0.3em] opacity-30">Ruta del Néctar (Pipeline)</h2>
+            <p className="text-[9px] font-bold text-foreground/40 mt-1 uppercase tracking-wider">Arrastra las tarjetas para polinizar o extraer el néctar de las flores</p>
           </div>
           <button
             onClick={handleOpenCreateLead}
             className="px-5 py-2.5 bg-nectar-gold hover:bg-nectar-gold/90 text-background text-[9px] font-black uppercase tracking-widest rounded-xl transition-all font-bold hover:scale-[1.02]"
           >
-            + Agregar Prospecto
+            + Sembrar Flor
           </button>
         </div>
 
-        {/* Board Columns Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-          {columns.map(col => {
-            const colLeads = getLeadsByStatus(col.status);
-            const isDragOver = activeDragOverColumn === col.status;
+        {/* Board Columns Grid with Horizontal Scroll */}
+        <div className="w-full overflow-x-auto pb-6 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-card-border/60 hover:scrollbar-thumb-nectar-gold/30">
+          <div className="flex flex-row gap-6 min-w-max px-2">
+            {columns.map(col => {
+              const colLeads = getLeadsByStatus(col.status);
+              const isDragOver = activeDragOverColumn === col.status;
 
-            return (
-              <div
-                key={col.status}
-                onDragOver={(e) => handleDragOver(e, col.status)}
-                onDragLeave={handleDragLeave}
-                onDrop={(e) => handleDrop(e, col.status)}
-                className={`p-5 rounded-[2rem] bg-card-bg border transition-all duration-300 flex flex-col min-h-[500px] ${
-                  isDragOver ? 'border-nectar-gold bg-nectar-gold/5 scale-[1.01]' : 'border-card-border/60'
-                }`}
-              >
-                {/* Column Header */}
-                <div className="flex justify-between items-center mb-4 pb-2 border-b border-card-border/35">
-                  <span className={`text-[10px] font-black uppercase tracking-widest ${col.color}`}>
-                    {col.title}
-                  </span>
-                  <span className="px-2 py-0.5 bg-background/50 rounded-full text-[9px] font-bold opacity-60 font-mono">
-                    {colLeads.length}
-                  </span>
-                </div>
+              return (
+                <div
+                  key={col.status}
+                  onDragOver={(e) => handleDragOver(e, col.status)}
+                  onDragLeave={handleDragLeave}
+                  onDrop={(e) => handleDrop(e, col.status)}
+                  className={`p-6 rounded-[2.5rem] bg-card-bg border transition-all duration-300 flex flex-col min-h-[550px] w-[320px] md:w-[350px] shrink-0 shadow-lg ${
+                    isDragOver ? 'border-nectar-gold bg-nectar-gold/5 scale-[1.01] shadow-nectar-gold/5' : 'border-card-border/60'
+                  }`}
+                >
+                  {/* Column Header */}
+                  <div className="flex justify-between items-center mb-4 pb-2 border-b border-card-border/35">
+                    <span className={`text-[10px] font-black uppercase tracking-widest ${col.color}`}>
+                      {col.title}
+                    </span>
+                    <span className="px-2 py-0.5 bg-background/50 rounded-full text-[9px] font-bold opacity-60 font-mono">
+                      {colLeads.length}
+                    </span>
+                  </div>
 
-                {/* Column Cards Container */}
-                <div className="flex-1 space-y-4 overflow-y-auto max-h-[550px] pr-1">
-                  {colLeads.map(lead => (
-                    <div
-                      key={lead.id}
-                      draggable
-                      onDragStart={(e) => handleDragStart(e, lead.id)}
-                      className="p-5 rounded-2xl bg-background/50 border border-card-border/50 hover:border-nectar-gold/40 transition-all cursor-grab active:cursor-grabbing group relative flex flex-col justify-between min-h-[140px] shadow-sm hover:shadow-md"
-                    >
-                      <div>
-                        <div className="flex justify-between items-start gap-2">
-                          <h4 className="font-black text-xs text-white group-hover:text-nectar-gold transition-colors line-clamp-1">
-                            {lead.name}
-                          </h4>
-                          <span className="text-[9px] font-bold text-nectar-gold font-mono shrink-0">
-                            ${parseFloat(lead.estimated_value).toLocaleString('es-MX')}
-                          </span>
-                        </div>
-                        
-                        {lead.project_idea && (
-                          <p className="text-[9.5px] text-foreground/50 line-clamp-2 mt-1 leading-relaxed">
-                            {lead.project_idea}
-                          </p>
-                        )}
-
-                        <div className="mt-3 space-y-1 text-[8.5px] font-bold text-foreground/40 font-mono">
-                          {lead.email && <div className="truncate">✉ {lead.email}</div>}
-                          {lead.phone && <div>📞 {lead.phone}</div>}
-                        </div>
-                      </div>
-
-                      {/* Card Actions Footer */}
-                      <div className="flex justify-between items-center gap-2 mt-4 pt-2 border-t border-card-border/20">
-                        <button
-                          onClick={() => handleOpenNotes(lead)}
-                          className="text-[8px] font-bold uppercase tracking-wider text-foreground/50 hover:text-white"
-                          title="Notas de seguimiento"
-                        >
-                          📝 Notas
-                        </button>
-                        
-                        <div className="flex items-center gap-2">
-                          {col.status !== 'WON' && col.status !== 'LOST' && (
-                            <button
-                              onClick={() => handleOpenCreateQuote(lead)}
-                              className="px-2 py-1 bg-nectar-gold/10 hover:bg-nectar-gold hover:text-background text-nectar-gold text-[7.5px] font-black uppercase tracking-wider rounded border border-nectar-gold/20 transition-all"
-                            >
-                              Cotizar
-                            </button>
+                  {/* Column Cards Container */}
+                  <div className="flex-1 space-y-4 overflow-y-auto max-h-[550px] pr-1">
+                    {colLeads.map(lead => (
+                      <div
+                        key={lead.id}
+                        draggable
+                        onDragStart={(e) => handleDragStart(e, lead.id)}
+                        className="p-5 rounded-2xl bg-background/50 border border-card-border/50 hover:border-nectar-gold/40 transition-all cursor-grab active:cursor-grabbing group relative flex flex-col justify-between min-h-[140px] shadow-sm hover:shadow-md"
+                      >
+                        <div>
+                          <div className="flex justify-between items-start gap-2">
+                            <h4 className="font-black text-xs text-foreground group-hover:text-nectar-gold transition-colors line-clamp-1">
+                              {lead.name}
+                            </h4>
+                            <div className="flex flex-col items-end text-right shrink-0">
+                              <span className="text-[9px] font-bold text-nectar-gold font-mono" title="Comisión Estimada (10% Mes 1, 5% Mes 2, 2% Meses 3-6)">
+                                ${calculateLeadCommission(lead).toLocaleString('es-MX', { maximumFractionDigits: 0 })}
+                              </span>
+                              <span className="text-[7.5px] text-foreground/45 font-mono">
+                                Val: ${parseFloat(lead.estimated_value).toLocaleString('es-MX', { maximumFractionDigits: 0 })}
+                              </span>
+                            </div>
+                          </div>
+                          
+                          {lead.project_idea && (
+                            <p className="text-[9.5px] text-foreground/50 line-clamp-2 mt-1 leading-relaxed">
+                              {lead.project_idea}
+                            </p>
                           )}
+
+                          <div className="mt-3 space-y-1 text-[8.5px] font-bold text-foreground/40 font-mono">
+                            {lead.email && <div className="truncate">✉ {lead.email}</div>}
+                            {lead.phone && <div>📞 {lead.phone}</div>}
+                          </div>
+                        </div>
+
+                        {/* Card Actions Footer */}
+                        <div className="flex justify-between items-center gap-2 mt-4 pt-2 border-t border-card-border/20">
                           <button
-                            onClick={() => handleOpenEditLead(lead)}
-                            className="text-[8px] font-bold uppercase tracking-wider text-foreground/30 hover:text-white"
+                            onClick={() => handleOpenNotes(lead)}
+                            className="text-[8px] font-bold uppercase tracking-wider text-foreground/50 hover:text-nectar-gold"
+                            title="Notas de seguimiento"
                           >
-                            Editar
+                            📝 Notas
                           </button>
-                          <button
-                            onClick={() => handleDeleteLead(lead.id)}
-                            className="text-[8px] font-bold uppercase tracking-wider text-red-500/50 hover:text-red-500"
-                          >
-                            ✖
-                          </button>
+                          
+                          <div className="flex items-center gap-2">
+                            {col.status !== 'WON' && col.status !== 'LOST' && (
+                              <button
+                                onClick={() => handleOpenCreateQuote(lead)}
+                                className="px-2 py-1 bg-nectar-gold/10 hover:bg-nectar-gold hover:text-background text-nectar-gold text-[7.5px] font-black uppercase tracking-wider rounded border border-nectar-gold/20 transition-all"
+                              >
+                                Cotizar
+                              </button>
+                            )}
+                            <button
+                              onClick={() => handleOpenEditLead(lead)}
+                              className="text-[8px] font-bold uppercase tracking-wider text-foreground/30 hover:text-nectar-gold"
+                            >
+                              Editar
+                            </button>
+                            <button
+                              onClick={() => handleDeleteLead(lead.id)}
+                              className="text-[8px] font-bold uppercase tracking-wider text-red-500/50 hover:text-red-500"
+                            >
+                              ✖
+                            </button>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
 
-                  {colLeads.length === 0 && (
-                    <div className="h-full flex items-center justify-center py-20 text-center text-[9px] font-black uppercase tracking-widest opacity-20 border border-dashed border-card-border/40 rounded-2xl">
-                      Arrastrar aquí
-                    </div>
-                  )}
+                    {colLeads.length === 0 && (
+                      <div className="h-full flex items-center justify-center py-20 text-center text-[9px] font-black uppercase tracking-widest opacity-20 border border-dashed border-card-border/40 rounded-2xl">
+                        Arrastrar aquí
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       </section>
 
       {/* Quotes History Section */}
       <section className="p-8 md:p-10 rounded-[3rem] bg-card-bg border border-card-border shadow-xl relative">
-        <div className="mb-8">
-          <h3 className="text-xs font-black uppercase tracking-[0.3em] opacity-30">Tus Cotizaciones Generadas</h3>
-          <p className="text-[9px] font-bold text-foreground/40 mt-1 uppercase tracking-wider">Registro de propuestas modulares emitidas e historial de descargas</p>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+          <div>
+            <h3 className="text-xs font-black uppercase tracking-[0.3em] opacity-30">Tus Cotizaciones Generadas</h3>
+            <p className="text-[9px] font-bold text-foreground/40 mt-1 uppercase tracking-wider">Registro de propuestas modulares emitidas e historial de descargas</p>
+          </div>
+          <button
+            onClick={() => {
+              if (leads.length === 0) {
+                showToast('Primero crea un prospecto para poder generarle una cotización.', 'warning');
+                return;
+              }
+              const firstLead = leads[0];
+              setQuoteLead(firstLead);
+              setQuoteProjectName(firstLead.project_idea || '');
+              setQuoteDescription(`Propuesta técnica y económica para ${firstLead.name}`);
+              setSelectedModules([]);
+              setShowQuoteModal(true);
+            }}
+            className="px-5 py-2.5 bg-nectar-gold hover:bg-nectar-gold/90 text-background text-[9px] font-black uppercase tracking-widest rounded-xl transition-all font-bold hover:scale-[1.02] shadow-lg shadow-nectar-gold/15"
+          >
+            + Nueva Cotización
+          </button>
         </div>
 
         <div className="overflow-x-auto">
@@ -786,7 +841,7 @@ export default function SalesCommander() {
           <div className="bg-card-bg border border-card-border rounded-[2.5rem] p-8 md:p-10 max-w-xl w-full relative overflow-hidden shadow-2xl">
             <div className="absolute top-0 right-0 w-32 h-32 bg-nectar-gold/5 rounded-full blur-2xl -mr-10 -mt-10"></div>
             
-            <h3 className="text-2xl font-black tracking-tight text-white mb-6">
+            <h3 className="text-2xl font-black tracking-tight text-foreground mb-6">
               {editingLead ? 'Editar Prospecto' : 'Nuevo Prospecto'}
             </h3>
 
@@ -917,7 +972,7 @@ export default function SalesCommander() {
           <div className="bg-card-bg border border-card-border rounded-[2.5rem] p-8 md:p-10 max-w-lg w-full relative overflow-hidden shadow-2xl">
             <div className="absolute top-0 right-0 w-32 h-32 bg-nectar-gold/5 rounded-full blur-2xl -mr-10 -mt-10"></div>
             
-            <h3 className="text-xl font-black tracking-tight text-white mb-2">
+            <h3 className="text-xl font-black tracking-tight text-foreground mb-2">
               Notas de Seguimiento
             </h3>
             <p className="text-[8px] font-black uppercase tracking-widest text-nectar-gold mb-6">{notesLead.name}</p>
@@ -963,7 +1018,7 @@ export default function SalesCommander() {
             <div className="flex justify-between items-start mb-6">
               <div>
                 <span className="px-2 py-0.5 bg-nectar-gold/10 text-nectar-gold text-[7.5px] font-black uppercase tracking-widest rounded-full">Consola de Vendedor</span>
-                <h3 className="text-3xl font-black tracking-tighter mt-2 text-white">Cotizador Modular Rápido</h3>
+                <h3 className="text-3xl font-black tracking-tighter mt-2 text-foreground">Cotizador Modular Rápido</h3>
                 <p className="text-[9px] text-foreground/45 uppercase tracking-wider mt-1">Generando propuesta para el prospecto: <strong>{quoteLead.name}</strong></p>
               </div>
               <button
@@ -984,15 +1039,28 @@ export default function SalesCommander() {
               {/* Form Row 1: Client Data */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-background/20 p-5 rounded-2xl border border-card-border/30">
                 <div className="space-y-4">
-                  <h4 className="text-[10px] font-black uppercase tracking-widest text-nectar-gold border-b border-card-border/25 pb-1">Datos del Cliente</h4>
-                  <div className="grid grid-cols-2 gap-4 text-[10px]">
+                  <h4 className="text-[10px] font-black uppercase tracking-widest text-nectar-gold border-b border-card-border/25 pb-1">Seleccionar Cliente / Prospecto</h4>
+                  <div className="space-y-3">
                     <div>
-                      <span className="opacity-50">Nombre / Razón Social:</span>
-                      <p className="font-bold text-white text-xs mt-1">{quoteLead.name}</p>
-                    </div>
-                    <div>
-                      <span className="opacity-50">Email de Contacto:</span>
-                      <p className="font-bold text-white text-xs mt-1 truncate">{quoteLead.email || '—'}</p>
+                      <label className="block text-[8px] font-black uppercase tracking-wider text-foreground/50 mb-1">Prospecto a Cotizar *</label>
+                      <select
+                        value={quoteLead.id}
+                        onChange={(e) => {
+                          const selected = leads.find(l => l.id === parseInt(e.target.value));
+                          if (selected) {
+                            setQuoteLead(selected);
+                            setQuoteProjectName(selected.project_idea || '');
+                            setQuoteDescription(`Propuesta técnica y económica para ${selected.name}`);
+                          }
+                        }}
+                        className="w-full bg-background border border-card-border rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-nectar-gold text-foreground font-bold"
+                      >
+                        {leads.map(l => (
+                          <option key={l.id} value={l.id}>
+                            {l.name} ({l.email || 'Sin email'})
+                          </option>
+                        ))}
+                      </select>
                     </div>
                   </div>
                 </div>
@@ -1070,7 +1138,7 @@ export default function SalesCommander() {
                         />
                         <div className="min-w-0">
                           <div className="flex justify-between items-start gap-1">
-                            <span className="font-black text-xs text-white truncate">{mod.name}</span>
+                            <span className="font-black text-xs text-foreground truncate">{mod.name}</span>
                             <span className="text-[10px] font-bold text-nectar-gold font-mono shrink-0">${mod.price.toLocaleString()}</span>
                           </div>
                           <p className="text-[8.5px] text-foreground/50 mt-1 line-clamp-2 leading-relaxed">{mod.description}</p>
@@ -1084,7 +1152,7 @@ export default function SalesCommander() {
               {/* Selected Modules Adjustments List */}
               {selectedModules.length > 0 && (
                 <div className="space-y-4 bg-background/30 p-5 rounded-3xl border border-card-border/40">
-                  <h4 className="text-[10px] font-black uppercase tracking-widest text-white border-b border-card-border/25 pb-2">Desglose de Cotización (Edición en Tiempo Real)</h4>
+                  <h4 className="text-[10px] font-black uppercase tracking-widest text-foreground border-b border-card-border/25 pb-2">Desglose de Cotización (Edición en Tiempo Real)</h4>
                   <div className="space-y-4 max-h-[220px] overflow-y-auto pr-1">
                     {selectedModules.map((mod, idx) => (
                       <div key={mod.key} className="flex gap-4 items-start bg-background/50 border border-card-border/50 p-4 rounded-2xl">
@@ -1093,7 +1161,7 @@ export default function SalesCommander() {
                             type="text"
                             value={mod.name}
                             onChange={(e) => handleEditSelectedModule(idx, 'name', e.target.value)}
-                            className="bg-transparent border-b border-card-border/40 focus:border-nectar-gold focus:outline-none text-xs font-black text-white w-full pb-1 uppercase tracking-wider"
+                            className="bg-transparent border-b border-card-border/40 focus:border-nectar-gold focus:outline-none text-xs font-black text-foreground w-full pb-1 uppercase tracking-wider"
                           />
                           <textarea
                             rows={1}
@@ -1162,6 +1230,18 @@ export default function SalesCommander() {
           message={toast.message}
           type={toast.type}
           onClose={() => setToast(null)}
+        />
+      )}
+      {confirmModal && (
+        <ConfirmModal
+          isOpen={true}
+          title={confirmModal.title}
+          message={confirmModal.message}
+          onConfirm={() => {
+            confirmModal.onConfirm();
+            setConfirmModal(null);
+          }}
+          onCancel={() => setConfirmModal(null)}
         />
       )}
     </div>

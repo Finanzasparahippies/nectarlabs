@@ -88,7 +88,7 @@ export default function ThemeToggle() {
 
       {/* THE MORPHING ORB (Sun / Moon) */}
       <div
-        className={`absolute top-1 left-1 w-7 h-7 rounded-full transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] relative overflow-hidden ${
+        className={`absolute top-[3px] left-[3px] w-7 h-7 rounded-full transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] overflow-hidden ${
           theme === 'light'
             ? 'translate-x-0 bg-gradient-to-br from-amber-400 to-orange-500 shadow-[0_2px_8px_rgba(245,158,11,0.5),0_0_0_4px_rgba(245,158,11,0.15)]'
             : 'translate-x-9 bg-gradient-to-br from-slate-100 to-slate-300 shadow-[0_2px_8px_rgba(255,255,255,0.25),0_0_0_4px_rgba(255,255,255,0.08)]'

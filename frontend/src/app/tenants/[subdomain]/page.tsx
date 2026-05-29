@@ -28,6 +28,9 @@ interface TenantConfig {
   card_bg_color: string;
   text_color: string;
   border_color: string;
+  pollen_active?: boolean;
+  pollen_icon?: string;
+  pollen_color?: string;
   active_addons?: string[];
 }
 
@@ -88,6 +91,7 @@ export default function TenantPortalPage() {
   const params = useParams();
   const rawSubdomain = params?.subdomain as string;
   const [subdomain, setSubdomain] = useState<string>('');
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(true);
 
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'warning' | 'info' } | null>(null);
   const [confirmDlg, setConfirmDlg] = useState<{ isOpen: boolean; title: string; message: string; onConfirm: () => void } | null>(null);
@@ -207,7 +211,7 @@ export default function TenantPortalPage() {
 
   useEffect(() => {
     if (tenantConfig) {
-      document.title = tenantConfig.portal_title || `${tenantConfig.name} - Centro de Soporte`;
+      document.title = tenantConfig.portal_title || `${tenantConfig.name} - Portal Oficial`;
     }
   }, [tenantConfig]);
 
@@ -494,7 +498,7 @@ export default function TenantPortalPage() {
     return (
       <div className="min-h-screen bg-[#020403] text-white flex flex-col items-center justify-center font-sans">
         <span className="w-8 h-8 rounded-full border-4 border-t-white border-white/10 animate-spin"></span>
-        <p className="mt-4 text-xs font-black uppercase tracking-widest text-white/50">Cargando Portal de Soporte...</p>
+        <p className="mt-4 text-xs font-black uppercase tracking-widest text-white/50">Cargando Portal...</p>
       </div>
     );
   }
@@ -515,33 +519,97 @@ export default function TenantPortalPage() {
   }
 
   const primaryColor = tenantConfig.theme_color || '#C68A1E';
+  const pollenColor = tenantConfig.pollen_color || primaryColor;
+  const pollenIcon = tenantConfig.pollen_icon || '•';
 
   return (
-    <div id="tenant-portal-root" className="min-h-screen flex flex-col font-sans">
+    <div id="tenant-portal-root" className="min-h-screen flex flex-col font-sans relative overflow-hidden">
+      {/* 🐝 Néctar Pollen Particles Effect */}
+      {tenantConfig.pollen_active !== false && (
+        <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+          <div className="pollen-particle animate-[float-pollen_10s_infinite_linear]" style={{ left: '10%' }}>{pollenIcon}</div>
+          <div className="pollen-particle animate-[float-pollen_14s_infinite_linear]" style={{ left: '25%', animationDelay: '2s' }}>{pollenIcon}</div>
+          <div className="pollen-particle animate-[float-pollen_8s_infinite_linear]" style={{ left: '45%', animationDelay: '4s' }}>{pollenIcon}</div>
+          <div className="pollen-particle animate-[float-pollen_16s_infinite_linear]" style={{ left: '60%', animationDelay: '1s' }}>{pollenIcon}</div>
+          <div className="pollen-particle animate-[float-pollen_12s_infinite_linear]" style={{ left: '80%', animationDelay: '3.2s' }}>{pollenIcon}</div>
+          <div className="pollen-particle animate-[float-pollen_20s_infinite_linear]" style={{ left: '95%', animationDelay: '5.5s' }}>{pollenIcon}</div>
+        </div>
+      )}
       <style>{`
         #tenant-portal-root {
-          background-color: ${tenantConfig.bg_color || '#020403'} !important;
-          color: ${tenantConfig.text_color || '#FFFFFF'} !important;
+          background-color: ${isDarkMode ? (tenantConfig.bg_color || '#020403') : '#FAFAFA'} !important;
+          color: ${isDarkMode ? (tenantConfig.text_color || '#FFFFFF') : '#111827'} !important;
         }
         #tenant-portal-root .tenant-header {
-          background-color: ${tenantConfig.card_bg_color || '#050a06'}80 !important;
-          border-color: ${tenantConfig.border_color || '#151F18'} !important;
+          background-color: ${isDarkMode ? (tenantConfig.card_bg_color || '#050a06') + '80' : '#FFFFFF80'} !important;
+          border-color: ${isDarkMode ? (tenantConfig.border_color || '#151F18') : '#E5E7EB'} !important;
         }
         #tenant-portal-root .tenant-card {
-          background-color: ${tenantConfig.card_bg_color || '#050a06'}a0 !important;
-          border-color: ${tenantConfig.border_color || '#151F18'} !important;
+          background-color: ${isDarkMode ? (tenantConfig.card_bg_color || '#050a06') + 'a0' : '#FFFFFF'} !important;
+          border-color: ${isDarkMode ? (tenantConfig.border_color || '#151F18') : '#E5E7EB'} !important;
         }
         #tenant-portal-root .tenant-input {
-          background-color: ${tenantConfig.bg_color || '#020403'} !important;
-          border-color: ${tenantConfig.border_color || '#151F18'} !important;
-          color: ${tenantConfig.text_color || '#FFFFFF'} !important;
+          background-color: ${isDarkMode ? (tenantConfig.bg_color || '#020403') : '#FFFFFF'} !important;
+          border-color: ${isDarkMode ? (tenantConfig.border_color || '#151F18') : '#E5E7EB'} !important;
+          color: ${isDarkMode ? (tenantConfig.text_color || '#FFFFFF') : '#111827'} !important;
         }
         #tenant-portal-root .tenant-border {
-          border-color: ${tenantConfig.border_color || '#151F18'} !important;
+          border-color: ${isDarkMode ? (tenantConfig.border_color || '#151F18') : '#E5E7EB'} !important;
         }
         #tenant-portal-root .tenant-footer {
-          background-color: ${tenantConfig.card_bg_color || '#050a06'}a0 !important;
-          border-color: ${tenantConfig.border_color || '#151F18'} !important;
+          background-color: ${isDarkMode ? (tenantConfig.card_bg_color || '#050a06') + 'a0' : '#F3F4F6'} !important;
+          border-color: ${isDarkMode ? (tenantConfig.border_color || '#151F18') : '#E5E7EB'} !important;
+        }
+        #tenant-portal-root .text-white {
+          color: ${isDarkMode ? '#FFFFFF' : '#111827'} !important;
+        }
+        #tenant-portal-root .text-white\\/50 {
+          color: ${isDarkMode ? 'rgba(255, 255, 255, 0.5)' : 'rgba(17, 24, 39, 0.6)'} !important;
+        }
+        #tenant-portal-root .text-white\\/30 {
+          color: ${isDarkMode ? 'rgba(255, 255, 255, 0.3)' : 'rgba(17, 24, 39, 0.4)'} !important;
+        }
+        #tenant-portal-root .text-white\\/35 {
+          color: ${isDarkMode ? 'rgba(255, 255, 255, 0.35)' : 'rgba(17, 24, 39, 0.45)'} !important;
+        }
+        #tenant-portal-root .text-white\\/40 {
+          color: ${isDarkMode ? 'rgba(255, 255, 255, 0.4)' : 'rgba(17, 24, 39, 0.5)'} !important;
+        }
+        #tenant-portal-root .text-white\\/60 {
+          color: ${isDarkMode ? 'rgba(255, 255, 255, 0.6)' : 'rgba(17, 24, 39, 0.65)'} !important;
+        }
+        #tenant-portal-root .text-white\\/70 {
+          color: ${isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(17, 24, 39, 0.75)'} !important;
+        }
+        #tenant-portal-root .bg-white\\/5 {
+          background-color: ${isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'} !important;
+        }
+        #tenant-portal-root .hover\\:bg-white\\/10:hover {
+          background-color: ${isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'} !important;
+        }
+        #tenant-portal-root .border-white\\/5 {
+          border-color: ${isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'} !important;
+        }
+        #tenant-portal-root .hover\\:border-white\\/10:hover {
+          border-color: ${isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'} !important;
+        }
+        @keyframes float-pollen {
+          0% { transform: translateY(-5vh) translateX(0) scale(0.6); opacity: 0; }
+          15% { opacity: 0.8; }
+          85% { opacity: 0.8; }
+          100% { transform: translateY(105vh) translateX(45px) scale(1.4); opacity: 0; }
+        }
+        .pollen-particle {
+          position: absolute;
+          width: auto;
+          height: auto;
+          font-size: 16px;
+          line-height: 1;
+          color: ${pollenColor} !important;
+          pointer-events: none;
+          user-select: none;
+          filter: blur(0.2px);
+          text-shadow: 0 0 8px ${pollenColor};
         }
       `}</style>
 
@@ -561,7 +629,7 @@ export default function TenantPortalPage() {
             )}
             <div>
               <h1 className="text-sm font-black uppercase tracking-tight text-white">{tenantConfig.name}</h1>
-              <p className="text-[9px] uppercase tracking-widest font-black opacity-60">Centro de Soporte Técnico</p>
+              <p className="text-[9px] uppercase tracking-widest font-black opacity-60">{tenantConfig.portal_title || 'Portal de Servicios'}</p>
             </div>
           </div>
 
@@ -573,10 +641,10 @@ export default function TenantPortalPage() {
               style={{
                 backgroundColor: currentSection === 'addons' ? `${primaryColor}15` : 'transparent',
                 borderColor: currentSection === 'addons' ? primaryColor : 'transparent',
-                color: currentSection === 'addons' ? primaryColor : 'rgba(255, 255, 255, 0.6)'
+                color: currentSection === 'addons' ? primaryColor : (isDarkMode ? 'rgba(255, 255, 255, 0.6)' : 'rgba(17, 24, 39, 0.6)')
               }}
             >
-              🚀 Módulos Activos
+              🚀 Inicio
             </button>
             <button
               onClick={() => setCurrentSection('support')}
@@ -584,10 +652,24 @@ export default function TenantPortalPage() {
               style={{
                 backgroundColor: currentSection === 'support' ? `${primaryColor}15` : 'transparent',
                 borderColor: currentSection === 'support' ? primaryColor : 'transparent',
-                color: currentSection === 'support' ? primaryColor : 'rgba(255, 255, 255, 0.6)'
+                color: currentSection === 'support' ? primaryColor : (isDarkMode ? 'rgba(255, 255, 255, 0.6)' : 'rgba(17, 24, 39, 0.6)')
               }}
             >
               🛠️ Soporte Técnico
+            </button>
+
+            <button
+              onClick={() => setIsDarkMode(prev => !prev)}
+              className="w-8 h-8 rounded-xl flex items-center justify-center transition-all cursor-pointer"
+              style={{
+                backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
+                borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+                borderWidth: '1px',
+                borderStyle: 'solid'
+              }}
+              title={isDarkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+            >
+              {isDarkMode ? '☀️' : '🌙'}
             </button>
           </div>
 
@@ -616,12 +698,12 @@ export default function TenantPortalPage() {
                 className="absolute -top-32 -right-32 w-64 h-64 rounded-full blur-[100px] opacity-10 pointer-events-none"
                 style={{ backgroundColor: primaryColor }}
               ></div>
-              
+
               {tenantConfig.logo_url && (
                 <img src={tenantConfig.logo_url} alt={tenantConfig.name} className="w-20 h-20 rounded-3xl object-cover border-2 border-white/10" />
               )}
               <div className="flex-1 text-center sm:text-left space-y-2">
-                <span className="text-[9px] uppercase tracking-widest font-black text-white/40 block">Portal Oficial</span>
+                <span className="text-[9px] uppercase tracking-widest font-black text-white/40 block">🐝 Colmena de Servicios</span>
                 <h2 className="text-3xl font-black uppercase tracking-tight text-white">{tenantConfig.name}</h2>
                 <p className="text-sm text-white/70 max-w-2xl leading-relaxed">{tenantConfig.welcome_message}</p>
               </div>
@@ -688,17 +770,17 @@ export default function TenantPortalPage() {
 
                 <div className="py-12 text-center max-w-md mx-auto space-y-6">
                   <div className="w-16 h-16 rounded-3xl mx-auto flex items-center justify-center text-3xl" style={{ backgroundColor: `${primaryColor}15` }}>
-                    🚀
+                    🐝
                   </div>
                   <h3 className="text-lg font-black uppercase text-white tracking-wider">
-                    Ecosistema Digital de {tenantConfig.name}
+                    Colmena Digital de {tenantConfig.name}
                   </h3>
                   <p className="text-xs text-white/50 leading-relaxed">
-                    Estamos trabajando de la mano con Néctar Labs para integrar módulos de reservas de citas, suscripción a boletines y herramientas exclusivas para ti.
+                    Estamos configurando las celdas de nuestro panal de servicios junto con Néctar Labs para traerte herramientas exclusivas y módulos interactivos.
                   </p>
                   <button
                     onClick={() => setCurrentSection('support')}
-                    className="px-6 py-3.5 text-black font-black uppercase tracking-widest text-[9px] rounded-xl hover:scale-102 active:scale-95 transition-all inline-block"
+                    className="px-6 py-3.5 text-black font-black uppercase tracking-widest text-[9px] rounded-xl hover:scale-102 active:scale-95 transition-all inline-block cursor-pointer"
                     style={{ backgroundColor: primaryColor }}
                   >
                     Ir a Soporte Técnico
@@ -793,14 +875,14 @@ export default function TenantPortalPage() {
                               selectedTicket.status === 'CLOSED'
                                 ? 'rgba(239, 68, 68, 0.1)'
                                 : selectedTicket.status === 'RESOLVED'
-                                ? 'rgba(16, 185, 129, 0.1)'
-                                : 'rgba(245, 158, 11, 0.1)',
+                                  ? 'rgba(16, 185, 129, 0.1)'
+                                  : 'rgba(245, 158, 11, 0.1)',
                             color:
                               selectedTicket.status === 'CLOSED'
                                 ? '#ef4444'
                                 : selectedTicket.status === 'RESOLVED'
-                                ? '#10b981'
-                                : '#f59e0b',
+                                  ? '#10b981'
+                                  : '#f59e0b',
                           }}
                         >
                           {selectedTicket.status}
@@ -975,10 +1057,10 @@ export default function TenantPortalPage() {
                       <h3 className="text-sm font-black uppercase tracking-wider text-white mb-6 border-b pb-4 tenant-border">
                         Centro de Ayuda y Chat
                       </h3>
-                      
+
                       <div className="space-y-6">
                         <div className="flex gap-4">
-                          <div 
+                          <div
                             className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
                             style={{ backgroundColor: `${primaryColor}10`, color: primaryColor }}
                           >
@@ -1001,7 +1083,7 @@ export default function TenantPortalPage() {
                         </div>
 
                         <div className="flex gap-4">
-                          <div 
+                          <div
                             className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
                             style={{ backgroundColor: `${primaryColor}10`, color: primaryColor }}
                           >

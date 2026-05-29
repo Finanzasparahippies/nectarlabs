@@ -30,6 +30,14 @@ export default function SupportChatWidget() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const prevMessagesCountRef = useRef<number>(0);
 
+  const [showCloseConfirm, setShowCloseConfirm] = useState(false);
+  const [widgetError, setWidgetError] = useState<string | null>(null);
+
+  const showError = (msg: string) => {
+    setWidgetError(msg);
+    setTimeout(() => setWidgetError(null), 5000);
+  };
+
   // Guest Fields
   const [guestName, setGuestName] = useState('');
 
@@ -82,7 +90,7 @@ export default function SupportChatWidget() {
       prevMessagesCountRef.current = 0;
       setIsOpen(true);
     } catch (err: any) {
-      alert(err.message || 'Error al iniciar el chat de soporte técnico');
+      showError(err.message || 'Error al iniciar el chat de soporte técnico');
     } finally {
       setIsSubmitting(false);
     }
@@ -206,7 +214,7 @@ export default function SupportChatWidget() {
       prevMessagesCountRef.current = 0;
       setIsOpen(true);
     } catch (err) {
-      alert('Error al iniciar el chat de soporte técnico');
+      showError('Error al iniciar el chat de soporte técnico');
     } finally {
       setIsSubmitting(false);
     }
@@ -245,17 +253,20 @@ export default function SupportChatWidget() {
         });
       }
     } catch (err) {
-      alert('Error al enviar el mensaje');
+      showError('Error al enviar el mensaje');
       setNewMessage(messageText); // restore text
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleCloseChat = async () => {
+  const handleCloseChat = () => {
     if (!activeChat) return;
-    if (!confirm('¿Estás seguro de que deseas cerrar esta sesión de chat de soporte?')) return;
+    setShowCloseConfirm(true);
+  };
 
+  const confirmCloseChat = async () => {
+    setShowCloseConfirm(false);
     try {
       await fetcher(`/support-chats/${activeChat.id}/close/`, {
         method: 'POST',
@@ -264,7 +275,7 @@ export default function SupportChatWidget() {
       setMessages([]);
       prevMessagesCountRef.current = 0;
     } catch (err) {
-      alert('Error al cerrar el chat');
+      showError('Error al cerrar el chat');
     }
   };
 
@@ -308,8 +319,40 @@ export default function SupportChatWidget() {
           </div>
 
           {/* Chat Messages / Setup */}
-          <div className="flex-1 overflow-y-auto p-5 space-y-4 custom-scrollbar">
-            {!token ? (
+          <div className="flex-1 overflow-y-auto p-5 space-y-4 custom-scrollbar relative">
+            {widgetError && (
+              <div className="absolute top-2 left-2 right-2 bg-red-500/90 text-white text-[10px] font-bold p-2.5 rounded-xl text-center z-10 shadow-lg">
+                {widgetError}
+              </div>
+            )}
+
+            {showCloseConfirm ? (
+              <div className="h-full flex flex-col items-center justify-center text-center p-4 space-y-4 animate-premium">
+                <div className="w-12 h-12 bg-red-500/10 text-red-500 rounded-full flex items-center justify-center mx-auto mb-2 text-xl font-bold">
+                  ⚠️
+                </div>
+                <h5 className="font-black text-sm text-foreground uppercase tracking-wide">¿Cerrar Sesión de Chat?</h5>
+                <p className="text-[10px] text-muted max-w-xs mx-auto leading-relaxed">
+                  Esta acción finalizará tu conversación actual con soporte técnico. No podrás reactivar este mismo chat.
+                </p>
+                <div className="flex gap-3 w-full pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowCloseConfirm(false)}
+                    className="flex-1 py-2.5 bg-card-border hover:bg-card-border/80 text-foreground font-black uppercase tracking-widest text-[8px] rounded-xl transition-all cursor-pointer"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={confirmCloseChat}
+                    className="flex-1 py-2.5 bg-red-500 hover:bg-red-600 text-white font-black uppercase tracking-widest text-[8px] rounded-xl transition-all cursor-pointer"
+                  >
+                    Sí, Cerrar
+                  </button>
+                </div>
+              </div>
+            ) : !token ? (
               /* Guest Auth Form */
               <form onSubmit={handleGuestSubmit} className="h-full flex flex-col justify-center space-y-4 px-2 animate-premium">
                 <div className="text-center pb-2">
@@ -403,7 +446,7 @@ export default function SupportChatWidget() {
           </div>
 
           {/* Message Form */}
-          {activeChat && activeChat.status !== 'CLOSED' && (
+          {activeChat && activeChat.status !== 'CLOSED' && !showCloseConfirm && (
             <form onSubmit={handleSendMessage} className="p-4 border-t border-card-border bg-foreground/[0.01] flex gap-2">
               <input
                 type="text"

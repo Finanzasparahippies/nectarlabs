@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Toast from '../../ui/Toast';
 
 interface SponsorTiersProps {
   primaryColor: string;
@@ -8,6 +9,7 @@ interface SponsorTiersProps {
 
 export default function SponsorTiers({ primaryColor }: SponsorTiersProps) {
   const [selectedTier, setSelectedTier] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'warning' | 'info' } | null>(null);
 
   const tiers = [
     {
@@ -121,7 +123,7 @@ export default function SponsorTiers({ primaryColor }: SponsorTiersProps) {
           <button 
             type="button"
             onClick={() => {
-              alert('Redirigiendo a pasarela de cobros segura de Stripe...');
+              setToast({ message: 'Redirigiendo a pasarela de cobros segura de Stripe...', type: 'info' });
             }}
             className="px-5 py-3 rounded-xl font-black uppercase tracking-widest text-[9px] hover:scale-105 active:scale-95 transition-all text-black cursor-pointer animate-pulse"
             style={{ backgroundColor: primaryColor }}
@@ -129,6 +131,14 @@ export default function SponsorTiers({ primaryColor }: SponsorTiersProps) {
             Proceder al pago con Stripe
           </button>
         </div>
+      )}
+
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
       )}
     </div>
   );

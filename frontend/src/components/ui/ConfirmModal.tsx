@@ -25,19 +25,19 @@ export default function ConfirmModal({ isOpen, title, message, onConfirm, onCanc
         {/* Glow */}
         <div className="absolute -top-24 -right-24 w-48 h-48 bg-nectar-gold/5 rounded-full blur-3xl"></div>
         
-        <h3 className="text-lg font-black uppercase tracking-wider text-white mb-2">{title}</h3>
+        <h3 className="text-lg font-black uppercase tracking-wider text-foreground mb-2">{title}</h3>
         <p className="text-[10px] text-foreground/60 leading-relaxed uppercase tracking-wider mb-6">{message}</p>
         
         <div className="flex gap-4">
           <button
             onClick={onCancel}
-            className="flex-1 py-3 bg-white/5 hover:bg-white/10 border border-white/5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all"
+            className="flex-1 py-3 bg-foreground/[0.03] hover:bg-foreground/[0.08] border border-card-border rounded-xl text-[9px] font-black uppercase tracking-widest text-foreground/75 hover:text-foreground transition-all"
           >
             Cancelar
           </button>
           <button
             onClick={onConfirm}
-            className="flex-1 py-3 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 rounded-xl text-[9px] font-black uppercase tracking-widest text-red-400 transition-all"
+            className="flex-1 py-3 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 rounded-xl text-[9px] font-black uppercase tracking-widest text-red-400 hover:text-red-500 transition-all"
           >
             Confirmar
           </button>

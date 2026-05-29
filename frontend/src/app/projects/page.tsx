@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { fetcher } from '../../lib/api';
 import DashboardSidebar from '../../components/DashboardSidebar';
+import Toast from '../../components/ui/Toast';
+import ConfirmModal from '../../components/ui/ConfirmModal';
 
 interface Advance {
   id: number;
@@ -78,6 +80,17 @@ export default function ProjectsPage() {
   const [userRole, setUserRole] = useState('');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
+
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'warning' | 'info' } | null>(null);
+  const [confirmModal, setConfirmModal] = useState<{
+    title: string;
+    message: string;
+    onConfirm: () => void;
+  } | null>(null);
+
+  const showToast = (message: string, type: 'success' | 'error' | 'warning' | 'info' = 'success') => {
+    setToast({ message, type });
+  };
 
   // User creation states
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
@@ -182,8 +195,9 @@ export default function ProjectsPage() {
       setEditingProject(null);
       resetForm();
       loadData();
+      showToast("Proyecto guardado con éxito.", "success");
     } catch (err) {
-      alert("Error al guardar el proyecto");
+      showToast("Error al guardar el proyecto", "error");
     }
   };
 
@@ -229,8 +243,9 @@ export default function ProjectsPage() {
       });
       setProjects(projects.map(p => p.id === projectId ? updatedProject : p));
       setActivityDescriptions({ ...activityDescriptions, [projectId]: '' });
+      showToast("Actividad iniciada.", "success");
     } catch (err: any) {
-      alert(err.message || "Error al iniciar actividad");
+      showToast(err.message || "Error al iniciar actividad", "error");
     }
   };
 
@@ -240,8 +255,9 @@ export default function ProjectsPage() {
         method: 'POST'
       });
       setProjects(projects.map(p => p.id === projectId ? updatedProject : p));
+      showToast("Actividad detenida y registrada.", "success");
     } catch (err: any) {
-      alert(err.message || "Error al detener actividad");
+      showToast(err.message || "Error al detener actividad", "error");
     }
   };
 
@@ -255,8 +271,9 @@ export default function ProjectsPage() {
       });
       setProjects(projects.map(p => p.id === projectId ? updatedProject : p));
       setAdvanceForms({ ...advanceForms, [projectId]: null });
+      showToast("Avance entregado con éxito.", "success");
     } catch (err: any) {
-      alert(err.message || "Error al entregar el avance");
+      showToast(err.message || "Error al entregar el avance", "error");
     }
   };
 
@@ -875,6 +892,27 @@ export default function ProjectsPage() {
             </form>
           </div>
         </div>
+      )}
+
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
+
+      {confirmModal && (
+        <ConfirmModal
+          isOpen={true}
+          title={confirmModal.title}
+          message={confirmModal.message}
+          onConfirm={() => {
+            confirmModal.onConfirm();
+            setConfirmModal(null);
+          }}
+          onCancel={() => setConfirmModal(null)}
+        />
       )}
     </div>
   );

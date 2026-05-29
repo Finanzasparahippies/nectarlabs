@@ -12,6 +12,7 @@ import SalesCommander from '../../components/dashboard/SalesCommander';
 import DashboardSidebar from '../../components/DashboardSidebar';
 import Toast from '../../components/ui/Toast';
 import ConfirmModal from '../../components/ui/ConfirmModal';
+import ContactSupportModal from '../../components/dashboard/ContactSupportModal';
 
 interface Project {
   id: number;
@@ -146,6 +147,8 @@ function DashboardPageOriginal() {
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'warning' | 'info' } | null>(null);
   const [confirmDlg, setConfirmDlg] = useState<{ title: string; message: string; onConfirm: () => void } | null>(null);
   const [fetching, setFetching] = useState(true);
+  const [paymentsExpanded, setPaymentsExpanded] = useState(false);
+  const [showSupportModal, setShowSupportModal] = useState(false);
 
   const showToast = (message: string, type: 'success' | 'error' | 'warning' | 'info' = 'success') => {
     setToast({ message, type });
@@ -679,7 +682,7 @@ function DashboardPageOriginal() {
               {notification.type === 'cancel' && (
                 <span className="w-4 h-4 rounded-full bg-yellow-500/20 border border-yellow-500 text-yellow-500 flex items-center justify-center font-bold text-[9px] shrink-0">!</span>
               )}
-              <h3 className="font-black text-[10px] uppercase tracking-wider text-white">
+              <h3 className="font-black text-[10px] uppercase tracking-wider text-foreground">
                 {notification.title}
               </h3>
             </div>
@@ -729,7 +732,7 @@ function DashboardPageOriginal() {
                     <span className="px-3 py-1 bg-amber-500/20 text-amber-400 text-[8px] font-black uppercase tracking-widest rounded-full border border-amber-500/30">
                       Reunión de Inducción Pendiente
                     </span>
-                    <h2 className="text-2xl font-black tracking-tight text-white mt-2">
+                    <h2 className="text-2xl font-black tracking-tight text-foreground mt-2">
                       Tu Cuenta de Vendedor requiere aprobación
                     </h2>
                     <p className="text-xs text-foreground/60 leading-relaxed uppercase tracking-wider">
@@ -763,11 +766,11 @@ function DashboardPageOriginal() {
 
                     <div className="space-y-4">
                       <div className="flex items-center gap-3 bg-background/50 border border-card-border/80 rounded-2xl p-4 justify-between">
-                        <span className="font-mono text-lg font-black tracking-widest text-white select-all">{myReferralCode.code}</span>
+                        <span className="font-mono text-lg font-black tracking-widest text-foreground select-all">{myReferralCode.code}</span>
                         <button
                            onClick={() => {
                              navigator.clipboard.writeText(myReferralCode.code);
-                             alert("¡Código de vendedor copiado al portapapeles!");
+                             showToast("¡Código de vendedor copiado al portapapeles!", "success");
                            }}
                            className="px-6 py-3 bg-nectar-gold hover:bg-nectar-gold/90 text-background text-[10px] font-black uppercase tracking-widest rounded-xl transition-all hover:scale-[1.02] active:scale-95"
                         >
@@ -890,7 +893,7 @@ function DashboardPageOriginal() {
                         <td className="py-4 text-center font-mono font-bold text-xs text-nectar-gold">
                           {parseFloat(comm.commission_percentage)}%
                         </td>
-                        <td className="py-4 text-right font-mono font-bold text-xs text-white">
+                        <td className="py-4 text-right font-mono font-bold text-xs text-foreground">
                           ${parseFloat(comm.amount).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
                         </td>
                         <td className="py-4 text-center">
@@ -1162,8 +1165,8 @@ function DashboardPageOriginal() {
                                     
                                     if (!contract.tenant_custom_domain) {
                                       if (host.includes('localhost')) {
-                                        domain = `http://${contract.tenant_subdomain}.localhost:3000`;
-                                        urlDisplay = `${contract.tenant_subdomain}.localhost:3000`;
+                                        domain = `http://nectarlabs.localhost/tenants/${contract.tenant_subdomain}`;
+                                        urlDisplay = `nectarlabs.localhost/tenants/${contract.tenant_subdomain}`;
                                       } else if (host.includes('staging.nectarlabs.dev')) {
                                         domain = `https://${contract.tenant_subdomain}.staging.nectarlabs.dev`;
                                         urlDisplay = `${contract.tenant_subdomain}.staging.nectarlabs.dev`;
@@ -1567,7 +1570,7 @@ function DashboardPageOriginal() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-12 border-t border-card-border/50 pt-10">
                         {/* Referral Card */}
                         {myReferralCode && (
-                          <div className="p-6 rounded-2xl bg-background/40 border border-card-border/50 relative overflow-hidden group shadow-lg flex flex-col justify-between">
+                          <div className="p-6 rounded-2xl bg-card-bg border border-card-border relative overflow-hidden group shadow-lg flex flex-col justify-between">
                             <div className="absolute top-0 right-0 w-32 h-32 bg-nectar-gold/5 rounded-full blur-2xl -mr-10 -mt-10"></div>
                             <div className="relative z-10 space-y-4">
                               <div className="flex justify-between items-start">
@@ -1583,14 +1586,14 @@ function DashboardPageOriginal() {
                                   <span className="text-2xl font-black text-nectar-gold font-mono">{myReferralCode.used_count || 0}</span>
                                 </div>
                               </div>
-                              <div className="flex items-center gap-2 bg-background/50 border border-card-border/60 rounded-xl p-3 justify-between">
-                                <span className="font-mono text-sm font-black tracking-wider text-white select-all">{myReferralCode.code}</span>
+                              <div className="flex items-center gap-2 bg-background border border-card-border rounded-xl p-3 justify-between">
+                                <span className="font-mono text-sm font-black tracking-wider text-foreground select-all">{myReferralCode.code}</span>
                                 <button
                                   onClick={() => {
                                     navigator.clipboard.writeText(myReferralCode.code);
-                                    alert("¡Código de referido copiado al portapapeles!");
+                                    showToast("¡Código de referido copiado al portapapeles!", "success");
                                   }}
-                                  className="px-4 py-2 bg-nectar-gold hover:bg-nectar-gold/90 text-background text-[9px] font-black uppercase tracking-widest rounded-lg transition-all active:scale-95 shrink-0"
+                                  className="px-4 py-2 bg-nectar-gold hover:bg-nectar-gold/90 text-background text-[9px] font-black uppercase tracking-widest rounded-lg transition-all active:scale-95 shrink-0 font-bold"
                                 >
                                   Copiar Código
                                 </button>
@@ -1601,7 +1604,7 @@ function DashboardPageOriginal() {
 
                         {/* Retroactive Coupon Input Card */}
                         {showRetroactiveCouponInput ? (
-                          <div className="p-6 rounded-2xl bg-background/40 border border-card-border/50 relative overflow-hidden group shadow-lg flex flex-col justify-between">
+                          <div className="p-6 rounded-2xl bg-card-bg border border-card-border relative overflow-hidden group shadow-lg flex flex-col justify-between">
                             <div className="absolute top-0 right-0 w-32 h-32 bg-nectar-gold/5 rounded-full blur-2xl -mr-10 -mt-10"></div>
                             <div className="relative z-10 space-y-4">
                               <div>
@@ -1623,11 +1626,23 @@ function DashboardPageOriginal() {
                                 <button
                                   onClick={handleApplyRetroactiveCode}
                                   disabled={applyingRetroactiveCode || !retroactiveCodeInput.trim()}
-                                  className="px-6 bg-nectar-gold hover:bg-nectar-gold/90 text-background rounded-xl text-[9px] font-black uppercase tracking-widest transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50"
+                                  className="px-6 bg-nectar-gold hover:bg-nectar-gold/90 text-background rounded-xl text-[9px] font-black uppercase tracking-widest transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 font-bold"
                                 >
                                   {applyingRetroactiveCode ? 'Aplicando...' : 'Aplicar'}
                                 </button>
                               </div>
+                              
+                              <div className="pt-2 flex justify-between items-center text-[9px] uppercase tracking-wider border-t border-card-border/40">
+                                <span className="text-foreground/40 font-bold">¿Quieres un código personalizado?</span>
+                                <button
+                                  type="button"
+                                  onClick={() => setShowSupportModal(true)}
+                                  className="text-nectar-gold hover:underline font-black cursor-pointer bg-transparent border-0 p-0"
+                                >
+                                  Solicitar a Soporte
+                                </button>
+                              </div>
+
                               {retroactiveSuccessMessage && (
                                 <p className="text-[9px] text-green-400 font-bold bg-green-500/5 p-2 rounded border border-green-500/10 animate-in fade-in">
                                   ✓ {retroactiveSuccessMessage}
@@ -1641,14 +1656,26 @@ function DashboardPageOriginal() {
                             </div>
                           </div>
                         ) : (
-                          <div className="p-6 rounded-2xl bg-background/25 border border-card-border/40 relative overflow-hidden group shadow-lg flex flex-col justify-between">
+                          <div className="p-6 rounded-2xl bg-card-bg border border-card-border relative overflow-hidden group shadow-lg flex flex-col justify-between">
                             <div className="absolute top-0 right-0 w-32 h-32 bg-nectar-forest/5 rounded-full blur-2xl -mr-10 -mt-10"></div>
-                            <div className="relative z-10">
-                              <span className="px-2 py-0.5 bg-nectar-forest/10 text-nectar-forest text-[7.5px] font-black uppercase tracking-widest rounded-full">Información</span>
-                              <h4 className="text-lg font-black tracking-tight mt-2">Ecosistema Néctar Labs</h4>
-                              <p className="text-[10px] text-foreground/60 mt-1 leading-relaxed">
-                                Tu infraestructura de Partner Tecnológico se aprovisiona y mantiene activa las 24 horas del día. Si requieres más ayuda, abre un ticket de soporte.
-                              </p>
+                            <div className="relative z-10 flex flex-col justify-between h-full space-y-4">
+                              <div>
+                                <span className="px-2 py-0.5 bg-nectar-forest/10 text-nectar-forest text-[7.5px] font-black uppercase tracking-widest rounded-full">Información</span>
+                                <h4 className="text-lg font-black tracking-tight mt-2">Ecosistema Néctar Labs</h4>
+                                <p className="text-[10px] text-foreground/60 mt-1 leading-relaxed">
+                                  Tu infraestructura de Partner Tecnológico se aprovisiona y mantiene activa las 24 horas del día. Si requieres más ayuda, abre un ticket de soporte.
+                                </p>
+                              </div>
+                              <div className="pt-2 flex justify-between items-center text-[9px] uppercase tracking-wider border-t border-card-border/40">
+                                <span className="text-foreground/40 font-bold">¿Tienes requerimientos especiales?</span>
+                                <button
+                                  type="button"
+                                  onClick={() => setShowSupportModal(true)}
+                                  className="text-nectar-gold hover:underline font-black cursor-pointer bg-transparent border-0 p-0"
+                                >
+                                  Contactar Soporte
+                                </button>
+                              </div>
                             </div>
                           </div>
                         )}
@@ -1658,122 +1685,214 @@ function DashboardPageOriginal() {
 
                   {/* Monthly Payments (6 months commitment) */}
                   <div className="mt-12 border-t border-card-border/50 pt-10">
-                    <h3 className="text-lg font-black tracking-tight mb-6">Mensualidades Obligatorias (Compromiso a 6 Meses)</h3>
-
-                    <div className="flex flex-col gap-4">
-                      {installments
+                    {(() => {
+                      const activeInstallments = installments
                         .filter(inst => inst.contract === activeContract.id)
-                        .sort((a, b) => a.installment_number - b.installment_number)
-                        .map((inst, index, arr) => {
-                          const isPaid = inst.status === 'PAID';
-                          const isPendingReview = !isPaid && inst.receipt_file;
-                          const isPending = !isPaid && !inst.receipt_file;
+                        .sort((a, b) => a.installment_number - b.installment_number);
 
-                          let statusColor = 'bg-yellow-500';
-                          let statusText = 'Pendiente';
-                          let bgClass = 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20';
-                          if (isPaid) {
-                            statusColor = 'bg-green-500';
-                            statusText = 'Pagado';
-                            bgClass = 'bg-green-500/10 text-green-500 border-green-500/20';
-                          } else if (isPendingReview) {
-                            statusColor = 'bg-orange-500';
-                            statusText = 'En Revisión';
-                            bgClass = 'bg-orange-500/10 text-orange-500 border-orange-500/20';
-                          }
+                      const nextPending = activeInstallments.find(inst => inst.status !== 'PAID');
 
-                          return (
-                            <div key={inst.id} className="relative flex flex-col md:flex-row md:items-center justify-between p-6 rounded-2xl bg-background/25 border border-card-border/60 hover:border-card-border transition-all duration-300 gap-6">
-                              {/* Left side: Timeline marker + Info */}
-                              <div className="flex items-center gap-4 flex-1 min-w-0">
-                                {/* Dot & Connector Line */}
-                                <div className="relative flex flex-col items-center justify-center">
-                                  <div className={`w-3.5 h-3.5 rounded-full ${statusColor} shadow-lg shadow-current/20 flex-shrink-0 z-10`} />
-                                  {index < arr.length - 1 && (
-                                    <div className="absolute top-4 w-[2px] h-16 bg-card-border/40 z-0" />
-                                  )}
-                                </div>
+                      return (
+                        <>
+                          <div className="flex justify-between items-center mb-6">
+                            <h3 className="text-lg font-black tracking-tight">Mensualidades de Ingeniería</h3>
+                            {activeInstallments.length > 0 && (
+                              <button
+                                onClick={() => setPaymentsExpanded(!paymentsExpanded)}
+                                className="px-4 py-2 border border-card-border hover:bg-foreground hover:text-background text-[8px] font-black uppercase tracking-widest rounded-xl transition-all flex items-center gap-2"
+                              >
+                                <span>{paymentsExpanded ? 'Ocultar Calendario' : 'Ver Calendario Completo'}</span>
+                                <svg 
+                                  xmlns="http://www.w3.org/2000/svg" 
+                                  viewBox="0 0 24 24" 
+                                  fill="none" 
+                                  stroke="currentColor" 
+                                  strokeWidth="2.5" 
+                                  className={`w-3.5 h-3.5 transition-transform duration-300 ${paymentsExpanded ? 'rotate-180' : ''}`}
+                                >
+                                  <polyline points="6 9 12 15 18 9"></polyline>
+                                </svg>
+                              </button>
+                            )}
+                          </div>
 
-                                <div className="min-w-0 ml-2">
-                                  <div className="flex items-center gap-2">
-                                    <span className="text-[9px] font-black uppercase tracking-widest opacity-40">
-                                      Mes {inst.installment_number} de 6
+                          {/* Next Pending Payment Highlight Card */}
+                          {nextPending ? (
+                            <div className="mb-6 p-6 rounded-2xl bg-nectar-gold/5 border-2 border-nectar-gold/30 shadow-lg relative overflow-hidden group">
+                              <div className="absolute top-0 right-0 w-32 h-32 bg-nectar-gold/5 rounded-full blur-2xl -mr-10 -mt-10"></div>
+                              <span className="px-2 py-0.5 bg-nectar-gold/10 text-nectar-gold text-[7.5px] font-black uppercase tracking-widest rounded-full">Próximo Pago Requerido</span>
+                              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mt-4">
+                                <div className="min-w-0">
+                                  <span className="text-[9px] font-black uppercase tracking-widest opacity-40">
+                                    Mes {nextPending.installment_number} de 6
+                                  </span>
+                                  {nextPending.project_name && (
+                                    <span className="text-[9px] font-bold text-nectar-gold truncate max-w-[150px]">
+                                      • {nextPending.project_name}
                                     </span>
-                                    {inst.project_name && (
-                                      <span className="text-[9px] font-bold text-nectar-gold truncate max-w-[150px]">
-                                        • {inst.project_name}
-                                      </span>
-                                    )}
-                                  </div>
+                                  )}
                                   <h4 className="font-bold text-sm text-foreground mt-0.5">
                                     Mensualidad de Ingeniería
                                   </h4>
                                   <p className="text-[10px] text-foreground/50 mt-1">
-                                    Vencimiento: <span className="font-semibold text-foreground/80">{formatDate(inst.due_date)}</span>
+                                    Vencimiento: <span className="font-semibold text-foreground/80">{formatDate(nextPending.due_date)}</span>
                                   </p>
-                                  {inst.cfdi_uuid && (
+                                  {nextPending.cfdi_uuid && (
                                     <p className="text-[9px] text-green-500 font-bold mt-1">
-                                      Folio Fiscal SAT: <span className="font-mono select-all text-[8px] tracking-tight">{inst.cfdi_uuid}</span>
+                                      Folio Fiscal SAT: <span className="font-mono select-all text-[8px] tracking-tight">{nextPending.cfdi_uuid}</span>
                                     </p>
                                   )}
                                 </div>
-                              </div>
 
-                              {/* Right side: Status, Amount, & Action */}
-                              <div className="flex flex-wrap items-center md:justify-end gap-6">
-                                {/* Status badge */}
-                                <span className={`px-3 py-1 text-[8px] font-black uppercase tracking-widest rounded-full border ${bgClass}`}>
-                                  {statusText}
-                                </span>
+                                <div className="flex flex-wrap items-center gap-6">
+                                  <div className="text-left md:text-right min-w-[120px]">
+                                    <span className="text-[8px] uppercase tracking-widest opacity-40 block font-black">Monto</span>
+                                    <span className="font-black text-base text-foreground font-mono">
+                                      ${parseFloat(nextPending.amount).toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN
+                                    </span>
+                                  </div>
 
-                                {/* Amount */}
-                                <div className="text-left md:text-right min-w-[120px]">
-                                  <span className="text-[8px] uppercase tracking-widest opacity-40 block">Monto</span>
-                                  <span className="font-black text-base text-foreground">
-                                    ${parseFloat(inst.amount).toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN
-                                  </span>
-                                </div>
-
-                                {/* Action */}
-                                <div className="w-full md:w-auto min-w-[150px] flex justify-end">
-                                  {!isPaid && (
-                                    <div className="w-full">
-                                      {chosenMethod === 'STRIPE' ? (
-                                        <button
-                                          onClick={() => handlePayStripe(inst.id)}
-                                          className="w-full py-2.5 bg-[#635BFF] hover:bg-[#5b53e8] text-white text-center rounded-xl text-[8px] font-black uppercase tracking-widest transition-all shadow-lg shadow-[#635BFF]/10 active:scale-95"
-                                        >
-                                          Pagar con Stripe
-                                        </button>
-                                      ) : isPendingReview ? (
-                                        <p className="text-[8px] text-center opacity-60 italic font-bold py-2 bg-background/40 rounded-xl border border-card-border/30">
-                                          Comprobante en validación
-                                        </p>
-                                      ) : (
-                                        <label className="w-full block py-2.5 border border-dashed border-nectar-gold/50 text-nectar-gold hover:bg-nectar-gold hover:text-background text-center rounded-xl text-[8px] font-black uppercase tracking-widest transition-all cursor-pointer hover:border-solid">
-                                          Subir Comprobante
-                                          <input
-                                            type="file"
-                                            accept="image/*,application/pdf"
-                                            className="hidden"
-                                            onChange={(e) => {
-                                              const file = e.target.files?.[0];
-                                              if (file) handleUploadReceipt(inst.id, file);
-                                            }}
-                                          />
-                                        </label>
-                                      )}
-                                    </div>
-                                  )}
+                                  <div className="w-full md:w-auto min-w-[150px] flex justify-end">
+                                    {chosenMethod === 'STRIPE' ? (
+                                      <button
+                                        onClick={() => handlePayStripe(nextPending.id)}
+                                        className="w-full py-2.5 bg-[#635BFF] hover:bg-[#5b53e8] text-white text-center rounded-xl text-[8px] font-black uppercase tracking-widest transition-all shadow-lg shadow-[#635BFF]/10 active:scale-95 font-bold"
+                                      >
+                                        Pagar con Stripe
+                                      </button>
+                                    ) : nextPending.receipt_file ? (
+                                      <p className="text-[8px] text-center opacity-60 italic font-bold py-2 px-4 bg-background/40 rounded-xl border border-card-border/30 w-full">
+                                        Comprobante en validación
+                                      </p>
+                                    ) : (
+                                      <label className="w-full block py-2.5 border border-dashed border-nectar-gold/50 text-nectar-gold hover:bg-nectar-gold hover:text-background text-center rounded-xl text-[8px] font-black uppercase tracking-widest transition-all cursor-pointer hover:border-solid font-bold">
+                                        Subir Comprobante
+                                        <input
+                                          type="file"
+                                          accept="image/*,application/pdf"
+                                          className="hidden"
+                                          onChange={(e) => {
+                                            const file = e.target.files?.[0];
+                                            if (file) handleUploadReceipt(nextPending.id, file);
+                                          }}
+                                        />
+                                      </label>
+                                    )}
+                                  </div>
                                 </div>
                               </div>
                             </div>
-                          );
-                        })}
-                      {installments.filter(inst => inst.contract === activeContract.id).length === 0 && (
-                        <p className="text-center text-xs opacity-40 font-bold py-6">Las mensualidades se generarán una vez que el trato sea firmado por el administrador.</p>
-                      )}
-                    </div>
+                          ) : (
+                            activeInstallments.length > 0 && (
+                              <div className="mb-6 p-6 rounded-2xl bg-green-500/5 border border-green-500/20 text-center">
+                                <span className="text-[10px] font-black text-green-500 uppercase tracking-widest">✓ Todos tus compromisos de pago están al corriente</span>
+                              </div>
+                            )
+                          )}
+
+                          {/* Collapsible Full Calendar */}
+                          {paymentsExpanded && (
+                            <div className="mt-6 animate-fadeIn">
+                              <span className="text-[8px] font-black uppercase tracking-[0.2em] text-foreground/30 mb-4 block">Calendario Completo de Pagos</span>
+                              <div className="overflow-x-auto bg-background/30 rounded-2xl border border-card-border/60">
+                                <table className="w-full text-left border-collapse min-w-[650px]">
+                                  <thead>
+                                    <tr className="border-b border-card-border/50 text-[8px] font-black uppercase tracking-widest opacity-40">
+                                      <th className="p-4 pl-6">Mensualidad</th>
+                                      <th className="p-4">Vencimiento</th>
+                                      <th className="p-4 text-right">Monto</th>
+                                      <th className="p-4 text-center">Estatus</th>
+                                      <th className="p-4 text-right pr-6">Acción / Comprobante</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {activeInstallments.map((inst) => {
+                                      const isPaid = inst.status === 'PAID';
+                                      const isPendingReview = !isPaid && inst.receipt_file;
+                                      let statusText = 'Pendiente';
+                                      let bgClass = 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20';
+                                      if (isPaid) {
+                                        statusText = 'Pagado';
+                                        bgClass = 'bg-green-500/10 text-green-500 border-green-500/20';
+                                      } else if (isPendingReview) {
+                                        statusText = 'En Revisión';
+                                        bgClass = 'bg-orange-500/10 text-orange-500 border-orange-500/20';
+                                      }
+
+                                      return (
+                                        <tr key={inst.id} className="border-b border-card-border/30 last:border-0 hover:bg-foreground/[0.01] transition-colors">
+                                          <td className="p-4 pl-6">
+                                            <div className="flex items-center gap-2">
+                                              <span className="w-5 h-5 rounded-full bg-foreground/5 flex items-center justify-center text-[9px] font-bold text-foreground/70">
+                                                {inst.installment_number}
+                                              </span>
+                                              <div>
+                                                <span className="font-bold text-xs">Mes {inst.installment_number}</span>
+                                                {inst.project_name && (
+                                                  <p className="text-[7.5px] font-bold text-nectar-gold uppercase tracking-wider mt-0.5 max-w-[120px] truncate">{inst.project_name}</p>
+                                                )}
+                                              </div>
+                                            </div>
+                                          </td>
+                                          <td className="p-4 text-xs font-medium text-foreground/75">
+                                            {formatDate(inst.due_date)}
+                                          </td>
+                                          <td className="p-4 text-right font-mono font-bold text-xs text-foreground">
+                                            ${parseFloat(inst.amount).toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN
+                                          </td>
+                                          <td className="p-4 text-center">
+                                            <span className={`px-2.5 py-0.5 text-[7px] font-black uppercase tracking-widest rounded-full border ${bgClass}`}>
+                                              {statusText}
+                                            </span>
+                                          </td>
+                                          <td className="p-4 text-right pr-6">
+                                            {!isPaid ? (
+                                              <div className="flex justify-end gap-2">
+                                                {chosenMethod === 'STRIPE' ? (
+                                                  <button
+                                                    onClick={() => handlePayStripe(inst.id)}
+                                                    className="px-3 py-1.5 bg-[#635BFF] hover:bg-[#5b53e8] text-white text-[8px] font-black uppercase tracking-widest rounded-lg transition-all"
+                                                  >
+                                                    Pagar con Stripe
+                                                  </button>
+                                                ) : isPendingReview ? (
+                                                  <span className="text-[8px] font-bold opacity-60 italic py-1 px-2.5 bg-background/50 rounded border border-card-border/30">
+                                                    Validando...
+                                                  </span>
+                                                ) : (
+                                                  <label className="px-3 py-1.5 border border-dashed border-nectar-gold/50 text-nectar-gold hover:bg-nectar-gold hover:text-background text-[8px] font-black uppercase tracking-widest rounded-lg transition-all cursor-pointer">
+                                                    Subir Comprobante
+                                                    <input
+                                                      type="file"
+                                                      accept="image/*,application/pdf"
+                                                      className="hidden"
+                                                      onChange={(e) => {
+                                                        const file = e.target.files?.[0];
+                                                        if (file) handleUploadReceipt(inst.id, file);
+                                                      }}
+                                                    />
+                                                  </label>
+                                                )}
+                                              </div>
+                                            ) : (
+                                              <span className="text-xs text-green-500 font-bold">✓ Pagado</span>
+                                            )}
+                                          </td>
+                                        </tr>
+                                      );
+                                    })}
+                                  </tbody>
+                                </table>
+                              </div>
+                            </div>
+                          )}
+
+                          {activeInstallments.length === 0 && (
+                            <p className="text-center text-xs opacity-40 font-bold py-6">Las mensualidades se generarán una vez que el trato sea firmado por el administrador.</p>
+                          )}
+                        </>
+                      );
+                    })()}
                   </div>
                 </section>
               );
@@ -1903,7 +2022,7 @@ function DashboardPageOriginal() {
                               <div className="space-y-1">
                                 <h3 className="text-2xl font-black tracking-tight">{project.name}</h3>
                                 {isStaff && project.client_username && <p className="text-[8px] font-bold text-nectar-gold opacity-60">Cliente: {project.client_username}</p>}
-                                {project.designer_email && <p className="text-[8px] font-bold text-white/45 uppercase tracking-wider">Diseñador: {project.designer_email}</p>}
+                                {project.designer_email && <p className="text-[8px] font-bold text-foreground/45 uppercase tracking-wider">Diseñador: {project.designer_email}</p>}
                               </div>
                               <span className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold text-[8px] font-black uppercase tracking-widest rounded-full">{project.status}</span>
                             </div>
@@ -2005,7 +2124,7 @@ function DashboardPageOriginal() {
                                     {(() => {
                                       const tenant = tenants[0];
                                       const host = typeof window !== 'undefined' ? window.location.hostname : '';
-                                      if (host.includes('localhost')) return `${tenant.subdomain}.localhost:3000`;
+                                      if (host.includes('localhost')) return `nectarlabs.localhost/tenants/${tenant.subdomain}`;
                                       if (host.includes('staging.nectarlabs.dev')) return `${tenant.subdomain}.staging.nectarlabs.dev`;
                                       return `${tenant.subdomain}.nectarlabs.dev`;
                                     })()}
@@ -2036,7 +2155,7 @@ function DashboardPageOriginal() {
                                   href={(() => {
                                     const tenant = tenants[0];
                                     const host = typeof window !== 'undefined' ? window.location.hostname : '';
-                                    if (host.includes('localhost')) return `http://${tenant.subdomain}.localhost:3000`;
+                                    if (host.includes('localhost')) return `http://nectarlabs.localhost/tenants/${tenant.subdomain}`;
                                     if (host.includes('staging.nectarlabs.dev')) return `https://${tenant.subdomain}.staging.nectarlabs.dev`;
                                     return `https://${tenant.subdomain}.nectarlabs.dev`;
                                   })()}
@@ -2105,8 +2224,8 @@ function DashboardPageOriginal() {
                       let domain = `https://${tenant.subdomain}.nectarlabs.dev`;
                       let urlDisplay = `${tenant.subdomain}.nectarlabs.dev`;
                       if (host.includes('localhost')) {
-                        domain = `http://${tenant.subdomain}.localhost:3000`;
-                        urlDisplay = `${tenant.subdomain}.localhost:3000`;
+                        domain = `http://nectarlabs.localhost/tenants/${tenant.subdomain}`;
+                        urlDisplay = `nectarlabs.localhost/tenants/${tenant.subdomain}`;
                       } else if (host.includes('staging.nectarlabs.dev')) {
                         domain = `https://${tenant.subdomain}.staging.nectarlabs.dev`;
                         urlDisplay = `${tenant.subdomain}.staging.nectarlabs.dev`;
@@ -2164,28 +2283,39 @@ function DashboardPageOriginal() {
                             )}
                           </div>
 
-                          <div className="flex gap-2">
+                          <div className="flex flex-wrap gap-2">
                             {!isStaff && (
                               <Link
                                 href="/dashboard/tenant-settings"
-                                className="flex-1 py-2 bg-background border border-card-border hover:border-foreground text-foreground text-center rounded-xl text-[8px] font-black uppercase tracking-widest transition-all cursor-pointer font-bold flex items-center justify-center"
+                                className="flex-1 min-w-[90px] py-2 bg-background border border-card-border hover:border-foreground text-foreground text-center rounded-xl text-[8px] font-black uppercase tracking-widest transition-all cursor-pointer font-bold flex items-center justify-center font-bold"
                               >
                                 Personalizar Marca
                               </Link>
                             )}
-                            <a
-                              href={domain}
-                              target="_blank"
-                              rel="noreferrer"
-                              className={`flex-1 py-2 text-center rounded-xl text-[8px] font-black uppercase tracking-widest transition-all cursor-pointer font-bold ${
+                            <button
+                              onClick={() => {
+                                if (tenant.is_active) {
+                                  window.open(domain, '_blank', 'noopener,noreferrer');
+                                }
+                              }}
+                              className={`flex-1 min-w-[90px] py-2 text-center rounded-xl text-[8px] font-black uppercase tracking-widest transition-all cursor-pointer font-bold ${
                                 tenant.is_active 
                                   ? 'bg-nectar-gold/10 hover:bg-nectar-gold hover:text-background border border-nectar-gold/20 hover:border-nectar-gold text-nectar-gold'
-                                  : 'bg-card-border text-foreground/40 cursor-not-allowed pointer-events-none'
+                                  : 'bg-card-border text-foreground/40 cursor-not-allowed border border-transparent'
                               }`}
                               title={tenant.is_active ? 'Abrir Portal' : 'El portal está en estado reservado hasta recibir el pago.'}
+                              disabled={!tenant.is_active}
                             >
                               {tenant.is_active ? 'Abrir Portal ↗' : 'Portal Reservado 🔒'}
-                            </a>
+                            </button>
+                            {tenant.is_active && (
+                              <button
+                                onClick={() => router.push(`/dashboard/tenant-settings?tenant=${tenant.id}`)}
+                                className="flex-1 min-w-[90px] py-2 bg-foreground hover:bg-foreground/90 text-background text-center rounded-xl text-[8px] font-black uppercase tracking-widest transition-all cursor-pointer font-bold flex items-center justify-center border border-transparent font-bold"
+                              >
+                                Consola Admin ⚙️
+                              </button>
+                            )}
                           </div>
                         </div>
                       );
@@ -2229,6 +2359,11 @@ function DashboardPageOriginal() {
           onCancel={() => setConfirmDlg(null)}
         />
       )}
+
+      <ContactSupportModal
+        isOpen={showSupportModal}
+        onClose={() => setShowSupportModal(false)}
+      />
     </div>
   );
 }

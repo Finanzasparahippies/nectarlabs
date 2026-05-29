@@ -113,7 +113,7 @@ const fallbackAddons: Omit<Addon, 'icon'>[] = [
   },
   {
     id: 'logistics-gps',
-    name: 'Néctar Logistics & GPS',
+    name: 'Néctar Delivery',
     categoryBadge: 'LOGÍSTICA Y CONTROL',
     description: 'Seguimiento en tiempo real de repartidores, trazado de rutas óptimas de paradas y cálculo de ETA en mapa interactivo.',
     detailedDescription: 'Módulo de geolocalización industrial. Registra rutas y telemetría GPS, ofreciendo una experiencia interactiva tanto al administrador (consola de flotas) como al usuario final (seguimiento del pedido en tiempo real).',
@@ -261,22 +261,25 @@ export default function AddonsPage() {
 
         const data = await fetcher('/addons/');
         if (Array.isArray(data)) {
-          const mapped: Addon[] = data.map((item: any) => ({
-            id: item.slug,
-            dbId: item.id,
-            name: item.name,
-            categoryBadge: item.category_badge,
-            description: item.description,
-            detailedDescription: item.detailed_description,
-            monthlyPrice: parseFloat(item.monthly_price),
-            yearlyPrice: parseFloat(item.yearly_price),
-            originProject: item.origin_project,
-            sourceReference: item.source_reference,
-            complexity: item.complexity,
-            serverRequirements: item.server_requirements,
-            technicalDetails: item.technical_details || [],
-            icon: getAddonIcon(item.slug),
-          }));
+          const mapped: Addon[] = data.map((item: any) => {
+            const isDelivery = item.slug === 'logistics-gps';
+            return {
+              id: item.slug,
+              dbId: item.id,
+              name: isDelivery ? 'Néctar Delivery' : item.name,
+              categoryBadge: isDelivery ? 'LOGÍSTICA Y CONTROL' : item.category_badge,
+              description: item.description,
+              detailedDescription: item.detailed_description,
+              monthlyPrice: parseFloat(item.monthly_price),
+              yearlyPrice: parseFloat(item.yearly_price),
+              originProject: item.origin_project,
+              sourceReference: item.source_reference,
+              complexity: item.complexity,
+              serverRequirements: item.server_requirements,
+              technicalDetails: item.technical_details || [],
+              icon: getAddonIcon(item.slug),
+            };
+          });
           setAddonsList(mapped);
 
           // Auto-select or request from params
@@ -613,15 +616,29 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
               ))}
             </>
           ) : addonsList.map((addon) => {
+            const isDelivery = addon.id === 'logistics-gps';
             const price = billingCycle === 'monthly' ? addon.monthlyPrice : addon.yearlyPrice;
             const savings = billingCycle === 'yearly' ? addon.monthlyPrice * 2 : 0;
             return (
               <div
                 key={addon.id}
-                className="bg-card-bg border border-card-border p-8 rounded-[2.5rem] relative overflow-hidden group hover:border-nectar-gold/50 hover:shadow-[0_20px_50px_rgba(198,138,30,0.08)] transition-all duration-500 flex flex-col justify-between min-h-[420px]"
+                className={`bg-card-bg border border-card-border p-8 rounded-[2.5rem] relative overflow-hidden group transition-all duration-500 flex flex-col justify-between min-h-[420px] ${
+                  isDelivery 
+                    ? 'hover:border-nectar-gold/50 hover:shadow-[0_20px_50px_rgba(198,138,30,0.08)]' 
+                    : 'opacity-55'
+                }`}
               >
                 {/* Accent Background Glow on Hover */}
-                <div className="absolute -top-32 -right-32 w-64 h-64 bg-nectar-gold/5 blur-[80px] rounded-full group-hover:bg-nectar-gold/10 transition-all duration-700 pointer-events-none -z-10"></div>
+                {isDelivery && (
+                  <div className="absolute -top-32 -right-32 w-64 h-64 bg-nectar-gold/5 blur-[80px] rounded-full group-hover:bg-nectar-gold/10 transition-all duration-700 pointer-events-none -z-10"></div>
+                )}
+
+                {/* Lock Badge for Locked Addons */}
+                {!isDelivery && (
+                  <div className="absolute top-4 right-4 bg-red-500/10 border border-red-500/20 text-red-400 text-[7px] font-black uppercase tracking-widest px-2.5 py-1 rounded-md flex items-center gap-1 font-bold">
+                    🔒 En desarrollo / Bloqueado
+                  </div>
+                )}
 
                 <div>
                   {/* Category Badge & Icon */}
@@ -629,13 +646,13 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
                     <span className="text-[8px] font-black uppercase tracking-widest text-nectar-gold bg-nectar-gold/5 border border-nectar-gold/15 px-3 py-1.5 rounded-full">
                       {addon.categoryBadge}
                     </span>
-                    <div className="p-3 bg-foreground/5 rounded-2xl group-hover:bg-nectar-gold/10 group-hover:scale-110 transition-all duration-500">
+                    <div className={`p-3 bg-foreground/5 rounded-2xl transition-all duration-500 ${isDelivery ? 'group-hover:bg-nectar-gold/10 group-hover:scale-110' : ''}`}>
                       {addon.icon}
                     </div>
                   </div>
 
                   {/* Title & Description */}
-                  <h3 className="text-2xl font-black tracking-tight mb-3 group-hover:text-nectar-gold transition-colors duration-300">
+                  <h3 className={`text-2xl font-black tracking-tight mb-3 transition-colors duration-300 ${isDelivery ? 'group-hover:text-nectar-gold' : ''}`}>
                     {addon.name}
                   </h3>
                   <p className="text-xs text-muted mb-6 leading-relaxed">
@@ -685,29 +702,40 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <button
-                      onClick={() => setSelectedAddon(addon)}
-                      className="w-full py-4 text-[9px] font-black uppercase tracking-widest text-nectar-gold hover:text-foreground hover:bg-foreground/5 rounded-xl border border-nectar-gold/20 hover:border-transparent transition-all duration-300 text-center"
-                    >
-                      Ver Ficha
-                    </button>
-                    {isStaff ? (
+                  {isDelivery ? (
+                    <div className="grid grid-cols-2 gap-4">
                       <button
-                        onClick={() => setManageAddon(addon)}
-                        className="w-full py-4 text-[9px] font-black uppercase tracking-widest bg-nectar-gold text-background hover:scale-[1.03] active:scale-95 transition-all rounded-xl shadow-lg shadow-nectar-gold/10 hover:shadow-nectar-gold/25"
+                        onClick={() => setSelectedAddon(addon)}
+                        className="w-full py-4 text-[9px] font-black uppercase tracking-widest text-nectar-gold hover:text-foreground hover:bg-foreground/5 rounded-xl border border-nectar-gold/20 hover:border-transparent transition-all duration-300 text-center"
                       >
-                        Asignar Cliente
+                        Ver Ficha
                       </button>
-                    ) : (
+                      {isStaff ? (
+                        <button
+                          onClick={() => setManageAddon(addon)}
+                          className="w-full py-4 text-[9px] font-black uppercase tracking-widest bg-nectar-gold text-background hover:scale-[1.03] active:scale-95 transition-all rounded-xl shadow-lg shadow-nectar-gold/10 hover:shadow-nectar-gold/25"
+                        >
+                          Asignar Cliente
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => setRequestAddon(addon)}
+                          className="w-full py-4 text-[9px] font-black uppercase tracking-widest bg-nectar-gold text-background hover:scale-[1.03] active:scale-95 transition-all rounded-xl shadow-lg shadow-nectar-gold/10 hover:shadow-nectar-gold/25"
+                        >
+                          {hasPlanContract ? 'Solicitar Gratis' : 'Solicitar'}
+                        </button>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="w-full">
                       <button
-                        onClick={() => setRequestAddon(addon)}
-                        className="w-full py-4 text-[9px] font-black uppercase tracking-widest bg-nectar-gold text-background hover:scale-[1.03] active:scale-95 transition-all rounded-xl shadow-lg shadow-nectar-gold/10 hover:shadow-nectar-gold/25"
+                        disabled
+                        className="w-full py-4 text-[9px] font-black uppercase tracking-widest bg-card-border/30 text-foreground/45 rounded-xl border border-card-border/20 cursor-not-allowed text-center"
                       >
-                        {hasPlanContract ? 'Solicitar Gratis' : 'Solicitar'}
+                        🔒 Módulo en desarrollo
                       </button>
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </div>
               </div>
             );

@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { fetcher } from '../../../lib/api';
 import DashboardSidebar from '../../../components/DashboardSidebar';
+import Toast from '../../../components/ui/Toast';
+import ConfirmModal from '../../../components/ui/ConfirmModal';
 
 interface Tenant {
   id: string;
@@ -20,6 +22,9 @@ interface Tenant {
   card_bg_color: string;
   text_color: string;
   border_color: string;
+  pollen_active: boolean;
+  pollen_icon: string;
+  pollen_color: string;
   logo_url: string | null;
   welcome_message: string;
   portal_title: string | null;
@@ -76,6 +81,9 @@ export default function TenantSettingsPage() {
   const [editCardBgColor, setEditCardBgColor] = useState('#050a06');
   const [editTextColor, setEditTextColor] = useState('#FFFFFF');
   const [editBorderColor, setEditBorderColor] = useState('#151F18');
+  const [editPollenActive, setEditPollenActive] = useState(true);
+  const [editPollenIcon, setEditPollenIcon] = useState('⚫');
+  const [editPollenColor, setEditPollenColor] = useState('#C68A1E');
   const [editLogoUrl, setEditLogoUrl] = useState('');
   const [editLogoFile, setEditLogoFile] = useState<File | null>(null);
   const [editLogoPreview, setEditLogoPreview] = useState<string | null>(null);
@@ -102,6 +110,17 @@ export default function TenantSettingsPage() {
   const [userUsername, setUserUsername] = useState('');
   const [userPassword, setUserPassword] = useState('');
   const [userRoleSelect, setUserRoleSelect] = useState('CUSTOMER');
+
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'warning' | 'info' } | null>(null);
+  const [confirmModal, setConfirmModal] = useState<{
+    title: string;
+    message: string;
+    onConfirm: () => void;
+  } | null>(null);
+
+  const showToast = (message: string, type: 'success' | 'error' | 'warning' | 'info' = 'success') => {
+    setToast({ message, type });
+  };
   
   const router = useRouter();
 
@@ -119,10 +138,17 @@ export default function TenantSettingsPage() {
 
     const loadInitialData = async () => {
       try {
+        const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+        const urlTenantId = urlParams ? urlParams.get('tenant') : null;
+
         const tenantData = await fetcher('/tenants/');
         setTenants(tenantData);
         if (tenantData.length > 0) {
-          const activeTenant = tenantData[0];
+          let activeTenant = tenantData[0];
+          if (urlTenantId) {
+            const found = tenantData.find((t: any) => String(t.id) === urlTenantId);
+            if (found) activeTenant = found;
+          }
           setSelectedTenant(activeTenant);
           initTenantFields(activeTenant);
           
@@ -155,6 +181,9 @@ export default function TenantSettingsPage() {
     setEditCardBgColor(tenant.card_bg_color || '#050a06');
     setEditTextColor(tenant.text_color || '#FFFFFF');
     setEditBorderColor(tenant.border_color || '#151F18');
+    setEditPollenActive(tenant.pollen_active !== false); // default to true if undefined
+    setEditPollenIcon(tenant.pollen_icon || '⚫');
+    setEditPollenColor(tenant.pollen_color || '#C68A1E');
     setEditLogoUrl(tenant.logo_url || '');
     setEditLogoFile(null);
     setEditLogoPreview(null);
@@ -184,9 +213,9 @@ export default function TenantSettingsPage() {
       initTenantFields(created);
       setNewTenantName('');
       setNewTenantSubdomain('');
-      alert('Configuración de negocio iniciada correctamente.');
+      showToast('Configuración de negocio iniciada correctamente.', 'success');
     } catch (err: any) {
-      alert(err.message || 'Error al inicializar la configuración de tu negocio.');
+      showToast(err.message || 'Error al inicializar la configuración de tu negocio.', 'error');
     } finally {
       setIsSubmitting(false);
     }
@@ -208,6 +237,9 @@ export default function TenantSettingsPage() {
       formData.append('card_bg_color', editCardBgColor);
       formData.append('text_color', editTextColor);
       formData.append('border_color', editBorderColor);
+      formData.append('pollen_active', String(editPollenActive));
+      formData.append('pollen_icon', editPollenIcon);
+      formData.append('pollen_color', editPollenColor);
       formData.append('welcome_message', editWelcomeMessage.trim());
       formData.append('portal_title', editPortalTitle.trim());
       formData.append('footer_text', editFooterText.trim());
@@ -228,9 +260,9 @@ export default function TenantSettingsPage() {
       setTenants([updated]);
       setSelectedTenant(updated);
       initTenantFields(updated);
-      alert('Configuración guardada correctamente.');
+      showToast('Configuración guardada correctamente.', 'success');
     } catch (err: any) {
-      alert(err.message || 'Error al guardar los cambios.');
+      showToast(err.message || 'Error al guardar los cambios.', 'error');
     } finally {
       setIsSubmitting(false);
     }
@@ -301,32 +333,37 @@ export default function TenantSettingsPage() {
           body: formData,
         });
         setProducts(prev => prev.map(p => p.id === updated.id ? updated : p));
-        alert('Producto actualizado con éxito.');
+        showToast('Producto actualizado con éxito.', 'success');
       } else {
         const created = await fetcher('/products/', {
           method: 'POST',
           body: formData,
         });
         setProducts(prev => [created, ...prev]);
-        alert('Producto creado con éxito.');
+        showToast('Producto creado con éxito.', 'success');
       }
       setShowProductModal(false);
     } catch (err: any) {
-      alert(err.message || 'Error al guardar el producto.');
+      showToast(err.message || 'Error al guardar el producto.', 'error');
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleDeleteProduct = async (id: number) => {
-    if (!confirm('¿Estás seguro de que deseas eliminar este producto?')) return;
-    try {
-      await fetcher(`/products/${id}/`, { method: 'DELETE' });
-      setProducts(prev => prev.filter(p => p.id !== id));
-      alert('Producto eliminado con éxito.');
-    } catch (err: any) {
-      alert(err.message || 'Error al eliminar el producto.');
-    }
+    setConfirmModal({
+      title: 'Eliminar Producto',
+      message: '¿Estás seguro de que deseas eliminar este producto? Esta acción no se puede deshacer.',
+      onConfirm: async () => {
+        try {
+          await fetcher(`/products/${id}/`, { method: 'DELETE' });
+          setProducts(prev => prev.filter(p => p.id !== id));
+          showToast('Producto eliminado con éxito.', 'success');
+        } catch (err: any) {
+          showToast(err.message || 'Error al eliminar el producto.', 'error');
+        }
+      }
+    });
   };
 
   // --- USER MANAGEMENT ---
@@ -370,32 +407,37 @@ export default function TenantSettingsPage() {
           body: JSON.stringify(payload),
         });
         setUsersList(prev => prev.map(u => u.id === updated.id ? updated : u));
-        alert('Usuario actualizado con éxito.');
+        showToast('Usuario actualizado con éxito.', 'success');
       } else {
         const created = await fetcher('/users/', {
           method: 'POST',
           body: JSON.stringify(payload),
         });
         setUsersList(prev => [created, ...prev]);
-        alert('Usuario creado con éxito.');
+        showToast('Usuario creado con éxito.', 'success');
       }
       setShowUserModal(false);
     } catch (err: any) {
-      alert(err.message || 'Error al guardar el usuario.');
+      showToast(err.message || 'Error al guardar el usuario.', 'error');
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleDeleteUser = async (id: number) => {
-    if (!confirm('¿Estás seguro de que deseas eliminar este usuario?')) return;
-    try {
-      await fetcher(`/users/${id}/`, { method: 'DELETE' });
-      setUsersList(prev => prev.filter(u => u.id !== id));
-      alert('Usuario eliminado con éxito.');
-    } catch (err: any) {
-      alert(err.message || 'Error al eliminar el usuario.');
-    }
+    setConfirmModal({
+      title: 'Eliminar Usuario',
+      message: '¿Estás seguro de que deseas eliminar este usuario? Esta acción no se puede deshacer.',
+      onConfirm: async () => {
+        try {
+          await fetcher(`/users/${id}/`, { method: 'DELETE' });
+          setUsersList(prev => prev.filter(u => u.id !== id));
+          showToast('Usuario eliminado con éxito.', 'success');
+        } catch (err: any) {
+          showToast(err.message || 'Error al eliminar el usuario.', 'error');
+        }
+      }
+    });
   };
 
   if (loading) {
@@ -433,27 +475,27 @@ export default function TenantSettingsPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                 </svg>
               </div>
-              <h2 className="text-xl font-black uppercase tracking-wider text-white">Activa tu Configuración de Negocio</h2>
-              <p className="text-xs text-white/50 max-w-sm mx-auto mt-2 leading-relaxed">
+              <h2 className="text-xl font-black uppercase tracking-wider text-foreground">Activa tu Configuración de Negocio</h2>
+              <p className="text-xs text-foreground/50 max-w-sm mx-auto mt-2 leading-relaxed">
                 Antes de comenzar a gestionar tus productos y usuarios, define un subdominio y nombre de marca para tu portal comercial.
               </p>
             </div>
 
             <form onSubmit={handleCreateTenant} className="space-y-4">
               <div className="space-y-1">
-                <label className="text-[9px] font-black uppercase tracking-widest text-white/40">Nombre de tu Negocio / Marca</label>
+                <label className="text-[9px] font-black uppercase tracking-widest text-foreground/40">Nombre de tu Negocio / Marca</label>
                 <input
                   type="text"
                   value={newTenantName}
                   onChange={(e) => setNewTenantName(e.target.value)}
                   placeholder="Ej. Mi Tienda Néctar"
                   required
-                  className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-nectar-gold transition-all"
+                  className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-foreground focus:outline-none focus:border-nectar-gold transition-all"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-[9px] font-black uppercase tracking-widest text-white/40">Subdominio Comercial</label>
+                <label className="text-[9px] font-black uppercase tracking-widest text-foreground/40">Subdominio Comercial</label>
                 <div className="flex items-center bg-background border border-card-border rounded-xl px-4 py-3 focus-within:border-nectar-gold transition-all">
                   <input
                     type="text"
@@ -461,11 +503,11 @@ export default function TenantSettingsPage() {
                     onChange={(e) => setNewTenantSubdomain(e.target.value)}
                     placeholder="mi-negocio"
                     required
-                    className="flex-1 bg-transparent text-xs text-white focus:outline-none"
+                    className="flex-1 bg-transparent text-xs text-foreground focus:outline-none"
                   />
                   <span className="text-[10px] font-bold text-nectar-gold pl-2">.nectarlabs.dev</span>
                 </div>
-                <p className="text-[8px] text-white/30 uppercase mt-1">Define la dirección web pública de tu portal de cliente.</p>
+                <p className="text-[8px] text-foreground/30 uppercase mt-1">Define la dirección web pública de tu portal de cliente.</p>
               </div>
 
               <button
@@ -488,7 +530,7 @@ export default function TenantSettingsPage() {
                   <button
                     onClick={() => setActiveSubTab('branding')}
                     className={`pb-3 text-[10px] font-black uppercase tracking-widest relative transition-all whitespace-nowrap ${
-                      activeSubTab === 'branding' ? 'text-nectar-gold' : 'text-white/45 hover:text-white'
+                      activeSubTab === 'branding' ? 'text-nectar-gold' : 'text-foreground/45 hover:text-foreground'
                     }`}
                   >
                     Portal y Negocio
@@ -497,7 +539,7 @@ export default function TenantSettingsPage() {
                   <button
                     onClick={() => setActiveSubTab('colors')}
                     className={`pb-3 text-[10px] font-black uppercase tracking-widest relative transition-all whitespace-nowrap ${
-                      activeSubTab === 'colors' ? 'text-nectar-gold' : 'text-white/45 hover:text-white'
+                      activeSubTab === 'colors' ? 'text-nectar-gold' : 'text-foreground/45 hover:text-foreground'
                     }`}
                   >
                     Colores y Branding
@@ -506,7 +548,7 @@ export default function TenantSettingsPage() {
                   <button
                     onClick={() => setActiveSubTab('products')}
                     className={`pb-3 text-[10px] font-black uppercase tracking-widest relative transition-all whitespace-nowrap ${
-                      activeSubTab === 'products' ? 'text-nectar-gold' : 'text-white/45 hover:text-white'
+                      activeSubTab === 'products' ? 'text-nectar-gold' : 'text-foreground/45 hover:text-foreground'
                     }`}
                   >
                     Productos
@@ -515,7 +557,7 @@ export default function TenantSettingsPage() {
                   <button
                     onClick={() => setActiveSubTab('users')}
                     className={`pb-3 text-[10px] font-black uppercase tracking-widest relative transition-all whitespace-nowrap ${
-                      activeSubTab === 'users' ? 'text-nectar-gold' : 'text-white/45 hover:text-white'
+                      activeSubTab === 'users' ? 'text-nectar-gold' : 'text-foreground/45 hover:text-foreground'
                     }`}
                   >
                     Usuarios
@@ -528,31 +570,31 @@ export default function TenantSettingsPage() {
                   <form onSubmit={handleSaveSettings} className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-1">
-                        <label className="text-[9px] font-black uppercase tracking-widest text-white/40">Nombre del Negocio / Portal</label>
+                        <label className="text-[9px] font-black uppercase tracking-widest text-foreground/40">Nombre del Negocio / Portal</label>
                         <input
                           type="text"
                           value={editName}
                           onChange={(e) => setEditName(e.target.value)}
                           required
-                          className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-nectar-gold transition-all"
+                          className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-foreground focus:outline-none focus:border-nectar-gold transition-all"
                         />
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-[9px] font-black uppercase tracking-widest text-white/40">Título del Portal (Pestaña del Navegador)</label>
+                        <label className="text-[9px] font-black uppercase tracking-widest text-foreground/40">Título del Portal (Pestaña del Navegador)</label>
                         <input
                           type="text"
                           value={editPortalTitle}
                           onChange={(e) => setEditPortalTitle(e.target.value)}
                           placeholder="Ej. Mi Tienda Néctar"
-                          className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-nectar-gold transition-all"
+                          className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-foreground focus:outline-none focus:border-nectar-gold transition-all"
                         />
                       </div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-1">
-                        <label className="text-[9px] font-black uppercase tracking-widest text-white/40">Logotipo (Subir Archivo)</label>
+                        <label className="text-[9px] font-black uppercase tracking-widest text-foreground/40">Logotipo (Subir Archivo)</label>
                         <div className="flex flex-col sm:flex-row gap-4 items-center bg-background border border-card-border rounded-xl p-4">
                           <div className="relative w-16 h-16 rounded-xl border border-card-border overflow-hidden bg-background flex items-center justify-center shrink-0">
                             {editLogoPreview || editLogoUrl ? (
@@ -562,7 +604,7 @@ export default function TenantSettingsPage() {
                                 className="w-full h-full object-cover"
                               />
                             ) : (
-                              <span className="text-[10px] text-white/30 uppercase font-black text-center p-1">Sin Logo</span>
+                              <span className="text-[10px] text-foreground/30 uppercase font-black text-center p-1">Sin Logo</span>
                             )}
                           </div>
                           <div className="flex-1 space-y-2">
@@ -576,7 +618,7 @@ export default function TenantSettingsPage() {
                                   setEditLogoPreview(URL.createObjectURL(file));
                                 }
                               }}
-                              className="text-xs text-white file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-[10px] file:font-black file:uppercase file:tracking-wider file:bg-white/5 file:text-white hover:file:bg-white/10 w-full"
+                              className="text-xs text-foreground file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-[10px] file:font-black file:uppercase file:tracking-wider file:bg-foreground/5 file:text-foreground hover:file:bg-foreground/10 w-full"
                             />
                             {(editLogoPreview || editLogoUrl) && (
                               <button
@@ -596,42 +638,42 @@ export default function TenantSettingsPage() {
                       </div>
 
                       <div className="space-y-1 flex flex-col justify-end">
-                        <label className="text-[9px] font-black uppercase tracking-widest text-white/40">O URL Externa del Logo</label>
+                        <label className="text-[9px] font-black uppercase tracking-widest text-foreground/40">O URL Externa del Logo</label>
                         <input
                           type="url"
                           value={editLogoUrl}
                           onChange={(e) => setEditLogoUrl(e.target.value)}
                           placeholder="https://ejemplo.com/logo.png"
-                          className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-nectar-gold transition-all"
+                          className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-foreground focus:outline-none focus:border-nectar-gold transition-all"
                         />
                       </div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-card-border">
                       <div className="space-y-1">
-                        <label className="text-[9px] font-black uppercase tracking-widest text-white/40">Subdominio del Negocio</label>
+                        <label className="text-[9px] font-black uppercase tracking-widest text-foreground/40">Subdominio del Negocio</label>
                         <div className="flex items-center bg-background border border-card-border rounded-xl px-4 py-3 focus-within:border-nectar-gold transition-all">
                           <input
                             type="text"
                             value={editSubdomain}
                             onChange={(e) => setEditSubdomain(e.target.value)}
                             required
-                            className="flex-1 bg-transparent text-xs text-white focus:outline-none"
+                            className="flex-1 bg-transparent text-xs text-foreground focus:outline-none"
                           />
                           <span className="text-[10px] font-bold text-nectar-gold pl-2">.nectarlabs.dev</span>
                         </div>
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-[9px] font-black uppercase tracking-widest text-white/40">Dominio Personalizado (CNAME Mapping)</label>
+                        <label className="text-[9px] font-black uppercase tracking-widest text-foreground/40">Dominio Personalizado (CNAME Mapping)</label>
                         <input
                           type="text"
                           value={editCustomDomain}
                           onChange={(e) => setEditCustomDomain(e.target.value)}
                           placeholder="Ej. tienda.minegocio.com"
-                          className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-nectar-gold transition-all"
+                          className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-foreground focus:outline-none focus:border-nectar-gold transition-all"
                         />
-                        <p className="text-[8px] text-white/30 uppercase mt-1">
+                        <p className="text-[8px] text-foreground/30 uppercase mt-1">
                           Apunta tu CNAME en tu proveedor de DNS hacia <span className="text-nectar-gold">nectarlabs.dev</span>.
                         </p>
                         
@@ -641,7 +683,7 @@ export default function TenantSettingsPage() {
                               type="button"
                               onClick={handleValidateDomain}
                               disabled={isValidatingDomain}
-                              className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-lg text-[9px] font-black uppercase tracking-wider transition-all disabled:opacity-50"
+                              className="px-4 py-2 bg-foreground/5 hover:bg-foreground/10 border border-card-border text-foreground rounded-lg text-[9px] font-black uppercase tracking-wider transition-all disabled:opacity-50"
                             >
                               {isValidatingDomain ? 'Validando...' : 'Verificar DNS'}
                             </button>
@@ -666,22 +708,22 @@ export default function TenantSettingsPage() {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-card-border">
                       <div className="space-y-1">
-                        <label className="text-[9px] font-black uppercase tracking-widest text-white/40">Mensaje de Bienvenida del Portal</label>
+                        <label className="text-[9px] font-black uppercase tracking-widest text-foreground/40">Mensaje de Bienvenida del Portal</label>
                         <textarea
                           value={editWelcomeMessage}
                           onChange={(e) => setEditWelcomeMessage(e.target.value)}
                           rows={3}
-                          className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-nectar-gold transition-all resize-none"
+                          className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-foreground focus:outline-none focus:border-nectar-gold transition-all resize-none"
                         ></textarea>
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-[9px] font-black uppercase tracking-widest text-white/40">Texto de Pie de Página (Footer)</label>
+                        <label className="text-[9px] font-black uppercase tracking-widest text-foreground/40">Texto de Pie de Página (Footer)</label>
                         <textarea
                           value={editFooterText}
                           onChange={(e) => setEditFooterText(e.target.value)}
                           rows={3}
-                          className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-nectar-gold transition-all resize-none"
+                          className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-foreground focus:outline-none focus:border-nectar-gold transition-all resize-none"
                         ></textarea>
                       </div>
                     </div>
@@ -689,8 +731,8 @@ export default function TenantSettingsPage() {
                     <div className="space-y-4 pt-4 border-t border-card-border">
                       <div className="flex items-center justify-between p-4 bg-background/50 border border-card-border rounded-xl">
                         <div>
-                          <h4 className="text-xs font-black uppercase tracking-wide text-white">Exigir Registro / Datos de Cliente</h4>
-                          <p className="text-[9px] text-white/40 uppercase mt-0.5">Exige nombre y correo electrónico antes de permitir iniciar una sesión de soporte o compra.</p>
+                          <h4 className="text-xs font-black uppercase tracking-wide text-foreground">Exigir Registro / Datos de Cliente</h4>
+                          <p className="text-[9px] text-foreground/40 uppercase mt-0.5">Exige nombre y correo electrónico antes de permitir iniciar una sesión de soporte o compra.</p>
                         </div>
                         <label className="relative inline-flex items-center cursor-pointer select-none">
                           <input
@@ -704,15 +746,15 @@ export default function TenantSettingsPage() {
                       </div>
                       
                       <div className="space-y-1">
-                        <label className="text-[9px] font-black uppercase tracking-widest text-white/40">Orígenes Permitidos (Widget CORS Security)</label>
+                        <label className="text-[9px] font-black uppercase tracking-widest text-foreground/40">Orígenes Permitidos (Widget CORS Security)</label>
                         <textarea
                           value={editAllowedOrigins}
                           onChange={(e) => setEditAllowedOrigins(e.target.value)}
                           placeholder="https://minegocio.com, https://app.minegocio.com"
                           rows={2}
-                          className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-nectar-gold transition-all resize-none"
+                          className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-foreground focus:outline-none focus:border-nectar-gold transition-all resize-none"
                         ></textarea>
-                        <p className="text-[8px] text-white/30 uppercase mt-1">Dominios desde los que se autoriza embeber el widget del portal.</p>
+                        <p className="text-[8px] text-foreground/30 uppercase mt-1">Dominios desde los que se autoriza embeber el widget del portal.</p>
                       </div>
                     </div>
 
@@ -729,120 +771,207 @@ export default function TenantSettingsPage() {
                 )}
 
                 {activeSubTab === 'colors' && (
-                  <form onSubmit={handleSaveSettings} className="space-y-6">
-                    <h4 className="text-[10px] font-black uppercase tracking-widest text-nectar-gold">Paleta de Colores de tu Negocio</h4>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+                  <form onSubmit={handleSaveSettings} className="space-y-8 animate-fadeIn">
+                    <div className="flex justify-between items-center border-b border-card-border pb-4">
+                      <div>
+                        <h4 className="text-xs font-black uppercase tracking-widest text-nectar-gold">Paleta de Colores</h4>
+                        <p className="text-[8px] text-foreground/45 uppercase tracking-wider mt-1">Configura la identidad de marca de tu Colmena</p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                       {/* 1. Theme Color */}
-                      <div className="space-y-1">
-                        <label className="text-[8px] font-black uppercase tracking-widest text-white/45">Primario (Tema)</label>
-                        <div className="flex gap-2">
+                      <div className="p-4 bg-foreground/[0.01] border border-card-border/40 rounded-2xl space-y-3">
+                        <label className="text-[8px] font-black uppercase tracking-widest text-foreground/45 block">Primario (Tema)</label>
+                        <div className="flex items-center gap-3">
                           <input
                             type="color"
                             value={editThemeColor}
                             onChange={(e) => setEditThemeColor(e.target.value)}
-                            className="w-10 h-10 bg-background border border-card-border rounded-xl cursor-pointer p-1"
+                            className="shrink-0 w-11 h-11 rounded-xl cursor-pointer border border-card-border bg-transparent p-0 overflow-hidden [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:border-0 [&::-webkit-color-swatch]:rounded-xl transition-transform hover:scale-105"
                           />
                           <input
                             type="text"
                             value={editThemeColor}
                             onChange={(e) => setEditThemeColor(e.target.value)}
-                            className="flex-1 bg-background border border-card-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-nectar-gold uppercase text-center font-mono"
+                            className="flex-1 bg-background border border-card-border rounded-xl px-3 py-2.5 text-xs text-foreground focus:outline-none focus:border-nectar-gold uppercase text-center font-mono font-bold tracking-wider"
                           />
                         </div>
                       </div>
 
                       {/* 2. Accent Color */}
-                      <div className="space-y-1">
-                        <label className="text-[8px] font-black uppercase tracking-widest text-white/45">Acento</label>
-                        <div className="flex gap-2">
+                      <div className="p-4 bg-foreground/[0.01] border border-card-border/40 rounded-2xl space-y-3">
+                        <label className="text-[8px] font-black uppercase tracking-widest text-foreground/45 block">Acento</label>
+                        <div className="flex items-center gap-3">
                           <input
                             type="color"
                             value={editAccentColor}
                             onChange={(e) => setEditAccentColor(e.target.value)}
-                            className="w-10 h-10 bg-background border border-card-border rounded-xl cursor-pointer p-1"
+                            className="shrink-0 w-11 h-11 rounded-xl cursor-pointer border border-card-border bg-transparent p-0 overflow-hidden [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:border-0 [&::-webkit-color-swatch]:rounded-xl transition-transform hover:scale-105"
                           />
                           <input
                             type="text"
                             value={editAccentColor}
                             onChange={(e) => setEditAccentColor(e.target.value)}
-                            className="flex-1 bg-background border border-card-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-nectar-gold uppercase text-center font-mono"
+                            className="flex-1 bg-background border border-card-border rounded-xl px-3 py-2.5 text-xs text-foreground focus:outline-none focus:border-nectar-gold uppercase text-center font-mono font-bold tracking-wider"
                           />
                         </div>
                       </div>
 
                       {/* 3. Text Color */}
-                      <div className="space-y-1">
-                        <label className="text-[8px] font-black uppercase tracking-widest text-white/45">Texto Principal</label>
-                        <div className="flex gap-2">
+                      <div className="p-4 bg-foreground/[0.01] border border-card-border/40 rounded-2xl space-y-3">
+                        <label className="text-[8px] font-black uppercase tracking-widest text-foreground/45 block">Texto Principal</label>
+                        <div className="flex items-center gap-3">
                           <input
                             type="color"
                             value={editTextColor}
                             onChange={(e) => setEditTextColor(e.target.value)}
-                            className="w-10 h-10 bg-background border border-card-border rounded-xl cursor-pointer p-1"
+                            className="shrink-0 w-11 h-11 rounded-xl cursor-pointer border border-card-border bg-transparent p-0 overflow-hidden [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:border-0 [&::-webkit-color-swatch]:rounded-xl transition-transform hover:scale-105"
                           />
                           <input
                             type="text"
                             value={editTextColor}
                             onChange={(e) => setEditTextColor(e.target.value)}
-                            className="flex-1 bg-background border border-card-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-nectar-gold uppercase text-center font-mono"
+                            className="flex-1 bg-background border border-card-border rounded-xl px-3 py-2.5 text-xs text-foreground focus:outline-none focus:border-nectar-gold uppercase text-center font-mono font-bold tracking-wider"
                           />
                         </div>
                       </div>
 
                       {/* 4. Canvas BG Color */}
-                      <div className="space-y-1">
-                        <label className="text-[8px] font-black uppercase tracking-widest text-white/45">Fondo Lienzo</label>
-                        <div className="flex gap-2">
+                      <div className="p-4 bg-foreground/[0.01] border border-card-border/40 rounded-2xl space-y-3">
+                        <label className="text-[8px] font-black uppercase tracking-widest text-foreground/45 block">Fondo Lienzo</label>
+                        <div className="flex items-center gap-3">
                           <input
                             type="color"
                             value={editBgColor}
                             onChange={(e) => setEditBgColor(e.target.value)}
-                            className="w-10 h-10 bg-background border border-card-border rounded-xl cursor-pointer p-1"
+                            className="shrink-0 w-11 h-11 rounded-xl cursor-pointer border border-card-border bg-transparent p-0 overflow-hidden [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:border-0 [&::-webkit-color-swatch]:rounded-xl transition-transform hover:scale-105"
                           />
                           <input
                             type="text"
                             value={editBgColor}
                             onChange={(e) => setEditBgColor(e.target.value)}
-                            className="flex-1 bg-background border border-card-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-nectar-gold uppercase text-center font-mono"
+                            className="flex-1 bg-background border border-card-border rounded-xl px-3 py-2.5 text-xs text-foreground focus:outline-none focus:border-nectar-gold uppercase text-center font-mono font-bold tracking-wider"
                           />
                         </div>
                       </div>
 
                       {/* 5. Card BG Color */}
-                      <div className="space-y-1">
-                        <label className="text-[8px] font-black uppercase tracking-widest text-white/45">Fondo Tarjetas</label>
-                        <div className="flex gap-2">
+                      <div className="p-4 bg-foreground/[0.01] border border-card-border/40 rounded-2xl space-y-3">
+                        <label className="text-[8px] font-black uppercase tracking-widest text-foreground/45 block">Fondo Tarjetas</label>
+                        <div className="flex items-center gap-3">
                           <input
                             type="color"
                             value={editCardBgColor}
                             onChange={(e) => setEditCardBgColor(e.target.value)}
-                            className="w-10 h-10 bg-background border border-card-border rounded-xl cursor-pointer p-1"
+                            className="shrink-0 w-11 h-11 rounded-xl cursor-pointer border border-card-border bg-transparent p-0 overflow-hidden [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:border-0 [&::-webkit-color-swatch]:rounded-xl transition-transform hover:scale-105"
                           />
                           <input
                             type="text"
                             value={editCardBgColor}
                             onChange={(e) => setEditCardBgColor(e.target.value)}
-                            className="flex-1 bg-background border border-card-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-nectar-gold uppercase text-center font-mono"
+                            className="flex-1 bg-background border border-card-border rounded-xl px-3 py-2.5 text-xs text-foreground focus:outline-none focus:border-nectar-gold uppercase text-center font-mono font-bold tracking-wider"
                           />
                         </div>
                       </div>
 
                       {/* 6. Border Color */}
-                      <div className="space-y-1">
-                        <label className="text-[8px] font-black uppercase tracking-widest text-white/45">Bordes y Divisiones</label>
-                        <div className="flex gap-2">
+                      <div className="p-4 bg-foreground/[0.01] border border-card-border/40 rounded-2xl space-y-3">
+                        <label className="text-[8px] font-black uppercase tracking-widest text-foreground/45 block">Bordes y Divisiones</label>
+                        <div className="flex items-center gap-3">
                           <input
                             type="color"
                             value={editBorderColor}
                             onChange={(e) => setEditBorderColor(e.target.value)}
-                            className="w-10 h-10 bg-background border border-card-border rounded-xl cursor-pointer p-1"
+                            className="shrink-0 w-11 h-11 rounded-xl cursor-pointer border border-card-border bg-transparent p-0 overflow-hidden [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:border-0 [&::-webkit-color-swatch]:rounded-xl transition-transform hover:scale-105"
                           />
                           <input
                             type="text"
                             value={editBorderColor}
                             onChange={(e) => setEditBorderColor(e.target.value)}
-                            className="flex-1 bg-background border border-card-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-nectar-gold uppercase text-center font-mono"
+                            className="flex-1 bg-background border border-card-border rounded-xl px-3 py-2.5 text-xs text-foreground focus:outline-none focus:border-nectar-gold uppercase text-center font-mono font-bold tracking-wider"
                           />
+                        </div>
+                      </div>
+
+                      {/* Interactive Mockup Preview */}
+                      <div className="md:col-span-3 mt-4 p-6 rounded-[2rem] border transition-all duration-500 shadow-xl" style={{ backgroundColor: editBgColor, borderColor: editBorderColor }}>
+                        <div className="flex justify-between items-center mb-4">
+                          <span className="text-[8px] font-black uppercase tracking-widest opacity-60" style={{ color: editTextColor }}>Vista Previa en Tiempo Real</span>
+                          <span className="w-3 h-3 rounded-full animate-pulse" style={{ backgroundColor: editThemeColor, boxShadow: `0 0 12px ${editThemeColor}` }}></span>
+                        </div>
+                        <div className="p-6 rounded-2xl border space-y-3 transition-all duration-300" style={{ backgroundColor: editCardBgColor, borderColor: editBorderColor }}>
+                          <h5 className="text-xs font-black uppercase tracking-widest" style={{ color: editThemeColor }}>Módulo Principal</h5>
+                          <p className="text-[10px] leading-relaxed font-semibold" style={{ color: editTextColor }}>
+                            Esta tarjeta simula la combinación exacta de colores para el fondo, bordes, tarjetas y fuentes de tu portal público.
+                          </p>
+                          <div className="flex gap-2 pt-2">
+                            <span className="px-4 py-2 rounded-xl text-[8px] font-black uppercase tracking-widest transition-all" style={{ backgroundColor: editAccentColor, color: '#FFFFFF' }}>
+                              Botón de Acción
+                            </span>
+                            <span className="px-4 py-2 rounded-xl text-[8px] font-black uppercase tracking-widest border transition-all" style={{ borderColor: editBorderColor, color: editTextColor }}>
+                              Secundario
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Visual Effect Customization Section */}
+                    <div className="pt-6 border-t border-card-border space-y-6">
+                      <div>
+                        <h4 className="text-xs font-black uppercase tracking-widest text-nectar-gold">Efecto Visual de la Colmena</h4>
+                        <p className="text-[8px] text-foreground/45 uppercase tracking-wider mt-1">Configura las partículas animadas que caen en tu portal público</p>
+                      </div>
+                      
+                      <div className="flex items-center gap-3 p-4 bg-foreground/[0.01] border border-card-border/40 rounded-2xl">
+                        <input
+                          type="checkbox"
+                          id="pollen-active"
+                          checked={editPollenActive}
+                          onChange={(e) => setEditPollenActive(e.target.checked)}
+                          className="w-4 h-4 rounded border-card-border bg-background text-nectar-gold focus:ring-nectar-gold cursor-pointer"
+                        />
+                        <label htmlFor="pollen-active" className="text-[10px] font-black uppercase tracking-widest text-foreground cursor-pointer select-none">
+                          Activar lluvia de partículas / polen en el portal público
+                        </label>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* Particle Icon Select */}
+                        <div className="space-y-2 p-4 bg-foreground/[0.01] border border-card-border/40 rounded-2xl">
+                          <label className="text-[8px] font-black uppercase tracking-widest text-foreground/45 block">Icono del Efecto</label>
+                          <select
+                            value={editPollenIcon}
+                            onChange={(e) => setEditPollenIcon(e.target.value)}
+                            className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-foreground focus:outline-none focus:border-nectar-gold font-bold appearance-none cursor-pointer"
+                          >
+                            <option value="•">⚫ Punto Clásico</option>
+                            <option value="🌸">🌸 Pétalo de Flor</option>
+                            <option value="❄️">❄️ Copo de Nieve</option>
+                            <option value="✨">✨ Destello Mágico</option>
+                            <option value="🍂">🍂 Hoja de Otoño</option>
+                            <option value="🐝">🐝 Abeja Forrajera</option>
+                          </select>
+                        </div>
+
+                        {/* Particle Color Picker */}
+                        <div className="space-y-2 p-4 bg-foreground/[0.01] border border-card-border/40 rounded-2xl">
+                          <label className="text-[8px] font-black uppercase tracking-widest text-foreground/45 block">Color de las Partículas</label>
+                          <div className="flex items-center gap-3">
+                            <input
+                              type="color"
+                              value={editPollenColor}
+                              onChange={(e) => setEditPollenColor(e.target.value)}
+                              className="shrink-0 w-11 h-11 rounded-xl cursor-pointer border border-card-border bg-transparent p-0 overflow-hidden [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:border-0 [&::-webkit-color-swatch]:rounded-xl transition-transform hover:scale-105"
+                            />
+                            <input
+                              type="text"
+                              value={editPollenColor}
+                              onChange={(e) => setEditPollenColor(e.target.value)}
+                              className="flex-1 bg-background border border-card-border rounded-xl px-3 py-2.5 text-xs text-foreground focus:outline-none focus:border-nectar-gold uppercase text-center font-mono font-bold tracking-wider"
+                            />
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -862,7 +991,7 @@ export default function TenantSettingsPage() {
                 {activeSubTab === 'products' && (
                   <div className="space-y-6">
                     <div className="flex justify-between items-center">
-                      <h3 className="text-xs font-black uppercase tracking-wider text-white/40">Mis Productos</h3>
+                      <h3 className="text-xs font-black uppercase tracking-wider text-foreground/40">Mis Productos</h3>
                       <button
                         onClick={openAddProduct}
                         className="px-4 py-2 bg-nectar-gold hover:bg-nectar-gold/90 text-background text-[9px] font-black uppercase tracking-widest rounded-xl transition-all active:scale-95 cursor-pointer"
@@ -879,15 +1008,15 @@ export default function TenantSettingsPage() {
                               {prod.image ? (
                                 <img src={prod.image} alt={prod.name} className="w-full h-full object-cover" />
                               ) : (
-                                <span className="text-[10px] text-white/20 uppercase font-black">📦</span>
+                                <span className="text-[10px] text-foreground/20 uppercase font-black">📦</span>
                               )}
                             </div>
                             <div className="min-w-0">
-                              <h4 className="font-bold text-sm text-white truncate">{prod.name}</h4>
-                              <p className="text-[10px] text-white/50 truncate max-w-[200px]">{prod.description || 'Sin descripción'}</p>
+                              <h4 className="font-bold text-sm text-foreground truncate">{prod.name}</h4>
+                              <p className="text-[10px] text-foreground/50 truncate max-w-[200px]">{prod.description || 'Sin descripción'}</p>
                               <div className="flex gap-3 items-center mt-1">
                                 <span className="text-xs font-bold text-nectar-gold">${prod.price}</span>
-                                <span className="text-[8px] font-black uppercase tracking-wider text-white/30">Stock: {prod.stock}</span>
+                                <span className="text-[8px] font-black uppercase tracking-wider text-foreground/30">Stock: {prod.stock}</span>
                               </div>
                             </div>
                           </div>
@@ -895,7 +1024,7 @@ export default function TenantSettingsPage() {
                           <div className="flex gap-2">
                             <button
                               onClick={() => openEditProduct(prod)}
-                              className="p-2 bg-white/5 hover:bg-white/10 text-white rounded-lg border border-white/5"
+                              className="p-2 bg-foreground/5 hover:bg-foreground/10 text-foreground rounded-lg border border-card-border"
                               title="Editar"
                             >
                               ✏️
@@ -922,7 +1051,7 @@ export default function TenantSettingsPage() {
                 {activeSubTab === 'users' && (
                   <div className="space-y-6">
                     <div className="flex justify-between items-center">
-                      <h3 className="text-xs font-black uppercase tracking-wider text-white/40">Usuarios de mi Negocio</h3>
+                      <h3 className="text-xs font-black uppercase tracking-wider text-foreground/40">Usuarios de mi Negocio</h3>
                       <button
                         onClick={openAddUser}
                         className="px-4 py-2 bg-nectar-gold hover:bg-nectar-gold/90 text-background text-[9px] font-black uppercase tracking-widest rounded-xl transition-all active:scale-95 cursor-pointer"
@@ -950,7 +1079,7 @@ export default function TenantSettingsPage() {
                                 <span className={`px-2.5 py-0.5 text-[7px] font-black uppercase tracking-widest rounded-full ${
                                   userItem.role === 'BUSINESS' 
                                     ? 'bg-nectar-gold/10 text-nectar-gold border border-nectar-gold/20' 
-                                    : 'bg-white/5 text-white/70 border border-white/10'
+                                    : 'bg-foreground/5 text-foreground/70 border border-card-border/50'
                                 }`}>
                                   {userItem.role}
                                 </span>
@@ -959,7 +1088,7 @@ export default function TenantSettingsPage() {
                                 <div className="inline-flex gap-2">
                                   <button
                                     onClick={() => openEditUser(userItem)}
-                                    className="px-2 py-1 bg-white/5 hover:bg-white/10 text-white rounded text-[10px]"
+                                    className="px-2 py-1 bg-foreground/5 hover:bg-foreground/10 text-foreground rounded text-[10px]"
                                   >
                                     Editar
                                   </button>
@@ -988,8 +1117,8 @@ export default function TenantSettingsPage() {
                   <div className="absolute top-0 left-0 right-0 h-2" style={{ backgroundColor: editThemeColor }}></div>
                   
                   <div className="text-center pt-4">
-                    <span className="text-[8px] font-black uppercase tracking-widest text-white/30">Vista Previa Visual</span>
-                    <h4 className="text-xs font-black uppercase text-white tracking-tight mt-2">Portal Comercial</h4>
+                    <span className="text-[8px] font-black uppercase tracking-widest text-foreground/30">Vista Previa Visual</span>
+                    <h4 className="text-xs font-black uppercase text-foreground tracking-tight mt-2">Portal Comercial</h4>
                   </div>
 
                   {/* Mock Widget UI */}
@@ -1054,7 +1183,7 @@ export default function TenantSettingsPage() {
                     </div>
                   </div>
 
-                  <span className="text-[7.5px] font-black tracking-widest uppercase text-white/20">
+                  <span className="text-[7.5px] font-black tracking-widest uppercase text-foreground/20">
                     Powered by Néctar Labs
                   </span>
                 </div>
@@ -1235,6 +1364,27 @@ export default function TenantSettingsPage() {
             </form>
           </div>
         </div>
+      )}
+
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
+
+      {confirmModal && (
+        <ConfirmModal
+          isOpen={true}
+          title={confirmModal.title}
+          message={confirmModal.message}
+          onConfirm={() => {
+            confirmModal.onConfirm();
+            setConfirmModal(null);
+          }}
+          onCancel={() => setConfirmModal(null)}
+        />
       )}
     </div>
   );
