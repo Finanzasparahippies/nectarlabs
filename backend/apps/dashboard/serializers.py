@@ -72,9 +72,22 @@ class ProjectQuoteSerializer(serializers.ModelSerializer):
 
 class LeadSerializer(serializers.ModelSerializer):
     salesperson_email = serializers.EmailField(source='salesperson.email', read_only=True)
+    payment_frequency = serializers.SerializerMethodField()
 
     class Meta:
         model = Lead
         fields = '__all__'
         read_only_fields = ('salesperson',)
+
+    def get_payment_frequency(self, obj):
+        if not obj.email:
+            return 'monthly'
+        from apps.shop.models import Contract
+        contract = Contract.objects.filter(user__email=obj.email, is_active=True).first()
+        if contract:
+            if contract.payment_day == 'WEEKLY_MONDAY':
+                return 'weekly'
+            elif contract.payment_day == 'FORTNIGHTLY_1ST_15TH':
+                return 'fortnightly'
+        return 'monthly'
 

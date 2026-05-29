@@ -102,14 +102,21 @@ class Tenant(models.Model):
             is_fully_signed=True,
             plan__isnull=False
         ).exists()
+        
+        addons = set()
         if has_plan:
-            return list(AddOn.objects.filter(is_active=True).values_list('slug', flat=True).distinct())
-
-        # Return only the ones explicitly purchased or assigned via active, fully signed contracts
-        return list(AddOn.objects.filter(
-            is_active=True,
-            contracts__user=self.owner,
-            contracts__is_active=True,
-            contracts__is_fully_signed=True
-        ).values_list('slug', flat=True).distinct())
+            addons.update(AddOn.objects.filter(is_active=True).values_list('slug', flat=True).distinct())
+        else:
+            # Return only the ones explicitly purchased or assigned via active, fully signed contracts
+            addons.update(AddOn.objects.filter(
+                is_active=True,
+                contracts__user=self.owner,
+                contracts__is_active=True,
+                contracts__is_fully_signed=True
+            ).values_list('slug', flat=True).distinct())
+            
+        if self.newsletter_plan == 'PREMIUM':
+            addons.add('newsletter-campaigner')
+            
+        return list(addons)
 

@@ -43,7 +43,11 @@ class SubscribeView(APIView):
         # Enforce contact limit for TRIAL plan if tenant is active and not using BYO SMTP
         if tenant:
             has_byo_smtp = bool(tenant.custom_smtp_host and tenant.custom_smtp_username and tenant.custom_smtp_password)
-            if not has_byo_smtp and getattr(tenant, 'newsletter_plan', 'TRIAL') == 'TRIAL':
+            from apps.shop.models import Contract
+            has_active_contract = Contract.objects.filter(user=tenant.owner, is_active=True).exists()
+            has_paid_addon = tenant.newsletter_plan == 'PREMIUM'
+            
+            if not has_byo_smtp and not (has_active_contract or has_paid_addon):
                 exists = Subscriber.objects.filter(email=email, tenant=tenant).exists()
                 if not exists:
                     current_contacts = Subscriber.objects.filter(tenant=tenant, is_active=True).count()

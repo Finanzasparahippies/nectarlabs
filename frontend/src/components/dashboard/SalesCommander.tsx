@@ -33,6 +33,7 @@ interface Lead {
   status: 'PROSPECT' | 'CONTACTED' | 'PROPOSAL' | 'WON' | 'LOST';
   notes: string | null;
   created_at: string;
+  payment_frequency?: 'weekly' | 'fortnightly' | 'monthly';
 }
 
 interface ProjectQuote {
@@ -501,11 +502,9 @@ export default function SalesCommander() {
     }
 
     const val = parseFloat(lead.estimated_value) || 0;
-    // Commission model: 6 installments.
-    // Month 1: 10% of monthly payment (estimated_value / 6)
-    // Month 2: 5% of monthly payment
-    // Months 3-6: 2% of monthly payment each (total 4 months)
-    const monthlyPayment = val / 6;
+    const isWeekly = lead.payment_frequency === 'weekly';
+    const monthlyPayment = isWeekly ? val * 4 : val / 6;
+    
     const m1 = monthlyPayment * 0.10;
     const m2 = monthlyPayment * 0.05;
     const m3to6 = (monthlyPayment * 0.02) * 4;

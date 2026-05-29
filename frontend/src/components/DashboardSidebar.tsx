@@ -152,6 +152,18 @@ function DashboardSidebarContent() {
       )
     },
     {
+      label: 'Financial Oracle',
+      href: '/dashboard/sales',
+      show: userRole === 'SALES',
+      active: pathname === '/dashboard/sales',
+      icon: (active: boolean) => (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={`w-4 h-4 transition-all duration-300 group-hover:scale-110 ${active ? 'text-nectar-gold' : 'text-foreground/45 group-hover:text-foreground'}`}>
+          <line x1="12" y1="1" x2="12" y2="23"></line>
+          <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+        </svg>
+      )
+    },
+    {
       label: 'Compromiso de Pago',
       href: '/dashboard?tab=overview&scroll=payment-commitment',
       onClick: handleScrollToPayment,
