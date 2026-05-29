@@ -73,8 +73,8 @@ const fallbackAddons: Omit<Addon, 'icon'>[] = [
     categoryBadge: 'COMUNICACIÓN EN VIVO',
     description: 'Widget de chat flotante en tiempo real y consola multi-agente con historial persistente.',
     detailedDescription: 'Un canal de comunicación instantáneo integrado para retención y soporte de usuarios. Los clientes ven un widget interactivo de chat, mientras que los agentes de soporte gestionan las conversaciones desde una consola interna dedicada.',
-    monthlyPrice: 79,
-    yearlyPrice: 790,
+    monthlyPrice: 99,
+    yearlyPrice: 990,
     complexity: 'Media',
     serverRequirements: 'Django Channels (ASGI) con servidor de caché Redis + Base de Datos relacional.',
     technicalDetails: [
@@ -107,8 +107,8 @@ const fallbackAddons: Omit<Addon, 'icon'>[] = [
     categoryBadge: 'LOGÍSTICA Y CONTROL',
     description: 'Seguimiento en tiempo real de repartidores, trazado de rutas óptimas de paradas y cálculo de ETA en mapa interactivo.',
     detailedDescription: 'Módulo de geolocalización industrial. Registra rutas y telemetría GPS, ofreciendo una experiencia interactiva tanto al administrador (consola de flotas) como al usuario final (seguimiento del pedido en tiempo real).',
-    monthlyPrice: 249,
-    yearlyPrice: 2490,
+    monthlyPrice: 449,
+    yearlyPrice: 4490,
     complexity: 'Muy Alta',
     serverRequirements: 'Acceso a Mapbox API o Google Maps API para cálculo de rutas + Telemetría persistente de alta frecuencia.',
     technicalDetails: [
@@ -124,8 +124,8 @@ const fallbackAddons: Omit<Addon, 'icon'>[] = [
     categoryBadge: 'MONETIZACIÓN',
     description: 'Pasarela de suscripciones recurrentes de Stripe con control de acceso a feeds exclusivos y niveles de membresía.',
     detailedDescription: 'Permite monetizar tu contenido, comunidad o SaaS de manera flexible. Automatiza cobros recurrentes de Stripe, gestiona roles y bloquea o desbloquea secciones de contenido multimedia basándose en el nivel del suscriptor.',
-    monthlyPrice: 129,
-    yearlyPrice: 1290,
+    monthlyPrice: 169,
+    yearlyPrice: 1690,
     complexity: 'Media',
     serverRequirements: 'Cuenta comercial de Stripe + Configuración de endpoint para Webhooks HTTPS del backend.',
     technicalDetails: [
@@ -141,8 +141,8 @@ const fallbackAddons: Omit<Addon, 'icon'>[] = [
     categoryBadge: 'MONITOREO DE DESEMPEÑO',
     description: 'Monitor de Core Web Vitals en navegador y telemetría de base de datos con conteo de queries e hilos en tiempo real.',
     detailedDescription: 'Optimiza la infraestructura midiendo el impacto real. Este middleware inyecta telemetría que calcula Web Vitals (LCP, FID, CLS) desde el lado del cliente y registra el tiempo de respuesta y la eficiencia de las consultas SQL en Django.',
-    monthlyPrice: 59,
-    yearlyPrice: 590,
+    monthlyPrice: 99,
+    yearlyPrice: 990,
     complexity: 'Media',
     serverRequirements: 'Módulo de Middleware Django instalado + Agregación de logs asíncrona para no afectar el flujo principal.',
     technicalDetails: [
@@ -158,14 +158,18 @@ const fallbackAddons: Omit<Addon, 'icon'>[] = [
     categoryBadge: 'EMAIL MARKETING',
     description: 'Gestor de suscripciones, programador de campañas con plantillas HTML y envío masivo optimizado para SMTP/SES.',
     detailedDescription: 'Envía boletines interactivos a tu base de contactos. Cuenta con un sistema automático de tokens únicos de cancelación de suscripción para cumplir con las normativas internacionales de correo, además de plantillas HTML prediseñadas.',
-    monthlyPrice: 39,
-    yearlyPrice: 390,
+    monthlyPrice: 79,
+    yearlyPrice: 790,
     complexity: 'Baja',
     serverRequirements: 'Servicio de entrega de correos electrónicos configurado (AWS SES, Resend, Sendgrid o un SMTP privado).',
     technicalDetails: [
       'Tokens únicos de desuscripción seguros (UUID)',
       'Render de templates de correo HTML con Django Template Loader',
       'Manejo de estados activos / inactivos de la base de datos',
+      'Soporte multi-idioma de plantillas'
+    ]
+  }
+];',
       'Soporte multi-idioma de plantillas'
     ]
   }

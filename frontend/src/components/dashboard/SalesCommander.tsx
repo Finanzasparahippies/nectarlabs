@@ -490,6 +490,16 @@ export default function SalesCommander() {
   };
 
   const calculateLeadCommission = (lead: Lead) => {
+    const quote = quotes.find(q => 
+      (lead.email && q.client_email && q.client_email.toLowerCase() === lead.email.toLowerCase()) || 
+      (q.client_name && q.client_name.toLowerCase() === lead.name.toLowerCase())
+    );
+    
+    if (quote) {
+      const quotePrice = parseFloat(quote.total_price) || 0;
+      return quotePrice * 0.20;
+    }
+
     const val = parseFloat(lead.estimated_value) || 0;
     // Commission model: 6 installments.
     // Month 1: 10% of monthly payment (estimated_value / 6)
@@ -622,66 +632,84 @@ export default function SalesCommander() {
                         onDragStart={(e) => handleDragStart(e, lead.id)}
                         className="p-5 rounded-2xl bg-background/50 border border-card-border/50 hover:border-nectar-gold/40 transition-all cursor-grab active:cursor-grabbing group relative flex flex-col justify-between min-h-[140px] shadow-sm hover:shadow-md"
                       >
-                        <div>
-                          <div className="flex justify-between items-start gap-2">
-                            <h4 className="font-black text-xs text-foreground group-hover:text-nectar-gold transition-colors line-clamp-1">
-                              {lead.name}
-                            </h4>
-                            <div className="flex flex-col items-end text-right shrink-0">
-                              <span className="text-[9px] font-bold text-nectar-gold font-mono" title="Comisión Estimada (10% Mes 1, 5% Mes 2, 2% Meses 3-6)">
-                                ${calculateLeadCommission(lead).toLocaleString('es-MX', { maximumFractionDigits: 0 })}
-                              </span>
-                              <span className="text-[7.5px] text-foreground/45 font-mono">
-                                Val: ${parseFloat(lead.estimated_value).toLocaleString('es-MX', { maximumFractionDigits: 0 })}
-                              </span>
-                            </div>
-                          </div>
-                          
-                          {lead.project_idea && (
-                            <p className="text-[9.5px] text-foreground/50 line-clamp-2 mt-1 leading-relaxed">
-                              {lead.project_idea}
-                            </p>
-                          )}
+                        {(() => {
+                          const quote = quotes.find(q => 
+                            (lead.email && q.client_email && q.client_email.toLowerCase() === lead.email.toLowerCase()) || 
+                            (q.client_name && q.client_name.toLowerCase() === lead.name.toLowerCase())
+                          );
+                          const hasQuote = !!quote;
+                          const leadValue = hasQuote ? parseFloat(quote.total_price) || 0 : parseFloat(lead.estimated_value) || 0;
+                          const commission = hasQuote ? leadValue * 0.20 : calculateLeadCommission(lead);
 
-                          <div className="mt-3 space-y-1 text-[8.5px] font-bold text-foreground/40 font-mono">
-                            {lead.email && <div className="truncate">✉ {lead.email}</div>}
-                            {lead.phone && <div>📞 {lead.phone}</div>}
-                          </div>
-                        </div>
+                          return (
+                            <>
+                              <div>
+                                <div className="flex justify-between items-start gap-2">
+                                  <h4 className="font-black text-xs text-foreground group-hover:text-nectar-gold transition-colors line-clamp-1">
+                                    {lead.name}
+                                  </h4>
+                                  <div className="flex flex-col items-end text-right shrink-0">
+                                    <span 
+                                      className="text-[9px] font-bold text-nectar-gold font-mono" 
+                                      title={hasQuote ? "Comisión Única del 20% por Proyecto Custom" : "Comisión Estimada (10% Mes 1, 5% Mes 2, 2% Meses 3-6)"}
+                                    >
+                                      ${commission.toLocaleString('es-MX', { maximumFractionDigits: 0 })}
+                                      {hasQuote && <span className="text-[7.5px] text-nectar-gold/80 ml-0.5">(20%)</span>}
+                                    </span>
+                                    <span className="text-[7.5px] text-foreground/45 font-mono">
+                                      Val: ${leadValue.toLocaleString('es-MX', { maximumFractionDigits: 0 })} {hasQuote ? '(Custom)' : ''}
+                                    </span>
+                                  </div>
+                                </div>
+                                
+                                {lead.project_idea && (
+                                  <p className="text-[9.5px] text-foreground/50 line-clamp-2 mt-1 leading-relaxed">
+                                    {lead.project_idea}
+                                  </p>
+                                )}
 
-                        {/* Card Actions Footer */}
-                        <div className="flex justify-between items-center gap-2 mt-4 pt-2 border-t border-card-border/20">
-                          <button
-                            onClick={() => handleOpenNotes(lead)}
-                            className="text-[8px] font-bold uppercase tracking-wider text-foreground/50 hover:text-nectar-gold"
-                            title="Notas de seguimiento"
-                          >
-                            📝 Notas
-                          </button>
-                          
-                          <div className="flex items-center gap-2">
-                            {col.status !== 'WON' && col.status !== 'LOST' && (
-                              <button
-                                onClick={() => handleOpenCreateQuote(lead)}
-                                className="px-2 py-1 bg-nectar-gold/10 hover:bg-nectar-gold hover:text-background text-nectar-gold text-[7.5px] font-black uppercase tracking-wider rounded border border-nectar-gold/20 transition-all"
-                              >
-                                Cotizar
-                              </button>
-                            )}
-                            <button
-                              onClick={() => handleOpenEditLead(lead)}
-                              className="text-[8px] font-bold uppercase tracking-wider text-foreground/30 hover:text-nectar-gold"
-                            >
-                              Editar
-                            </button>
-                            <button
-                              onClick={() => handleDeleteLead(lead.id)}
-                              className="text-[8px] font-bold uppercase tracking-wider text-red-500/50 hover:text-red-500"
-                            >
-                              ✖
-                            </button>
-                          </div>
-                        </div>
+                                <div className="mt-3 space-y-1 text-[8.5px] font-bold text-foreground/40 font-mono">
+                                  {lead.email && <div className="truncate">✉ {lead.email}</div>}
+                                  {lead.phone && <div>📞 {lead.phone}</div>}
+                                </div>
+                              </div>
+
+                              {/* Card Actions Footer */}
+                              <div className="flex justify-between items-center gap-2 mt-4 pt-2 border-t border-card-border/20">
+                                <button
+                                  onClick={() => handleOpenNotes(lead)}
+                                  className="text-[8px] font-bold uppercase tracking-wider text-foreground/50 hover:text-nectar-gold"
+                                  title="Notas de seguimiento"
+                                >
+                                  📝 Notas
+                                </button>
+                                
+                                <div className="flex items-center gap-2">
+                                  {col.status !== 'WON' && col.status !== 'LOST' && (
+                                    <button
+                                      onClick={() => handleOpenCreateQuote(lead)}
+                                      className="px-2 py-1 bg-nectar-gold/10 hover:bg-nectar-gold hover:text-background text-nectar-gold text-[7.5px] font-black uppercase tracking-wider rounded border border-nectar-gold/20 transition-all"
+                                    >
+                                      Cotizar
+                                    </button>
+                                  )}
+                                  <button
+                                    onClick={() => handleOpenEditLead(lead)}
+                                    className="text-[8px] font-bold uppercase tracking-wider text-foreground/30 hover:text-nectar-gold"
+                                  >
+                                    Editar
+                                  </button>
+                                  <button
+                                    onClick={() => handleDeleteLead(lead.id)}
+                                    className="text-[8px] font-bold uppercase tracking-wider text-red-500/50 hover:text-red-500"
+                                  >
+                                    ✖
+                                  </button>
+                                </div>
+                              </div>
+                            </>
+                          );
+                        })()}
                       </div>
                     ))}
 

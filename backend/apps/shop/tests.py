@@ -447,6 +447,69 @@ class PromoCodeAndCommissionTests(APITestCase):
         # Verify NO commission is generated
         self.assertEqual(SalesCommission.objects.count(), 0)
 
+    def test_sales_commission_for_quote_contract(self):
+        """
+        Verify that marking the advance payment (installment 1) of a quote contract
+        as PAID generates a unique 20% commission on the total quote value.
+        Verify that subsequent payments (installment 2) generate no commission.
+        """
+        # Approve the salesperson first
+        self.salesperson.is_approved_seller = True
+        self.salesperson.save()
+
+        # Create a project quote
+        from apps.dashboard.models import ProjectQuote
+        quote = ProjectQuote.objects.create(
+            client_name="Quote Client",
+            client_email="client_b@example.com",
+            project_name="Custom CRM Project",
+            total_price=50000.00,
+            estimated_delivery_weeks=12
+        )
+
+        # Create contract for custom quote with seller promo code
+        contract = Contract.objects.create(
+            user=self.client_user,
+            project_quote=quote,
+            full_name="Quote Client Company",
+            tax_id="RFC123456789",
+            address="Av. Juarez 123",
+            project_idea="Build custom CRM.",
+            payment_commitment_method="SPEI",
+            promo_code=self.seller_promo,
+            signed_at=timezone.now()
+        )
+
+        # Sign contract to generate installments
+        self.client.force_authenticate(user=self.ceo)
+        url_sign = reverse('contract-dev-sign', kwargs={'pk': contract.id})
+        self.client.post(url_sign, {'signature': 'DeveloperSignatureXYZ'})
+
+        # Get generated installments
+        installments = contract.installments.all().order_by('installment_number')
+        self.assertEqual(installments.count(), 2)
+
+        # Mark Month 1 (anticipo) installment as PAID
+        first_inst = installments[0]
+        first_inst.status = PaymentInstallment.Status.PAID
+        first_inst.save()
+
+        # Verify commission generated for Month 1 (20% of 50000.00 = 10000.00)
+        self.assertEqual(SalesCommission.objects.count(), 1)
+        comm1 = SalesCommission.objects.first()
+        self.assertEqual(comm1.salesperson, self.salesperson)
+        self.assertEqual(comm1.installment, first_inst)
+        self.assertEqual(comm1.commission_percentage, 20.00)
+        self.assertEqual(comm1.amount, 10000.00)
+
+        # Mark Month 2 (liquidación) installment as PAID
+        second_inst = installments[1]
+        second_inst.status = PaymentInstallment.Status.PAID
+        second_inst.save()
+
+        # Verify no new commission was generated
+        self.assertEqual(SalesCommission.objects.count(), 1)
+
     def test_promo_code_crud_as_admin(self):
         """Verify that an admin (CEO) can list, create, retrieve, update, and delete promo codes."""
         self.client.force_authenticate(user=self.ceo)

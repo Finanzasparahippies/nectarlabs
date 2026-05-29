@@ -38,7 +38,7 @@ router.register(r'sales-commissions', SalesCommissionViewSet, basename='salescom
 from django.conf import settings
 
 from apps.users.views import RegisterView
-from apps.newsletter.views import SubscribeView
+from apps.newsletter.views import SubscribeView, UnsubscribeView
 from apps.dashboard.views import BusinessStatsView
 from apps.shop.views import stripe_webhook
 
@@ -53,6 +53,7 @@ urlpatterns = [
     path('api/performance/', include('apps.performance.urls')),
     path('api/register/', RegisterView.as_view(), name='register'),
     path('api/newsletter/subscribe/', SubscribeView.as_view(), name='newsletter_subscribe'),
+    path('api/newsletter/unsubscribe/', UnsubscribeView.as_view(), name='newsletter_unsubscribe'),
     path('api/dashboard/business-stats/', BusinessStatsView.as_view(), name='business_stats'),
     path('api/token/', MyTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),

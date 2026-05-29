@@ -116,3 +116,22 @@ class SubscribeView(APIView):
             logger.error(f"Error al enviar correo de bienvenida a {subscriber.email} en {tenant_desc}: {e}", exc_info=True)
 
 
+class UnsubscribeView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request, *args, **kwargs):
+        email = request.data.get('email')
+        token = request.data.get('token')
+
+        if not email or not token:
+            return Response({"error": "El correo electrónico y el token son obligatorios."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            subscriber = Subscriber.objects.get(email=email.strip().lower(), token=uuid.UUID(str(token)))
+            subscriber.is_active = False
+            subscriber.save()
+            return Response({"message": "Te has desuscrito con éxito del boletín."})
+        except (Subscriber.DoesNotExist, ValueError, TypeError):
+            return Response({"error": "Enlace de desuscripción inválido o vencido."}, status=status.HTTP_400_BAD_REQUEST)
+
+

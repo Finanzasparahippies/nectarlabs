@@ -791,21 +791,37 @@ function DashboardPageOriginal() {
                     <h2 className="text-3xl font-black tracking-tighter mt-4 mb-2">Estructura Néctar Labs</h2>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-4">
-                    <div className="p-4 bg-background/40 border border-card-border/60 rounded-2xl text-center">
-                      <span className="text-[8px] font-black uppercase tracking-widest opacity-40 block">Mes 1</span>
-                      <span className="text-2xl font-black text-nectar-gold font-mono">10%</span>
-                      <p className="text-[8px] font-bold text-foreground/50 mt-1 uppercase">Abono Inicial</p>
+                  <div className="space-y-4">
+                    <h4 className="text-[10px] font-black uppercase tracking-wider text-foreground/60">Contratos & Módulos Estándar (Mensual Recurrente):</h4>
+                    <div className="grid grid-cols-3 gap-4">
+                      <div className="p-4 bg-background/40 border border-card-border/60 rounded-2xl text-center">
+                        <span className="text-[8px] font-black uppercase tracking-widest opacity-40 block">Mes 1</span>
+                        <span className="text-2xl font-black text-nectar-gold font-mono">10%</span>
+                        <p className="text-[8px] font-bold text-foreground/50 mt-1 uppercase">Abono Inicial</p>
+                      </div>
+                      <div className="p-4 bg-background/40 border border-card-border/60 rounded-2xl text-center">
+                        <span className="text-[8px] font-black uppercase tracking-widest opacity-40 block">Mes 2</span>
+                        <span className="text-2xl font-black text-nectar-gold font-mono">5%</span>
+                        <p className="text-[8px] font-bold text-foreground/50 mt-1 uppercase">Segundo Mes</p>
+                      </div>
+                      <div className="p-4 bg-background/40 border border-card-border/60 rounded-2xl text-center">
+                        <span className="text-[8px] font-black uppercase tracking-widest opacity-40 block">Mes 3+</span>
+                        <span className="text-2xl font-black text-nectar-gold font-mono">2%</span>
+                        <p className="text-[8px] font-bold text-foreground/50 mt-1 uppercase">Permanente</p>
+                      </div>
                     </div>
-                    <div className="p-4 bg-background/40 border border-card-border/60 rounded-2xl text-center">
-                      <span className="text-[8px] font-black uppercase tracking-widest opacity-40 block">Mes 2</span>
-                      <span className="text-2xl font-black text-nectar-gold font-mono">5%</span>
-                      <p className="text-[8px] font-bold text-foreground/50 mt-1 uppercase">Segundo Mes</p>
-                    </div>
-                    <div className="p-4 bg-background/40 border border-card-border/60 rounded-2xl text-center">
-                      <span className="text-[8px] font-black uppercase tracking-widest opacity-40 block">Mes 3+</span>
-                      <span className="text-2xl font-black text-nectar-gold font-mono">2%</span>
-                      <p className="text-[8px] font-bold text-foreground/50 mt-1 uppercase">Permanente</p>
+
+                    <h4 className="text-[10px] font-black uppercase tracking-wider text-foreground/60 mt-4">Proyectos Personalizados (Cotizaciones):</h4>
+                    <div className="p-4 bg-nectar-gold/10 border border-nectar-gold/30 rounded-2xl flex items-center justify-between">
+                      <div>
+                        <span className="text-[8px] font-black uppercase tracking-widest text-nectar-gold block">Abono 1 (Anticipo 50%)</span>
+                        <span className="text-2xl font-black text-nectar-gold font-mono">20%</span>
+                        <p className="text-[8px] font-bold text-foreground/65 mt-0.5 uppercase">Comisión única sobre el total cotizado</p>
+                      </div>
+                      <div className="text-right max-w-[150px]">
+                        <span className="text-[7.5px] font-bold text-foreground/45 uppercase tracking-wider block">Nota</span>
+                        <p className="text-[9px] text-foreground/65 leading-tight mt-1">La liquidación final (Abono 2) no genera comisiones adicionales.</p>
+                      </div>
                     </div>
                   </div>
 

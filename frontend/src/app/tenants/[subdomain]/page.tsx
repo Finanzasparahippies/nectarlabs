@@ -772,7 +772,7 @@ export default function TenantPortalPage() {
                 {/* Tab Component Render */}
                 <div className="flex-1 min-h-[400px]">
                   {[
-                    { slug: 'booking-signature', component: <BookingCanvas primaryColor={primaryColor} /> },
+                    { slug: 'booking-signature', component: <BookingCanvas tenantId={tenantConfig.id} subdomain={subdomain} primaryColor={primaryColor} /> },
                     { slug: 'logistics-gps', component: <FleetMap primaryColor={primaryColor} /> },
                     { slug: 'patreon-sponsorship', component: <SponsorTiers primaryColor={primaryColor} /> },
                     { slug: 'analytics-apm', component: <TelemetryDashboard primaryColor={primaryColor} /> },

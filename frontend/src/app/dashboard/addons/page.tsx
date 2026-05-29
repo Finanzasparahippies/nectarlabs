@@ -79,8 +79,8 @@ const fallbackAddons: Omit<Addon, 'icon'>[] = [
     categoryBadge: 'COMUNICACIÓN EN VIVO',
     description: 'Widget de chat flotante en tiempo real y consola multi-agente con historial persistente.',
     detailedDescription: 'Un canal de comunicación instantáneo integrado para retención y soporte de usuarios. Los clientes ven un widget interactivo de chat, mientras que los agentes de soporte gestionan las conversaciones desde una consola interna dedicada.',
-    monthlyPrice: 79,
-    yearlyPrice: 790,
+    monthlyPrice: 99,
+    yearlyPrice: 990,
     originProject: 'nectarlabs-main',
     sourceReference: 'backend/apps/tickets (SupportChat, SupportChatMessage)',
     complexity: 'Media',
@@ -117,8 +117,8 @@ const fallbackAddons: Omit<Addon, 'icon'>[] = [
     categoryBadge: 'LOGÍSTICA Y CONTROL',
     description: 'Seguimiento en tiempo real de repartidores, trazado de rutas óptimas de paradas y cálculo de ETA en mapa interactivo.',
     detailedDescription: 'Módulo de geolocalización industrial. Registra rutas y telemetría GPS, ofreciendo una experiencia interactiva tanto al administrador (consola de flotas) como al usuario final (seguimiento del pedido en tiempo real).',
-    monthlyPrice: 249,
-    yearlyPrice: 2490,
+    monthlyPrice: 449,
+    yearlyPrice: 4490,
     originProject: 'losplacosones',
     sourceReference: 'losplacosones/backend/apps/delivery',
     complexity: 'Muy Alta',
@@ -136,14 +136,14 @@ const fallbackAddons: Omit<Addon, 'icon'>[] = [
     categoryBadge: 'MONETIZACIÓN',
     description: 'Pasarela de suscripciones recurrentes de Stripe con control de acceso a feeds exclusivos y niveles de membresía.',
     detailedDescription: 'Permite monetizar tu contenido, comunidad o SaaS de manera flexible. Automatiza cobros recurrentes de Stripe, gestiona roles y bloquea o desbloquea secciones de contenido multimedia basándose en el nivel del suscriptor.',
-    monthlyPrice: 129,
-    yearlyPrice: 1290,
+    monthlyPrice: 169,
+    yearlyPrice: 1690,
     originProject: 'tierraviva',
     sourceReference: 'tierraviva/tierraViva-backend-main/sponsorship',
     complexity: 'Media',
     serverRequirements: 'Cuenta comercial de Stripe + Configuración de endpoint para Webhooks HTTPS del backend.',
     technicalDetails: [
-      'Integración con Stripe Billing API y Webhooks',
+      'Integración con Stripe Billing API and Webhooks',
       'Definición de tiers o niveles dinámicos desde Django Admin',
       'Validación automatizada de estatus de membresías en backend',
       'Portal de auto-gestión del suscriptor'
@@ -155,8 +155,8 @@ const fallbackAddons: Omit<Addon, 'icon'>[] = [
     categoryBadge: 'MONITOREO DE DESEMPEÑO',
     description: 'Monitor de Core Web Vitals en navegador y telemetría de base de datos con conteo de queries e hilos en tiempo real.',
     detailedDescription: 'Optimiza la infraestructura midiendo el impacto real. Este middleware inyecta telemetría que calcula Web Vitals (LCP, FID, CLS) desde el lado del cliente y registra el tiempo de respuesta y la eficiencia de las consultas SQL en Django.',
-    monthlyPrice: 59,
-    yearlyPrice: 590,
+    monthlyPrice: 99,
+    yearlyPrice: 990,
     originProject: 'nectarlabs-main',
     sourceReference: 'backend/apps/performance (PerformanceMiddleware, models.py)',
     complexity: 'Media',
@@ -174,8 +174,8 @@ const fallbackAddons: Omit<Addon, 'icon'>[] = [
     categoryBadge: 'EMAIL MARKETING',
     description: 'Gestor de suscripciones, programador de campañas con plantillas HTML y envío masivo optimizado para SMTP/SES.',
     detailedDescription: 'Envía boletines interactivos a tu base de contactos. Cuenta con un sistema automático de tokens únicos de cancelación de suscripción para cumplir con las normativas internacionales de correo, además de plantillas HTML prediseñadas.',
-    monthlyPrice: 39,
-    yearlyPrice: 390,
+    monthlyPrice: 79,
+    yearlyPrice: 790,
     originProject: 'nectarlabs-main',
     sourceReference: 'backend/apps/newsletter (Subscriber, send_newsletter_email)',
     complexity: 'Baja',
@@ -184,6 +184,10 @@ const fallbackAddons: Omit<Addon, 'icon'>[] = [
       'Tokens únicos de desuscripción seguros (UUID)',
       'Render de templates de correo HTML con Django Template Loader',
       'Manejo de estados activos / inactivos de la base de datos',
+      'Soporte multi-idioma de plantillas'
+    ]
+  }
+];',
       'Soporte multi-idioma de plantillas'
     ]
   }
