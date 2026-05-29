@@ -233,7 +233,7 @@ BREVO_EMAIL_PORT = env.int("BREVO_EMAIL_PORT", default=587)
 BREVO_EMAIL_USE_TLS = env.bool("BREVO_EMAIL_USE_TLS", default=True)
 BREVO_EMAIL_HOST_USER = env("BREVO_EMAIL_HOST_USER", default="")
 BREVO_EMAIL_HOST_PASSWORD = env("BREVO_EMAIL_HOST_PASSWORD", default="")
-BREVO_DEFAULT_FROM_EMAIL = env("BREVO_DEFAULT_FROM_EMAIL", default="Nectar Labs <no-reply@nectarlabs.com>")
+BREVO_DEFAULT_FROM_EMAIL = env("BREVO_DEFAULT_FROM_EMAIL", default="Nectar Labs <no-reply@nectarlabs.dev>")
 
 # SMTP Amazon SES (Plan de Pago)
 SES_EMAIL_HOST = env("SES_EMAIL_HOST", default="email-smtp.us-east-1.amazonaws.com")
@@ -241,7 +241,7 @@ SES_EMAIL_PORT = env.int("SES_EMAIL_PORT", default=587)
 SES_EMAIL_USE_TLS = env.bool("SES_EMAIL_USE_TLS", default=True)
 SES_EMAIL_HOST_USER = env("SES_EMAIL_HOST_USER", default="")
 SES_EMAIL_HOST_PASSWORD = env("SES_EMAIL_HOST_PASSWORD", default="")
-SES_DEFAULT_FROM_EMAIL = env("SES_DEFAULT_FROM_EMAIL", default="Nectar Labs <no-reply@nectarlabs.com>")
+SES_DEFAULT_FROM_EMAIL = env("SES_DEFAULT_FROM_EMAIL", default="Nectar Labs <no-reply@nectarlabs.dev>")
 
 
 # Stripe
