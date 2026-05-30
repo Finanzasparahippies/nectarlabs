@@ -45,8 +45,6 @@ services:
     container_name: nectar_redis_prod
     image: redis:alpine
     restart: always
-    ports:
-      - "6379:6379"
     logging:
       driver: "json-file"
       options:
