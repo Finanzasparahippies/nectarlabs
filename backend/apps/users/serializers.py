@@ -101,10 +101,11 @@ class UserSerializer(serializers.ModelSerializer):
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True)
     password_confirm = serializers.CharField(write_only=True, required=True)
+    role = serializers.ChoiceField(choices=[User.Role.CUSTOMER, User.Role.SALES], default=User.Role.CUSTOMER, required=False)
 
     class Meta:
         model = User
-        fields = ('email', 'username', 'password', 'password_confirm')
+        fields = ('email', 'username', 'password', 'password_confirm', 'role')
 
     def validate(self, attrs):
         if attrs['password'] != attrs['password_confirm']:
@@ -128,7 +129,7 @@ class RegisterSerializer(serializers.ModelSerializer):
             email=email,
             username=username,
             password=validated_data['password'],
-            role=User.Role.CUSTOMER
+            role=validated_data.get('role', User.Role.CUSTOMER)
         )
         
         # Public registrations start as email unverified

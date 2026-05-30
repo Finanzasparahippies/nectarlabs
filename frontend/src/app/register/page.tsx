@@ -35,6 +35,7 @@ export default function RegisterPage() {
           email: formData.email,
           username: formData.username,
           password: formData.password,
+          password_confirm: formData.confirm_password,
           role: formData.role
         }),
       });
