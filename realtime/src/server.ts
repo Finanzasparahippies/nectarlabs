@@ -44,28 +44,38 @@ wss.on('connection', async (ws, req) => {
     if (!clientConn) return;
     try {
       const data = JSON.parse(messageData.toString());
+      console.log(`[Realtime] Mensaje recibido de ${clientConn.email}:`, data);
       
       switch (data.type) {
         case 'subscribe': {
           const chatId = parseInt(data.chatId, 10);
-          if (isNaN(chatId)) return;
+          console.log(`[Realtime] Intento de suscripción al chat #${chatId} por el usuario ${clientConn.email} (ID: ${clientConn.userId}, Rol: ${clientConn.role})`);
+          if (isNaN(chatId)) {
+            console.warn(`[Realtime] Suscripción fallida: chatId no es un número válido (${data.chatId})`);
+            return;
+          }
 
           // Verify authorization
           const chatRes = await pool.query('SELECT * FROM tickets_supportchat WHERE id = $1', [chatId]);
+          console.log(`[Realtime] Búsqueda de chat en DB para #${chatId}. Encontrado: ${chatRes.rows.length > 0}`);
           if (chatRes.rows.length === 0) {
+            console.warn(`[Realtime] Suscripción fallida: Chat #${chatId} no encontrado en la DB.`);
             ws.send(JSON.stringify({ type: 'error', message: 'Chat no encontrado.' }));
             return;
           }
 
           const chat = chatRes.rows[0];
+          console.log(`[Realtime] Datos del Chat: ID cliente en DB: ${chat.client_id} (Tipo: ${typeof chat.client_id}), ID usuario: ${clientConn.userId} (Tipo: ${typeof clientConn.userId})`);
+          
           const isAgent = clientConn.role === 'ADMIN' || clientConn.role === 'BUSINESS' || clientConn.role === 'DEVELOPER';
           if (!isAgent && chat.client_id !== clientConn.userId) {
+            console.warn(`[Realtime] Suscripción fallida: Usuario ${clientConn.email} (ID ${clientConn.userId}) no autorizado para chat #${chatId} (Propietario: ${chat.client_id}).`);
             ws.send(JSON.stringify({ type: 'error', message: 'No autorizado para acceder a este chat.' }));
             return;
           }
 
           clientConn.subscribedChatId = chatId;
-          console.log(`[Realtime] Cliente ${clientConn.email} se suscribió al chat #${chatId}`);
+          console.log(`[Realtime] Cliente ${clientConn.email} se suscribió con éxito al chat #${chatId}`);
           
           // Send connection confirmation
           ws.send(JSON.stringify({ type: 'subscribed', chatId }));
@@ -74,7 +84,9 @@ wss.on('connection', async (ws, req) => {
 
         case 'message': {
           const chatId = clientConn.subscribedChatId;
+          console.log(`[Realtime] Mensaje recibido de ${clientConn.email} para chat #${chatId}: "${data.message}"`);
           if (!chatId) {
+            console.warn(`[Realtime] Mensaje rechazado: Cliente ${clientConn.email} no está suscrito a ningún chat.`);
             ws.send(JSON.stringify({ type: 'error', message: 'No estás suscrito a ningún chat activo. Envía un evento subscribe primero.' }));
             return;
           }
