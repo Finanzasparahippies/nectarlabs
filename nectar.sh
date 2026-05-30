@@ -222,9 +222,37 @@ case $COMMAND in
         docker compose -f docker-compose.prod.yml run --rm certbot certonly --webroot --webroot-path=/var/www/certbot -d $DOMAIN -d www.$DOMAIN
         ;;
     clean)
-        echo "Performing safe Docker cleanup (build cache & dangling images)..."
+        echo "Starting comprehensive and safe VPS cleanup..."
+        echo ""
+        echo "1. Removing stopped containers..."
+        docker container prune -f
+        
+        echo "2. Removing dangling networks..."
+        docker network prune -f
+        
+        echo "3. Removing dangling volumes (only unused/anonymous volumes)..."
+        docker volume prune -f
+        
+        echo "4. Removing dangling/untagged images..."
         docker image prune -f
+        
+        echo "5. Removing Docker build cache..."
         docker builder prune -f
+        
+        # Check if running on Linux with journalctl to clean system logs
+        if command -v journalctl &> /dev/null; then
+            echo "6. Vacuuming system logs (journald) to 100MB..."
+            sudo journalctl --vacuum-size=100M 2>/dev/null || echo "   (Skip: sudo privileges required to vacuum logs)"
+        fi
+        
+        # Check if running on Debian/Ubuntu to clean apt cache
+        if command -v apt-get &> /dev/null; then
+            echo "7. Cleaning APT package cache..."
+            sudo apt-get autoclean -y 2>/dev/null || echo "   (Skip: sudo privileges required to clean APT cache)"
+        fi
+        
+        echo ""
+        echo "System cleanup complete! Disk space reclaimed successfully."
         ;;
     *)
         show_help
