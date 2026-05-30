@@ -16,6 +16,9 @@ graph TD
     D --> E[Propiedad Dinámica active_addons en Tenant]
     E --> F[Next.js consulta Endpoint Público /public-config/]
     F --> G[Renderizado Condicional del Módulo en Subdominio]
+    G --> H[Conexión WebSocket a Microservicio Realtime /ws/]
+    H --> I[Usuario final interactúa con Asistente IA]
+    I --> J[Realtime transmite respuesta en streaming vía Groq SDK]
 ```
 
 ---
@@ -53,7 +56,7 @@ Cuando un cliente adquiere un add-on, la relación contractual y el plan de pago
 >    * El costo consolidado de los Add-ons activos y asignados a su contrato se carga de manera íntegra a sus mensualidades.
 > 3. **Contratos Flexibles (Add-ons Only)**:
 >    * Para clientes que deseen adquirir módulos y Add-ons de Néctar Labs de manera independiente sin un plan de desarrollo asociado, el campo `plan` en el modelo `Contract` es opcional (`null=True`).
->    * En este esquema, el monto total de cada mensualidad se calcula exclusivamente sumando los precios de los Add-ons asignados.
+>    * In this scheme, the monthly payment is calculated by summing the prices of the active addons.
 
 ### 2. Enmienda de Contrato (Contract Amendment)
 * **Asociación en base de datos**: Para clientes que compran Add-ons de forma manual o que tienen contratos personalizados, el administrador asocia los Add-ons en el listado multiselección de `addons` del contrato del cliente (`Contract`) a través del Django Admin.
@@ -86,19 +89,31 @@ El backend expone de manera segura los Add-ons activos en la serialización púb
 }
 ```
 El componente del frontend de Next.js verifica si el slug requerido se encuentra en `active_addons`:
-* **Si está presente**: Renderiza dinámicamente el componente interactivo (formulario de chat en vivo con WebSockets o polling).
+* **Si está presente**: Renderiza dinámicamente el componente interactivo de Chat de Soporte conectado al microservicio de WebSockets (`wss://[domain]/ws/`).
 * **Si no está presente**: Renderiza un **Placeholder Premium** branded que invita a adquirir el módulo.
 
-### 2. Variables de Entorno de Módulos Externos
-Algunos Add-ons requieren configuraciones o servicios externos adicionales (ej. Mapbox, Stripe, Supabase Pools, Redis Cache).
+### 2. Variables de Entorno y Microservicios
+El Add-on de **Live Chat** requiere la inicialización del microservicio `realtime` y el servidor de caché `redis`.
 
-1. Abra el archivo `.env.staging` (para staging) o `.env` (para producción).
-2. Agregue las credenciales del Add-on respectivo:
+1. **Variables para el Microservicio `realtime`** (se configuran en `.env.staging` / `.env`):
    ```env
-   # Configuración requerida para Live Chat Add-on
-   REDIS_URL_LIVE_CHAT=redis://redis:6379/2
+   # API Key de Groq para streaming de respuestas de la IA de asistencia
+   GROQ_API_KEY=gsk_...
+   
+   # Conexión a Base de Datos (PostgreSQL) para verificar accesos y persistir chats
+   DATABASE_URL=postgresql://postgres:password@db:5432/nectarlabs
+   
+   # Puerto interno del WebSocket
+   PORT=4000
    ```
-3. Reinicie los contenedores correspondientes para aplicar las variables de entorno sin interrumpir el resto de servicios:
+
+2. **Variables para el Caché de Django con Redis**:
+   ```env
+   # URL de conexión a la base de datos Redis del entorno correspondiente
+   REDIS_URL=redis://redis:6379/1
+   ```
+
+3. Reinicie los contenedores para aplicar las nuevas configuraciones y arrancar el WebSocket:
    ```bash
    ./nectar.sh restart-staging
    ```

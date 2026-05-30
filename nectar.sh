@@ -56,6 +56,7 @@ show_help() {
     echo "  build                   - Build production images"
     echo "  up-prod                 - Start production environment"
     echo "  down-prod               - Stop production environment"
+    echo "  logs-prod               - View production logs in real-time"
     echo "  makemigrations-prod     - Generate database migrations (Prod)"
     echo "  migrate-prod            - Run database migrations (Prod)"
     echo "  createsuperuser-prod    - Create admin user (Prod)"
@@ -94,6 +95,13 @@ case $COMMAND in
     down-prod)
         echo "Stopping Production Environment..."
         docker compose -f docker-compose.prod.yml down "$@"
+        ;;
+    logs-prod)
+        if [ $# -eq 0 ]; then
+            docker compose -f docker-compose.prod.yml logs -f --tail=100
+        else
+            docker compose -f docker-compose.prod.yml logs "$@"
+        fi
         ;;
     makemigrations-prod)
         run_django_cmd_prod makemigrations "$@"
