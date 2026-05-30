@@ -37,7 +37,6 @@ function OnboardingContent() {
         setRedirectCountdown(prev => {
           if (prev <= 1) {
             clearInterval(interval);
-            router.push('/dashboard');
             return 0;
           }
           return prev - 1;
@@ -45,7 +44,13 @@ function OnboardingContent() {
       }, 1000);
       return () => clearInterval(interval);
     }
-  }, [step, router]);
+  }, [step]);
+
+  useEffect(() => {
+    if (step === 4 && redirectCountdown <= 0) {
+      router.push('/dashboard');
+    }
+  }, [step, redirectCountdown, router]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [isMounted, setIsMounted] = useState(false);

@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import DashboardSidebar from '@/components/DashboardSidebar';
+import Toast from '@/components/ui/Toast';
 
 // Mock FAQ database for Mexican SAT CFDI 4.0
 const FAQS = [
@@ -29,6 +30,12 @@ const FAQS = [
 
 export default function InvoicingGuidePage() {
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
+  
+  // Toast notifications
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'warning' | 'info' } | null>(null);
+  const showToast = (message: string, type: 'success' | 'error' | 'warning' | 'info' = 'success') => {
+    setToast({ message, type });
+  };
   
   // Interactive Simulator States
   const [currentSimStep, setCurrentSimStep] = useState(1);
@@ -82,6 +89,14 @@ export default function InvoicingGuidePage() {
   // Simulate test stamping
   const handleSimulateStamping = (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Edge case: Validate receptor RFC structure
+    const rfcRegex = /^[A-Z&Ñ]{3,4}\d{6}[A-Z0-9]{3}$/i;
+    if (!rfcRegex.test(testClientRfc)) {
+      showToast("El RFC del Receptor no tiene el formato oficial del SAT (e.g., XAXX010101000).", "error");
+      return;
+    }
+
     setStampingStatus('stamping');
     setTimeout(() => {
       const mockUuid = '7e5d16cc-3db2-4d2c-8067-172ab67262ba';
@@ -93,6 +108,59 @@ export default function InvoicingGuidePage() {
       });
       setStampingStatus('success');
     }, 1800);
+  };
+
+  const downloadXml = () => {
+    if (!stampedInvoice) return;
+    const element = document.createElement("a");
+    const file = new Blob([stampedInvoice.xml], { type: 'text/xml' });
+    element.href = URL.createObjectURL(file);
+    element.download = `factura_${stampedInvoice.id}.xml`;
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+    showToast("XML CFDI 4.0 de prueba descargado con éxito.", "success");
+  };
+
+  const downloadPdf = () => {
+    if (!stampedInvoice) return;
+    
+    // Generate a simple valid PDF client-side with diagonal watermarks to prevent abuse
+    const pdfData = `%PDF-1.4\n` +
+      `1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n` +
+      `2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n` +
+      `3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> >> >> /Contents 4 0 R >>\nendobj\n` +
+      `4 0 obj\n<< /Length 600 >>\nstream\n` +
+      `BT\n/F1 36 Tf\n0.92 0.92 0.92 rg\n` +
+      `0.707 0.707 -0.707 0.707 80 200 Tm\n(SIMULACION - NO VALIDO) Tj\n` +
+      `0.707 0.707 -0.707 0.707 180 350 Tm\n(SIMULACION - NO VALIDO) Tj\n` +
+      `0.707 0.707 -0.707 0.707 280 500 Tm\n(SIMULACION - NO VALIDO) Tj\n` +
+      `ET\n` +
+      `BT\n/F1 10 Tf\n0 0 0 rg\n` +
+      `1 0 0 1 50 800 Tm\n(FACTURA ELECTRONICA CFDI 4.0 - SIMULADOR NECTAR LABS) Tj\n` +
+      `0 -30 Td\n(UUID: ${stampedInvoice.uuid}) Tj\n` +
+      `0 -20 Td\n(Emisor: ${simRazon}) Tj\n` +
+      `0 -15 Td\n(RFC Emisor: ${simRfc} | CP: ${simCp} | Regimen: ${simRegimen}) Tj\n` +
+      `0 -20 Td\n(Receptor: ${testClientName}) Tj\n` +
+      `0 -15 Td\n(RFC Receptor: ${testClientRfc}) Tj\n` +
+      `0 -30 Td\n(Concepto: ${testDesc}) Tj\n` +
+      `0 -20 Td\n(Subtotal: $${parseFloat(testAmount).toFixed(2)} MXN) Tj\n` +
+      `0 -15 Td\n(IVA 16%: $${(parseFloat(testAmount) * 0.16).toFixed(2)} MXN) Tj\n` +
+      `0 -20 Td\n(TOTAL FACTURADO: $${stampedInvoice.total} MXN) Tj\n` +
+      `0 -40 Td\n(Representacion impresa simulada sin valor fiscal y con fines didacticos.) Tj\n` +
+      `ET\nendstream\nendobj\n` +
+      `xref\n0 5\n0000000000 65535 f\n0000000009 00000 n\n0000000052 00000 n\n0000000101 00000 n\n0000000215 00000 n\n` +
+      `trailer\n<< /Size 5 /Root 1 0 R >>\n` +
+      `startxref\n415\n%%EOF`;
+      
+    const element = document.createElement("a");
+    const file = new Blob([pdfData], { type: 'application/pdf' });
+    element.href = URL.createObjectURL(file);
+    element.download = `factura_${stampedInvoice.id}_simulada.pdf`;
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+    showToast("Representación impresa PDF con marca de agua descargada.", "success");
   };
 
   return (
@@ -577,18 +645,14 @@ export default function InvoicingGuidePage() {
                         {/* PDF / XML Mock Downloads */}
                         <div className="flex gap-2 justify-end pt-1">
                           <button
-                            onClick={() => {
-                              alert('XML simulado descargado.');
-                            }}
-                            className="px-2.5 py-1.5 bg-foreground/5 hover:bg-foreground/10 border border-card-border text-[7.5px] font-black uppercase tracking-widest rounded transition-all text-foreground"
+                            onClick={downloadXml}
+                            className="px-2.5 py-1.5 bg-foreground/5 hover:bg-foreground/10 border border-card-border text-[7.5px] font-black uppercase tracking-widest rounded transition-all text-foreground hover:text-nectar-gold active:scale-95"
                           >
                             Descargar XML
                           </button>
                           <button
-                            onClick={() => {
-                              alert('Representación impresa PDF simulada descargada.');
-                            }}
-                            className="px-2.5 py-1.5 bg-foreground/5 hover:bg-foreground/10 border border-card-border text-[7.5px] font-black uppercase tracking-widest rounded transition-all text-foreground"
+                            onClick={downloadPdf}
+                            className="px-2.5 py-1.5 bg-foreground/5 hover:bg-foreground/10 border border-card-border text-[7.5px] font-black uppercase tracking-widest rounded transition-all text-foreground hover:text-nectar-gold active:scale-95"
                           >
                             Descargar PDF
                           </button>
@@ -681,6 +745,13 @@ export default function InvoicingGuidePage() {
         </section>
 
       </main>
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
     </div>
   );
 }
