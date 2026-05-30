@@ -1,3 +1,5 @@
+name: nectarlabs-dev
+
 services:
   backend:
     container_name: nectar_backend

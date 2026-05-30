@@ -1,3 +1,5 @@
+name: nectarlabs-staging
+
 services:
   backend-staging:
     image: nectar-labs-backend:staging
