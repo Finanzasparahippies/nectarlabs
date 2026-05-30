@@ -612,7 +612,7 @@ def stripe_webhook(request):
                             
                             pac = get_pac_service()
                             try:
-                                res = pac.create_invoice(invoice, profile, customer_info, items)
+                                res = pac.create_invoice(invoice, profile, customer_info, items, is_parent_to_tenant=True)
                                 invoice.facturapi_invoice_id = res["facturapi_invoice_id"]
                                 invoice.uuid_sat = res["uuid_sat"]
                                 

@@ -1,13 +1,18 @@
+import logging
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from django.core.exceptions import PermissionDenied
+from rest_framework.views import APIView
 
 from apps.tenants.models import Tenant
+from apps.tenants.permissions import HasAddOnPermission
 from .models import TaxProfile, Invoice
 from .serializers import TaxProfileSerializer, InvoiceSerializer
 from .services import get_pac_service, PACError, LCOSyncError
+
+logger = logging.getLogger(__name__)
 
 class BillingTenantMixin:
     """Mixin para obtener de forma segura el Tenant del usuario autenticado"""
@@ -28,10 +33,9 @@ class BillingTenantMixin:
         return tenant
 
 
-from rest_framework.views import APIView
-
 class TaxProfileView(BillingTenantMixin, APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, HasAddOnPermission]
+    addon_slug = 'mexico-invoicing'
 
     def get(self, request):
         tenant = self.get_tenant()
@@ -89,13 +93,72 @@ class TaxProfileView(BillingTenantMixin, APIView):
         return Response(TaxProfileSerializer(profile).data)
 
 
-class InvoiceViewSet(BillingTenantMixin, viewsets.ReadOnlyModelViewSet):
-    permission_classes = [permissions.IsAuthenticated]
+class InvoiceViewSet(BillingTenantMixin, viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated, HasAddOnPermission]
+    addon_slug = 'mexico-invoicing'
     serializer_class = InvoiceSerializer
 
     def get_queryset(self):
         tenant = self.get_tenant()
         return Invoice.objects.filter(tenant=tenant)
+
+    @action(detail=False, methods=['post'], url_path='issue-to-customer')
+    def issue_to_customer(self, request):
+        tenant = self.get_tenant()
+        profile = getattr(tenant, 'tax_profile', None)
+        if not profile or not profile.facturapi_organization_id:
+            return Response(
+                {"error": "No se puede facturar; el perfil fiscal del inquilino no está configurado o no tiene sellos válidos."}, 
+                status=400
+            )
+
+        customer_info = request.data.get("customer_info")
+        items = request.data.get("items")
+        total = request.data.get("total")
+
+        if not customer_info or not items or total is None:
+            return Response({"error": "Los campos customer_info, items y total son obligatorios."}, status=400)
+
+        # Basic customer_info validations
+        for field in ["rfc", "razon_social", "regimen_fiscal", "codigo_postal", "email"]:
+            if not customer_info.get(field):
+                return Response({"error": f"El campo customer_info.{field} es obligatorio."}, status=400)
+
+        # Create Invoice local instance
+        invoice = Invoice.objects.create(
+            tenant=tenant,
+            total=total,
+            is_tenant_to_customer=True,
+            status=Invoice.Status.PENDING
+        )
+
+        pac = get_pac_service()
+        try:
+            res = pac.create_invoice(
+                invoice=invoice,
+                tax_profile=profile,
+                customer_info=customer_info,
+                items=items,
+                is_parent_to_tenant=False
+            )
+            invoice.facturapi_invoice_id = res["facturapi_invoice_id"]
+            invoice.uuid_sat = res["uuid_sat"]
+            invoice.xml_file.save(res["xml_file"].name, res["xml_file"], save=False)
+            invoice.pdf_file.save(res["pdf_file"].name, res["pdf_file"], save=False)
+            invoice.status = Invoice.Status.PAID
+            invoice.error_message = None
+            invoice.save()
+            return Response(InvoiceSerializer(invoice).data, status=status.HTTP_201_CREATED)
+        except LCOSyncError as e:
+            invoice.status = Invoice.Status.LCO_SYNC_PENDING
+            invoice.error_message = str(e)
+            invoice.save()
+            return Response(InvoiceSerializer(invoice).data, status=status.HTTP_202_ACCEPTED)
+        except PACError as e:
+            invoice.status = Invoice.Status.FAILED
+            invoice.error_message = str(e)
+            invoice.save()
+            return Response({"error": f"Fallo al emitir CFDI en el PAC: {e}"}, status=400)
 
     @action(detail=True, methods=['post'])
     def cancel(self, request, pk=None):
@@ -125,23 +188,35 @@ class InvoiceViewSet(BillingTenantMixin, viewsets.ReadOnlyModelViewSet):
         pac = get_pac_service()
         user = invoice.tenant.owner
         
-        # Payload de facturación con datos del receptor y emisor
-        customer_info = {
-            "razon_social": user.get_full_name() or user.username,
-            "rfc": profile.rfc, 
-            "regimen_fiscal": profile.regimen_fiscal,
-            "codigo_postal": profile.codigo_postal,
-            "email": user.email
-        }
+        is_parent = not invoice.is_tenant_to_customer
         
-        items = [{
-            "quantity": 1,
-            "unit_price": float(invoice.total),
-            "description": f"Suscripción de Ecosistema Digital - {invoice.tenant.name}"
-        }]
+        if is_parent:
+            customer_info = {
+                "razon_social": user.get_full_name() or user.username,
+                "rfc": profile.rfc, 
+                "regimen_fiscal": profile.regimen_fiscal,
+                "codigo_postal": profile.codigo_postal,
+                "email": user.email
+            }
+            items = [{
+                "quantity": 1,
+                "unit_price": float(invoice.total),
+                "description": f"Suscripción de Ecosistema Digital - {invoice.tenant.name}"
+            }]
+        else:
+            customer_info = request.data.get("customer_info")
+            items = request.data.get("items")
+            if not customer_info or not items:
+                return Response({"error": "Para reintentar una factura de inquilino a cliente, debes enviar 'customer_info' e 'items' en el cuerpo de la petición."}, status=400)
 
         try:
-            res = pac.create_invoice(invoice, profile, customer_info, items)
+            res = pac.create_invoice(
+                invoice=invoice,
+                tax_profile=profile,
+                customer_info=customer_info,
+                items=items,
+                is_parent_to_tenant=is_parent
+            )
             invoice.facturapi_invoice_id = res["facturapi_invoice_id"]
             invoice.uuid_sat = res["uuid_sat"]
             
