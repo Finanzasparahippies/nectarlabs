@@ -5,6 +5,7 @@ from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
 from django.core.mail import EmailMultiAlternatives
 from django.utils.html import strip_tags
+from django.template.loader import render_to_string
 from apps.tenants.utils import get_platform_sender
 
 logger = logging.getLogger(__name__)
@@ -25,25 +26,12 @@ def send_verification_email(user, request):
         
         subject = "Verifica tu cuenta - Néctar Labs"
         
-        # Simple plain text and HTML content
-        html_content = f"""
-        <html>
-            <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #111827; background-color: #f9fafb; padding: 20px;">
-                <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 30px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
-                    <h2 style="color: #C68A1E; text-align: center; margin-bottom: 24px;">¡Bienvenido a Néctar Labs!</h2>
-                    <p>Hola <strong>{user.username or 'Usuario'}</strong>,</p>
-                    <p>Gracias por registrarte en nuestra plataforma. Para poder acceder a tu dashboard y a todas las funciones premium, necesitamos que confirmes tu dirección de correo electrónico.</p>
-                    <div style="text-align: center; margin: 32px 0;">
-                        <a href="{verify_url}" style="background-color: #C68A1E; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: bold; display: inline-block;">Verificar Correo Electrónico</a>
-                    </div>
-                    <p style="font-size: 13px; color: #6b7280; text-align: center; margin-top: 24px;">
-                        Si el botón no funciona, copia y pega el siguiente enlace en tu navegador:<br>
-                        <a href="{verify_url}" style="color: #10B981;">{verify_url}</a>
-                    </p>
-                </div>
-            </body>
-        </html>
-        """
+        # Render the premium HTML template
+        html_content = render_to_string('shop/emails/verify_email.html', {
+            'subject': subject,
+            'username': user.username or 'Usuario',
+            'verify_url': verify_url,
+        })
         text_content = strip_tags(html_content)
         
         email = EmailMultiAlternatives(

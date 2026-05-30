@@ -61,8 +61,18 @@ class VerifyEmailView(APIView):
         uidb64 = request.query_params.get('uid')
         token = request.query_params.get('token')
         
+        frontend_url = settings.FRONTEND_URL
+        # Dynamic environment redirect: if settings.FRONTEND_URL is configured as localhost
+        # but the request is coming from a remote staging/production domain, use the request host
+        # to ensure the user redirects to the correct environment.
+        request_host = request.get_host()
+        if request_host and not any(h in request_host.lower() for h in ["localhost", "127.0.0.1", "testserver", "backend"]):
+            if any(h in frontend_url.lower() for h in ["localhost", "127.0.0.1"]):
+                scheme = "https" if request.is_secure() or request.META.get('HTTP_X_FORWARDED_PROTO') == 'https' else "http"
+                frontend_url = f"{scheme}://{request_host}"
+
         if not uidb64 or not token:
-            return redirect(f"{settings.FRONTEND_URL}/login?verified=false&error=missing_params")
+            return redirect(f"{frontend_url}/login?verified=false&error=missing_params")
             
         try:
             uid = force_str(urlsafe_base64_decode(uidb64))
@@ -73,9 +83,9 @@ class VerifyEmailView(APIView):
         if user is not None and default_token_generator.check_token(user, token):
             user.is_email_verified = True
             user.save()
-            return redirect(f"{settings.FRONTEND_URL}/login?verified=true")
+            return redirect(f"{frontend_url}/login?verified=true")
         else:
-            return redirect(f"{settings.FRONTEND_URL}/login?verified=false&error=invalid_token")
+            return redirect(f"{frontend_url}/login?verified=false&error=invalid_token")
 
 class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
