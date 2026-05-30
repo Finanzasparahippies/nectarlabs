@@ -169,6 +169,12 @@ class BusinessStatsView(APIView):
     permission_classes = [permissions.IsAdminUser]
 
     def get(self, request, *args, **kwargs):
+        from django.core.cache import cache
+        cache_key = 'business_stats_data'
+        cached_data = cache.get(cache_key)
+        if cached_data:
+            return Response(cached_data)
+
         # 1. Ventas Totales (MRR de contratos activos + total de órdenes pagadas, EXCLUYE diseño de marca transitorio)
         active_contracts = Contract.objects.filter(is_active=True)
         contracts_mrr = 0
@@ -323,7 +329,7 @@ class BusinessStatsView(APIView):
                 "profit": month_profit
             })
 
-        return Response({
+        response_data = {
             "financials": {
                 "gross_sales": gross_sales,
                 "contracts_mrr": float(contracts_mrr),
@@ -338,7 +344,11 @@ class BusinessStatsView(APIView):
             "client_billing": client_billing,
             "server_billing": server_billing,
             "monthly_trend": monthly_trend
-        })
+        }
+
+        # Cache data for 1 hour (3600 seconds)
+        cache.set(cache_key, response_data, 3600)
+        return Response(response_data)
 
 class ProjectQuoteViewSet(viewsets.ModelViewSet):
     serializer_class = ProjectQuoteSerializer

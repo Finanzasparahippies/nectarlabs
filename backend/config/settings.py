@@ -296,8 +296,24 @@ R2_STORAGE_OPTIONS = {
     'secret_key': env('R2_SECRET_ACCESS_KEY', default=''),
     'bucket_name': env('R2_BUCKET_NAME', default=''),
     'endpoint_url': env('R2_S3_ENDPOINT_URL', default=''),
-    'region_name': 'auto',
 }
+
+# Cache Configuration
+if 'test' in sys.argv:
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+            "LOCATION": "nectar-labs-test-cache",
+        }
+    }
+else:
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.redis.RedisCache",
+            "LOCATION": env("REDIS_URL", default="redis://redis:6379/1"),
+            "TIMEOUT": 3600,
+        }
+    }
 
 # Logging configuration to display logs in console during test/run
 LOGGING = {

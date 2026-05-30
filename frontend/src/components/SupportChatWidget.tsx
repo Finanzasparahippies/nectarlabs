@@ -29,6 +29,7 @@ export default function SupportChatWidget() {
   const [hasNewMessages, setHasNewMessages] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const prevMessagesCountRef = useRef<number>(0);
+  const wsRef = useRef<WebSocket | null>(null);
 
   const [showCloseConfirm, setShowCloseConfirm] = useState(false);
   const [widgetError, setWidgetError] = useState<string | null>(null);
@@ -140,42 +141,92 @@ export default function SupportChatWidget() {
     checkActiveChat();
   }, [token, isStaff]);
 
-  // Optimized Polling Logic
+  // WebSocket Connection Logic
   useEffect(() => {
     if (!token || isStaff || !activeChat) return;
 
-    const fetchMessages = async () => {
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${protocol}//${window.location.host}/ws/?token=${encodeURIComponent(token)}`;
+    
+    console.log('[WebSocket] Conectando a:', wsUrl);
+    const ws = new WebSocket(wsUrl);
+    wsRef.current = ws;
+
+    ws.onopen = () => {
+      console.log('[WebSocket] Conexión abierta con éxito.');
+      ws.send(JSON.stringify({ type: 'subscribe', chatId: activeChat.id }));
+    };
+
+    ws.onmessage = (event) => {
       try {
-        const chat = await fetcher(`/support-chats/${activeChat.id}/`);
-        if (chat) {
-          setActiveChat(chat);
-          const newMsgs = chat.messages || [];
-          setMessages(newMsgs);
-          
-          if (newMsgs.length > prevMessagesCountRef.current) {
-            // New messages arrived!
+        const data = JSON.parse(event.data);
+        if (data.type === 'message' && data.chatId === activeChat.id) {
+          const newMsg = data.message;
+          setMessages((prev) => {
+            if (prev.some((m) => m.id === newMsg.id)) return prev;
+            const updated = [...prev, newMsg];
+            prevMessagesCountRef.current = updated.length;
             if (!isOpen) {
               setHasNewMessages(true);
             }
-            prevMessagesCountRef.current = newMsgs.length;
-          }
+            return updated;
+          });
+        } else if (data.type === 'ai_stream_start') {
+          // Add temporary streaming message
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: -999,
+              sender_email: 'bot@nectarlabs.dev',
+              sender_role: 'BOT',
+              message: '',
+              created_at: new Date().toISOString(),
+              is_ai_message: true,
+            } as any,
+          ]);
+        } else if (data.type === 'ai_stream_token') {
+          // Append token to temporary message
+          setMessages((prev) =>
+            prev.map((m) => {
+              if (m.id === -999) {
+                return { ...m, message: m.message + data.token };
+              }
+              return m;
+            })
+          );
+        } else if (data.type === 'ai_stream_complete') {
+          // Replace temporary message with final message from DB
+          setMessages((prev) => {
+            const filtered = prev.filter((m) => m.id !== -999);
+            if (filtered.some((m) => m.id === data.message.id)) return filtered;
+            const updated = [...filtered, data.message];
+            prevMessagesCountRef.current = updated.length;
+            return updated;
+          });
+        } else if (data.type === 'status_change') {
+          setActiveChat((prev) => prev ? { ...prev, status: data.status } : null);
+        } else if (data.type === 'error') {
+          showError(data.message);
         }
       } catch (err) {
-        console.error('Error polling support messages:', err);
-        // If chat was closed/deleted from backend, reset state
-        if (err instanceof Error && err.message.includes('404')) {
-          setActiveChat(null);
-          setMessages([]);
-        }
+        console.error('[WebSocket] Error procesando mensaje de entrada:', err);
       }
     };
 
-    // Determine polling interval based on widget state to minimize server load
-    // 5 seconds if open and user is looking at it, 25 seconds if collapsed/closed
-    const intervalTime = isOpen ? 5000 : 25000;
-    const interval = setInterval(fetchMessages, intervalTime);
+    ws.onclose = (event) => {
+      console.log('[WebSocket] Conexión cerrada.', event.code, event.reason);
+    };
 
-    return () => clearInterval(interval);
+    ws.onerror = (err) => {
+      console.error('[WebSocket] Error en conexión:', err);
+    };
+
+    return () => {
+      if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
+        ws.close();
+      }
+      wsRef.current = null;
+    };
   }, [token, isStaff, activeChat, isOpen]);
 
   const prevLengthRef = useRef(0);
@@ -226,37 +277,17 @@ export default function SupportChatWidget() {
 
     const messageText = newMessage;
     setNewMessage('');
-    setIsSubmitting(true);
 
-    try {
-      const sentMsg = await fetcher(`/support-chats/${activeChat.id}/add_message/`, {
-        method: 'POST',
-        body: JSON.stringify({ message: messageText }),
-      });
-      
-      // Update messages list immediately for high responsiveness
-      if (sentMsg && sentMsg.message && sentMsg.ai_reply) {
-        setMessages((prev) => {
-          const ids = new Set(prev.map((m) => m.id));
-          const toAdd: Message[] = [];
-          if (!ids.has(sentMsg.message.id)) toAdd.push(sentMsg.message);
-          if (!ids.has(sentMsg.ai_reply.id)) toAdd.push(sentMsg.ai_reply);
-          prevMessagesCountRef.current = prev.length + toAdd.length;
-          return [...prev, ...toAdd];
-        });
-      } else if (sentMsg) {
-        setMessages((prev) => {
-          const ids = new Set(prev.map((m) => m.id));
-          if (ids.has(sentMsg.id)) return prev;
-          prevMessagesCountRef.current = prev.length + 1;
-          return [...prev, sentMsg];
-        });
-      }
-    } catch (err) {
-      showError('Error al enviar el mensaje');
-      setNewMessage(messageText); // restore text
-    } finally {
-      setIsSubmitting(false);
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      wsRef.current.send(
+        JSON.stringify({
+          type: 'message',
+          message: messageText,
+        })
+      );
+    } else {
+      showError('El chat está desconectado. Intentando reconectar...');
+      setNewMessage(messageText);
     }
   };
 
