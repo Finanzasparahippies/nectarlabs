@@ -1783,9 +1783,9 @@ function DashboardPageOriginal() {
                                           id={`wants-invoice-${nextPending.id}`}
                                           checked={!!wantsInvoiceMap[nextPending.id]}
                                           onChange={(e) => setWantsInvoiceMap(prev => ({ ...prev, [nextPending.id]: e.target.checked }))}
-                                          className="rounded border-white/20 bg-black/40 text-nectar-gold focus:ring-nectar-gold w-3 h-3 cursor-pointer"
+                                          className="rounded border-card-border bg-card-bg dark:border-white/20 dark:bg-black/40 text-nectar-gold focus:ring-nectar-gold w-3 h-3 cursor-pointer"
                                         />
-                                        <label htmlFor={`wants-invoice-${nextPending.id}`} className="text-[8px] uppercase tracking-wider font-bold text-white/60 cursor-pointer select-none">
+                                        <label htmlFor={`wants-invoice-${nextPending.id}`} className="text-[8px] uppercase tracking-wider font-bold text-foreground/60 cursor-pointer select-none">
                                           Facturar (+16% IVA)
                                         </label>
                                       </div>
@@ -1897,9 +1897,9 @@ function DashboardPageOriginal() {
                                                       id={`wants-invoice-${inst.id}`}
                                                       checked={!!wantsInvoiceMap[inst.id]}
                                                       onChange={(e) => setWantsInvoiceMap(prev => ({ ...prev, [inst.id]: e.target.checked }))}
-                                                      className="rounded border-white/20 bg-black/40 text-nectar-gold focus:ring-nectar-gold w-3 h-3 cursor-pointer"
+                                                      className="rounded border-card-border bg-card-bg dark:border-white/20 dark:bg-black/40 text-nectar-gold focus:ring-nectar-gold w-3 h-3 cursor-pointer"
                                                     />
-                                                    <label htmlFor={`wants-invoice-${inst.id}`} className="text-[7.5px] uppercase font-bold text-white/50 cursor-pointer select-none">
+                                                    <label htmlFor={`wants-invoice-${inst.id}`} className="text-[7.5px] uppercase font-bold text-foreground/50 cursor-pointer select-none">
                                                       Facturar (+16%)
                                                     </label>
                                                   </div>

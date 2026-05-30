@@ -270,8 +270,8 @@ export default function SupportSettingsPage() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background p-6 text-center">
         <h1 className="text-xl font-black text-red-500 uppercase tracking-widest mb-2">Acceso Denegado</h1>
-        <p className="text-xs text-white/50 max-w-sm mb-6">No tienes privilegios para administrar centros de soporte globales.</p>
-        <Link href="/dashboard" className="px-6 py-3 bg-white/5 border border-white/10 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-white/10 transition-all">
+        <p className="text-xs text-foreground/60 max-w-sm mb-6">No tienes privilegios para administrar centros de soporte globales.</p>
+        <Link href="/dashboard" className="px-6 py-3 bg-foreground/5 border border-card-border rounded-xl text-[10px] font-black uppercase tracking-widest text-foreground hover:bg-foreground/10 transition-all">
           Volver al Dashboard
         </Link>
       </div>
@@ -311,27 +311,27 @@ export default function SupportSettingsPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
               </div>
-              <h2 className="text-xl font-black uppercase tracking-wider text-white">Activa tu Centro de Soporte</h2>
-              <p className="text-xs text-white/50 max-w-sm mx-auto mt-2 leading-relaxed">
+              <h2 className="text-xl font-black uppercase tracking-wider text-foreground">Activa tu Centro de Soporte</h2>
+              <p className="text-xs text-foreground/65 max-w-sm mx-auto mt-2 leading-relaxed">
                 Ofrece a tus clientes un portal de tickets de soporte técnico personalizado y un widget de chat en vivo integrado directamente en tus aplicaciones.
               </p>
             </div>
 
             <form onSubmit={handleCreateTenant} className="space-y-4">
               <div className="space-y-1">
-                <label className="text-[9px] font-black uppercase tracking-widest text-white/40">Nombre del Portal de Soporte</label>
+                <label className="text-[9px] font-black uppercase tracking-widest text-foreground/50">Nombre del Portal de Soporte</label>
                 <input
                   type="text"
                   value={newTenantName}
                   onChange={(e) => setNewTenantName(e.target.value)}
                   placeholder="Ej. Soporte Néctar Labs"
                   required
-                  className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-nectar-gold transition-all"
+                  className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-foreground focus:outline-none focus:border-nectar-gold transition-all"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-[9px] font-black uppercase tracking-widest text-white/40">Subdominio Dedicado</label>
+                <label className="text-[9px] font-black uppercase tracking-widest text-foreground/50">Subdominio Dedicado</label>
                 <div className="flex items-center bg-background border border-card-border rounded-xl px-4 py-3 focus-within:border-nectar-gold transition-all">
                   <input
                     type="text"
@@ -339,11 +339,11 @@ export default function SupportSettingsPage() {
                     onChange={(e) => setNewTenantSubdomain(e.target.value)}
                     placeholder="soporte-miempresa"
                     required
-                    className="flex-1 bg-transparent text-xs text-white focus:outline-none"
+                    className="flex-1 bg-transparent text-xs text-foreground focus:outline-none"
                   />
                   <span className="text-[10px] font-bold text-nectar-gold pl-2">.nectarlabs.dev</span>
                 </div>
-                <p className="text-[8px] text-white/30 uppercase mt-1">Este slug definirá tu URL del portal de ayuda hospedado.</p>
+                <p className="text-[8px] text-foreground/40 uppercase mt-1">Este slug definirá tu URL del portal de ayuda hospedado.</p>
               </div>
 
               <button
@@ -361,16 +361,16 @@ export default function SupportSettingsPage() {
             {/* Left list (Staff see all, Business owners see their list) */}
             {userRole === 'ADMIN' && tenants.length > 1 && (
               <div className="xl:col-span-3 bg-card-bg border border-card-border rounded-[2.5rem] p-6 flex flex-col space-y-4">
-                <h3 className="text-xs font-black uppercase tracking-wider text-white/40">Portales Registrados</h3>
+                <h3 className="text-xs font-black uppercase tracking-wider text-foreground/50">Portales Registrados</h3>
                 <div className="space-y-2 overflow-y-auto max-h-[400px] custom-scrollbar pr-1">
                   {tenants.map((t) => (
                     <button
-                      key={t.id}
+                       key={t.id}
                       onClick={() => selectTenant(t)}
                       className={`w-full text-left p-4 rounded-xl border transition-all text-xs font-black uppercase tracking-wider ${
                         selectedTenant?.id === t.id
                           ? 'bg-nectar-gold/10 text-nectar-gold border-nectar-gold/30'
-                          : 'bg-background/40 hover:bg-background/70 text-white/60 border-card-border'
+                          : 'bg-background/40 hover:bg-background/70 text-foreground/75 border-card-border'
                       }`}
                     >
                       {t.name}
@@ -389,7 +389,7 @@ export default function SupportSettingsPage() {
                   <button
                     onClick={() => setActiveSubTab('branding')}
                     className={`pb-3 text-[10px] font-black uppercase tracking-widest relative transition-all ${
-                      activeSubTab === 'branding' ? 'text-nectar-gold' : 'text-white/45 hover:text-white'
+                      activeSubTab === 'branding' ? 'text-nectar-gold' : 'text-foreground/50 hover:text-foreground'
                     }`}
                   >
                     Personalización
@@ -398,7 +398,7 @@ export default function SupportSettingsPage() {
                   <button
                     onClick={() => setActiveSubTab('routing')}
                     className={`pb-3 text-[10px] font-black uppercase tracking-widest relative transition-all ${
-                      activeSubTab === 'routing' ? 'text-nectar-gold' : 'text-white/45 hover:text-white'
+                      activeSubTab === 'routing' ? 'text-nectar-gold' : 'text-foreground/50 hover:text-foreground'
                     }`}
                   >
                     Enrutamiento y Seguridad
@@ -407,7 +407,7 @@ export default function SupportSettingsPage() {
                   <button
                     onClick={() => setActiveSubTab('widget')}
                     className={`pb-3 text-[10px] font-black uppercase tracking-widest relative transition-all ${
-                      activeSubTab === 'widget' ? 'text-nectar-gold' : 'text-white/45 hover:text-white'
+                      activeSubTab === 'widget' ? 'text-nectar-gold' : 'text-foreground/50 hover:text-foreground'
                     }`}
                   >
                     Integración e API Key
@@ -420,24 +420,24 @@ export default function SupportSettingsPage() {
                     <div className="space-y-6">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-1">
-                          <label className="text-[9px] font-black uppercase tracking-widest text-white/40">Nombre de la Marca</label>
+                          <label className="text-[9px] font-black uppercase tracking-widest text-foreground/50">Nombre de la Marca</label>
                           <input
                             type="text"
                             value={editName}
                             onChange={(e) => setEditName(e.target.value)}
                             required
-                            className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-nectar-gold transition-all"
+                            className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-foreground focus:outline-none focus:border-nectar-gold transition-all"
                           />
                         </div>
 
                         <div className="space-y-1">
-                          <label className="text-[9px] font-black uppercase tracking-widest text-white/40">Título del Portal (Pestaña del Navegador)</label>
+                          <label className="text-[9px] font-black uppercase tracking-widest text-foreground/50">Título del Portal (Pestaña del Navegador)</label>
                           <input
                             type="text"
                             value={editPortalTitle}
                             onChange={(e) => setEditPortalTitle(e.target.value)}
                             placeholder="Ej. Soporte Premium - MiEmpresa"
-                            className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-nectar-gold transition-all"
+                            className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-foreground focus:outline-none focus:border-nectar-gold transition-all"
                           />
                         </div>
                       </div>
@@ -445,7 +445,7 @@ export default function SupportSettingsPage() {
                       {/* Logo Section with file uploader and URL fallback */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-1">
-                          <label className="text-[9px] font-black uppercase tracking-widest text-white/40">Logotipo de la Marca (Subir Archivo)</label>
+                          <label className="text-[9px] font-black uppercase tracking-widest text-foreground/50">Logotipo de la Marca (Subir Archivo)</label>
                           <div className="flex flex-col sm:flex-row gap-4 items-center bg-background border border-card-border rounded-xl p-4">
                             <div className="relative w-16 h-16 rounded-xl border border-card-border overflow-hidden bg-background flex items-center justify-center shrink-0">
                               {editLogoPreview || editLogoUrl ? (
@@ -455,7 +455,7 @@ export default function SupportSettingsPage() {
                                   className="w-full h-full object-cover"
                                 />
                               ) : (
-                                <span className="text-[10px] text-white/30 uppercase font-black text-center p-1">Sin Logo</span>
+                                <span className="text-[10px] text-foreground/35 uppercase font-black text-center p-1">Sin Logo</span>
                               )}
                             </div>
                             <div className="flex-1 space-y-2">
@@ -469,7 +469,7 @@ export default function SupportSettingsPage() {
                                     setEditLogoPreview(URL.createObjectURL(file));
                                   }
                                 }}
-                                className="text-xs text-white file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-[10px] file:font-black file:uppercase file:tracking-wider file:bg-white/5 file:text-white hover:file:bg-white/10 w-full"
+                                className="text-xs text-foreground file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-[10px] file:font-black file:file:uppercase file:tracking-wider file:bg-foreground/5 file:text-foreground hover:file:bg-foreground/10 w-full"
                               />
                               {(editLogoPreview || editLogoUrl) && (
                                 <button
@@ -489,13 +489,13 @@ export default function SupportSettingsPage() {
                         </div>
 
                         <div className="space-y-1 flex flex-col justify-end">
-                          <label className="text-[9px] font-black uppercase tracking-widest text-white/40">O URL Externa del Logo (Opcional)</label>
+                          <label className="text-[9px] font-black uppercase tracking-widest text-foreground/50">O URL Externa del Logo (Opcional)</label>
                           <input
                             type="url"
                             value={editLogoUrl}
                             onChange={(e) => setEditLogoUrl(e.target.value)}
                             placeholder="https://ejemplo.com/logo.png"
-                            className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-nectar-gold transition-all"
+                            className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-foreground focus:outline-none focus:border-nectar-gold transition-all"
                           />
                         </div>
                       </div>
@@ -506,7 +506,7 @@ export default function SupportSettingsPage() {
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                           {/* 1. Theme Color */}
                           <div className="p-4 bg-foreground/[0.01] border border-card-border/40 rounded-2xl space-y-3">
-                            <label className="text-[8px] font-black uppercase tracking-widest text-white/45 block">Primario (Tema)</label>
+                            <label className="text-[8px] font-black uppercase tracking-widest text-foreground/50 block">Primario (Tema)</label>
                             <div className="flex items-center gap-3">
                               <input
                                 type="color"
@@ -519,14 +519,14 @@ export default function SupportSettingsPage() {
                                 value={editThemeColor}
                                 onChange={(e) => setEditThemeColor(e.target.value)}
                                 placeholder="#C68A1E"
-                                className="flex-1 bg-background border border-card-border rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-nectar-gold uppercase text-center font-mono font-bold tracking-wider"
+                                className="flex-1 bg-background border border-card-border rounded-xl px-3 py-2.5 text-xs text-foreground focus:outline-none focus:border-nectar-gold uppercase text-center font-mono font-bold tracking-wider"
                               />
                             </div>
                           </div>
 
                           {/* 2. Accent Color */}
                           <div className="p-4 bg-foreground/[0.01] border border-card-border/40 rounded-2xl space-y-3">
-                            <label className="text-[8px] font-black uppercase tracking-widest text-white/45 block">Acento</label>
+                            <label className="text-[8px] font-black uppercase tracking-widest text-foreground/50 block">Acento</label>
                             <div className="flex items-center gap-3">
                               <input
                                 type="color"
@@ -539,14 +539,14 @@ export default function SupportSettingsPage() {
                                 value={editAccentColor}
                                 onChange={(e) => setEditAccentColor(e.target.value)}
                                 placeholder="#10B981"
-                                className="flex-1 bg-background border border-card-border rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-nectar-gold uppercase text-center font-mono font-bold tracking-wider"
+                                className="flex-1 bg-background border border-card-border rounded-xl px-3 py-2.5 text-xs text-foreground focus:outline-none focus:border-nectar-gold uppercase text-center font-mono font-bold tracking-wider"
                               />
                             </div>
                           </div>
 
                           {/* 3. Text Color */}
                           <div className="p-4 bg-foreground/[0.01] border border-card-border/40 rounded-2xl space-y-3">
-                            <label className="text-[8px] font-black uppercase tracking-widest text-white/45 block">Texto Principal</label>
+                            <label className="text-[8px] font-black uppercase tracking-widest text-foreground/50 block">Texto Principal</label>
                             <div className="flex items-center gap-3">
                               <input
                                 type="color"
@@ -559,14 +559,14 @@ export default function SupportSettingsPage() {
                                 value={editTextColor}
                                 onChange={(e) => setEditTextColor(e.target.value)}
                                 placeholder="#FFFFFF"
-                                className="flex-1 bg-background border border-card-border rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-nectar-gold uppercase text-center font-mono font-bold tracking-wider"
+                                className="flex-1 bg-background border border-card-border rounded-xl px-3 py-2.5 text-xs text-foreground focus:outline-none focus:border-nectar-gold uppercase text-center font-mono font-bold tracking-wider"
                               />
                             </div>
                           </div>
 
                           {/* 4. Canvas BG Color */}
                           <div className="p-4 bg-foreground/[0.01] border border-card-border/40 rounded-2xl space-y-3">
-                            <label className="text-[8px] font-black uppercase tracking-widest text-white/45 block">Fondo Lienzo</label>
+                            <label className="text-[8px] font-black uppercase tracking-widest text-foreground/50 block">Fondo Lienzo</label>
                             <div className="flex items-center gap-3">
                               <input
                                 type="color"
@@ -579,14 +579,14 @@ export default function SupportSettingsPage() {
                                 value={editBgColor}
                                 onChange={(e) => setEditBgColor(e.target.value)}
                                 placeholder="#020403"
-                                className="flex-1 bg-background border border-card-border rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-nectar-gold uppercase text-center font-mono font-bold tracking-wider"
+                                className="flex-1 bg-background border border-card-border rounded-xl px-3 py-2.5 text-xs text-foreground focus:outline-none focus:border-nectar-gold uppercase text-center font-mono font-bold tracking-wider"
                               />
                             </div>
                           </div>
 
                           {/* 5. Card BG Color */}
                           <div className="p-4 bg-foreground/[0.01] border border-card-border/40 rounded-2xl space-y-3">
-                            <label className="text-[8px] font-black uppercase tracking-widest text-white/45 block">Fondo Tarjetas</label>
+                            <label className="text-[8px] font-black uppercase tracking-widest text-foreground/50 block">Fondo Tarjetas</label>
                             <div className="flex items-center gap-3">
                               <input
                                 type="color"
@@ -599,14 +599,14 @@ export default function SupportSettingsPage() {
                                 value={editCardBgColor}
                                 onChange={(e) => setEditCardBgColor(e.target.value)}
                                 placeholder="#050a06"
-                                className="flex-1 bg-background border border-card-border rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-nectar-gold uppercase text-center font-mono font-bold tracking-wider"
+                                className="flex-1 bg-background border border-card-border rounded-xl px-3 py-2.5 text-xs text-foreground focus:outline-none focus:border-nectar-gold uppercase text-center font-mono font-bold tracking-wider"
                               />
                             </div>
                           </div>
 
                           {/* 6. Border Color */}
                           <div className="p-4 bg-foreground/[0.01] border border-card-border/40 rounded-2xl space-y-3">
-                            <label className="text-[8px] font-black uppercase tracking-widest text-white/45 block">Bordes / Divisiones</label>
+                            <label className="text-[8px] font-black uppercase tracking-widest text-foreground/50 block">Bordes / Divisiones</label>
                             <div className="flex items-center gap-3">
                               <input
                                 type="color"
@@ -619,7 +619,7 @@ export default function SupportSettingsPage() {
                                 value={editBorderColor}
                                 onChange={(e) => setEditBorderColor(e.target.value)}
                                 placeholder="#151F18"
-                                className="flex-1 bg-background border border-card-border rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-nectar-gold uppercase text-center font-mono font-bold tracking-wider"
+                                className="flex-1 bg-background border border-card-border rounded-xl px-3 py-2.5 text-xs text-foreground focus:outline-none focus:border-nectar-gold uppercase text-center font-mono font-bold tracking-wider"
                               />
                             </div>
                           </div>
@@ -628,31 +628,31 @@ export default function SupportSettingsPage() {
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-card-border">
                         <div className="space-y-1">
-                          <label className="text-[9px] font-black uppercase tracking-widest text-white/40">Mensaje de Bienvenida del Chat</label>
+                          <label className="text-[9px] font-black uppercase tracking-widest text-foreground/50">Mensaje de Bienvenida del Chat</label>
                           <textarea
                             value={editWelcomeMessage}
                             onChange={(e) => setEditWelcomeMessage(e.target.value)}
                             rows={3}
-                            className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-nectar-gold transition-all resize-none animate-premium"
+                            className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-foreground focus:outline-none focus:border-nectar-gold transition-all resize-none animate-premium"
                           ></textarea>
                         </div>
 
                         <div className="space-y-1">
-                          <label className="text-[9px] font-black uppercase tracking-widest text-white/40">Texto de Pie de Página (Footer)</label>
+                          <label className="text-[9px] font-black uppercase tracking-widest text-foreground/50">Texto de Pie de Página (Footer)</label>
                           <textarea
                             value={editFooterText}
                             onChange={(e) => setEditFooterText(e.target.value)}
                             rows={3}
                             placeholder="Ej. © 2026 MiEmpresa. Todos los derechos reservados."
-                            className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-nectar-gold transition-all resize-none animate-premium"
+                            className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-foreground focus:outline-none focus:border-nectar-gold transition-all resize-none animate-premium"
                           ></textarea>
                         </div>
                       </div>
 
                       <div className="flex items-center justify-between p-4 bg-background/50 border border-card-border rounded-xl">
                         <div>
-                          <h4 className="text-xs font-black uppercase tracking-wide text-white">Requerir Información de Clientes</h4>
-                          <p className="text-[9px] text-white/40 uppercase mt-0.5">Exige nombre y correo electrónico antes de permitir iniciar una sesión de soporte.</p>
+                          <h4 className="text-xs font-black uppercase tracking-wide text-foreground">Requerir Información de Clientes</h4>
+                          <p className="text-[9px] text-foreground/40 uppercase mt-0.5">Exige nombre y correo electrónico antes de permitir iniciar una sesión de soporte.</p>
                         </div>
                         <label className="relative inline-flex items-center cursor-pointer select-none">
                           <input
@@ -671,20 +671,20 @@ export default function SupportSettingsPage() {
                     <div className="space-y-6">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-1">
-                          <label className="text-[9px] font-black uppercase tracking-widest text-white/40">Subdominio Dedicado</label>
+                          <label className="text-[9px] font-black uppercase tracking-widest text-foreground/50">Subdominio Dedicado</label>
                           <div className="flex items-center bg-background border border-card-border rounded-xl px-4 py-3 focus-within:border-nectar-gold transition-all">
                             <input
                               type="text"
                               value={editSubdomain}
                               onChange={(e) => setEditSubdomain(e.target.value)}
                               required
-                              className="flex-1 bg-transparent text-xs text-white focus:outline-none"
+                              className="flex-1 bg-transparent text-xs text-foreground focus:outline-none"
                             />
                             <span className="text-[10px] font-bold text-nectar-gold pl-2">.nectarlabs.dev</span>
                           </div>
                           {selectedTenant && (
                             <div className="flex gap-2 items-center mt-2">
-                              <span className="text-[8px] text-white/30 uppercase">Enlace Portal:</span>
+                              <span className="text-[8px] text-foreground/40 uppercase">Enlace Portal:</span>
                               <a
                                 href={`${origin.replace('//', `//${editSubdomain}.`)}`}
                                 target="_blank"
@@ -698,15 +698,15 @@ export default function SupportSettingsPage() {
                         </div>
 
                         <div className="space-y-1">
-                          <label className="text-[9px] font-black uppercase tracking-widest text-white/40">Dominio Personalizado (Cname Mapping)</label>
+                          <label className="text-[9px] font-black uppercase tracking-widest text-foreground/50">Dominio Personalizado (Cname Mapping)</label>
                           <input
                             type="text"
                             value={editCustomDomain}
                             onChange={(e) => setEditCustomDomain(e.target.value)}
                             placeholder="Ej. soporte.miempresa.com"
-                            className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-nectar-gold transition-all"
+                            className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-foreground focus:outline-none focus:border-nectar-gold transition-all"
                           />
-                          <p className="text-[8px] text-white/30 uppercase mt-1">
+                          <p className="text-[8px] text-foreground/40 uppercase mt-1">
                             Apunta tu CNAME en tu proveedor de DNS (GoDaddy, Cloudflare, etc.) hacia <span className="text-nectar-gold">nectarlabs.dev</span>.
                           </p>
                           
@@ -716,7 +716,7 @@ export default function SupportSettingsPage() {
                                 type="button"
                                 onClick={handleValidateDomain}
                                 disabled={isValidatingDomain}
-                                className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-lg text-[9px] font-black uppercase tracking-wider transition-all disabled:opacity-50"
+                                className="px-4 py-2 bg-foreground/5 hover:bg-foreground/10 border border-card-border text-foreground rounded-lg text-[9px] font-black uppercase tracking-wider transition-all disabled:opacity-50"
                               >
                                 {isValidatingDomain ? 'Validando...' : 'Verificar DNS'}
                               </button>
@@ -743,15 +743,15 @@ export default function SupportSettingsPage() {
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-[9px] font-black uppercase tracking-widest text-white/40">Orígenes Permitidos (Seguridad de Widget)</label>
+                        <label className="text-[9px] font-black uppercase tracking-widest text-foreground/50">Orígenes Permitidos (Seguridad de Widget)</label>
                         <textarea
                           value={editAllowedOrigins}
                           onChange={(e) => setEditAllowedOrigins(e.target.value)}
                           placeholder="https://miempresa.com, https://app.miempresa.com"
                           rows={3}
-                          className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-nectar-gold transition-all resize-none"
+                          className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-foreground focus:outline-none focus:border-nectar-gold transition-all resize-none"
                         ></textarea>
-                        <p className="text-[8px] text-white/30 uppercase mt-1">
+                        <p className="text-[8px] text-foreground/40 uppercase mt-1">
                           Direcciones desde las cuales tu widget estará autorizado a cargarse. Separa cada dominio con comas o saltos de línea. Dejar vacío para permitir en cualquier origen.
                         </p>
                       </div>
@@ -761,16 +761,16 @@ export default function SupportSettingsPage() {
                   {activeSubTab === 'widget' && (
                     <div className="space-y-6">
                       <div className="space-y-2">
-                        <h4 className="text-xs font-black uppercase tracking-wide text-white">Script de Integración del Widget</h4>
-                        <p className="text-[10px] text-white/50 leading-relaxed">
+                        <h4 className="text-xs font-black uppercase tracking-wide text-foreground">Script de Integración del Widget</h4>
+                        <p className="text-[10px] text-foreground/60 leading-relaxed">
                           Copia y pega este fragmento de código HTML al final de la etiqueta <code className="text-nectar-gold">&lt;body&gt;</code> de tu sitio web para renderizar el chat de soporte técnico.
                         </p>
-                        <div className="relative bg-background border border-card-border rounded-2xl p-4.5 font-mono text-[10px] text-white/90 overflow-x-auto select-all">
+                        <div className="relative bg-background border border-card-border rounded-2xl p-4.5 font-mono text-[10px] text-foreground/90 overflow-x-auto select-all">
                           <pre>{widgetScriptTag}</pre>
                           <button
                             type="button"
                             onClick={() => copyToClipboard(widgetScriptTag)}
-                            className="absolute top-3 right-3 bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/10 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all"
+                            className="absolute top-3 right-3 bg-foreground/5 hover:bg-foreground/10 border border-card-border px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider text-foreground transition-all"
                           >
                             {copied ? '¡Copiado!' : 'Copiar'}
                           </button>
@@ -779,11 +779,11 @@ export default function SupportSettingsPage() {
 
                       <div className="pt-6 border-t border-card-border space-y-4">
                         <div>
-                          <h4 className="text-xs font-black uppercase tracking-wide text-white">API Key y Autenticación del SDK</h4>
-                          <p className="text-[10px] text-white/40 leading-relaxed uppercase mt-0.5">Utiliza esta credencial para sincronizar la base de datos de usuarios finales o interactuar directamente vía API.</p>
+                          <h4 className="text-xs font-black uppercase tracking-wide text-foreground">API Key y Autenticación del SDK</h4>
+                          <p className="text-[10px] text-foreground/50 leading-relaxed uppercase mt-0.5">Utiliza esta credencial para sincronizar la base de datos de usuarios finales o interactuar directamente vía API.</p>
                         </div>
                         <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
-                          <div className="flex-1 bg-background border border-card-border rounded-xl px-4.5 py-3.5 font-mono text-xs text-white/80 select-all overflow-x-auto">
+                          <div className="flex-1 bg-background border border-card-border rounded-xl px-4.5 py-3.5 font-mono text-xs text-foreground/85 select-all overflow-x-auto">
                             {selectedTenant?.api_key || 'Cargando API Key...'}
                           </div>
                           <button
@@ -816,8 +816,8 @@ export default function SupportSettingsPage() {
                   <div className="absolute top-0 left-0 right-0 h-2" style={{ backgroundColor: editThemeColor }}></div>
                   
                   <div className="text-center pt-4">
-                    <span className="text-[8px] font-black uppercase tracking-widest text-white/30">Vista Previa Visual</span>
-                    <h4 className="text-xs font-black uppercase text-white tracking-tight mt-2">Chat de Soporte</h4>
+                    <span className="text-[8px] font-black uppercase tracking-widest text-foreground/45">Vista Previa Visual</span>
+                    <h4 className="text-xs font-black uppercase text-foreground tracking-tight mt-2">Chat de Soporte</h4>
                   </div>
 
                   {/* Mock Widget UI */}
@@ -882,7 +882,7 @@ export default function SupportSettingsPage() {
                     </div>
                   </div>
 
-                  <span className="text-[7.5px] font-black tracking-widest uppercase text-white/20">
+                  <span className="text-[7.5px] font-black tracking-widest uppercase text-foreground/30">
                     Powered by Néctar Labs
                   </span>
                 </div>

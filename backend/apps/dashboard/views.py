@@ -22,11 +22,16 @@ class ProjectViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
+        base_queryset = Project.objects.select_related(
+            'client', 'designer', 'plan', 'designer_plan'
+        ).prefetch_related(
+            'logs', 'logs__user', 'advances', 'advances__delivered_by'
+        )
         if user.role == 'DESIGNER':
-            return Project.objects.filter(designer=user)
+            return base_queryset.filter(designer=user)
         if user.is_staff or user.role in ['ADMIN', 'DEVELOPER']:
-            return Project.objects.all()
-        return Project.objects.filter(client=user)
+            return base_queryset.all()
+        return base_queryset.filter(client=user)
 
     def check_permissions(self, request):
         super().check_permissions(request)
@@ -159,11 +164,12 @@ class TimeLogViewSet(viewsets.ReadOnlyModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
+        base_queryset = TimeLog.objects.select_related('user', 'project')
         if user.role == 'DESIGNER':
-            return TimeLog.objects.filter(project__designer=user)
+            return base_queryset.filter(project__designer=user)
         if user.is_staff:
-            return TimeLog.objects.all()
-        return TimeLog.objects.filter(project__client=user)
+            return base_queryset.all()
+        return base_queryset.filter(project__client=user)
 
 class BusinessStatsView(APIView):
     permission_classes = [permissions.IsAdminUser]
@@ -176,7 +182,7 @@ class BusinessStatsView(APIView):
             return Response(cached_data)
 
         # 1. Ventas Totales (MRR de contratos activos + total de órdenes pagadas, EXCLUYE diseño de marca transitorio)
-        active_contracts = Contract.objects.filter(is_active=True)
+        active_contracts = Contract.objects.filter(is_active=True).select_related('plan').prefetch_related('addons')
         contracts_mrr = 0
         designer_fees = 0
         for contract in active_contracts:
@@ -212,7 +218,7 @@ class BusinessStatsView(APIView):
 
         # 4. Calendario de Cashflow (Cobros a clientes y servidores)
         client_billing = []
-        for contract in Contract.objects.filter(is_active=True):
+        for contract in Contract.objects.filter(is_active=True).select_related('plan').prefetch_related('addons'):
             if contract.next_payment_date:
                 days_left = (contract.next_payment_date - timezone.now().date()).days
                 status_label = "overdue" if days_left < 0 else ("upcoming" if days_left <= 7 else "paid")
@@ -279,7 +285,7 @@ class BusinessStatsView(APIView):
             month_contracts = Contract.objects.filter(
                 is_active=True,
                 signed_at__lte=end_of_month_dt
-            )
+            ).select_related('plan').prefetch_related('addons')
             
             month_sales = 0
             for contract in month_contracts:
