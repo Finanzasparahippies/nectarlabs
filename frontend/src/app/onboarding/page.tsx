@@ -390,7 +390,9 @@ function OnboardingContent() {
         {step === 3 && (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
             <h1 className="text-5xl font-black tracking-tighter">Firma Digital</h1>
-            <p className="text-xl opacity-60">Revisa cuidadosamente los términ            <div className="bg-card-bg/85 backdrop-blur-md border border-nectar-gold/25 rounded-3xl overflow-hidden flex flex-col min-h-[68vh] max-h-[78vh] md:max-h-[82vh] shadow-[0_0_50px_rgba(198,138,30,0.08)] relative">
+            <p className="text-xl opacity-60">Revisa cuidadosamente los términos del contrato antes de firmar.</p>
+
+            <div className="bg-card-bg/85 backdrop-blur-md border border-nectar-gold/25 rounded-3xl overflow-hidden flex flex-col min-h-[68vh] max-h-[78vh] md:max-h-[82vh] shadow-[0_0_50px_rgba(198,138,30,0.08)] relative">
               <style>{`
                 .custom-contract-scrollbar::-webkit-scrollbar {
                   width: 8px;
