@@ -5,9 +5,10 @@ from rest_framework.response import Response
 from django.db.models import Sum
 from django.utils import timezone
 
-from .models import Project, TimeLog, FAQ, ServerCost, BusinessExpense, ProjectAdvance, ProjectQuote, Lead
+from .models import Project, TimeLog, FAQ, ServerCost, BusinessExpense, ProjectAdvance, ProjectQuote, Lead, LeadAppointment
 from apps.shop.models import Contract, Order
-from .serializers import ProjectSerializer, TimeLogSerializer, FAQSerializer, ProjectQuoteSerializer, LeadSerializer
+from .serializers import ProjectSerializer, TimeLogSerializer, FAQSerializer, ProjectQuoteSerializer, LeadSerializer, LeadAppointmentSerializer
+
 
 class FAQViewSet(viewsets.ReadOnlyModelViewSet):
     # (FAQ code remains unchanged)
@@ -522,5 +523,152 @@ class LeadViewSet(viewsets.ModelViewSet):
             serializer.save(salesperson=salesperson)
         else:
             serializer.save(salesperson=self.request.user)
+
+
+from rest_framework import filters
+from django.shortcuts import redirect
+from django.core.signing import TimestampSigner, BadSignature, SignatureExpired
+from django.conf import settings
+from .utils import send_lead_appointment_email
+
+class LeadAppointmentViewSet(viewsets.ModelViewSet):
+    serializer_class = LeadAppointmentSerializer
+    filter_backends = [filters.OrderingFilter]
+    ordering_fields = ['date', 'time']
+
+    def get_permissions(self):
+        if self.action in ['create', 'confirm', 'availability']:
+            return [permissions.AllowAny()]
+        return [permissions.IsAuthenticated()]
+
+    def get_queryset(self):
+        user = self.request.user
+        if not user or not user.is_authenticated:
+            return LeadAppointment.objects.none()
+        if user.is_staff or user.role == 'ADMIN':
+            return LeadAppointment.objects.all().order_by('-date', '-time')
+        if user.role == 'SALES':
+            return LeadAppointment.objects.filter(salesperson=user).order_by('-date', '-time')
+        return LeadAppointment.objects.none()
+
+    def perform_create(self, serializer):
+        from django.contrib.auth import get_user_model
+        from apps.shop.models import AddOn
+        from rest_framework.exceptions import ValidationError
+        User = get_user_model()
+
+        client_name = self.request.data.get('client_name')
+        client_email = self.request.data.get('client_email')
+        client_phone = self.request.data.get('client_phone', '')
+        addon_slug = self.request.data.get('addon_slug', '')
+        notes = self.request.data.get('notes', '')
+        date = self.request.data.get('date')
+        time = self.request.data.get('time')
+
+        if not client_name or not client_email:
+            raise ValidationError({"client_name": "Nombre y email del cliente son requeridos."})
+
+        # 1. Asignar o buscar vendedor
+        salesperson = User.objects.filter(role=User.Role.SALES).first()
+        if not salesperson:
+            salesperson = User.objects.filter(role=User.Role.ADMIN).first()
+        if not salesperson:
+            salesperson = User.objects.filter(is_staff=True).first()
+        if not salesperson:
+            salesperson = User.objects.first()
+
+        if not salesperson:
+            raise ValidationError({"salesperson": "No hay agentes de ventas registrados para atender la consulta."})
+
+        # Evitar colisión de horario
+        if LeadAppointment.objects.filter(salesperson=salesperson, date=date, time=time).exclude(status='CANCELLED').exists():
+            other_salespeople = User.objects.filter(role=User.Role.SALES).exclude(id=salesperson.id)
+            assigned_new = False
+            for os in other_salespeople:
+                if not LeadAppointment.objects.filter(salesperson=os, date=date, time=time).exclude(status='CANCELLED').exists():
+                    salesperson = os
+                    assigned_new = True
+                    break
+            if not assigned_new:
+                raise ValidationError({"time": "Este horario ya no está disponible con nuestros agentes. Por favor selecciona otra hora."})
+
+        # 2. Buscar o crear el Lead
+        lead = Lead.objects.filter(email=client_email).first()
+        if not lead:
+            lead = Lead.objects.create(
+                name=client_name,
+                email=client_email,
+                phone=client_phone,
+                project_idea=notes,
+                salesperson=salesperson,
+                status=Lead.Status.PROSPECT
+            )
+        else:
+            if not lead.phone:
+                lead.phone = client_phone
+            if not lead.project_idea:
+                lead.project_idea = notes
+            lead.save()
+
+        # 3. Buscar addon de interés
+        addon = None
+        if addon_slug:
+            addon = AddOn.objects.filter(slug=addon_slug).first()
+
+        # Guardar cita
+        appointment = serializer.save(
+            lead=lead,
+            salesperson=salesperson,
+            addon=addon,
+            is_confirmed_by_client=False # Requiere confirmación por correo
+        )
+
+        # Enviar correo de creación / verificación
+        send_lead_appointment_email(appointment, email_type='creation')
+
+    @action(detail=False, methods=['get'])
+    def confirm(self, request):
+        token = request.query_params.get('token')
+        if not token:
+            return redirect(f"{settings.FRONTEND_URL}/?confirmed=false&reason=missing_token")
+        
+        signer = TimestampSigner()
+        try:
+            appointment_id = signer.unsign(token, max_age=86400)
+            appointment = LeadAppointment.objects.get(id=appointment_id)
+            appointment.is_confirmed_by_client = True
+            appointment.status = 'CONFIRMED'
+            appointment.save()
+
+            # Activar lead a contactado
+            lead = appointment.lead
+            if lead.status == Lead.Status.PROSPECT:
+                lead.status = Lead.Status.CONTACTED
+                lead.save()
+
+            # Enviar correo de confirmación de agenda
+            send_lead_appointment_email(appointment, email_type='confirmation')
+
+            return redirect(f"{settings.FRONTEND_URL}/?confirmed=true")
+        except (BadSignature, SignatureExpired, LeadAppointment.DoesNotExist):
+            return redirect(f"{settings.FRONTEND_URL}/?confirmed=false&reason=invalid_or_expired")
+
+    @action(detail=False, methods=['get'])
+    def availability(self, request):
+        from django.contrib.auth import get_user_model
+        from django.db.models import Count
+        User = get_user_model()
+        salespeople_count = User.objects.filter(role=User.Role.SALES).count()
+        if salespeople_count == 0:
+            salespeople_count = 1
+
+        busy_slots = LeadAppointment.objects.filter(
+            date__gte=timezone.now().date()
+        ).exclude(status='CANCELLED').values('date', 'time').annotate(
+            num_appointments=Count('id')
+        ).filter(num_appointments__gte=salespeople_count)
+
+        return Response(busy_slots)
+
 
 

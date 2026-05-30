@@ -29,6 +29,17 @@ def safe_b64decode(b64_string):
     except Exception:
         return None
 
+def is_valid_image(image_bytes):
+    if not image_bytes:
+        return False
+    try:
+        from PIL import Image
+        img = Image.open(BytesIO(image_bytes))
+        img.verify()
+        return True
+    except Exception:
+        return False
+
 class BookingContractPDF(FPDF):
     def __init__(self, tenant, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -118,7 +129,7 @@ def generate_booking_contract_pdf(contract):
         if contract.signature_base64:
             try:
                 sig_data = safe_b64decode(contract.signature_base64)
-                if sig_data:
+                if sig_data and is_valid_image(sig_data):
                     sig_img = BytesIO(sig_data)
                     pdf.image(sig_img, x=25, y=y_before_sig, w=45)
                 if contract.signed_at:
@@ -139,7 +150,7 @@ def generate_booking_contract_pdf(contract):
         if contract.manager_signature:
             try:
                 sig_data = safe_b64decode(contract.manager_signature)
-                if sig_data:
+                if sig_data and is_valid_image(sig_data):
                     sig_img = BytesIO(sig_data)
                     pdf.image(sig_img, x=125, y=y_before_sig, w=45)
                 if contract.manager_signed_at:

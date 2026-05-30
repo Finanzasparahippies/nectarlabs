@@ -45,7 +45,7 @@ const steps = [
   }
 ];
 
-export default function ProcessFlow() {
+export default function ProcessFlow({ onOpenScheduler }: { onOpenScheduler?: () => void }) {
   return (
     <section className="w-full py-20 sm:py-40 px-6 max-w-7xl mx-auto relative overflow-hidden">
       {/* Decorative background element */}
@@ -105,7 +105,10 @@ export default function ProcessFlow() {
           <p className="text-white/60 text-sm sm:text-lg font-bold">Tu negocio merece una arquitectura a medida, no parches tecnológicos.</p>
         </div>
 
-        <button className="w-full md:w-auto px-8 py-4 sm:px-12 sm:py-6 bg-nectar-gold text-white font-black uppercase tracking-widest rounded-2xl hover:bg-white hover:text-nectar-forest transition-all scale-100 hover:scale-105 active:scale-95 shadow-xl relative z-10 text-xs sm:text-sm">
+        <button 
+          onClick={() => onOpenScheduler?.()}
+          className="w-full md:w-auto px-8 py-4 sm:px-12 sm:py-6 bg-nectar-gold text-white font-black uppercase tracking-widest rounded-2xl hover:bg-white hover:text-nectar-forest transition-all scale-100 hover:scale-105 active:scale-95 shadow-xl relative z-10 text-xs sm:text-sm cursor-pointer"
+        >
           Agendar Consultoría
         </button>
       </div>

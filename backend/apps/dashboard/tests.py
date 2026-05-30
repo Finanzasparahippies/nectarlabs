@@ -433,3 +433,141 @@ class LeadAndSalespersonQuoteTests(APITestCase):
         response = self.client.delete(url)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
+
+class LeadAppointmentTests(APITestCase):
+    def setUp(self):
+        self.ceo = User.objects.create_user(
+            username="saul_ceo_appt",
+            email="saul_appt@nectarlabs.dev",
+            password="securepassword",
+            role=User.Role.ADMIN,
+            is_staff=True
+        )
+        self.salesperson_a = User.objects.create_user(
+            username="seller_appt_a",
+            email="seller_appt_a@example.com",
+            password="password123",
+            role=User.Role.SALES
+        )
+        self.salesperson_b = User.objects.create_user(
+            username="seller_appt_b",
+            email="seller_appt_b@example.com",
+            password="password123",
+            role=User.Role.SALES
+        )
+        
+    def test_anonymous_booking_creates_lead_and_appointment(self):
+        from apps.dashboard.models import Lead, LeadAppointment
+        from django.core import mail
+        
+        # Booking request data
+        data = {
+            "client_name": "Juan Perez",
+            "client_email": "juan@example.com",
+            "client_phone": "555-1234",
+            "notes": "Interested in Live Chat addon",
+            "date": "2026-06-15",
+            "time": "10:00:00",
+            "addon_slug": "live-chat"
+        }
+        
+        # Anonymous post to appointments
+        response = self.client.post(reverse('appointment-list'), data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        
+        # Verify Lead creation
+        lead = Lead.objects.get(email="juan@example.com")
+        self.assertEqual(lead.name, "Juan Perez")
+        self.assertEqual(lead.phone, "555-1234")
+        self.assertEqual(lead.status, Lead.Status.PROSPECT)
+        
+        # Verify Appointment creation
+        appt = LeadAppointment.objects.get(lead=lead)
+        self.assertEqual(str(appt.date), "2026-06-15")
+        self.assertEqual(str(appt.time), "10:00:00")
+        self.assertFalse(appt.is_confirmed_by_client)
+        self.assertEqual(appt.salesperson, self.salesperson_a) # First sales user
+        
+        # Verify verification email was sent
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertIn("Consulta de Software Solicitada", mail.outbox[0].subject)
+        
+    def test_double_booking_prevention_assigns_other_salesperson(self):
+        from apps.dashboard.models import Lead, LeadAppointment
+        
+        # Book first appointment
+        data1 = {
+            "client_name": "Juan Perez",
+            "client_email": "juan@example.com",
+            "client_phone": "555-1234",
+            "notes": "First booking",
+            "date": "2026-06-15",
+            "time": "10:00:00"
+        }
+        response = self.client.post(reverse('appointment-list'), data1, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        
+        # Book second appointment at same date/time -> should assign salesperson_b
+        data2 = {
+            "client_name": "Maria Lopez",
+            "client_email": "maria@example.com",
+            "client_phone": "555-5678",
+            "notes": "Second booking at same time",
+            "date": "2026-06-15",
+            "time": "10:00:00"
+        }
+        response = self.client.post(reverse('appointment-list'), data2, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        
+        appt2 = LeadAppointment.objects.get(lead__email="maria@example.com")
+        self.assertEqual(appt2.salesperson, self.salesperson_b)
+        
+        # Book third appointment at same date/time -> should fail because both are busy
+        data3 = {
+            "client_name": "Pedro Gomez",
+            "client_email": "pedro@example.com",
+            "date": "2026-06-15",
+            "time": "10:00:00"
+        }
+        response = self.client.post(reverse('appointment-list'), data3, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        # Check either string or list representation of the error
+        time_error = str(response.data['time'])
+        self.assertIn("Este horario ya no está disponible", time_error)
+        
+    def test_appointment_confirmation_flow(self):
+        from apps.dashboard.models import Lead, LeadAppointment
+        from django.core.signing import TimestampSigner
+        
+        # Create appointment manually
+        lead = Lead.objects.create(
+            name="Test Client",
+            email="test@example.com",
+            salesperson=self.salesperson_a
+        )
+        appt = LeadAppointment.objects.create(
+            lead=lead,
+            salesperson=self.salesperson_a,
+            date="2026-06-16",
+            time="11:00:00"
+        )
+        
+        # Generate token
+        signer = TimestampSigner()
+        token = signer.sign(str(appt.id))
+        
+        # Confirm get request
+        url = reverse('appointment-confirm') + f"?token={token}"
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
+        self.assertIn("confirmed=true", response.url)
+        
+        # Refresh and verify status
+        appt.refresh_from_db()
+        self.assertTrue(appt.is_confirmed_by_client)
+        self.assertEqual(appt.status, LeadAppointment.Status.CONFIRMED)
+        
+        lead.refresh_from_db()
+        self.assertEqual(lead.status, Lead.Status.CONTACTED)
+
+

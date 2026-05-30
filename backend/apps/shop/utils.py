@@ -45,6 +45,17 @@ def safe_b64decode(b64_string):
     except Exception:
         return None
 
+def is_valid_image(image_bytes):
+    if not image_bytes:
+        return False
+    try:
+        from PIL import Image
+        img = Image.open(BytesIO(image_bytes))
+        img.verify()
+        return True
+    except Exception:
+        return False
+
 def generate_contract_pdf(contract):
     try:
         pdf = ContractPDF()
@@ -128,7 +139,7 @@ def generate_contract_pdf(contract):
         if contract.developer_signature:
             try:
                 sig_data = safe_b64decode(contract.developer_signature)
-                if sig_data:
+                if sig_data and is_valid_image(sig_data):
                     sig_img = BytesIO(sig_data)
                     pdf.image(sig_img, x=25, y=y_before_sig - 10, w=50)
                 if contract.developer_signed_at:
@@ -149,7 +160,7 @@ def generate_contract_pdf(contract):
         if contract.signature_base64:
             try:
                 sig_data = safe_b64decode(contract.signature_base64)
-                if sig_data:
+                if sig_data and is_valid_image(sig_data):
                     sig_img = BytesIO(sig_data)
                     pdf.image(sig_img, x=125, y=y_before_sig - 10, w=50)
                 pdf.set_xy(110, y_before_sig + 15)

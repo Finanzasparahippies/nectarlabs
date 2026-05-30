@@ -1,5 +1,7 @@
 from rest_framework import serializers
-from .models import Project, TimeLog, FAQ, ProjectAdvance, ProjectQuote, Lead
+from .models import Project, TimeLog, FAQ, ProjectAdvance, ProjectQuote, Lead, LeadAppointment
+
+
 
 class FAQSerializer(serializers.ModelSerializer):
     class Meta:
@@ -90,4 +92,37 @@ class LeadSerializer(serializers.ModelSerializer):
             elif contract.payment_day == 'FORTNIGHTLY_1ST_15TH':
                 return 'fortnightly'
         return 'monthly'
+
+
+class LeadAppointmentSerializer(serializers.ModelSerializer):
+    lead_name = serializers.CharField(source='lead.name', read_only=True)
+    lead_email = serializers.EmailField(source='lead.email', read_only=True)
+    lead_phone = serializers.CharField(source='lead.phone', read_only=True)
+    addon_name = serializers.CharField(source='addon.name', read_only=True)
+    salesperson_email = serializers.EmailField(source='salesperson.email', read_only=True)
+    
+    # Custom input fields to allow creating a Lead on-the-fly
+    client_name = serializers.CharField(write_only=True, required=False)
+    client_email = serializers.EmailField(write_only=True, required=False)
+    client_phone = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    addon_slug = serializers.CharField(write_only=True, required=False, allow_blank=True)
+
+    class Meta:
+        model = LeadAppointment
+        fields = [
+            'id', 'lead', 'lead_name', 'lead_email', 'lead_phone', 'addon', 'addon_name',
+            'salesperson', 'salesperson_email', 'date', 'time', 'status', 'notes',
+            'is_confirmed_by_client', 'created_at', 'updated_at',
+            'client_name', 'client_email', 'client_phone', 'addon_slug'
+        ]
+        read_only_fields = ('lead', 'salesperson', 'is_confirmed_by_client')
+
+    def create(self, validated_data):
+        validated_data.pop('client_name', None)
+        validated_data.pop('client_email', None)
+        validated_data.pop('client_phone', None)
+        validated_data.pop('addon_slug', None)
+        return super().create(validated_data)
+
+
 

@@ -261,3 +261,42 @@ class Lead(models.Model):
         return f"{self.name} - {self.status} (${self.estimated_value})"
 
 
+class LeadAppointment(models.Model):
+    class Status(models.TextChoices):
+        PENDING = 'PENDING', 'Pendiente'
+        CONFIRMED = 'CONFIRMED', 'Confirmada'
+        COMPLETED = 'COMPLETED', 'Completada'
+        CANCELLED = 'CANCELLED', 'Cancelada'
+
+    lead = models.ForeignKey(Lead, on_delete=models.CASCADE, related_name='appointments')
+    addon = models.ForeignKey(
+        'shop.AddOn', 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True, 
+        related_name='consultations',
+        help_text="Servicio/Addon de interés para la consulta"
+    )
+    salesperson = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='lead_appointments',
+        help_text="Vendedor/Agente asignado para la cita"
+    )
+    date = models.DateField()
+    time = models.TimeField()
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
+    notes = models.TextField(blank=True, null=True, help_text="Notas o comentarios de la cita")
+    is_confirmed_by_client = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['date', 'time']
+        unique_together = ['salesperson', 'date', 'time'] # Evitar colisiones para el mismo vendedor
+
+    def __str__(self):
+        return f"Consulta {self.date} {self.time} - {self.lead.name} con {self.salesperson.email}"
+
+
+

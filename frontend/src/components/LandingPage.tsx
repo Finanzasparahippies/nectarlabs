@@ -1,4 +1,6 @@
-import React from 'react';
+'use client';
+
+import React, { useState } from 'react';
 import BentoGrid from './landing/BentoGrid';
 import ProcessFlow from './landing/ProcessFlow';
 import InteractiveTimeline from './landing/InteractiveTimeline';
@@ -9,8 +11,17 @@ import AddonTutorial from './landing/AddonTutorial';
 import SellerProgram from './landing/SellerProgram';
 import Navbar from './Navbar';
 import Link from 'next/link';
+import ConsultationScheduler from './landing/ConsultationScheduler';
 
 export default function LandingPage() {
+  const [isSchedulerOpen, setIsSchedulerOpen] = useState(false);
+  const [schedulerAddonSlug, setSchedulerAddonSlug] = useState('');
+
+  const openScheduler = (slug = '') => {
+    setSchedulerAddonSlug(slug);
+    setIsSchedulerOpen(true);
+  };
+
   return (
     <div className="min-h-screen flex flex-col items-center selection:bg-nectar-gold selection:text-nectar-cream">
       <Navbar />
@@ -59,7 +70,7 @@ export default function LandingPage() {
         </div>
 
         <div id="process">
-          <ProcessFlow />
+          <ProcessFlow onOpenScheduler={openScheduler} />
         </div>
 
         <div id="formula" className="py-32 bg-foreground/5 border-y border-foreground/10 relative scroll-mt-24 overflow-hidden">
@@ -80,7 +91,7 @@ export default function LandingPage() {
         </div>
 
         <div className="py-48 bg-gradient-to-b from-transparent via-nectar-gold/5 to-transparent">
-          <PricingCalculator />
+          <PricingCalculator onOpenScheduler={openScheduler} />
         </div>
 
         <div id="seller-program" className="border-t border-card-border scroll-mt-24">
@@ -237,6 +248,12 @@ export default function LandingPage() {
       <footer className="w-full py-12 px-6 border-t border-card-border text-center text-xs text-foreground/20 tracking-widest uppercase">
         © 2026 Nectar Labs • Hermosillo, Sonora • Tu Socio Tecnológico
       </footer>
+
+      <ConsultationScheduler 
+        isOpen={isSchedulerOpen} 
+        onClose={() => setIsSchedulerOpen(false)} 
+        initialAddonSlug={schedulerAddonSlug} 
+      />
     </div>
   );
 }

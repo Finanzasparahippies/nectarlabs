@@ -105,9 +105,12 @@ def send_newsletter_email(subject, template_name, context, recipient_list, tenan
 
     # Attempt to send using the providers sequentially until successful
     last_error = None
+    recipients_count = len(recipient_list)
+    recipients_log = f"{recipients_count} recipients" if recipients_count > 5 else str(recipient_list)
+
     for name, config, sender in providers:
         try:
-            logger.info(f"Attempting to send newsletter email via {name} to {recipient_list}")
+            logger.info(f"Attempting to send newsletter email via {name} to {recipients_log}")
             
             # Obtain the connection
             if config is None:
@@ -135,7 +138,7 @@ def send_newsletter_email(subject, template_name, context, recipient_list, tenan
             msg.attach_alternative(html_content, "text/html")
             msg.send(fail_silently=False)
             
-            logger.info(f"Successfully sent newsletter email via {name} to {recipient_list}")
+            logger.info(f"Successfully sent newsletter email via {name} to {recipients_log}")
             
             # Increment monthly counter for non-BYO SMTP tenants
             if tenant and not has_byo_smtp:
@@ -150,7 +153,7 @@ def send_newsletter_email(subject, template_name, context, recipient_list, tenan
             
     # If all providers failed, raise the last exception
     if last_error:
-        logger.error(f"All email providers failed to send email to {recipient_list}")
+        logger.error(f"All email providers failed to send email to {recipients_log}")
         raise last_error
     return False
 

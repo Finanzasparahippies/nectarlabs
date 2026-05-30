@@ -47,7 +47,7 @@ class InvoiceSerializer(serializers.ModelSerializer):
             'total', 'status', 'status_display', 'xml_file', 'pdf_file', 
             'xml_url', 'pdf_url', 'error_message', 'created_at', 'updated_at'
         ]
-        read_only_fields = '__all__'
+        read_only_fields = fields
 
     def get_xml_url(self, obj):
         return obj.xml_file.url if obj.xml_file else None

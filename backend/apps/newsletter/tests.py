@@ -185,8 +185,9 @@ class NewsletterAddonTests(BaseTenantAddonTestCase):
         send_newsletter_email("Test Subject", "welcome", {}, large_recipients, tenant=self.tenant_a)
         self.assertTrue(len(mail.outbox) > 0)
 
-        # Reset extra credits
+        # Reset extra credits and monthly count
         self.tenant_a.newsletter_extra_credits = 0
+        self.tenant_a.newsletter_sent_this_month = 0
         self.tenant_a.save()
         
         # Verify that send_newsletter_email succeeds if they have no active contract but newsletter_plan is PREMIUM

@@ -12,9 +12,9 @@ const CALCULATOR_ADDONS = [
 ];
 
 const PARTNER_PLANS = [
-  { id: 1, name: 'Plan Básico', hours: 8, price: 3000, description: 'Ideales para prototipos, MVPs y pequeñas operaciones.' },
-  { id: 2, name: 'Plan Staging', hours: 90, price: 29999, description: 'Nuestro plan insignia para desarrollo continuo de producto.' },
-  { id: 3, name: 'Plan Producción', hours: 160, price: 49999, description: 'Ingeniería dedicada y soporte 24/7 de alta disponibilidad.' },
+  { id: 1, name: 'Plan Básico', hours: 8, price: 750, period: 'semana', totalMonthly: 3000, description: 'Ideales para prototipos y MVPs. Incluye desarrollo, diseño, hosting, base de datos y dominio .com.' },
+  { id: 2, name: 'Plan Mid', hours: 10, price: 1400, period: 'quincena', totalMonthly: 2800, description: 'Desarrollo continuo de producto, arquitectura serverless escalable y optimizaciones Premium.' },
+  { id: 3, name: 'Plan Premium', hours: 12, price: 2500, period: 'mes', totalMonthly: 2500, description: 'Ingeniería de software dedicada, soporte y control total de infraestructura de alta disponibilidad.' },
 ];
 
 const BRAND_DESIGN_PRICES = {
@@ -24,9 +24,9 @@ const BRAND_DESIGN_PRICES = {
   weekly: { name: 'Semanal (Premium)', price: 2000, hours: 12, label: 'Semanal ($500/sem)' },
 };
 
-export default function PricingCalculator() {
+export default function PricingCalculator({ onOpenScheduler }: { onOpenScheduler?: (addonSlug?: string) => void }) {
   const [mode, setMode] = useState<'partner' | 'addons'>('partner');
-  const [planIndex, setPlanIndex] = useState(1); // Default to Plan Staging (index 1)
+  const [planIndex, setPlanIndex] = useState(1); // Default to Plan Mid (index 1)
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
   const [brandDesign, setBrandDesign] = useState<'none' | 'monthly' | 'biweekly' | 'weekly'>('none');
   const [selectedAddons, setSelectedAddons] = useState<string[]>([]);
@@ -49,13 +49,13 @@ export default function PricingCalculator() {
   // Calculations for Partner Tecnológico Mode
   const activePlan = PARTNER_PLANS[planIndex];
   const brandDesignInfo = BRAND_DESIGN_PRICES[brandDesign];
-  const partnerSubtotal = activePlan.price + brandDesignInfo.price;
+  const partnerSubtotal = activePlan.totalMonthly + brandDesignInfo.price;
   const partnerIva = partnerSubtotal * 0.16;
   const partnerTotal = partnerSubtotal + partnerIva;
 
   // Efficiency/Savings vs Traditional Agency
   const agencyCost = activePlan.hours * agencyRate;
-  const partnerSavings = agencyCost - activePlan.price;
+  const partnerSavings = agencyCost - activePlan.totalMonthly;
 
   // Calculations for Solo Módulos Mode
   const addonsSubtotalMonthly = selectedAddons.reduce((sum, id) => {
@@ -166,8 +166,8 @@ export default function PricingCalculator() {
                   {/* Markings */}
                   <div className="flex justify-between mt-4 px-1 text-[9px] font-black uppercase tracking-wider text-foreground/50">
                     <span className={planIndex === 0 ? 'text-nectar-gold font-black' : ''}>8h Básico</span>
-                    <span className={planIndex === 1 ? 'text-nectar-gold font-black' : ''}>90h Staging</span>
-                    <span className={planIndex === 2 ? 'text-nectar-gold font-black' : ''}>160h Producción</span>
+                    <span className={planIndex === 1 ? 'text-nectar-gold font-black' : ''}>10h Mid</span>
+                    <span className={planIndex === 2 ? 'text-nectar-gold font-black' : ''}>12h Premium</span>
                   </div>
                 </div>
 
@@ -177,7 +177,7 @@ export default function PricingCalculator() {
                   </div>
                   <div className="shrink-0 bg-nectar-forest/5 dark:bg-nectar-leaf/10 border border-nectar-forest/10 dark:border-nectar-leaf/20 px-3.5 py-2 rounded-xl text-center">
                     <span className="text-[8px] font-black block opacity-40 uppercase">Precio Plan</span>
-                    <span className="text-sm font-black text-nectar-gold">${activePlan.price.toLocaleString('es-MX')} / mes</span>
+                    <span className="text-sm font-black text-nectar-gold">${activePlan.price.toLocaleString('es-MX')} / {activePlan.period}</span>
                   </div>
                 </div>
               </div>
@@ -370,9 +370,9 @@ export default function PricingCalculator() {
                   <div className="flex justify-between items-center py-2.5 border-b border-white/5">
                     <div>
                       <span className="font-bold text-white block">{activePlan.name}</span>
-                      <span className="text-[9px] text-white/50">{activePlan.hours} horas de ingeniería de software</span>
+                      <span className="text-[9px] text-white/50">{activePlan.hours} horas/mes • ${activePlan.price.toLocaleString('es-MX')} MXN/{activePlan.period}</span>
                     </div>
-                    <span className="font-mono font-bold">${activePlan.price.toLocaleString('es-MX')} MXN</span>
+                    <span className="font-mono font-bold">${activePlan.totalMonthly.toLocaleString('es-MX')} MXN</span>
                   </div>
 
                   {brandDesign !== 'none' && (
@@ -475,15 +475,23 @@ export default function PricingCalculator() {
               </div>
             )}
 
-            {/* CTA Dynamic Button */}
-            <a 
-              href={getRedirectUrl()}
-              className="block w-full"
-            >
-              <button className="w-full py-4 bg-white text-nectar-forest font-black uppercase tracking-widest rounded-2xl hover:bg-nectar-gold hover:text-white transition-all shadow-xl text-[10px] sm:text-xs cursor-pointer">
-                {mode === 'partner' ? '🛡️ Iniciar Onboarding' : '🧩 Contratar Módulos'}
+            {/* CTA Dynamic Buttons */}
+            <div className="space-y-3">
+              <a 
+                href={getRedirectUrl()}
+                className="block w-full"
+              >
+                <button className="w-full py-4 bg-white text-nectar-forest font-black uppercase tracking-widest rounded-2xl hover:bg-nectar-gold hover:text-white transition-all shadow-xl text-[10px] sm:text-xs cursor-pointer">
+                  {mode === 'partner' ? '🛡️ Iniciar Onboarding' : '🧩 Contratar Módulos'}
+                </button>
+              </a>
+              <button 
+                onClick={() => onOpenScheduler?.(mode === 'addons' ? selectedAddons[0] || '' : '')}
+                className="w-full py-4 bg-transparent border border-white/20 text-white hover:border-nectar-gold hover:text-nectar-gold font-black uppercase tracking-widest rounded-2xl transition-all text-[10px] sm:text-xs cursor-pointer"
+              >
+                📅 Agendar Consultoría Técnica
               </button>
-            </a>
+            </div>
           </div>
         </div>
       </div>

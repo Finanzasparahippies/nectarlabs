@@ -355,7 +355,7 @@ class BillingSystemTests(APITestCase):
             stripe_invoice_id="cs_123",
             facturapi_invoice_id="fact_123",
             uuid_sat="a3c428a2-25de-4dfb-90f7-872ab67262ba",
-            total=Decimal("20000.00"),
+            total=Decimal("100.00"),
             status=Invoice.Status.PAID
         )
         

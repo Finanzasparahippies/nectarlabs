@@ -19,7 +19,7 @@ const fallbackPlans: Plan[] = [
     name: "Plan Basico",
     price: "3000.00",
     hours: 8,
-    description: "Ideales para prototipos y MVPs. Incluye desarrollo, diseño, hosting, base de datos y dominio .com.",
+    description: "Ideales para prototipos y MVPs. Incluye desarrollo, diseño, hosting, base de datos y dominio personalizado",
     is_recommended: false
   },
   {
