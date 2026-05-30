@@ -76,6 +76,7 @@ show_help() {
     echo "  test-staging            - Run backend tests (Staging)"
     echo "  typecheck-staging       - Run TypeScript type-check in Staging frontend"
     echo "  buildcheck-staging      - Run Next.js build check in Staging frontend"
+    echo "  clean                   - Safe Docker cleanup (removes build cache & dangling images)"
     echo "  help                    - Show this help"
 }
 
@@ -219,6 +220,11 @@ case $COMMAND in
             exit 1
         fi
         docker compose -f docker-compose.prod.yml run --rm certbot certonly --webroot --webroot-path=/var/www/certbot -d $DOMAIN -d www.$DOMAIN
+        ;;
+    clean)
+        echo "Performing safe Docker cleanup (build cache & dangling images)..."
+        docker image prune -f
+        docker builder prune -f
         ;;
     *)
         show_help
