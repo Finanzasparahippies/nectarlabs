@@ -202,6 +202,7 @@ else:
             "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage" if DEBUG else "whitenoise.storage.CompressedManifestStaticFilesStorage",
         },
     }
+    WHITENOISE_MANIFEST_STRICT = False
 
 # Media files & Cloudinary
 MEDIA_URL = "/media/"
