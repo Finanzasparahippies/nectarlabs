@@ -20,7 +20,7 @@ services:
         max-size: "10m"
         max-file: "3"
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/addons/')"]
+      test: [ "CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/addons/')" ]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -79,12 +79,7 @@ services:
       frontend:
         condition: service_started
     command: >
-      /bin/sh -c "
-      NS=$$(awk '/nameserver/ {print $$2; exit}' /etc/resolv.conf);
-      [ -z \"$$NS\" ] && NS=\"127.0.0.11\";
-      echo \"resolver $$NS valid=5s;\" > /etc/nginx/conf.d/resolver.conf &&
-      exec nginx -g 'daemon off;'
-      "
+      /bin/sh -c " NS=$$(awk '/nameserver/ {print $$2; exit}' /etc/resolv.conf); [ -z \"$$NS\" ] && NS=\"127.0.0.11\"; echo \"resolver $$NS valid=5s;\" > /etc/nginx/conf.d/resolver.conf && exec nginx -g 'daemon off;' "
     networks:
       - prod_network
 

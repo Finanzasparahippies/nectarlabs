@@ -237,7 +237,10 @@ def send_lead_appointment_email(appointment, email_type='creation'):
     button_text = ""
     link = ""
     
-    addon_name = appointment.addon.name if appointment.addon else "Consultoría General de Software"
+    if appointment.id and appointment.addons.exists():
+        addon_name = ", ".join([a.name for a in appointment.addons.all()])
+    else:
+        addon_name = appointment.addon.name if appointment.addon else "Consultoría General de Software"
     
     if email_type == 'creation':
         subject = f"📅 Consulta de Software Solicitada - Néctar Labs"

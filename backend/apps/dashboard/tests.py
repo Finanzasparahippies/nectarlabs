@@ -570,4 +570,30 @@ class LeadAppointmentTests(APITestCase):
         lead.refresh_from_db()
         self.assertEqual(lead.status, Lead.Status.CONTACTED)
 
+    def test_anonymous_booking_with_multiple_addons(self):
+        from apps.dashboard.models import Lead, LeadAppointment
+        from apps.shop.models import AddOn
+        
+        addon1, _ = AddOn.objects.get_or_create(slug="live-chat", defaults={"name": "Néctar Live Chat", "monthly_price": 50.00})
+        addon2, _ = AddOn.objects.get_or_create(slug="booking-signature", defaults={"name": "Néctar Booking & Signature", "monthly_price": 75.00})
+
+        data = {
+            "client_name": "Pedro Gomez Multiple",
+            "client_email": "pedro_mult@example.com",
+            "client_phone": "555-9999",
+            "notes": "Interested in multiple addons",
+            "date": "2026-06-20",
+            "time": "12:00:00",
+            "addon_slugs": ["live-chat", "booking-signature"]
+        }
+
+        response = self.client.post(reverse('appointment-list'), data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        appt = LeadAppointment.objects.get(lead__email="pedro_mult@example.com")
+        self.assertEqual(appt.addon, addon1)
+        self.assertEqual(appt.addons.count(), 2)
+        self.assertIn(addon1, appt.addons.all())
+        self.assertIn(addon2, appt.addons.all())
+
 

@@ -577,6 +577,13 @@ class LeadAppointmentViewSet(viewsets.ModelViewSet):
         client_email = self.request.data.get('client_email')
         client_phone = self.request.data.get('client_phone', '')
         addon_slug = self.request.data.get('addon_slug', '')
+        addon_slugs = self.request.data.get('addon_slugs', [])
+        if isinstance(addon_slugs, str):
+            import json
+            try:
+                addon_slugs = json.loads(addon_slugs)
+            except Exception:
+                addon_slugs = [addon_slugs]
         notes = self.request.data.get('notes', '')
         date = self.request.data.get('date')
         time = self.request.data.get('time')
@@ -628,7 +635,9 @@ class LeadAppointmentViewSet(viewsets.ModelViewSet):
 
         # 3. Buscar addon de interés
         addon = None
-        if addon_slug:
+        if addon_slugs:
+            addon = AddOn.objects.filter(slug=addon_slugs[0]).first()
+        elif addon_slug:
             addon = AddOn.objects.filter(slug=addon_slug).first()
 
         # Guardar cita
@@ -638,6 +647,12 @@ class LeadAppointmentViewSet(viewsets.ModelViewSet):
             addon=addon,
             is_confirmed_by_client=False # Requiere confirmación por correo
         )
+
+        if addon_slugs:
+            addons_qs = AddOn.objects.filter(slug__in=addon_slugs)
+            appointment.addons.set(addons_qs)
+        elif addon:
+            appointment.addons.set([addon])
 
         # Enviar correo de creación / verificación
         send_lead_appointment_email(appointment, email_type='creation')

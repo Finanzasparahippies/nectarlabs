@@ -99,6 +99,7 @@ class LeadAppointmentSerializer(serializers.ModelSerializer):
     lead_email = serializers.EmailField(source='lead.email', read_only=True)
     lead_phone = serializers.CharField(source='lead.phone', read_only=True)
     addon_name = serializers.CharField(source='addon.name', read_only=True)
+    addons_details = serializers.SerializerMethodField()
     salesperson_email = serializers.EmailField(source='salesperson.email', read_only=True)
     
     # Custom input fields to allow creating a Lead on-the-fly
@@ -106,22 +107,29 @@ class LeadAppointmentSerializer(serializers.ModelSerializer):
     client_email = serializers.EmailField(write_only=True, required=False)
     client_phone = serializers.CharField(write_only=True, required=False, allow_blank=True)
     addon_slug = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    addon_slugs = serializers.ListField(child=serializers.CharField(), write_only=True, required=False)
 
     class Meta:
         model = LeadAppointment
         fields = [
             'id', 'lead', 'lead_name', 'lead_email', 'lead_phone', 'addon', 'addon_name',
+            'addons_details',
             'salesperson', 'salesperson_email', 'date', 'time', 'status', 'notes',
             'is_confirmed_by_client', 'created_at', 'updated_at',
-            'client_name', 'client_email', 'client_phone', 'addon_slug'
+            'client_name', 'client_email', 'client_phone', 'addon_slug', 'addon_slugs'
         ]
         read_only_fields = ('lead', 'salesperson', 'is_confirmed_by_client')
+
+    def get_addons_details(self, obj):
+        from apps.shop.serializers import AddOnSerializer
+        return AddOnSerializer(obj.addons.all(), many=True).data
 
     def create(self, validated_data):
         validated_data.pop('client_name', None)
         validated_data.pop('client_email', None)
         validated_data.pop('client_phone', None)
         validated_data.pop('addon_slug', None)
+        validated_data.pop('addon_slugs', None)
         return super().create(validated_data)
 
 

@@ -277,6 +277,12 @@ class LeadAppointment(models.Model):
         related_name='consultations',
         help_text="Servicio/Addon de interés para la consulta"
     )
+    addons = models.ManyToManyField(
+        'shop.AddOn',
+        blank=True,
+        related_name='consultations_m2m',
+        help_text="Servicios/Addons de interés para la consulta"
+    )
     salesperson = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,

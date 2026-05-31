@@ -101,7 +101,7 @@ class UserSerializer(serializers.ModelSerializer):
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True)
     password_confirm = serializers.CharField(write_only=True, required=True)
-    role = serializers.ChoiceField(choices=[User.Role.CUSTOMER, User.Role.SALES], default=User.Role.CUSTOMER, required=False)
+    role = serializers.ChoiceField(choices=User.Role.choices, default=User.Role.CUSTOMER, required=False)
 
     class Meta:
         model = User
@@ -124,12 +124,18 @@ class RegisterSerializer(serializers.ModelSerializer):
             while User.objects.filter(username=username).exists():
                 username = f"{base_username}{counter}"
                 counter += 1
+        
+        requested_role = validated_data.get('role', User.Role.CUSTOMER)
+        if requested_role not in [User.Role.CUSTOMER, User.Role.SALES]:
+            role_to_assign = User.Role.CUSTOMER
+        else:
+            role_to_assign = requested_role
                 
         user = User.objects.create_user(
             email=email,
             username=username,
             password=validated_data['password'],
-            role=validated_data.get('role', User.Role.CUSTOMER)
+            role=role_to_assign
         )
         
         # Public registrations start as email unverified
