@@ -25,7 +25,7 @@ class PACServiceBase:
         """Sube y resguarda los sellos CSD (.cer, .key) en el portal del PAC"""
         raise NotImplementedError()
 
-    def create_invoice(self, invoice, tax_profile, customer_info, items):
+    def create_invoice(self, invoice, tax_profile, customer_info, items, is_parent_to_tenant=False):
         """Genera y timbra una factura CFDI 4.0 en el PAC"""
         raise NotImplementedError()
 
@@ -52,8 +52,9 @@ class MockPACService(PACServiceBase):
             raise PACError("Clave de CSD incorrecta o certificado dañado.")
         return True
 
-    def create_invoice(self, invoice, tax_profile, customer_info, items):
-        logger.info(f"[MockPAC] Generando factura por ${invoice.total} en org {tax_profile.facturapi_organization_id}")
+    def create_invoice(self, invoice, tax_profile, customer_info, items, is_parent_to_tenant=False):
+        org_id = "parent" if is_parent_to_tenant else (tax_profile.facturapi_organization_id if tax_profile else "unknown")
+        logger.info(f"[MockPAC] Generando factura por ${invoice.total} en org {org_id}")
         
         # Simulación del caso de sincronización LCO (sello nuevo)
         # RFC especial para forzar el error de sincronización de sellos (LCO)
@@ -140,10 +141,11 @@ class FacturapiPACService(PACServiceBase):
         except Exception as e:
             raise PACError(f"Fallo de conexión para carga de sellos: {e}")
 
-    def create_invoice(self, invoice, tax_profile, customer_info, items):
+    def create_invoice(self, invoice, tax_profile, customer_info, items, is_parent_to_tenant=False):
         # Para timbrar a nombre de la organización subordinada, Facturapi requiere el header "Facturapi-Organization"
         headers = self.headers.copy()
-        headers["Facturapi-Organization"] = tax_profile.facturapi_organization_id
+        if not is_parent_to_tenant and tax_profile and tax_profile.facturapi_organization_id:
+            headers["Facturapi-Organization"] = tax_profile.facturapi_organization_id
         
         url = f"{self.base_url}/invoices"
         
@@ -213,8 +215,10 @@ class FacturapiPACService(PACServiceBase):
     def cancel_invoice(self, invoice):
         # Requiere el header de la organización correspondiente
         headers = self.headers.copy()
-        tax_profile = invoice.tenant.tax_profile
-        headers["Facturapi-Organization"] = tax_profile.facturapi_organization_id
+        if getattr(invoice, 'is_tenant_to_customer', False):
+            tax_profile = getattr(invoice.tenant, 'tax_profile', None)
+            if tax_profile and tax_profile.facturapi_organization_id:
+                headers["Facturapi-Organization"] = tax_profile.facturapi_organization_id
 
         url = f"{self.base_url}/invoices/{invoice.facturapi_invoice_id}"
         try:
@@ -233,8 +237,10 @@ class FacturapiPACService(PACServiceBase):
 
     def check_invoice_status(self, invoice):
         headers = self.headers.copy()
-        tax_profile = invoice.tenant.tax_profile
-        headers["Facturapi-Organization"] = tax_profile.facturapi_organization_id
+        if getattr(invoice, 'is_tenant_to_customer', False):
+            tax_profile = getattr(invoice.tenant, 'tax_profile', None)
+            if tax_profile and tax_profile.facturapi_organization_id:
+                headers["Facturapi-Organization"] = tax_profile.facturapi_organization_id
 
         url = f"{self.base_url}/invoices/{invoice.facturapi_invoice_id}"
         try:

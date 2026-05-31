@@ -100,7 +100,7 @@ export default function DevSignPage() {
 
         {/* Resumen del Contrato */}
         {contract && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-card-bg p-8 rounded-[3rem] border border-card-border shadow-2xl relative overflow-hidden">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-card-bg/85 backdrop-blur-md p-8 rounded-[3rem] border border-nectar-gold/25 shadow-[0_0_50px_rgba(198,138,30,0.08)] relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-nectar-gold/5 rounded-full blur-3xl"></div>
             <div className="space-y-6 border-r border-card-border/50 pr-8">
               <h3 className="text-nectar-gold font-black uppercase text-[10px] tracking-[0.3em]">Detalles del Proyecto</h3>
@@ -129,13 +129,13 @@ export default function DevSignPage() {
             <p className="text-[10px] text-muted font-bold uppercase tracking-widest mt-2">Dibuja tu firma para formalizar el acuerdo</p>
           </div>
           
-          <div className="bg-white rounded-[2rem] border-2 border-nectar-forest/10 overflow-hidden shadow-2xl h-64 md:h-80 relative group">
+          <div className="bg-white rounded-[2rem] border border-nectar-gold/20 overflow-hidden shadow-[0_4px_25px_rgba(0,0,0,0.3)] h-64 md:h-80 relative group">
             <SignaturePad
               ref={sigPad}
               canvasProps={{ className: "w-full h-full cursor-crosshair" }}
-              penColor="#1E3A2F"
+              penColor="#111827"
             />
-            <div className="absolute inset-0 pointer-events-none border-4 border-transparent group-hover:border-nectar-gold/10 transition-colors rounded-[2rem]"></div>
+            <div className="absolute inset-0 pointer-events-none border border-transparent group-hover:border-nectar-gold/10 transition-colors rounded-[2rem]"></div>
           </div>
 
           <div className="flex flex-col md:flex-row gap-4 justify-center pt-4">

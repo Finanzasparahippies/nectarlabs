@@ -162,10 +162,11 @@ Todo cliente con un plan o con Add-ons activos tiene acceso a la suite de soport
 - Permite abrir solicitudes técnicas clasificadas por Categorías (Soporte Técnico, Facturación, Implementación de Add-on, Bug).
 - Notificaciones vía correo electrónico integradas de forma automática al crear el ticket o responder en el hilo de mensajes.
 
-### Asistente IA Integrado (Widget Chat)
-- Cada portal público del cliente (ej. `tunegocio.nectarlabs.dev`) incluye un widget flotante de chat que asiste a los usuarios finales utilizando Inteligencia Artificial.
-- La IA responde con base en las directrices técnicas del negocio configuradas por el cliente.
-- Si la conversación requiere intervención humana, se puede escalar automáticamente a un ticket de soporte.
+### Asistente IA Integrado (Widget Chat en Tiempo Real)
+- **Conectividad por WebSockets**: Cada portal público de cliente (ej. `tunegocio.nectarlabs.dev`) incluye un widget flotante de chat que se conecta directamente al microservicio Node.js `realtime` mediante WebSockets (`wss://[domain]/ws/`).
+- **Respuestas en Streaming**: La IA de asistencia procesa las consultas de los usuarios finales y responde en streaming (token por token) usando la API de Groq Cloud sin esperas prolongadas.
+- **Acceso Directo a Contexto**: El microservicio realiza consultas en base de datos PostgreSQL para verificar el estado de los tickets, contratos y configuraciones del cliente (tenant) y así proporcionar respuestas 100% personalizadas y con contexto preciso del negocio.
+- **Escalamiento Humano**: Si la conversación requiere intervención humana, el sistema permite crear automáticamente un ticket de soporte en la base de datos, notificando al equipo de Néctar Labs.
 
 ---
 

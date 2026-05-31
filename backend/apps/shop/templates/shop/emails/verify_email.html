@@ -1,0 +1,26 @@
+{% extends "shop/emails/base_nectar.html" %}
+
+{% block content %}
+<h2 style="color: #FDFBF7; font-size: 22px; font-weight: 700; line-height: 1.3; margin-top: 0; margin-bottom: 20px; text-align: center;">
+    ¡Bienvenido a Néctar Labs!
+</h2>
+
+<p>Hola <strong>{{ username }}</strong>,</p>
+
+<p>Gracias por registrarte en nuestra plataforma de ingeniería y desarrollo premium. Para poder acceder a tu dashboard y activar todas las funciones avanzadas de tu cuenta, necesitamos que confirmes tu dirección de correo electrónico.</p>
+
+<div style="text-align: center; margin: 40px 0;">
+    <a href="{{ verify_url }}" class="btn-gold" style="background-color: #C68A1E; color: #090F19; text-decoration: none; padding: 16px 36px; border-radius: 50px; font-weight: 900; font-size: 13px; text-transform: uppercase; letter-spacing: 2px; display: inline-block; box-shadow: 0 10px 20px rgba(198, 138, 30, 0.25); transition: all 0.3s ease-in-out;">
+        Verificar Correo Electrónico
+    </a>
+</div>
+
+<p>Una vez verificado, podrás iniciar sesión y comenzar la configuración de tu espacio de trabajo para aprovisionar los entornos de desarrollo necesarios.</p>
+
+<p style="font-size: 12px; color: #9CA3AF; text-align: center; margin-top: 30px; border-top: 1px solid rgba(255, 255, 255, 0.05); padding-top: 20px;">
+    Si el botón no funciona, copia y pega el siguiente enlace en tu navegador:<br>
+    <a href="{{ verify_url }}" style="color: #C68A1E; word-break: break-all; text-decoration: underline;">{{ verify_url }}</a>
+</p>
+
+<p style="margin-bottom: 0; margin-top: 30px;">Saludos cordiales,<br>El equipo de <strong>Néctar Labs</strong></p>
+{% endblock %}

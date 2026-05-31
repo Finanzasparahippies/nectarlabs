@@ -1,3 +1,5 @@
+name: nectarlabs-dev
+
 services:
   backend:
     container_name: nectar_backend
@@ -83,6 +85,39 @@ services:
       echo \"resolver $$NS valid=5s;\" > /etc/nginx/conf.d/resolver.conf &&
       exec nginx -g 'daemon off;'
       "
+    networks:
+      - prod_network
+
+  redis:
+    container_name: nectar_redis
+    image: redis:alpine
+    restart: always
+    ports:
+      - "6379:6379"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - prod_network
+
+  realtime:
+    container_name: nectar_realtime
+    image: nectar-labs-realtime:dev
+    build: ./realtime
+    volumes:
+      - ./realtime:/app:z
+      - /app/node_modules
+    env_file:
+      - .env
+    environment:
+      - PORT=4000
+      - DJANGO_SECRET_KEY=${SECRET_KEY}
+    ports:
+      - "4000:4000"
+    depends_on:
+      - redis
     networks:
       - prod_network
 

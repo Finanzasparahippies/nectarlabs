@@ -11,6 +11,7 @@ class User(AbstractUser):
         DESIGNER = 'DESIGNER', _('Designer')
         DEVELOPER = 'DEVELOPER', _('Developer')
         SALES = 'SALES', _('Salesperson')
+        STAFF = 'STAFF', _('Staff')
 
     email = models.EmailField(_('email address'), unique=True)
     role = models.CharField(
@@ -29,6 +30,10 @@ class User(AbstractUser):
     is_approved_seller = models.BooleanField(
         default=False,
         help_text="Indica si el vendedor está aprobado para generar comisiones."
+    )
+    is_email_verified = models.BooleanField(
+        default=False,
+        help_text="Indica si el correo electrónico ha sido verificado."
     )
     
     # Use email as the primary identifier

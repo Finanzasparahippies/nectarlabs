@@ -202,6 +202,7 @@ else:
             "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage" if DEBUG else "whitenoise.storage.CompressedManifestStaticFilesStorage",
         },
     }
+    WHITENOISE_MANIFEST_STRICT = False
 
 # Media files & Cloudinary
 MEDIA_URL = "/media/"
@@ -259,6 +260,18 @@ CORS_ALLOW_ALL_ORIGINS = DEBUG
 CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS", default=[])
 CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[])
 
+# Automatically allow staging and production domains in CSRF trusted origins
+for domain in [".nectarlabs.dev", ".staging.nectarlabs.dev"]:
+    for proto in ["http://", "https://"]:
+        origin = f"{proto}{domain}"
+        if origin not in CSRF_TRUSTED_ORIGINS:
+            CSRF_TRUSTED_ORIGINS.append(origin)
+        # Also include the bare domains
+        bare_origin = f"{proto}{domain.lstrip('.')}"
+        if bare_origin not in CSRF_TRUSTED_ORIGINS:
+            CSRF_TRUSTED_ORIGINS.append(bare_origin)
+
+
 if DEBUG:
     dev_origins = [
         "http://localhost",
@@ -296,8 +309,24 @@ R2_STORAGE_OPTIONS = {
     'secret_key': env('R2_SECRET_ACCESS_KEY', default=''),
     'bucket_name': env('R2_BUCKET_NAME', default=''),
     'endpoint_url': env('R2_S3_ENDPOINT_URL', default=''),
-    'region_name': 'auto',
 }
+
+# Cache Configuration
+if 'test' in sys.argv:
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+            "LOCATION": "nectar-labs-test-cache",
+        }
+    }
+else:
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.redis.RedisCache",
+            "LOCATION": env("REDIS_URL", default="redis://redis:6379/1"),
+            "TIMEOUT": 3600,
+        }
+    }
 
 # Logging configuration to display logs in console during test/run
 LOGGING = {

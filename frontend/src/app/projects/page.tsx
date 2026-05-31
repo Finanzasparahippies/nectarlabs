@@ -369,7 +369,7 @@ export default function ProjectsPage() {
                           </p>
                         )}
                         {project.designer_email && (
-                          <p className="text-[9px] font-bold text-white/40 uppercase tracking-widest">
+                          <p className="text-[9px] font-bold text-foreground/45 uppercase tracking-widest">
                             Diseñador: {project.designer_email}
                           </p>
                         )}
@@ -432,7 +432,7 @@ export default function ProjectsPage() {
                     {/* Design Hours (Show if project has designer plan hours or a designer) */}
                     {(project.designer_plan_hours || 0) > 0 && (
                       <div className="p-6 rounded-[2rem] bg-background/40 border border-card-border/50">
-                        <h4 className="text-[9px] font-black uppercase tracking-widest text-white/85 mb-4">Consumo de Horas (Diseño de Marca)</h4>
+                        <h4 className="text-[9px] font-black uppercase tracking-widest text-foreground/80 mb-4">Consumo de Horas (Diseño de Marca)</h4>
                         <div className="grid grid-cols-3 gap-4 mb-4 text-center">
                           <div>
                             <p className="text-[8px] font-bold opacity-45 uppercase tracking-wider">Plan Diseño</p>

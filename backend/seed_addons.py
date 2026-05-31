@@ -124,6 +124,26 @@ def seed_addons():
                 "Manejo de estados activos / inactivos de la base de datos",
                 "Soporte multi-idioma de plantillas"
             ]
+        },
+        {
+            "slug": "mexico-invoicing",
+            "name": "Facturación SAT México",
+            "category_badge": "CONTABILIDAD Y FISCAL",
+            "description": "Emite facturas CFDI 4.0 oficiales del SAT a tus clientes de manera automatizada y marca blanca.",
+            "detailed_description": "Módulo de facturación fiscal electrónica para México. Permite crear organizaciones subordinadas en Facturapi, subir sellos CSD y timbrar facturas CFDI 4.0 directamente desde tu portal, de forma automatizada (en compras) o manual a clientes.",
+            "monthly_price": 299.00,
+            "yearly_price": 2990.00,
+            "origin_project": "nectarlabs-main",
+            "source_reference": "backend/apps/billing (models.py, services.py, views.py)",
+            "complexity": AddOn.Complexity.HIGH,
+            "server_requirements": "Configuración de credenciales de PAC (Facturapi API Key) en variables de entorno + HTTPS para subida segura de sellos.",
+            "technical_details": [
+                "Creación dinámica de organizaciones subordinadas en el PAC",
+                "Carga directa y segura de sellos CSD (.cer, .key)",
+                "Generación y timbrado automatizado de CFDI 4.0 (con IVA 16% auto-calculado)",
+                "Descarga local e independiente de archivos XML y PDF de facturas",
+                "Manejo inteligente de sincronización LCO del SAT (24-72 hrs)"
+            ]
         }
     ]
 

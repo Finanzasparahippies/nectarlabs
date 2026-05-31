@@ -8,7 +8,7 @@ from decimal import Decimal
 from django.core.files.uploadedfile import SimpleUploadedFile
 
 from apps.tenants.models import Tenant
-from apps.shop.models import Plan, Contract, PaymentInstallment
+from apps.shop.models import Plan, Contract, PaymentInstallment, AddOn
 from apps.billing.models import TaxProfile, Invoice
 from apps.billing.services import get_pac_service, MockPACService, LCOSyncError, PACError
 
@@ -60,6 +60,19 @@ class BillingSystemTests(APITestCase):
             is_fully_signed=True,
             is_active=True
         )
+
+        # Create the invoicing addon and associate it with the contract
+        self.invoicing_addon = AddOn.objects.create(
+            slug="mexico-invoicing",
+            name="Facturación SAT México",
+            category_badge="CONTABILIDAD Y FISCAL",
+            description="Módulo de facturación fiscal electrónica",
+            detailed_description="Detalles del módulo",
+            monthly_price=299.00,
+            yearly_price=2990.00,
+            complexity=AddOn.Complexity.HIGH
+        )
+        self.contract.addons.add(self.invoicing_addon)
 
         # Create a PaymentInstallment
         self.installment = PaymentInstallment.objects.create(
@@ -189,7 +202,7 @@ class BillingSystemTests(APITestCase):
     def test_stripe_webhook_automatic_invoicing(self, mock_get_pac):
         """
         Verify that Stripe checkout.session.completed triggers automatic invoice creation
-        and stamping when a TaxProfile is configured.
+        and stamping when a TaxProfile is configured (Parent-to-Tenant).
         """
         # Configure tax profile first
         profile = TaxProfile.objects.create(
@@ -252,10 +265,16 @@ class BillingSystemTests(APITestCase):
         invoice = Invoice.objects.filter(tenant=self.tenant).first()
         self.assertIsNotNone(invoice)
         self.assertEqual(invoice.status, Invoice.Status.PAID)
+        self.assertEqual(invoice.is_tenant_to_customer, False)  # It's Parent-to-Tenant
         self.assertEqual(invoice.stripe_invoice_id, "cs_test_session123")
         expected_total = (self.installment.amount * Decimal('1.16')).quantize(Decimal('0.01'))
         self.assertEqual(invoice.total, expected_total)
         self.assertEqual(str(invoice.uuid_sat), mock_uuid)
+
+        # Verify that the service was called with is_parent_to_tenant=True
+        mock_pac.create_invoice.assert_called_once()
+        args, kwargs = mock_pac.create_invoice.call_args
+        self.assertTrue(kwargs.get('is_parent_to_tenant', False))
 
     @patch('apps.billing.services.get_pac_service')
     def test_stripe_webhook_optional_invoicing_no_creation(self, mock_get_pac):
@@ -386,6 +405,193 @@ class BillingSystemTests(APITestCase):
         
         retry_url = reverse('billing-invoice-retry', kwargs={'pk': failed_invoice.id})
         response = self.client.post(retry_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        failed_invoice.refresh_from_db()
+        self.assertEqual(failed_invoice.status, Invoice.Status.PAID)
+        self.assertIsNotNone(failed_invoice.uuid_sat)
+
+    # --- NEW TEST CASES FOR TENANT TO CUSTOMER INVOICING AND PERMISSIONS ---
+
+    def test_invoicing_gated_by_addon_permission_denied(self):
+        """
+        Verify that a tenant without the mexico-invoicing addon gets a 403 Forbidden
+        when accessing TaxProfile or Invoice endpoints.
+        """
+        # Create another user and tenant without the addon
+        unsubscribed_user = User.objects.create_user(
+            username="client_b",
+            email="client_b@example.com",
+            password="clientpassword",
+            role=User.Role.BUSINESS
+        )
+        unsubscribed_tenant = Tenant.objects.create(
+            owner=unsubscribed_user,
+            name="Unsubscribed Workspace",
+            subdomain="unsubscribed",
+            is_active=True
+        )
+        # Create a contract with NO invoicing addon
+        Contract.objects.create(
+            user=unsubscribed_user,
+            full_name="Client Company B",
+            tax_id="RFC789",
+            signed_at=timezone.now(),
+            is_fully_signed=True,
+            is_active=True
+        )
+
+        self.client.force_authenticate(user=unsubscribed_user)
+        
+        # 1. GET Tax Profile should be gated
+        url_profile = reverse('billing_tax_profile')
+        response = self.client.get(url_profile)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+        # 2. GET Invoices list should be gated
+        url_invoices = reverse('billing-invoice-list')
+        response = self.client.get(url_invoices)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_tenant_to_customer_invoicing_success(self):
+        """
+        Verify that a tenant can manually issue an invoice to their customer (Tenant-to-Customer).
+        """
+        self.client.force_authenticate(user=self.client_user)
+        
+        # Configure tax profile first
+        profile = TaxProfile.objects.create(
+            tenant=self.tenant,
+            rfc="XAXX010101000",
+            razon_social="Tenant Enterprise",
+            regimen_fiscal="601",
+            codigo_postal="06000",
+            facturapi_organization_id="org_mock_tenant_123"
+        )
+
+        url = reverse('billing-invoice-list') + "issue-to-customer/"
+        
+        payload = {
+            "customer_info": {
+                "rfc": "XAXX010101000",
+                "razon_social": "End Customer SA",
+                "regimen_fiscal": "601",
+                "codigo_postal": "01000",
+                "email": "customer@gmail.com"
+            },
+            "items": [
+                {
+                    "quantity": 2,
+                    "unit_price": 500.00,
+                    "description": "Premium Service Consulting"
+                }
+            ],
+            "total": 1000.00
+        }
+
+        response = self.client.post(url, payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertIn("uuid_sat", response.data)
+        
+        # Confirm Invoice model is saved with correct flags
+        invoice = Invoice.objects.get(id=response.data["id"])
+        self.assertEqual(invoice.is_tenant_to_customer, True)
+        self.assertEqual(invoice.status, Invoice.Status.PAID)
+        self.assertEqual(invoice.total, Decimal("1000.00"))
+
+    def test_tenant_to_customer_invoicing_lco_sync(self):
+        """
+        Verify LCOSyncError handling during Tenant-to-Customer manual invoicing.
+        """
+        self.client.force_authenticate(user=self.client_user)
+        
+        # Configure tax profile first (with specific RFC causing LCOSyncError)
+        profile = TaxProfile.objects.create(
+            tenant=self.tenant,
+            rfc="LCO999999AAA",
+            razon_social="Tenant Enterprise LCO",
+            regimen_fiscal="601",
+            codigo_postal="06000",
+            facturapi_organization_id="org_mock_tenant_lco"
+        )
+
+        url = reverse('billing-invoice-list') + "issue-to-customer/"
+        
+        payload = {
+            "customer_info": {
+                "rfc": "LCO999999AAA",
+                "razon_social": "End Customer LCO",
+                "regimen_fiscal": "601",
+                "codigo_postal": "01000",
+                "email": "customer_lco@gmail.com"
+            },
+            "items": [
+                {
+                    "quantity": 1,
+                    "unit_price": 1000.00,
+                    "description": "Sync delay test"
+                }
+            ],
+            "total": 1000.00
+        }
+
+        response = self.client.post(url, payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
+        
+        # Verify invoice is saved in LCO_SYNC_PENDING state
+        invoice = Invoice.objects.get(id=response.data["id"])
+        self.assertEqual(invoice.is_tenant_to_customer, True)
+        self.assertEqual(invoice.status, Invoice.Status.LCO_SYNC_PENDING)
+        self.assertIn("LCO del SAT", invoice.error_message)
+
+    def test_retry_tenant_to_customer_invoice(self):
+        """
+        Verify that a failed Tenant-to-Customer invoice can be retried by passing the payload.
+        """
+        self.client.force_authenticate(user=self.client_user)
+
+        # Configure tax profile first
+        profile = TaxProfile.objects.create(
+            tenant=self.tenant,
+            rfc="XAXX010101000",
+            razon_social="Tenant Enterprise",
+            regimen_fiscal="601",
+            codigo_postal="06000",
+            facturapi_organization_id="org_mock_tenant_123"
+        )
+
+        # Create a failed Tenant-to-Customer invoice
+        failed_invoice = Invoice.objects.create(
+            tenant=self.tenant,
+            total=Decimal("500.00"),
+            is_tenant_to_customer=True,
+            status=Invoice.Status.FAILED
+        )
+
+        retry_url = reverse('billing-invoice-retry', kwargs={'pk': failed_invoice.id})
+        
+        # Calling retry without customer_info/items should return 400
+        response = self.client.post(retry_url, {}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("customer_info", response.data["error"])
+
+        # Calling retry WITH customer_info/items should succeed
+        payload = {
+            "customer_info": {
+                "rfc": "XAXX010101000",
+                "razon_social": "End Customer",
+                "regimen_fiscal": "601",
+                "codigo_postal": "01000",
+                "email": "customer@gmail.com"
+            },
+            "items": [
+                {
+                    "quantity": 1,
+                    "unit_price": 500.00,
+                    "description": "Retried item"
+                }
+            ]
+        }
+        response = self.client.post(retry_url, payload, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         failed_invoice.refresh_from_db()
         self.assertEqual(failed_invoice.status, Invoice.Status.PAID)

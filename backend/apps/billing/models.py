@@ -61,6 +61,12 @@ class Invoice(models.Model):
     # Detalles de error (LCO, errores de validación)
     error_message = models.TextField(blank=True, null=True, verbose_name="Detalles de Error")
     
+    is_tenant_to_customer = models.BooleanField(
+        default=False,
+        verbose_name="Factura de Inquilino a Cliente",
+        help_text="Indica si la factura fue emitida por el inquilino a su propio cliente o por Néctar Labs al inquilino."
+    )
+    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

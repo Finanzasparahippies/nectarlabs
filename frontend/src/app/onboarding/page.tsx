@@ -37,7 +37,6 @@ function OnboardingContent() {
         setRedirectCountdown(prev => {
           if (prev <= 1) {
             clearInterval(interval);
-            router.push('/dashboard');
             return 0;
           }
           return prev - 1;
@@ -45,7 +44,13 @@ function OnboardingContent() {
       }, 1000);
       return () => clearInterval(interval);
     }
-  }, [step, router]);
+  }, [step]);
+
+  useEffect(() => {
+    if (step === 4 && redirectCountdown <= 0) {
+      router.push('/dashboard');
+    }
+  }, [step, redirectCountdown, router]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
@@ -392,15 +397,33 @@ function OnboardingContent() {
             <h1 className="text-5xl font-black tracking-tighter">Firma Digital</h1>
             <p className="text-xl opacity-60">Revisa cuidadosamente los términos del contrato antes de firmar.</p>
 
-            <div className="bg-card-bg border-2 border-card-border rounded-3xl overflow-hidden flex flex-col max-h-[60vh]">
+            <div className="bg-card-bg/85 backdrop-blur-md border border-nectar-gold/25 rounded-3xl overflow-hidden flex flex-col min-h-[68vh] max-h-[78vh] md:max-h-[82vh] shadow-[0_0_50px_rgba(198,138,30,0.08)] relative">
+              <style>{`
+                .custom-contract-scrollbar::-webkit-scrollbar {
+                  width: 8px;
+                }
+                .custom-contract-scrollbar::-webkit-scrollbar-track {
+                  background: rgba(0, 0, 0, 0.2);
+                  border-radius: 10px;
+                }
+                .custom-contract-scrollbar::-webkit-scrollbar-thumb {
+                  background: rgba(198, 138, 30, 0.3);
+                  border-radius: 10px;
+                  border: 2px solid #121815;
+                }
+                .custom-contract-scrollbar::-webkit-scrollbar-thumb:hover {
+                  background: rgba(198, 138, 30, 0.5);
+                }
+              `}</style>
+              
               {/* Contract Preview Document */}
-              <div className="p-8 md:p-12 overflow-y-auto custom-scrollbar flex-1 bg-background/50">
-                <header className="mb-12 border-b border-card-border pb-8">
+              <div className="p-8 md:p-12 overflow-y-auto custom-contract-scrollbar flex-1 bg-background/30 selection:bg-nectar-gold selection:text-background">
+                <header className="mb-12 border-b border-card-border/60 pb-8">
                   <h2 className="text-2xl font-black tracking-tighter mb-2">CONTRATO DE PRESTACIÓN DE SERVICIOS TECNOLÓGICOS</h2>
                   <p className="text-nectar-gold font-bold uppercase tracking-widest text-[10px]">Modalidad: Partner Tecnológico</p>
                 </header>
 
-                <div className="prose prose-invert max-w-none space-y-10 text-sm leading-relaxed opacity-80">
+                <div className="prose prose-invert max-w-none space-y-10 text-sm leading-relaxed opacity-85">
                   <section>
                     <p>Este contrato se celebra entre <strong>Néctar Labs</strong>, representado por <strong>Jesus Saul Villegas Cruz</strong>, en adelante "EL DESARROLLADOR", y <strong>{formData.full_name || '[Nombre del Cliente]'}</strong>, en adelante "EL CLIENTE".</p>
                   </section>
@@ -408,14 +431,14 @@ function OnboardingContent() {
                   <section className="space-y-6">
                     <h3 className="text-lg font-black uppercase tracking-tight text-foreground">DECLARACIONES Y DATOS DE LAS PARTES</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="space-y-2 p-5 bg-background/80 rounded-2xl border border-card-border text-xs">
+                      <div className="space-y-2 p-5 bg-background/80 rounded-2xl border border-card-border/60 text-xs">
                         <h4 className="font-black text-[9px] uppercase text-nectar-gold">EL DESARROLLADOR</h4>
                         <p><strong>Jesus Saul Villegas Cruz</strong></p>
                         <p>RFC: VICJ911227KY2</p>
                         <p>Domicilio: Poder Legislativo 345, col. Ley 57. Hermosillo, Sonora.</p>
                         <p>Email: contacto@finanzasparahippies.com</p>
                       </div>
-                      <div className="space-y-2 p-5 bg-background/80 rounded-2xl border border-card-border text-xs">
+                      <div className="space-y-2 p-5 bg-background/80 rounded-2xl border border-card-border/60 text-xs">
                         <h4 className="font-black text-[9px] uppercase text-nectar-gold">EL CLIENTE</h4>
                         <p><strong>{formData.full_name || '___________________'}</strong></p>
                         <p>RFC: {formData.tax_id || '__________________________'}</p>
@@ -432,7 +455,7 @@ function OnboardingContent() {
                   <section className="space-y-3">
                     <h3 className="text-lg font-black uppercase tracking-tight text-foreground">2. OBJETIVO ESPECÍFICO DEL PROYECTO</h3>
                     <p>El enfoque principal durante el periodo inicial será el desarrollo del siguiente proyecto tecnológico:</p>
-                    <div className="p-4 border-l-4 border-nectar-gold bg-nectar-gold/5 italic text-nectar-gold font-bold">
+                    <div className="p-4 border-l-4 border-nectar-gold bg-nectar-gold/5 italic text-nectar-gold font-bold rounded-r-xl">
                       "{formData.project_idea || 'Idea del proyecto no especificada.'}"
                     </div>
                   </section>
@@ -487,7 +510,7 @@ function OnboardingContent() {
                               <div className="h-[1px] bg-card-border/40 my-2" />
                               <div className="flex justify-between items-center text-nectar-gold">
                                 <span>Inversión Mensual con Descuento:</span>
-                                <span className="font-mono text-lg">${discPrice.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN / Mes</span>
+                                <span className="font-mono">${discPrice.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN / Mes</span>
                               </div>
                             </div>
                           ) : (
@@ -499,18 +522,18 @@ function OnboardingContent() {
                         </div>
                       );
                     })()}
-                    <div className="p-4 border-2 border-foreground/20 bg-background/50 rounded-xl font-bold flex justify-between items-center text-xs">
+                    <div className="p-4 border border-card-border/60 bg-background/50 rounded-xl font-bold flex justify-between items-center text-xs">
                       <span>Frecuencia y Día de Pago:</span>
-                      <span className="text-nectar-gold">
+                      <span className="text-nectar-gold font-black">
                         {formData.payment_day === 'WEEKLY_MONDAY' ? 'Abonos semanales (Lunes de cada semana)' :
                          formData.payment_day === 'FORTNIGHTLY_1ST_15TH' ? 'Abonos quincenales (Días 1 y 15 de cada mes)' :
                          'Abonos mensuales (Día 1ero de cada mes)'}
                       </span>
                     </div>
                     {formData.brand_design_tier !== 'NONE' && (
-                      <div className="p-4 border-2 border-foreground/20 bg-foreground/5 rounded-xl font-bold flex justify-between items-center text-xs">
+                      <div className="p-4 border border-card-border/60 bg-foreground/5 rounded-xl font-bold flex justify-between items-center text-xs">
                         <span>Complemento: Diseño de Marca ({formData.brand_design_tier})</span>
-                        <span>+ ${formData.brand_design_price.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN</span>
+                        <span className="text-nectar-gold font-black">+ ${formData.brand_design_price.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN</span>
                       </div>
                     )}
                   </section>
@@ -532,7 +555,7 @@ function OnboardingContent() {
                     <p><strong>Propiedad Intelectual:</strong> La propiedad del código fuente y los activos de diseño se transfieren a EL CLIENTE tras la liquidación del periodo obligatorio (6 meses).</p>
                   </section>
                   
-                  <section className="space-y-3">
+                  <section className="space-y-3 font-semibold text-foreground/80">
                     <h3 className="text-lg font-black uppercase tracking-tight text-foreground">6. CONTINUIDAD POST-COMPROMISO (MES 7+)</h3>
                     <p>Al finalizar el periodo inicial de 6 meses, EL CLIENTE podrá optar por suscripción continua (mantiene beneficios y horas) o Servicio por Evento (On-Demand) a $500 MXN/hora.</p>
                   </section>
@@ -540,22 +563,23 @@ function OnboardingContent() {
               </div>
 
               {/* Signature Area */}
-              <div className="p-8 bg-card-bg border-t border-card-border space-y-6">
-                <div className="bg-white rounded-2xl overflow-hidden border-2 border-card-border shadow-inner">
-                <SignatureCanvas
-                  ref={sigCanvas}
-                  penColor='black'
-                  canvasProps={{ className: 'w-full h-64 cursor-crosshair' }}
-                />
-              </div>
+              <div className="p-8 bg-card-bg/95 border-t border-card-border/60 space-y-6">
+                <div className="bg-white rounded-2xl overflow-hidden border border-nectar-gold/20 shadow-[0_4px_25px_rgba(0,0,0,0.3)] relative group">
+                  <SignatureCanvas
+                    ref={sigCanvas}
+                    penColor='black'
+                    canvasProps={{ className: 'w-full h-64 cursor-crosshair' }}
+                  />
+                  <div className="absolute inset-0 pointer-events-none border border-transparent group-hover:border-nectar-gold/10 transition-colors rounded-2xl"></div>
+                </div>
 
-              <div className="flex justify-between items-center">
-                <button onClick={clearSignature} className="text-[10px] font-black uppercase tracking-widest opacity-40 hover:opacity-100">
-                  Borrar Trazo
-                </button>
-                <p className="text-[10px] font-black uppercase tracking-widest text-nectar-gold">Firma aquí con tu mouse o dedo</p>
+                <div className="flex justify-between items-center">
+                  <button onClick={clearSignature} className="text-[10px] font-black uppercase tracking-widest text-red-400 hover:text-red-500 transition-colors active:scale-95">
+                    Borrar Trazo
+                  </button>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-nectar-gold">Firma aquí con tu mouse o dedo</p>
+                </div>
               </div>
-            </div>
             </div>
 
             <div className="flex gap-4">

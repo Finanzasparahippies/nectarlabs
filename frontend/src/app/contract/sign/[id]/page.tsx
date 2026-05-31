@@ -136,72 +136,92 @@ export default function ClientSignPage() {
         </div>
 
         {/* Contract Viewer / Quote Summary */}
-        <div className="bg-card-bg p-8 md:p-12 rounded-[2.5rem] border border-card-border shadow-2xl relative overflow-hidden space-y-8">
+        <div className="bg-card-bg/85 backdrop-blur-md p-8 md:p-12 rounded-[2.5rem] border border-nectar-gold/25 shadow-[0_0_50px_rgba(198,138,30,0.08)] relative overflow-hidden space-y-8">
+          <style>{`
+            .custom-contract-scrollbar::-webkit-scrollbar {
+              width: 8px;
+            }
+            .custom-contract-scrollbar::-webkit-scrollbar-track {
+              background: rgba(0, 0, 0, 0.2);
+              border-radius: 10px;
+            }
+            .custom-contract-scrollbar::-webkit-scrollbar-thumb {
+              background: rgba(198, 138, 30, 0.3);
+              border-radius: 10px;
+              border: 2px solid #121815;
+            }
+            .custom-contract-scrollbar::-webkit-scrollbar-thumb:hover {
+              background: rgba(198, 138, 30, 0.5);
+            }
+          `}</style>
+          
           <div className="absolute top-0 right-0 w-64 h-64 bg-nectar-gold/5 rounded-full blur-3xl -mr-20 -mt-20"></div>
 
-          <div>
-            <h3 className="text-xs font-black uppercase tracking-widest text-nectar-gold mb-3">1. Proyecto Cotizado</h3>
-            {quote ? (
-              <div className="space-y-4">
-                <div className="bg-background/40 border border-card-border/60 p-6 rounded-2xl">
-                  <h4 className="text-2xl font-black text-white">{quote.project_name}</h4>
-                  <p className="text-xs text-foreground/60 mt-1 uppercase tracking-wider">Duración de desarrollo: <strong>{quote.estimated_delivery_weeks} semanas</strong></p>
-                  {quote.description && (
-                    <p className="text-xs text-foreground/80 mt-4 leading-relaxed bg-background/50 p-4 rounded-xl border border-card-border/30 italic">
-                      "{quote.description}"
-                    </p>
-                  )}
-                </div>
+          <div className="max-h-[60vh] overflow-y-auto custom-contract-scrollbar pr-4 space-y-8">
+            <div>
+              <h3 className="text-xs font-black uppercase tracking-widest text-nectar-gold mb-3">1. Proyecto Cotizado</h3>
+              {quote ? (
+                <div className="space-y-4">
+                  <div className="bg-background/40 border border-card-border/60 p-6 rounded-2xl">
+                    <h4 className="text-2xl font-black text-white">{quote.project_name}</h4>
+                    <p className="text-xs text-foreground/60 mt-1 uppercase tracking-wider">Duración de desarrollo: <strong>{quote.estimated_delivery_weeks} semanas</strong></p>
+                    {quote.description && (
+                      <p className="text-xs text-foreground/80 mt-4 leading-relaxed bg-background/50 p-4 rounded-xl border border-card-border/30 italic">
+                        "{quote.description}"
+                      </p>
+                    )}
+                  </div>
 
-                <div className="space-y-3">
-                  <h5 className="text-[10px] font-black uppercase tracking-widest opacity-40">Módulos y Funcionalidades Incluidas</h5>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {quote.modules && quote.modules.map((mod: any, index: number) => (
-                      <div key={index} className="p-4 rounded-xl bg-background/50 border border-card-border/40 flex flex-col justify-between">
-                        <div>
-                          <span className="text-xs font-black text-white block">{mod.name}</span>
-                          <span className="text-[10px] text-foreground/60 leading-normal block mt-1">{mod.description || "Alcance estándar del módulo."}</span>
+                  <div className="space-y-3">
+                    <h5 className="text-[10px] font-black uppercase tracking-widest opacity-40">Módulos y Funcionalidades Incluidas</h5>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {quote.modules && quote.modules.map((mod: any, index: number) => (
+                        <div key={index} className="p-4 rounded-xl bg-background/50 border border-card-border/40 flex flex-col justify-between">
+                          <div>
+                            <span className="text-xs font-black text-white block">{mod.name}</span>
+                            <span className="text-[10px] text-foreground/60 leading-normal block mt-1">{mod.description || "Alcance estándar del módulo."}</span>
+                          </div>
+                          <span className="text-xs font-mono font-bold text-nectar-gold mt-3 block">
+                            ${parseFloat(mod.price || "0").toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN
+                          </span>
                         </div>
-                        <span className="text-xs font-mono font-bold text-nectar-gold mt-3 block">
-                          ${parseFloat(mod.price || "0").toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN
-                        </span>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="pt-4 border-t border-card-border/40 flex justify-between items-center">
+                    <span className="text-xs font-black uppercase tracking-wider text-foreground/50">Costo Total de Inversión</span>
+                    <span className="text-3xl font-black text-nectar-gold font-mono">
+                      ${parseFloat(quote.total_price || "0").toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN
+                    </span>
+                  </div>
+
+                  <div className="p-4 rounded-xl bg-nectar-gold/5 border border-nectar-gold/15 text-[10px] leading-relaxed text-foreground/70 uppercase">
+                    ℹ️ <strong>Esquema de Abono:</strong> 50% de anticipo obligatorio (${(parseFloat(quote.total_price || "0") / 2).toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN) para iniciar ingeniería y 50% de liquidación (${(parseFloat(quote.total_price || "0") / 2).toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN) contra entrega.
                   </div>
                 </div>
-
-                <div className="pt-4 border-t border-card-border/40 flex justify-between items-center">
-                  <span className="text-xs font-black uppercase tracking-wider text-foreground/50">Costo Total de Inversión</span>
-                  <span className="text-3xl font-black text-nectar-gold font-mono">
-                    ${parseFloat(quote.total_price || "0").toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN
-                  </span>
+              ) : (
+                <div className="p-6 rounded-2xl bg-background/30 border border-card-border/50">
+                  <p className="text-xs font-bold">{contract?.plan_name || "Partner Tecnológico de Ingeniería"}</p>
+                  <p className="text-[10px] text-foreground/60 mt-1">Idea de Proyecto: {contract?.project_idea}</p>
                 </div>
+              )}
+            </div>
 
-                <div className="p-4 rounded-xl bg-nectar-gold/5 border border-nectar-gold/15 text-[10px] leading-relaxed text-foreground/70 uppercase">
-                  ℹ️ <strong>Esquema de Abono:</strong> 50% de anticipo obligatorio (${(parseFloat(quote.total_price || "0") / 2).toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN) para iniciar ingeniería y 50% de liquidación (${(parseFloat(quote.total_price || "0") / 2).toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN) contra entrega.
-                </div>
+            {/* Terms & Conditions */}
+            <div className="space-y-3 pt-4 border-t border-card-border/30">
+              <h3 className="text-xs font-black uppercase tracking-widest text-nectar-gold">2. Términos y Cláusulas Clave</h3>
+              <div className="text-[10px] text-foreground/60 leading-relaxed space-y-2 uppercase tracking-wide">
+                <p><strong>Cláusula Primera:</strong> EL DESARROLLADOR se compromete a entregar los módulos listados en la Sección 1 en el plazo estipulado.</p>
+                <p><strong>Cláusula Segunda:</strong> EL CLIENTE autoriza a EL DESARROLLADOR a comenzar el aprovisionamiento de servidores una vez recibido el pago del primer abono (50% de anticipo).</p>
+                <p><strong>Cláusula Tercera:</strong> El código fuente y los activos digitales del proyecto serán propiedad intelectual del cliente una vez liquidada la totalidad del proyecto.</p>
               </div>
-            ) : (
-              <div className="p-6 rounded-2xl bg-background/30 border border-card-border/50">
-                <p className="text-xs font-bold">{contract?.plan_name || "Partner Tecnológico de Ingeniería"}</p>
-                <p className="text-[10px] text-foreground/60 mt-1">Idea de Proyecto: {contract?.project_idea}</p>
-              </div>
-            )}
-          </div>
-
-          {/* Terms & Conditions */}
-          <div className="space-y-3">
-            <h3 className="text-xs font-black uppercase tracking-widest text-nectar-gold">2. Términos y Cláusulas Clave</h3>
-            <div className="text-[10px] text-foreground/60 leading-relaxed space-y-2 uppercase tracking-wide">
-              <p><strong>Cláusula Primera:</strong> EL DESARROLLADOR se compromete a entregar los módulos listados en la Sección 1 en el plazo estipulado.</p>
-              <p><strong>Cláusula Segunda:</strong> EL CLIENTE autoriza a EL DESARROLLADOR a comenzar el aprovisionamiento de servidores una vez recibido el pago del primer abono (50% de anticipo).</p>
-              <p><strong>Cláusula Tercera:</strong> El código fuente y los activos digitales del proyecto serán propiedad intelectual del cliente una vez liquidada la totalidad del proyecto.</p>
             </div>
           </div>
         </div>
 
         {/* Signature & Billing Info Form */}
-        <div className="bg-card-bg p-8 md:p-12 rounded-[2.5rem] border border-card-border shadow-2xl relative overflow-hidden space-y-8">
+        <div className="bg-card-bg/85 backdrop-blur-md p-8 md:p-12 rounded-[2.5rem] border border-card-border/60 shadow-2xl relative overflow-hidden space-y-8">
           <div className="absolute top-0 right-0 w-64 h-64 bg-nectar-gold/5 rounded-full blur-3xl -mr-20 -mt-20"></div>
 
           <div>
@@ -247,13 +267,13 @@ export default function ClientSignPage() {
               <div className="text-center mb-2">
                 <span className="text-[10px] font-black uppercase tracking-widest text-foreground">Traza tu Firma Digital en el recuadro</span>
               </div>
-              <div className="bg-white rounded-[2rem] border-2 border-nectar-gold/10 overflow-hidden shadow-2xl h-64 relative group">
+              <div className="bg-white rounded-[2rem] border border-nectar-gold/20 overflow-hidden shadow-[0_4px_25px_rgba(0,0,0,0.3)] h-64 relative group">
                 <SignaturePad
                   ref={sigPad}
                   canvasProps={{ className: "w-full h-full cursor-crosshair" }}
-                  penColor="#D4AF37"
+                  penColor="#111827"
                 />
-                <div className="absolute inset-0 pointer-events-none border-4 border-transparent group-hover:border-nectar-gold/10 transition-colors rounded-[2rem]"></div>
+                <div className="absolute inset-0 pointer-events-none border border-transparent group-hover:border-nectar-gold/10 transition-colors rounded-[2rem]"></div>
               </div>
 
               <div className="flex flex-col md:flex-row gap-4 justify-center pt-4">

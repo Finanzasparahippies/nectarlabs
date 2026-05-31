@@ -56,6 +56,7 @@ show_help() {
     echo "  build                   - Build production images"
     echo "  up-prod                 - Start production environment"
     echo "  down-prod               - Stop production environment"
+    echo "  logs-prod               - View production logs in real-time"
     echo "  makemigrations-prod     - Generate database migrations (Prod)"
     echo "  migrate-prod            - Run database migrations (Prod)"
     echo "  createsuperuser-prod    - Create admin user (Prod)"
@@ -75,6 +76,7 @@ show_help() {
     echo "  test-staging            - Run backend tests (Staging)"
     echo "  typecheck-staging       - Run TypeScript type-check in Staging frontend"
     echo "  buildcheck-staging      - Run Next.js build check in Staging frontend"
+    echo "  clean                   - Safe Docker cleanup (removes build cache & dangling images)"
     echo "  help                    - Show this help"
 }
 
@@ -94,6 +96,13 @@ case $COMMAND in
     down-prod)
         echo "Stopping Production Environment..."
         docker compose -f docker-compose.prod.yml down "$@"
+        ;;
+    logs-prod)
+        if [ $# -eq 0 ]; then
+            docker compose -f docker-compose.prod.yml logs -f --tail=100
+        else
+            docker compose -f docker-compose.prod.yml logs "$@"
+        fi
         ;;
     makemigrations-prod)
         run_django_cmd_prod makemigrations "$@"
@@ -211,6 +220,39 @@ case $COMMAND in
             exit 1
         fi
         docker compose -f docker-compose.prod.yml run --rm certbot certonly --webroot --webroot-path=/var/www/certbot -d $DOMAIN -d www.$DOMAIN
+        ;;
+    clean)
+        echo "Starting comprehensive and safe VPS cleanup..."
+        echo ""
+        echo "1. Removing stopped containers..."
+        docker container prune -f
+        
+        echo "2. Removing dangling networks..."
+        docker network prune -f
+        
+        echo "3. Removing dangling volumes (only unused/anonymous volumes)..."
+        docker volume prune -f
+        
+        echo "4. Removing dangling/untagged images..."
+        docker image prune -f
+        
+        echo "5. Removing Docker build cache..."
+        docker builder prune -f
+        
+        # Check if running on Linux with journalctl to clean system logs
+        if command -v journalctl &> /dev/null; then
+            echo "6. Vacuuming system logs (journald) to 100MB..."
+            sudo journalctl --vacuum-size=100M 2>/dev/null || echo "   (Skip: sudo privileges required to vacuum logs)"
+        fi
+        
+        # Check if running on Debian/Ubuntu to clean apt cache
+        if command -v apt-get &> /dev/null; then
+            echo "7. Cleaning APT package cache..."
+            sudo apt-get autoclean -y 2>/dev/null || echo "   (Skip: sudo privileges required to clean APT cache)"
+        fi
+        
+        echo ""
+        echo "System cleanup complete! Disk space reclaimed successfully."
         ;;
     *)
         show_help

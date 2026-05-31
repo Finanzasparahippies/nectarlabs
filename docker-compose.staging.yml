@@ -1,3 +1,5 @@
+name: nectarlabs-staging
+
 services:
   backend-staging:
     image: nectar-labs-backend:staging
@@ -45,6 +47,36 @@ services:
     networks:
       - prod_network
 
+  redis:
+    container_name: nectar_redis_staging
+    image: redis:alpine
+    restart: always
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - prod_network
+
+  realtime:
+    container_name: nectar_realtime_staging
+    image: nectar-labs-realtime:staging
+    build:
+      context: ./realtime
+      dockerfile: Dockerfile
+    volumes:
+      - ./realtime:/app:Z
+      - /app/node_modules
+    env_file:
+      - .env.staging
+    environment:
+      - PORT=4000
+      - DJANGO_SECRET_KEY=${SECRET_KEY}
+    depends_on:
+      - redis
+    networks:
+      - prod_network
 
 networks:
   prod_network:

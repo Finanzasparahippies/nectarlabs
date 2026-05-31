@@ -41,7 +41,7 @@ router.register(r'billing/invoices', InvoiceViewSet, basename='billing-invoice')
 
 from django.conf import settings
 
-from apps.users.views import RegisterView
+from apps.users.views import RegisterView, VerifyEmailView
 from apps.newsletter.views import SubscribeView, UnsubscribeView
 from apps.dashboard.views import BusinessStatsView
 from apps.shop.views import stripe_webhook
@@ -50,6 +50,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/tenants/public-config/', public_config, name='tenant_public_config'),
     path('api/tenants/guest-auth/', guest_auth, name='tenant_guest_auth'),
+    path('api/users/verify-email/', VerifyEmailView.as_view(), name='verify_email'),
     path('api/', include(router.urls)),
     path('api/bookings/', include('apps.bookings.urls')),
     path('api/delivery/', include('apps.delivery.urls')),
