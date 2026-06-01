@@ -5,7 +5,7 @@ import django
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 django.setup()
 
-from apps.shop.models import AddOn
+from apps.shop.models import AddOn, Plan
 
 def seed_addons():
     print("Creando o actualizando Add-ons del ecosistema Nectar Labs de forma segura...")
@@ -165,5 +165,111 @@ def seed_addons():
     print("¡Población de Add-ons completada con éxito!")
 
 
+def seed_plans():
+    print("Creando o actualizando planes tecnológicos de Nectar Labs de forma segura...")
+    plans_data = [
+        {
+            "id": 1,
+            "name": "Plan Basico",
+            "price": 3000.00,
+            "hours": 8,
+            "description": "Ideales para prototipos y MVPs. Incluye desarrollo, diseño, hosting, base de datos y dominio .com.",
+            "is_recommended": False,
+            "is_active": True
+        },
+        {
+            "id": 2,
+            "name": "Plan Staging",
+            "price": 29999.00,
+            "hours": 90,
+            "description": "Nuestro plan insignia. Desarrollo continuo de producto, arquitectura serverless escalable y optimizaciones Premium.",
+            "is_recommended": True,
+            "is_active": True
+        },
+        {
+            "id": 3,
+            "name": "Plan Producción",
+            "price": 49999.00,
+            "hours": 160,
+            "description": "Ingeniería de software dedicada, soporte 24/7 y control total de infraestructura de alta disponibilidad.",
+            "is_recommended": False,
+            "is_active": True
+        }
+    ]
+    
+    for item in plans_data:
+        existing = Plan.objects.filter(id=item["id"]).first()
+        if existing and float(existing.price) != float(item["price"]):
+            # Clear stripe price so that it is regenerated for the new price!
+            existing.stripe_price_id = None
+            existing.stripe_product_id = None
+            existing.save(update_fields=['stripe_price_id', 'stripe_product_id'])
+            
+        plan, created = Plan.objects.update_or_create(
+            id=item["id"],
+            defaults=item
+        )
+        action_str = "creado" if created else "actualizado"
+        print(f"Plan '{plan.name}' (ID: {plan.id}) {action_str} con éxito.")
+    
+    print("¡Base de datos de Nectar Labs poblada con éxito con planes!")
+
+
+def seed_stamp_packages_to_stripe():
+    from django.conf import settings
+    stripe_key = getattr(settings, "STRIPE_SECRET_KEY", None)
+    if not stripe_key or getattr(settings, "TESTING", False):
+        print("Saltando sincronización de paquetes de timbres con Stripe (sin api key o en modo de pruebas).")
+        return
+
+    import stripe
+    stripe.api_key = stripe_key
+    print("Sincronizando paquetes de timbres con Stripe...")
+    
+    packages = [
+        {"size": 50, "price": 100.00, "desc": "Paquete de 50 timbres fiscales"},
+        {"size": 100, "price": 180.00, "desc": "Paquete de 100 timbres fiscales"},
+        {"size": 500, "price": 650.00, "desc": "Paquete de 500 timbres fiscales"},
+    ]
+    for pkg in packages:
+        try:
+            # Buscar producto existente
+            products = stripe.Product.list(limit=1, active=True, metadata={"stamp_package_size": str(pkg["size"])})
+            if products.data:
+                product = products.data[0]
+                print(f"Producto de Stripe para paquete de {pkg['size']} timbres ya existe: {product.id}")
+            else:
+                product = stripe.Product.create(
+                    name=f"[Néctar Labs] Paquete de {pkg['size']} timbres",
+                    description=pkg["desc"],
+                    metadata={"stamp_package_size": str(pkg["size"])}
+                )
+                print(f"Creado producto de Stripe para paquete de {pkg['size']} timbres: {product.id}")
+            
+            # Buscar precio existente
+            prices = stripe.Price.list(product=product.id, active=True)
+            price_id = None
+            amount_cents = int(pkg["price"] * 100)
+            for p in prices.data:
+                if not p.recurring and p.unit_amount == amount_cents and p.currency == "mxn":
+                    price_id = p.id
+                    break
+            
+            if not price_id:
+                price_obj = stripe.Price.create(
+                    unit_amount=amount_cents,
+                    currency="mxn",
+                    product=product.id
+                )
+                price_id = price_obj.id
+                print(f"Creado precio de Stripe para paquete de {pkg['size']} timbres: {price_id}")
+            else:
+                print(f"Precio de Stripe para paquete de {pkg['size']} timbres ya existe: {price_id}")
+        except Exception as e:
+            print(f"Error al sincronizar paquete de timbres {pkg['size']}: {e}")
+
+
 if __name__ == '__main__':
     seed_addons()
+    seed_plans()
+    seed_stamp_packages_to_stripe()

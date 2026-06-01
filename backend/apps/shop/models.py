@@ -26,7 +26,73 @@ class Plan(models.Model):
         default=0.00,
         help_text="Porcentaje de descuento de temporada (0 a 100)"
     )
+    stripe_product_id = models.CharField(max_length=100, blank=True, null=True, help_text="ID del Producto de Stripe")
+    stripe_price_id = models.CharField(max_length=100, blank=True, null=True, help_text="ID del Precio de Stripe (Base Mensual)")
     
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        
+        updated = False
+        if getattr(settings, "STRIPE_SECRET_KEY", None) and not getattr(settings, "TESTING", False) and (not self.stripe_product_id or not self.stripe_price_id):
+            import stripe
+            stripe.api_key = settings.STRIPE_SECRET_KEY
+            try:
+                from django.utils.text import slugify
+                plan_slug = slugify(self.name)
+                
+                # Search for existing Stripe Product with this plan slug or plan_id
+                product = None
+                products = stripe.Product.list(limit=1, active=True, metadata={"plan_slug": plan_slug})
+                if products.data:
+                    product = products.data[0]
+                else:
+                    products = stripe.Product.list(limit=1, active=True, metadata={"plan_id": str(self.id)})
+                    if products.data:
+                        product = products.data[0]
+                
+                if not product:
+                    product = stripe.Product.create(
+                        name=f"[Nectar Labs Plan] {self.name}",
+                        description=self.description,
+                        metadata={"plan_id": str(self.id), "plan_slug": plan_slug}
+                    )
+                else:
+                    # Update metadata if needed
+                    if product.metadata.get("plan_id") != str(self.id) or product.metadata.get("plan_slug") != plan_slug:
+                        stripe.Product.modify(
+                            product.id,
+                            metadata={"plan_id": str(self.id), "plan_slug": plan_slug}
+                        )
+                
+                self.stripe_product_id = product.id
+                
+                # Fetch active prices for this product to avoid duplicates
+                prices = stripe.Price.list(product=product.id, active=True)
+                
+                price_id = None
+                amount_cents = int(self.price * 100)
+                for p in prices.data:
+                    if not p.recurring and p.unit_amount == amount_cents and p.currency == "mxn":
+                        price_id = p.id
+                        break
+                
+                if not price_id:
+                    price_obj = stripe.Price.create(
+                        unit_amount=amount_cents,
+                        currency="mxn",
+                        product=product.id,
+                    )
+                    price_id = price_obj.id
+                
+                self.stripe_price_id = price_id
+                updated = True
+            except Exception as e:
+                import logging
+                logging.getLogger("apps").error(f"Error creating Stripe Product/Prices for Plan {self.name}: {e}")
+                
+        if updated:
+            super().save(update_fields=['stripe_product_id', 'stripe_price_id'])
+
     def __str__(self):
         return self.name
 

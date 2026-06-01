@@ -66,6 +66,47 @@ class BillingInfoView(BillingTenantMixin, APIView):
         }
         return Response(data)
 
+def get_or_create_stamp_package_stripe_price(package_size, package_desc, package_price):
+    if getattr(settings, "TESTING", False) or not getattr(settings, "STRIPE_SECRET_KEY", None):
+        return "dummy_price_id"
+    import stripe
+    stripe.api_key = settings.STRIPE_SECRET_KEY
+    try:
+        # Search for existing Stripe Product with this stamp package size metadata
+        product = None
+        products = stripe.Product.list(limit=1, active=True, metadata={"stamp_package_size": str(package_size)})
+        if products.data:
+            product = products.data[0]
+        else:
+            product = stripe.Product.create(
+                name=f"[Néctar Labs] Paquete de {package_size} timbres",
+                description=package_desc,
+                metadata={"stamp_package_size": str(package_size)}
+            )
+        
+        # Search for existing active price matching this amount for this product
+        prices = stripe.Price.list(product=product.id, active=True)
+        price_id = None
+        amount_cents = int(package_price * 100)
+        for p in prices.data:
+            if not p.recurring and p.unit_amount == amount_cents and p.currency == "mxn":
+                price_id = p.id
+                break
+        
+        if not price_id:
+            price_obj = stripe.Price.create(
+                unit_amount=amount_cents,
+                currency="mxn",
+                product=product.id
+            )
+            price_id = price_obj.id
+            
+        return price_id
+    except Exception as e:
+        import logging
+        logging.getLogger("apps").error(f"Error getting/creating Stripe price for stamp package {package_size}: {e}")
+        return None
+
 class BuyStampsView(BillingTenantMixin, APIView):
     permission_classes = [permissions.IsAuthenticated, HasAddOnPermission]
     addon_slug = 'mexico-invoicing'
@@ -91,10 +132,21 @@ class BuyStampsView(BillingTenantMixin, APIView):
         from apps.shop.views import get_frontend_origin
         frontend_url = get_frontend_origin(request)
         
+        price_id = get_or_create_stamp_package_stripe_price(
+            package_size,
+            package['description'],
+            package['price']
+        )
+        
         try:
-            session = stripe.checkout.Session.create(
-                payment_method_types=['card'],
-                line_items=[{
+            line_items = []
+            if price_id and price_id != "dummy_price_id":
+                line_items.append({
+                    'price': price_id,
+                    'quantity': 1,
+                })
+            else:
+                line_items.append({
                     'price_data': {
                         'currency': 'mxn',
                         'product_data': {
@@ -104,7 +156,11 @@ class BuyStampsView(BillingTenantMixin, APIView):
                         'unit_amount': int(package['price'] * 100),
                     },
                     'quantity': 1,
-                }],
+                })
+
+            session = stripe.checkout.Session.create(
+                payment_method_types=['card'],
+                line_items=line_items,
                 mode='payment',
                 success_url=f"{frontend_url}/tenants/{tenant.subdomain}/admin?tab=billing&payment=success&package={package_size}",
                 cancel_url=f"{frontend_url}/tenants/{tenant.subdomain}/admin?tab=billing&payment=cancel",

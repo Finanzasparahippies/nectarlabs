@@ -394,6 +394,27 @@ class ContractViewSet(viewsets.ModelViewSet):
         except Exception as e:
             return HttpResponse(f"Error al recuperar el archivo PDF: {e}", status=500)
 
+def get_or_create_generic_stripe_product(name, description, metadata_key, metadata_val):
+    if getattr(settings, "TESTING", False) or not getattr(settings, "STRIPE_SECRET_KEY", None):
+        return "dummy_product_id"
+    import stripe
+    stripe.api_key = settings.STRIPE_SECRET_KEY
+    try:
+        products = stripe.Product.list(limit=1, active=True, metadata={metadata_key: metadata_val})
+        if products.data:
+            return products.data[0].id
+        else:
+            prod = stripe.Product.create(
+                name=name,
+                description=description,
+                metadata={metadata_key: metadata_val}
+            )
+            return prod.id
+    except Exception as e:
+        import logging
+        logging.getLogger("apps").error(f"Error creating generic product {name}: {e}")
+        return None
+
 class PaymentInstallmentViewSet(viewsets.ModelViewSet):
     serializer_class = PaymentInstallmentSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -446,18 +467,50 @@ class PaymentInstallmentViewSet(viewsets.ModelViewSet):
             final_amount = base_amount.quantize(Decimal('0.01'))
             product_name = f"Mensualidad {installment.installment_number}/6 - Nectar Labs"
 
+        # Resolver ID de producto Stripe
+        stripe_product_id = None
+        if installment.installment_type == PaymentInstallment.InstallmentType.DESIGN:
+            stripe_product_id = get_or_create_generic_stripe_product(
+                "[Néctar Labs] Diseño de Marca",
+                "Servicios de diseño de marca e identidad visual",
+                "special_product",
+                "brand_design"
+            )
+        else:
+            plan = installment.contract.plan
+            if plan:
+                if not plan.stripe_product_id:
+                    try:
+                        plan.save()
+                    except Exception:
+                        pass
+                stripe_product_id = plan.stripe_product_id
+            
+            if not stripe_product_id:
+                stripe_product_id = get_or_create_generic_stripe_product(
+                    "[Néctar Labs] Desarrollo Personalizado",
+                    "Servicios de desarrollo de software a la medida",
+                    "special_product",
+                    "custom_development"
+                )
+
         try:
+            price_data = {
+                'currency': 'mxn',
+                'unit_amount': int(final_amount * 100),  # Stripe requiere centavos
+            }
+            if stripe_product_id and stripe_product_id != "dummy_product_id":
+                price_data['product'] = stripe_product_id
+            else:
+                price_data['product_data'] = {
+                    'name': product_name,
+                    'description': f"Cliente: {installment.contract.full_name}",
+                }
+
             session = stripe.checkout.Session.create(
                 payment_method_types=['card'],
                 line_items=[{
-                    'price_data': {
-                        'currency': 'mxn',
-                        'product_data': {
-                            'name': product_name,
-                            'description': f"Cliente: {installment.contract.full_name}",
-                        },
-                        'unit_amount': int(final_amount * 100),  # Stripe requiere centavos
-                    },
+                    'price_data': price_data,
                     'quantity': 1,
                 }],
                 mode='payment',
