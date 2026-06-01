@@ -946,8 +946,7 @@ def stripe_webhook(request):
                     if user_id and addon_id:
                         from django.contrib.auth import get_user_model
                         from apps.tenants.models import Tenant
-                        from apps.shop.models import AddOn, Contract
-                        
+
                         User = get_user_model()
                         user = User.objects.get(id=user_id)
                         addon = AddOn.objects.get(id=addon_id)
