@@ -24,21 +24,30 @@ interface Project {
   client: number;
 }
 
-interface TenantSearchBarProps {
-  tenants: Tenant[];
-  selectedTenant: Tenant | null;
-  onSelectTenant: (tenant: Tenant) => void;
+interface TenantSearchBarProps<T> {
+  tenants: T[];
+  selectedTenant: T | null;
+  onSelectTenant: (tenant: T) => void;
   usersList: UserItem[];
   projects: Project[];
 }
 
-export default function TenantSearchBar({
+export default function TenantSearchBar<
+  T extends {
+    id: string;
+    name: string;
+    subdomain: string;
+    owner: number;
+    custom_domain: string | null;
+  }
+>({
   tenants,
   selectedTenant,
   onSelectTenant,
   usersList,
   projects,
-}: TenantSearchBarProps) {
+}: TenantSearchBarProps<T>) {
+
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
 
