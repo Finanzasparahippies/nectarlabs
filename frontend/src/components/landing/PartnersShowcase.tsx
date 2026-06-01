@@ -19,7 +19,6 @@ interface PartnerCard {
   name: string;
   category: string;
   description: string;
-  techs: string[];
   domain: string;
   accentColor: string;
   logo: React.ReactNode;
@@ -31,12 +30,11 @@ const MOCK_PARTNERS = [
     name: 'Apex Logistics',
     category: 'Logística & Distribución',
     description: 'Ruteo y despacho automatizado de mercancías con mapas interactivos y sincronización en tiempo real.',
-    techs: ['Next.js', 'Django', 'Postgres', 'Maps'],
     domain: 'apex.nectarlabs.dev',
     accentColor: '#10B981',
     logo: (accent: string) => (
-      <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+      <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="m13 17 5-5-5-5M6 17l5-5-5-5" />
       </svg>
     )
   },
@@ -45,15 +43,13 @@ const MOCK_PARTNERS = [
     name: 'Aura Wellness',
     category: 'Salud & Telemedicina',
     description: 'Sistema completo de agendamiento y salas de consulta virtual con pasarelas de pago y expediente clínico.',
-    techs: ['Next.js', 'Postgres', 'Node.js', 'WebRTC'],
     domain: 'aura.com.mx',
     accentColor: '#3B82F6',
     logo: (accent: string) => (
-      <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="12" r="10"></circle>
-        <path d="M8 14s1.5 2 4 2 4-2 4-2"></path>
-        <line x1="9" y1="9" x2="9.01" y2="9"></line>
-        <line x1="15" y1="9" x2="15.01" y2="9"></line>
+      <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 2a10 10 0 1 0 10 10" />
+        <path d="M12 6a6 6 0 1 0 6 6" />
+        <circle cx="12" cy="12" r="2" fill={accent} />
       </svg>
     )
   },
@@ -62,30 +58,28 @@ const MOCK_PARTNERS = [
     name: 'Stellar CMS',
     category: 'Gestión Headless',
     description: 'Plataforma para publicación y distribución omnicanal de catálogos y artículos con caché optimizada.',
-    techs: ['React', 'Supabase', 'TypeScript', 'Node.js'],
     domain: 'stellar-cms.net',
     accentColor: '#8B5CF6',
     logo: (accent: string) => (
-      <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+      <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="2.5">
+        <path d="M12 2L2 12l10 10 10-10L12 2z" />
+        <path d="M12 6L6 12l6 6 6-6-6-6z" opacity="0.5" />
       </svg>
     )
   },
   {
     id: 'mock-4',
     name: 'Skyline SaaS',
-    category: 'Inmuebles & Multi-tenancy',
+    category: 'PropTech & SaaS',
     description: 'Administración SaaS de rentas y servicios para complejos corporativos con portales independientes.',
-    techs: ['Next.js', 'Django', 'Stripe', 'Docker'],
     domain: 'skyline.nectarlabs.dev',
     accentColor: '#EC4899',
     logo: (accent: string) => (
-      <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-        <line x1="9" y1="3" x2="9" y2="21"></line>
-        <line x1="15" y1="3" x2="15" y2="21"></line>
-        <line x1="3" y1="9" x2="21" y2="9"></line>
-        <line x1="3" y1="15" x2="21" y2="15"></line>
+      <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="2.5" strokeLinecap="round">
+        <rect x="3" y="3" width="7" height="9" rx="1" />
+        <rect x="14" y="3" width="7" height="5" rx="1" />
+        <rect x="3" y="16" width="7" height="5" rx="1" />
+        <rect x="14" y="12" width="7" height="9" rx="1" />
       </svg>
     )
   },
@@ -94,14 +88,13 @@ const MOCK_PARTNERS = [
     name: 'Prime E-Commerce',
     category: 'Comercio Electrónico',
     description: 'Tienda en línea de alto desempeño con checkout optimizado, cobros con tarjeta y control de inventario.',
-    techs: ['Next.js', 'Stripe', 'Tailwind', 'Postgres'],
     domain: 'prime-store.mx',
     accentColor: '#F59E0B',
     logo: (accent: string) => (
-      <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="9" cy="21" r="1"></circle>
-        <circle cx="20" cy="21" r="1"></circle>
-        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+      <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+        <line x1="3" y1="6" x2="21" y2="6"></line>
+        <path d="M16 10a4 4 0 0 1-8 0"></path>
       </svg>
     )
   },
@@ -110,13 +103,11 @@ const MOCK_PARTNERS = [
     name: 'Vesta Real Estate',
     category: 'CRM Inmobiliario',
     description: 'Buscador inteligente de propiedades y CRM para agentes de ventas con flujos de embudo visuales.',
-    techs: ['React', 'Django', 'Maps', 'Postgres'],
     domain: 'vesta-properties.com',
     accentColor: '#14B8A6',
     logo: (accent: string) => (
-      <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+      <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M2 20h20M4 17V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v13M20 9v8M11 7h2M11 11h2" />
       </svg>
     )
   }
@@ -130,18 +121,16 @@ export default function PartnersShowcase() {
     const loadRealData = async () => {
       try {
         const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-        // Fetch to /tenants/ with isPublic to prevent auth redirects, sending token manually if present
         const data = await fetcher('/tenants/', {
           isPublic: true,
           headers: token ? { 'Authorization': `Bearer ${token}` } : {},
         });
 
         if (data && Array.isArray(data) && data.length > 0) {
-          // Transform active tenants into partner cards
           const activeTenants = data.filter((t: Tenant) => t.is_active);
           
           if (activeTenants.length > 0) {
-            const transformed = activeTenants.map((t: Tenant, index: number) => {
+            const transformed = activeTenants.map((t: Tenant) => {
               const accentColor = t.accent_color || '#C68A1E';
               const logoNode = t.logo_url ? (
                 <img 
@@ -162,12 +151,16 @@ export default function PartnersShowcase() {
                 </div>
               );
 
-              // Standardized techs & mock description mapping for dynamic data
-              const techs = index % 3 === 0 
-                ? ['Next.js', 'Django', 'Stripe', 'Docker'] 
-                : index % 3 === 1 
-                  ? ['Next.js', 'Postgres', 'Tailwind', 'Stripe'] 
-                  : ['React', 'Django', 'Maps', 'Postgres'];
+              const getPremiumCategory = (name: string) => {
+                const lower = name.toLowerCase();
+                if (lower.includes('apex') || lower.includes('logistics') || lower.includes('distribucion') || lower.includes('logística')) return 'Logística & Distribución';
+                if (lower.includes('aura') || lower.includes('wellness') || lower.includes('salud') || lower.includes('telemedicina')) return 'Salud & Telemedicina';
+                if (lower.includes('stellar') || lower.includes('cms') || lower.includes('content')) return 'Gestión Headless';
+                if (lower.includes('skyline') || lower.includes('saas') || lower.includes('inmuebles')) return 'PropTech & SaaS';
+                if (lower.includes('prime') || lower.includes('store') || lower.includes('e-commerce') || lower.includes('tienda')) return 'Comercio Electrónico';
+                if (lower.includes('vesta') || lower.includes('properties') || lower.includes('inmobiliario')) return 'CRM Inmobiliario';
+                return 'Plataforma Digital';
+              };
 
               const getCustomDesc = (name: string) => {
                 const lower = name.toLowerCase();
@@ -181,9 +174,8 @@ export default function PartnersShowcase() {
               return {
                 id: t.id,
                 name: t.name,
-                category: t.custom_domain ? 'Dominio Corporativo' : 'Subdominio Néctar',
+                category: getPremiumCategory(t.name),
                 description: getCustomDesc(t.name),
-                techs: techs,
                 domain: t.custom_domain || `${t.subdomain}.nectarlabs.dev`,
                 accentColor: accentColor,
                 logo: logoNode,
@@ -198,13 +190,11 @@ export default function PartnersShowcase() {
         console.warn('Could not load real tenant data, falling back to mockup showcase:', err);
       }
 
-      // Fallback: load mockup list
       const mockCards = MOCK_PARTNERS.map(p => ({
         id: p.id,
         name: p.name,
         category: p.category,
         description: p.description,
-        techs: p.techs,
         domain: p.domain,
         accentColor: p.accentColor,
         logo: p.logo(p.accentColor),
@@ -225,83 +215,84 @@ export default function PartnersShowcase() {
     );
   }
 
-  // Split partners list in half to populate 2 marquee rows (direction: left, direction: right)
+  // Split partners list in half to populate 2 marquee rows
   const halfLength = Math.ceil(partners.length / 2);
   const firstRow = partners.slice(0, halfLength);
   const secondRow = partners.slice(halfLength);
 
-  // Duplicating items to allow seamless infinite loops
-  const marqueeItemsRow1 = [...firstRow, ...firstRow, ...firstRow];
-  const marqueeItemsRow2 = [...secondRow, ...secondRow, ...secondRow];
+  // Duplicating items exactly 2x for a perfect mathematically seamless infinite marquee loop with TranslateX(-50%)
+  const marqueeItemsRow1 = [...firstRow, ...firstRow];
+  const marqueeItemsRow2 = [...secondRow, ...secondRow];
 
   const PartnerCardComponent = ({ partner }: { partner: PartnerCard }) => (
-    <div 
-      className="w-[280px] sm:w-[320px] shrink-0 p-6 rounded-[2rem] bg-card-bg border border-card-border hover:border-nectar-gold/30 hover:shadow-lg transition-all duration-500 flex flex-col gap-4 text-left mx-3 relative overflow-hidden group"
-      style={{ '--accent-color': partner.accentColor } as React.CSSProperties}
+    <a 
+      href={`https://${partner.domain}`}
+      target="_blank"
+      rel="noreferrer"
+      className="w-[290px] sm:w-[330px] shrink-0 p-8 rounded-[2.25rem] bg-gradient-to-b from-card-bg to-card-bg/95 border border-card-border hover:border-[var(--accent-border)] hover:shadow-2xl hover:shadow-[var(--accent-glow)] hover:-translate-y-1.5 transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] flex flex-col gap-6 text-left mx-4 relative overflow-hidden group cursor-pointer"
+      style={{ 
+        '--accent-color': partner.accentColor,
+        '--accent-glow': `${partner.accentColor}12`,
+        '--accent-border': `${partner.accentColor}30`,
+      } as React.CSSProperties}
     >
-      {/* Decorative gradient overlay */}
+      {/* Subtle ambient light dot inside the card on hover */}
       <div 
-        className="absolute top-0 right-0 w-20 h-20 opacity-0 group-hover:opacity-100 transition-opacity duration-700 blur-2xl rounded-full"
-        style={{ backgroundColor: `${partner.accentColor}20` }}
+        className="absolute -bottom-12 -right-12 w-40 h-40 opacity-0 group-hover:opacity-100 transition-opacity duration-700 blur-[40px] rounded-full pointer-events-none"
+        style={{ backgroundColor: 'var(--accent-glow)' }}
       ></div>
 
-      <div className="flex justify-between items-start gap-4">
+      <div className="flex justify-between items-center gap-4">
+        {/* Logo Container */}
         <div 
-          className="w-12 h-12 rounded-2xl flex items-center justify-center border shrink-0 transition-transform duration-500 group-hover:scale-110 shadow-sm"
+          className="w-12 h-12 rounded-2xl flex items-center justify-center border shrink-0 transition-transform duration-500 group-hover:scale-105 shadow-sm"
           style={{ 
-            backgroundColor: `${partner.accentColor}12`, 
-            borderColor: `${partner.accentColor}25`
+            backgroundColor: `${partner.accentColor}08`, 
+            borderColor: `${partner.accentColor}20`
           }}
         >
           {partner.logo}
         </div>
-        <div className="text-right shrink-0">
+
+        {/* Minimalist pulsed state indicator */}
+        <div className="flex items-center gap-2">
           <span 
-            className="px-2.5 py-1 text-[7px] font-black uppercase tracking-widest rounded-full border bg-opacity-[0.05]"
-            style={{ 
-              color: partner.accentColor, 
-              borderColor: `${partner.accentColor}25`,
-              backgroundColor: `${partner.accentColor}08`
-            }}
-          >
-            ● Activo
-          </span>
-          <span className="block text-[7px] font-black uppercase tracking-widest opacity-35 mt-2">
+            className="w-1.5 h-1.5 rounded-full animate-pulse" 
+            style={{ backgroundColor: partner.accentColor }}
+          ></span>
+          <span className="text-[8px] font-bold uppercase tracking-[0.2em] opacity-40">
             {partner.category}
           </span>
         </div>
       </div>
 
-      <div>
-        <h4 className="font-black text-sm text-foreground tracking-wide group-hover:text-nectar-gold transition-colors duration-300">
-          {partner.name}
-        </h4>
-        <p className="text-[10px] text-foreground/50 leading-relaxed mt-2 font-medium">
-          {partner.description}
-        </p>
-      </div>
-
-      <div className="mt-auto pt-4 border-t border-card-border/30 flex flex-col gap-3">
-        <div className="flex flex-wrap gap-1.5">
-          {partner.techs.map((tech, i) => (
-            <span 
-              key={i} 
-              className="px-2 py-0.5 rounded-md bg-foreground/[0.03] border border-card-border text-[7.5px] font-bold text-foreground/60 tracking-wider"
+      {/* Typography block with ample vertical breathing room */}
+      <div className="flex-1 flex flex-col justify-between">
+        <div>
+          <div className="flex items-center gap-1.5">
+            <h4 className="font-bold text-base text-foreground tracking-wide group-hover:text-nectar-gold transition-colors duration-300">
+              {partner.name}
+            </h4>
+            {/* Elegant sliding/scaling diagonal link arrow symbol */}
+            <svg 
+              className="w-4 h-4 opacity-0 transform translate-x-[-6px] translate-y-[6px] scale-75 group-hover:opacity-100 group-hover:translate-x-0 group-hover:translate-y-0 group-hover:scale-100 transition-all duration-300 ease-out text-nectar-gold" 
+              viewBox="0 0 24 24" 
+              fill="none" 
+              stroke="currentColor" 
+              strokeWidth="2.5" 
+              strokeLinecap="round" 
+              strokeLinejoin="round"
             >
-              {tech}
-            </span>
-          ))}
+              <line x1="7" y1="17" x2="17" y2="7"></line>
+              <polyline points="7 7 17 7 17 17"></polyline>
+            </svg>
+          </div>
+          <p className="text-[11px] text-foreground/50 leading-relaxed mt-3 font-medium pr-2 group-hover:text-foreground/75 transition-colors duration-300">
+            {partner.description}
+          </p>
         </div>
-        <a 
-          href={`https://${partner.domain}`}
-          target="_blank"
-          rel="noreferrer"
-          className="text-[9px] font-mono lowercase tracking-normal text-nectar-gold hover:underline flex items-center gap-1 mt-1 shrink-0"
-        >
-          <span>🔗 {partner.domain}</span>
-        </a>
       </div>
-    </div>
+    </a>
   );
 
   return (
