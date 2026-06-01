@@ -953,3 +953,114 @@ class StripeAddonSubscriptionTests(APITestCase):
         self.assertEqual(ticket.priority, Ticket.Priority.HIGH)
         self.assertIn(self.addon.name, ticket.title)
         self.assertIn("Need live chat module config", ticket.description)
+
+
+class StripePlanInstallmentCheckoutTests(APITestCase):
+    def setUp(self):
+        self.ceo = User.objects.create_user(
+            username="saul_ceo_stripe",
+            email="saul_stripe@nectarlabs.dev",
+            password="securepassword",
+            role=User.Role.ADMIN,
+            is_staff=True
+        )
+        self.client_user = User.objects.create_user(
+            username="client_stripe",
+            email="client_stripe@example.com",
+            password="clientpassword",
+            role=User.Role.BUSINESS
+        )
+        self.plan = Plan.objects.create(
+            name="Plan Test Stripe",
+            price=5000.00,
+            hours=20,
+            description="Stripe testing plan",
+            stripe_product_id="prod_mock_plan_123",
+            stripe_price_id="price_mock_plan_123"
+        )
+        self.contract = Contract.objects.create(
+            user=self.client_user,
+            plan=self.plan,
+            full_name="Stripe Client Company",
+            tax_id="RFC123456789",
+            address="Av. Juarez 123",
+            project_idea="Build an e-commerce platform.",
+            payment_commitment_method="SPEI",
+            signed_at=timezone.now()
+        )
+        
+        # Sign the contract to generate installments
+        self.client.force_authenticate(user=self.ceo)
+        url_sign = reverse('contract-dev-sign', kwargs={'pk': self.contract.id})
+        self.client.post(url_sign, {'signature': 'DeveloperSignatureXYZ'})
+        
+        self.installment = self.contract.installments.filter(installment_type='DEVELOPMENT').first()
+
+    @patch('stripe.checkout.Session.create')
+    def test_installment_checkout_uses_preexisting_plan_product(self, mock_checkout_create):
+        mock_checkout_create.return_value.url = "https://checkout.stripe.com/pay/mock_session_123"
+        
+        self.client.force_authenticate(user=self.client_user)
+        url = reverse('paymentinstallment-checkout-session', kwargs={'pk': self.installment.id})
+        response = self.client.post(url, {'wants_invoice': False}, format='json')
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        
+        # Verify Stripe Checkout Session was created using the plan's stripe_product_id in price_data.product
+        mock_checkout_create.assert_called_once()
+        args, kwargs = mock_checkout_create.call_args
+        line_item_price_data = kwargs['line_items'][0]['price_data']
+        self.assertEqual(line_item_price_data['product'], 'prod_mock_plan_123')
+        self.assertNotIn('product_data', line_item_price_data)
+        self.assertEqual(line_item_price_data['unit_amount'], 125000) # (5000 / 4) * 100
+
+    @patch('stripe.checkout.Session.create')
+    @patch('stripe.Product.list')
+    def test_custom_project_checkout_uses_generic_product(self, mock_product_list, mock_checkout_create):
+        # Setup mock for listing to return a mocked product ID instead of calling API
+        from unittest.mock import MagicMock
+        mock_prod = MagicMock()
+        mock_prod.id = "prod_mock_custom_dev"
+        mock_product_list.return_value.data = [mock_prod]
+        
+        mock_checkout_create.return_value.url = "https://checkout.stripe.com/pay/mock_session_123"
+        
+        # Create a contract with a project quote (custom project, no plan)
+        from apps.dashboard.models import ProjectQuote
+        quote = ProjectQuote.objects.create(
+            client_name="Quote Client Stripe",
+            client_email="client_stripe@example.com",
+            project_name="Custom CRM Stripe",
+            total_price=40000.00,
+            estimated_delivery_weeks=8
+        )
+        custom_contract = Contract.objects.create(
+            user=self.client_user,
+            project_quote=quote,
+            full_name="Custom CRM Company",
+            signature_base64="data:image/png;base64,ClientSignatureBase64...",
+            is_fully_signed=False
+        )
+        
+        # Dev sign
+        self.client.force_authenticate(user=self.ceo)
+        url_sign = reverse('contract-dev-sign', kwargs={'pk': custom_contract.id})
+        self.client.post(url_sign, {'signature': 'DeveloperSignatureXYZ'})
+        
+        custom_installment = custom_contract.installments.filter(installment_type='DEVELOPMENT').first()
+        
+        # Checkout session
+        self.client.force_authenticate(user=self.client_user)
+        url = reverse('paymentinstallment-checkout-session', kwargs={'pk': custom_installment.id})
+        response = self.client.post(url, {'wants_invoice': False}, format='json')
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        
+        # Verify it lists products with special_product metadata and uses it in price_data.product
+        mock_product_list.assert_called()
+        mock_checkout_create.assert_called_once()
+        args, kwargs = mock_checkout_create.call_args
+        line_item_price_data = kwargs['line_items'][0]['price_data']
+        self.assertEqual(line_item_price_data['product'], 'prod_mock_custom_dev')
+        self.assertNotIn('product_data', line_item_price_data)
+
