@@ -761,11 +761,14 @@ def stripe_webhook(request):
             addon_id = session.get('metadata', {}).get('addon_id')
             comments = session.get('metadata', {}).get('comments', '')
             if user_id and addon_id:
+                import logging as _logging
+                _webhook_logger = _logging.getLogger(__name__)
+                contract = None
                 try:
                     from django.contrib.auth import get_user_model
                     User = get_user_model()
                     user = User.objects.get(id=user_id)
-                    
+
                     # Upgrade role to BUSINESS if they are currently a CUSTOMER
                     if user.role == User.Role.CUSTOMER:
                         user.role = User.Role.BUSINESS
@@ -782,16 +785,22 @@ def stripe_webhook(request):
                             payment_commitment_method='STRIPE'
                         )
                     contract.addons.add(addon_id)
-                    
-                    # --- AUTO-CREATE TENANT ---
-                    try:
-                        from apps.tenants.models import Tenant
-                        from django.utils.text import slugify
-                        tenant = Tenant.objects.filter(owner=user).first()
+                except Exception as core_err:
+                    _webhook_logger.error(
+                        f"[stripe_webhook] addon_subscription: error in core activation for user={user_id} addon={addon_id}: {core_err}",
+                        exc_info=True
+                    )
+
+                # --- AUTO-CREATE TENANT ---
+                try:
+                    from apps.tenants.models import Tenant
+                    from django.utils.text import slugify
+                    if contract:
+                        tenant = Tenant.objects.filter(owner=contract.user).first()
                         if not tenant:
-                            base_subdomain = slugify(contract.full_name or user.username)
+                            base_subdomain = slugify(contract.full_name or contract.user.username)
                             if not base_subdomain:
-                                base_subdomain = slugify(user.username) or f"client-{user.id}"
+                                base_subdomain = slugify(contract.user.username) or f"client-{contract.user.id}"
                             
                             subdomain = base_subdomain
                             counter = 1
@@ -800,8 +809,8 @@ def stripe_webhook(request):
                                 counter += 1
                             
                             Tenant.objects.create(
-                                owner=user,
-                                name=contract.full_name or f"Portal de {user.get_full_name() or user.username}",
+                                owner=contract.user,
+                                name=contract.full_name or f"Portal de {contract.user.get_full_name() or contract.user.username}",
                                 subdomain=subdomain,
                                 is_active=True
                             )
@@ -809,20 +818,20 @@ def stripe_webhook(request):
                             if not tenant.is_active:
                                 tenant.is_active = True
                                 tenant.save()
-                    except Exception as tenant_err:
-                        import logging
-                        logging.getLogger(__name__).error(f"Error creating/activating tenant on addon subscription: {tenant_err}", exc_info=True)
+                except Exception as tenant_err:
+                    _webhook_logger.error(f"Error creating/activating tenant on addon subscription: {tenant_err}", exc_info=True)
 
-                    # Enviar correo de confirmación de pago del Add-on (facturación)
-                    try:
+                # Enviar correo de confirmación de pago del Add-on (facturación)
+                try:
+                    if contract:
                         addon = AddOn.objects.get(id=addon_id)
                         send_addon_payment_receipt_email(contract.user, addon, session)
-                    except Exception as mail_err:
-                        import logging
-                        logging.getLogger(__name__).error(f"Error sending addon subscription payment receipt email: {mail_err}", exc_info=True)
-                    
-                    # --- AUTO-CREATE IMPLEMENTATION TICKET ---
-                    try:
+                except Exception as mail_err:
+                    _webhook_logger.error(f"Error sending addon subscription payment receipt email: {mail_err}", exc_info=True)
+                
+                # --- AUTO-CREATE IMPLEMENTATION TICKET ---
+                try:
+                    if contract:
                         from apps.tickets.models import Ticket
                         addon = AddOn.objects.get(id=addon_id)
                         ticket_title = f"[Suscripción Stripe] Integración de Add-on: {addon.name}"
@@ -850,11 +859,8 @@ def stripe_webhook(request):
                             priority=Ticket.Priority.HIGH,
                             status=Ticket.Status.OPEN
                         )
-                    except Exception as ticket_err:
-                        import logging
-                        logging.error(f"Error creating ticket on webhook: {ticket_err}", exc_info=True)
-                except Exception:
-                    pass
+                except Exception as ticket_err:
+                    _webhook_logger.error(f"Error creating ticket on webhook: {ticket_err}", exc_info=True)
 
         # Caso 3: Suscripción / Pago de Sponsorship (Patreon) para un cliente del Tenant
         elif session.get('metadata', {}).get('type') == 'patreon_sponsorship':
