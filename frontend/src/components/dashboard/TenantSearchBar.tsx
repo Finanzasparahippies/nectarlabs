@@ -39,6 +39,7 @@ export default function TenantSearchBar<
     subdomain: string;
     owner: number;
     custom_domain: string | null;
+    is_active: boolean;
   }
 >({
   tenants,
@@ -47,6 +48,7 @@ export default function TenantSearchBar<
   usersList,
   projects,
 }: TenantSearchBarProps<T>) {
+
 
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
