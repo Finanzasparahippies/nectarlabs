@@ -734,6 +734,45 @@ class ContractSignatureTests(APITestCase):
         due_diff = inst2.due_date - inst1.due_date
         self.assertEqual(due_diff.days, 12 * 7)
 
+    def test_contract_list_and_retrieve_isolation(self):
+        # Create a contract for client_user
+        contract_a = Contract.objects.create(
+            user=self.client_user,
+            full_name="Contract A",
+            is_fully_signed=True
+        )
+        # Create a contract for other_client
+        contract_b = Contract.objects.create(
+            user=self.other_client,
+            full_name="Contract B",
+            is_fully_signed=True
+        )
+
+        # 1. CEO / Admin should see both contracts in list
+        self.client.force_authenticate(user=self.ceo)
+        response = self.client.get(reverse('contract-list'))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        contract_ids = [c['id'] for c in response.data]
+        self.assertIn(contract_a.id, contract_ids)
+        self.assertIn(contract_b.id, contract_ids)
+
+        # 2. client_user should only see contract_a in list
+        self.client.force_authenticate(user=self.client_user)
+        response = self.client.get(reverse('contract-list'))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        contract_ids = [c['id'] for c in response.data]
+        self.assertIn(contract_a.id, contract_ids)
+        self.assertNotIn(contract_b.id, contract_ids)
+
+        # 3. client_user should be able to retrieve contract_a
+        response = self.client.get(reverse('contract-detail', kwargs={'pk': contract_a.id}))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # 4. client_user should NOT be able to retrieve contract_b (returns 404)
+        response = self.client.get(reverse('contract-detail', kwargs={'pk': contract_b.id}))
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+
 
 class SecureFileViewerTests(APITestCase):
     def setUp(self):

@@ -7,6 +7,7 @@ import { fetcher } from '../../../lib/api';
 import DashboardSidebar from '../../../components/DashboardSidebar';
 import Toast from '../../../components/ui/Toast';
 import ConfirmModal from '../../../components/ui/ConfirmModal';
+import TenantSearchBar from '../../../components/dashboard/TenantSearchBar';
 
 interface Tenant {
   id: string;
@@ -59,11 +60,18 @@ interface UserItem {
   role: string;
 }
 
+interface Project {
+  id: number;
+  name: string;
+  client: number;
+}
+
 export default function TenantSettingsPage() {
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [usersList, setUsersList] = useState<UserItem[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
   const [isStaff, setIsStaff] = useState(false);
   const [userRole, setUserRole] = useState('');
   const [loading, setLoading] = useState(true);
@@ -281,13 +289,15 @@ export default function TenantSettingsPage() {
           setSelectedTenant(activeTenant);
           initTenantFields(activeTenant);
 
-          // Load products and users scoped to this tenant
-          const [productsData, usersData] = await Promise.all([
+          // Load products, users and projects scoped to this tenant
+          const [productsData, usersData, projectsData] = await Promise.all([
             fetcher('/products/').catch(() => []),
-            fetcher('/users/').catch(() => [])
+            fetcher('/users/').catch(() => []),
+            fetcher('/projects/').catch(() => [])
           ]);
           setProducts(productsData);
           setUsersList(usersData);
+          setProjects(projectsData);
         }
       } catch (err) {
         console.error('Error loading tenant settings data:', err);
@@ -682,7 +692,21 @@ export default function TenantSettingsPage() {
         ) : (
           /* Main Tab Layout */
           <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-stretch">
-            <div className="xl:col-span-12 flex flex-col lg:flex-row gap-8">
+            {/* Left list (Staff see all) */}
+            {userRole === 'ADMIN' && tenants.length > 1 && (
+              <div className="xl:col-span-3 bg-card-bg border border-card-border rounded-[2.5rem] p-6 flex flex-col space-y-4">
+                <h3 className="text-xs font-black uppercase tracking-wider text-foreground/50">Negocios Registrados</h3>
+                <TenantSearchBar
+                  tenants={tenants}
+                  selectedTenant={selectedTenant}
+                  onSelectTenant={initTenantFields}
+                  usersList={usersList}
+                  projects={projects}
+                />
+              </div>
+            )}
+
+            <div className={`${userRole === 'ADMIN' && tenants.length > 1 ? 'xl:col-span-9' : 'xl:col-span-12'} flex flex-col lg:flex-row gap-8`}>
               {/* Form Config (70% column width on lg) */}
               <div className="flex-1 bg-card-bg border border-card-border rounded-[3rem] p-8 md:p-10 shadow-xl">
                 {/* Form Tabs */}

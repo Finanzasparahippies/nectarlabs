@@ -84,6 +84,25 @@ interface BusinessCommanderProps {
 export default function BusinessCommander({ stats, installments, setInstallments }: BusinessCommanderProps) {
   const [activePoint, setActivePoint] = useState<number | null>(null);
   const [cfdiInputs, setCfdiInputs] = useState<Record<number, string>>({});
+  
+  // Premium Tab State
+  const [activeTab, setActiveTab] = useState<'financials' | 'kanban' | 'quotes' | 'sales'>('financials');
+  
+  // Kanban states
+  const [leads, setLeads] = useState<any[]>([]);
+  const [contracts, setContracts] = useState<any[]>([]);
+  const [leadsLoading, setLeadsLoading] = useState(true);
+  const [salespersonFilter, setSalespersonFilter] = useState<string>('all');
+  const [kanbanSearch, setKanbanSearch] = useState<string>('');
+  const [debouncedKanbanSearch, setDebouncedKanbanSearch] = useState<string>('');
+
+  // Debounce search term in Kanban
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedKanbanSearch(kanbanSearch);
+    }, 250);
+    return () => clearTimeout(handler);
+  }, [kanbanSearch]);
 
   // Sales Admin Panel state
   const [commissions, setCommissions] = useState<any[]>([]);
@@ -132,27 +151,97 @@ export default function BusinessCommander({ stats, installments, setInstallments
   useEffect(() => {
     const loadSalesData = async () => {
       try {
-        const [commissionsData, summaryData, promoData, usersData, quotesData] = await Promise.all([
+        const [commissionsData, summaryData, promoData, usersData, quotesData, leadsData, contractsData] = await Promise.all([
           fetcher('/sales-commissions/').catch(() => []),
           fetcher('/sales-commissions/summary/').catch(() => null),
           fetcher('/promo-codes/').catch(() => []),
           fetcher('/users/').catch(() => []),
           fetcher('/quotes/').catch(() => []),
+          fetcher('/leads/').catch(() => []),
+          fetcher('/contracts/').catch(() => []),
         ]);
         setCommissions(Array.isArray(commissionsData) ? commissionsData : []);
         setCommissionSummary(summaryData);
         setPromoCodes(Array.isArray(promoData) ? promoData : []);
         setUsers(Array.isArray(usersData) ? usersData : []);
         setQuotes(Array.isArray(quotesData) ? quotesData : []);
+        setLeads(Array.isArray(leadsData) ? leadsData : []);
+        setContracts(Array.isArray(contractsData) ? contractsData : []);
       } catch (err) {
         console.error('Error loading sales data:', err);
       } finally {
         setSalesLoading(false);
         setQuotesLoading(false);
+        setLeadsLoading(false);
       }
     };
     loadSalesData();
   }, []);
+
+  const STATUS_ORDER: string[] = ['PROSPECT', 'CONTACTED', 'PROPOSAL', 'WON', 'LOST'];
+
+  const getContractSalesperson = (contract: any) => {
+    // 1. Via project_quote (which has salesperson)
+    if (contract.project_quote && (contract.project_quote.salesperson || contract.project_quote.salesperson_id)) {
+      return contract.project_quote.salesperson || contract.project_quote.salesperson_id;
+    }
+    
+    // 2. Via promo_code (which has referrer if it's a SELLER code)
+    if (contract.promo_code && contract.promo_code.referrer) {
+      const referrerId = contract.promo_code.referrer.id || contract.promo_code.referrer;
+      const isSalesperson = users.some(u => u.id === referrerId && u.role === 'SALES');
+      if (isSalesperson) return referrerId;
+    }
+    
+    // 3. Via Lead with the same email
+    const clientEmail = contract.user?.email || contract.client_email || contract.prospect_email;
+    if (clientEmail) {
+      const matchedLead = leads.find(l => l.email && l.email.toLowerCase() === clientEmail.toLowerCase());
+      if (matchedLead && matchedLead.salesperson) {
+        return matchedLead.salesperson;
+      }
+    }
+    
+    // 4. Via user.referrer
+    if (contract.user && contract.user.referrer) {
+      const referrerId = contract.user.referrer.id || contract.user.referrer;
+      const isSalesperson = users.some(u => u.id === referrerId && u.role === 'SALES');
+      if (isSalesperson) return referrerId;
+    }
+    
+    return null;
+  };
+
+  const handleMoveLeadStatus = async (leadId: number, targetStatus: string) => {
+    const originalLeads = [...leads];
+    
+    // Optimistic UI update
+    setLeads(prev => prev.map(l => l.id === leadId ? { ...l, status: targetStatus } : l));
+    
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/leads/${leadId}/`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ status: targetStatus })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Error al actualizar el estado en el servidor.');
+      }
+      
+      const updated = await response.json();
+      setLeads(prev => prev.map(l => l.id === leadId ? updated : l));
+      showToast(`Prospecto movido con éxito.`, 'success');
+    } catch (err: any) {
+      // Rollback
+      setLeads(originalLeads);
+      showToast(err.message || 'Error al actualizar estado en el servidor. Revirtiendo...', 'error');
+    }
+  };
 
   const handleUpdateQuoteStatus = async (quoteId: string, status: string) => {
     try {
@@ -521,6 +610,167 @@ export default function BusinessCommander({ stats, installments, setInstallments
   const { financials, client_billing, server_billing, monthly_trend } = stats;
   const salesPeople = users.filter((u: any) => u.role === 'SALES');
 
+  // Helper for empty column render
+  const EmptyColumn = () => (
+    <div className="h-40 flex items-center justify-center text-center text-[9px] font-black uppercase tracking-widest opacity-25 border border-dashed border-card-border/40 rounded-2xl">
+      Vacío
+    </div>
+  );
+
+  // Helper to render Lead Card in Kanban
+  const KanbanLeadCard = ({ lead }: { lead: any }) => {
+    const spUser = users.find(u => u.id === lead.salesperson || u.id === lead.salesperson_id || (lead.salesperson && Number(u.id) === Number(lead.salesperson)));
+    const createdDate = lead.created_at
+      ? new Date(lead.created_at).toLocaleDateString('es-MX', { day: '2-digit', month: 'short' })
+      : '—';
+    
+    // Determine movement options
+    const statusIdx = STATUS_ORDER.indexOf(lead.status);
+    const canMoveLeft = statusIdx > 0;
+    const canMoveRight = statusIdx < 4 && lead.status !== 'PROPOSAL'; // For Proposal, we show Won / Lost explicitly
+    
+    return (
+      <div className="bg-card-bg/60 border border-card-border p-5 rounded-2xl hover:border-nectar-gold/40 transition-all duration-300 flex flex-col gap-3 relative group shadow-sm hover:shadow-md text-left">
+        <div className="flex justify-between items-start gap-2 w-full min-w-0">
+          <span className="font-black text-xs text-foreground uppercase tracking-wide truncate max-w-[170px]">{lead.name}</span>
+          <span className="text-[8px] font-bold text-foreground/40 font-mono shrink-0">{createdDate}</span>
+        </div>
+        
+        {lead.email && (
+          <p className="text-[8.5px] text-foreground/50 font-mono truncate" title={lead.email}>{lead.email}</p>
+        )}
+        
+        {lead.project_idea && (
+          <p className="text-[9.5px] text-foreground/60 line-clamp-2 leading-relaxed bg-background/30 p-2 rounded-lg border border-card-border/30 font-medium">
+            {lead.project_idea}
+          </p>
+        )}
+        
+        <div className="flex justify-between items-center pt-1 gap-2">
+          <div className="min-w-0">
+            <span className="text-[7.5px] font-black uppercase tracking-wider text-foreground/35 block">Valor Est.</span>
+            <span className="text-xs font-black text-nectar-gold font-mono">
+              ${parseFloat(lead.estimated_value || 0).toLocaleString('es-MX', { maximumFractionDigits: 0 })}
+            </span>
+          </div>
+          
+          <div className="text-right shrink-0">
+            <span className="text-[7.5px] font-black uppercase tracking-wider text-foreground/35 block">Vendedor</span>
+            <span className="px-2 py-0.5 bg-foreground/5 rounded text-[8px] font-black text-foreground/60 border border-card-border/50 truncate max-w-[100px] inline-block">
+              {spUser ? spUser.username : 'Sin Asignar'}
+            </span>
+          </div>
+        </div>
+
+        {/* Action Controls */}
+        <div className="flex justify-end gap-1.5 pt-2 border-t border-card-border/35 mt-1">
+          {canMoveLeft && (
+            <button
+              onClick={() => handleMoveLeadStatus(lead.id, STATUS_ORDER[statusIdx - 1])}
+              className="p-1.5 bg-foreground/5 hover:bg-foreground/10 text-foreground/60 hover:text-foreground rounded-lg border border-card-border text-[9px] font-bold transition-all hover:scale-105 active:scale-95"
+              title={`Mover a ${STATUS_ORDER[statusIdx - 1]}`}
+            >
+              ←
+            </button>
+          )}
+
+          {lead.status === 'PROPOSAL' ? (
+            <>
+              <button
+                onClick={() => handleMoveLeadStatus(lead.id, 'LOST')}
+                className="px-2.5 py-1 bg-red-950/40 border border-red-500/30 hover:bg-red-900/40 text-red-400 rounded-lg text-[8px] font-black uppercase tracking-wider transition-all hover:scale-105 active:scale-95"
+                title="Marcar como Perdido"
+              >
+                Perder ✗
+              </button>
+              <button
+                onClick={() => handleMoveLeadStatus(lead.id, 'WON')}
+                className="px-2.5 py-1 bg-green-950/40 border border-green-500/30 hover:bg-green-900/40 text-green-400 rounded-lg text-[8px] font-black uppercase tracking-wider transition-all hover:scale-105 active:scale-95 font-bold"
+                title="Marcar como Ganado"
+              >
+                Ganar ✓
+              </button>
+            </>
+          ) : (
+            canMoveRight && (
+              <button
+                onClick={() => handleMoveLeadStatus(lead.id, STATUS_ORDER[statusIdx + 1])}
+                className="p-1.5 bg-nectar-gold/10 hover:bg-nectar-gold hover:text-background text-nectar-gold rounded-lg border border-nectar-gold/20 text-[9px] font-black transition-all hover:scale-105 active:scale-95"
+                title={`Mover a ${STATUS_ORDER[statusIdx + 1]}`}
+              >
+                →
+              </button>
+            )
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  // Helper to render Contract Card in Kanban
+  const KanbanContractCard = ({ contract }: { contract: any }) => {
+    const salespersonId = getContractSalesperson(contract);
+    const spUser = salespersonId ? users.find(u => u.id === salespersonId || (salespersonId && Number(u.id) === Number(salespersonId))) : null;
+    const clientEmail = contract.user?.email || contract.client_email || contract.prospect_email || 'Sin email';
+    const signedDate = contract.signed_at
+      ? new Date(contract.signed_at).toLocaleDateString('es-MX', { day: '2-digit', month: 'short' })
+      : '—';
+      
+    const contractValue = contract.project_quote?.total_price
+      ? parseFloat(contract.project_quote.total_price)
+      : contract.plan?.price
+        ? parseFloat(contract.plan.price)
+        : 0;
+
+    return (
+      <div className="bg-nectar-gold/5 border border-nectar-gold/25 p-5 rounded-2xl relative shadow-md transition-all duration-300 hover:border-nectar-gold/50 flex flex-col gap-3 text-left">
+        <div className="flex justify-between items-start gap-2 w-full min-w-0">
+          <span className="font-black text-xs text-foreground uppercase tracking-wide truncate max-w-[180px]">{contract.full_name}</span>
+          <span className="text-[8px] font-bold text-nectar-gold/60 font-mono shrink-0">{signedDate}</span>
+        </div>
+        
+        <p className="text-[8.5px] text-foreground/50 font-mono truncate" title={clientEmail}>{clientEmail}</p>
+
+        {contract.plan && (
+          <div className="px-2.5 py-1 bg-nectar-gold/10 rounded-lg border border-nectar-gold/15 text-[8.5px] font-black uppercase text-nectar-gold tracking-wider w-fit">
+            Plan: {contract.plan.name}
+          </div>
+        )}
+        
+        <p className="text-[9.5px] text-foreground/60 line-clamp-2 leading-relaxed bg-background/30 p-2 rounded-lg border border-card-border/30 font-medium">
+          {contract.project_idea || contract.project_quote?.project_name || 'Desarrollo de Software'}
+        </p>
+
+        <div className="flex justify-between items-center pt-1 gap-2">
+          <div className="min-w-0">
+            <span className="text-[7.5px] font-black uppercase tracking-wider text-foreground/35 block">Valor Contrato</span>
+            <span className="text-xs font-black text-nectar-gold font-mono">
+              {contractValue > 0 ? `$${contractValue.toLocaleString('es-MX', { maximumFractionDigits: 0 })}` : 'Variable'}
+            </span>
+          </div>
+          
+          <div className="text-right shrink-0">
+            <span className="text-[7.5px] font-black uppercase tracking-wider text-foreground/35 block">Vendedor</span>
+            <span className="px-2 py-0.5 bg-nectar-gold/10 rounded text-[8px] font-black text-nectar-gold/80 border border-nectar-gold/20 truncate max-w-[100px] inline-block">
+              {spUser ? spUser.username : 'Sin Asignar'}
+            </span>
+          </div>
+        </div>
+        
+        {contract.pdf_file && (
+          <a
+            href={getInlineViewUrl(contract.pdf_file, 'contract', contract.id)}
+            target="_blank"
+            rel="noreferrer"
+            className="w-full text-center py-2 bg-nectar-gold hover:bg-nectar-gold/90 text-background text-[9px] font-black uppercase tracking-widest rounded-xl transition-all font-bold mt-1 shadow-sm hover:scale-[1.02]"
+          >
+            Ver Contrato Firmado
+          </a>
+        )}
+      </div>
+    );
+  };
+
   // Determinar los puntos de coordenadas para el gráfico SVG
   const maxSales = Math.max(...monthly_trend.map(t => t.sales)) || 1000;
   const padding = 40;
@@ -539,1037 +789,1318 @@ export default function BusinessCommander({ stats, installments, setInstallments
   const salesPoints = getCoordinates('sales');
   const costsPoints = getCoordinates('costs');
 
+  const filteredLeads = leads.filter(l => {
+    // Salesperson filter
+    if (salespersonFilter !== 'all') {
+      if (salespersonFilter === 'none') {
+        if (l.salesperson) return false;
+      } else {
+        if (Number(l.salesperson) !== Number(salespersonFilter)) return false;
+      }
+    }
+    // Text search
+    if (debouncedKanbanSearch) {
+      const query = debouncedKanbanSearch.toLowerCase();
+      return (
+        l.name.toLowerCase().includes(query) ||
+        (l.email && l.email.toLowerCase().includes(query)) ||
+        (l.project_idea && l.project_idea.toLowerCase().includes(query))
+      );
+    }
+    return true;
+  });
+
+  const filteredContracts = contracts.filter(c => {
+    // Salesperson filter
+    if (salespersonFilter !== 'all') {
+      const spId = getContractSalesperson(c);
+      if (salespersonFilter === 'none') {
+        if (spId) return false;
+      } else {
+        if (Number(spId) !== Number(salespersonFilter)) return false;
+      }
+    }
+    // Text search
+    if (debouncedKanbanSearch) {
+      const query = debouncedKanbanSearch.toLowerCase();
+      const clientEmail = c.user?.email || c.client_email || c.prospect_email;
+      return (
+        (c.full_name && c.full_name.toLowerCase().includes(query)) ||
+        (c.project_idea && c.project_idea.toLowerCase().includes(query)) ||
+        (clientEmail && clientEmail.toLowerCase().includes(query)) ||
+        (c.project_quote?.project_name && c.project_quote.project_name.toLowerCase().includes(query))
+      );
+    }
+    return true;
+  });
+
   return (
     <div className="space-y-16">
-      {/* 4 Financial Cards (Los Placosones inspired, Nectar styled) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 animate-fadeIn">
-        {/* Ventas Card */}
-        <div className="p-8 rounded-[2.5rem] bg-card-bg border border-card-border hover:border-nectar-gold/60 transition-all duration-500 relative overflow-hidden group shadow-lg flex flex-col justify-between min-h-[220px]">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-nectar-gold/5 blur-2xl rounded-full"></div>
-          <div>
-            <div className="flex justify-between items-start mb-6">
-              <span className="text-[9px] font-black uppercase tracking-widest opacity-40">Ventas Consolidadas</span>
-              <div className="w-8 h-8 rounded-xl bg-nectar-gold/10 text-nectar-gold flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-                  <line x1="12" y1="1" x2="12" y2="23"></line>
-                  <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
-                </svg>
-              </div>
-            </div>
-            <h3 className="text-3xl font-black tracking-tight mb-2">
-              ${financials.gross_sales.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
-            </h3>
-            <p className="text-[9px] font-bold text-foreground/40 uppercase tracking-wider mb-6">
-              Ingresos Consolidados de Néctar Labs
-            </p>
-          </div>
-
-          {/* Desglose de Ventas */}
-          <div className="pt-4 border-t border-card-border/40 grid grid-cols-3 gap-2 text-[8px] font-black uppercase tracking-wider">
-            <div>
-              <p className="opacity-30 mb-1">Contratos MRR</p>
-              <p className="text-foreground/90 font-black">${(financials.contracts_mrr || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}</p>
-            </div>
-            <div>
-              <p className="opacity-30 mb-1">Ventas Tienda</p>
-              <p className="text-foreground/90 font-black">${(financials.paid_orders_total || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}</p>
-            </div>
-            <div className="text-amber-400">
-              <p className="opacity-40 mb-1">Diseñador (Transitorio)</p>
-              <p className="font-black">${(financials.designer_fees || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Costos Card */}
-        <div className="p-8 rounded-[2.5rem] bg-card-bg border border-card-border hover:border-nectar-gold/60 transition-all duration-500 relative overflow-hidden group shadow-lg flex flex-col justify-between min-h-[220px]">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-foreground/5 blur-2xl rounded-full"></div>
-          <div>
-            <div className="flex justify-between items-start mb-6">
-              <span className="text-[9px] font-black uppercase tracking-widest opacity-40">Costos Operativos</span>
-              <div className="w-8 h-8 rounded-xl bg-foreground/5 text-foreground opacity-60 flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-                  <rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect>
-                  <rect x="9" y="9" width="6" height="6"></rect>
-                  <line x1="9" y1="1" x2="9" y2="4"></line>
-                  <line x1="15" y1="1" x2="15" y2="4"></line>
-                  <line x1="9" y1="20" x2="9" y2="23"></line>
-                  <line x1="15" y1="20" x2="15" y2="23"></line>
-                  <line x1="20" y1="9" x2="23" y2="9"></line>
-                  <line x1="20" y1="15" x2="23" y2="15"></line>
-                  <line x1="1" y1="9" x2="4" y2="9"></line>
-                  <line x1="1" y1="15" x2="4" y2="15"></line>
-                </svg>
-              </div>
-            </div>
-            <h3 className="text-3xl font-black tracking-tight mb-2">
-              ${financials.total_costs.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
-            </h3>
-            <p className="text-[9px] font-bold text-foreground/40 uppercase tracking-wider mb-6">
-              Costos Operativos Mensualizados
-            </p>
-          </div>
-
-          {/* Desglose de Costos */}
-          <div className="pt-4 border-t border-card-border/40 grid grid-cols-2 gap-4 text-[9px] font-bold uppercase tracking-wider">
-            <div>
-              <p className="opacity-30 mb-1">Servidores</p>
-              <p className="text-foreground/90 font-black">${(financials.servers_total || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}</p>
-            </div>
-            <div>
-              <p className="opacity-30 mb-1">SaaS / Licencias</p>
-              <p className="text-foreground/90 font-black">${(financials.expenses_total || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Utilidad Card */}
-        <div className="p-8 rounded-[2.5rem] bg-card-bg border border-card-border hover:border-nectar-gold/60 transition-all duration-500 relative overflow-hidden group shadow-lg min-h-[220px] flex flex-col justify-between">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-green-500/5 blur-2xl rounded-full"></div>
-          <div>
-            <div className="flex justify-between items-start mb-6">
-              <span className="text-[9px] font-black uppercase tracking-widest opacity-40">Utilidad Neta</span>
-              <div className="w-8 h-8 rounded-xl bg-green-500/10 text-green-400 flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-                  <line x1="7" y1="17" x2="17" y2="7"></line>
-                  <polyline points="7 7 17 7 17 17"></polyline>
-                </svg>
-              </div>
-            </div>
-            <h3 className="text-3xl font-black tracking-tight mb-2 text-green-400">
-              ${financials.net_profit.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
-            </h3>
-            <p className="text-[9px] font-bold text-foreground/40 uppercase tracking-wider">
-              Margen Neto Mensual Consolidado
-            </p>
-          </div>
-          <div className="text-[9px] font-bold text-foreground/25 uppercase tracking-wider pt-4 border-t border-card-border/20">
-            Fórmula: Ingresos - Costos
-          </div>
-        </div>
-
-        {/* Margen Card */}
-        <div className="p-8 rounded-[2.5rem] bg-card-bg border border-card-border hover:border-nectar-gold/60 transition-all duration-500 relative overflow-hidden group shadow-lg min-h-[220px] flex flex-col justify-between">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-nectar-gold/5 blur-2xl rounded-full"></div>
-          <div>
-            <div className="flex justify-between items-start mb-6">
-              <span className="text-[9px] font-black uppercase tracking-widest opacity-40">Eficiencia Operativa</span>
-              <div className="w-8 h-8 rounded-xl bg-nectar-gold/15 text-nectar-gold flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-                  <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
-                  <polyline points="17 6 23 6 23 12"></polyline>
-                </svg>
-              </div>
-            </div>
-            <h3 className="text-3xl font-black tracking-tight mb-2 text-nectar-gold">
-              {financials.margin.toFixed(1)}%
-            </h3>
-            <p className="text-[9px] font-bold text-foreground/40 uppercase tracking-wider">
-              Retorno de Ganancia por cada Dólar Cobrado
-            </p>
-          </div>
-          <div className="text-[9px] font-bold text-foreground/25 uppercase tracking-wider pt-4 border-t border-card-border/20">
-            Fórmula: (Utilidad / Ingresos) * 100
-          </div>
-        </div>
+      {/* Pestañas Premium */}
+      <div className="flex border-b border-card-border pb-px mb-12 gap-8 overflow-x-auto">
+        <button
+          onClick={() => setActiveTab('financials')}
+          className={`pb-4 text-xs font-black uppercase tracking-widest relative transition-all whitespace-nowrap ${
+            activeTab === 'financials' ? 'text-nectar-gold' : 'text-foreground/45 hover:text-foreground'
+          }`}
+        >
+          Resumen Financiero
+          {activeTab === 'financials' && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-nectar-gold"></span>}
+        </button>
+        <button
+          onClick={() => setActiveTab('kanban')}
+          className={`pb-4 text-xs font-black uppercase tracking-widest relative transition-all whitespace-nowrap ${
+            activeTab === 'kanban' ? 'text-nectar-gold' : 'text-foreground/45 hover:text-foreground'
+          }`}
+        >
+          Kanban de Ventas
+          {activeTab === 'kanban' && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-nectar-gold"></span>}
+        </button>
+        <button
+          onClick={() => setActiveTab('quotes')}
+          className={`pb-4 text-xs font-black uppercase tracking-widest relative transition-all whitespace-nowrap ${
+            activeTab === 'quotes' ? 'text-nectar-gold' : 'text-foreground/45 hover:text-foreground'
+          }`}
+        >
+          Cotizaciones Modulares
+          {activeTab === 'quotes' && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-nectar-gold"></span>}
+        </button>
+        <button
+          onClick={() => setActiveTab('sales')}
+          className={`pb-4 text-xs font-black uppercase tracking-widest relative transition-all whitespace-nowrap ${
+            activeTab === 'sales' ? 'text-nectar-gold' : 'text-foreground/45 hover:text-foreground'
+          }`}
+        >
+          Comisiones y Vendedores
+          {activeTab === 'sales' && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-nectar-gold"></span>}
+        </button>
       </div>
 
-      {/* SVG Interactive Trend Chart */}
-      <section className="p-8 md:p-10 rounded-[3rem] bg-card-bg border border-card-border shadow-xl relative">
-        <div className="flex justify-between items-center mb-8">
-          <h3 className="text-xs font-black uppercase tracking-[0.3em] opacity-30">Tendencia Financiera Trimestral</h3>
+      {activeTab === 'financials' && (
+        <>
+          {/* 4 Financial Cards (Los Placosones inspired, Nectar styled) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 animate-fadeIn">
+            {/* Ventas Card */}
+            <div className="p-8 rounded-[2.5rem] bg-card-bg border border-card-border hover:border-nectar-gold/60 transition-all duration-500 relative overflow-hidden group shadow-lg flex flex-col justify-between min-h-[220px]">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-nectar-gold/5 blur-2xl rounded-full"></div>
+              <div>
+                <div className="flex justify-between items-start mb-6">
+                  <span className="text-[9px] font-black uppercase tracking-widest opacity-40">Ventas Consolidadas</span>
+                  <div className="w-8 h-8 rounded-xl bg-nectar-gold/10 text-nectar-gold flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+                      <line x1="12" y1="1" x2="12" y2="23"></line>
+                      <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                    </svg>
+                  </div>
+                </div>
+                <h3 className="text-3xl font-black tracking-tight mb-2">
+                  ${financials.gross_sales.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                </h3>
+                <p className="text-[9px] font-bold text-foreground/40 uppercase tracking-wider mb-6">
+                  Ingresos Consolidados de Néctar Labs
+                </p>
+              </div>
 
-          {/* Instrucción visual */}
-          <span className="text-[8px] font-black text-nectar-gold uppercase tracking-widest bg-nectar-gold/5 px-3 py-1 rounded-full">
-            Desliza el cursor para explorar
-          </span>
-        </div>
+              {/* Desglose de Ventas */}
+              <div className="pt-4 border-t border-card-border/40 grid grid-cols-3 gap-2 text-[8px] font-black uppercase tracking-wider">
+                <div>
+                  <p className="opacity-30 mb-1">Contratos MRR</p>
+                  <p className="text-foreground/90 font-black">${(financials.contracts_mrr || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}</p>
+                </div>
+                <div>
+                  <p className="opacity-30 mb-1">Ventas Tienda</p>
+                  <p className="text-foreground/90 font-black">${(financials.paid_orders_total || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}</p>
+                </div>
+                <div className="text-amber-400">
+                  <p className="opacity-40 mb-1">Diseñador (Transitorio)</p>
+                  <p className="font-black">${(financials.designer_fees || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}</p>
+                </div>
+              </div>
+            </div>
 
-        <div className="relative">
-          <svg viewBox={`0 0 ${chartWidth} ${chartHeight}`} className="w-full h-64 overflow-visible">
-            <defs>
-              <linearGradient id="salesGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#E2B355" stopOpacity="0.15" />
-                <stop offset="100%" stopColor="#E2B355" stopOpacity="0.0" />
-              </linearGradient>
-            </defs>
+            {/* Costos Card */}
+            <div className="p-8 rounded-[2.5rem] bg-card-bg border border-card-border hover:border-nectar-gold/60 transition-all duration-500 relative overflow-hidden group shadow-lg flex flex-col justify-between min-h-[220px]">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-foreground/5 blur-2xl rounded-full"></div>
+              <div>
+                <div className="flex justify-between items-start mb-6">
+                  <span className="text-[9px] font-black uppercase tracking-widest opacity-40">Costos Operativos</span>
+                  <div className="w-8 h-8 rounded-xl bg-foreground/5 text-foreground opacity-60 flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+                      <rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect>
+                      <rect x="9" y="9" width="6" height="6"></rect>
+                      <line x1="9" y1="1" x2="9" y2="4"></line>
+                      <line x1="15" y1="1" x2="15" y2="4"></line>
+                      <line x1="9" y1="20" x2="9" y2="23"></line>
+                      <line x1="15" y1="20" x2="15" y2="23"></line>
+                      <line x1="20" y1="9" x2="23" y2="9"></line>
+                      <line x1="20" y1="15" x2="23" y2="15"></line>
+                      <line x1="1" y1="9" x2="4" y2="9"></line>
+                      <line x1="1" y1="15" x2="4" y2="15"></line>
+                    </svg>
+                  </div>
+                </div>
+                <h3 className="text-3xl font-black tracking-tight mb-2">
+                  ${financials.total_costs.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                </h3>
+                <p className="text-[9px] font-bold text-foreground/40 uppercase tracking-wider mb-6">
+                  Costos Operativos Mensualizados
+                </p>
+              </div>
 
-            {/* Gridlines */}
-            <line x1={padding} y1={padding} x2={chartWidth - padding} y2={padding} stroke="var(--card-border)" strokeOpacity="0.2" strokeDasharray="4 4" />
-            <line x1={padding} y1={chartHeight - padding} x2={chartWidth - padding} y2={chartHeight - padding} stroke="var(--card-border)" strokeOpacity="0.4" />
+              {/* Desglose de Costos */}
+              <div className="pt-4 border-t border-card-border/40 grid grid-cols-2 gap-4 text-[9px] font-bold uppercase tracking-wider">
+                <div>
+                  <p className="opacity-30 mb-1">Servidores</p>
+                  <p className="text-foreground/90 font-black">${(financials.servers_total || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}</p>
+                </div>
+                <div>
+                  <p className="opacity-30 mb-1">SaaS / Licencias</p>
+                  <p className="text-foreground/90 font-black">${(financials.expenses_total || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}</p>
+                </div>
+              </div>
+            </div>
 
-            {/* Hover Vertical Guideline Tracker */}
-            {activePoint !== null && (
-              <line
-                x1={padding + (activePoint * (chartWidth - padding * 2)) / (monthly_trend.length - 1)}
-                y1={padding - 10}
-                x2={padding + (activePoint * (chartWidth - padding * 2)) / (monthly_trend.length - 1)}
-                y2={chartHeight - padding}
-                stroke="#E2B355"
-                strokeWidth="1.5"
-                strokeOpacity="0.2"
-                strokeDasharray="3 3"
-                className="transition-all duration-150 ease-out"
-              />
-            )}
+            {/* Utilidad Card */}
+            <div className="p-8 rounded-[2.5rem] bg-card-bg border border-card-border hover:border-nectar-gold/60 transition-all duration-500 relative overflow-hidden group shadow-lg min-h-[220px] flex flex-col justify-between">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-green-500/5 blur-2xl rounded-full"></div>
+              <div>
+                <div className="flex justify-between items-start mb-6">
+                  <span className="text-[9px] font-black uppercase tracking-widest opacity-40">Utilidad Neta</span>
+                  <div className="w-8 h-8 rounded-xl bg-green-500/10 text-green-400 flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+                      <line x1="7" y1="17" x2="17" y2="7"></line>
+                      <polyline points="7 7 17 7 17 17"></polyline>
+                    </svg>
+                  </div>
+                </div>
+                <h3 className="text-3xl font-black tracking-tight mb-2 text-green-400">
+                  ${financials.net_profit.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                </h3>
+                <p className="text-[9px] font-bold text-foreground/40 uppercase tracking-wider">
+                  Margen Neto Mensual Consolidado
+                </p>
+              </div>
+              <div className="text-[9px] font-bold text-foreground/25 uppercase tracking-wider pt-4 border-t border-card-border/20">
+                Fórmula: Ingresos - Costos
+              </div>
+            </div>
 
-            {/* Sales Area & Line (Gold) */}
-            <path
-              d={`M ${padding},${chartHeight - padding} L ${salesPoints} L ${chartWidth - padding},${chartHeight - padding} Z`}
-              fill="url(#salesGrad)"
-            />
-            <polyline
-              fill="none"
-              stroke="#E2B355"
-              strokeWidth="3"
-              points={salesPoints}
-            />
+            {/* Margen Card */}
+            <div className="p-8 rounded-[2.5rem] bg-card-bg border border-card-border hover:border-nectar-gold/60 transition-all duration-500 relative overflow-hidden group shadow-lg min-h-[220px] flex flex-col justify-between">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-nectar-gold/5 blur-2xl rounded-full"></div>
+              <div>
+                <div className="flex justify-between items-start mb-6">
+                  <span className="text-[9px] font-black uppercase tracking-widest opacity-40">Eficiencia Operativa</span>
+                  <div className="w-8 h-8 rounded-xl bg-nectar-gold/15 text-nectar-gold flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+                      <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+                      <polyline points="17 6 23 6 23 12"></polyline>
+                    </svg>
+                  </div>
+                </div>
+                <h3 className="text-3xl font-black tracking-tight mb-2 text-nectar-gold">
+                  {financials.margin.toFixed(1)}%
+                </h3>
+                <p className="text-[9px] font-bold text-foreground/40 uppercase tracking-wider">
+                  Retorno de Ganancia por cada Dólar Cobrado
+                </p>
+              </div>
+              <div className="text-[9px] font-bold text-foreground/25 uppercase tracking-wider pt-4 border-t border-card-border/20">
+                Fórmula: (Utilidad / Ingresos) * 100
+              </div>
+            </div>
+          </div>
 
-            {/* Costs Line (White) */}
-            <polyline
-              fill="none"
-              stroke="var(--foreground)"
-              strokeWidth="2"
-              strokeOpacity="0.5"
-              strokeDasharray="3 3"
-              points={costsPoints}
-            />
+          {/* SVG Interactive Trend Chart */}
+          <section className="p-8 md:p-10 rounded-[3rem] bg-card-bg border border-card-border shadow-xl relative">
+            <div className="flex justify-between items-center mb-8">
+              <h3 className="text-xs font-black uppercase tracking-[0.3em] opacity-30">Tendencia Financiera Trimestral</h3>
 
-            {/* Static & Hover Highlighted Dots */}
-            {monthly_trend.map((point, idx) => {
-              const x = padding + (idx * (chartWidth - padding * 2)) / (monthly_trend.length - 1);
-              const salesY = chartHeight - padding - (point.sales * (chartHeight - padding * 2)) / maxSales;
-              const costsY = chartHeight - padding - (point.costs * (chartHeight - padding * 2)) / maxSales;
+              {/* Instrucción visual */}
+              <span className="text-[8px] font-black text-nectar-gold uppercase tracking-widest bg-nectar-gold/5 px-3 py-1 rounded-full">
+                Desliza el cursor para explorar
+              </span>
+            </div>
 
-              const isActive = activePoint === idx;
+            <div className="relative">
+              <svg viewBox={`0 0 ${chartWidth} ${chartHeight}`} className="w-full h-64 overflow-visible">
+                <defs>
+                  <linearGradient id="salesGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#E2B355" stopOpacity="0.15" />
+                    <stop offset="100%" stopColor="#E2B355" stopOpacity="0.0" />
+                  </linearGradient>
+                </defs>
 
-              return (
-                <g key={idx}>
-                  {/* Sales Dot */}
-                  <circle
-                    cx={x}
-                    cy={salesY}
-                    r={isActive ? 7 : 4}
-                    fill="#E2B355"
-                    className="transition-all duration-300 pointer-events-none"
+                {/* Gridlines */}
+                <line x1={padding} y1={padding} x2={chartWidth - padding} y2={padding} stroke="var(--card-border)" strokeOpacity="0.2" strokeDasharray="4 4" />
+                <line x1={padding} y1={chartHeight - padding} x2={chartWidth - padding} y2={chartHeight - padding} stroke="var(--card-border)" strokeOpacity="0.4" />
+
+                {/* Hover Vertical Guideline Tracker */}
+                {activePoint !== null && (
+                  <line
+                    x1={padding + (activePoint * (chartWidth - padding * 2)) / (monthly_trend.length - 1)}
+                    y1={padding - 10}
+                    x2={padding + (activePoint * (chartWidth - padding * 2)) / (monthly_trend.length - 1)}
+                    y2={chartHeight - padding}
+                    stroke="#E2B355"
+                    strokeWidth="1.5"
+                    strokeOpacity="0.2"
+                    strokeDasharray="3 3"
+                    className="transition-all duration-150 ease-out"
                   />
-                  {/* Costs Dot */}
-                  <circle
-                    cx={x}
-                    cy={costsY}
-                    r={isActive ? 6 : 3}
-                    fill="var(--foreground)"
-                    fillOpacity={isActive ? 1.0 : 0.6}
-                    className="transition-all duration-300 pointer-events-none"
-                  />
+                )}
 
-                  {/* Month Label */}
-                  <text
-                    x={x}
-                    y={chartHeight - 12}
-                    textAnchor="middle"
-                    fill="var(--foreground)"
-                    fillOpacity={isActive ? 0.9 : 0.3}
-                    className="text-[8px] font-black uppercase tracking-wider transition-all duration-300"
-                  >
-                    {point.month}
-                  </text>
-                </g>
-              );
-            })}
-
-            {/* Hover Interactive Zones */}
-            {monthly_trend.map((point, idx) => {
-              const sliceWidth = (chartWidth - padding * 2) / (monthly_trend.length - 1);
-              const x = padding + (idx * (chartWidth - padding * 2)) / (monthly_trend.length - 1);
-              return (
-                <rect
-                  key={`hit-${idx}`}
-                  x={x - sliceWidth / 2}
-                  y={padding - 10}
-                  width={sliceWidth}
-                  height={chartHeight - padding * 2 + 20}
-                  fill="transparent"
-                  className="cursor-crosshair"
-                  onMouseEnter={() => setActivePoint(idx)}
-                  onMouseMove={() => setActivePoint(idx)}
-                  onMouseLeave={() => setActivePoint(null)}
+                {/* Sales Area & Line (Gold) */}
+                <path
+                  d={`M ${padding},${chartHeight - padding} L ${salesPoints} L ${chartWidth - padding},${chartHeight - padding} Z`}
+                  fill="url(#salesGrad)"
                 />
-              );
-            })}
-          </svg>
+                <polyline
+                  fill="none"
+                  stroke="#E2B355"
+                  strokeWidth="3"
+                  points={salesPoints}
+                />
 
-          {/* Chart Legend */}
-          <div className="flex gap-8 justify-center mt-6 text-[8px] font-black uppercase tracking-widest">
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-0.5 bg-[#E2B355]"></div>
-              <span className="opacity-80">Ingresos</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-0.5 bg-foreground border-dashed border-t-2"></div>
-              <span className="opacity-50">Costos de Infraestructura</span>
-            </div>
-          </div>
+                {/* Costs Line (White) */}
+                <polyline
+                  fill="none"
+                  stroke="var(--foreground)"
+                  strokeWidth="2"
+                  strokeOpacity="0.5"
+                  strokeDasharray="3 3"
+                  points={costsPoints}
+                />
 
-          {/* Unified Hover Tooltip Card */}
-          {activePoint !== null && (
-            <div className="absolute top-4 right-4 bg-card-bg/95 backdrop-blur-md border border-card-border p-5 rounded-3xl shadow-2xl text-[9px] font-black uppercase tracking-widest space-y-2.5 z-30 pointer-events-none animate-fadeIn border-nectar-gold/30">
-              <div className="flex justify-between items-center gap-6 border-b border-card-border/50 pb-2">
-                <span className="text-nectar-gold font-black">Periodo</span>
-                <span className="text-foreground">{monthly_trend[activePoint].month}</span>
-              </div>
-              <div className="flex justify-between gap-10">
-                <span className="opacity-40">Ingresos</span>
-                <span className="text-foreground">${Math.round(monthly_trend[activePoint].sales).toLocaleString('es-MX')}</span>
-              </div>
-              <div className="flex justify-between gap-10">
-                <span className="opacity-40">Costos</span>
-                <span className="text-foreground">${Math.round(monthly_trend[activePoint].costs).toLocaleString('es-MX')}</span>
-              </div>
-              <div className="flex justify-between gap-10 pt-2 border-t border-card-border/50 text-green-400">
-                <span>Utilidad</span>
-                <span>${Math.round(monthly_trend[activePoint].sales - monthly_trend[activePoint].costs).toLocaleString('es-MX')}</span>
-              </div>
-            </div>
-          )}
-        </div>
-      </section>
+                {/* Static & Hover Highlighted Dots */}
+                {monthly_trend.map((point, idx) => {
+                  const x = padding + (idx * (chartWidth - padding * 2)) / (monthly_trend.length - 1);
+                  const salesY = chartHeight - padding - (point.sales * (chartHeight - padding * 2)) / maxSales;
+                  const costsY = chartHeight - padding - (point.costs * (chartHeight - padding * 2)) / maxSales;
 
-      {/* Cashflow Calendar Columns */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-12">
-        {/* Clients Billing */}
-        <section className="bg-card-bg border border-card-border rounded-[2.5rem] p-8 md:p-10 shadow-lg">
-          <div className="mb-8">
-            <h3 className="text-xs font-black uppercase tracking-[0.3em] opacity-30">Facturación Contractual</h3>
-            <p className="text-[9px] font-bold text-foreground/40 mt-1 uppercase tracking-wider">Próximos cobros a clientes por planes activos</p>
-          </div>
-
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-card-border/50 text-[8px] font-black uppercase tracking-widest opacity-40">
-                  <th className="pb-4">Cliente</th>
-                  <th className="pb-4 text-right">Monto</th>
-                  <th className="pb-4 text-center">Vence</th>
-                  <th className="pb-4 text-right">Estado</th>
-                </tr>
-              </thead>
-              <tbody>
-                {client_billing.map(billing => (
-                  <tr key={billing.id} className="border-b border-card-border/30 last:border-0 hover:bg-foreground/[0.02] transition-colors">
-                    <td className="py-4 pr-4">
-                      <h4 className="font-black text-sm">{billing.client}</h4>
-                      <p className="text-[7px] font-bold text-nectar-gold uppercase tracking-wider mt-0.5">{billing.plan}</p>
-                    </td>
-                    <td className="py-4 text-right font-bold text-sm">
-                      ${billing.amount.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
-                    </td>
-                    <td className="py-4 text-center text-[10px] font-bold opacity-60">
-                      {new Date(billing.next_payment_date).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' })}
-                    </td>
-                    <td className="py-4 text-right">
-                      {billing.status === 'overdue' ? (
-                        <span className="px-3 py-1.5 bg-red-500/10 text-red-500 text-[7px] font-black uppercase tracking-widest rounded-full animate-pulse">Vencido</span>
-                      ) : billing.status === 'upcoming' ? (
-                        <span className="px-3 py-1.5 bg-amber-500/10 text-amber-500 text-[7px] font-black uppercase tracking-widest rounded-full">En {billing.days_remaining} días</span>
-                      ) : (
-                        <span className="px-3 py-1.5 bg-green-500/10 text-green-500 text-[7px] font-black uppercase tracking-widest rounded-full">Al día</span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-                {client_billing.length === 0 && (
-                  <tr>
-                    <td colSpan={4} className="py-12 text-center text-[9px] font-black uppercase tracking-widest opacity-25">
-                      Sin cobros contractuales pendientes
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </section>
-
-        {/* Server Infrastructure Cost Vencimientos */}
-        <section className="bg-card-bg border border-card-border rounded-[2.5rem] p-8 md:p-10 shadow-lg">
-          <div className="mb-8">
-            <h3 className="text-xs font-black uppercase tracking-[0.3em] opacity-30">Vencimiento de Infraestructura</h3>
-            <p className="text-[9px] font-bold text-foreground/40 mt-1 uppercase tracking-wider">Fechas límites de pago para servidores y servicios</p>
-          </div>
-
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-card-border/50 text-[8px] font-black uppercase tracking-widest opacity-40">
-                  <th className="pb-4">Infraestructura</th>
-                  <th className="pb-4 text-right">Costo</th>
-                  <th className="pb-4 text-center">Vence</th>
-                  <th className="pb-4 text-right">Estado</th>
-                </tr>
-              </thead>
-              <tbody>
-                {server_billing.map(billing => (
-                  <tr key={billing.id} className="border-b border-card-border/30 last:border-0 hover:bg-foreground/[0.02] transition-colors">
-                    <td className="py-4 pr-4">
-                      <h4 className="font-black text-sm">{billing.name}</h4>
-                      <p className="text-[7px] font-bold text-nectar-gold uppercase tracking-wider mt-0.5">{billing.provider}</p>
-                    </td>
-                    <td className="py-4 text-right font-bold text-sm">
-                      ${billing.amount.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
-                    </td>
-                    <td className="py-4 text-center text-[10px] font-bold opacity-60">
-                      {new Date(billing.next_payment_date).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' })}
-                    </td>
-                    <td className="py-4 text-right">
-                      {billing.status === 'overdue' ? (
-                        <span className="px-3 py-1.5 bg-red-500/10 text-red-500 text-[7px] font-black uppercase tracking-widest rounded-full animate-pulse">Expirado</span>
-                      ) : billing.status === 'upcoming' ? (
-                        <span className="px-3 py-1.5 bg-amber-500/10 text-amber-500 text-[7px] font-black uppercase tracking-widest rounded-full">Por pagar</span>
-                      ) : (
-                        <span className="px-3 py-1.5 bg-green-500/10 text-green-500 text-[7px] font-black uppercase tracking-widest rounded-full">Al día</span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-                {server_billing.length === 0 && (
-                  <tr>
-                    <td colSpan={4} className="py-12 text-center text-[9px] font-black uppercase tracking-widest opacity-25">
-                      Sin vencimientos de servidores registrados
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </section>
-      </div>
-
-      {/* Control de Mensualidades y Emisión de CFDI (SAT) */}
-      <section className="bg-card-bg border border-card-border rounded-[2.5rem] p-8 md:p-10 shadow-lg mt-12">
-        <div className="mb-8">
-          <h3 className="text-xs font-black uppercase tracking-[0.3em] opacity-30">Control de Mensualidades y Emisión de CFDI (SAT)</h3>
-          <p className="text-[9px] font-bold text-foreground/40 mt-1 uppercase tracking-wider">Validación de comprobantes SPEI/Depósitos y registro de Facturas timbradas</p>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="border-b border-card-border/50 text-[8px] font-black uppercase tracking-widest opacity-40">
-                <th className="pb-4">Contrato / Mes</th>
-                <th className="pb-4 text-right">Monto</th>
-                <th className="pb-4 text-center">Vencimiento</th>
-                <th className="pb-4 text-center">Comprobante</th>
-                <th className="pb-4 text-center">Estatus</th>
-                <th className="pb-4 text-right">Facturación CFDI (SAT)</th>
-              </tr>
-            </thead>
-            <tbody>
-              {installments.map(inst => (
-                <tr key={inst.id} className="border-b border-card-border/30 last:border-0 hover:bg-foreground/[0.02] transition-colors">
-                  <td className="py-4 pr-4">
-                    <h4 className="font-black text-sm">Contrato #{inst.contract}</h4>
-                    {inst.client_name && (
-                      <p className="text-[9px] font-black text-foreground mt-0.5">{inst.client_name}</p>
-                    )}
-                    {inst.project_name && (
-                      <p className="text-[8px] font-bold text-nectar-gold opacity-80 mt-0.5">{inst.project_name}</p>
-                    )}
-                    <p className="text-[7px] font-bold text-foreground/40 uppercase tracking-wider mt-1">Mensualidad {inst.installment_number} de 6</p>
-                  </td>
-                  <td className="py-4 text-right font-bold text-sm">
-                    ${parseFloat(inst.amount).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
-                  </td>
-                  <td className="py-4 text-center text-[10px] font-bold opacity-60">
-                    {inst.due_date}
-                  </td>
-                  <td className="py-4 text-center">
-                    {inst.receipt_file ? (
-                      <a
-                        href={getInlineViewUrl(inst.receipt_file, 'receipt', inst.id)}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="px-2.5 py-1 bg-nectar-gold/10 text-nectar-gold hover:bg-nectar-gold hover:text-background text-[8px] font-black uppercase tracking-widest rounded-full transition-all inline-block font-bold border border-nectar-gold/20"
-                      >
-                        Ver Comprobante
-                      </a>
-                    ) : (
-                      <span className="text-[8px] opacity-35 font-bold uppercase">No cargado</span>
-                    )}
-                  </td>
-                  <td className="py-4 text-center">
-                    <div className="flex flex-col items-center gap-1.5">
-                      <select
-                        value={inst.status}
-                        onChange={(e) => handleUpdateInstallmentStatus(inst.id, e.target.value)}
-                        className={`px-2.5 py-1 text-[7px] font-black uppercase tracking-wider rounded-full bg-background border focus:outline-none cursor-pointer transition-colors ${inst.status === 'PAID'
-                          ? 'border-green-500/30 text-green-500 bg-green-500/5'
-                          : inst.status === 'CANCELLED'
-                            ? 'border-red-500/30 text-red-500 bg-red-500/5'
-                            : inst.receipt_file
-                              ? 'border-orange-500/30 text-orange-500 bg-orange-500/5'
-                              : 'border-yellow-500/30 text-yellow-500 bg-yellow-500/5'
-                          }`}
-                      >
-                        <option value="PENDING" className="text-yellow-500">Pendiente</option>
-                        <option value="PAID" className="text-green-500">Pagado</option>
-                        <option value="CANCELLED" className="text-red-500">Cancelado</option>
-                      </select>
-                      {inst.status !== 'PAID' && inst.receipt_file && (
-                        <button
-                          onClick={() => handleUpdateInstallmentStatus(inst.id, 'PAID')}
-                          className="mt-1 px-2 py-0.5 bg-green-600 hover:bg-green-500 text-white text-[7px] font-black uppercase tracking-widest rounded-md hover:scale-105 active:scale-95 transition-all shadow-sm"
-                        >
-                          Aprobar Pago
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                  <td className="py-4 text-right">
-                    {inst.cfdi_uuid ? (
-                      <div className="text-right">
-                        <span className="px-2.5 py-1 bg-green-500/10 text-green-400 text-[7px] font-black uppercase tracking-widest rounded-full">Timbrada</span>
-                        <p className="text-[7px] font-mono text-foreground/45 mt-1 select-all">{inst.cfdi_uuid}</p>
-                      </div>
-                    ) : (
-                      <div className="flex justify-end items-center gap-2">
-                        <input
-                          type="text"
-                          placeholder="UUID CFDI 4.0"
-                          value={cfdiInputs[inst.id] || ""}
-                          onChange={(e) => setCfdiInputs(prev => ({ ...prev, [inst.id]: e.target.value }))}
-                          className="bg-background border border-card-border rounded-lg px-3 py-1.5 text-[8px] font-mono focus:outline-none focus:border-nectar-gold w-40 text-foreground"
-                        />
-                        <button
-                          onClick={() => handleSaveCFDI(inst.id)}
-                          className="px-3 py-1.5 bg-nectar-gold text-background text-[7px] font-black uppercase tracking-widest rounded-lg hover:scale-105 active:scale-95 transition-all"
-                        >
-                          Guardar
-                        </button>
-                      </div>
-                    )}
-                  </td>
-                </tr>
-              ))}
-              {installments.length === 0 && (
-                <tr>
-                  <td colSpan={6} className="py-12 text-center text-[9px] font-black uppercase tracking-widest opacity-25">
-                    Sin mensualidades generadas en el sistema
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      {/* ── SECCIÓN DE COTIZACIONES MODULARES ── */}
-      <section className="bg-card-bg border border-card-border rounded-[2.5rem] p-8 md:p-10 shadow-lg mt-12">
-        <div className="mb-8 flex justify-between items-center flex-wrap gap-4 text-left">
-          <div>
-            <h3 className="text-xs font-black uppercase tracking-[0.3em] opacity-30">Cotizador de Proyectos Modulares</h3>
-            <p className="text-[9px] font-bold text-foreground/40 mt-1 uppercase tracking-wider">Generación de propuestas comerciales y PDFs formalizados para proyectos a la medida</p>
-          </div>
-          <button
-            onClick={() => {
-              setSelectedModules([]);
-              setProjectName('');
-              setProjectDesc('');
-              setProspectName('');
-              setProspectEmail('');
-              setSelectedClientId('');
-              setDeliveryWeeks(4);
-              setQuoteError('');
-              setShowQuoteModal(true);
-            }}
-            className="px-6 py-2.5 bg-nectar-gold text-background text-[9px] font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 transition-all shadow-lg shadow-nectar-gold/25 font-bold"
-          >
-            + Nueva Cotización
-          </button>
-        </div>
-
-        {quotesLoading ? (
-          <div className="py-10 flex justify-center">
-            <div className="w-8 h-8 border-2 border-nectar-gold border-t-transparent rounded-full animate-spin" />
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-card-border/50 text-[8px] font-black uppercase tracking-widest opacity-40">
-                  <th className="pb-4">Proyecto / Cliente</th>
-                  <th className="pb-4 text-center">Módulos</th>
-                  <th className="pb-4 text-center">Entrega Est.</th>
-                  <th className="pb-4 text-right">Total Cotizado</th>
-                  <th className="pb-4 text-center">Estado</th>
-                  <th className="pb-4 text-center">PDF</th>
-                  <th className="pb-4 text-center">Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {quotes.map(quote => (
-                  <tr key={quote.id} className="border-b border-card-border/30 last:border-0 hover:bg-foreground/[0.02] transition-colors">
-                    <td className="py-4 pr-4 text-left">
-                      <h4 className="font-black text-sm">{quote.project_name}</h4>
-                      <span className="text-[9px] font-bold text-foreground/60">{quote.client_name}</span>
-                      <p className="text-[7.5px] font-mono text-foreground/40 mt-0.5">{quote.client_email}</p>
-                    </td>
-                    <td className="py-4 text-center font-mono font-bold text-xs">
-                      {quote.modules ? quote.modules.length : 0}
-                    </td>
-                    <td className="py-4 text-center text-[10px] font-bold opacity-60">
-                      {quote.estimated_delivery_weeks} sem
-                    </td>
-                    <td className="py-4 text-right font-black text-sm text-nectar-gold font-mono">
-                      ${parseFloat(quote.total_price || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
-                    </td>
-                    <td className="py-4 text-center">
-                      <select
-                        value={quote.status}
-                        onChange={(e) => handleUpdateQuoteStatus(quote.id, e.target.value)}
-                        className={`px-3 py-1.5 text-[7px] font-black uppercase tracking-wider rounded-full bg-background border focus:outline-none cursor-pointer transition-colors ${quote.status === 'APPROVED'
-                          ? 'border-green-500/30 text-green-500 bg-green-500/5'
-                          : quote.status === 'REJECTED'
-                            ? 'border-red-500/30 text-red-500 bg-red-500/5'
-                            : quote.status === 'SENT'
-                              ? 'border-blue-500/30 text-blue-500 bg-blue-500/5'
-                              : 'border-yellow-500/30 text-yellow-500 bg-yellow-500/5'
-                          }`}
-                      >
-                        <option value="DRAFT">Borrador</option>
-                        <option value="SENT">Enviado</option>
-                        <option value="APPROVED">Aprobado</option>
-                        <option value="REJECTED">Rechazado</option>
-                      </select>
-                    </td>
-                    <td className="py-4 text-center">
-                      {quote.pdf_file ? (
-                        <div className="flex flex-col items-center gap-1">
-                          <a
-                            href={getInlineViewUrl(quote.pdf_file, 'quote', quote.id)}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="px-2.5 py-1 bg-nectar-gold/10 hover:bg-nectar-gold hover:text-background text-[8px] font-black uppercase tracking-widest rounded-full transition-all inline-block font-bold border border-nectar-gold/20"
-                          >
-                            Abrir PDF ↗
-                          </a>
-                          <button
-                            onClick={() => handleRegenerateQuotePDF(quote.id)}
-                            className="text-[7px] font-black uppercase tracking-widest opacity-40 hover:opacity-100 hover:text-nectar-gold transition-all"
-                          >
-                            Regenerar
-                          </button>
-                        </div>
-                      ) : (
-                        <button
-                          onClick={() => handleRegenerateQuotePDF(quote.id)}
-                          className="px-2.5 py-1 bg-foreground/5 hover:bg-foreground hover:text-background text-[8px] font-black uppercase tracking-widest rounded-full transition-all"
-                        >
-                          Generar PDF
-                        </button>
-                      )}
-                    </td>
-                    <td className="py-4 text-center">
-                      <button
-                        onClick={() => handleDeleteQuote(quote.id)}
-                        className="px-3 py-1 bg-red-500/10 text-red-500 hover:bg-red-600 hover:text-white rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border border-red-500/20"
-                      >
-                        Eliminar
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-                {quotes.length === 0 && (
-                  <tr>
-                    <td colSpan={7} className="py-12 text-center text-[9px] font-black uppercase tracking-widest opacity-25">
-                      No hay cotizaciones generadas aún
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </section>
-
-      {/* ── ADMIN SALES COMMAND CENTER ── */}
-      <section id="ventas-section" className="space-y-10">
-        <div>
-          <h2 className="text-xs font-black uppercase tracking-[0.4em] opacity-30 mb-1">Panel de Ventas</h2>
-          <p className="text-[9px] font-bold text-foreground/30 uppercase tracking-wider">Control global de vendedores, comisiones y códigos de referido</p>
-        </div>
-
-        {/* Sales KPI Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
-          <div className="p-6 rounded-[2rem] bg-card-bg border border-card-border relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-green-500/5 blur-3xl rounded-full" />
-            <span className="text-[8px] font-black uppercase tracking-widest opacity-40">Comisiones Pagadas</span>
-            <h3 className="text-2xl font-black tracking-tight mt-2 text-green-400 font-mono">
-              ${((commissionSummary?.paid_total) || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
-              <span className="text-[9px] font-bold opacity-50 ml-1">MXN</span>
-            </h3>
-            <p className="text-[9px] text-foreground/40 mt-1 uppercase tracking-wider font-bold">Liquidadas a vendedores</p>
-          </div>
-          <div className="p-6 rounded-[2rem] bg-card-bg border border-card-border relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-yellow-500/5 blur-3xl rounded-full" />
-            <span className="text-[8px] font-black uppercase tracking-widest opacity-40">Comisiones Pendientes</span>
-            <h3 className="text-2xl font-black tracking-tight mt-2 text-yellow-400 font-mono">
-              ${((commissionSummary?.pending_total) || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
-              <span className="text-[9px] font-bold opacity-50 ml-1">MXN</span>
-            </h3>
-            <p className="text-[9px] text-foreground/40 mt-1 uppercase tracking-wider font-bold">Por liquidar a vendedores</p>
-          </div>
-          <div className="p-6 rounded-[2rem] bg-card-bg border border-card-border relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-nectar-gold/5 blur-3xl rounded-full" />
-            <span className="text-[8px] font-black uppercase tracking-widest opacity-40">Contratos Referidos</span>
-            <h3 className="text-2xl font-black tracking-tight mt-2 text-nectar-gold font-mono">
-              {commissionSummary?.referred_contracts_count ?? 0}
-              <span className="text-[9px] font-bold opacity-50 ml-1">Contratos</span>
-            </h3>
-            <p className="text-[9px] text-foreground/40 mt-1 uppercase tracking-wider font-bold">Adquiridos por vendedores</p>
-          </div>
-          <div className="p-6 rounded-[2rem] bg-card-bg border border-card-border relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 blur-3xl rounded-full" />
-            <span className="text-[8px] font-black uppercase tracking-widest opacity-40">Vendedores Activos</span>
-            <h3 className="text-2xl font-black tracking-tight mt-2 text-blue-400 font-mono">
-              {commissionSummary?.active_sellers ?? 0}
-              <span className="text-[9px] font-bold opacity-50 ml-1">SALES</span>
-            </h3>
-            <p className="text-[9px] text-foreground/40 mt-1 uppercase tracking-wider font-bold">Usuarios con rol vendedor</p>
-          </div>
-        </div>
-
-        {/* Gestión de Vendedores Table */}
-        <div className="p-8 md:p-10 rounded-[3rem] bg-card-bg border border-card-border shadow-xl">
-          <div className="mb-8 flex items-center justify-between flex-wrap gap-4">
-            <div>
-              <h3 className="text-xs font-black uppercase tracking-[0.3em] opacity-30">Gestión de Vendedores</h3>
-              <p className="text-[9px] font-bold text-foreground/30 mt-1 uppercase tracking-wider">Aprobación y métricas de desempeño de vendedores</p>
-            </div>
-            <span className="px-4 py-1.5 bg-foreground/5 rounded-full text-[8px] font-black uppercase tracking-widest opacity-50">
-              {salesPeople.length} vendedores registrados
-            </span>
-          </div>
-
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-                            <thead>
-                <tr className="border-b border-card-border/50 text-[8px] font-black uppercase tracking-widest opacity-40">
-                  <th className="pb-4">Email Vendedor</th>
-                  <th className="pb-4 text-center">Código Referido</th>
-                  <th className="pb-4 text-center">Usos / Referidos</th>
-                  <th className="pb-4 text-right">Pendientes</th>
-                  <th className="pb-4 text-right">Cobradas</th>
-                  <th className="pb-4 text-center">Estatus</th>
-                  <th className="pb-4 text-center">Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {salesPeople.map((u: any) => {
-                  const userCode = promoCodes.find((p: any) => (p.referrer === u.id || p.referrer?.id === u.id || (p.referrer && Number(p.referrer) === Number(u.id))) && p.code_type === 'SELLER');
-                  const referredCount = userCode ? userCode.used_count : 0;
-                  const userCommissions = commissions.filter((c: any) => c.salesperson === u.id);
-                  const paidTotal = userCommissions.filter((c: any) => c.status === 'PAID').reduce((sum, c) => sum + parseFloat(c.amount || 0), 0);
-                  const pendingTotal = userCommissions.filter((c: any) => c.status === 'PENDING').reduce((sum, c) => sum + parseFloat(c.amount || 0), 0);
-                  const isApproved = !!u.is_approved_seller;
+                  const isActive = activePoint === idx;
 
                   return (
-                    <tr key={u.id} className="border-b border-card-border/30 last:border-0 hover:bg-foreground/[0.02] transition-colors">
-                      <td className="py-3.5">
-                        <span className="font-black text-[10px] text-foreground">{u.username}</span>
-                        <p className="text-[8px] text-foreground/45 font-mono">{u.email}</p>
-                      </td>
-                      <td className="py-3.5 text-center">
-                        {userCode ? (
-                          <div className="flex items-center justify-center gap-2">
-                            <span className="font-mono font-black text-sm text-nectar-gold tracking-widest">{userCode.code}</span>
-                            <button
-                              onClick={() => {
-                                setPromoCode(userCode.code);
-                                setPromoCodeType(userCode.code_type);
-                                setPromoDiscount(parseFloat(userCode.discount_percentage));
-                                setPromoMaxUses(userCode.max_uses !== null && userCode.max_uses !== undefined ? String(userCode.max_uses) : '');
-                                setPromoValidUntil(userCode.valid_until || '');
-                                setPromoReferrer(String(u.id));
-                                setEditingPromoId(userCode.id);
-                                setPromoError('');
-                                setShowPromoModal(true);
-                              }}
-                              className="p-1 hover:text-nectar-gold text-foreground/40 transition-colors"
-                              title="Editar Código"
-                            >
-                              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5">
-                                <path d="M5.433 13.917l1.262-3.155A4 4 0 017.58 9.42l6.92-6.918a2.121 2.121 0 013 3l-6.92 6.918c-.383.383-.84.685-1.343.886l-3.155 1.262a.5.5 0 01-.65-.65z" />
-                                <path d="M3.5 5.75c0-.69.56-1.25 1.25-1.25H10A.75.75 0 0010 3H4.75A2.75 2.75 0 002 5.75v9.5A2.75 2.75 0 004.75 18h9.5A2.75 2.75 0 0017 15.25V10a.75.75 0 00-1.5 0v5.25c0 .69-.56 1.25-1.25 1.25h-9.5c-.69 0-1.25-.56-1.25-1.25v-9.5z" />
-                              </svg>
-                            </button>
-                          </div>
-                        ) : (
-                          <button
-                            onClick={() => {
-                              setPromoCode(`NECTAR-${u.username.toUpperCase()}`);
-                              setPromoCodeType('SELLER');
-                              setPromoDiscount(10);
-                              setPromoMaxUses('');
-                              setPromoValidUntil('');
-                              setPromoReferrer(String(u.id));
-                              setEditingPromoId(null);
-                              setPromoError('');
-                              setShowPromoModal(true);
-                            }}
-                            className="px-3 py-1 bg-nectar-gold/10 hover:bg-nectar-gold hover:text-background text-[7px] font-black uppercase tracking-widest rounded-xl border border-nectar-gold/20 transition-all font-bold"
-                          >
-                            + Crear Código
-                          </button>
-                        )}
-                      </td>
-                      <td className="py-3.5 text-center font-mono font-bold text-xs">{referredCount}</td>
-                      <td className="py-3.5 text-right font-mono font-bold text-[11px] text-yellow-500">
-                        ${pendingTotal.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
-                      </td>
-                      <td className="py-3.5 text-right font-mono font-bold text-[11px] text-green-400">
-                        ${paidTotal.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
-                      </td>
-                      <td className="py-3.5 text-center">
-                        {isApproved ? (
-                          <span className="px-3 py-1 bg-green-500/10 text-green-500 text-[7px] font-black uppercase tracking-widest rounded-full border border-green-500/20">Aprobado</span>
-                        ) : (
-                          <span className="px-3 py-1 bg-red-500/10 text-red-400 text-[7px] font-black uppercase tracking-widest rounded-full border border-red-500/20">Pendiente</span>
-                        )}
-                      </td>
-                      <td className="py-3.5 text-center">
-                        <button
-                          onClick={() => handleToggleApproval(u.id, isApproved)}
-                          disabled={togglingUser === u.id}
-                          className={`px-4 py-1.5 text-[7px] font-black uppercase tracking-widest rounded-xl transition-all hover:scale-105 active:scale-95 disabled:opacity-40 font-bold ${isApproved
-                            ? 'bg-red-950/40 border border-red-500/30 hover:bg-red-900/40 text-red-400'
-                            : 'bg-green-950/40 border border-green-500/30 hover:bg-green-900/40 text-green-400'
-                            }`}
-                        >
-                          {togglingUser === u.id ? '...' : (isApproved ? 'Revocar' : 'Aprobar')}
-                        </button>
-                      </td>
-                    </tr>
+                    <g key={idx}>
+                      {/* Sales Dot */}
+                      <circle
+                        cx={x}
+                        cy={salesY}
+                        r={isActive ? 7 : 4}
+                        fill="#E2B355"
+                        className="transition-all duration-300 pointer-events-none"
+                      />
+                      {/* Costs Dot */}
+                      <circle
+                        cx={x}
+                        cy={costsY}
+                        r={isActive ? 6 : 3}
+                        fill="var(--foreground)"
+                        fillOpacity={isActive ? 1.0 : 0.6}
+                        className="transition-all duration-300 pointer-events-none"
+                      />
+
+                      {/* Month Label */}
+                      <text
+                        x={x}
+                        y={chartHeight - 12}
+                        textAnchor="middle"
+                        fill="var(--foreground)"
+                        fillOpacity={isActive ? 0.9 : 0.3}
+                        className="text-[8px] font-black uppercase tracking-wider transition-all duration-300"
+                      >
+                        {point.month}
+                      </text>
+                    </g>
                   );
                 })}
-                {salesPeople.length === 0 && (
-                  <tr>
-                    <td colSpan={7} className="py-12 text-center text-[9px] font-black uppercase tracking-widest opacity-25">
-                      No hay vendedores registrados en el sistema
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
 
-        {/* Commissions Table */}
-        <div className="p-8 md:p-10 rounded-[3rem] bg-card-bg border border-card-border shadow-xl">
-          <div className="mb-8 flex items-center justify-between">
-            <div>
-              <h3 className="text-xs font-black uppercase tracking-[0.3em] opacity-30">Historial de Comisiones</h3>
-              <p className="text-[9px] font-bold text-foreground/30 mt-1 uppercase tracking-wider">Todas las comisiones generadas por ventas referidas</p>
+                {/* Hover Interactive Zones */}
+                {monthly_trend.map((point, idx) => {
+                  const sliceWidth = (chartWidth - padding * 2) / (monthly_trend.length - 1);
+                  const x = padding + (idx * (chartWidth - padding * 2)) / (monthly_trend.length - 1);
+                  return (
+                    <rect
+                      key={`hit-${idx}`}
+                      x={x - sliceWidth / 2}
+                      y={padding - 10}
+                      width={sliceWidth}
+                      height={chartHeight - padding * 2 + 20}
+                      fill="transparent"
+                      className="cursor-crosshair"
+                      onMouseEnter={() => setActivePoint(idx)}
+                      onMouseMove={() => setActivePoint(idx)}
+                      onMouseLeave={() => setActivePoint(null)}
+                    />
+                  );
+                })}
+              </svg>
+
+              {/* Chart Legend */}
+              <div className="flex gap-8 justify-center mt-6 text-[8px] font-black uppercase tracking-widest">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-0.5 bg-[#E2B355]"></div>
+                  <span className="opacity-80">Ingresos</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-0.5 bg-foreground border-dashed border-t-2"></div>
+                  <span className="opacity-50">Costos de Infraestructura</span>
+                </div>
+              </div>
+
+              {/* Unified Hover Tooltip Card */}
+              {activePoint !== null && (
+                <div className="absolute top-4 right-4 bg-card-bg/95 backdrop-blur-md border border-card-border p-5 rounded-3xl shadow-2xl text-[9px] font-black uppercase tracking-widest space-y-2.5 z-30 pointer-events-none animate-fadeIn border-nectar-gold/30">
+                  <div className="flex justify-between items-center gap-6 border-b border-card-border/50 pb-2">
+                    <span className="text-nectar-gold font-black">Periodo</span>
+                    <span className="text-foreground">{monthly_trend[activePoint].month}</span>
+                  </div>
+                  <div className="flex justify-between gap-10">
+                    <span className="opacity-40">Ingresos</span>
+                    <span className="text-foreground">${Math.round(monthly_trend[activePoint].sales).toLocaleString('es-MX')}</span>
+                  </div>
+                  <div className="flex justify-between gap-10">
+                    <span className="opacity-40">Costos</span>
+                    <span className="text-foreground">${Math.round(monthly_trend[activePoint].costs).toLocaleString('es-MX')}</span>
+                  </div>
+                  <div className="flex justify-between gap-10 pt-2 border-t border-card-border/50 text-green-400">
+                    <span>Utilidad</span>
+                    <span>${Math.round(monthly_trend[activePoint].sales - monthly_trend[activePoint].costs).toLocaleString('es-MX')}</span>
+                  </div>
+                </div>
+              )}
             </div>
-            <span className="px-4 py-1.5 bg-foreground/5 rounded-full text-[8px] font-black uppercase tracking-widest opacity-50">
-              {commissions.length} registros
-            </span>
+          </section>
+
+          {/* Cashflow Calendar Columns */}
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-12">
+            {/* Clients Billing */}
+            <section className="bg-card-bg border border-card-border rounded-[2.5rem] p-8 md:p-10 shadow-lg">
+              <div className="mb-8">
+                <h3 className="text-xs font-black uppercase tracking-[0.3em] opacity-30">Facturación Contractual</h3>
+                <p className="text-[9px] font-bold text-foreground/40 mt-1 uppercase tracking-wider">Próximos cobros a clientes por planes activos</p>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-card-border/50 text-[8px] font-black uppercase tracking-widest opacity-40">
+                      <th className="pb-4">Cliente</th>
+                      <th className="pb-4 text-right">Monto</th>
+                      <th className="pb-4 text-center">Vence</th>
+                      <th className="pb-4 text-right">Estado</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {client_billing.map(billing => (
+                      <tr key={billing.id} className="border-b border-card-border/30 last:border-0 hover:bg-foreground/[0.02] transition-colors">
+                        <td className="py-4 pr-4">
+                          <h4 className="font-black text-sm">{billing.client}</h4>
+                          <p className="text-[7px] font-bold text-nectar-gold uppercase tracking-wider mt-0.5">{billing.plan}</p>
+                        </td>
+                        <td className="py-4 text-right font-bold text-sm">
+                          ${billing.amount.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                        </td>
+                        <td className="py-4 text-center text-[10px] font-bold opacity-60">
+                          {new Date(billing.next_payment_date).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' })}
+                        </td>
+                        <td className="py-4 text-right">
+                          {billing.status === 'overdue' ? (
+                            <span className="px-3 py-1.5 bg-red-500/10 text-red-500 text-[7px] font-black uppercase tracking-widest rounded-full animate-pulse">Vencido</span>
+                          ) : billing.status === 'upcoming' ? (
+                            <span className="px-3 py-1.5 bg-amber-500/10 text-amber-500 text-[7px] font-black uppercase tracking-widest rounded-full">En {billing.days_remaining} días</span>
+                          ) : (
+                            <span className="px-3 py-1.5 bg-green-500/10 text-green-500 text-[7px] font-black uppercase tracking-widest rounded-full">Al día</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                    {client_billing.length === 0 && (
+                      <tr>
+                        <td colSpan={4} className="py-12 text-center text-[9px] font-black uppercase tracking-widest opacity-25">
+                          Sin cobros contractuales pendientes
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+            {/* Server Infrastructure Cost Vencimientos */}
+            <section className="bg-card-bg border border-card-border rounded-[2.5rem] p-8 md:p-10 shadow-lg">
+              <div className="mb-8">
+                <h3 className="text-xs font-black uppercase tracking-[0.3em] opacity-30">Vencimiento de Infraestructura</h3>
+                <p className="text-[9px] font-bold text-foreground/40 mt-1 uppercase tracking-wider">Fechas límites de pago para servidores y servicios</p>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-card-border/50 text-[8px] font-black uppercase tracking-widest opacity-40">
+                      <th className="pb-4">Infraestructura</th>
+                      <th className="pb-4 text-right">Costo</th>
+                      <th className="pb-4 text-center">Vence</th>
+                      <th className="pb-4 text-right">Estado</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {server_billing.map(billing => (
+                      <tr key={billing.id} className="border-b border-card-border/30 last:border-0 hover:bg-foreground/[0.02] transition-colors">
+                        <td className="py-4 pr-4">
+                          <h4 className="font-black text-sm">{billing.name}</h4>
+                          <p className="text-[7px] font-bold text-nectar-gold uppercase tracking-wider mt-0.5">{billing.provider}</p>
+                        </td>
+                        <td className="py-4 text-right font-bold text-sm">
+                          ${billing.amount.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                        </td>
+                        <td className="py-4 text-center text-[10px] font-bold opacity-60">
+                          {new Date(billing.next_payment_date).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' })}
+                        </td>
+                        <td className="py-4 text-right">
+                          {billing.status === 'overdue' ? (
+                            <span className="px-3 py-1.5 bg-red-500/10 text-red-500 text-[7px] font-black uppercase tracking-widest rounded-full animate-pulse">Expirado</span>
+                          ) : billing.status === 'upcoming' ? (
+                            <span className="px-3 py-1.5 bg-amber-500/10 text-amber-500 text-[7px] font-black uppercase tracking-widest rounded-full">Por pagar</span>
+                          ) : (
+                            <span className="px-3 py-1.5 bg-green-500/10 text-green-500 text-[7px] font-black uppercase tracking-widest rounded-full">Al día</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                    {server_billing.length === 0 && (
+                      <tr>
+                        <td colSpan={4} className="py-12 text-center text-[9px] font-black uppercase tracking-widest opacity-25">
+                          Sin vencimientos de servidores registrados
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </section>
           </div>
-          {salesLoading ? (
-            <div className="py-10 flex justify-center">
-              <div className="w-8 h-8 border-2 border-nectar-gold border-t-transparent rounded-full animate-spin" />
+
+          {/* Control de Mensualidades y Emisión de CFDI (SAT) */}
+          <section className="bg-card-bg border border-card-border rounded-[2.5rem] p-8 md:p-10 shadow-lg mt-12">
+            <div className="mb-8">
+              <h3 className="text-xs font-black uppercase tracking-[0.3em] opacity-30">Control de Mensualidades y Emisión de CFDI (SAT)</h3>
+              <p className="text-[9px] font-bold text-foreground/40 mt-1 uppercase tracking-wider">Validación de comprobantes SPEI/Depósitos y registro de Facturas timbradas</p>
             </div>
-          ) : (
+
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="border-b border-card-border/50 text-[8px] font-black uppercase tracking-widest opacity-40">
-                    <th className="pb-4">Vendedor</th>
-                    <th className="pb-4">Cliente</th>
-                    <th className="pb-4 text-center">Plan</th>
-                    <th className="pb-4 text-center">Mensualidad</th>
+                    <th className="pb-4">Contrato / Mes</th>
+                    <th className="pb-4 text-right">Monto</th>
                     <th className="pb-4 text-center">Vencimiento</th>
-                    <th className="pb-4 text-right">Monto Pagado</th>
-                    <th className="pb-4 text-center">Comisión %</th>
-                    <th className="pb-4 text-right">Tu Pago</th>
-                    <th className="pb-4 text-center">Estado</th>
-                    <th className="pb-4 text-center">Acción</th>
+                    <th className="pb-4 text-center">Comprobante</th>
+                    <th className="pb-4 text-center">Estatus</th>
+                    <th className="pb-4 text-right">Facturación CFDI (SAT)</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {commissions.map((comm) => (
-                    <tr key={comm.id} className="border-b border-card-border/30 last:border-0 hover:bg-foreground/[0.02] transition-colors">
-                      <td className="py-3.5">
-                        <div>
-                          <span className="font-black text-[10px] text-foreground">{comm.salesperson_email?.split('@')[0]}</span>
-                          <p className="text-[8px] text-foreground/40 font-mono">{comm.salesperson_email}</p>
-                        </div>
+                  {installments.map(inst => (
+                    <tr key={inst.id} className="border-b border-card-border/30 last:border-0 hover:bg-foreground/[0.02] transition-colors">
+                      <td className="py-4 pr-4">
+                        <h4 className="font-black text-sm">Contrato #{inst.contract}</h4>
+                        {inst.client_name && (
+                          <p className="text-[9px] font-black text-foreground mt-0.5">{inst.client_name}</p>
+                        )}
+                        {inst.project_name && (
+                          <p className="text-[8px] font-bold text-nectar-gold opacity-80 mt-0.5">{inst.project_name}</p>
+                        )}
+                        <p className="text-[7px] font-bold text-foreground/40 uppercase tracking-wider mt-1">Mensualidad {inst.installment_number} de 6</p>
                       </td>
-                      <td className="py-3.5 font-bold text-[11px] text-foreground/80">{comm.client_name}</td>
-                      <td className="py-3.5 text-center">
-                        <span className="px-2 py-0.5 bg-foreground/5 rounded-full text-[8px] font-black uppercase tracking-wider text-foreground/50">{comm.plan_name}</span>
+                      <td className="py-4 text-right font-bold text-sm">
+                        ${parseFloat(inst.amount).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
                       </td>
-                      <td className="py-3.5 text-center font-mono font-bold text-xs text-foreground/70">#{comm.installment_number}</td>
-                      <td className="py-3.5 text-center text-[10px] font-bold text-foreground/50">
-                        {comm.due_date ? new Date(comm.due_date + 'T00:00:00').toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: '2-digit' }) : '—'}
+                      <td className="py-4 text-center text-[10px] font-bold opacity-60">
+                        {inst.due_date}
                       </td>
-                      <td className="py-3.5 text-right font-mono font-bold text-[11px]">
-                        ${parseFloat(comm.installment_amount || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
-                      </td>
-                      <td className="py-3.5 text-center font-mono font-black text-sm text-nectar-gold">
-                        {parseFloat(comm.commission_percentage)}%
-                      </td>
-                      <td className="py-3.5 text-right font-mono font-black text-sm text-foreground">
-                        ${parseFloat(comm.amount || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
-                      </td>
-                      <td className="py-3.5 text-center">
-                        {comm.status === 'PAID' ? (
-                          <span className="px-3 py-1 bg-green-500/10 text-green-500 text-[7px] font-black uppercase tracking-widest rounded-full border border-green-500/20">Pagada</span>
+                      <td className="py-4 text-center">
+                        {inst.receipt_file ? (
+                          <a
+                            href={getInlineViewUrl(inst.receipt_file, 'receipt', inst.id)}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="px-2.5 py-1 bg-nectar-gold/10 text-nectar-gold hover:bg-nectar-gold hover:text-background text-[8px] font-black uppercase tracking-widest rounded-full transition-all inline-block font-bold border border-nectar-gold/20"
+                          >
+                            Ver Comprobante
+                          </a>
                         ) : (
-                          <span className="px-3 py-1 bg-yellow-500/10 text-yellow-500 text-[7px] font-black uppercase tracking-widest rounded-full border border-yellow-500/20">Pendiente</span>
+                          <span className="text-[8px] opacity-35 font-bold uppercase">No cargado</span>
                         )}
                       </td>
-                      <td className="py-3.5 text-center">
-                        {comm.status === 'PENDING' ? (
-                          <button
-                            onClick={() => handleMarkCommissionPaid(comm.id)}
-                            disabled={markingPaid === comm.id}
-                            className="px-4 py-1.5 bg-green-600 hover:bg-green-500 text-white text-[7px] font-black uppercase tracking-widest rounded-xl transition-all hover:scale-105 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
+                      <td className="py-4 text-center">
+                        <div className="flex flex-col items-center gap-1.5">
+                          <select
+                            value={inst.status}
+                            onChange={(e) => handleUpdateInstallmentStatus(inst.id, e.target.value)}
+                            className={`px-2.5 py-1 text-[7px] font-black uppercase tracking-wider rounded-full bg-background border focus:outline-none cursor-pointer transition-colors ${inst.status === 'PAID'
+                              ? 'border-green-500/30 text-green-500 bg-green-500/5'
+                              : inst.status === 'CANCELLED'
+                                ? 'border-red-500/30 text-red-500 bg-red-500/5'
+                                : inst.receipt_file
+                                  ? 'border-orange-500/30 text-orange-500 bg-orange-500/5'
+                                  : 'border-yellow-500/30 text-yellow-500 bg-yellow-500/5'
+                              }`}
                           >
-                            {markingPaid === comm.id ? '...' : 'Marcar Pagada'}
-                          </button>
+                            <option value="PENDING" className="text-yellow-500">Pendiente</option>
+                            <option value="PAID" className="text-green-500">Pagado</option>
+                            <option value="CANCELLED" className="text-red-500">Cancelado</option>
+                          </select>
+                          {inst.status !== 'PAID' && inst.receipt_file && (
+                            <button
+                              onClick={() => handleUpdateInstallmentStatus(inst.id, 'PAID')}
+                              className="mt-1 px-2 py-0.5 bg-green-600 hover:bg-green-500 text-white text-[7px] font-black uppercase tracking-widest rounded-md hover:scale-105 active:scale-95 transition-all shadow-sm"
+                            >
+                              Aprobar Pago
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                      <td className="py-4 text-right">
+                        {inst.cfdi_uuid ? (
+                          <div className="text-right">
+                            <span className="px-2.5 py-1 bg-green-500/10 text-green-400 text-[7px] font-black uppercase tracking-widest rounded-full">Timbrada</span>
+                            <p className="text-[7px] font-mono text-foreground/45 mt-1 select-all">{inst.cfdi_uuid}</p>
+                          </div>
                         ) : (
-                          <span className="text-[8px] text-foreground/20 font-black">—</span>
+                          <div className="flex justify-end items-center gap-2">
+                            <input
+                              type="text"
+                              placeholder="UUID CFDI 4.0"
+                              value={cfdiInputs[inst.id] || ""}
+                              onChange={(e) => setCfdiInputs(prev => ({ ...prev, [inst.id]: e.target.value }))}
+                              className="bg-background border border-card-border rounded-lg px-3 py-1.5 text-[8px] font-mono focus:outline-none focus:border-nectar-gold w-40 text-foreground"
+                            />
+                            <button
+                              onClick={() => handleSaveCFDI(inst.id)}
+                              className="px-3 py-1.5 bg-nectar-gold text-background text-[7px] font-black uppercase tracking-widest rounded-lg hover:scale-105 active:scale-95 transition-all"
+                            >
+                              Guardar
+                            </button>
+                          </div>
                         )}
                       </td>
                     </tr>
                   ))}
-                  {commissions.length === 0 && (
+                  {installments.length === 0 && (
                     <tr>
-                      <td colSpan={10} className="py-12 text-center text-[9px] font-black uppercase tracking-widest opacity-25">
-                        Sin comisiones registradas en el sistema
+                      <td colSpan={6} className="py-12 text-center text-[9px] font-black uppercase tracking-widest opacity-25">
+                        Sin mensualidades generadas en el sistema
+                      </td>
+                    </tr>
+                  )}
+               
+      {/* ── SALES KANBAN BOARD ── */}
+      {activeTab === 'kanban' && (
+        <div className="space-y-8 animate-fadeIn">
+          {/* Header & Filters */}
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-card-bg border border-card-border p-6 rounded-[2rem] shadow-lg">
+            <div>
+              <h2 className="text-xs font-black uppercase tracking-[0.4em] opacity-30 mb-1">Pipeline de Ventas</h2>
+              <p className="text-[9px] font-bold text-foreground/30 uppercase tracking-wider">Monitoreo y administración de prospectos y contratos en tiempo real</p>
+            </div>
+            
+            {/* Filters */}
+            <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
+              {/* Salesperson Filter */}
+              <div className="flex flex-col gap-1 min-w-[200px]">
+                <label className="text-[7.5px] font-black uppercase tracking-widest opacity-40 ml-2">Filtrar por Vendedor</label>
+                <select
+                  value={salespersonFilter}
+                  onChange={(e) => setSalespersonFilter(e.target.value)}
+                  className="bg-background border border-card-border rounded-xl px-4 py-2.5 text-xs text-foreground focus:outline-none focus:border-nectar-gold font-bold appearance-none cursor-pointer"
+                >
+                  <option value="all">👥 Todos los Vendedores</option>
+                  <option value="none">👤 Sin Vendedor Asignado</option>
+                  {salesPeople.map((sp: any) => (
+                    <option key={sp.id} value={sp.id}>
+                      🏷️ {sp.username} ({sp.email})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Search Bar */}
+              <div className="flex flex-col gap-1 min-w-[220px]">
+                <label className="text-[7.5px] font-black uppercase tracking-widest opacity-40 ml-2">Buscar Cliente / Idea</label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={kanbanSearch}
+                    onChange={(e) => setKanbanSearch(e.target.value)}
+                    placeholder="Buscar nombre, email..."
+                    className="w-full bg-background border border-card-border rounded-xl px-4 py-2.5 text-xs text-foreground focus:outline-none focus:border-nectar-gold pl-9"
+                  />
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 opacity-30 text-xs">🔍</span>
+                  {kanbanSearch && (
+                    <button
+                      onClick={() => setKanbanSearch('')}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground/40 hover:text-foreground text-xs font-bold"
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Kanban Board Columns Grid */}
+          <div className="flex gap-6 overflow-x-auto pb-6 custom-scrollbar snap-x">
+            {/* Column 1: Prospectos */}
+            <div className="flex-1 min-w-[290px] max-w-[340px] bg-card-bg/25 border border-card-border/40 p-5 rounded-[2.5rem] flex flex-col gap-4 snap-start">
+              <div className="flex justify-between items-center pb-2 border-b border-card-border/20">
+                <span className="text-[10px] font-black uppercase tracking-widest opacity-70 flex items-center gap-1.5">
+                  🔍 Prospectos
+                </span>
+                <span className="px-2 py-0.5 bg-foreground/5 rounded-full text-[8.5px] font-bold opacity-50 font-mono">
+                  {filteredLeads.filter((l: any) => l.status === 'PROSPECT').length}
+                </span>
+              </div>
+              <div className="flex-1 overflow-y-auto max-h-[60vh] space-y-4 pr-1 custom-scrollbar">
+                {filteredLeads.filter((l: any) => l.status === 'PROSPECT').map((lead: any) => (
+                  <KanbanLeadCard key={lead.id} lead={lead} />
+                ))}
+                {filteredLeads.filter((l: any) => l.status === 'PROSPECT').length === 0 && <EmptyColumn />}
+              </div>
+            </div>
+
+            {/* Column 2: Contactados */}
+            <div className="flex-1 min-w-[290px] max-w-[340px] bg-card-bg/25 border border-card-border/40 p-5 rounded-[2.5rem] flex flex-col gap-4 snap-start">
+              <div className="flex justify-between items-center pb-2 border-b border-card-border/20">
+                <span className="text-[10px] font-black uppercase tracking-widest opacity-70 flex items-center gap-1.5 text-blue-400">
+                  📞 Contactados
+                </span>
+                <span className="px-2 py-0.5 bg-blue-500/10 text-blue-400 rounded-full text-[8.5px] font-bold font-mono">
+                  {filteredLeads.filter((l: any) => l.status === 'CONTACTED').length}
+                </span>
+              </div>
+              <div className="flex-1 overflow-y-auto max-h-[60vh] space-y-4 pr-1 custom-scrollbar">
+                {filteredLeads.filter((l: any) => l.status === 'CONTACTED').map((lead: any) => (
+                  <KanbanLeadCard key={lead.id} lead={lead} />
+                ))}
+                {filteredLeads.filter((l: any) => l.status === 'CONTACTED').length === 0 && <EmptyColumn />}
+              </div>
+            </div>
+
+            {/* Column 3: Propuesta */}
+            <div className="flex-1 min-w-[290px] max-w-[340px] bg-card-bg/25 border border-card-border/40 p-5 rounded-[2.5rem] flex flex-col gap-4 snap-start">
+              <div className="flex justify-between items-center pb-2 border-b border-card-border/20">
+                <span className="text-[10px] font-black uppercase tracking-widest opacity-70 flex items-center gap-1.5 text-amber-400">
+                  📋 Propuesta
+                </span>
+                <span className="px-2 py-0.5 bg-amber-500/10 text-amber-400 rounded-full text-[8.5px] font-bold font-mono">
+                  {filteredLeads.filter((l: any) => l.status === 'PROPOSAL').length}
+                </span>
+              </div>
+              <div className="flex-1 overflow-y-auto max-h-[60vh] space-y-4 pr-1 custom-scrollbar">
+                {filteredLeads.filter((l: any) => l.status === 'PROPOSAL').map((lead: any) => (
+                  <KanbanLeadCard key={lead.id} lead={lead} />
+                ))}
+                {filteredLeads.filter((l: any) => l.status === 'PROPOSAL').length === 0 && <EmptyColumn />}
+              </div>
+            </div>
+
+            {/* Column 4: Perdidos */}
+            <div className="flex-1 min-w-[290px] max-w-[340px] bg-card-bg/25 border border-card-border/40 p-5 rounded-[2.5rem] flex flex-col gap-4 snap-start">
+              <div className="flex justify-between items-center pb-2 border-b border-card-border/20">
+                <span className="text-[10px] font-black uppercase tracking-widest opacity-70 flex items-center gap-1.5 text-red-400">
+                  ❌ Perdidos
+                </span>
+                <span className="px-2 py-0.5 bg-red-500/10 text-red-400 rounded-full text-[8.5px] font-bold font-mono">
+                  {filteredLeads.filter((l: any) => l.status === 'LOST').length}
+                </span>
+              </div>
+              <div className="flex-1 overflow-y-auto max-h-[60vh] space-y-4 pr-1 custom-scrollbar">
+                {filteredLeads.filter((l: any) => l.status === 'LOST').map((lead: any) => (
+                  <KanbanLeadCard key={lead.id} lead={lead} />
+                ))}
+                {filteredLeads.filter((l: any) => l.status === 'LOST').length === 0 && <EmptyColumn />}
+              </div>
+            </div>
+
+            {/* Column 5: Ganados */}
+            <div className="flex-1 min-w-[290px] max-w-[340px] bg-card-bg/25 border border-card-border/40 p-5 rounded-[2.5rem] flex flex-col gap-4 snap-start">
+              <div className="flex justify-between items-center pb-2 border-b border-card-border/20">
+                <span className="text-[10px] font-black uppercase tracking-widest opacity-70 flex items-center gap-1.5 text-green-400">
+                  ✅ Ganados
+                </span>
+                <span className="px-2 py-0.5 bg-green-500/10 text-green-400 rounded-full text-[8.5px] font-bold font-mono">
+                  {filteredLeads.filter((l: any) => l.status === 'WON').length}
+                </span>
+              </div>
+              <div className="flex-1 overflow-y-auto max-h-[60vh] space-y-4 pr-1 custom-scrollbar">
+                {filteredLeads.filter((l: any) => l.status === 'WON').map((lead: any) => (
+                  <KanbanLeadCard key={lead.id} lead={lead} />
+                ))}
+                {filteredLeads.filter((l: any) => l.status === 'WON').length === 0 && <EmptyColumn />}
+              </div>
+            </div>
+
+            {/* Column 6: Contratos Activos */}
+            <div className="flex-1 min-w-[310px] max-w-[360px] bg-nectar-gold/5 border border-nectar-gold/20 p-5 rounded-[2.5rem] flex flex-col gap-4 shadow-[0_0_20px_rgba(198,138,30,0.02)] snap-start">
+              <div className="flex justify-between items-center pb-2 border-b border-nectar-gold/20">
+                <span className="text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 text-nectar-gold animate-pulse">
+                  📄 Contratos Activos
+                </span>
+                <span className="px-2 py-0.5 bg-nectar-gold/10 text-nectar-gold rounded-full text-[8.5px] font-bold font-mono border border-nectar-gold/15">
+                  {filteredContracts.filter((c: any) => c.is_fully_signed && c.is_active).length}
+                </span>
+              </div>
+              <div className="flex-1 overflow-y-auto max-h-[60vh] space-y-4 pr-1 custom-scrollbar">
+                {filteredContracts.filter((c: any) => c.is_fully_signed && c.is_active).map((contract: any) => (
+                  <KanbanContractCard key={contract.id} contract={contract} />
+                ))}
+                {filteredContracts.filter((c: any) => c.is_fully_signed && c.is_active).length === 0 && (
+                  <div className="h-full flex items-center justify-center py-20 text-center text-[9px] font-black uppercase tracking-widest opacity-20 border border-dashed border-nectar-gold/25 rounded-2xl">
+                    Sin contratos activos
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── MODULAR QUOTES TAB ── */}
+      {activeTab === 'quotes' && (
+        <section id="cotizaciones-section" className="space-y-10 animate-fadeIn">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+            <div>
+              <h2 className="text-xs font-black uppercase tracking-[0.4em] opacity-30 mb-1">Cotizaciones Modulares</h2>
+              <p className="text-[9px] font-bold text-foreground/30 uppercase tracking-wider">Historial de cotizaciones modularizadas emitidas en el sistema</p>
+            </div>
+            <button
+              onClick={() => {
+                setProspectName('');
+                setProspectEmail('');
+                setProjectName('');
+                setProjectDesc('');
+                setDeliveryWeeks(4);
+                setSelectedModules([]);
+                setQuoteError('');
+                setSelectedClientId('');
+                setQuoteClientType('prospect');
+                setShowQuoteModal(true);
+              }}
+              className="px-5 py-2.5 bg-nectar-gold text-background text-[9px] font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 transition-all shadow-md font-bold"
+            >
+              + Nueva Cotización
+            </button>
+          </div>
+
+          <div className="p-8 md:p-10 rounded-[3rem] bg-card-bg border border-card-border shadow-xl">
+            {quotesLoading ? (
+              <div className="py-10 flex justify-center">
+                <div className="w-8 h-8 border-2 border-nectar-gold border-t-transparent rounded-full animate-spin" />
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-card-border/50 text-[8px] font-black uppercase tracking-widest opacity-40">
+                      <th className="pb-4">Cliente / Razón Social</th>
+                      <th className="pb-4">Proyecto</th>
+                      <th className="pb-4">Vendedor</th>
+                      <th className="pb-4 text-right">Monto Estimado</th>
+                      <th className="pb-4 text-center">Entrega</th>
+                      <th className="pb-4 text-center">Estatus</th>
+                      <th className="pb-4 text-right">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {quotes.map((quote: any) => {
+                      const spUser = users.find(u => u.id === quote.salesperson || u.id === quote.salesperson_id);
+                      return (
+                        <tr key={quote.id} className="border-b border-card-border/30 last:border-0 hover:bg-foreground/[0.02] transition-colors">
+                          <td className="py-4 pr-4">
+                            <h4 className="font-black text-sm">{quote.client_name}</h4>
+                            <p className="text-[7.5px] font-bold text-foreground/45 uppercase tracking-wider mt-0.5">{quote.client_email}</p>
+                          </td>
+                          <td className="py-4 font-bold text-xs">
+                            {quote.project_name}
+                          </td>
+                          <td className="py-4 text-[10px] font-bold text-foreground/60">
+                            {spUser ? spUser.username : 'Sin Asignar'}
+                          </td>
+                          <td className="py-4 text-right font-mono font-bold text-xs text-nectar-gold">
+                            ${parseFloat(quote.total_price || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                          </td>
+                          <td className="py-4 text-center text-[10px] font-bold opacity-60">
+                            {quote.estimated_delivery_weeks} Semanas
+                          </td>
+                          <td className="py-4 text-center">
+                            {quote.status === 'APPROVED' ? (
+                              <span className="px-3 py-1 bg-green-500/10 text-green-500 text-[7px] font-black uppercase tracking-widest rounded-full border border-green-500/20">Aprobado</span>
+                            ) : quote.status === 'REJECTED' ? (
+                              <span className="px-3 py-1 bg-red-500/10 text-red-500 text-[7px] font-black uppercase tracking-widest rounded-full border border-red-500/20">Rechazado</span>
+                            ) : quote.status === 'SENT' ? (
+                              <span className="px-3 py-1 bg-blue-500/10 text-blue-500 text-[7px] font-black uppercase tracking-widest rounded-full border border-blue-500/20">Enviado</span>
+                            ) : (
+                              <span className="px-3 py-1 bg-yellow-500/10 text-yellow-500 text-[7px] font-black uppercase tracking-widest rounded-full border border-yellow-500/20">Borrador</span>
+                            )}
+                          </td>
+                          <td className="py-4 text-right">
+                            <div className="flex justify-end gap-2 flex-wrap">
+                              {quote.status === 'DRAFT' && (
+                                <button
+                                  onClick={() => handleUpdateQuoteStatus(quote.id, 'SENT')}
+                                  className="px-2.5 py-1.5 bg-blue-500/10 hover:bg-blue-500 text-blue-400 hover:text-white text-[8px] font-black uppercase tracking-widest rounded-lg transition-all border border-blue-500/25"
+                                >
+                                  Enviar
+                                </button>
+                              )}
+                              
+                              {quote.status !== 'APPROVED' && quote.status !== 'REJECTED' && (
+                                <>
+                                  <button
+                                    onClick={() => handleUpdateQuoteStatus(quote.id, 'APPROVED')}
+                                    className="px-2.5 py-1.5 bg-green-500/10 hover:bg-green-500 text-green-400 hover:text-white text-[8px] font-black uppercase tracking-widest rounded-lg transition-all border border-green-500/25"
+                                  >
+                                    Aprobar
+                                  </button>
+                                  <button
+                                    onClick={() => handleUpdateQuoteStatus(quote.id, 'REJECTED')}
+                                    className="px-2.5 py-1.5 bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white text-[8px] font-black uppercase tracking-widest rounded-lg transition-all border border-red-500/25"
+                                  >
+                                    Rechazar
+                                  </button>
+                                </>
+                              )}
+
+                              <button
+                                onClick={() => handleRegenerateQuotePDF(quote.id)}
+                                className="px-2.5 py-1.5 bg-card-border hover:bg-white hover:text-background text-[8px] font-black uppercase tracking-widest rounded-lg transition-all"
+                                title="Regenerar PDF"
+                              >
+                                🔄 PDF
+                              </button>
+
+                              {quote.pdf_file ? (
+                                <a
+                                  href={getInlineViewUrl(quote.pdf_file, 'quote', quote.id)}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="px-2.5 py-1.5 bg-nectar-gold hover:bg-nectar-gold/90 text-background text-[8px] font-black uppercase tracking-widest rounded-lg transition-all inline-block font-bold"
+                                >
+                                  Ver PDF
+                                </a>
+                              ) : (
+                                <span className="text-[8px] opacity-35 font-bold uppercase py-1.5 inline-block pr-2">Sin PDF</span>
+                              )}
+
+                              <button
+                                onClick={() => handleDeleteQuote(quote.id)}
+                                className="px-2 py-1 bg-red-500/5 hover:bg-red-500 text-red-500 hover:text-white text-xs rounded transition-all"
+                              >
+                                ✖
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                    {quotes.length === 0 && (
+                      <tr>
+                        <td colSpan={7} className="py-12 text-center text-[9px] font-black uppercase tracking-widest opacity-25">
+                          Sin cotizaciones modularizadas registradas
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
+      {/* ── ADMIN SALES COMMAND CENTER ── */}
+      {activeTab === 'sales' && (
+        <section id="ventas-section" className="space-y-10 animate-fadeIn">
+          <div>
+            <h2 className="text-xs font-black uppercase tracking-[0.4em] opacity-30 mb-1">Panel de Ventas</h2>
+            <p className="text-[9px] font-bold text-foreground/30 uppercase tracking-wider">Control global de vendedores, comisiones y códigos de referido</p>
+          </div>
+
+          {/* Sales KPI Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
+            <div className="p-6 rounded-[2rem] bg-card-bg border border-card-border relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-green-500/5 blur-3xl rounded-full" />
+              <span className="text-[8px] font-black uppercase tracking-widest opacity-40">Comisiones Pagadas</span>
+              <h3 className="text-2xl font-black tracking-tight mt-2 text-green-400 font-mono">
+                ${((commissionSummary?.paid_total) || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                <span className="text-[9px] font-bold opacity-50 ml-1">MXN</span>
+              </h3>
+              <p className="text-[9px] text-foreground/40 mt-1 uppercase tracking-wider font-bold">Liquidadas a vendedores</p>
+            </div>
+            <div className="p-6 rounded-[2rem] bg-card-bg border border-card-border relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-yellow-500/5 blur-3xl rounded-full" />
+              <span className="text-[8px] font-black uppercase tracking-widest opacity-40">Comisiones Pendientes</span>
+              <h3 className="text-2xl font-black tracking-tight mt-2 text-yellow-400 font-mono">
+                ${((commissionSummary?.pending_total) || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                <span className="text-[9px] font-bold opacity-50 ml-1">MXN</span>
+              </h3>
+              <p className="text-[9px] text-foreground/40 mt-1 uppercase tracking-wider font-bold">Por liquidar a vendedores</p>
+            </div>
+            <div className="p-6 rounded-[2rem] bg-card-bg border border-card-border relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-nectar-gold/5 blur-3xl rounded-full" />
+              <span className="text-[8px] font-black uppercase tracking-widest opacity-40">Contratos Referidos</span>
+              <h3 className="text-2xl font-black tracking-tight mt-2 text-nectar-gold font-mono">
+                {commissionSummary?.referred_contracts_count ?? 0}
+                <span className="text-[9px] font-bold opacity-50 ml-1">Contratos</span>
+              </h3>
+              <p className="text-[9px] text-foreground/40 mt-1 uppercase tracking-wider font-bold">Adquiridos por vendedores</p>
+            </div>
+            <div className="p-6 rounded-[2rem] bg-card-bg border border-card-border relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 blur-3xl rounded-full" />
+              <span className="text-[8px] font-black uppercase tracking-widest opacity-40">Vendedores Activos</span>
+              <h3 className="text-2xl font-black tracking-tight mt-2 text-blue-400 font-mono">
+                {commissionSummary?.active_sellers ?? 0}
+                <span className="text-[9px] font-bold opacity-50 ml-1">SALES</span>
+              </h3>
+              <p className="text-[9px] text-foreground/40 mt-1 uppercase tracking-wider font-bold">Usuarios con rol vendedor</p>
+            </div>
+          </div>
+
+          {/* Gestión de Vendedores Table */}
+          <div className="p-8 md:p-10 rounded-[3rem] bg-card-bg border border-card-border shadow-xl">
+            <div className="mb-8 flex items-center justify-between flex-wrap gap-4 text-left">
+              <div>
+                <h3 className="text-xs font-black uppercase tracking-[0.3em] opacity-30">Gestión de Vendedores</h3>
+                <p className="text-[9px] font-bold text-foreground/30 mt-1 uppercase tracking-wider">Aprobación y métricas de desempeño de vendedores</p>
+              </div>
+              <span className="px-4 py-1.5 bg-foreground/5 rounded-full text-[8px] font-black uppercase tracking-widest opacity-50 font-bold">
+                {salesPeople.length} vendedores registrados
+              </span>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-card-border/50 text-[8px] font-black uppercase tracking-widest opacity-40">
+                    <th className="pb-4">Email Vendedor</th>
+                    <th className="pb-4 text-center">Código Referido</th>
+                    <th className="pb-4 text-center">Usos / Referidos</th>
+                    <th className="pb-4 text-right">Pendientes</th>
+                    <th className="pb-4 text-right">Cobradas</th>
+                    <th className="pb-4 text-center">Estatus</th>
+                    <th className="pb-4 text-center">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {salesPeople.map((u: any) => {
+                    const userCode = promoCodes.find((p: any) => (p.referrer === u.id || p.referrer?.id === u.id || (p.referrer && Number(p.referrer) === Number(u.id))) && p.code_type === 'SELLER');
+                    const referredCount = userCode ? userCode.used_count : 0;
+                    const userCommissions = commissions.filter((c: any) => c.salesperson === u.id);
+                    const paidTotal = userCommissions.filter((c: any) => c.status === 'PAID').reduce((sum, c) => sum + parseFloat(c.amount || 0), 0);
+                    const pendingTotal = userCommissions.filter((c: any) => c.status === 'PENDING').reduce((sum, c) => sum + parseFloat(c.amount || 0), 0);
+                    const isApproved = !!u.is_approved_seller;
+
+                    return (
+                      <tr key={u.id} className="border-b border-card-border/30 last:border-0 hover:bg-foreground/[0.02] transition-colors">
+                        <td className="py-3.5">
+                          <span className="font-black text-[10px] text-foreground">{u.username}</span>
+                          <p className="text-[8px] text-foreground/45 font-mono">{u.email}</p>
+                        </td>
+                        <td className="py-3.5 text-center">
+                          {userCode ? (
+                            <div className="flex items-center justify-center gap-2">
+                              <span className="font-mono font-black text-sm text-nectar-gold tracking-widest">{userCode.code}</span>
+                              <button
+                                onClick={() => {
+                                  setPromoCode(userCode.code);
+                                  setPromoCodeType(userCode.code_type);
+                                  setPromoDiscount(parseFloat(userCode.discount_percentage));
+                                  setPromoMaxUses(userCode.max_uses !== null && userCode.max_uses !== undefined ? String(userCode.max_uses) : '');
+                                  setPromoValidUntil(userCode.valid_until || '');
+                                  setPromoReferrer(String(u.id));
+                                  setEditingPromoId(userCode.id);
+                                  setPromoError('');
+                                  setShowPromoModal(true);
+                                }}
+                                className="p-1 hover:text-nectar-gold text-foreground/40 transition-colors"
+                                title="Editar Código"
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5">
+                                  <path d="M5.433 13.917l1.262-3.155A4 4 0 017.58 9.42l6.92-6.918a2.121 2.121 0 013 3l-6.92 6.918c-.383.383-.84.685-1.343.886l-3.155 1.262a.5.5 0 01-.65-.65z" />
+                                  <path d="M3.5 5.75c0-.69.56-1.25 1.25-1.25H10A.75.75 0 0010 3H4.75A2.75 2.75 0 002 5.75v9.5A2.75 2.75 0 004.75 18h9.5A2.75 2.75 0 0017 15.25V10a.75.75 0 00-1.5 0v5.25c0 .69-.56 1.25-1.25 1.25h-9.5c-.69 0-1.25-.56-1.25-1.25v-9.5z" />
+                                </svg>
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => {
+                                setPromoCode(`NECTAR-${u.username.toUpperCase()}`);
+                                setPromoCodeType('SELLER');
+                                setPromoDiscount(10);
+                                setPromoMaxUses('');
+                                setPromoValidUntil('');
+                                setPromoReferrer(String(u.id));
+                                setEditingPromoId(null);
+                                setPromoError('');
+                                setShowPromoModal(true);
+                              }}
+                              className="px-3 py-1 bg-nectar-gold/10 hover:bg-nectar-gold hover:text-background text-[7px] font-black uppercase tracking-widest rounded-xl border border-nectar-gold/20 transition-all font-bold"
+                            >
+                              + Crear Código
+                            </button>
+                          )}
+                        </td>
+                        <td className="py-3.5 text-center font-mono font-bold text-xs">{referredCount}</td>
+                        <td className="py-3.5 text-right font-mono font-bold text-[11px] text-yellow-500">
+                          ${pendingTotal.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                        </td>
+                        <td className="py-3.5 text-right font-mono font-bold text-[11px] text-green-400">
+                          ${paidTotal.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                        </td>
+                        <td className="py-3.5 text-center">
+                          {isApproved ? (
+                            <span className="px-3 py-1 bg-green-500/10 text-green-500 text-[7px] font-black uppercase tracking-widest rounded-full border border-green-500/20">Aprobado</span>
+                          ) : (
+                            <span className="px-3 py-1 bg-red-500/10 text-red-400 text-[7px] font-black uppercase tracking-widest rounded-full border border-red-500/20">Pendiente</span>
+                          )}
+                        </td>
+                        <td className="py-3.5 text-center">
+                          <button
+                            onClick={() => handleToggleApproval(u.id, isApproved)}
+                            disabled={togglingUser === u.id}
+                            className={`px-4 py-1.5 text-[7px] font-black uppercase tracking-widest rounded-xl transition-all hover:scale-105 active:scale-95 disabled:opacity-40 font-bold ${isApproved
+                              ? 'bg-red-950/40 border border-red-500/30 hover:bg-red-900/40 text-red-400'
+                              : 'bg-green-950/40 border border-green-500/30 hover:bg-green-900/40 text-green-400'
+                              }`}
+                          >
+                            {togglingUser === u.id ? '...' : (isApproved ? 'Revocar' : 'Aprobar')}
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  {salesPeople.length === 0 && (
+                    <tr>
+                      <td colSpan={7} className="py-12 text-center text-[9px] font-black uppercase tracking-widest opacity-25">
+                        No hay vendedores registrados en el sistema
                       </td>
                     </tr>
                   )}
                 </tbody>
               </table>
             </div>
-          )}
-        </div>
+          </div>
 
-        {/* Promo Codes Table */}
-        <div className="p-8 md:p-10 rounded-[3rem] bg-card-bg border border-card-border shadow-xl">
-          <div className="mb-8 flex items-center justify-between flex-wrap gap-4 text-left">
-            <div>
-              <h3 className="text-xs font-black uppercase tracking-[0.3em] opacity-30">Códigos de Descuento y Referido</h3>
-              <p className="text-[9px] font-bold text-foreground/30 mt-1 uppercase tracking-wider">Todos los códigos del sistema — SELLER y CLIENT</p>
-            </div>
-            <div className="flex gap-4 items-center">
-              <button
-                onClick={() => {
-                  setPromoCode('');
-                  setPromoCodeType('CLIENT');
-                  setPromoDiscount(10);
-                  setPromoMaxUses('');
-                  setPromoValidUntil('');
-                  setPromoReferrer('');
-                  setPromoError('');
-                  setEditingPromoId(null);
-                  setShowPromoModal(true);
-                }}
-                className="px-5 py-2.5 bg-nectar-gold text-background text-[8px] font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 transition-all shadow-md font-bold"
-              >
-                + Crear Código
-              </button>
+          {/* Commissions Table */}
+          <div className="p-8 md:p-10 rounded-[3rem] bg-card-bg border border-card-border shadow-xl">
+            <div className="mb-8 flex items-center justify-between">
+              <div>
+                <h3 className="text-xs font-black uppercase tracking-[0.3em] opacity-30">Historial de Comisiones</h3>
+                <p className="text-[9px] font-bold text-foreground/30 mt-1 uppercase tracking-wider">Todas las comisiones generadas por ventas referidas</p>
+              </div>
               <span className="px-4 py-1.5 bg-foreground/5 rounded-full text-[8px] font-black uppercase tracking-widest opacity-50 font-bold">
-                {promoCodes.length} códigos
+                {commissions.length} registros
               </span>
             </div>
+            {salesLoading ? (
+              <div className="py-10 flex justify-center">
+                <div className="w-8 h-8 border-2 border-nectar-gold border-t-transparent rounded-full animate-spin" />
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-card-border/50 text-[8px] font-black uppercase tracking-widest opacity-40">
+                      <th className="pb-4">Vendedor</th>
+                      <th className="pb-4">Cliente</th>
+                      <th className="pb-4 text-center">Plan</th>
+                      <th className="pb-4 text-center">Mensualidad</th>
+                      <th className="pb-4 text-center">Vencimiento</th>
+                      <th className="pb-4 text-right">Monto Pagado</th>
+                      <th className="pb-4 text-center">Comisión %</th>
+                      <th className="pb-4 text-right">Tu Pago</th>
+                      <th className="pb-4 text-center">Estado</th>
+                      <th className="pb-4 text-center">Acción</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {commissions.map((comm) => (
+                      <tr key={comm.id} className="border-b border-card-border/30 last:border-0 hover:bg-foreground/[0.02] transition-colors">
+                        <td className="py-3.5">
+                          <div>
+                            <span className="font-black text-[10px] text-foreground">{comm.salesperson_email?.split('@')[0]}</span>
+                            <p className="text-[8px] text-foreground/40 font-mono">{comm.salesperson_email}</p>
+                          </div>
+                        </td>
+                        <td className="py-3.5 font-bold text-[11px] text-foreground/80">{comm.client_name}</td>
+                        <td className="py-3.5 text-center">
+                          <span className="px-2 py-0.5 bg-foreground/5 rounded-full text-[8px] font-black uppercase tracking-wider text-foreground/50">{comm.plan_name}</span>
+                        </td>
+                        <td className="py-3.5 text-center font-mono font-bold text-xs text-foreground/70">#{comm.installment_number}</td>
+                        <td className="py-3.5 text-center text-[10px] font-bold text-foreground/50">
+                          {comm.due_date ? new Date(comm.due_date + 'T00:00:00').toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: '2-digit' }) : '—'}
+                        </td>
+                        <td className="py-3.5 text-right font-mono font-bold text-[11px]">
+                          ${parseFloat(comm.installment_amount || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                        </td>
+                        <td className="py-3.5 text-center font-mono font-black text-sm text-nectar-gold">
+                          {parseFloat(comm.commission_percentage)}%
+                        </td>
+                        <td className="py-3.5 text-right font-mono font-black text-sm text-foreground">
+                          ${parseFloat(comm.amount || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                        </td>
+                        <td className="py-3.5 text-center">
+                          {comm.status === 'PAID' ? (
+                            <span className="px-3 py-1 bg-green-500/10 text-green-500 text-[7px] font-black uppercase tracking-widest rounded-full border border-green-500/20">Pagada</span>
+                          ) : (
+                            <span className="px-3 py-1 bg-yellow-500/10 text-yellow-500 text-[7px] font-black uppercase tracking-widest rounded-full border border-yellow-500/20">Pendiente</span>
+                          )}
+                        </td>
+                        <td className="py-3.5 text-center">
+                          {comm.status === 'PENDING' ? (
+                            <button
+                              onClick={() => handleMarkCommissionPaid(comm.id)}
+                              disabled={markingPaid === comm.id}
+                              className="px-4 py-1.5 bg-green-600 hover:bg-green-500 text-white text-[7px] font-black uppercase tracking-widest rounded-xl transition-all hover:scale-105 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
+                            >
+                              {markingPaid === comm.id ? '...' : 'Marcar Pagada'}
+                            </button>
+                          ) : (
+                            <span className="text-[8px] text-foreground/20 font-black">—</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                    {commissions.length === 0 && (
+                      <tr>
+                        <td colSpan={10} className="py-12 text-center text-[9px] font-black uppercase tracking-widest opacity-25">
+                          Sin comisiones registradas en el sistema
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-card-border/50 text-[8px] font-black uppercase tracking-widest opacity-40">
-                  <th className="pb-4">Código</th>
-                  <th className="pb-4 text-center">Tipo</th>
-                  <th className="pb-4">Referidor</th>
-                  <th className="pb-4 text-center">Descuento</th>
-                  <th className="pb-4 text-center">Usos</th>
-                  <th className="pb-4 text-center">Límite</th>
-                  <th className="pb-4 text-center">Estado</th>
-                  <th className="pb-4 text-center">Creado</th>
-                  <th className="pb-4 text-right">Acción</th>
-                </tr>
-              </thead>
-              <tbody>
-                {promoCodes.map((code) => (
-                  <tr key={code.id} className="border-b border-card-border/30 last:border-0 hover:bg-foreground/[0.02] transition-colors">
-                    <td className="py-3.5">
-                      <span className="font-mono font-black text-sm text-nectar-gold tracking-widest">{code.code}</span>
-                    </td>
-                    <td className="py-3.5 text-center">
-                      <span className={`px-3 py-1 text-[7px] font-black uppercase tracking-widest rounded-full border ${code.code_type === 'SELLER'
-                        ? 'bg-blue-500/10 text-blue-400 border-blue-500/20'
-                        : 'bg-purple-500/10 text-purple-400 border-purple-500/20'
-                        }`}>
-                        {code.code_type === 'SELLER' ? '🏷️ Vendedor' : '👥 Cliente'}
-                      </span>
-                    </td>
-                    <td className="py-3.5 text-[10px] font-bold text-foreground/60">{code.referrer_email || '—'}</td>
-                    <td className="py-3.5 text-center font-mono font-black text-sm text-nectar-gold">{parseFloat(code.discount_percentage)}%</td>
-                    <td className="py-3.5 text-center font-mono font-bold text-sm">{code.used_count}</td>
-                    <td className="py-3.5 text-center text-[10px] font-bold text-foreground/50">{code.max_uses ?? '∞'}</td>
-                    <td className="py-3.5 text-center">
-                      <button
-                        onClick={() => handleTogglePromoCodeActive(code.id, code.is_active)}
-                        className={`px-3 py-1 text-[7px] font-black uppercase tracking-widest rounded-full border hover:scale-105 active:scale-95 transition-all ${code.is_active
-                          ? 'bg-green-500/10 text-green-500 border-green-500/20'
-                          : 'bg-red-500/10 text-red-400 border-red-500/20'
-                          }`}
-                      >
-                        {code.is_active ? 'Activo' : 'Inactivo'}
-                      </button>
-                    </td>
-                    <td className="py-3.5 text-center text-[9px] font-bold text-foreground/45">
-                      {new Date(code.created_at).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: '2-digit' })}
-                    </td>
-                    <td className="py-3.5 text-right space-x-2">
-                      <button
-                        onClick={() => {
-                          setPromoCode(code.code);
-                          setPromoCodeType(code.code_type);
-                          setPromoDiscount(parseFloat(code.discount_percentage));
-                          setPromoMaxUses(code.max_uses !== null && code.max_uses !== undefined ? String(code.max_uses) : '');
-                          setPromoValidUntil(code.valid_until || '');
-                          setPromoReferrer(code.referrer !== null && code.referrer !== undefined ? String(code.referrer) : '');
-                          setEditingPromoId(code.id);
-                          setPromoError('');
-                          setShowPromoModal(true);
-                        }}
-                        className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold hover:bg-nectar-gold hover:text-background rounded-xl text-[7px] font-black uppercase tracking-widest transition-all border border-nectar-gold/20 font-bold"
-                      >
-                        Editar
-                      </button>
-                      <button
-                        onClick={() => handleDeletePromoCode(code.id, code.code)}
-                        className="px-3 py-1 bg-red-500/10 text-red-500 hover:bg-red-600 hover:text-white rounded-xl text-[7px] font-black uppercase tracking-widest transition-all border border-red-500/20 font-bold"
-                      >
-                        Eliminar
-                      </button>
-                    </td>
+
+          {/* Promo Codes Table */}
+          <div className="p-8 md:p-10 rounded-[3rem] bg-card-bg border border-card-border shadow-xl">
+            <div className="mb-8 flex items-center justify-between flex-wrap gap-4 text-left">
+              <div>
+                <h3 className="text-xs font-black uppercase tracking-[0.3em] opacity-30">Códigos de Descuento y Referido</h3>
+                <p className="text-[9px] font-bold text-foreground/30 mt-1 uppercase tracking-wider">Todos los códigos del sistema — SELLER y CLIENT</p>
+              </div>
+              <div className="flex gap-4 items-center">
+                <button
+                  onClick={() => {
+                    setPromoCode('');
+                    setPromoCodeType('CLIENT');
+                    setPromoDiscount(10);
+                    setPromoMaxUses('');
+                    setPromoValidUntil('');
+                    setPromoReferrer('');
+                    setPromoError('');
+                    setEditingPromoId(null);
+                    setShowPromoModal(true);
+                  }}
+                  className="px-5 py-2.5 bg-nectar-gold text-background text-[8px] font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 transition-all shadow-md font-bold"
+                >
+                  + Crear Código
+                </button>
+                <span className="px-4 py-1.5 bg-foreground/5 rounded-full text-[8px] font-black uppercase tracking-widest opacity-50 font-bold">
+                  {promoCodes.length} códigos
+                </span>
+              </div>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-card-border/50 text-[8px] font-black uppercase tracking-widest opacity-40">
+                    <th className="pb-4">Código</th>
+                    <th className="pb-4 text-center">Tipo</th>
+                    <th className="pb-4">Referidor</th>
+                    <th className="pb-4 text-center">Descuento</th>
+                    <th className="pb-4 text-center">Usos</th>
+                    <th className="pb-4 text-center">Límite</th>
+                    <th className="pb-4 text-center">Estado</th>
+                    <th className="pb-4 text-center">Creado</th>
+                    <th className="pb-4 text-right">Acción</th>
                   </tr>
-                ))}
-                {promoCodes.length === 0 && (
-                  <tr>
-                    <td colSpan={9} className="py-12 text-center text-[9px] font-black uppercase tracking-widest opacity-25">
-                      Sin códigos de referido registrados
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {promoCodes.map((code) => (
+                    <tr key={code.id} className="border-b border-card-border/30 last:border-0 hover:bg-foreground/[0.02] transition-colors">
+                      <td className="py-3.5">
+                        <span className="font-mono font-black text-sm text-nectar-gold tracking-widest">{code.code}</span>
+                      </td>
+                      <td className="py-3.5 text-center">
+                        <span className={`px-3 py-1 text-[7px] font-black uppercase tracking-widest rounded-full border ${code.code_type === 'SELLER'
+                          ? 'bg-blue-500/10 text-blue-400 border-blue-500/20'
+                          : 'bg-purple-500/10 text-purple-400 border-purple-500/20'
+                          }`}>
+                          {code.code_type === 'SELLER' ? '🏷️ Vendedor' : '👥 Cliente'}
+                        </span>
+                      </td>
+                      <td className="py-3.5 text-[10px] font-bold text-foreground/60">{code.referrer_email || '—'}</td>
+                      <td className="py-3.5 text-center font-mono font-black text-sm text-nectar-gold">{parseFloat(code.discount_percentage)}%</td>
+                      <td className="py-3.5 text-center font-mono font-bold text-sm">{code.used_count}</td>
+                      <td className="py-3.5 text-center text-[10px] font-bold text-foreground/50">{code.max_uses ?? '∞'}</td>
+                      <td className="py-3.5 text-center">
+                        <button
+                          onClick={() => handleTogglePromoCodeActive(code.id, code.is_active)}
+                          className={`px-3 py-1 text-[7px] font-black uppercase tracking-widest rounded-full border hover:scale-105 active:scale-95 transition-all ${code.is_active
+                            ? 'bg-green-500/10 text-green-500 border-green-500/20'
+                            : 'bg-red-500/10 text-red-400 border-red-500/20'
+                            }`}
+                        >
+                          {code.is_active ? 'Activo' : 'Inactivo'}
+                        </button>
+                      </td>
+                      <td className="py-3.5 text-center text-[9px] font-bold text-foreground/45">
+                        {new Date(code.created_at).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: '2-digit' })}
+                      </td>
+                      <td className="py-3.5 text-right space-x-2">
+                        <button
+                          onClick={() => {
+                            setPromoCode(code.code);
+                            setPromoCodeType(code.code_type);
+                            setPromoDiscount(parseFloat(code.discount_percentage));
+                            setPromoMaxUses(code.max_uses !== null && code.max_uses !== undefined ? String(code.max_uses) : '');
+                            setPromoValidUntil(code.valid_until || '');
+                            setPromoReferrer(code.referrer !== null && code.referrer !== undefined ? String(code.referrer) : '');
+                            setEditingPromoId(code.id);
+                            setPromoError('');
+                            setShowPromoModal(true);
+                          }}
+                          className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold hover:bg-nectar-gold hover:text-background rounded-xl text-[7px] font-black uppercase tracking-widest transition-all border border-nectar-gold/20 font-bold"
+                        >
+                          Editar
+                        </button>
+                        <button
+                          onClick={() => handleDeletePromoCode(code.id, code.code)}
+                          className="px-3 py-1 bg-red-500/10 text-red-500 hover:bg-red-600 hover:text-white rounded-xl text-[7px] font-black uppercase tracking-widest transition-all border border-red-500/20 font-bold"
+                        >
+                          Eliminar
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                  {promoCodes.length === 0 && (
+                    <tr>
+                      <td colSpan={9} className="py-12 text-center text-[9px] font-black uppercase tracking-widest opacity-25">
+                        Sin códigos de referido registrados
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* ── MODAL NUEVA COTIZACIÓN MODULAR ── */}
       {showQuoteModal && (

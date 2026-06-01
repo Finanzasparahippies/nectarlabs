@@ -7,6 +7,7 @@ import { fetcher } from '../../../lib/api';
 import DashboardSidebar from '../../../components/DashboardSidebar';
 import Toast from '../../../components/ui/Toast';
 import ConfirmModal from '../../../components/ui/ConfirmModal';
+import TenantSearchBar from '../../../components/dashboard/TenantSearchBar';
 
 interface Tenant {
   id: string;
@@ -27,9 +28,27 @@ interface Tenant {
   portal_title: string | null;
   footer_text: string | null;
   require_customer_info: boolean;
+  pollen_active: boolean;
+  pollen_icon: string;
+  pollen_color: string;
+  pollen_count?: number;
+  pollen_blur?: number;
   is_active: boolean;
   created_at: string;
   updated_at: string;
+}
+
+interface UserItem {
+  id: number;
+  email: string;
+  username: string;
+  role: string;
+}
+
+interface Project {
+  id: number;
+  name: string;
+  client: number;
 }
 
 export default function SupportSettingsPage() {
@@ -81,6 +100,20 @@ export default function SupportSettingsPage() {
   const [editRequireCustomerInfo, setEditRequireCustomerInfo] = useState(true);
   const [editAllowedOrigins, setEditAllowedOrigins] = useState('');
   
+  // Cross-reference data
+  const [usersList, setUsersList] = useState<UserItem[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
+
+  // Pollen visual settings
+  const [editPollenActive, setEditPollenActive] = useState(true);
+  const [editPollenIcon, setEditPollenIcon] = useState('⚫');
+  const [editPollenColor, setEditPollenColor] = useState('#C68A1E');
+  const [editPollenCount, setEditPollenCount] = useState(6);
+  const [editPollenBlur, setEditPollenBlur] = useState(0.2);
+  const [customPollenIcon, setCustomPollenIcon] = useState('');
+
+  const predefinedIcons = ['⚫', '🌸', '❄️', '✨', '🍂', '🐝'];
+  
   const router = useRouter();
 
   useEffect(() => {
@@ -101,9 +134,16 @@ export default function SupportSettingsPage() {
         setTenants(data);
         if (data.length > 0) {
           selectTenant(data[0]);
+          
+          const [usersData, projectsData] = await Promise.all([
+            fetcher('/users/').catch(() => []),
+            fetcher('/projects/').catch(() => [])
+          ]);
+          setUsersList(usersData);
+          setProjects(projectsData);
         }
       } catch (err) {
-        console.error('Error loading tenants:', err);
+        console.error('Error loading support-settings data:', err);
       } finally {
         setLoading(false);
       }
@@ -124,6 +164,21 @@ export default function SupportSettingsPage() {
     setEditCardBgColor(tenant.card_bg_color || '#050a06');
     setEditTextColor(tenant.text_color || '#FFFFFF');
     setEditBorderColor(tenant.border_color || '#151F18');
+    
+    // Pollen states
+    setEditPollenActive(tenant.pollen_active !== false);
+    setEditPollenIcon(tenant.pollen_icon || '⚫');
+    setEditPollenColor(tenant.pollen_color || '#C68A1E');
+    setEditPollenCount(tenant.pollen_count !== undefined ? tenant.pollen_count : 6);
+    setEditPollenBlur(tenant.pollen_blur !== undefined ? tenant.pollen_blur : 0.2);
+
+    const isCustom = !predefinedIcons.includes(tenant.pollen_icon || '⚫');
+    if (isCustom) {
+      setCustomPollenIcon(tenant.pollen_icon);
+    } else {
+      setCustomPollenIcon('');
+    }
+
     setEditLogoUrl(tenant.logo_url || '');
     setEditLogoFile(null);
     setEditLogoPreview(null);
@@ -176,6 +231,14 @@ export default function SupportSettingsPage() {
       formData.append('card_bg_color', editCardBgColor);
       formData.append('text_color', editTextColor);
       formData.append('border_color', editBorderColor);
+      
+      // Pollen settings
+      formData.append('pollen_active', String(editPollenActive));
+      formData.append('pollen_icon', editPollenIcon);
+      formData.append('pollen_color', editPollenColor);
+      formData.append('pollen_count', String(editPollenCount));
+      formData.append('pollen_blur', String(editPollenBlur));
+      
       formData.append('welcome_message', editWelcomeMessage.trim());
       formData.append('portal_title', editPortalTitle.trim());
       formData.append('footer_text', editFooterText.trim());
@@ -362,22 +425,13 @@ export default function SupportSettingsPage() {
             {userRole === 'ADMIN' && tenants.length > 1 && (
               <div className="xl:col-span-3 bg-card-bg border border-card-border rounded-[2.5rem] p-6 flex flex-col space-y-4">
                 <h3 className="text-xs font-black uppercase tracking-wider text-foreground/50">Portales Registrados</h3>
-                <div className="space-y-2 overflow-y-auto max-h-[400px] custom-scrollbar pr-1">
-                  {tenants.map((t) => (
-                    <button
-                       key={t.id}
-                      onClick={() => selectTenant(t)}
-                      className={`w-full text-left p-4 rounded-xl border transition-all text-xs font-black uppercase tracking-wider ${
-                        selectedTenant?.id === t.id
-                          ? 'bg-nectar-gold/10 text-nectar-gold border-nectar-gold/30'
-                          : 'bg-background/40 hover:bg-background/70 text-foreground/75 border-card-border'
-                      }`}
-                    >
-                      {t.name}
-                      <p className="text-[8px] opacity-45 lowercase tracking-normal mt-0.5">{t.subdomain}.nectarlabs.dev</p>
-                    </button>
-                  ))}
-                </div>
+                <TenantSearchBar
+                  tenants={tenants}
+                  selectedTenant={selectedTenant}
+                  onSelectTenant={selectTenant}
+                  usersList={usersList}
+                  projects={projects}
+                />
               </div>
             )}
 
@@ -663,6 +717,124 @@ export default function SupportSettingsPage() {
                           />
                           <div className="w-11 h-6 bg-card-border peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-nectar-gold"></div>
                         </label>
+                      </div>
+
+                      {/* Visual Effect Customization Section */}
+                      <div className="pt-6 border-t border-card-border space-y-6">
+                        <div>
+                          <h4 className="text-xs font-black uppercase tracking-widest text-nectar-gold">Efecto Visual de la Colmena</h4>
+                          <p className="text-[8px] text-foreground/45 uppercase tracking-wider mt-1">Configura las partículas animadas que caen en tu portal público</p>
+                        </div>
+
+                        <div className="flex items-center gap-3 p-4 bg-foreground/[0.01] border border-card-border/40 rounded-2xl">
+                          <input
+                            type="checkbox"
+                            id="pollen-active"
+                            checked={editPollenActive}
+                            onChange={(e) => setEditPollenActive(e.target.checked)}
+                            className="w-4 h-4 rounded border-card-border bg-background text-nectar-gold focus:ring-nectar-gold cursor-pointer"
+                          />
+                          <label htmlFor="pollen-active" className="text-[10px] font-black uppercase tracking-widest text-foreground cursor-pointer select-none">
+                            Activar lluvia de partículas / polen en el portal público
+                          </label>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          {/* Particle Icon Select */}
+                          <div className="space-y-2 p-4 bg-foreground/[0.01] border border-card-border/40 rounded-2xl">
+                            <label className="text-[8px] font-black uppercase tracking-widest text-foreground/45 block">Icono del Efecto</label>
+                            <select
+                              value={predefinedIcons.includes(editPollenIcon) ? editPollenIcon : 'custom'}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                if (val === 'custom') {
+                                  setEditPollenIcon(customPollenIcon || '⭐');
+                                } else {
+                                  setEditPollenIcon(val);
+                                }
+                              }}
+                              className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-foreground focus:outline-none focus:border-nectar-gold font-bold appearance-none cursor-pointer"
+                            >
+                              <option value="⚫">⚫ Punto Clásico</option>
+                              <option value="🌸">🌸 Pétalo de Flor</option>
+                              <option value="❄️">❄️ Copo de Nieve</option>
+                              <option value="✨">✨ Destello Mágico</option>
+                              <option value="🍂">🍂 Hoja de Otoño</option>
+                              <option value="🐝">🐝 Abeja Forrajera</option>
+                              <option value="custom">✨ Personalizado (Emoji / Carácter)</option>
+                            </select>
+
+                            {!predefinedIcons.includes(editPollenIcon) && (
+                              <div className="mt-2 space-y-1">
+                                <label className="text-[8px] font-black uppercase tracking-widest text-foreground/40">Emoji o Carácter Personalizado</label>
+                                <input
+                                  type="text"
+                                  maxLength={10}
+                                  value={editPollenIcon}
+                                  onChange={(e) => {
+                                    setEditPollenIcon(e.target.value);
+                                    setCustomPollenIcon(e.target.value);
+                                  }}
+                                  placeholder="Ej: ⭐, 🍯, 🎈"
+                                  className="w-full bg-background border border-card-border rounded-xl px-4 py-2.5 text-xs text-foreground focus:outline-none focus:border-nectar-gold font-bold"
+                                />
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Particle Color Picker */}
+                          <div className="space-y-2 p-4 bg-foreground/[0.01] border border-card-border/40 rounded-2xl">
+                            <label className="text-[8px] font-black uppercase tracking-widest text-foreground/45 block">Color de las Partículas</label>
+                            <div className="flex items-center gap-3">
+                              <input
+                                type="color"
+                                value={editPollenColor}
+                                onChange={(e) => setEditPollenColor(e.target.value)}
+                                className="shrink-0 w-11 h-11 rounded-xl cursor-pointer border border-card-border bg-transparent p-0 overflow-hidden [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:border-0 [&::-webkit-color-swatch]:rounded-xl transition-transform hover:scale-105"
+                              />
+                              <input
+                                type="text"
+                                value={editPollenColor}
+                                onChange={(e) => setEditPollenColor(e.target.value)}
+                                className="flex-1 bg-background border border-card-border rounded-xl px-3 py-2.5 text-xs text-foreground focus:outline-none focus:border-nectar-gold uppercase text-center font-mono font-bold tracking-wider"
+                              />
+                            </div>
+                          </div>
+
+                          {/* Particle Count Input */}
+                          <div className="space-y-2 p-4 bg-foreground/[0.01] border border-card-border/40 rounded-2xl">
+                            <label className="text-[8px] font-black uppercase tracking-widest text-foreground/45 block">Cantidad de Partículas</label>
+                            <input
+                              type="number"
+                              min={1}
+                              max={100}
+                              value={editPollenCount}
+                              onChange={(e) => setEditPollenCount(parseInt(e.target.value) || 6)}
+                              className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-foreground focus:outline-none focus:border-nectar-gold font-bold"
+                            />
+                            <p className="text-[8px] text-foreground/30 uppercase mt-1">Controla cuántas partículas flotan simultáneamente en la pantalla.</p>
+                          </div>
+
+                          {/* Particle Blur Strength */}
+                          <div className="space-y-2 p-4 bg-foreground/[0.01] border border-card-border/40 rounded-2xl">
+                            <label className="text-[8px] font-black uppercase tracking-widest text-foreground/45 block">Desenfoque de Partículas (Blur en px)</label>
+                            <div className="flex items-center gap-3">
+                              <input
+                                type="range"
+                                min={0}
+                                max={10}
+                                step={0.1}
+                                value={editPollenBlur}
+                                onChange={(e) => setEditPollenBlur(parseFloat(e.target.value) || 0)}
+                                className="flex-1 accent-nectar-gold cursor-pointer"
+                              />
+                              <span className="w-12 bg-background border border-card-border rounded-xl py-2 text-center text-xs font-mono font-bold text-foreground">
+                                {editPollenBlur}px
+                              </span>
+                            </div>
+                            <p className="text-[8px] text-foreground/30 uppercase mt-1">Nivel de desenfoque aplicado a cada partícula para dar profundidad.</p>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   )}
