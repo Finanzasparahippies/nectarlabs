@@ -234,9 +234,12 @@ def seed_stamp_packages_to_stripe():
     for pkg in packages:
         try:
             # Buscar producto existente
-            products = stripe.Product.list(limit=1, active=True, metadata={"stamp_package_size": str(pkg["size"])})
-            if products.data:
-                product = products.data[0]
+            product = None
+            for p in stripe.Product.list(limit=100).auto_paging_iter():
+                if p.active and p.metadata.get("stamp_package_size") == str(pkg["size"]):
+                    product = p
+                    break
+            if product:
                 print(f"Producto de Stripe para paquete de {pkg['size']} timbres ya existe: {product.id}")
             else:
                 product = stripe.Product.create(

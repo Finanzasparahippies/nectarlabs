@@ -74,10 +74,11 @@ def get_or_create_stamp_package_stripe_price(package_size, package_desc, package
     try:
         # Search for existing Stripe Product with this stamp package size metadata
         product = None
-        products = stripe.Product.list(limit=1, active=True, metadata={"stamp_package_size": str(package_size)})
-        if products.data:
-            product = products.data[0]
-        else:
+        for p in stripe.Product.list(limit=100).auto_paging_iter():
+            if p.active and p.metadata.get("stamp_package_size") == str(package_size):
+                product = p
+                break
+        if not product:
             product = stripe.Product.create(
                 name=f"[Néctar Labs] Paquete de {package_size} timbres",
                 description=package_desc,

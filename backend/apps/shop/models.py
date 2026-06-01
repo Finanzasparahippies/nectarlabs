@@ -42,13 +42,10 @@ class Plan(models.Model):
                 
                 # Search for existing Stripe Product with this plan slug or plan_id
                 product = None
-                products = stripe.Product.list(limit=1, active=True, metadata={"plan_slug": plan_slug})
-                if products.data:
-                    product = products.data[0]
-                else:
-                    products = stripe.Product.list(limit=1, active=True, metadata={"plan_id": str(self.id)})
-                    if products.data:
-                        product = products.data[0]
+                for p in stripe.Product.list(limit=100).auto_paging_iter():
+                    if p.active and (p.metadata.get("plan_slug") == plan_slug or p.metadata.get("plan_id") == str(self.id)):
+                        product = p
+                        break
                 
                 if not product:
                     product = stripe.Product.create(
@@ -394,9 +391,10 @@ class AddOn(models.Model):
             try:
                 # Search for existing Stripe Product with this slug
                 product = None
-                products = stripe.Product.list(limit=1, active=True, metadata={"addon_slug": self.slug})
-                if products.data:
-                    product = products.data[0]
+                for p in stripe.Product.list(limit=100).auto_paging_iter():
+                    if p.active and p.metadata.get("addon_slug") == self.slug:
+                        product = p
+                        break
                 else:
                     product = stripe.Product.create(
                         name=f"[Nectar Labs Add-on] {self.name}",

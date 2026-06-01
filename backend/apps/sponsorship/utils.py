@@ -27,13 +27,10 @@ def create_stripe_product_and_price(tier):
     # Search for an existing product with this tenant subdomain and tier level metadata
     product = None
     try:
-        products = stripe.Product.list(
-            limit=1,
-            active=True,
-            metadata={"tenant_subdomain": tier.tenant.subdomain, "tier_level": str(tier.level)}
-        )
-        if products.data:
-            product = products.data[0]
+        for p in stripe.Product.list(limit=100).auto_paging_iter():
+            if p.active and p.metadata.get("tenant_subdomain") == tier.tenant.subdomain and p.metadata.get("tier_level") == str(tier.level):
+                product = p
+                break
     except Exception as list_err:
         logger.error(f"Error listing products in Stripe: {list_err}")
 

@@ -400,9 +400,13 @@ def get_or_create_generic_stripe_product(name, description, metadata_key, metada
     import stripe
     stripe.api_key = settings.STRIPE_SECRET_KEY
     try:
-        products = stripe.Product.list(limit=1, active=True, metadata={metadata_key: metadata_val})
-        if products.data:
-            return products.data[0].id
+        product_id = None
+        for p in stripe.Product.list(limit=100).auto_paging_iter():
+            if p.active and p.metadata.get(metadata_key) == metadata_val:
+                product_id = p.id
+                break
+        if product_id:
+            return product_id
         else:
             prod = stripe.Product.create(
                 name=name,
