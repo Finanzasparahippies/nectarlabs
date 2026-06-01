@@ -1100,7 +1100,7 @@ class StripePlanInstallmentCheckoutTests(APITestCase):
         mock_checkout_create.return_value.url = "https://checkout.stripe.com/pay/mock_session_123"
         
         self.client.force_authenticate(user=self.client_user)
-        url = reverse('paymentinstallment-checkout-session', kwargs={'pk': self.installment.id})
+        url = reverse('installment-checkout-session', kwargs={'pk': self.installment.id})
         response = self.client.post(url, {'wants_invoice': False}, format='json')
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -1150,7 +1150,7 @@ class StripePlanInstallmentCheckoutTests(APITestCase):
         
         # Checkout session
         self.client.force_authenticate(user=self.client_user)
-        url = reverse('paymentinstallment-checkout-session', kwargs={'pk': custom_installment.id})
+        url = reverse('installment-checkout-session', kwargs={'pk': custom_installment.id})
         response = self.client.post(url, {'wants_invoice': False}, format='json')
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)

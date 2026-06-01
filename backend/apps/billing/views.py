@@ -1,10 +1,12 @@
 import logging
+import stripe
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from django.core.exceptions import PermissionDenied
 from rest_framework.views import APIView
+from django.conf import settings
 
 from apps.tenants.models import Tenant
 from apps.tenants.permissions import HasAddOnPermission
@@ -69,7 +71,6 @@ class BillingInfoView(BillingTenantMixin, APIView):
 def get_or_create_stamp_package_stripe_price(package_size, package_desc, package_price):
     if getattr(settings, "TESTING", False) or not getattr(settings, "STRIPE_SECRET_KEY", None):
         return "dummy_price_id"
-    import stripe
     stripe.api_key = settings.STRIPE_SECRET_KEY
     try:
         # Search for existing Stripe Product with this stamp package size metadata
@@ -126,8 +127,6 @@ class BuyStampsView(BillingTenantMixin, APIView):
             
         package = STAMP_PACKAGES[package_size]
         
-        from django.conf import settings
-        import stripe
         stripe.api_key = settings.STRIPE_SECRET_KEY
         
         from apps.shop.views import get_frontend_origin
