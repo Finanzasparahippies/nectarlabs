@@ -1394,7 +1394,13 @@ export default function BusinessCommander({ stats, installments, setInstallments
                       </td>
                     </tr>
                   )}
-               
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </>
+      )}
+
       {/* ── SALES KANBAN BOARD ── */}
       {activeTab === 'kanban' && (
         <div className="space-y-8 animate-fadeIn">
