@@ -47,19 +47,28 @@ class Plan(models.Model):
                         product = p
                         break
                 
+                expected_name = f"[Nectar Labs Plan] {self.name}"
                 if not product:
                     product = stripe.Product.create(
-                        name=f"[Nectar Labs Plan] {self.name}",
+                        name=expected_name,
                         description=self.description,
                         metadata={"plan_id": str(self.id), "plan_slug": plan_slug}
                     )
                 else:
-                    # Update metadata if needed
-                    if product.metadata.get("plan_id") != str(self.id) or product.metadata.get("plan_slug") != plan_slug:
-                        stripe.Product.modify(
-                            product.id,
-                            metadata={"plan_id": str(self.id), "plan_slug": plan_slug}
-                        )
+                    # Update details on Stripe if changed
+                    updates = {}
+                    if product.name != expected_name:
+                        updates["name"] = expected_name
+                    if product.description != self.description:
+                        updates["description"] = self.description
+                    
+                    current_plan_id = product.metadata.get("plan_id")
+                    current_plan_slug = product.metadata.get("plan_slug")
+                    if current_plan_id != str(self.id) or current_plan_slug != plan_slug:
+                        updates["metadata"] = {"plan_id": str(self.id), "plan_slug": plan_slug}
+                    
+                    if updates:
+                        stripe.Product.modify(product.id, **updates)
                 
                 self.stripe_product_id = product.id
                 
@@ -395,12 +404,21 @@ class AddOn(models.Model):
                     if p.active and p.metadata.get("addon_slug") == self.slug:
                         product = p
                         break
-                else:
+                expected_name = f"[Nectar Labs Add-on] {self.name}"
+                if not product:
                     product = stripe.Product.create(
-                        name=f"[Nectar Labs Add-on] {self.name}",
+                        name=expected_name,
                         description=self.description,
                         metadata={"addon_slug": self.slug}
                     )
+                else:
+                    # Update details on Stripe if changed
+                    if product.name != expected_name or product.description != self.description:
+                        stripe.Product.modify(
+                            product.id,
+                            name=expected_name,
+                            description=self.description
+                        )
                 
                 # Fetch active prices for this product to avoid duplicates
                 prices = stripe.Price.list(product=product.id, active=True)
