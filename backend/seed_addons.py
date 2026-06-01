@@ -129,10 +129,10 @@ def seed_addons():
             "slug": "mexico-invoicing",
             "name": "Facturación SAT México",
             "category_badge": "CONTABILIDAD Y FISCAL",
-            "description": "Emite facturas CFDI 4.0 oficiales del SAT a tus clientes de manera automatizada y marca blanca.",
+            "description": "Emite facturas CFDI 4.0 oficiales del SAT a tus clientes de manera automatizada y marca blanca. Incluye 100 timbres mensuales.",
             "detailed_description": "Módulo de facturación fiscal electrónica para México. Permite crear organizaciones subordinadas en Facturapi, subir sellos CSD y timbrar facturas CFDI 4.0 directamente desde tu portal, de forma automatizada (en compras) o manual a clientes.",
-            "monthly_price": 299.00,
-            "yearly_price": 2990.00,
+            "monthly_price": 499.00,
+            "yearly_price": 4990.00,
             "origin_project": "nectarlabs-main",
             "source_reference": "backend/apps/billing (models.py, services.py, views.py)",
             "complexity": AddOn.Complexity.HIGH,
@@ -148,6 +148,13 @@ def seed_addons():
     ]
 
     for item in addons_data:
+        existing = AddOn.objects.filter(slug=item["slug"]).first()
+        if existing and (float(existing.monthly_price) != float(item["monthly_price"]) or float(existing.yearly_price) != float(item["yearly_price"])):
+            # Clear stripe ids so that they are regenerated for the new price!
+            existing.stripe_price_id = None
+            existing.stripe_yearly_price_id = None
+            existing.save(update_fields=['stripe_price_id', 'stripe_yearly_price_id'])
+
         addon, created = AddOn.objects.update_or_create(
             slug=item["slug"],
             defaults=item
@@ -156,6 +163,7 @@ def seed_addons():
         print(f"Add-on '{addon.name}' ({addon.slug}) {action_str} con éxito.")
 
     print("¡Población de Add-ons completada con éxito!")
+
 
 if __name__ == '__main__':
     seed_addons()

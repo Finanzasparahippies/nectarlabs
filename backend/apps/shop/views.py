@@ -595,46 +595,60 @@ def stripe_webhook(request):
                                 status=Invoice.Status.PENDING
                             )
                             
-                            customer_info = {
-                                "razon_social": user.get_full_name() or user.username,
-                                "rfc": profile.rfc,
-                                "regimen_fiscal": profile.regimen_fiscal,
-                                "codigo_postal": profile.codigo_postal,
-                                "email": user.email
-                            }
-                            
-                            # La unidad precio de los conceptos se pasa sin IVA (Base), ya que el PAC calcula e incrementa el IVA del 16% automáticamente
-                            items = [{
-                                "quantity": 1,
-                                "unit_price": float(installment.amount),
-                                "description": f"Abono #{installment.installment_number} - Contrato de Ecosistema Digital ({tenant.name})"
-                            }]
-                            
-                            pac = get_pac_service()
-                            try:
-                                res = pac.create_invoice(invoice, profile, customer_info, items, is_parent_to_tenant=True)
-                                invoice.facturapi_invoice_id = res["facturapi_invoice_id"]
-                                invoice.uuid_sat = res["uuid_sat"]
-                                
-                                # Asignar y guardar archivos del PAC
-                                invoice.xml_file.save(res["xml_file"].name, res["xml_file"], save=False)
-                                invoice.pdf_file.save(res["pdf_file"].name, res["pdf_file"], save=False)
-                                
-                                invoice.status = Invoice.Status.PAID
-                                invoice.error_message = None
-                                invoice.save()
-                                
-                                # Vincular UUID al abono
-                                installment.cfdi_uuid = str(res["uuid_sat"])
-                                installment.save(update_fields=['cfdi_uuid'])
-                            except LCOSyncError as e:
-                                invoice.status = Invoice.Status.LCO_SYNC_PENDING
-                                invoice.error_message = str(e)
-                                invoice.save()
-                            except PACError as e:
+                            # Check if the tenant has enough stamps
+                            if tenant.stamp_balance <= 0:
                                 invoice.status = Invoice.Status.FAILED
-                                invoice.error_message = str(e)
+                                invoice.error_message = "No tienes timbres suficientes en tu balance. Por favor adquiere más timbres."
                                 invoice.save()
+                            else:
+                                customer_info = {
+                                    "razon_social": user.get_full_name() or user.username,
+                                    "rfc": profile.rfc,
+                                    "regimen_fiscal": profile.regimen_fiscal,
+                                    "codigo_postal": profile.codigo_postal,
+                                    "email": user.email
+                                }
+                                
+                                # La unidad precio de los conceptos se pasa sin IVA (Base), ya que el PAC calcula e incrementa el IVA del 16% automáticamente
+                                items = [{
+                                    "quantity": 1,
+                                    "unit_price": float(installment.amount),
+                                    "description": f"Abono #{installment.installment_number} - Contrato de Ecosistema Digital ({tenant.name})"
+                                }]
+                                
+                                pac = get_pac_service()
+                                try:
+                                    res = pac.create_invoice(invoice, profile, customer_info, items, is_parent_to_tenant=True)
+                                    invoice.facturapi_invoice_id = res["facturapi_invoice_id"]
+                                    invoice.uuid_sat = res["uuid_sat"]
+                                    
+                                    # Asignar y guardar archivos del PAC
+                                    invoice.xml_file.save(res["xml_file"].name, res["xml_file"], save=False)
+                                    invoice.pdf_file.save(res["pdf_file"].name, res["pdf_file"], save=False)
+                                    
+                                    invoice.status = Invoice.Status.PAID
+                                    invoice.error_message = None
+                                    invoice.save()
+                                    
+                                    # Vincular UUID al abono
+                                    installment.cfdi_uuid = str(res["uuid_sat"])
+                                    installment.save(update_fields=['cfdi_uuid'])
+                                    
+                                    # Decrement stamp balance
+                                    tenant.stamp_balance = max(0, tenant.stamp_balance - 1)
+                                    tenant.save()
+                                except LCOSyncError as e:
+                                    invoice.status = Invoice.Status.LCO_SYNC_PENDING
+                                    invoice.error_message = str(e)
+                                    invoice.save()
+                                    
+                                    # Decrement stamp balance
+                                    tenant.stamp_balance = max(0, tenant.stamp_balance - 1)
+                                    tenant.save()
+                                except PACError as e:
+                                    invoice.status = Invoice.Status.FAILED
+                                    invoice.error_message = str(e)
+                                    invoice.save()
                     except Exception as cfdi_err:
                         import logging
                         logging.getLogger(__name__).error(f"Error en facturación automática: {cfdi_err}", exc_info=True)
@@ -787,6 +801,20 @@ def stripe_webhook(request):
                     import logging
                     logging.getLogger("apps").error(f"Error handling patreon_sponsorship webhook: {webhook_err}", exc_info=True)
 
+        # Caso 4: Compra de paquete de timbres
+        elif session.get('metadata', {}).get('type') == 'stamp_package':
+            tenant_id = session.get('metadata', {}).get('tenant_id')
+            stamps_count = session.get('metadata', {}).get('stamps_count')
+            if tenant_id and stamps_count:
+                try:
+                    from apps.tenants.models import Tenant
+                    tenant = Tenant.objects.get(id=tenant_id)
+                    tenant.stamp_balance = (tenant.stamp_balance or 0) + int(stamps_count)
+                    tenant.save()
+                except Exception as e:
+                    import logging
+                    logging.getLogger("apps").error(f"Error updating stamp balance in webhook: {e}", exc_info=True)
+
     # Procesar cancelación de suscripción
     elif event['type'] == 'customer.subscription.deleted':
         subscription = event['data']['object']
@@ -802,6 +830,56 @@ def stripe_webhook(request):
                     contract.addons.remove(addon_id)
             except Exception:
                 pass
+
+    # Acreditación de timbres en renovación/primer pago de suscripción mensual
+    elif event['type'] == 'invoice.payment_succeeded':
+        invoice_obj = event['data']['object']
+        subscription_id = invoice_obj.get('subscription')
+        if subscription_id:
+            try:
+                import stripe
+                from django.conf import settings
+                stripe.api_key = settings.STRIPE_SECRET_KEY
+                
+                subscription = stripe.Subscription.retrieve(subscription_id)
+                metadata = subscription.get('metadata', {})
+                if metadata.get('type') == 'addon_subscription':
+                    user_id = metadata.get('user_id')
+                    addon_id = metadata.get('addon_id')
+                    if user_id and addon_id:
+                        from django.contrib.auth import get_user_model
+                        from apps.tenants.models import Tenant
+                        from apps.shop.models import AddOn, Contract
+                        
+                        User = get_user_model()
+                        user = User.objects.get(id=user_id)
+                        addon = AddOn.objects.get(id=addon_id)
+                        
+                        if addon.slug == 'mexico-invoicing':
+                            # Encontrar o crear Tenant
+                            tenant = Tenant.objects.filter(owner=user).first()
+                            if not tenant:
+                                from django.utils.text import slugify
+                                contract = Contract.objects.filter(user=user, is_active=True).first()
+                                full_name = contract.full_name if contract else (user.get_full_name() or user.username)
+                                base_subdomain = slugify(full_name) or f"client-{user.id}"
+                                subdomain = base_subdomain
+                                counter = 1
+                                while Tenant.objects.filter(subdomain=subdomain).exists():
+                                    subdomain = f"{base_subdomain}-{counter}"
+                                    counter += 1
+                                tenant = Tenant.objects.create(
+                                    owner=user,
+                                    name=f"Portal de {full_name}",
+                                    subdomain=subdomain,
+                                    is_active=True
+                                )
+                            
+                            tenant.stamp_balance = (tenant.stamp_balance or 0) + 100
+                            tenant.save()
+            except Exception as e:
+                import logging
+                logging.getLogger("apps").error(f"Error handling invoice.payment_succeeded webhook: {e}", exc_info=True)
 
     return HttpResponse(status=200)
 

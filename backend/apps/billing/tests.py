@@ -84,6 +84,10 @@ class BillingSystemTests(APITestCase):
             status=PaymentInstallment.Status.PENDING
         )
 
+        # Give the tenant some initial stamps for existing tests to pass
+        self.tenant.stamp_balance = 100
+        self.tenant.save()
+
     def test_mock_pac_service_lco_sync_handling(self):
         """
         Tests that the MockPACService raises LCOSyncError when the specific RFC 'LCO999999AAA' is used.
@@ -596,3 +600,367 @@ class BillingSystemTests(APITestCase):
         failed_invoice.refresh_from_db()
         self.assertEqual(failed_invoice.status, Invoice.Status.PAID)
         self.assertIsNotNone(failed_invoice.uuid_sat)
+
+    def test_billing_info_endpoint(self):
+        """
+        Verify that BillingInfoView returns the correct keys and stamp balance.
+        """
+        self.client.force_authenticate(user=self.client_user)
+        url = reverse('billing_info')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["stamp_balance"], 100)
+        self.assertTrue(response.data["is_commercial_partner"]) # contract has plan
+        self.assertTrue(response.data["addon_active"])
+        self.assertFalse(response.data["has_tax_profile"])
+
+    @patch('stripe.checkout.Session.create')
+    def test_buy_stamps_session_creation(self, mock_checkout):
+        """
+        Verify that BuyStampsView successfully creates a Stripe Checkout session.
+        """
+        self.client.force_authenticate(user=self.client_user)
+        
+        # Mock Stripe response
+        mock_checkout.return_value = MagicMock(url="https://checkout.stripe.com/pay/test")
+        
+        url = reverse('billing_buy_stamps')
+        payload = {"package_size": 100}
+        response = self.client.post(url, payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["url"], "https://checkout.stripe.com/pay/test")
+        
+        # Verify it was called with metadata
+        mock_checkout.assert_called_once()
+        kwargs = mock_checkout.call_args[1]
+        self.assertEqual(kwargs["metadata"]["tenant_id"], str(self.tenant.id))
+        self.assertEqual(kwargs["metadata"]["stamps_count"], 100)
+        self.assertEqual(kwargs["metadata"]["type"], "stamp_package")
+
+    def test_manual_invoicing_fails_when_no_stamps(self):
+        """
+        Verify manual invoicing fails when stamp balance is 0.
+        """
+        self.client.force_authenticate(user=self.client_user)
+        self.tenant.stamp_balance = 0
+        self.tenant.save()
+        
+        # Configure tax profile first
+        profile = TaxProfile.objects.create(
+            tenant=self.tenant,
+            rfc="XAXX010101000",
+            razon_social="Tenant Enterprise",
+            regimen_fiscal="601",
+            codigo_postal="06000",
+            facturapi_organization_id="org_mock_tenant_123"
+        )
+        
+        url = reverse('billing-invoice-list') + "issue-to-customer/"
+        payload = {
+            "customer_info": {
+                "rfc": "XAXX010101000",
+                "razon_social": "End Customer SA",
+                "regimen_fiscal": "601",
+                "codigo_postal": "01000",
+                "email": "customer@gmail.com"
+            },
+            "items": [{"quantity": 1, "unit_price": 100.00, "description": "Consulting"}],
+            "total": 100.00
+        }
+        
+        response = self.client.post(url, payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("timbres suficientes", response.data["error"])
+
+    def test_manual_invoicing_decrements_stamp_balance(self):
+        """
+        Verify manual invoicing decrements stamp balance on success.
+        """
+        self.client.force_authenticate(user=self.client_user)
+        self.tenant.stamp_balance = 5
+        self.tenant.save()
+        
+        profile = TaxProfile.objects.create(
+            tenant=self.tenant,
+            rfc="XAXX010101000",
+            razon_social="Tenant Enterprise",
+            regimen_fiscal="601",
+            codigo_postal="06000",
+            facturapi_organization_id="org_mock_tenant_123"
+        )
+        
+        url = reverse('billing-invoice-list') + "issue-to-customer/"
+        payload = {
+            "customer_info": {
+                "rfc": "XAXX010101000",
+                "razon_social": "End Customer SA",
+                "regimen_fiscal": "601",
+                "codigo_postal": "01000",
+                "email": "customer@gmail.com"
+            },
+            "items": [{"quantity": 1, "unit_price": 100.00, "description": "Consulting"}],
+            "total": 100.00
+        }
+        
+        response = self.client.post(url, payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.tenant.refresh_from_db()
+        self.assertEqual(self.tenant.stamp_balance, 4)
+
+    def test_manual_invoicing_lco_sync_pending_decrements_stamp_balance(self):
+        """
+        Verify manual invoicing LCOSyncError also decrements stamp balance.
+        """
+        self.client.force_authenticate(user=self.client_user)
+        self.tenant.stamp_balance = 5
+        self.tenant.save()
+        
+        profile = TaxProfile.objects.create(
+            tenant=self.tenant,
+            rfc="LCO999999AAA",  # specific RFC causing LCOSyncError
+            razon_social="Tenant Enterprise LCO",
+            regimen_fiscal="601",
+            codigo_postal="06000",
+            facturapi_organization_id="org_mock_tenant_lco"
+        )
+        
+        url = reverse('billing-invoice-list') + "issue-to-customer/"
+        payload = {
+            "customer_info": {
+                "rfc": "LCO999999AAA",
+                "razon_social": "End Customer LCO",
+                "regimen_fiscal": "601",
+                "codigo_postal": "01000",
+                "email": "customer_lco@gmail.com"
+            },
+            "items": [{"quantity": 1, "unit_price": 1000.00, "description": "Sync delay test"}],
+            "total": 1000.00
+        }
+        
+        response = self.client.post(url, payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
+        self.tenant.refresh_from_db()
+        self.assertEqual(self.tenant.stamp_balance, 4)
+
+    def test_retry_failed_invoice_checks_and_decrements_stamp_balance(self):
+        """
+        Verify retrying a FAILED invoice checks balance (fails if 0, decrements on success).
+        """
+        self.client.force_authenticate(user=self.client_user)
+        
+        # 1. Test when balance is 0
+        self.tenant.stamp_balance = 0
+        self.tenant.save()
+        
+        profile = TaxProfile.objects.create(
+            tenant=self.tenant,
+            rfc="XAXX010101000",
+            razon_social="Tenant Enterprise",
+            regimen_fiscal="601",
+            codigo_postal="06000",
+            facturapi_organization_id="org_mock_tenant_123"
+        )
+        
+        failed_invoice = Invoice.objects.create(
+            tenant=self.tenant,
+            total=Decimal("500.00"),
+            is_tenant_to_customer=True,
+            status=Invoice.Status.FAILED
+        )
+        
+        retry_url = reverse('billing-invoice-retry', kwargs={'pk': failed_invoice.id})
+        payload = {
+            "customer_info": {
+                "rfc": "XAXX010101000",
+                "razon_social": "End Customer",
+                "regimen_fiscal": "601",
+                "codigo_postal": "01000",
+                "email": "customer@gmail.com"
+            },
+            "items": [{"quantity": 1, "unit_price": 500.00, "description": "Retried item"}]
+        }
+        response = self.client.post(retry_url, payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("timbres suficientes", response.data["error"])
+        
+        # 2. Test when balance is > 0
+        self.tenant.stamp_balance = 2
+        self.tenant.save()
+        
+        response = self.client.post(retry_url, payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        
+        self.tenant.refresh_from_db()
+        self.assertEqual(self.tenant.stamp_balance, 1)
+
+    def test_retry_lco_sync_pending_does_not_decrement_again(self):
+        """
+        Verify retrying an LCO_SYNC_PENDING invoice does NOT decrement the stamp balance again.
+        """
+        self.client.force_authenticate(user=self.client_user)
+        self.tenant.stamp_balance = 10
+        self.tenant.save()
+        
+        profile = TaxProfile.objects.create(
+            tenant=self.tenant,
+            rfc="XAXX010101000",
+            razon_social="Tenant Enterprise",
+            regimen_fiscal="601",
+            codigo_postal="06000",
+            facturapi_organization_id="org_mock_tenant_123"
+        )
+        
+        lco_invoice = Invoice.objects.create(
+            tenant=self.tenant,
+            total=Decimal("500.00"),
+            is_tenant_to_customer=True,
+            status=Invoice.Status.LCO_SYNC_PENDING
+        )
+        
+        retry_url = reverse('billing-invoice-retry', kwargs={'pk': lco_invoice.id})
+        payload = {
+            "customer_info": {
+                "rfc": "XAXX010101000",
+                "razon_social": "End Customer",
+                "regimen_fiscal": "601",
+                "codigo_postal": "01000",
+                "email": "customer@gmail.com"
+            },
+            "items": [{"quantity": 1, "unit_price": 500.00, "description": "Retried item"}]
+        }
+        
+        response = self.client.post(retry_url, payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        
+        self.tenant.refresh_from_db()
+        self.assertEqual(self.tenant.stamp_balance, 10)  # No decrement
+
+    def test_stripe_webhook_stamp_package_credits_stamps(self):
+        """
+        Verify that the stamp_package webhook adds stamps.
+        """
+        url = reverse('stripe_webhook')
+        payload = {
+            "id": "evt_stamp_pack",
+            "type": "checkout.session.completed",
+            "data": {
+                "object": {
+                    "id": "cs_stamp_pack_123",
+                    "metadata": {
+                        "type": "stamp_package",
+                        "tenant_id": str(self.tenant.id),
+                        "stamps_count": "100"
+                    }
+                }
+            }
+        }
+        
+        self.tenant.stamp_balance = 5
+        self.tenant.save()
+        
+        with patch('stripe.Webhook.construct_event') as mock_construct:
+            mock_construct.return_value = payload
+            response = self.client.post(
+                url, 
+                payload, 
+                format='json',
+                HTTP_STRIPE_SIGNATURE='t=123,v1=abc'
+            )
+            self.assertEqual(response.status_code, 200)
+            
+        self.tenant.refresh_from_db()
+        self.assertEqual(self.tenant.stamp_balance, 105)
+
+    @patch('stripe.Subscription.retrieve')
+    def test_stripe_webhook_addon_payment_succeeded_credits_100_stamps(self, mock_sub_retrieve):
+        """
+        Verify that invoice.payment_succeeded webhook for mexico-invoicing credits 100 stamps.
+        """
+        url = reverse('stripe_webhook')
+        payload = {
+            "id": "evt_invoice_paid",
+            "type": "invoice.payment_succeeded",
+            "data": {
+                "object": {
+                    "id": "in_123",
+                    "subscription": "sub_invoicing123"
+                }
+            }
+        }
+        
+        # Mock stripe retrieve response for subscription
+        mock_sub = MagicMock()
+        mock_sub.get.side_effect = lambda key, default=None: {
+            "metadata": {
+                "type": "addon_subscription",
+                "user_id": self.client_user.id,
+                "addon_id": self.invoicing_addon.id
+            }
+        }.get(key, default)
+        mock_sub_retrieve.return_value = mock_sub
+        
+        self.tenant.stamp_balance = 10
+        self.tenant.save()
+        
+        with patch('stripe.Webhook.construct_event') as mock_construct:
+            mock_construct.return_value = payload
+            response = self.client.post(
+                url, 
+                payload, 
+                format='json',
+                HTTP_STRIPE_SIGNATURE='t=123,v1=abc'
+            )
+            self.assertEqual(response.status_code, 200)
+            
+        self.tenant.refresh_from_db()
+        self.assertEqual(self.tenant.stamp_balance, 110)
+
+    @patch('apps.billing.services.get_pac_service')
+    def test_stripe_webhook_automatic_invoicing_fails_when_no_stamps(self, mock_get_pac):
+        """
+        Verify automatic invoicing fails and creates FAILED invoice when stamp balance is 0.
+        """
+        # Configure tax profile first
+        profile = TaxProfile.objects.create(
+            tenant=self.tenant,
+            rfc="XAXX010101000",
+            razon_social="Client Company SA",
+            regimen_fiscal="601",
+            codigo_postal="06000",
+            facturapi_organization_id="org_mock_12345"
+        )
+        
+        # Zero stamps
+        self.tenant.stamp_balance = 0
+        self.tenant.save()
+        
+        url = reverse('stripe_webhook')
+        payload = {
+            "id": "evt_test_zero",
+            "type": "checkout.session.completed",
+            "data": {
+                "object": {
+                    "id": "cs_test_session_zero",
+                    "metadata": {
+                        "installment_id": self.installment.id,
+                        "wants_invoice": "true"
+                    }
+                }
+            }
+        }
+        
+        with patch('stripe.Webhook.construct_event') as mock_construct:
+            mock_construct.return_value = payload
+            response = self.client.post(
+                url, 
+                payload, 
+                format='json',
+                HTTP_STRIPE_SIGNATURE='t=123,v1=abc'
+            )
+            self.assertEqual(response.status_code, 200)
+            
+        # Invoice should exist in FAILED state
+        invoice = Invoice.objects.filter(tenant=self.tenant).first()
+        self.assertIsNotNone(invoice)
+        self.assertEqual(invoice.status, Invoice.Status.FAILED)
+        self.assertIn("timbres suficientes", invoice.error_message)

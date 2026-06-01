@@ -14,6 +14,12 @@ from .services import get_pac_service, PACError, LCOSyncError
 
 logger = logging.getLogger(__name__)
 
+STAMP_PACKAGES = {
+    50: {"price": 100.00, "stamps": 50, "description": "Paquete de 50 timbres fiscales"},
+    100: {"price": 180.00, "stamps": 100, "description": "Paquete de 100 timbres fiscales"},
+    500: {"price": 650.00, "stamps": 500, "description": "Paquete de 500 timbres fiscales"},
+}
+
 class BillingTenantMixin:
     """Mixin para obtener de forma segura el Tenant del usuario autenticado"""
     def get_tenant(self):
@@ -32,6 +38,85 @@ class BillingTenantMixin:
             raise PermissionDenied("No se encontró un portal (tenant) asociado a tu cuenta.")
         return tenant
 
+
+class BillingInfoView(BillingTenantMixin, APIView):
+    permission_classes = [permissions.IsAuthenticated, HasAddOnPermission]
+    addon_slug = 'mexico-invoicing'
+
+    def get(self, request):
+        tenant = self.get_tenant()
+        profile = TaxProfile.objects.filter(tenant=tenant).first()
+        
+        from apps.shop.models import Contract
+        is_commercial_partner = Contract.objects.filter(
+            user=tenant.owner,
+            is_active=True,
+            is_fully_signed=True,
+            plan__isnull=False
+        ).exists()
+        
+        addon_active = 'mexico-invoicing' in tenant.active_addons
+
+        data = {
+            "stamp_balance": tenant.stamp_balance,
+            "is_commercial_partner": is_commercial_partner,
+            "addon_active": addon_active,
+            "has_tax_profile": profile is not None,
+            "tax_profile": TaxProfileSerializer(profile).data if profile else None
+        }
+        return Response(data)
+
+class BuyStampsView(BillingTenantMixin, APIView):
+    permission_classes = [permissions.IsAuthenticated, HasAddOnPermission]
+    addon_slug = 'mexico-invoicing'
+
+    def post(self, request):
+        tenant = self.get_tenant()
+        package_size = request.data.get('package_size')
+        
+        try:
+            package_size = int(package_size)
+        except (ValueError, TypeError):
+            return Response({"error": "El tamaño del paquete debe ser un número entero."}, status=400)
+            
+        if package_size not in STAMP_PACKAGES:
+            return Response({"error": "Tamaño de paquete inválido. Opciones disponibles: 50, 100, 500."}, status=400)
+            
+        package = STAMP_PACKAGES[package_size]
+        
+        from django.conf import settings
+        import stripe
+        stripe.api_key = settings.STRIPE_SECRET_KEY
+        
+        from apps.shop.views import get_frontend_origin
+        frontend_url = get_frontend_origin(request)
+        
+        try:
+            session = stripe.checkout.Session.create(
+                payment_method_types=['card'],
+                line_items=[{
+                    'price_data': {
+                        'currency': 'mxn',
+                        'product_data': {
+                            'name': f"[Néctar Labs] {package['description']}",
+                            'description': f"Timbres fiscales para {tenant.name}",
+                        },
+                        'unit_amount': int(package['price'] * 100),
+                    },
+                    'quantity': 1,
+                }],
+                mode='payment',
+                success_url=f"{frontend_url}/tenants/{tenant.subdomain}/admin?tab=billing&payment=success&package={package_size}",
+                cancel_url=f"{frontend_url}/tenants/{tenant.subdomain}/admin?tab=billing&payment=cancel",
+                metadata={
+                    'tenant_id': str(tenant.id),
+                    'stamps_count': package_size,
+                    'type': 'stamp_package'
+                }
+            )
+            return Response({'url': session.url}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class TaxProfileView(BillingTenantMixin, APIView):
     permission_classes = [permissions.IsAuthenticated, HasAddOnPermission]
@@ -124,6 +209,13 @@ class InvoiceViewSet(BillingTenantMixin, viewsets.ModelViewSet):
             if not customer_info.get(field):
                 return Response({"error": f"El campo customer_info.{field} es obligatorio."}, status=400)
 
+        # Check stamp balance
+        if tenant.stamp_balance <= 0:
+            return Response(
+                {"error": "No tienes timbres suficientes en tu balance. Adquiere un paquete de timbres para continuar."}, 
+                status=400
+            )
+
         # Create Invoice local instance
         invoice = Invoice.objects.create(
             tenant=tenant,
@@ -148,11 +240,19 @@ class InvoiceViewSet(BillingTenantMixin, viewsets.ModelViewSet):
             invoice.status = Invoice.Status.PAID
             invoice.error_message = None
             invoice.save()
+            
+            tenant.stamp_balance = max(0, tenant.stamp_balance - 1)
+            tenant.save()
+            
             return Response(InvoiceSerializer(invoice).data, status=status.HTTP_201_CREATED)
         except LCOSyncError as e:
             invoice.status = Invoice.Status.LCO_SYNC_PENDING
             invoice.error_message = str(e)
             invoice.save()
+            
+            tenant.stamp_balance = max(0, tenant.stamp_balance - 1)
+            tenant.save()
+            
             return Response(InvoiceSerializer(invoice).data, status=status.HTTP_202_ACCEPTED)
         except PACError as e:
             invoice.status = Invoice.Status.FAILED
@@ -181,12 +281,20 @@ class InvoiceViewSet(BillingTenantMixin, viewsets.ModelViewSet):
         if invoice.status not in [Invoice.Status.LCO_SYNC_PENDING, Invoice.Status.FAILED]:
             return Response({"error": "Solo se pueden reintentar facturas fallidas o pendientes por sincronía LCO."}, status=400)
 
-        profile = getattr(invoice.tenant, 'tax_profile', None)
+        original_status = invoice.status
+        tenant = invoice.tenant
+
+        # Check stamp balance if we are retrying a FAILED invoice
+        if original_status == Invoice.Status.FAILED:
+            if tenant.stamp_balance <= 0:
+                return Response({"error": "No tienes timbres suficientes en tu balance para reintentar esta factura."}, status=400)
+
+        profile = getattr(tenant, 'tax_profile', None)
         if not profile or not profile.facturapi_organization_id:
             return Response({"error": "No se puede facturar; el perfil fiscal del inquilino no está configurado."}, status=400)
 
         pac = get_pac_service()
-        user = invoice.tenant.owner
+        user = tenant.owner
         
         is_parent = not invoice.is_tenant_to_customer
         
@@ -201,7 +309,7 @@ class InvoiceViewSet(BillingTenantMixin, viewsets.ModelViewSet):
             items = [{
                 "quantity": 1,
                 "unit_price": float(invoice.total),
-                "description": f"Suscripción de Ecosistema Digital - {invoice.tenant.name}"
+                "description": f"Suscripción de Ecosistema Digital - {tenant.name}"
             }]
         else:
             customer_info = request.data.get("customer_info")
@@ -228,6 +336,10 @@ class InvoiceViewSet(BillingTenantMixin, viewsets.ModelViewSet):
             invoice.error_message = None
             invoice.save()
 
+            if original_status == Invoice.Status.FAILED:
+                tenant.stamp_balance = max(0, tenant.stamp_balance - 1)
+                tenant.save()
+
             # Enviar el correo de confirmación de facturación
             try:
                 from apps.shop.utils import send_payment_receipt_email
@@ -245,6 +357,11 @@ class InvoiceViewSet(BillingTenantMixin, viewsets.ModelViewSet):
             invoice.status = Invoice.Status.LCO_SYNC_PENDING
             invoice.error_message = str(e)
             invoice.save(update_fields=['status', 'error_message'])
+
+            if original_status == Invoice.Status.FAILED:
+                tenant.stamp_balance = max(0, tenant.stamp_balance - 1)
+                tenant.save()
+
             return Response({"error": f"Sello no activo (SAT LCO). Reintentando más tarde automáticamente: {e}"}, status=400)
             
         except PACError as e:

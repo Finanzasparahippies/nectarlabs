@@ -322,38 +322,61 @@ class AddOn(models.Model):
         super().save(*args, **kwargs)
         
         updated = False
-        if getattr(settings, "STRIPE_SECRET_KEY", None) and (not self.stripe_price_id or not self.stripe_yearly_price_id):
+        if getattr(settings, "STRIPE_SECRET_KEY", None) and not getattr(settings, "TESTING", False) and (not self.stripe_price_id or not self.stripe_yearly_price_id):
             import stripe
             stripe.api_key = settings.STRIPE_SECRET_KEY
             try:
-                # Create Stripe Product
-                product = stripe.Product.create(
-                    name=f"[Nectar Labs Add-on] {self.name}",
-                    description=self.description,
-                )
+                # Search for existing Stripe Product with this slug
+                product = None
+                products = stripe.Product.list(limit=1, active=True, metadata={"addon_slug": self.slug})
+                if products.data:
+                    product = products.data[0]
+                else:
+                    product = stripe.Product.create(
+                        name=f"[Nectar Labs Add-on] {self.name}",
+                        description=self.description,
+                        metadata={"addon_slug": self.slug}
+                    )
+                
+                # Fetch active prices for this product to avoid duplicates
+                prices = stripe.Price.list(product=product.id, active=True)
                 
                 if not self.stripe_price_id:
-                    monthly_price = stripe.Price.create(
-                        unit_amount=int(self.monthly_price * 100),
-                        currency="mxn",
-                        product=product.id,
-                        recurring={"interval": "month"},
-                    )
-                    self.stripe_price_id = monthly_price.id
+                    monthly_price_id = None
+                    for p in prices.data:
+                        if p.recurring and p.recurring.get("interval") == "month" and p.unit_amount == int(self.monthly_price * 100) and p.currency == "mxn":
+                            monthly_price_id = p.id
+                            break
+                    if not monthly_price_id:
+                        monthly_price = stripe.Price.create(
+                            unit_amount=int(self.monthly_price * 100),
+                            currency="mxn",
+                            product=product.id,
+                            recurring={"interval": "month"},
+                        )
+                        monthly_price_id = monthly_price.id
+                    self.stripe_price_id = monthly_price_id
                     updated = True
                     
                 if not self.stripe_yearly_price_id:
-                    yearly_price = stripe.Price.create(
-                        unit_amount=int(self.yearly_price * 100),
-                        currency="mxn",
-                        product=product.id,
-                        recurring={"interval": "year"},
-                    )
-                    self.stripe_yearly_price_id = yearly_price.id
+                    yearly_price_id = None
+                    for p in prices.data:
+                        if p.recurring and p.recurring.get("interval") == "year" and p.unit_amount == int(self.yearly_price * 100) and p.currency == "mxn":
+                            yearly_price_id = p.id
+                            break
+                    if not yearly_price_id:
+                        yearly_price = stripe.Price.create(
+                            unit_amount=int(self.yearly_price * 100),
+                            currency="mxn",
+                            product=product.id,
+                            recurring={"interval": "year"},
+                        )
+                        yearly_price_id = yearly_price.id
+                    self.stripe_yearly_price_id = yearly_price_id
                     updated = True
             except Exception as e:
                 import logging
-                logging.getLogger("apps").error(f"Error creating Stripe Product for AddOn {self.slug}: {e}")
+                logging.getLogger("apps").error(f"Error creating Stripe Product/Prices for AddOn {self.slug}: {e}")
                 
         if updated:
             super().save(update_fields=['stripe_price_id', 'stripe_yearly_price_id'])

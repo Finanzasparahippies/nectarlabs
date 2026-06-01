@@ -85,6 +85,11 @@ class Tenant(models.Model):
     custom_smtp_use_tls = models.BooleanField(default=True)
     custom_smtp_from_email = models.EmailField(blank=True, null=True)
     
+    stamp_balance = models.PositiveIntegerField(
+        default=0,
+        help_text="Balance actual de timbres fiscales (comprados o incluidos en la suscripción)."
+    )
+    
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

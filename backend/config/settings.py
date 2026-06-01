@@ -127,7 +127,9 @@ if not env("DATABASE_URL", default=None):
 
 # Force using SQLite when running tests to avoid Supabase connection pooler conflicts
 import sys
+TESTING = False
 if 'test' in sys.argv:
+    TESTING = True
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.sqlite3",

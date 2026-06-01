@@ -14,7 +14,7 @@ from apps.blog.views import PostViewSet
 from apps.tickets.views import TicketViewSet, SupportChatViewSet
 from apps.users.views import UserViewSet
 from apps.tenants.views import TenantViewSet, public_config, guest_auth
-from apps.billing.views import TaxProfileView, InvoiceViewSet
+from apps.billing.views import TaxProfileView, InvoiceViewSet, BillingInfoView, BuyStampsView
 
 router = DefaultRouter()
 router.register(r'plans', PlanViewSet)
@@ -66,6 +66,8 @@ urlpatterns = [
     path("ckeditor5/", include('django_ckeditor_5.urls')),
     path('api/shop/stripe-webhook/', stripe_webhook, name='stripe_webhook'),
     path('api/billing/tax-profile/', TaxProfileView.as_view(), name='billing_tax_profile'),
+    path('api/billing/info/', BillingInfoView.as_view(), name='billing_info'),
+    path('api/billing/buy-stamps/', BuyStampsView.as_view(), name='billing_buy_stamps'),
 ]
 
 

@@ -47,7 +47,7 @@ class SponsorshipTier(models.Model):
         
         updated = False
         # Only attempt Stripe product creation if stripe secret key is set
-        if getattr(settings, "STRIPE_SECRET_KEY", None) and (not self.stripe_price_id or (self.type == "SUBSCRIPTION" and not self.stripe_price_id_annual)):
+        if getattr(settings, "STRIPE_SECRET_KEY", None) and not getattr(settings, "TESTING", False) and (not self.stripe_price_id or (self.type == "SUBSCRIPTION" and not self.stripe_price_id_annual)):
             from .utils import create_stripe_product_and_price
             try:
                 price_ids = create_stripe_product_and_price(self)

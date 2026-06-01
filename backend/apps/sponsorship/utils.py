@@ -8,9 +8,13 @@ logger = logging.getLogger("apps")
 def create_stripe_product_and_price(tier):
     """
     Creates a Product and two Prices (Monthly and Annual) in Stripe for a given SponsorshipTier.
-    Returns a dict with stripe price IDs.
+    Returns a dict with stripe price IDs. Reuses existing products/prices via metadata if they exist.
     """
     if not stripe.api_key:
+        return {}
+
+    # Skip real calls in testing mode
+    if getattr(settings, "TESTING", False):
         return {}
 
     images = []
@@ -20,33 +24,77 @@ def create_stripe_product_and_price(tier):
         except Exception:
             pass
 
-    # Create Product
-    product = stripe.Product.create(
-        name=f"[{tier.tenant.name}] {tier.name}",
-        description=tier.description or f"Membresía {tier.name} para {tier.tenant.name}",
-        images=images if images else None,
-    )
-    
-    # Create Monthly Price
-    monthly_price = stripe.Price.create(
-        unit_amount=int(tier.price * 100),
-        currency="mxn",
-        product=product.id,
-        recurring={"interval": "month"} if tier.type == "SUBSCRIPTION" else None,
-    )
-    
-    price_ids = {'monthly': monthly_price.id}
+    # Search for an existing product with this tenant subdomain and tier level metadata
+    product = None
+    try:
+        products = stripe.Product.list(
+            limit=1,
+            active=True,
+            metadata={"tenant_subdomain": tier.tenant.subdomain, "tier_level": str(tier.level)}
+        )
+        if products.data:
+            product = products.data[0]
+    except Exception as list_err:
+        logger.error(f"Error listing products in Stripe: {list_err}")
 
-    # Create Annual Price (only if SUBSCRIPTION)
-    if tier.type == "SUBSCRIPTION":
-        # price_annual is calculated in the model's save method
-        annual_price = stripe.Price.create(
-            unit_amount=int(tier.price_annual * 100),
+    if not product:
+        product = stripe.Product.create(
+            name=f"[{tier.tenant.name}] {tier.name}",
+            description=tier.description or f"Membresía {tier.name} para {tier.tenant.name}",
+            images=images if images else None,
+            metadata={
+                "tenant_subdomain": tier.tenant.subdomain,
+                "tier_level": str(tier.level),
+                "sponsorship_tier_id": str(tier.id)
+            }
+        )
+
+    # List active prices for this product to avoid duplicates
+    prices_list = []
+    try:
+        prices_list = stripe.Price.list(product=product.id, active=True).data
+    except Exception as prices_err:
+        logger.error(f"Error listing prices for product {product.id}: {prices_err}")
+
+    # Check monthly/one-time price
+    monthly_price_id = None
+    for p in prices_list:
+        is_recurring_month = p.recurring and p.recurring.get("interval") == "month"
+        is_one_time = not p.recurring
+        if tier.type == "SUBSCRIPTION" and is_recurring_month and p.unit_amount == int(tier.price * 100) and p.currency == "mxn":
+            monthly_price_id = p.id
+            break
+        elif tier.type == "DONATION" and is_one_time and p.unit_amount == int(tier.price * 100) and p.currency == "mxn":
+            monthly_price_id = p.id
+            break
+
+    if not monthly_price_id:
+        monthly_price = stripe.Price.create(
+            unit_amount=int(tier.price * 100),
             currency="mxn",
             product=product.id,
-            recurring={"interval": "year"},
+            recurring={"interval": "month"} if tier.type == "SUBSCRIPTION" else None,
         )
-        price_ids['annual'] = annual_price.id
+        monthly_price_id = monthly_price.id
+
+    price_ids = {'monthly': monthly_price_id}
+
+    # Check/Create Annual Price (only if SUBSCRIPTION)
+    if tier.type == "SUBSCRIPTION":
+        annual_price_id = None
+        for p in prices_list:
+            if p.recurring and p.recurring.get("interval") == "year" and p.unit_amount == int(tier.price_annual * 100) and p.currency == "mxn":
+                annual_price_id = p.id
+                break
+        if not annual_price_id:
+            annual_price = stripe.Price.create(
+                unit_amount=int(tier.price_annual * 100),
+                currency="mxn",
+                product=product.id,
+                recurring={"interval": "year"},
+            )
+            annual_price_id = annual_price.id
+        price_ids['annual'] = annual_price_id
         
     return price_ids
 

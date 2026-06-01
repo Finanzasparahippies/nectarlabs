@@ -63,10 +63,12 @@ export default function TenantAdminPage() {
 
   // Billing tab states
   const [taxProfile, setTaxProfile] = useState<any | null>(null);
+  const [billingInfo, setBillingInfo] = useState<any | null>(null);
   const [invoices, setInvoices] = useState<any[]>([]);
   const [loadingBilling, setLoadingBilling] = useState(false);
   const [isSavingTaxProfile, setIsSavingTaxProfile] = useState(false);
   const [taxProfileError, setTaxProfileError] = useState<string | null>(null);
+  const [buyingPackage, setBuyingPackage] = useState<number | null>(null);
 
   // Tax Profile Form State
   const [rfc, setRfc] = useState('');
@@ -77,21 +79,52 @@ export default function TenantAdminPage() {
   const [keyFile, setKeyFile] = useState<File | null>(null);
   const [privateKeyPassword, setPrivateKeyPassword] = useState('');
 
+  // Handle URL query parameters for success/cancel redirects
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const paymentStatus = urlParams.get('payment');
+      if (paymentStatus === 'success') {
+        const pkg = urlParams.get('package');
+        showToast(`¡Pago exitoso! Se han acreditado ${pkg || ''} timbres a tu balance.`, 'success');
+        // Clean URL parameters
+        const newUrl = window.location.pathname + '?tab=billing';
+        window.history.replaceState({}, '', newUrl);
+      } else if (paymentStatus === 'cancel') {
+        showToast('La compra de timbres fue cancelada.', 'info');
+        const newUrl = window.location.pathname + '?tab=billing';
+        window.history.replaceState({}, '', newUrl);
+      }
+    }
+  }, []);
+
+  // Initialize active tab from URL param if available
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const tabParam = urlParams.get('tab');
+      if (tabParam === 'metrics' || tabParam === 'branding' || tabParam === 'billing') {
+        setActiveTab(tabParam);
+      }
+    }
+  }, [subdomain]);
+
   const loadBillingData = async () => {
     if (!tenantConfig) return;
     setLoadingBilling(true);
     try {
       try {
-        const profile = await fetcher(`/billing/tax-profile/?tenant_id=${tenantConfig.id}`);
-        setTaxProfile(profile);
-        setRfc(profile.rfc || '');
-        setRazonSocial(profile.razon_social || '');
-        setRegimenFiscal(profile.regimen_fiscal || '601');
-        setCodigoPostal(profile.codigo_postal || '');
-      } catch (err: any) {
-        if (err.status !== 404) {
-          console.error('Error fetching tax profile:', err);
+        const info = await fetcher(`/billing/info/?tenant_id=${tenantConfig.id}`);
+        setBillingInfo(info);
+        if (info.tax_profile) {
+          setTaxProfile(info.tax_profile);
+          setRfc(info.tax_profile.rfc || '');
+          setRazonSocial(info.tax_profile.razon_social || '');
+          setRegimenFiscal(info.tax_profile.regimen_fiscal || '601');
+          setCodigoPostal(info.tax_profile.codigo_postal || '');
         }
+      } catch (err: any) {
+        console.error('Error fetching billing info:', err);
       }
 
       const invs = await fetcher(`/billing/invoices/?tenant_id=${tenantConfig.id}`);
@@ -108,6 +141,29 @@ export default function TenantAdminPage() {
       loadBillingData();
     }
   }, [activeTab, tenantConfig]);
+
+  const handleBuyStamps = async (size: number) => {
+    if (!tenantConfig) return;
+    setBuyingPackage(size);
+    try {
+      const response = await fetcher(`/billing/buy-stamps/?tenant_id=${tenantConfig.id}`, {
+        method: 'POST',
+        body: JSON.stringify({ package_size: size }),
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      if (response.url) {
+        window.location.href = response.url;
+      } else {
+        showToast('No se recibió la URL de pago de Stripe.', 'error');
+      }
+    } catch (err: any) {
+      showToast(err.message || 'Error al iniciar la compra de timbres.', 'error');
+    } finally {
+      setBuyingPackage(null);
+    }
+  };
 
   const handleSaveTaxProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -874,7 +930,79 @@ export default function TenantAdminPage() {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
               {/* Form Column */}
               <div className="lg:col-span-5 space-y-6">
-                <div className="admin-card border rounded-[2rem] p-6 shadow-lg space-y-6">
+                {/* Control de Timbres Card */}
+                <div className="admin-card border rounded-[2rem] p-6 shadow-lg space-y-6 relative overflow-hidden text-left">
+                  {/* Decorative background glow */}
+                  <div className="absolute -top-24 -left-24 w-48 h-48 rounded-full blur-[80px] opacity-10 pointer-events-none" style={{ backgroundColor: primaryColor }}></div>
+                  
+                  <div className="border-b border-white/5 pb-4">
+                    <h3 className="text-xs font-black uppercase tracking-widest text-white">Balance de Timbres</h3>
+                    <p className="text-[8px] text-white/40 uppercase tracking-wider mt-1">Control de consumo y paquetes</p>
+                  </div>
+
+                  <div className="flex items-center justify-between gap-4 p-4 rounded-2xl bg-white/[0.02] border border-white/5">
+                    <div>
+                      <span className="text-[7px] uppercase font-black tracking-widest text-white/40 block">Timbres Disponibles</span>
+                      <span className="text-3xl font-black text-white font-mono leading-none mt-1 block">
+                        {billingInfo ? billingInfo.stamp_balance : 0}
+                      </span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-[7px] uppercase font-black tracking-widest text-white/40 block">Esquema Actual</span>
+                      <span className="mt-1 inline-block px-2.5 py-0.5 border text-[7px] font-black uppercase tracking-widest rounded-full bg-nectar-gold/10 text-nectar-gold border-nectar-gold/20">
+                        {billingInfo?.is_commercial_partner ? 'Socio Comercial' : 'Suscripción Add-on'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Plan Description details */}
+                  <div className="text-[9px] text-white/50 leading-relaxed space-y-1.5 p-3 rounded-xl bg-white/[0.01] border border-white/5">
+                    {billingInfo?.is_commercial_partner ? (
+                      <p>
+                        ✨ Al ser **Socio Comercial**, tu módulo de facturación es gratuito. Solo pagas por tus paquetes de timbres conforme los consumes.
+                      </p>
+                    ) : (
+                      <p>
+                        💼 Tu suscripción incluye **100 timbres mensuales** que se renuevan automáticamente en tu fecha de facturación.
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Packages Section */}
+                  <div className="space-y-3">
+                    <h4 className="text-[9px] font-black uppercase tracking-wider text-white">Adquirir Paquetes de Timbres</h4>
+                    <div className="grid grid-cols-3 gap-2">
+                      {[
+                        { size: 50, price: 100, desc: '50 Timbres' },
+                        { size: 100, price: 180, desc: '100 Timbres' },
+                        { size: 500, price: 650, desc: '500 Timbres' }
+                      ].map((pkg) => (
+                        <button
+                          key={pkg.size}
+                          onClick={() => handleBuyStamps(pkg.size)}
+                          disabled={buyingPackage !== null}
+                          className="flex flex-col items-center justify-between p-3 rounded-xl border border-white/5 hover:border-nectar-gold bg-white/[0.01] hover:bg-white/[0.03] transition-all cursor-pointer group text-center disabled:opacity-40"
+                        >
+                          <span className="text-[8px] font-black text-white/70 group-hover:text-nectar-gold uppercase tracking-wider">
+                            {pkg.desc}
+                          </span>
+                          <span className="text-xs font-black text-white font-mono mt-2">
+                            ${pkg.price}
+                          </span>
+                          <span className="text-[6px] text-white/30 uppercase font-black mt-1">
+                            MXN
+                          </span>
+                          <div className="w-full mt-3 py-1 bg-white/5 group-hover:bg-nectar-gold group-hover:text-background text-white text-[6px] font-black uppercase tracking-wider rounded-md transition-all">
+                            {buyingPackage === pkg.size ? 'Cargando...' : 'Comprar'}
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Configuración Fiscal Card */}
+                <div className="admin-card border rounded-[2rem] p-6 shadow-lg space-y-6 text-left">
                   <div className="border-b border-white/5 pb-4">
                     <h3 className="text-xs font-black uppercase tracking-widest text-white">Configuración Fiscal</h3>
                     <p className="text-[8px] text-white/40 uppercase tracking-wider mt-1">Perfil emisor registrado ante el SAT</p>
