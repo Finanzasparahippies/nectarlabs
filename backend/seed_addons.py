@@ -13,7 +13,7 @@ def seed_addons():
     addons_data = [
         {
             "slug": "live-chat",
-            "name": "Néctar Live Chat",
+            "name": "Néctar Live Chat Bot",
             "category_badge": "COMUNICACIÓN EN VIVO",
             "description": "Widget de chat flotante en tiempo real y consola multi-agente con historial persistente.",
             "detailed_description": "Un canal de comunicación instantáneo integrado para retención y soporte de usuarios. Los clientes ven un widget interactivo de chat, mientras que los agentes de soporte gestionan las conversaciones desde una consola interna dedicada.",
@@ -32,14 +32,14 @@ def seed_addons():
         },
         {
             "slug": "booking-signature",
-            "name": "Néctar Booking & Signature",
-            "category_badge": "CONTRATOS Y CITAS",
-            "description": "Motor de reserva de citas integrado con firma digital de propuestas y generación de PDFs con firma incrustada.",
-            "detailed_description": "Ideal para digitalizar acuerdos contractuales. Permite configurar calendarios interactivos, generar propuestas en PDF al vuelo a partir de plantillas y capturar firmas táctiles o con mouse seguras con marcas de tiempo criptográficas.",
+            "name": "Néctar Contratos Digitales",
+            "category_badge": "CONTRATOS DIGITALES",
+            "description": "Motor de contratos digitales con firma incrustada y generación de PDFs automatico.",
+            "detailed_description": "Ideal para digitalizar acuerdos contractuales. Permite configurar contratos, generar propuestas en PDF automaticos y capturar firmas táctiles o con mouse seguras con marcas de tiempo criptográficas.",
             "monthly_price": 149.00,
             "yearly_price": 1490.00,
-            "origin_project": "ms-ambar",
-            "source_reference": "ms-ambar/backend/apps/bookings & templates/emails",
+            "origin_project": "nectarlabs-main",
+            "source_reference": "backend/apps/contracts/models/contract.py, backend/apps/contracts/models/proposal.py",
             "complexity": AddOn.Complexity.HIGH,
             "server_requirements": "Almacenamiento seguro en la nube (AWS S3, Azure Blob o similar) para resguardar PDFs + Biblioteca ReportLab.",
             "technical_details": [
@@ -51,7 +51,7 @@ def seed_addons():
         },
         {
             "slug": "logistics-gps",
-            "name": "Néctar Logistics & GPS",
+            "name": "Néctar Delivery",
             "category_badge": "LOGÍSTICA Y CONTROL",
             "description": "Seguimiento en tiempo real de repartidores, trazado de rutas óptimas de paradas y cálculo de ETA en mapa interactivo.",
             "detailed_description": "Módulo de geolocalización industrial. Registra rutas y telemetría GPS, ofreciendo una experiencia interactiva tanto al administrador (consola de flotas) como al usuario final (seguimiento del pedido en tiempo real).",
@@ -70,14 +70,14 @@ def seed_addons():
         },
         {
             "slug": "patreon-sponsorship",
-            "name": "Néctar Patreon/Sponsorship",
+            "name": "Néctar Sponsors & Content Access Program (NSCAP)",
             "category_badge": "MONETIZACIÓN",
             "description": "Pasarela de suscripciones recurrentes de Stripe con control de acceso a feeds exclusivos y niveles de membresía.",
             "detailed_description": "Permite monetizar tu contenido, comunidad o SaaS de manera flexible. Automatiza cobros recurrentes de Stripe, gestiona roles y bloquea o desbloquea secciones de contenido multimedia basándose en el nivel del suscriptor.",
             "monthly_price": 169.00,
             "yearly_price": 1690.00,
-            "origin_project": "tierraviva",
-            "source_reference": "tierraviva/tierraViva-backend-main/sponsorship",
+            "origin_project": "nectarlabs-main",
+            "source_reference": "backend/apps/sponsorship/models/sponsorship.py",
             "complexity": AddOn.Complexity.MEDIUM,
             "server_requirements": "Cuenta comercial de Stripe + Configuración de endpoint para Webhooks HTTPS del backend.",
             "technical_details": [
@@ -89,26 +89,26 @@ def seed_addons():
         },
         {
             "slug": "analytics-apm",
-            "name": "Néctar Analytics APM",
-            "category_badge": "MONITOREO DE DESEMPEÑO",
-            "description": "Monitor de Core Web Vitals en navegador y telemetría de base de datos con conteo de queries e hilos en tiempo real.",
-            "detailed_description": "Optimiza la infraestructura midiendo el impacto real. Este middleware inyecta telemetría que calcula Web Vitals (LCP, FID, CLS) desde el lado del cliente y registra el tiempo de respuesta y la eficiencia de las consultas SQL en Django.",
+            "name": "Néctar Administrador de Ventas y Analytics",
+            "category_badge": "MONETIZACIÓN",
+            "description": "Administrador de ventas y analytics para Nectar, con dashboard de métricas en tiempo real, gráficos interactivos y exportación de datos.",
+            "detailed_description": "Administra las ventas y analytics de tu plataforma. Con un dashboard intuitivo, podrás ver métricas en tiempo real, gráficos interactivos y exportar datos en diferentes formatos. Ideal para negocios que buscan optimizar sus ventas y analytics.",
             "monthly_price": 99.00,
             "yearly_price": 990.00,
             "origin_project": "nectarlabs-main",
-            "source_reference": "backend/apps/performance (PerformanceMiddleware, models.py)",
+            "source_reference": "backend/apps/sales (SalesMiddleware, models.py)",
             "complexity": AddOn.Complexity.MEDIUM,
             "server_requirements": "Módulo de Middleware Django instalado + Agregación de logs asíncrona para no afectar el flujo principal.",
             "technical_details": [
-                "Detección automática de consultas duplicadas (N+1)",
-                "Monitoreo del hardware del servidor (CPU/RAM/SSD)",
-                "Alertas configurables por lentitud de base de datos",
-                "Registro detallado de Web Vitals del navegador del cliente"
+                "Dashboard interactivo con métricas en tiempo real",
+                "Exportación de datos en diferentes formatos",
+                "Gráficos interactivos",
+                "Registro detallado de transacciones"
             ]
         },
         {
             "slug": "newsletter-campaigner",
-            "name": "Néctar Newsletter",
+            "name": "Néctar Newsletter y Campañas de Email",
             "category_badge": "EMAIL MARKETING",
             "description": "Gestor de suscripciones, programador de campañas con plantillas HTML y envío masivo optimizado para SMTP/SES.",
             "detailed_description": "Envía boletines interactivos a tu base de contactos. Cuenta con un sistema automático de tokens únicos de cancelación de suscripción para cumplir con las normativas internacionales de correo, además de plantillas HTML prediseñadas.",
@@ -121,7 +121,7 @@ def seed_addons():
             "technical_details": [
                 "Tokens únicos de desuscripción seguros (UUID)",
                 "Render de templates de correo HTML con Django Template Loader",
-                "Manejo de estados activos / inactivos de la base de datos",
+                "Manejo de estados activos / inactivos en la base de datos",
                 "Soporte multi-idioma de plantillas"
             ]
         },
@@ -140,7 +140,8 @@ def seed_addons():
             "technical_details": [
                 "Creación dinámica de organizaciones subordinadas en el PAC",
                 "Carga directa y segura de sellos CSD (.cer, .key)",
-                "Generación y timbrado automatizado de CFDI 4.0 (con IVA 16% auto-calculado)",
+                "Soporte para 100 timbres mensuales incluidos",
+                "Generación y timbrado automatizado de CFDI 4.0",
                 "Descarga local e independiente de archivos XML y PDF de facturas",
                 "Manejo inteligente de sincronización LCO del SAT (24-72 hrs)"
             ]
@@ -179,19 +180,19 @@ def seed_plans():
         },
         {
             "id": 2,
-            "name": "Plan Staging",
-            "price": 29999.00,
-            "hours": 90,
-            "description": "Nuestro plan insignia. Desarrollo continuo de producto, arquitectura serverless escalable y optimizaciones Premium.",
+            "name": "Plan Mid",
+            "price": 2800.00,
+            "hours": 10,
+            "description": "Ideal para proyectos en producción que requieren mantenimiento continuo y mejoras constantes.",
             "is_recommended": True,
             "is_active": True
         },
         {
             "id": 3,
-            "name": "Plan Producción",
-            "price": 49999.00,
-            "hours": 160,
-            "description": "Ingeniería de software dedicada, soporte 24/7 y control total de infraestructura de alta disponibilidad.",
+            "name": "Plan Premium",
+            "price": 2500.00,
+            "hours": 12,
+            "description": "Ideal para empresas que buscan escalabilidad y desarrollo continuo con soporte prioritario.",
             "is_recommended": False,
             "is_active": True
         }
