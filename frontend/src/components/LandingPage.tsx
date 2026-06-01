@@ -12,6 +12,7 @@ import SellerProgram from './landing/SellerProgram';
 import Navbar from './Navbar';
 import Link from 'next/link';
 import ConsultationScheduler from './landing/ConsultationScheduler';
+import PartnersShowcase from './landing/PartnersShowcase';
 
 export default function LandingPage() {
   const [isSchedulerOpen, setIsSchedulerOpen] = useState(false);
@@ -65,6 +66,8 @@ export default function LandingPage() {
 
       {/* Main Content Sections */}
       <div className="w-full space-y-32 pb-32">
+        <PartnersShowcase />
+
         <div id="bento">
           <BentoGrid />
         </div>
