@@ -573,9 +573,35 @@ class LeadAppointmentTests(APITestCase):
     def test_anonymous_booking_with_multiple_addons(self):
         from apps.dashboard.models import Lead, LeadAppointment
         from apps.shop.models import AddOn
-        
-        addon1, _ = AddOn.objects.get_or_create(slug="live-chat", defaults={"name": "Néctar Live Chat", "monthly_price": 50.00})
-        addon2, _ = AddOn.objects.get_or_create(slug="booking-signature", defaults={"name": "Néctar Booking & Signature", "monthly_price": 75.00})
+
+        addon1, _ = AddOn.objects.get_or_create(
+            slug="live-chat",
+            defaults={
+                "name": "Néctar Live Chat",
+                "category_badge": "Chat",
+                "description": "Live chat widget",
+                "detailed_description": "Detailed live chat widget",
+                "monthly_price": 50.00,
+                "yearly_price": 500.00,
+                "origin_project": "Nectar Chat",
+                "source_reference": "ref",
+                "server_requirements": "None"
+            }
+        )
+        addon2, _ = AddOn.objects.get_or_create(
+            slug="booking-signature",
+            defaults={
+                "name": "Néctar Booking & Signature",
+                "category_badge": "Booking",
+                "description": "Booking and signature",
+                "detailed_description": "Detailed booking and signature",
+                "monthly_price": 75.00,
+                "yearly_price": 750.00,
+                "origin_project": "Nectar Book",
+                "source_reference": "ref",
+                "server_requirements": "None"
+            }
+        )
 
         data = {
             "client_name": "Pedro Gomez Multiple",
