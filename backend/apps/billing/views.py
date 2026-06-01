@@ -163,6 +163,7 @@ class BuyStampsView(BillingTenantMixin, APIView):
                 payment_method_types=['card'],
                 line_items=line_items,
                 mode='payment',
+                allow_promotion_codes=True,
                 success_url=f"{frontend_url}/tenants/{tenant.subdomain}/admin?tab=billing&payment=success&package={package_size}",
                 cancel_url=f"{frontend_url}/tenants/{tenant.subdomain}/admin?tab=billing&payment=cancel",
                 metadata={

@@ -636,6 +636,7 @@ class BillingSystemTests(APITestCase):
         self.assertEqual(kwargs["metadata"]["tenant_id"], str(self.tenant.id))
         self.assertEqual(kwargs["metadata"]["stamps_count"], 100)
         self.assertEqual(kwargs["metadata"]["type"], "stamp_package")
+        self.assertEqual(kwargs.get("allow_promotion_codes"), True)
 
     def test_manual_invoicing_fails_when_no_stamps(self):
         """

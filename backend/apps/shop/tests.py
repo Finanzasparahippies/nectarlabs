@@ -889,9 +889,108 @@ class StripeAddonSubscriptionTests(APITestCase):
         args, kwargs = mock_checkout_create.call_args
         self.assertEqual(kwargs['line_items'][0]['price'], 'price_mock_123')
         self.assertEqual(kwargs['mode'], 'subscription')
+        self.assertEqual(kwargs['allow_promotion_codes'], True)
         self.assertEqual(kwargs['metadata']['user_id'], self.user.id)
         self.assertEqual(kwargs['metadata']['addon_id'], self.addon.id)
         self.assertEqual(kwargs['metadata']['comments'], 'Please install ASAP')
+
+    @patch('stripe.checkout.Session.create')
+    def test_addon_subscribe_with_valid_django_promo_code(self, mock_checkout_create):
+        mock_checkout_create.return_value.url = "https://checkout.stripe.com/pay/mock_session_123"
+        
+        # Create a valid PromoCode in Django
+        PromoCode.objects.create(
+            code="ADDON50",
+            code_type=PromoCode.CodeType.CLIENT,
+            discount_percentage=50.00,
+            is_active=True
+        )
+        
+        self.client.force_authenticate(user=self.user)
+        url = reverse('addon-subscribe', kwargs={'pk': self.addon.id})
+        response = self.client.post(url, {
+            'billing_cycle': 'monthly',
+            'comments': 'Please install ASAP',
+            'promo_code': 'ADDON50'
+        }, format='json')
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['url'], "https://checkout.stripe.com/pay/mock_session_123")
+        
+        mock_checkout_create.assert_called_once()
+        kwargs = mock_checkout_create.call_args[1]
+        self.assertEqual(kwargs['discounts'], [{'coupon': 'dummy_coupon_id'}])
+
+    def test_addon_subscribe_with_invalid_django_promo_code(self):
+        self.client.force_authenticate(user=self.user)
+        url = reverse('addon-subscribe', kwargs={'pk': self.addon.id})
+        response = self.client.post(url, {
+            'billing_cycle': 'monthly',
+            'promo_code': 'NON_EXISTENT_CODE'
+        }, format='json')
+        
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('error', response.data)
+        self.assertEqual(response.data['error'], 'Código promocional no encontrado.')
+
+    def test_addon_subscribe_with_expired_django_promo_code(self):
+        # Create an inactive PromoCode
+        PromoCode.objects.create(
+            code="EXPIRED20",
+            code_type=PromoCode.CodeType.CLIENT,
+            discount_percentage=20.00,
+            is_active=False
+        )
+        
+        self.client.force_authenticate(user=self.user)
+        url = reverse('addon-subscribe', kwargs={'pk': self.addon.id})
+        response = self.client.post(url, {
+            'billing_cycle': 'monthly',
+            'promo_code': 'EXPIRED20'
+        }, format='json')
+        
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('error', response.data)
+        self.assertEqual(response.data['error'], 'Este código promocional ha expirado o no es válido.')
+
+    @patch('stripe.Coupon.retrieve')
+    @patch('stripe.Coupon.create')
+    def test_get_or_create_stripe_coupon_creation(self, mock_coupon_create, mock_coupon_retrieve):
+        from django.test import override_settings
+        from apps.shop.views import get_or_create_stripe_coupon
+        
+        # Test retrieve behavior when coupon already exists in Stripe
+        mock_coupon_retrieve.return_value.id = "django_addon50"
+        promo = PromoCode.objects.create(
+            code="ADDON50_TEST",
+            code_type=PromoCode.CodeType.CLIENT,
+            discount_percentage=50.00,
+            is_active=True
+        )
+        
+        with override_settings(TESTING=False, STRIPE_SECRET_KEY="sk_test_mock"):
+            coupon_id = get_or_create_stripe_coupon(promo)
+            self.assertEqual(coupon_id, "django_addon50")
+            mock_coupon_retrieve.assert_called_once_with("django_addon50_test")
+            mock_coupon_create.assert_not_called()
+            
+        mock_coupon_retrieve.reset_mock()
+        mock_coupon_create.reset_mock()
+        
+        # Test create behavior when coupon does not exist (retrieve throws error)
+        import stripe
+        mock_coupon_retrieve.side_effect = stripe.error.InvalidRequestError("No such coupon", "id")
+        mock_coupon_create.return_value.id = "django_addon50_test"
+        
+        with override_settings(TESTING=False, STRIPE_SECRET_KEY="sk_test_mock"):
+            coupon_id = get_or_create_stripe_coupon(promo)
+            self.assertEqual(coupon_id, "django_addon50_test")
+            mock_coupon_retrieve.assert_called_once_with("django_addon50_test")
+            mock_coupon_create.assert_called_once()
+            create_kwargs = mock_coupon_create.call_args[1]
+            self.assertEqual(create_kwargs["id"], "django_addon50_test")
+            self.assertEqual(create_kwargs["percent_off"], 50.00)
+            self.assertEqual(create_kwargs["duration"], "forever")
 
     @patch('stripe.Webhook.construct_event')
     def test_stripe_webhook_addon_subscription_activation(self, mock_construct_event):

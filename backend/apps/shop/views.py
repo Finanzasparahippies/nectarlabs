@@ -109,14 +109,28 @@ class AddOnViewSet(viewsets.ModelViewSet):
             comments = request.data.get('comments', '')
             comments_truncated = comments[:450] if comments else ''
             
-            session = stripe.checkout.Session.create(
-                payment_method_types=['card'],
-                line_items=[{
+            discounts = []
+            promo_code_str = request.data.get('promo_code', '').strip().upper()
+            if promo_code_str:
+                try:
+                    promo = PromoCode.objects.get(code=promo_code_str)
+                    if not promo.is_valid():
+                        return Response({'error': 'Este código promocional ha expirado o no es válido.'}, status=status.HTTP_400_BAD_REQUEST)
+                    stripe_coupon_id = get_or_create_stripe_coupon(promo)
+                    if stripe_coupon_id:
+                        discounts.append({'coupon': stripe_coupon_id})
+                except PromoCode.DoesNotExist:
+                    return Response({'error': 'Código promocional no encontrado.'}, status=status.HTTP_400_BAD_REQUEST)
+
+            session_kwargs = {
+                'payment_method_types': ['card'],
+                'line_items': [{
                     'price': price_id,
                     'quantity': 1,
                 }],
-                mode='subscription',
-                subscription_data={
+                'mode': 'subscription',
+                'allow_promotion_codes': True,
+                'subscription_data': {
                     'metadata': {
                         'user_id': request.user.id,
                         'addon_id': addon.id,
@@ -124,15 +138,19 @@ class AddOnViewSet(viewsets.ModelViewSet):
                         'comments': comments_truncated
                     }
                 },
-                success_url=f"{get_frontend_origin(request)}/dashboard?payment=success&addon_slug={addon.slug}",
-                cancel_url=f"{get_frontend_origin(request)}/dashboard?payment=cancel",
-                metadata={
+                'success_url': f"{get_frontend_origin(request)}/dashboard?payment=success&addon_slug={addon.slug}",
+                'cancel_url': f"{get_frontend_origin(request)}/dashboard?payment=cancel",
+                'metadata': {
                     'user_id': request.user.id,
                     'addon_id': addon.id,
                     'type': 'addon_subscription',
                     'comments': comments_truncated
                 }
-            )
+            }
+            if discounts:
+                session_kwargs['discounts'] = discounts
+
+            session = stripe.checkout.Session.create(**session_kwargs)
             return Response({'url': session.url}, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -418,6 +436,24 @@ def get_or_create_generic_stripe_product(name, description, metadata_key, metada
         import logging
         logging.getLogger("apps").error(f"Error creating generic product {name}: {e}")
         return None
+
+def get_or_create_stripe_coupon(promo):
+    if getattr(settings, "TESTING", False) or not getattr(settings, "STRIPE_SECRET_KEY", None):
+        return "dummy_coupon_id"
+    import stripe
+    stripe.api_key = settings.STRIPE_SECRET_KEY
+    coupon_id = f"django_{promo.code.lower()}"
+    try:
+        return stripe.Coupon.retrieve(coupon_id).id
+    except Exception:
+        duration = "once" if promo.code_type == PromoCode.CodeType.SELLER else "forever"
+        coupon = stripe.Coupon.create(
+            id=coupon_id,
+            percent_off=float(promo.discount_percentage),
+            duration=duration,
+            metadata={"promo_code": promo.code}
+        )
+        return coupon.id
 
 class PaymentInstallmentViewSet(viewsets.ModelViewSet):
     serializer_class = PaymentInstallmentSerializer
