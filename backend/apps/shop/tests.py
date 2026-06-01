@@ -1085,6 +1085,7 @@ class StripePlanInstallmentCheckoutTests(APITestCase):
             address="Av. Juarez 123",
             project_idea="Build an e-commerce platform.",
             payment_commitment_method="SPEI",
+            payment_day="WEEKLY_MONDAY",
             signed_at=timezone.now()
         )
         
@@ -1113,6 +1114,9 @@ class StripePlanInstallmentCheckoutTests(APITestCase):
         self.assertNotIn('product_data', line_item_price_data)
         self.assertEqual(line_item_price_data['unit_amount'], 125000) # (5000 / 4) * 100
 
+    from django.test import override_settings
+
+    @override_settings(TESTING=False, STRIPE_SECRET_KEY="sk_test_mock")
     @patch('stripe.checkout.Session.create')
     @patch('stripe.Product.list')
     def test_custom_project_checkout_uses_generic_product(self, mock_product_list, mock_checkout_create):
@@ -1120,7 +1124,9 @@ class StripePlanInstallmentCheckoutTests(APITestCase):
         from unittest.mock import MagicMock
         mock_prod = MagicMock()
         mock_prod.id = "prod_mock_custom_dev"
-        mock_product_list.return_value.data = [mock_prod]
+        mock_prod.active = True
+        mock_prod.metadata = {"special_product": "custom_development"}
+        mock_product_list.return_value.auto_paging_iter.return_value = [mock_prod]
         
         mock_checkout_create.return_value.url = "https://checkout.stripe.com/pay/mock_session_123"
         

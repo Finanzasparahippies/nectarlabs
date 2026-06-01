@@ -930,7 +930,6 @@ def stripe_webhook(request):
         subscription_id = invoice_obj.get('subscription')
         if subscription_id:
             try:
-                from django.conf import settings
                 stripe.api_key = settings.STRIPE_SECRET_KEY
                 
                 subscription = stripe.Subscription.retrieve(subscription_id)
