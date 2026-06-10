@@ -161,8 +161,8 @@ export default function TenantAdminPage() {
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search);
       const tabParam = urlParams.get('tab');
-      if (tabParam === 'metrics' || tabParam === 'branding' || tabParam === 'billing') {
-        setActiveTab(tabParam);
+      if (tabParam === 'metrics' || tabParam === 'branding' || tabParam === 'billing' || tabParam === 'integrations') {
+        setActiveTab(tabParam as any);
       }
     }
   }, [subdomain]);
@@ -350,6 +350,25 @@ export default function TenantAdminPage() {
 
         if (isOwner || isSystemAdmin) {
           setAuthorized(true);
+          try {
+            const fullConfig = await fetcher(`/tenants/${config.id}/`);
+            setTenantConfig(fullConfig);
+            setSmtpHost(fullConfig.custom_smtp_host || '');
+            setSmtpPort(fullConfig.custom_smtp_port ? String(fullConfig.custom_smtp_port) : '587');
+            setSmtpUsername(fullConfig.custom_smtp_username || '');
+            setSmtpUseTls(fullConfig.custom_smtp_use_tls ?? true);
+            setSmtpFromEmail(fullConfig.custom_smtp_from_email || '');
+            setShippingMarkupPercentage(fullConfig.shipping_markup_percentage || '15.00');
+            setOriginName(fullConfig.shipping_origin_name || '');
+            setOriginPhone(fullConfig.shipping_origin_phone || '');
+            setOriginStreet(fullConfig.shipping_origin_street || '');
+            setOriginSuburb(fullConfig.shipping_origin_suburb || '');
+            setOriginCity(fullConfig.shipping_origin_city || '');
+            setOriginState(fullConfig.shipping_origin_state || '');
+            setOriginZipCode(fullConfig.shipping_origin_zip_code || '');
+          } catch (err) {
+            console.error('Error loading full tenant config:', err);
+          }
         } else {
           setAuthorized(false);
         }
@@ -363,6 +382,109 @@ export default function TenantAdminPage() {
 
     loadAdminData();
   }, [subdomain]);
+
+  const getNewsletterLimit = () => {
+    if (!tenantConfig) return 1000;
+    const baseLimit = tenantConfig.is_ambassador ? 1000 : (tenantConfig.newsletter_plan === 'PREMIUM' || (tenantConfig.active_addons || []).includes('newsletter-campaigner') ? 10000 : 1000);
+    return baseLimit + (tenantConfig.newsletter_extra_credits || 0);
+  };
+
+  const handleBuyEmailCredits = async () => {
+    if (!tenantConfig) return;
+    try {
+      const response = await fetcher(`/billing/buy-email-credits/?tenant_id=${tenantConfig.id}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      if (response.url) {
+        window.location.href = response.url;
+      } else {
+        showToast('No se recibió la URL de pago de Stripe.', 'error');
+      }
+    } catch (err: any) {
+      showToast(err.message || 'Error al iniciar la compra de créditos de correo.', 'error');
+    }
+  };
+
+  const handleSendCampaign = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!tenantConfig) return;
+    setIsSendingCampaign(true);
+    try {
+      const response = await fetcher('/newsletter/send-campaign/', {
+        method: 'POST',
+        body: JSON.stringify({
+          subject: campaignSubject.trim(),
+          title: campaignTitle.trim() || campaignSubject.trim(),
+          content: campaignContent.trim()
+        }),
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      showToast(response.message || 'Campaña enviada con éxito.', 'success');
+      setShowNewsletterModal(false);
+      setCampaignSubject('');
+      setCampaignTitle('');
+      setCampaignContent('');
+      // Reload tenant config to update sent count
+      const updated = await fetcher(`/tenants/${tenantConfig.id}/`);
+      setTenantConfig(updated);
+    } catch (err: any) {
+      showToast(err.message || 'Error al enviar la campaña.', 'error');
+    } finally {
+      setIsSendingCampaign(false);
+    }
+  };
+
+  const handleSaveIntegrations = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!tenantConfig) return;
+    setIsSavingIntegrations(true);
+    try {
+      const payload: any = {
+        custom_smtp_host: smtpHost.trim() || null,
+        custom_smtp_port: smtpPort ? parseInt(smtpPort) : null,
+        custom_smtp_username: smtpUsername.trim() || null,
+        custom_smtp_use_tls: smtpUseTls,
+        custom_smtp_from_email: smtpFromEmail.trim() || null,
+        shipping_markup_percentage: shippingMarkupPercentage,
+        shipping_origin_name: originName.trim() || null,
+        shipping_origin_phone: originPhone.trim() || null,
+        shipping_origin_street: originStreet.trim() || null,
+        shipping_origin_suburb: originSuburb.trim() || null,
+        shipping_origin_city: originCity.trim() || null,
+        shipping_origin_state: originState.trim() || null,
+        shipping_origin_zip_code: originZipCode.trim() || null,
+      };
+
+      if (smtpPassword) {
+        payload.custom_smtp_password = smtpPassword;
+      }
+      if (skydropxApiKey) {
+        payload.skydropx_api_key = skydropxApiKey;
+      }
+
+      const updated = await fetcher(`/tenants/${tenantConfig.id}/`, {
+        method: 'PATCH',
+        body: JSON.stringify(payload),
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      setTenantConfig(updated);
+      setSmtpPassword('');
+      setSkydropxApiKey('');
+      showToast('Integraciones actualizadas con éxito.', 'success');
+    } catch (err: any) {
+      showToast(err.message || 'Error al guardar integraciones.', 'error');
+    } finally {
+      setIsSavingIntegrations(false);
+    }
+  };
 
   const handleSaveConfig = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -524,6 +646,17 @@ export default function TenantAdminPage() {
               }}
             >
               🧾 Facturación CFDI
+            </button>
+            <button
+              onClick={() => setActiveTab('integrations')}
+              className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border cursor-pointer"
+              style={{
+                backgroundColor: activeTab === 'integrations' ? `${primaryColor}15` : 'transparent',
+                borderColor: activeTab === 'integrations' ? primaryColor : 'transparent',
+                color: activeTab === 'integrations' ? primaryColor : 'rgba(255, 255, 255, 0.6)'
+              }}
+            >
+              🔌 Integraciones
             </button>
           </div>
 
@@ -758,25 +891,49 @@ export default function TenantAdminPage() {
                 primaryColor={primaryColor}
                 metrics={{
                   leftLabel: "Suscriptores",
-                  leftVal: "1,240",
-                  rightLabel: "Tasa de Apertura",
-                  rightVal: "42.1%"
+                  leftVal: String(tenantConfig?.subscriber_count ?? 0),
+                  rightLabel: tenantConfig?.custom_smtp_host ? "Canal Email" : "Uso de Límite",
+                  rightVal: tenantConfig?.custom_smtp_host ? "Propio (SMTP)" : `${Math.min(100, Math.round(((tenantConfig?.newsletter_sent_this_month ?? 0) / getNewsletterLimit()) * 100))}%`
                 }}
               >
-                {/* Progress Wheel and usage numbers */}
-                <div className="h-28 flex items-center justify-around px-4 pt-2">
-                  <div className="relative w-14 h-14 flex items-center justify-center shrink-0">
-                    <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
-                      <path className="text-white/5" strokeWidth="3" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                      <path className="text-nectar-gold" strokeDasharray="34, 100" strokeWidth="3.2" strokeLinecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                    </svg>
-                    <span className="absolute text-[8px] font-black text-nectar-gold font-mono">34%</span>
+                <div className="h-28 flex flex-col justify-between px-2 pt-2 pb-1 text-left">
+                  <div className="flex items-center justify-around">
+                    <div className="relative w-12 h-12 flex items-center justify-center shrink-0">
+                      <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                        <path className="text-white/5" strokeWidth="3" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                        <path className="text-nectar-gold" strokeDasharray={`${tenantConfig?.custom_smtp_host ? 0 : Math.min(100, Math.round(((tenantConfig?.newsletter_sent_this_month ?? 0) / getNewsletterLimit()) * 100))}, 100`} strokeWidth="3.2" strokeLinecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                      </svg>
+                      <span className="absolute text-[7px] font-black text-nectar-gold font-mono">
+                        {tenantConfig?.custom_smtp_host ? '∞' : `${Math.min(100, Math.round(((tenantConfig?.newsletter_sent_this_month ?? 0) / getNewsletterLimit()) * 100))}%`}
+                      </span>
+                    </div>
+                    <div className="text-left space-y-0.5">
+                      <span className="text-[6px] uppercase font-black tracking-widest text-white/30 block">Consumo Mensual</span>
+                      <h4 className="text-[10px] font-black text-white font-mono leading-none">
+                        {tenantConfig?.custom_smtp_host ? 'Ilimitado (BYO SMTP)' : `${tenantConfig?.newsletter_sent_this_month ?? 0} / ${getNewsletterLimit()}`}
+                      </h4>
+                      <p className="text-[6.5px] text-white/40 font-bold">
+                        {tenantConfig?.is_ambassador ? 'Límite Partner Embajador' : 'Límite Plan Regular'}
+                      </p>
+                    </div>
                   </div>
-                  <div className="text-left space-y-1">
-                    <span className="text-[7px] uppercase font-black tracking-widest text-white/30 block">Consumo Mensual</span>
-                    <h4 className="text-xs font-black text-white font-mono leading-none">3,400 / 10,000</h4>
-                    <p className="text-[7.5px] text-white/40">Renueva en 12 días</p>
-                  </div>
+                  
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const sent = tenantConfig?.newsletter_sent_this_month ?? 0;
+                      const limit = getNewsletterLimit();
+                      const hasSmtp = Boolean(tenantConfig?.custom_smtp_host);
+                      if (!hasSmtp && sent >= limit) {
+                        setShowOverLimitModal(true);
+                      } else {
+                        setShowNewsletterModal(true);
+                      }
+                    }}
+                    className="w-full py-2 bg-nectar-gold text-background hover:bg-nectar-gold/90 rounded-xl text-[8px] font-black uppercase tracking-wider transition-all font-bold mt-2 shadow-md shadow-nectar-gold/10 cursor-pointer"
+                  >
+                    🚀 Redactar Boletín / Nueva Campaña
+                  </button>
                 </div>
               </AddonMetricCard>
 
@@ -998,24 +1155,57 @@ export default function TenantAdminPage() {
                     <p className="text-[8px] text-white/40 uppercase tracking-wider mt-1">Control de consumo y paquetes</p>
                   </div>
 
-                  <div className="flex items-center justify-between gap-4 p-4 rounded-2xl bg-white/[0.02] border border-white/5">
-                    <div>
-                      <span className="text-[7px] uppercase font-black tracking-widest text-white/40 block">Timbres Disponibles</span>
-                      <span className="text-3xl font-black text-white font-mono leading-none mt-1 block">
-                        {billingInfo ? billingInfo.stamp_balance : 0}
-                      </span>
+                  {billingInfo?.is_ambassador ? (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between p-4 rounded-2xl bg-white/[0.02] border border-white/5">
+                        <div>
+                          <span className="text-[7px] uppercase font-black tracking-widest text-white/40 block">Esquema Actual</span>
+                          <span className="mt-1 inline-block px-2.5 py-0.5 border text-[7px] font-black uppercase tracking-widest rounded-full bg-nectar-gold/10 text-nectar-gold border-nectar-gold/20">
+                            Embajador de Marca (Influencer)
+                          </span>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-[7px] uppercase font-black tracking-widest text-white/40 block">Timbres Totales</span>
+                          <span className="text-xl font-black text-white font-mono mt-1 block">
+                            {(billingInfo?.free_stamps_left ?? 0) + (billingInfo?.stamp_balance ?? 0)}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3 p-4 rounded-2xl bg-white/[0.01] border border-white/5 text-center">
+                        <div>
+                          <span className="text-[7px] uppercase font-black tracking-widest text-white/40 block">Timbres de Cortesía</span>
+                          <span className="text-sm font-black text-white font-mono mt-1 block">{(billingInfo?.free_stamps_left ?? 0)} / 20</span>
+                        </div>
+                        <div>
+                          <span className="text-[7px] uppercase font-black tracking-widest text-white/40 block">Timbres Adicionales</span>
+                          <span className="text-sm font-black text-white font-mono mt-1 block">{(billingInfo?.stamp_balance ?? 0)}</span>
+                        </div>
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <span className="text-[7px] uppercase font-black tracking-widest text-white/40 block">Esquema Actual</span>
-                      <span className="mt-1 inline-block px-2.5 py-0.5 border text-[7px] font-black uppercase tracking-widest rounded-full bg-nectar-gold/10 text-nectar-gold border-nectar-gold/20">
-                        {billingInfo?.is_commercial_partner ? 'Socio Comercial' : 'Suscripción Add-on'}
-                      </span>
+                  ) : (
+                    <div className="flex items-center justify-between gap-4 p-4 rounded-2xl bg-white/[0.02] border border-white/5">
+                      <div>
+                        <span className="text-[7px] uppercase font-black tracking-widest text-white/40 block">Timbres Disponibles</span>
+                        <span className="text-3xl font-black text-white font-mono leading-none mt-1 block">
+                          {billingInfo ? billingInfo.stamp_balance : 0}
+                        </span>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-[7px] uppercase font-black tracking-widest text-white/40 block">Esquema Actual</span>
+                        <span className="mt-1 inline-block px-2.5 py-0.5 border text-[7px] font-black uppercase tracking-widest rounded-full bg-nectar-gold/10 text-nectar-gold border-nectar-gold/20">
+                          {billingInfo?.is_commercial_partner ? 'Socio Comercial' : 'Suscripción Add-on'}
+                        </span>
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                   {/* Plan Description details */}
                   <div className="text-[9px] text-white/50 leading-relaxed space-y-1.5 p-3 rounded-xl bg-white/[0.01] border border-white/5">
-                    {billingInfo?.is_commercial_partner ? (
+                    {billingInfo?.is_ambassador ? (
+                      <p>
+                        ✨ Al ser **Embajador de Marca**, dispones de **20 timbres de cortesía al mes**. Si los consumes por completo, podrás seguir facturando adquiriendo timbres adicionales.
+                      </p>
+                    ) : billingInfo?.is_commercial_partner ? (
                       <p>
                         ✨ Al ser **Socio Comercial**, tu módulo de facturación es gratuito. Solo pagas por tus paquetes de timbres conforme los consumes.
                       </p>
@@ -1031,9 +1221,9 @@ export default function TenantAdminPage() {
                     <h4 className="text-[9px] font-black uppercase tracking-wider text-white">Adquirir Paquetes de Timbres</h4>
                     <div className="grid grid-cols-3 gap-2">
                       {[
-                        { size: 50, price: 100, desc: '50 Timbres' },
-                        { size: 100, price: 180, desc: '100 Timbres' },
-                        { size: 500, price: 650, desc: '500 Timbres' }
+                        { size: 50, price: 75, desc: '50 Timbres' },
+                        { size: 100, price: 150, desc: '100 Timbres' },
+                        { size: 500, price: 750, desc: '500 Timbres' }
                       ].map((pkg) => (
                         <button
                           key={pkg.size}
@@ -1288,7 +1478,8 @@ export default function TenantAdminPage() {
                                   {(inv.status === 'LCO_SYNC_PENDING' || inv.status === 'FAILED') && (
                                     <button
                                       onClick={() => handleRetryInvoice(inv.id)}
-                                      className="px-2 py-1 bg-green-500/10 hover:bg-green-500/20 border border-green-500/20 text-green-400 text-[7.5px] font-black uppercase tracking-widest rounded transition-all"
+                                      disabled={(!billingInfo?.is_ambassador && (billingInfo?.stamp_balance ?? 0) === 0) || (billingInfo?.is_ambassador && ((billingInfo?.free_stamps_left ?? 0) + (billingInfo?.stamp_balance ?? 0)) === 0)}
+                                      className="px-2 py-1 bg-green-500/10 hover:bg-green-500/20 border border-green-500/20 text-green-400 text-[7.5px] font-black uppercase tracking-widest rounded transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                                     >
                                       Reintentar
                                     </button>
@@ -1314,6 +1505,228 @@ export default function TenantAdminPage() {
             </div>
           </div>
         )}
+
+        {activeTab === 'integrations' && (
+          <div className="max-w-4xl mx-auto animate-in fade-in duration-300">
+            <form onSubmit={handleSaveIntegrations} className="space-y-8">
+              <div className="admin-card border rounded-[2.5rem] p-8 md:p-10 shadow-2xl relative overflow-hidden text-left space-y-6">
+                
+                <div>
+                  <span className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold text-[8px] font-black uppercase tracking-widest rounded-full border border-nectar-gold/20">
+                    🔌 Conectividad & Canales Externos
+                  </span>
+                  <h2 className="text-2xl font-black tracking-tighter mt-4 leading-none text-white">Configuración de Integraciones</h2>
+                  <p className="text-[10px] opacity-40 uppercase tracking-widest mt-1">Conecta tus propias APIs de mensajería, paquetería y logística</p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  {/* SMTP/Amazon SES Configuration */}
+                  <div className="space-y-4">
+                    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-nectar-gold border-b border-white/5 pb-2">Amazon SES / SMTP Personalizado</h3>
+                    
+                    <div className="space-y-1.5">
+                      <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Host SMTP</label>
+                      <input
+                        type="text"
+                        placeholder="Ej. email-smtp.us-east-1.amazonaws.com"
+                        value={smtpHost}
+                        onChange={(e) => setSmtpHost(e.target.value)}
+                        className="w-full border rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-nectar-gold transition-all admin-input"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-3">
+                      <div className="col-span-2 space-y-1.5">
+                        <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Puerto SMTP</label>
+                        <input
+                          type="text"
+                          placeholder="587"
+                          value={smtpPort}
+                          onChange={(e) => setSmtpPort(e.target.value.replace(/\D/g, ''))}
+                          className="w-full border rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-nectar-gold transition-all admin-input font-mono"
+                        />
+                      </div>
+                      <div className="flex flex-col justify-end pb-3">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={smtpUseTls}
+                            onChange={(e) => setSmtpUseTls(e.target.checked)}
+                            className="w-3.5 h-3.5 accent-nectar-gold"
+                          />
+                          <span className="text-[9px] font-bold uppercase tracking-wide text-white/75">TLS</span>
+                        </label>
+                      </div>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Usuario SMTP (SMTP Username)</label>
+                      <input
+                        type="text"
+                        placeholder="Ej. AKIAIOSFODNN7EXAMPLE"
+                        value={smtpUsername}
+                        onChange={(e) => setSmtpUsername(e.target.value)}
+                        className="w-full border rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-nectar-gold transition-all admin-input"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Contraseña SMTP (SMTP Password)</label>
+                      <input
+                        type="password"
+                        placeholder={tenantConfig?.has_custom_smtp_password ? '••••••••••••' : 'Nueva contraseña SMTP'}
+                        value={smtpPassword}
+                        onChange={(e) => setSmtpPassword(e.target.value)}
+                        className="w-full border rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-nectar-gold transition-all admin-input"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Remitente Autorizado (From Email)</label>
+                      <input
+                        type="email"
+                        placeholder="Ej. boletin@minegocio.com"
+                        value={smtpFromEmail}
+                        onChange={(e) => setSmtpFromEmail(e.target.value)}
+                        className="w-full border rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-nectar-gold transition-all admin-input font-mono"
+                      />
+                      <p className="text-[7px] text-white/45 leading-relaxed">
+                        ⚠️ Asegúrate de que esta dirección de correo esté previamente verificada y autorizada en tu consola de Amazon SES u otro proveedor SMTP.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Skydropx & Logistics Configuration */}
+                  <div className="space-y-4">
+                    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-nectar-gold border-b border-white/5 pb-2">Configuración Skydropx</h3>
+                    
+                    <div className="space-y-1.5">
+                      <label className="text-[8px] font-black uppercase tracking-widest opacity-40">API Key de Skydropx</label>
+                      <input
+                        type="password"
+                        placeholder={tenantConfig?.has_skydropx_api_key ? '••••••••••••' : 'Introduce tu API Key de Skydropx'}
+                        value={skydropxApiKey}
+                        onChange={(e) => setSkydropxApiKey(e.target.value)}
+                        className="w-full border rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-nectar-gold transition-all admin-input"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Margen de Ganancia de Envío (%)</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        max="100"
+                        placeholder="15.00"
+                        value={shippingMarkupPercentage}
+                        onChange={(e) => setShippingMarkupPercentage(e.target.value)}
+                        className="w-full border rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-nectar-gold transition-all admin-input font-mono"
+                      />
+                      <p className="text-[7px] text-white/45 leading-relaxed">
+                        Porcentaje adicional cargado al cliente final sobre la cotización base de Skydropx.
+                      </p>
+                    </div>
+
+                    <div className="border-t border-white/5 pt-4 mt-2 space-y-3">
+                      <h4 className="text-[9px] font-black uppercase tracking-wide text-white font-bold">Dirección de Origen para Envíos</h4>
+                      
+                      <div className="space-y-1.5">
+                        <label className="text-[8px] font-black uppercase tracking-widest opacity-45">Nombre del Remitente</label>
+                        <input
+                          type="text"
+                          placeholder="Ej. Almacén Central"
+                          value={originName}
+                          onChange={(e) => setOriginName(e.target.value)}
+                          className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1.5">
+                          <label className="text-[8px] font-black uppercase tracking-widest opacity-45">Teléfono</label>
+                          <input
+                            type="text"
+                            placeholder="Ej. 5512345678"
+                            value={originPhone}
+                            onChange={(e) => setOriginPhone(e.target.value)}
+                            className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input font-mono"
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-[8px] font-black uppercase tracking-widest opacity-45">Código Postal</label>
+                          <input
+                            type="text"
+                            maxLength={5}
+                            placeholder="Ej. 06000"
+                            value={originZipCode}
+                            onChange={(e) => setOriginZipCode(e.target.value.replace(/\D/g, ''))}
+                            className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input font-mono"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-[8px] font-black uppercase tracking-widest opacity-45">Calle y Número</label>
+                        <input
+                          type="text"
+                          placeholder="Ej. Av. Paseo de la Reforma 123"
+                          value={originStreet}
+                          onChange={(e) => setOriginStreet(e.target.value)}
+                          className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-2">
+                        <div className="space-y-1.5">
+                          <label className="text-[8px] font-black uppercase tracking-widest opacity-45">Colonia</label>
+                          <input
+                            type="text"
+                            placeholder="Juárez"
+                            value={originSuburb}
+                            onChange={(e) => setOriginSuburb(e.target.value)}
+                            className="w-full border rounded-xl px-2.5 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input"
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-[8px] font-black uppercase tracking-widest opacity-45">Ciudad</label>
+                          <input
+                            type="text"
+                            placeholder="CDMX"
+                            value={originCity}
+                            onChange={(e) => setOriginCity(e.target.value)}
+                            className="w-full border rounded-xl px-2.5 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input"
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-[8px] font-black uppercase tracking-widest opacity-45">Estado</label>
+                          <input
+                            type="text"
+                            placeholder="CDMX"
+                            value={originState}
+                            onChange={(e) => setOriginState(e.target.value)}
+                            className="w-full border rounded-xl px-2.5 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-6 border-t border-white/5 flex justify-end">
+                  <button
+                    type="submit"
+                    disabled={isSavingIntegrations}
+                    className="px-8 py-3.5 bg-nectar-gold text-background text-[10px] font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 disabled:opacity-40 disabled:scale-100 transition-all font-bold shadow-lg shadow-nectar-gold/25 cursor-pointer"
+                  >
+                    {isSavingIntegrations ? 'Guardando Integraciones...' : 'Guardar Integraciones'}
+                  </button>
+                </div>
+
+              </div>
+            </form>
+          </div>
+        )}
       </main>
 
       {/* Footer copyright */}
@@ -1323,6 +1736,135 @@ export default function TenantAdminPage() {
           <span>Desarrollado bajo licencia de Néctar Labs</span>
         </div>
       </footer>
+
+      {/* 📧 Modal: Redactar Boletín */}
+      {showNewsletterModal && (
+        <div className="fixed inset-0 z-55 bg-background/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="admin-card border rounded-[2rem] p-6 max-w-lg w-full space-y-4 shadow-2xl relative">
+            <button 
+              onClick={() => setShowNewsletterModal(false)}
+              className="absolute top-4 right-4 text-white/40 hover:text-white text-xs font-bold"
+            >
+              ✕
+            </button>
+            <div className="border-b border-white/5 pb-2">
+              <span className="px-2 py-0.5 bg-nectar-gold/10 text-nectar-gold text-[7px] font-black uppercase tracking-widest rounded-full border border-nectar-gold/20">
+                Email Campaigner
+              </span>
+              <h3 className="text-base font-black uppercase tracking-tight text-white mt-2">Nueva Campaña de Boletín</h3>
+              <p className="text-[7.5px] text-white/40 uppercase tracking-wider mt-0.5">Enviar un correo masivo a todos los suscriptores activos</p>
+            </div>
+            
+            <form onSubmit={handleSendCampaign} className="space-y-3">
+              <div className="space-y-1">
+                <label className="text-[7.5px] uppercase tracking-wider font-black text-white/50 block">Asunto del Correo (Subject)</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Ej. ¡Nueva colección disponible en nuestra tienda!"
+                  value={campaignSubject}
+                  onChange={(e) => setCampaignSubject(e.target.value)}
+                  className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[7.5px] uppercase tracking-wider font-black text-white/50 block">Título de Cabecera (Opcional)</label>
+                <input
+                  type="text"
+                  placeholder="Ej. ¡Grandes Noticias!"
+                  value={campaignTitle}
+                  onChange={(e) => setCampaignTitle(e.target.value)}
+                  className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[7.5px] uppercase tracking-wider font-black text-white/50 block">Contenido del Mensaje (HTML/Texto)</label>
+                <textarea
+                  required
+                  rows={6}
+                  placeholder="Escribe el cuerpo del mensaje. Puedes usar etiquetas HTML básicas..."
+                  value={campaignContent}
+                  onChange={(e) => setCampaignContent(e.target.value)}
+                  className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input resize-none"
+                />
+              </div>
+
+              <div className="pt-2 border-t border-white/5 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowNewsletterModal(false)}
+                  className="px-4 py-2 border border-white/10 hover:bg-white/5 rounded-xl text-[8px] font-black uppercase tracking-wider transition-all text-white/80"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSendingCampaign}
+                  className="px-6 py-2 bg-nectar-gold text-background hover:bg-nectar-gold/90 rounded-xl text-[8px] font-black uppercase tracking-wider transition-all font-bold shadow-md cursor-pointer"
+                >
+                  {isSendingCampaign ? 'Enviando...' : '🚀 Enviar Campaña'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* 🚨 Modal: Límite de Partner Excedido */}
+      {showOverLimitModal && (
+        <div className="fixed inset-0 z-55 bg-background/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="admin-card border rounded-[2rem] p-6 max-w-md w-full space-y-5 shadow-2xl relative text-center">
+            <button 
+              onClick={() => setShowOverLimitModal(false)}
+              className="absolute top-4 right-4 text-white/40 hover:text-white text-xs font-bold"
+            >
+              ✕
+            </button>
+            <div className="w-12 h-12 rounded-full bg-red-500/10 border border-red-500/20 text-red-500 flex items-center justify-center text-2xl mx-auto">
+              ⚠️
+            </div>
+            
+            <div className="space-y-2">
+              <h3 className="text-sm font-black uppercase tracking-tight text-white">Límite de Envíos Superado</h3>
+              <p className="text-[10px] text-white/70 leading-relaxed font-medium">
+                Has superado el límite de Partner. Boton para comprar mas Correos Masivos en modulos de 1000 correos, o Conecta tus propias llaves API de Amazon SES en tu configuración para envíos ilimitados
+              </p>
+            </div>
+            
+            <div className="pt-3 border-t border-white/5 flex flex-col gap-2">
+              <button
+                onClick={async () => {
+                  setShowOverLimitModal(false);
+                  await handleBuyEmailCredits();
+                }}
+                className="w-full py-3 bg-nectar-gold text-background hover:bg-nectar-gold/90 rounded-xl text-[8px] font-black uppercase tracking-wider transition-all font-bold shadow-md shadow-nectar-gold/10 cursor-pointer"
+              >
+                💳 Comprar 1,000 Correos Masivos ($15.00 MXN)
+              </button>
+              
+              <button
+                onClick={() => {
+                  setShowOverLimitModal(false);
+                  setActiveTab('integrations');
+                }}
+                className="w-full py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[8px] font-black uppercase tracking-wider transition-all text-white font-bold cursor-pointer"
+              >
+                ⚙️ Conectar Amazon SES / SMTP Propio
+              </button>
+              
+              <button
+                type="button"
+                onClick={() => setShowOverLimitModal(false)}
+                className="w-full py-2.5 text-[8px] font-black uppercase tracking-wider transition-all text-white/40 hover:text-white/60 cursor-pointer"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {toast && (
         <Toast

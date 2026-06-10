@@ -52,7 +52,8 @@ class Plan(models.Model):
                     product = stripe.Product.create(
                         name=expected_name,
                         description=self.description,
-                        metadata={"plan_id": str(self.id), "plan_slug": plan_slug}
+                        metadata={"plan_id": str(self.id), "plan_slug": plan_slug},
+                        idempotency_key=f"plan_product_{self.id}"
                     )
                 else:
                     # Update details on Stripe if changed
@@ -87,6 +88,7 @@ class Plan(models.Model):
                         unit_amount=amount_cents,
                         currency="mxn",
                         product=product.id,
+                        idempotency_key=f"plan_price_{self.id}_{amount_cents}"
                     )
                     price_id = price_obj.id
                 
@@ -444,7 +446,8 @@ class AddOn(models.Model):
                     product = stripe.Product.create(
                         name=expected_name,
                         description=self.description,
-                        metadata={"addon_slug": self.slug}
+                        metadata={"addon_slug": self.slug},
+                        idempotency_key=f"addon_product_{self.slug}"
                     )
                 else:
                     # Update details on Stripe if changed
@@ -470,6 +473,7 @@ class AddOn(models.Model):
                             currency="mxn",
                             product=product.id,
                             recurring={"interval": "month"},
+                            idempotency_key=f"addon_price_monthly_{self.slug}_{int(self.monthly_price * 100)}"
                         )
                         monthly_price_id = monthly_price.id
                     self.stripe_price_id = monthly_price_id
@@ -487,6 +491,7 @@ class AddOn(models.Model):
                             currency="mxn",
                             product=product.id,
                             recurring={"interval": "year"},
+                            idempotency_key=f"addon_price_yearly_{self.slug}_{int(self.yearly_price * 100)}"
                         )
                         yearly_price_id = yearly_price.id
                     self.stripe_yearly_price_id = yearly_price_id

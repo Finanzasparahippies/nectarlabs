@@ -43,7 +43,8 @@ def create_stripe_product_and_price(tier):
                 "tenant_subdomain": tier.tenant.subdomain,
                 "tier_level": str(tier.level),
                 "sponsorship_tier_id": str(tier.id)
-            }
+            },
+            idempotency_key=f"sponsorship_product_{tier.id}"
         )
 
     # List active prices for this product to avoid duplicates
@@ -71,6 +72,7 @@ def create_stripe_product_and_price(tier):
             currency="mxn",
             product=product.id,
             recurring={"interval": "month"} if tier.type == "SUBSCRIPTION" else None,
+            idempotency_key=f"sponsorship_price_monthly_{tier.id}_{int(tier.price * 100)}"
         )
         monthly_price_id = monthly_price.id
 
@@ -89,6 +91,7 @@ def create_stripe_product_and_price(tier):
                 currency="mxn",
                 product=product.id,
                 recurring={"interval": "year"},
+                idempotency_key=f"sponsorship_price_annual_{tier.id}_{int(tier.price_annual * 100)}"
             )
             annual_price_id = annual_price.id
         price_ids['annual'] = annual_price_id

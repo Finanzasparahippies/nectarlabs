@@ -85,7 +85,8 @@ def get_or_create_stamp_package_stripe_price(package_size, package_desc, package
             product = stripe.Product.create(
                 name=f"[Néctar Labs] Paquete de {package_size} timbres",
                 description=package_desc,
-                metadata={"stamp_package_size": str(package_size)}
+                metadata={"stamp_package_size": str(package_size)},
+                idempotency_key=f"stamp_package_product_{package_size}"
             )
         
         # Search for existing active price matching this amount for this product
@@ -101,7 +102,8 @@ def get_or_create_stamp_package_stripe_price(package_size, package_desc, package
             price_obj = stripe.Price.create(
                 unit_amount=amount_cents,
                 currency="mxn",
-                product=product.id
+                product=product.id,
+                idempotency_key=f"stamp_package_price_{package_size}_{amount_cents}"
             )
             price_id = price_obj.id
             
