@@ -996,7 +996,7 @@ def stripe_webhook(request):
                         user = User.objects.get(id=user_id)
                         addon = AddOn.objects.get(id=addon_id)
                         
-                        if addon.slug == 'mexico-invoicing':
+                        if addon.slug in ['mexico-invoicing', 'ecommerce-combo']:
                             # Encontrar o crear Tenant
                             tenant = Tenant.objects.filter(owner=user).first()
                             if not tenant:
