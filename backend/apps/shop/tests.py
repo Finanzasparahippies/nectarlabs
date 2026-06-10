@@ -4,8 +4,9 @@ from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APITestCase
 from apps.shop.models import Plan, Contract, PaymentInstallment, AddOn, PromoCode, SalesCommission
+from apps.tenants.models import Tenant
 from datetime import date, timedelta
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 User = get_user_model()
 

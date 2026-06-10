@@ -1054,7 +1054,7 @@ class BillingSystemTests(APITestCase):
         mock_price_create.return_value = mock_price
 
         with override_settings(TESTING=False, STRIPE_SECRET_KEY="sk_test_mock"):
-            price_id = get_or_create_stripe_price_id_direct = get_or_create_stamp_package_stripe_price(100)
+            price_id = get_or_create_stamp_package_stripe_price(100, "100 timbres package", 150.00)
             self.assertEqual(price_id, "price_stamp_package_test_100")
 
             # Check that Product.create was called with idempotency_key

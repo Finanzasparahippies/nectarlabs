@@ -1,4 +1,5 @@
 from rest_framework import status
+from unittest.mock import patch, MagicMock
 from apps.tenants.test_base import BaseTenantAddonTestCase, logger
 from apps.shop.models import Contract
 from apps.sponsorship.models import SponsorshipConfig, SponsorshipTier, Sponsorship, SponsorshipUpdate
