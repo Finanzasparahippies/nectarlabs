@@ -139,3 +139,72 @@ class UnsubscribeView(APIView):
             return Response({"error": "Enlace de desuscripción inválido o vencido."}, status=status.HTTP_400_BAD_REQUEST)
 
 
+class SendCampaignView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        tenant = request.user.owned_tenants.first()
+        if not tenant:
+            return Response({"error": "No tienes un portal (tenant) asociado a tu cuenta."}, status=status.HTTP_400_BAD_REQUEST)
+
+        subject = request.data.get('subject')
+        title = request.data.get('title')
+        content = request.data.get('content')
+        if not subject or not content:
+            return Response({"error": "El asunto (subject) y el contenido (content) son obligatorios."}, status=status.HTTP_400_BAD_REQUEST)
+
+        subscribers = Subscriber.objects.filter(tenant=tenant, is_active=True)
+        if not subscribers.exists():
+            return Response({"message": "No tienes suscriptores activos para enviar esta campaña."}, status=status.HTTP_200_OK)
+
+        sent_count = 0
+        frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:3000')
+        tenant_url = frontend_url
+        if tenant.custom_domain:
+            tenant_url = tenant.custom_domain if tenant.custom_domain.startswith(('http://', 'https://')) else f"https://{tenant.custom_domain}"
+        else:
+            from urllib.parse import urlparse, urlunparse
+            parsed = urlparse(frontend_url)
+            if parsed.netloc:
+                netloc = f"{tenant.subdomain}.{parsed.netloc}"
+                tenant_url = urlunparse(parsed._replace(netloc=netloc))
+            else:
+                tenant_url = f"https://{tenant.subdomain}.nectarlabs.dev"
+
+        try:
+            for sub in subscribers:
+                context = {
+                    "subject": subject,
+                    "title": title or subject,
+                    "content": content,
+                    "cta_url": tenant_url,
+                    "cta_text": "Visitar Sitio",
+                    "unsubscribe_url": f"{tenant_url}/unsubscribe?email={sub.email}&token={sub.token}"
+                }
+                send_newsletter_email(
+                    subject=subject,
+                    template_name="generic",
+                    context=context,
+                    recipient_list=[sub.email],
+                    tenant=tenant
+                )
+                sent_count += 1
+        except ValueError as val_err:
+            return Response({
+                "error": str(val_err),
+                "sent_count": sent_count
+            }, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).error(f"Error sending campaign: {e}", exc_info=True)
+            return Response({
+                "error": f"Error al enviar la campaña tras mandar {sent_count} correos: {str(e)}",
+                "sent_count": sent_count
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        return Response({
+            "message": f"Campaña enviada con éxito a {sent_count} suscriptores.",
+            "sent_count": sent_count
+        }, status=status.HTTP_200_OK)
+
+

@@ -90,12 +90,69 @@ class Tenant(models.Model):
         help_text="Balance actual de timbres fiscales (comprados o incluidos en la suscripción)."
     )
     
+    # Skydropx Integration
+    skydropx_api_key = models.CharField(max_length=255, blank=True, null=True)
+    shipping_origin_name = models.CharField(max_length=255, blank=True, null=True, default="")
+    shipping_origin_phone = models.CharField(max_length=20, blank=True, null=True, default="")
+    shipping_origin_street = models.TextField(blank=True, null=True, default="")
+    shipping_origin_suburb = models.CharField(max_length=255, blank=True, null=True, default="")
+    shipping_origin_city = models.CharField(max_length=255, blank=True, null=True, default="")
+    shipping_origin_state = models.CharField(max_length=100, blank=True, null=True, default="")
+    shipping_origin_zip_code = models.CharField(max_length=10, blank=True, null=True, default="")
+    shipping_markup_percentage = models.DecimalField(max_digits=5, decimal_places=2, default=15.00, help_text="Porcentaje de ganancia sobre el costo de Skydropx")
+
+    # Ambassador plan stamps tracking
+    stamps_used_this_month = models.PositiveIntegerField(default=0)
+    stamps_last_reset = models.DateField(default=timezone.now)
+
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f"{self.name} ({self.subdomain})"
+
+    @property
+    def is_ambassador(self):
+        from apps.shop.models import Contract
+        return Contract.objects.filter(
+            user=self.owner,
+            is_active=True,
+            is_fully_signed=True,
+            plan__name__icontains="embajador"
+        ).exists()
+
+    @property
+    def free_stamps_left(self):
+        today = timezone.now().date()
+        if not self.stamps_last_reset or (self.stamps_last_reset.month != today.month or self.stamps_last_reset.year != today.year):
+            return 20
+        return max(0, 20 - self.stamps_used_this_month)
+
+    def reset_stamps_if_new_month(self):
+        today = timezone.now().date()
+        if not self.stamps_last_reset or (self.stamps_last_reset.month != today.month or self.stamps_last_reset.year != today.year):
+            self.stamps_used_this_month = 0
+            self.stamps_last_reset = today
+            self.save(update_fields=['stamps_used_this_month', 'stamps_last_reset'])
+
+    def has_available_stamps(self):
+        self.reset_stamps_if_new_month()
+        if self.is_ambassador and self.stamps_used_this_month < 20:
+            return True
+        return self.stamp_balance > 0
+
+    def consume_stamp(self):
+        self.reset_stamps_if_new_month()
+        if self.is_ambassador and self.stamps_used_this_month < 20:
+            self.stamps_used_this_month += 1
+            self.save(update_fields=['stamps_used_this_month'])
+            return True
+        if self.stamp_balance > 0:
+            self.stamp_balance -= 1
+            self.save(update_fields=['stamp_balance'])
+            return True
+        return False
 
     @property
     def active_addons(self):

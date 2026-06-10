@@ -45,13 +45,13 @@ def get_tenant_email_connection(tenant=None):
         )
         return connection, from_email
 
-    # Verificar si el owner tiene contrato firmado y activo con algún plan
+    # Verificar si el owner tiene contrato firmado y activo con algún plan o es embajador
     is_paid = Contract.objects.filter(
         user=tenant.owner,
         is_active=True,
         is_fully_signed=True,
         plan__isnull=False
-    ).exists()
+    ).exists() or tenant.is_ambassador
 
     if is_paid:
         host = settings.SES_EMAIL_HOST

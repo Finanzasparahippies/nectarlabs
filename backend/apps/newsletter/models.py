@@ -47,7 +47,9 @@ def send_newsletter_email(subject, template_name, context, recipient_list, tenan
             has_active_contract = Contract.objects.filter(user=tenant.owner, is_active=True).exists()
             has_paid_addon = tenant.newsletter_plan == 'PREMIUM'
 
-            if has_active_contract or has_paid_addon:
+            if tenant.is_ambassador:
+                base_limit = 1000
+            elif has_active_contract or has_paid_addon:
                 base_limit = 10000
             else:
                 base_limit = 1000  # TRIAL plan without active contract

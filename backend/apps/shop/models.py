@@ -247,14 +247,47 @@ class Order(models.Model):
         null=True,
         blank=True
     )
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True)
+    user_email = models.EmailField(blank=True, null=True)
     total = models.DecimalField(max_digits=10, decimal_places=2)
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
     stripe_payment_intent = models.CharField(max_length=200, blank=True, null=True)
+    stripe_session_id = models.CharField(max_length=255, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    # Address Info
+    full_name = models.CharField(max_length=255, blank=True, null=True)
+    phone = models.CharField(max_length=20, default="", blank=True, null=True, help_text="Teléfono del cliente")
+    street_and_number = models.TextField(default="", blank=True, null=True, help_text="Calle, número exterior e interior")
+    suburb = models.CharField(max_length=255, default="", blank=True, null=True, verbose_name="Colonia")
+    city = models.CharField(max_length=100, default="", blank=True, null=True, verbose_name="Ciudad")
+    state = models.CharField(max_length=100, default="", blank=True, null=True, verbose_name="Estado")
+    postal_code = models.CharField(max_length=10, default="", blank=True, null=True, verbose_name="Código Postal")
+    country = models.CharField(max_length=100, default="MX", blank=True, null=True, verbose_name="País")
+
+    # Datos de la Guía Automatizada
+    shipping_provider = models.CharField(max_length=50, blank=True, null=True, help_text="Ej: FedEx, DHL")
+    tracking_number = models.CharField(max_length=100, blank=True, null=True)
+    tracking_url = models.URLField(max_length=500, blank=True, null=True)
+    shipping_label_pdf = models.URLField(max_length=500, blank=True, null=True)
+
+    # Costos detallados de envío
+    shipping_cost = models.DecimalField(max_digits=10, decimal_places=2, default=0.00, help_text="Costo de envío cobrado al cliente (con margen)")
+    shipping_cost_base = models.DecimalField(max_digits=10, decimal_places=2, default=0.00, help_text="Costo base de Skydropx")
+    skydropx_rate_id = models.CharField(max_length=255, blank=True, null=True, help_text="ID de tarifa seleccionado")
+
     def __str__(self):
-        return f"Order {self.id} - {self.user.email}"
+        email_str = self.user.email if self.user else (self.user_email or "No Email")
+        return f"Order {self.id} - {email_str}"
+
+class OrderItem(models.Model):
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField(default=1)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+
+    def __str__(self):
+        return f"{self.quantity} x {self.product.name}"
 
 class PaymentInstallment(models.Model):
     class Status(models.TextChoices):
