@@ -654,3 +654,50 @@ def send_order_confirmation_email(order):
         logging.getLogger("apps").error(f"Error sending order confirmation email for order {order.id}: {e}", exc_info=True)
         return False
 
+
+def send_autofactura_email(user, invoice):
+    """
+    Sends an email to the tenant owner with their XML and PDF invoice attached.
+    Sent from settings.EMAIL_BILLING (facturacion@nectarlabs.dev).
+    """
+    try:
+        recipient_email = user.email
+        name = user.get_full_name() or user.username or "Cliente"
+        
+        subject = f"Factura de tu Suscripción Add-on - Néctar Labs"
+        body_text = (
+            f"Hola {name},\n\n"
+            f"Adjunto encontrarás el XML y PDF de la factura fiscal correspondiente al pago de tu suscripción o add-on en Néctar Labs.\n\n"
+            f"Detalles de la Factura:\n"
+            f"- Folio Fiscal (UUID SAT): {invoice.uuid_sat}\n"
+            f"- Total: ${invoice.total:,.2f} MXN\n\n"
+            f"Agradecemos tu confianza y preferencia.\n\n"
+            f"Atentamente,\n"
+            f"El equipo de Néctar Labs"
+        )
+        
+        email = EmailMultiAlternatives(
+            subject=subject,
+            body=body_text,
+            from_email=get_platform_sender("Néctar Labs Facturación"),
+            to=[recipient_email],
+            reply_to=[settings.EMAIL_BILLING],
+            bcc=[settings.EMAIL_BILLING]
+        )
+        
+        # Attach files from PAC (Facturapi)
+        if invoice.xml_file:
+            invoice.xml_file.seek(0)
+            email.attach(f"Factura_{invoice.uuid_sat}.xml", invoice.xml_file.read(), 'text/xml')
+        if invoice.pdf_file:
+            invoice.pdf_file.seek(0)
+            email.attach(f"Factura_{invoice.uuid_sat}.pdf", invoice.pdf_file.read(), 'application/pdf')
+            
+        email.send()
+        logging.getLogger("apps").info(f"Autofactura email sent to {recipient_email} for invoice {invoice.id}")
+        return True
+    except Exception as e:
+        logging.getLogger("apps").error(f"Error sending autofactura email: {e}", exc_info=True)
+        return False
+
+

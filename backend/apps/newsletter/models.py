@@ -42,24 +42,14 @@ def send_newsletter_email(subject, template_name, context, recipient_list, tenan
                 tenant.newsletter_last_reset = today
                 tenant.save(update_fields=['newsletter_sent_this_month', 'newsletter_last_reset'])
 
-            # Determine limit based on plan or active technological partner contract
-            from apps.shop.models import Contract
-            has_active_contract = Contract.objects.filter(user=tenant.owner, is_active=True).exists()
-            has_paid_addon = tenant.newsletter_plan == 'PREMIUM'
-
-            if tenant.is_ambassador:
-                base_limit = 1000
-            elif has_active_contract or has_paid_addon:
-                base_limit = 10000
-            else:
-                base_limit = 1000  # TRIAL plan without active contract
-
+            # Determine limit: 1,000 emails base for all plans and active technological partner contracts
+            base_limit = 1000
             total_limit = base_limit + tenant.newsletter_extra_credits
 
             if tenant.newsletter_sent_this_month + len(recipient_list) > total_limit:
                 raise ValueError(
                     f"Límite mensual de correos alcanzado. Has enviado {tenant.newsletter_sent_this_month} de {total_limit} correos. "
-                    "Puedes contratar un paquete adicional de 10,000 correos por $79 MXN en tu panel de control."
+                    "Puedes contratar un paquete adicional de 1,000 correos por $100 MXN en tu panel de control."
                 )
 
     html_content = render_to_string(f"newsletter/{template_name}.html", context)

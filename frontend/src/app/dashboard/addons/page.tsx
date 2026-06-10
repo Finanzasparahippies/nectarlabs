@@ -63,6 +63,18 @@ const getAddonIcon = (id: string) => {
           <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
         </svg>
       );
+    case 'mexico-invoicing':
+      return (
+        <svg className="w-8 h-8 text-nectar-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+      );
+    case 'ecommerce-combo':
+      return (
+        <svg className="w-8 h-8 text-nectar-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+        </svg>
+      );
     default:
       return (
         <svg className="w-8 h-8 text-nectar-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -616,25 +628,25 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
               ))}
             </>
           ) : addonsList.map((addon) => {
-            const isDelivery = addon.id === 'logistics-gps';
+            const isEnabled = ['logistics-gps', 'mexico-invoicing', 'newsletter-campaigner', 'ecommerce-combo'].includes(addon.id);
             const price = billingCycle === 'monthly' ? addon.monthlyPrice : addon.yearlyPrice;
             const savings = billingCycle === 'yearly' ? addon.monthlyPrice * 2 : 0;
             return (
               <div
                 key={addon.id}
                 className={`bg-card-bg border border-card-border p-8 rounded-[2.5rem] relative overflow-hidden group transition-all duration-500 flex flex-col justify-between min-h-[420px] ${
-                  isDelivery 
+                  isEnabled 
                     ? 'hover:border-nectar-gold/50 hover:shadow-[0_20px_50px_rgba(198,138,30,0.08)]' 
                     : 'opacity-55'
                 }`}
               >
                 {/* Accent Background Glow on Hover */}
-                {isDelivery && (
+                {isEnabled && (
                   <div className="absolute -top-32 -right-32 w-64 h-64 bg-nectar-gold/5 blur-[80px] rounded-full group-hover:bg-nectar-gold/10 transition-all duration-700 pointer-events-none -z-10"></div>
                 )}
 
                 {/* Lock Badge for Locked Addons */}
-                {!isDelivery && (
+                {!isEnabled && (
                   <div className="absolute top-4 right-4 bg-red-500/10 border border-red-500/20 text-red-400 text-[7px] font-black uppercase tracking-widest px-2.5 py-1 rounded-md flex items-center gap-1 font-bold">
                     🔒 En desarrollo / Bloqueado
                   </div>
@@ -646,13 +658,13 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
                     <span className="text-[8px] font-black uppercase tracking-widest text-nectar-gold bg-nectar-gold/5 border border-nectar-gold/15 px-3 py-1.5 rounded-full">
                       {addon.categoryBadge}
                     </span>
-                    <div className={`p-3 bg-foreground/5 rounded-2xl transition-all duration-500 ${isDelivery ? 'group-hover:bg-nectar-gold/10 group-hover:scale-110' : ''}`}>
+                    <div className={`p-3 bg-foreground/5 rounded-2xl transition-all duration-500 ${isEnabled ? 'group-hover:bg-nectar-gold/10 group-hover:scale-110' : ''}`}>
                       {addon.icon}
                     </div>
                   </div>
 
                   {/* Title & Description */}
-                  <h3 className={`text-2xl font-black tracking-tight mb-3 transition-colors duration-300 ${isDelivery ? 'group-hover:text-nectar-gold' : ''}`}>
+                  <h3 className={`text-2xl font-black tracking-tight mb-3 transition-colors duration-300 ${isEnabled ? 'group-hover:text-nectar-gold' : ''}`}>
                     {addon.name}
                   </h3>
                   <p className="text-xs text-muted mb-6 leading-relaxed">
@@ -702,7 +714,7 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
                     </span>
                   </div>
 
-                  {isDelivery ? (
+                  {isEnabled ? (
                     <div className="grid grid-cols-2 gap-4">
                       <button
                         onClick={() => setSelectedAddon(addon)}

@@ -166,23 +166,25 @@ class NewsletterAddonTests(BaseTenantAddonTestCase):
         with self.assertRaises(ValueError):
             send_newsletter_email("Test Subject", "welcome", {}, recipients, tenant=self.tenant_a)
             
-        # Verify that send_newsletter_email succeeds if they have an active contract (limit is 10k)
+        # Verify that send_newsletter_email succeeds if it is under or equal to 1,000 (e.g. 500 emails)
         contract_a.is_active = True
         contract_a.save()
         mail.outbox = []
-        send_newsletter_email("Test Subject", "welcome", {}, recipients, tenant=self.tenant_a)
+        under_limit_recipients = [f"rec{i}@example.com" for i in range(500)]
+        send_newsletter_email("Test Subject", "welcome", {}, under_limit_recipients, tenant=self.tenant_a)
         self.assertTrue(len(mail.outbox) > 0)
 
-        # Verify that send_newsletter_email fails if they exceed 10k on PREMIUM/contract plan
-        large_recipients = [f"rec{i}@example.com" for i in range(10001)]
+        # Verify that send_newsletter_email fails if they exceed 1,000 emails base limit (e.g., trying to send 501 more)
+        # (500 already sent + 501 = 1001 > 1000)
+        over_limit_recipients = [f"rec{i}@example.com" for i in range(501)]
         with self.assertRaises(ValueError):
-            send_newsletter_email("Test Subject", "welcome", {}, large_recipients, tenant=self.tenant_a)
+            send_newsletter_email("Test Subject", "welcome", {}, over_limit_recipients, tenant=self.tenant_a)
 
-        # Verify that adding extra credits allows sending over 10k
-        self.tenant_a.newsletter_extra_credits = 10000 # Adds 10k extra capacity, making total 20k
+        # Verify that adding extra credits (e.g., 1000 extra credits, making total limit 2000) allows sending it
+        self.tenant_a.newsletter_extra_credits = 1000
         self.tenant_a.save()
         mail.outbox = []
-        send_newsletter_email("Test Subject", "welcome", {}, large_recipients, tenant=self.tenant_a)
+        send_newsletter_email("Test Subject", "welcome", {}, over_limit_recipients, tenant=self.tenant_a)
         self.assertTrue(len(mail.outbox) > 0)
 
         # Reset extra credits and monthly count
@@ -190,19 +192,20 @@ class NewsletterAddonTests(BaseTenantAddonTestCase):
         self.tenant_a.newsletter_sent_this_month = 0
         self.tenant_a.save()
         
-        # Verify that send_newsletter_email succeeds if they have no active contract but newsletter_plan is PREMIUM
+        # Verify that send_newsletter_email succeeds under limit (e.g. 500 emails) if they have no active contract but newsletter_plan is PREMIUM
         contract_a.is_active = False
         contract_a.save()
         self.tenant_a.newsletter_plan = 'PREMIUM'
         self.tenant_a.save()
         
         mail.outbox = []
-        send_newsletter_email("Test Subject", "welcome", {}, recipients, tenant=self.tenant_a)
+        send_newsletter_email("Test Subject", "welcome", {}, under_limit_recipients, tenant=self.tenant_a)
         self.assertTrue(len(mail.outbox) > 0)
 
-        # Verify limit of 10k for PREMIUM plan too
+        # Verify limit of 1000 (total) for PREMIUM plan too (sending 501 more fails)
+        over_limit_recipients_2 = [f"rec{i}@example.com" for i in range(501)]
         with self.assertRaises(ValueError):
-            send_newsletter_email("Test Subject", "welcome", {}, large_recipients, tenant=self.tenant_a)
+            send_newsletter_email("Test Subject", "welcome", {}, over_limit_recipients_2, tenant=self.tenant_a)
 
         # Now test the view:
         # If newsletter_plan is PREMIUM, they should be able to subscribe contacts without active contract

@@ -434,7 +434,7 @@ class BuyEmailCreditsView(BillingTenantMixin, APIView):
     def post(self, request):
         tenant = self.get_tenant()
         credits_count = 1000
-        price = 15.00
+        price = 100.00
         
         stripe.api_key = settings.STRIPE_SECRET_KEY
         

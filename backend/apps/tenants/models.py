@@ -180,5 +180,8 @@ class Tenant(models.Model):
         if self.newsletter_plan == 'PREMIUM':
             addons.add('newsletter-campaigner')
             
+        if 'ecommerce-combo' in addons:
+            addons.update(['logistics-gps', 'mexico-invoicing', 'newsletter-campaigner'])
+
         return list(addons)
 

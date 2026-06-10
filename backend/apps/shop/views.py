@@ -1016,8 +1016,81 @@ def stripe_webhook(request):
                                     is_active=True
                                 )
                             
-                            tenant.stamp_balance = (tenant.stamp_balance or 0) + 100
+                            tenant.stamp_balance = (tenant.stamp_balance or 0) + 20
                             tenant.save()
+
+                        # --- BUCLE INVERTIDO: Autofacturar la suscripción del inquilino ---
+                        try:
+                            from apps.billing.models import TaxProfile, Invoice
+                            from apps.billing.services import get_pac_service, PACError, LCOSyncError
+                            from decimal import Decimal
+                            
+                            tenant = Tenant.objects.filter(owner=user).first()
+                            if tenant and hasattr(tenant, 'tax_profile') and tenant.tax_profile.facturapi_organization_id:
+                                profile = tenant.tax_profile
+                                
+                                # Monto pagado en pesos (amount_paid está en centavos)
+                                amount_paid = Decimal(str(invoice_obj.get('amount_paid', 0))) / Decimal('100.00')
+                                if amount_paid > 0:
+                                    # El total pagado ya incluye IVA del 16%, base = total / 1.16
+                                    price_base = (amount_paid / Decimal('1.16')).quantize(Decimal('0.01'))
+                                    invoice_total = amount_paid.quantize(Decimal('0.01'))
+                                    
+                                    # Crear registro de factura
+                                    invoice = Invoice.objects.create(
+                                        tenant=tenant,
+                                        stripe_invoice_id=invoice_obj.get('id') or invoice_obj.get('charge'),
+                                        total=invoice_total,
+                                        status=Invoice.Status.PENDING
+                                    )
+                                    
+                                    # La autofacturación consume un timbre del inquilino (Parent-to-Tenant)
+                                    if not tenant.has_available_stamps():
+                                        invoice.status = Invoice.Status.FAILED
+                                        invoice.error_message = "No tienes timbres suficientes para autofacturación."
+                                        invoice.save()
+                                    else:
+                                        customer_info = {
+                                            "razon_social": user.get_full_name() or user.username,
+                                            "rfc": profile.rfc,
+                                            "regimen_fiscal": profile.regimen_fiscal,
+                                            "codigo_postal": profile.codigo_postal,
+                                            "email": user.email
+                                        }
+                                        items = [{
+                                            "quantity": 1,
+                                            "unit_price": float(price_base),
+                                            "description": f"Suscripción Mensual Add-on: {addon.name} ({tenant.name})"
+                                        }]
+                                        
+                                        pac = get_pac_service()
+                                        try:
+                                            res = pac.create_invoice(invoice, profile, customer_info, items, is_parent_to_tenant=True)
+                                            invoice.facturapi_invoice_id = res["facturapi_invoice_id"]
+                                            invoice.uuid_sat = res["uuid_sat"]
+                                            invoice.xml_file.save(res["xml_file"].name, res["xml_file"], save=False)
+                                            invoice.pdf_file.save(res["pdf_file"].name, res["pdf_file"], save=False)
+                                            invoice.status = Invoice.Status.PAID
+                                            invoice.error_message = None
+                                            invoice.save()
+                                            
+                                            tenant.consume_stamp()
+                                            
+                                            # Enviar factura por correo electrónico
+                                            from .utils import send_autofactura_email
+                                            send_autofactura_email(user, invoice)
+                                        except LCOSyncError as e:
+                                            invoice.status = Invoice.Status.LCO_SYNC_PENDING
+                                            invoice.error_message = str(e)
+                                            invoice.save()
+                                            tenant.consume_stamp()
+                                        except PACError as e:
+                                            invoice.status = Invoice.Status.FAILED
+                                            invoice.error_message = str(e)
+                                            invoice.save()
+                        except Exception as auto_inv_err:
+                            import logging
+                            logging.getLogger("apps").error(f"Error en bucle invertido de facturación: {auto_inv_err}", exc_info=True)
             except Exception as e:
                 import logging
                 logging.getLogger("apps").error(f"Error handling invoice.payment_succeeded webhook: {e}", exc_info=True)

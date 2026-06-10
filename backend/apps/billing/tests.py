@@ -873,9 +873,9 @@ class BillingSystemTests(APITestCase):
         self.assertEqual(self.tenant.stamp_balance, 105)
 
     @patch('stripe.Subscription.retrieve')
-    def test_stripe_webhook_addon_payment_succeeded_credits_100_stamps(self, mock_sub_retrieve):
+    def test_stripe_webhook_addon_payment_succeeded_credits_20_stamps(self, mock_sub_retrieve):
         """
-        Verify that invoice.payment_succeeded webhook for mexico-invoicing credits 100 stamps.
+        Verify that invoice.payment_succeeded webhook for mexico-invoicing credits 20 stamps.
         """
         url = reverse('stripe_webhook')
         payload = {
@@ -914,7 +914,148 @@ class BillingSystemTests(APITestCase):
             self.assertEqual(response.status_code, 200)
             
         self.tenant.refresh_from_db()
-        self.assertEqual(self.tenant.stamp_balance, 110)
+        self.assertEqual(self.tenant.stamp_balance, 30)
+
+    @patch('stripe.Subscription.retrieve')
+    def test_stripe_webhook_combo_payment_succeeded_credits_20_stamps(self, mock_sub_retrieve):
+        """
+        Verify that invoice.payment_succeeded webhook for ecommerce-combo credits 20 stamps.
+        """
+        url = reverse('stripe_webhook')
+        combo_addon = AddOn.objects.create(
+            slug="ecommerce-combo",
+            name="Combo E-commerce Automatizado",
+            category_badge="E-COMMERCE COMBO",
+            description="Combo addon",
+            monthly_price=799.00,
+            yearly_price=7990.00,
+            complexity=AddOn.Complexity.HIGH
+        )
+        
+        payload = {
+            "id": "evt_combo_paid",
+            "type": "invoice.payment_succeeded",
+            "data": {
+                "object": {
+                    "id": "in_456",
+                    "subscription": "sub_combo123"
+                }
+            }
+        }
+        
+        mock_sub = MagicMock()
+        mock_sub.get.side_effect = lambda key, default=None: {
+            "metadata": {
+                "type": "addon_subscription",
+                "user_id": self.client_user.id,
+                "addon_id": combo_addon.id
+            }
+        }.get(key, default)
+        mock_sub_retrieve.return_value = mock_sub
+        
+        self.tenant.stamp_balance = 10
+        self.tenant.save()
+        
+        with patch('stripe.Webhook.construct_event') as mock_construct:
+            mock_construct.return_value = payload
+            response = self.client.post(
+                url, 
+                payload, 
+                format='json',
+                HTTP_STRIPE_SIGNATURE='t=123,v1=abc'
+            )
+            self.assertEqual(response.status_code, 200)
+            
+        self.tenant.refresh_from_db()
+        self.assertEqual(self.tenant.stamp_balance, 30)
+
+    @patch('stripe.Subscription.retrieve')
+    @patch('apps.billing.services.get_pac_service')
+    def test_stripe_webhook_addon_payment_succeeded_autofacturacion(self, mock_get_pac, mock_sub_retrieve):
+        """
+        Verify that invoice.payment_succeeded webhook for an addon triggers autofacturacion (Bucle Invertido)
+        when a TaxProfile is configured, consumes a stamp, and sends an email.
+        """
+        url = reverse('stripe_webhook')
+        payload = {
+            "id": "evt_invoice_paid_autofactura",
+            "type": "invoice.payment_succeeded",
+            "data": {
+                "object": {
+                    "id": "in_999",
+                    "subscription": "sub_invoicing999",
+                    "amount_paid": 49900  # $499.00 MXN in cents
+                }
+            }
+        }
+        
+        # Configure tax profile
+        TaxProfile.objects.create(
+            tenant=self.tenant,
+            rfc="XAXX010101000",
+            razon_social="Tenant Enterprise",
+            regimen_fiscal="601",
+            codigo_postal="06000",
+            facturapi_organization_id="org_mock_tenant_123"
+        )
+        
+        # Mock stripe retrieve response for subscription
+        mock_sub = MagicMock()
+        mock_sub.get.side_effect = lambda key, default=None: {
+            "metadata": {
+                "type": "addon_subscription",
+                "user_id": self.client_user.id,
+                "addon_id": self.invoicing_addon.id
+            }
+        }.get(key, default)
+        mock_sub_retrieve.return_value = mock_sub
+        
+        # Set stamp balance
+        self.tenant.stamp_balance = 10
+        self.tenant.save()
+        
+        # Mock PAC service response
+        mock_pac = MagicMock()
+        mock_xml = SimpleUploadedFile("factura.xml", b"<xml>test</xml>", content_type="text/xml")
+        mock_pdf = SimpleUploadedFile("factura.pdf", b"pdf content", content_type="application/pdf")
+        mock_pac.create_invoice.return_value = {
+            "facturapi_invoice_id": "facturapi_inv_999",
+            "uuid_sat": "uuid-sat-999-999",
+            "xml_file": mock_xml,
+            "pdf_file": mock_pdf
+        }
+        mock_get_pac.return_value = mock_pac
+        
+        from django.core import mail
+        mail.outbox = []
+        
+        with patch('stripe.Webhook.construct_event') as mock_construct:
+            mock_construct.return_value = payload
+            response = self.client.post(
+                url, 
+                payload, 
+                format='json',
+                HTTP_STRIPE_SIGNATURE='t=123,v1=abc'
+            )
+            self.assertEqual(response.status_code, 200)
+            
+        self.tenant.refresh_from_db()
+        # Initial stamps = 10
+        # + 20 stamps added from mexico-invoicing addon = 30
+        # - 1 stamp consumed for autofacturacion = 29
+        self.assertEqual(self.tenant.stamp_balance, 29)
+        
+        # Verify Invoice object is created and marked PAID
+        invoice = Invoice.objects.filter(tenant=self.tenant, stripe_invoice_id="in_999").first()
+        self.assertIsNotNone(invoice)
+        self.assertEqual(invoice.status, Invoice.Status.PAID)
+        self.assertEqual(invoice.total, Decimal("499.00"))
+        
+        # Verify email is sent with PDF & XML attachments
+        self.assertEqual(len(mail.outbox), 1)
+        sent_mail = mail.outbox[0]
+        self.assertIn("Factura de tu suscripción", sent_mail.subject)
+        self.assertEqual(len(sent_mail.attachments), 2)
 
     @patch('apps.billing.services.get_pac_service')
     def test_stripe_webhook_automatic_invoicing_fails_when_no_stamps(self, mock_get_pac):

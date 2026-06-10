@@ -51,21 +51,21 @@ def seed_addons():
         },
         {
             "slug": "logistics-gps",
-            "name": "Néctar Delivery",
+            "name": "Tienda + Envíos con Skydropx",
             "category_badge": "LOGÍSTICA Y CONTROL",
-            "description": "Seguimiento en tiempo real de repartidores, trazado de rutas óptimas de paradas y cálculo de ETA en mapa interactivo.",
-            "detailed_description": "Módulo de geolocalización industrial. Registra rutas y telemetría GPS, ofreciendo una experiencia interactiva tanto al administrador (consola de flotas) como al usuario final (seguimiento del pedido en tiempo real).",
-            "monthly_price": 449.00,
-            "yearly_price": 4490.00,
+            "description": "Configura tus almacenes de origen, cotiza envíos en tiempo real con margen de ganancia y emite guías automáticamente.",
+            "detailed_description": "Módulo de logística inteligente integrado. Registra las tarifas reales desde la API de Skydropx y les aplica tu margen (markup) del 15% o personalizado directamente en el checkout, automatizando la generación de etiquetas en pedidos pagados.",
+            "monthly_price": 249.00,
+            "yearly_price": 2490.00,
             "origin_project": "losplacosones",
             "source_reference": "losplacosones/backend/apps/delivery",
             "complexity": AddOn.Complexity.VERY_HIGH,
-            "server_requirements": "Acceso a Mapbox API o Google Maps API para cálculo de rutas + Telemetría persistente de alta frecuencia.",
+            "server_requirements": "Cuenta en Skydropx (API Key de desarrollo o producción) + Configuración de dirección de almacén.",
             "technical_details": [
-                "WebSockets / Polling optimizado para actualización GPS",
-                "Consola administrativa con mapas interactivos de flotas",
-                "Cálculo inteligente de rutas y paradas ordenadas",
-                "Estimaciones de tiempo de entrega basadas en tráfico"
+                "Cotización dinámica multitarifa (FedEx, DHL, Estafeta)",
+                "Margen (markup) de ganancia sobre tarifas base",
+                "Emisión automatizada de guías tras confirmación de pago",
+                "Seguimiento y URL de rastreo guardados en la orden"
             ]
         },
         {
@@ -110,10 +110,10 @@ def seed_addons():
             "slug": "newsletter-campaigner",
             "name": "Néctar Newsletter y Campañas de Email",
             "category_badge": "EMAIL MARKETING",
-            "description": "Gestor de suscripciones, programador de campañas con plantillas HTML y envío masivo optimizado para SMTP/SES.",
-            "detailed_description": "Envía boletines interactivos a tu base de contactos. Cuenta con un sistema automático de tokens únicos de cancelación de suscripción para cumplir con las normativas internacionales de correo, además de plantillas HTML prediseñadas.",
-            "monthly_price": 79.00,
-            "yearly_price": 790.00,
+            "description": "Gestor de suscripciones, programador de campañas con plantillas HTML y envío masivo optimizado para SMTP/SES. Incluye 1,000 envíos/mes.",
+            "detailed_description": "Envía boletines interactivos a tu base de contactos. Cuenta con un sistema automático de tokens únicos de cancelación de suscripción para cumplir con las normativas internacionales de correo, además de plantillas HTML prediseñadas. Incluye 1,000 correos mensuales base.",
+            "monthly_price": 199.00,
+            "yearly_price": 1990.00,
             "origin_project": "nectarlabs-main",
             "source_reference": "backend/apps/newsletter (Subscriber, send_newsletter_email)",
             "complexity": AddOn.Complexity.LOW,
@@ -121,16 +121,16 @@ def seed_addons():
             "technical_details": [
                 "Tokens únicos de desuscripción seguros (UUID)",
                 "Render de templates de correo HTML con Django Template Loader",
-                "Manejo de estados activos / inactivos en la base de datos",
-                "Soporte multi-idioma de plantillas"
+                "Envío de 1,000 correos mensuales base incluidos",
+                "Emails extra con costo variable a $0.10 MXN"
             ]
         },
         {
             "slug": "mexico-invoicing",
             "name": "Facturación SAT México",
             "category_badge": "CONTABILIDAD Y FISCAL",
-            "description": "Emite facturas CFDI 4.0 oficiales del SAT a tus clientes de manera automatizada y marca blanca. Incluye 100 timbres mensuales.",
-            "detailed_description": "Módulo de facturación fiscal electrónica para México. Permite crear organizaciones subordinadas en Facturapi, subir sellos CSD y timbrar facturas CFDI 4.0 directamente desde tu portal, de forma automatizada (en compras) o manual a clientes.",
+            "description": "Emite facturas CFDI 4.0 oficiales del SAT a tus clientes de manera automatizada y marca blanca. Incluye 20 timbres base.",
+            "detailed_description": "Módulo de facturación fiscal electrónica para México. Permite crear organizaciones subordinadas en Facturapi, subir sellos CSD y timbrar facturas CFDI 4.0 directamente desde tu portal. Incluye 20 timbres mensuales base.",
             "monthly_price": 499.00,
             "yearly_price": 4990.00,
             "origin_project": "nectarlabs-main",
@@ -140,10 +140,31 @@ def seed_addons():
             "technical_details": [
                 "Creación dinámica de organizaciones subordinadas en el PAC",
                 "Carga directa y segura de sellos CSD (.cer, .key)",
-                "Soporte para 100 timbres mensuales incluidos",
+                "Soporte para 20 timbres mensuales incluidos",
+                "Timbres extra a $1.50 MXN c/u en prepago",
                 "Generación y timbrado automatizado de CFDI 4.0",
-                "Descarga local e independiente de archivos XML y PDF de facturas",
-                "Manejo inteligente de sincronización LCO del SAT (24-72 hrs)"
+                "Descarga de archivos XML y PDF de facturas",
+                "Manejo inteligente de sincronización LCO del SAT"
+            ]
+        },
+        {
+            "slug": "ecommerce-combo",
+            "name": "Combo E-commerce Automatizado",
+            "category_badge": "E-COMMERCE COMBO",
+            "description": "El paquete integral definitivo: Tienda + Envíos con Skydropx, Facturación SAT y Newsletter Masivo en uno.",
+            "detailed_description": "La solución completa ideal para cualquier comercio digital. Habilita de golpe las funciones de cotización y emisión de guías de envío nacionales de Skydropx, facturación fiscal automatizada CFDI 4.0 con 20 timbres base, y campañas de marketing por correo con 1,000 envíos incluidos.",
+            "monthly_price": 799.00,
+            "yearly_price": 7990.00,
+            "origin_project": "nectarlabs-main",
+            "source_reference": "backend/config/urls.py (E-commerce Integration Suite)",
+            "complexity": AddOn.Complexity.HIGH,
+            "server_requirements": "Configuración completa de llaves de Stripe, Skydropx API Key y Facturapi API Key.",
+            "technical_details": [
+                "Acceso completo a módulo Tienda + Envíos Skydropx",
+                "Acceso completo a módulo Facturación SAT (20 timbres base)",
+                "Acceso completo a módulo Newsletter Masivo (1,000 correos base)",
+                "Ahorro de $148.00 MXN mensuales sobre la compra individual",
+                "Configuración unificada y automatización de negocio cruzada"
             ]
         }
     ]
