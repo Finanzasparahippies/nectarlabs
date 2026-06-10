@@ -23,6 +23,35 @@ interface TenantConfig {
   border_color: string;
   active_addons?: string[];
   owner: number;
+  
+  // Custom fields
+  stamp_balance?: number;
+  newsletter_plan?: 'TRIAL' | 'PREMIUM';
+  newsletter_sent_this_month?: number;
+  newsletter_extra_credits?: number;
+  is_ambassador?: boolean;
+  free_stamps_left?: number;
+  stamps_used_this_month?: number;
+  subscriber_count?: number;
+  
+  // Custom SMTP
+  custom_smtp_host?: string | null;
+  custom_smtp_port?: number | null;
+  custom_smtp_username?: string | null;
+  custom_smtp_from_email?: string | null;
+  custom_smtp_use_tls?: boolean;
+  has_custom_smtp_password?: boolean;
+
+  // Skydropx
+  has_skydropx_api_key?: boolean;
+  shipping_markup_percentage?: string;
+  shipping_origin_name?: string | null;
+  shipping_origin_phone?: string | null;
+  shipping_origin_street?: string | null;
+  shipping_origin_suburb?: string | null;
+  shipping_origin_city?: string | null;
+  shipping_origin_state?: string | null;
+  shipping_origin_zip_code?: string | null;
 }
 
 export default function TenantAdminPage() {
@@ -40,7 +69,7 @@ export default function TenantAdminPage() {
   const [loading, setLoading] = useState(true);
   const [authorized, setAuthorized] = useState(false);
   const [userMe, setUserMe] = useState<any | null>(null);
-  const [activeTab, setActiveTab] = useState<'metrics' | 'branding' | 'billing'>('metrics');
+  const [activeTab, setActiveTab] = useState<'metrics' | 'branding' | 'billing' | 'integrations'>('metrics');
 
   // Customization Form State
   const [editName, setEditName] = useState('');
@@ -78,6 +107,35 @@ export default function TenantAdminPage() {
   const [cerFile, setCerFile] = useState<File | null>(null);
   const [keyFile, setKeyFile] = useState<File | null>(null);
   const [privateKeyPassword, setPrivateKeyPassword] = useState('');
+
+  // Integrations state
+  const [smtpHost, setSmtpHost] = useState('');
+  const [smtpPort, setSmtpPort] = useState('587');
+  const [smtpUsername, setSmtpUsername] = useState('');
+  const [smtpPassword, setSmtpPassword] = useState('');
+  const [smtpUseTls, setSmtpUseTls] = useState(true);
+  const [smtpFromEmail, setSmtpFromEmail] = useState('');
+
+  const [skydropxApiKey, setSkydropxApiKey] = useState('');
+  const [shippingMarkupPercentage, setShippingMarkupPercentage] = useState('15.00');
+  
+  const [originName, setOriginName] = useState('');
+  const [originPhone, setOriginPhone] = useState('');
+  const [originStreet, setOriginStreet] = useState('');
+  const [originSuburb, setOriginSuburb] = useState('');
+  const [originCity, setOriginCity] = useState('');
+  const [originState, setOriginState] = useState('');
+  const [originZipCode, setOriginZipCode] = useState('');
+
+  const [isSavingIntegrations, setIsSavingIntegrations] = useState(false);
+
+  // Newsletter campaign states
+  const [showNewsletterModal, setShowNewsletterModal] = useState(false);
+  const [showOverLimitModal, setShowOverLimitModal] = useState(false);
+  const [campaignSubject, setCampaignSubject] = useState('');
+  const [campaignTitle, setCampaignTitle] = useState('');
+  const [campaignContent, setCampaignContent] = useState('');
+  const [isSendingCampaign, setIsSendingCampaign] = useState(false);
 
   // Handle URL query parameters for success/cancel redirects
   useEffect(() => {

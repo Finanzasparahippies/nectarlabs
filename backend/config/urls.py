@@ -8,13 +8,13 @@ from rest_framework_simplejwt.views import (
 )
 
 
-from apps.shop.views import PlanViewSet, ProductViewSet, ContractViewSet, PaymentInstallmentViewSet, AddOnViewSet, PromoCodeViewSet, SalesCommissionViewSet
+from apps.shop.views import PlanViewSet, ProductViewSet, ContractViewSet, PaymentInstallmentViewSet, AddOnViewSet, PromoCodeViewSet, SalesCommissionViewSet, ShopCheckoutView, GetShippingRatesView
 from apps.dashboard.views import ProjectViewSet, FAQViewSet, TimeLogViewSet, ProjectQuoteViewSet, LeadViewSet, LeadAppointmentViewSet
 from apps.blog.views import PostViewSet
 from apps.tickets.views import TicketViewSet, SupportChatViewSet
 from apps.users.views import UserViewSet
 from apps.tenants.views import TenantViewSet, public_config, guest_auth
-from apps.billing.views import TaxProfileView, InvoiceViewSet, BillingInfoView, BuyStampsView
+from apps.billing.views import TaxProfileView, InvoiceViewSet, BillingInfoView, BuyStampsView, BuyEmailCreditsView
 
 router = DefaultRouter()
 router.register(r'plans', PlanViewSet)
@@ -42,7 +42,7 @@ router.register(r'billing/invoices', InvoiceViewSet, basename='billing-invoice')
 from django.conf import settings
 
 from apps.users.views import RegisterView, VerifyEmailView
-from apps.newsletter.views import SubscribeView, UnsubscribeView
+from apps.newsletter.views import SubscribeView, UnsubscribeView, SendCampaignView
 from apps.dashboard.views import BusinessStatsView
 from apps.shop.views import stripe_webhook
 
@@ -59,15 +59,19 @@ urlpatterns = [
     path('api/register/', RegisterView.as_view(), name='register'),
     path('api/newsletter/subscribe/', SubscribeView.as_view(), name='newsletter_subscribe'),
     path('api/newsletter/unsubscribe/', UnsubscribeView.as_view(), name='newsletter_unsubscribe'),
+    path('api/newsletter/send-campaign/', SendCampaignView.as_view(), name='newsletter_send_campaign'),
     path('api/dashboard/business-stats/', BusinessStatsView.as_view(), name='business_stats'),
     path('api/token/', MyTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/auth/', include('rest_framework.urls')),
     path("ckeditor5/", include('django_ckeditor_5.urls')),
     path('api/shop/stripe-webhook/', stripe_webhook, name='stripe_webhook'),
+    path('api/shop/checkout/', ShopCheckoutView.as_view(), name='shop_checkout'),
+    path('api/shop/shipping-rates/', GetShippingRatesView.as_view(), name='shop_shipping_rates'),
     path('api/billing/tax-profile/', TaxProfileView.as_view(), name='billing_tax_profile'),
     path('api/billing/info/', BillingInfoView.as_view(), name='billing_info'),
     path('api/billing/buy-stamps/', BuyStampsView.as_view(), name='billing_buy_stamps'),
+    path('api/billing/buy-email-credits/', BuyEmailCreditsView.as_view(), name='billing_buy_email_credits'),
 ]
 
 

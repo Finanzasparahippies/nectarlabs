@@ -689,7 +689,7 @@ def stripe_webhook(request):
                             )
                             
                             # Check if the tenant has enough stamps
-                            if tenant.stamp_balance <= 0:
+                            if not tenant.has_available_stamps():
                                 invoice.status = Invoice.Status.FAILED
                                 invoice.error_message = "No tienes timbres suficientes en tu balance. Por favor adquiere más timbres."
                                 invoice.save()
@@ -728,16 +728,14 @@ def stripe_webhook(request):
                                     installment.save(update_fields=['cfdi_uuid'])
                                     
                                     # Decrement stamp balance
-                                    tenant.stamp_balance = max(0, tenant.stamp_balance - 1)
-                                    tenant.save()
+                                    tenant.consume_stamp()
                                 except LCOSyncError as e:
                                     invoice.status = Invoice.Status.LCO_SYNC_PENDING
                                     invoice.error_message = str(e)
                                     invoice.save()
                                     
                                     # Decrement stamp balance
-                                    tenant.stamp_balance = max(0, tenant.stamp_balance - 1)
-                                    tenant.save()
+                                    tenant.consume_stamp()
                                 except PACError as e:
                                     invoice.status = Invoice.Status.FAILED
                                     invoice.error_message = str(e)
@@ -913,6 +911,53 @@ def stripe_webhook(request):
                 except Exception as e:
                     import logging
                     logging.getLogger("apps").error(f"Error updating stamp balance in webhook: {e}", exc_info=True)
+
+        # Caso 5: Compra en la Tienda del Inquilino (Shop Purchase)
+        elif session.get('metadata', {}).get('type') == 'shop_purchase':
+            order_id = session.get('metadata', {}).get('order_id')
+            if order_id:
+                try:
+                    from django.db import transaction
+                    from .models import Order, Product
+                    with transaction.atomic():
+                        order = Order.objects.select_for_update().get(id=order_id)
+                        if order.status == Order.Status.PENDING:
+                            order.status = Order.Status.PAID
+                            order.stripe_payment_intent = session.get('payment_intent')
+                            order.stripe_session_id = session.get('id')
+                            order.save()
+                            
+                            # Decrementar stock
+                            for item in order.items.all():
+                                product = Product.objects.select_for_update().get(id=item.product.id)
+                                product.stock = max(0, product.stock - item.quantity)
+                                product.save()
+                                
+                            from .shipping import generate_shipping_label
+                            from .utils import send_order_confirmation_email
+                            
+                            def process_fulfillment(order_obj):
+                                generate_shipping_label(order_obj)
+                                send_order_confirmation_email(order_obj)
+                                
+                            transaction.on_commit(lambda: process_fulfillment(order))
+                except Exception as e:
+                    import logging
+                    logging.getLogger("apps").error(f"Error processing shop purchase webhook: {e}", exc_info=True)
+
+        # Caso 6: Compra de paquete de correos masivos (Email Credits)
+        elif session.get('metadata', {}).get('type') == 'email_credits_package':
+            tenant_id = session.get('metadata', {}).get('tenant_id')
+            credits_count = session.get('metadata', {}).get('credits_count')
+            if tenant_id and credits_count:
+                try:
+                    from apps.tenants.models import Tenant
+                    tenant = Tenant.objects.get(id=tenant_id)
+                    tenant.newsletter_extra_credits = (tenant.newsletter_extra_credits or 0) + int(credits_count)
+                    tenant.save()
+                except Exception as e:
+                    import logging
+                    logging.getLogger("apps").error(f"Error updating newsletter email credits in webhook: {e}", exc_info=True)
 
     # Procesar cancelación de suscripción
     elif event['type'] == 'customer.subscription.deleted':
@@ -1107,3 +1152,196 @@ class SalesCommissionViewSet(viewsets.ReadOnlyModelViewSet):
 
         serializer = self.get_serializer(commission)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+from rest_framework.views import APIView
+from django.db import transaction
+from decimal import Decimal
+from apps.tenants.models import Tenant
+from .models import Order, OrderItem
+from .shipping import get_shipping_rates
+
+class GetShippingRatesView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request, *args, **kwargs):
+        tenant_id = request.data.get('tenant_id')
+        subdomain = request.data.get('subdomain')
+        tenant = None
+        
+        if tenant_id:
+            tenant = Tenant.objects.filter(id=tenant_id, is_active=True).first()
+        elif subdomain:
+            tenant = Tenant.objects.filter(subdomain=subdomain.lower(), is_active=True).first()
+
+        if not tenant:
+            return Response({"error": "No se pudo identificar un inquilino (tenant) válido."}, status=status.HTTP_400_BAD_REQUEST)
+
+        destination = request.data.get('destination')
+        if not destination or not (destination.get('zip_code') or destination.get('postal_code')):
+            return Response({"error": "La dirección de destino con código postal es obligatoria."}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not destination.get('zip_code') and destination.get('postal_code'):
+            destination['zip_code'] = destination['postal_code']
+
+        parcel = request.data.get('parcel')
+        rates = get_shipping_rates(destination, parcel=parcel, tenant=tenant)
+        return Response({"rates": rates}, status=status.HTTP_200_OK)
+
+
+class ShopCheckoutView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    @transaction.atomic
+    def post(self, request, *args, **kwargs):
+        data = request.data
+        tenant_id = data.get('tenant_id')
+        subdomain = data.get('subdomain')
+        
+        tenant = None
+        if tenant_id:
+            tenant = Tenant.objects.select_for_update().filter(id=tenant_id, is_active=True).first()
+        elif subdomain:
+            tenant = Tenant.objects.select_for_update().filter(subdomain=subdomain.lower(), is_active=True).first()
+
+        if not tenant:
+            return Response({"error": "No se pudo identificar un inquilino (tenant) válido."}, status=status.HTTP_400_BAD_REQUEST)
+
+        email = data.get('email')
+        full_name = data.get('full_name')
+        phone = data.get('phone', '')
+        street_and_number = data.get('street_and_number')
+        suburb = data.get('suburb')
+        city = data.get('city')
+        state = data.get('state')
+        postal_code = data.get('postal_code')
+        country = data.get('country', 'MX')
+        items_data = data.get('items', [])
+        
+        skydropx_rate_id = data.get('skydropx_rate_id')
+        shipping_cost = data.get('shipping_cost')
+        shipping_cost_base = data.get('shipping_cost_base')
+        shipping_provider = data.get('shipping_provider', 'FedEx')
+
+        if not all([email, full_name, street_and_number, suburb, city, state, postal_code, items_data]):
+            return Response({"error": "Todos los campos de entrega e ítems son requeridos."}, status=status.HTTP_400_BAD_REQUEST)
+
+        if skydropx_rate_id is None or shipping_cost is None:
+            return Response({"error": "Debes seleccionar una tarifa de envío válida."}, status=status.HTTP_400_BAD_REQUEST)
+
+        total_products_amount = Decimal('0.00')
+        order_items_to_prepare = []
+        line_items = []
+
+        for item in items_data:
+            prod_id = item.get('product_id')
+            qty = int(item.get('quantity', 1))
+
+            try:
+                product = Product.objects.select_for_update().get(id=prod_id, tenant=tenant)
+            except Product.DoesNotExist:
+                return Response({"error": f"Producto con ID {prod_id} no encontrado en este catálogo."}, status=status.HTTP_404_NOT_FOUND)
+
+            if product.stock < qty:
+                return Response({"error": f"Stock insuficiente para {product.name}."}, status=status.HTTP_400_BAD_REQUEST)
+
+            total_products_amount += product.price * qty
+            order_items_to_prepare.append({'product': product, 'quantity': qty, 'price': product.price})
+
+            price_id = product.stripe_price_id
+            if not price_id or not price_id.startswith('price_'):
+                line_items.append({
+                    'price_data': {
+                        'currency': 'mxn',
+                        'product_data': {
+                            'name': product.name,
+                            'description': product.description,
+                        },
+                        'unit_amount': int(product.price * 100),
+                    },
+                    'quantity': qty,
+                })
+            else:
+                line_items.append({
+                    'price': price_id,
+                    'quantity': qty,
+                })
+
+        line_items.append({
+            'price_data': {
+                'currency': 'mxn',
+                'product_data': {
+                    'name': f"Envío ({shipping_provider})",
+                },
+                'unit_amount': int(Decimal(str(shipping_cost)) * 100),
+            },
+            'quantity': 1,
+        })
+
+        total_order_amount = total_products_amount + Decimal(str(shipping_cost))
+        order = Order.objects.create(
+            tenant=tenant,
+            user=request.user if request.user.is_authenticated else None,
+            user_email=email,
+            total=total_order_amount,
+            status=Order.Status.PENDING,
+            full_name=full_name,
+            phone=phone,
+            street_and_number=street_and_number,
+            suburb=suburb,
+            city=city,
+            state=state,
+            postal_code=postal_code,
+            country=country,
+            shipping_provider=shipping_provider,
+            shipping_cost=Decimal(str(shipping_cost)),
+            shipping_cost_base=Decimal(str(shipping_cost_base or shipping_cost)),
+            skydropx_rate_id=skydropx_rate_id
+        )
+
+        for item_data in order_items_to_prepare:
+            OrderItem.objects.create(
+                order=order,
+                product=item_data['product'],
+                quantity=item_data['quantity'],
+                price=item_data['price']
+            )
+
+        frontend_url = settings.FRONTEND_URL
+        if tenant.custom_domain:
+            base_url = tenant.custom_domain if tenant.custom_domain.startswith(('http://', 'https://')) else f"https://{tenant.custom_domain}"
+        else:
+            from urllib.parse import urlparse, urlunparse
+            parsed = urlparse(frontend_url)
+            if parsed.netloc:
+                netloc = f"{tenant.subdomain}.{parsed.netloc}"
+                base_url = urlunparse(parsed._replace(netloc=netloc))
+            else:
+                base_url = f"https://{tenant.subdomain}.nectarlabs.dev"
+
+        success_url = f"{base_url}/shop/success?session_id={{CHECKOUT_SESSION_ID}}"
+        cancel_url = f"{base_url}/shop/cart"
+
+        try:
+            checkout_session = stripe.checkout.Session.create(
+                payment_method_types=['card'],
+                line_items=line_items,
+                mode='payment',
+                success_url=success_url,
+                cancel_url=cancel_url,
+                customer_email=email,
+                metadata={
+                    'order_id': str(order.id),
+                    'type': 'shop_purchase'
+                }
+            )
+            
+            return Response({
+                "checkout_url": checkout_session.url,
+                "order_id": order.id
+            }, status=status.HTTP_201_CREATED)
+            
+        except Exception as e:
+            import logging
+            logging.getLogger("apps").error(f"Error creating Stripe Session for shop checkout: {e}", exc_info=True)
+            return Response({"error": "No se pudo procesar la pasarela de pago."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

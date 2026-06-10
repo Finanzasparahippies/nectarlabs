@@ -17,9 +17,9 @@ from .services import get_pac_service, PACError, LCOSyncError
 logger = logging.getLogger(__name__)
 
 STAMP_PACKAGES = {
-    50: {"price": 100.00, "stamps": 50, "description": "Paquete de 50 timbres fiscales"},
-    100: {"price": 180.00, "stamps": 100, "description": "Paquete de 100 timbres fiscales"},
-    500: {"price": 650.00, "stamps": 500, "description": "Paquete de 500 timbres fiscales"},
+    50: {"price": 75.00, "stamps": 50, "description": "Paquete de 50 timbres fiscales"},
+    100: {"price": 150.00, "stamps": 100, "description": "Paquete de 100 timbres fiscales"},
+    500: {"price": 750.00, "stamps": 500, "description": "Paquete de 500 timbres fiscales"},
 }
 
 class BillingTenantMixin:
@@ -61,6 +61,8 @@ class BillingInfoView(BillingTenantMixin, APIView):
 
         data = {
             "stamp_balance": tenant.stamp_balance,
+            "is_ambassador": tenant.is_ambassador,
+            "free_stamps_left": tenant.free_stamps_left,
             "is_commercial_partner": is_commercial_partner,
             "addon_active": addon_active,
             "has_tax_profile": profile is not None,
@@ -267,7 +269,7 @@ class InvoiceViewSet(BillingTenantMixin, viewsets.ModelViewSet):
                 return Response({"error": f"El campo customer_info.{field} es obligatorio."}, status=400)
 
         # Check stamp balance
-        if tenant.stamp_balance <= 0:
+        if not tenant.has_available_stamps():
             return Response(
                 {"error": "No tienes timbres suficientes en tu balance. Adquiere un paquete de timbres para continuar."}, 
                 status=400
@@ -298,8 +300,7 @@ class InvoiceViewSet(BillingTenantMixin, viewsets.ModelViewSet):
             invoice.error_message = None
             invoice.save()
             
-            tenant.stamp_balance = max(0, tenant.stamp_balance - 1)
-            tenant.save()
+            tenant.consume_stamp()
             
             return Response(InvoiceSerializer(invoice).data, status=status.HTTP_201_CREATED)
         except LCOSyncError as e:
@@ -307,8 +308,7 @@ class InvoiceViewSet(BillingTenantMixin, viewsets.ModelViewSet):
             invoice.error_message = str(e)
             invoice.save()
             
-            tenant.stamp_balance = max(0, tenant.stamp_balance - 1)
-            tenant.save()
+            tenant.consume_stamp()
             
             return Response(InvoiceSerializer(invoice).data, status=status.HTTP_202_ACCEPTED)
         except PACError as e:
@@ -343,7 +343,7 @@ class InvoiceViewSet(BillingTenantMixin, viewsets.ModelViewSet):
 
         # Check stamp balance if we are retrying a FAILED invoice
         if original_status == Invoice.Status.FAILED:
-            if tenant.stamp_balance <= 0:
+            if not tenant.has_available_stamps():
                 return Response({"error": "No tienes timbres suficientes en tu balance para reintentar esta factura."}, status=400)
 
         profile = getattr(tenant, 'tax_profile', None)
@@ -394,8 +394,7 @@ class InvoiceViewSet(BillingTenantMixin, viewsets.ModelViewSet):
             invoice.save()
 
             if original_status == Invoice.Status.FAILED:
-                tenant.stamp_balance = max(0, tenant.stamp_balance - 1)
-                tenant.save()
+                tenant.consume_stamp()
 
             # Enviar el correo de confirmación de facturación
             try:
@@ -416,8 +415,7 @@ class InvoiceViewSet(BillingTenantMixin, viewsets.ModelViewSet):
             invoice.save(update_fields=['status', 'error_message'])
 
             if original_status == Invoice.Status.FAILED:
-                tenant.stamp_balance = max(0, tenant.stamp_balance - 1)
-                tenant.save()
+                tenant.consume_stamp()
 
             return Response({"error": f"Sello no activo (SAT LCO). Reintentando más tarde automáticamente: {e}"}, status=400)
             
@@ -426,3 +424,47 @@ class InvoiceViewSet(BillingTenantMixin, viewsets.ModelViewSet):
             invoice.error_message = str(e)
             invoice.save(update_fields=['status', 'error_message'])
             return Response({"error": f"Fallo de timbrado en el PAC: {e}"}, status=400)
+
+
+class BuyEmailCreditsView(BillingTenantMixin, APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        tenant = self.get_tenant()
+        credits_count = 1000
+        price = 15.00
+        
+        stripe.api_key = settings.STRIPE_SECRET_KEY
+        
+        from apps.shop.views import get_frontend_origin
+        frontend_url = get_frontend_origin(request)
+        
+        try:
+            line_items = [{
+                'price_data': {
+                    'currency': 'mxn',
+                    'product_data': {
+                        'name': "[Néctar Labs] Paquete de 1,000 correos masivos",
+                        'description': f"Créditos de email adicionales para {tenant.name}",
+                    },
+                    'unit_amount': int(price * 100),
+                },
+                'quantity': 1,
+            }]
+
+            session = stripe.checkout.Session.create(
+                payment_method_types=['card'],
+                line_items=line_items,
+                mode='payment',
+                allow_promotion_codes=True,
+                success_url=f"{frontend_url}/tenants/{tenant.subdomain}/admin?tab=newsletter&payment=success&credits={credits_count}",
+                cancel_url=f"{frontend_url}/tenants/{tenant.subdomain}/admin?tab=newsletter&payment=cancel",
+                metadata={
+                    'tenant_id': str(tenant.id),
+                    'credits_count': credits_count,
+                    'type': 'email_credits_package'
+                }
+            )
+            return Response({'url': session.url}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

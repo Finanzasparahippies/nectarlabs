@@ -611,3 +611,46 @@ def update_remaining_installments_amounts(contract):
     if next_inst and contract.promo_code:
         next_inst.apply_discount(contract.promo_code.discount_percentage, contract.promo_code)
 
+
+def send_order_confirmation_email(order):
+    """
+    Envía un correo de confirmación de pedido al cliente final de la tienda de un tenant.
+    Soporta ruteo dinámico usando la conexión SMTP del tenant si está configurada.
+    """
+    try:
+        items = list(order.items.all())
+        for item in items:
+            item.subtotal = item.price * item.quantity
+
+        tenant_name = order.tenant.name if order.tenant else 'Néctar Labs'
+        subject = f"🛒 Confirmación de Pedido #{order.id} - {tenant_name}"
+        
+        context = {
+            'order': order,
+            'items': items,
+            'subject': subject
+        }
+        
+        html_content = render_to_string('shop/emails/order_confirmation.html', context)
+        text_content = strip_tags(html_content)
+        
+        from apps.tenants.utils import get_tenant_email_connection
+        connection, from_email = get_tenant_email_connection(order.tenant)
+        if not connection:
+            from_email = settings.DEFAULT_FROM_EMAIL
+
+        email = EmailMultiAlternatives(
+            subject=subject,
+            body=text_content,
+            from_email=from_email,
+            to=[order.user_email],
+            connection=connection
+        )
+        email.attach_alternative(html_content, "text/html")
+        email.send(fail_silently=False)
+        logging.getLogger("apps").info(f"Order confirmation email sent for order {order.id} to {order.user_email}")
+        return True
+    except Exception as e:
+        logging.getLogger("apps").error(f"Error sending order confirmation email for order {order.id}: {e}", exc_info=True)
+        return False
+

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Plan, Product, Contract, PaymentInstallment, AddOn, PromoCode, SalesCommission
+from .models import Plan, Product, Contract, PaymentInstallment, AddOn, PromoCode, SalesCommission, Order, OrderItem
 
 class PlanSerializer(serializers.ModelSerializer):
     class Meta:
@@ -96,3 +96,19 @@ class PaymentInstallmentSerializer(serializers.ModelSerializer):
         from apps.dashboard.models import Project
         project = Project.objects.filter(client=obj.contract.user, plan=obj.contract.plan).first()
         return project.id if project else None
+
+
+class OrderItemSerializer(serializers.ModelSerializer):
+    product_name = serializers.ReadOnlyField(source='product.name')
+
+    class Meta:
+        model = OrderItem
+        fields = ['id', 'product', 'product_name', 'quantity', 'price']
+
+
+class OrderSerializer(serializers.ModelSerializer):
+    items = OrderItemSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Order
+        fields = '__all__'
