@@ -1208,3 +1208,159 @@ class StripePlanInstallmentCheckoutTests(APITestCase):
         self.assertEqual(line_item_price_data['product'], 'prod_mock_custom_dev')
         self.assertNotIn('product_data', line_item_price_data)
 
+
+class SkydropxAndStripeIdempotencyTests(APITestCase):
+    def setUp(self):
+        self.ceo = User.objects.create_user(
+            username="saul_ceo_skydropx",
+            email="saul_skydropx@nectarlabs.dev",
+            password="securepassword",
+            role=User.Role.ADMIN,
+            is_staff=True
+        )
+        self.client_user = User.objects.create_user(
+            username="client_skydropx",
+            email="client_skydropx@example.com",
+            password="clientpassword",
+            role=User.Role.BUSINESS
+        )
+        # Create a Tenant
+        self.tenant = Tenant.objects.create(
+            owner=self.client_user,
+            name="Skydropx Workspace",
+            subdomain="skydropx-workspace",
+            shipping_markup_percentage=15.00,
+            is_active=True
+        )
+
+    def test_get_shipping_rates_applies_markup(self):
+        """
+        Verify that get_shipping_rates calculates the total amount with the tenant's shipping_markup_percentage.
+        """
+        from apps.shop.shipping import get_shipping_rates
+        destination = {
+            "name": "Destinatario Test",
+            "street": "Calle Destino 789",
+            "suburb": "Pitic",
+            "city": "Hermosillo",
+            "state": "Sonora",
+            "zip_code": "83150"
+        }
+        
+        # In testing mode (TESTING=True), it will trigger mock rates with round(base_cost * (1 + markup/100), 2)
+        rates = get_shipping_rates(destination, tenant=self.tenant)
+        self.assertEqual(len(rates), 2)
+        
+        # Rate 1: base_cost_1 = 120.00. Total = 120.00 * 1.15 = 138.00
+        self.assertEqual(rates[0]["amount"], 120.00)
+        self.assertEqual(rates[0]["total_amount"], 138.00)
+        
+        # Rate 2: base_cost_2 = 180.00. Total = 180.00 * 1.15 = 207.00
+        self.assertEqual(rates[1]["amount"], 180.00)
+        self.assertEqual(rates[1]["total_amount"], 207.00)
+
+        # Update markup to 20% and check rates
+        self.tenant.shipping_markup_percentage = 20.00
+        self.tenant.save()
+        
+        rates = get_shipping_rates(destination, tenant=self.tenant)
+        # Rate 1: base_cost_1 = 120.00. Total = 120.00 * 1.20 = 144.00
+        self.assertEqual(rates[0]["total_amount"], 144.00)
+        # Rate 2: base_cost_2 = 180.00. Total = 180.00 * 1.20 = 216.00
+        self.assertEqual(rates[1]["total_amount"], 216.00)
+
+    @patch('stripe.Product.create')
+    @patch('stripe.Product.list')
+    @patch('stripe.Price.create')
+    @patch('stripe.Price.list')
+    def test_stripe_plan_creation_idempotency(self, mock_price_list, mock_price_create, mock_product_list, mock_product_create):
+        """
+        Verify that creating a Plan triggers Stripe Product and Price creations with deterministic idempotency keys.
+        """
+        from django.test import override_settings
+        
+        mock_product_list.return_value.auto_paging_iter.return_value = []
+        mock_prod = MagicMock()
+        mock_prod.id = "prod_plan_test_999"
+        mock_prod.active = True
+        mock_prod.name = "[Nectar Labs Plan] Plan Idempotente"
+        mock_prod.description = "Test Description"
+        mock_prod.metadata = {"plan_id": "999", "plan_slug": "plan-idempotente"}
+        mock_product_create.return_value = mock_prod
+
+        mock_price_list.return_value.data = []
+        mock_price = MagicMock()
+        mock_price.id = "price_plan_test_999"
+        mock_price_create.return_value = mock_price
+
+        # Save Plan outside testing mode to trigger Stripe calls
+        with override_settings(TESTING=False, STRIPE_SECRET_KEY="sk_test_mock"):
+            plan = Plan.objects.create(
+                id=999,
+                name="Plan Idempotente",
+                price=1000.00,
+                hours=10,
+                description="Test Description"
+            )
+            self.assertEqual(plan.stripe_product_id, "prod_plan_test_999")
+            self.assertEqual(plan.stripe_price_id, "price_plan_test_999")
+
+            # Verify idempotency keys
+            mock_product_create.assert_called_once()
+            prod_kwargs = mock_product_create.call_args[1]
+            self.assertEqual(prod_kwargs["idempotency_key"], "plan_product_999")
+
+            mock_price_create.assert_called_once()
+            price_kwargs = mock_price_create.call_args[1]
+            self.assertEqual(price_kwargs["idempotency_key"], "plan_price_999_100000")
+
+    @patch('stripe.Product.create')
+    @patch('stripe.Product.list')
+    @patch('stripe.Price.create')
+    @patch('stripe.Price.list')
+    def test_stripe_addon_creation_idempotency(self, mock_price_list, mock_price_create, mock_product_list, mock_product_create):
+        """
+        Verify that creating an AddOn triggers Stripe Product and Price creations with deterministic idempotency keys.
+        """
+        from django.test import override_settings
+        
+        mock_product_list.return_value.auto_paging_iter.return_value = []
+        mock_prod = MagicMock()
+        mock_prod.id = "prod_addon_test_slug"
+        mock_prod.active = True
+        mock_prod.name = "[Nectar Labs Add-on] Addon Idempotente"
+        mock_prod.description = "Test Description"
+        mock_prod.metadata = {"addon_slug": "addon-idempotente"}
+        mock_product_create.return_value = mock_prod
+
+        mock_price_list.return_value.data = []
+        mock_price = MagicMock()
+        mock_price.id = "price_addon_test_slug"
+        mock_price_create.return_value = mock_price
+
+        with override_settings(TESTING=False, STRIPE_SECRET_KEY="sk_test_mock"):
+            addon = AddOn.objects.create(
+                slug="addon-idempotente",
+                name="Addon Idempotente",
+                monthly_price=500.00,
+                yearly_price=5000.00,
+                description="Test Description",
+                complexity=AddOn.Complexity.LOW
+            )
+            self.assertEqual(addon.stripe_price_id, "price_addon_test_slug")
+            self.assertEqual(addon.stripe_yearly_price_id, "price_addon_test_slug")
+
+            # Verify idempotency keys
+            mock_product_create.assert_called_once()
+            prod_kwargs = mock_product_create.call_args[1]
+            self.assertEqual(prod_kwargs["idempotency_key"], "addon_product_addon-idempotente")
+
+            # Mock price create should have been called twice (monthly and yearly)
+            self.assertEqual(mock_price_create.call_count, 2)
+            first_call_args = mock_price_create.call_args_list[0][1]
+            second_call_args = mock_price_create.call_args_list[1][1]
+            
+            self.assertEqual(first_call_args["idempotency_key"], "addon_price_monthly_addon-idempotente_50000")
+            self.assertEqual(second_call_args["idempotency_key"], "addon_price_yearly_addon-idempotente_500000")
+
+

@@ -949,7 +949,6 @@ class BillingSystemTests(APITestCase):
                 }
             }
         }
-        
         with patch('stripe.Webhook.construct_event') as mock_construct:
             mock_construct.return_value = payload
             response = self.client.post(
@@ -965,3 +964,106 @@ class BillingSystemTests(APITestCase):
         self.assertIsNotNone(invoice)
         self.assertEqual(invoice.status, Invoice.Status.FAILED)
         self.assertIn("timbres suficientes", invoice.error_message)
+
+    def test_ambassador_free_stamps_usage(self):
+        """
+        Verify that a brand ambassador tenant gets 20 free stamps per month.
+        Consuming stamps should first exhaust the 20 courtesy stamps before using stamp_balance.
+        """
+        ambassador_plan = Plan.objects.create(
+            name="Plan Embajador Premium",
+            price=0.00,
+            hours=0
+        )
+        # Create an active contract for the ambassador
+        Contract.objects.create(
+            user=self.client_user,
+            plan=ambassador_plan,
+            full_name="Ambassador Brand Influencer",
+            tax_id="XAXX010101000",
+            address="Av. Juarez 123",
+            signed_at=timezone.now(),
+            is_fully_signed=True,
+            is_active=True
+        )
+
+        self.tenant.refresh_from_db()
+        self.assertTrue(self.tenant.is_ambassador)
+        self.assertEqual(self.tenant.free_stamps_left, 20)
+
+        # Start with 0 paid stamps
+        self.tenant.stamp_balance = 0
+        self.tenant.stamps_used_this_month = 0
+        self.tenant.save()
+
+        # 1st consumption should use a free stamp
+        success = self.tenant.consume_stamp()
+        self.assertTrue(success)
+        self.assertEqual(self.tenant.stamp_balance, 0)
+        self.assertEqual(self.tenant.stamps_used_this_month, 1)
+        self.assertEqual(self.tenant.free_stamps_left, 19)
+
+        # Consume remaining 19 free stamps
+        for _ in range(19):
+            self.assertTrue(self.tenant.consume_stamp())
+
+        self.assertEqual(self.tenant.stamps_used_this_month, 20)
+        self.assertEqual(self.tenant.free_stamps_left, 0)
+
+        # 21st consumption should fail because paid balance is 0 and free stamps are exhausted
+        success = self.tenant.consume_stamp()
+        self.assertFalse(success)
+
+        # Add some paid stamps
+        self.tenant.stamp_balance = 5
+        self.tenant.save()
+
+        # 21st consumption with paid balance should succeed
+        success = self.tenant.consume_stamp()
+        self.assertTrue(success)
+        self.assertEqual(self.tenant.stamp_balance, 4)
+        self.assertEqual(self.tenant.stamps_used_this_month, 20) # free stamps count stays at 20
+
+    @patch('stripe.Product.create')
+    @patch('stripe.Product.list')
+    @patch('stripe.Price.create')
+    @patch('stripe.Price.list')
+    def test_stripe_stamp_package_idempotency(self, mock_price_list, mock_price_create, mock_product_list, mock_product_create):
+        """
+        Verify that creating stamp packages in Stripe passes the deterministic idempotency_key parameter.
+        """
+        from apps.billing.views import get_or_create_stamp_package_stripe_price
+        from django.test import override_settings
+
+        # Mock Stripe Product list returning empty list
+        mock_product_list.return_value.auto_paging_iter.return_value = []
+        
+        # Mock Product.create return
+        mock_prod = MagicMock()
+        mock_prod.id = "prod_stamp_package_test_100"
+        mock_prod.active = True
+        mock_prod.metadata = {"stamp_package_size": "100"}
+        mock_product_create.return_value = mock_prod
+
+        # Mock Price list returning empty list
+        mock_price_list.return_value.data = []
+
+        # Mock Price.create return
+        mock_price = MagicMock()
+        mock_price.id = "price_stamp_package_test_100"
+        mock_price_create.return_value = mock_price
+
+        with override_settings(TESTING=False, STRIPE_SECRET_KEY="sk_test_mock"):
+            price_id = get_or_create_stripe_price_id_direct = get_or_create_stamp_package_stripe_price(100)
+            self.assertEqual(price_id, "price_stamp_package_test_100")
+
+            # Check that Product.create was called with idempotency_key
+            mock_product_create.assert_called_once()
+            prod_kwargs = mock_product_create.call_args[1]
+            self.assertEqual(prod_kwargs["idempotency_key"], "stamp_package_product_100")
+
+            # Check that Price.create was called with idempotency_key
+            mock_price_create.assert_called_once()
+            price_kwargs = mock_price_create.call_args[1]
+            self.assertEqual(price_kwargs["idempotency_key"], "stamp_package_price_100_15000") # 100 * 1.50 * 100 = 15000 cents
+

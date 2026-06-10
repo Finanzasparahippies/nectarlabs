@@ -110,3 +110,64 @@ class SponsorshipAddonTests(BaseTenantAddonTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 0)
         logger.info("Test passed: Sponsorship subscription and updates isolation verified.")
+
+    @patch('stripe.Product.create')
+    @patch('stripe.Product.list')
+    @patch('stripe.Price.create')
+    @patch('stripe.Price.list')
+    def test_stripe_sponsorship_tier_idempotency(self, mock_price_list, mock_price_create, mock_product_list, mock_product_create):
+        """
+        Verify that creating Stripe Product and Prices for a SponsorshipTier passes deterministic idempotency keys.
+        """
+        from apps.sponsorship.utils import create_stripe_product_and_price
+        from django.test import override_settings
+        from unittest.mock import MagicMock
+        
+        # Setup sponsorship details
+        SponsorshipConfig.objects.create(
+            tenant=self.tenant_a,
+            membership_name="Patrono",
+            welcome_message="¡Gracias por el apoyo!"
+        )
+
+        tier = SponsorshipTier.objects.create(
+            id=777,
+            tenant=self.tenant_a,
+            name="Platinum Sponsor",
+            level=5,
+            price=1000.00,
+            price_annual=10000.00,
+            type="SUBSCRIPTION",
+            is_active=True
+        )
+
+        # Mock Stripe
+        mock_product_list.return_value.auto_paging_iter.return_value = []
+        mock_prod = MagicMock()
+        mock_prod.id = "prod_sponsorship_test_777"
+        mock_prod.active = True
+        mock_product_create.return_value = mock_prod
+
+        mock_price_list.return_value.data = []
+        mock_price = MagicMock()
+        mock_price.id = "price_sponsorship_test_777"
+        mock_price_create.return_value = mock_price
+
+        with override_settings(TESTING=False, STRIPE_SECRET_KEY="sk_test_mock"):
+            price_ids = create_stripe_product_and_price(tier)
+            self.assertEqual(price_ids['monthly'], "price_sponsorship_test_777")
+            self.assertEqual(price_ids['annual'], "price_sponsorship_test_777")
+
+            # Check that Product.create was called with idempotency_key
+            mock_product_create.assert_called_once()
+            prod_kwargs = mock_product_create.call_args[1]
+            self.assertEqual(prod_kwargs["idempotency_key"], "sponsorship_product_777")
+
+            # Check Price.create calls and their idempotency_keys
+            self.assertEqual(mock_price_create.call_count, 2)
+            monthly_price_args = mock_price_create.call_args_list[0][1]
+            annual_price_args = mock_price_create.call_args_list[1][1]
+
+            self.assertEqual(monthly_price_args["idempotency_key"], "sponsorship_price_monthly_777_100000")
+            self.assertEqual(annual_price_args["idempotency_key"], "sponsorship_price_annual_777_1000000")
+
