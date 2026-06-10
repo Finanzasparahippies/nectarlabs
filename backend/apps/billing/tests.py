@@ -1020,7 +1020,7 @@ class BillingSystemTests(APITestCase):
         mock_pdf = SimpleUploadedFile("factura.pdf", b"pdf content", content_type="application/pdf")
         mock_pac.create_invoice.return_value = {
             "facturapi_invoice_id": "facturapi_inv_999",
-            "uuid_sat": "uuid-sat-999-999",
+            "uuid_sat": "99999999-9999-9999-9999-999999999999",
             "xml_file": mock_xml,
             "pdf_file": mock_pdf
         }
