@@ -1054,7 +1054,7 @@ class BillingSystemTests(APITestCase):
         # Verify email is sent with PDF & XML attachments
         self.assertEqual(len(mail.outbox), 1)
         sent_mail = mail.outbox[0]
-        self.assertIn("Factura de tu suscripción", sent_mail.subject)
+        self.assertIn("Factura de tu Suscripción", sent_mail.subject)
         self.assertEqual(len(sent_mail.attachments), 2)
 
     @patch('apps.billing.services.get_pac_service')
