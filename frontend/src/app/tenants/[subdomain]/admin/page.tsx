@@ -100,6 +100,18 @@ export default function TenantAdminPage() {
   const [invoicingMode, setInvoicingMode] = useState('AUTOMATIC');
   const [buyingPackage, setBuyingPackage] = useState<number | null>(null);
 
+  // Manual Invoices Custom Modal states
+  const [showManualInvoiceModal, setShowManualInvoiceModal] = useState(false);
+  const [manualRfc, setManualRfc] = useState('');
+  const [manualRazonSocial, setManualRazonSocial] = useState('');
+  const [manualRegimenFiscal, setManualRegimenFiscal] = useState('601');
+  const [manualCodigoPostal, setManualCodigoPostal] = useState('');
+  const [manualEmail, setManualEmail] = useState('');
+  const [manualItems, setManualItems] = useState<Array<{ quantity: number; unit_price: number; description: string }>>([
+    { quantity: 1, unit_price: 0, description: '' }
+  ]);
+  const [isSubmittingManualInvoice, setIsSubmittingManualInvoice] = useState(false);
+
   // Tax Profile Form State
   const [rfc, setRfc] = useState('');
   const [razonSocial, setRazonSocial] = useState('');
@@ -312,6 +324,61 @@ export default function TenantAdminPage() {
       setInvoices(invoices.map(inv => inv.id === invoiceId ? updatedInvoice : inv));
     } catch (err: any) {
       showToast(err.message || 'Error al reintentar el timbrado.', 'error');
+    }
+  };
+
+  const handleCreateManualInvoice = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!tenantConfig) {
+      showToast('No se cargó la configuración del portal.', 'warning');
+      return;
+    }
+
+    for (const item of manualItems) {
+      if (!item.description.trim() || item.unit_price <= 0 || item.quantity <= 0) {
+        showToast('Todos los conceptos deben tener descripción, cantidad y precio válido.', 'warning');
+        return;
+      }
+    }
+
+    const subtotal = manualItems.reduce((acc, item) => acc + (item.quantity * item.unit_price), 0);
+    const total = parseFloat((subtotal * 1.16).toFixed(2));
+
+    setIsSubmittingManualInvoice(true);
+    try {
+      const response = await fetcher(`/billing/invoices/issue-tenant-to-client/?tenant_id=${tenantConfig.id}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          customer_info: {
+            rfc: manualRfc.trim().toUpperCase(),
+            razon_social: manualRazonSocial.trim(),
+            regimen_fiscal: manualRegimenFiscal,
+            codigo_postal: manualCodigoPostal.trim(),
+            email: manualEmail.trim()
+          },
+          items: manualItems,
+          total: total
+        })
+      });
+
+      showToast('Factura manual emitida y timbrada con éxito.', 'success');
+      setShowManualInvoiceModal(false);
+
+      setManualRfc('');
+      setManualRazonSocial('');
+      setManualRegimenFiscal('601');
+      setManualCodigoPostal('');
+      setManualEmail('');
+      setManualItems([{ quantity: 1, unit_price: 0, description: '' }]);
+
+      loadBillingData();
+    } catch (err: any) {
+      showToast(err.message || 'Error al crear la factura manual.', 'error');
+    } finally {
+      setIsSubmittingManualInvoice(false);
     }
   };
 
@@ -1456,13 +1523,29 @@ export default function TenantAdminPage() {
                       <h3 className="text-xs font-black uppercase tracking-widest text-white">Historial de CFDIs</h3>
                       <p className="text-[8px] text-white/40 uppercase tracking-wider mt-1">Facturas emitidas y timbradas</p>
                     </div>
-                    <button
-                      onClick={loadBillingData}
-                      disabled={loadingBilling}
-                      className="px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/5 rounded-lg text-[8px] font-black uppercase tracking-wider transition-all text-white/80"
-                    >
-                      {loadingBilling ? 'Sincronizando...' : '🔄 Actualizar'}
-                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => {
+                          setManualRfc('');
+                          setManualRazonSocial('');
+                          setManualRegimenFiscal('601');
+                          setManualCodigoPostal('');
+                          setManualEmail('');
+                          setManualItems([{ quantity: 1, unit_price: 0, description: '' }]);
+                          setShowManualInvoiceModal(true);
+                        }}
+                        className="px-3 py-1.5 bg-nectar-gold text-background hover:bg-nectar-gold/90 border border-nectar-gold/20 rounded-lg text-[8px] font-black uppercase tracking-wider transition-all cursor-pointer font-bold"
+                      >
+                        + Factura Manual
+                      </button>
+                      <button
+                        onClick={loadBillingData}
+                        disabled={loadingBilling}
+                        className="px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/5 rounded-lg text-[8px] font-black uppercase tracking-wider transition-all text-white/80 cursor-pointer"
+                      >
+                        {loadingBilling ? 'Sincronizando...' : '🔄 Actualizar'}
+                      </button>
+                    </div>
                   </div>
 
                   {loadingBilling ? (
@@ -2276,6 +2359,245 @@ export default function TenantAdminPage() {
                 Cerrar
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── MODAL FACTURA MANUAL (TENANT TO CLIENT) ── */}
+      {showManualInvoiceModal && (
+        <div
+          onClick={() => setShowManualInvoiceModal(false)}
+          className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-6 cursor-pointer overflow-y-auto"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              backgroundColor: tenantConfig.card_bg_color || '#050a06',
+              borderColor: tenantConfig.border_color || '#151F18'
+            }}
+            className="w-full max-w-2xl border p-8 md:p-10 rounded-[3rem] shadow-2xl relative space-y-6 text-left cursor-default animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto admin-card"
+          >
+            <button
+              onClick={() => setShowManualInvoiceModal(false)}
+              className="absolute top-6 right-6 w-8 h-8 rounded-full border border-white/10 text-white/40 hover:text-white flex items-center justify-center text-xl font-bold cursor-pointer admin-border"
+            >
+              ×
+            </button>
+
+            <div>
+              <span className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold text-[8px] font-black uppercase tracking-widest rounded-full border border-nectar-gold/20">
+                Facturación SAT
+              </span>
+              <h2 className="text-2xl font-black tracking-tighter mt-4 leading-none">
+                Emitir Factura Manual a Cliente
+              </h2>
+              <p className="text-[10px] opacity-40 uppercase tracking-widest mt-1">
+                Genera y timbra una factura personalizada para tu cliente. Esta acción consumirá 1 timbre de tu balance.
+              </p>
+            </div>
+
+            <form onSubmit={handleCreateManualInvoice} className="space-y-6">
+              {/* Datos Fiscales */}
+              <div className="bg-background/40 border border-white/5 p-5 rounded-2xl space-y-4 admin-card">
+                <h3 className="text-[9px] font-black uppercase tracking-widest opacity-50 border-b border-white/5 pb-2">
+                  Datos de Facturación del Cliente
+                </h3>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-[8px] font-black uppercase tracking-widest opacity-40">RFC</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="XAXX010101000"
+                      value={manualRfc}
+                      onChange={(e) => setManualRfc(e.target.value.toUpperCase())}
+                      className="w-full bg-background border border-white/10 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-nectar-gold text-foreground font-mono uppercase tracking-wider admin-input"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Razón Social</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Nombre o Razón Social"
+                      value={manualRazonSocial}
+                      onChange={(e) => setManualRazonSocial(e.target.value)}
+                      className="w-full bg-background border border-white/10 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-nectar-gold text-foreground admin-input"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Régimen Fiscal</label>
+                    <select
+                      value={manualRegimenFiscal}
+                      onChange={(e) => setManualRegimenFiscal(e.target.value)}
+                      className="w-full bg-background border border-white/10 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-nectar-gold text-foreground font-bold admin-input"
+                    >
+                      <option value="601">601 - General de Ley Personas Morales</option>
+                      <option value="603">603 - Personas Morales con Fines no Lucrativos</option>
+                      <option value="605">605 - Sueldos y Salarios</option>
+                      <option value="606">606 - Arrendamiento</option>
+                      <option value="608">608 - Demás ingresos</option>
+                      <option value="612">612 - Personas Físicas con Actividades Empresariales y Profesionales</option>
+                      <option value="616">616 - Sin obligaciones fiscales</option>
+                      <option value="621">621 - Incorporación Fiscal</option>
+                      <option value="625">625 - Régimen de las Actividades Agrícolas, Ganaderas, Silvícolas y Pesqueras</option>
+                      <option value="626">626 - Régimen Simplificado de Confianza (RESICO)</option>
+                    </select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Código Postal</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="00000"
+                      value={manualCodigoPostal}
+                      onChange={(e) => setManualCodigoPostal(e.target.value)}
+                      className="w-full bg-background border border-white/10 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-nectar-gold text-foreground font-mono admin-input"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Email de Envío de Factura</label>
+                  <input
+                    type="email"
+                    required
+                    placeholder="correo@cliente.com"
+                    value={manualEmail}
+                    onChange={(e) => setManualEmail(e.target.value)}
+                    className="w-full bg-background border border-white/10 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-nectar-gold text-foreground admin-input"
+                  />
+                </div>
+              </div>
+
+              {/* Conceptos (Items) */}
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <label className="text-[9px] font-black uppercase tracking-widest opacity-50">Conceptos / Ítems de la Factura</label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setManualItems(prev => [...prev, { quantity: 1, unit_price: 0, description: '' }]);
+                    }}
+                    className="text-[8px] font-black text-nectar-gold hover:underline uppercase tracking-widest font-bold cursor-pointer"
+                  >
+                    + Agregar Concepto
+                  </button>
+                </div>
+
+                <div className="space-y-3 max-h-[200px] overflow-y-auto pr-2 custom-scrollbar">
+                  {manualItems.map((item, idx) => (
+                    <div key={idx} className="p-4 bg-background border border-white/5 rounded-xl space-y-3 relative text-left admin-card">
+                      {manualItems.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setManualItems(prev => prev.filter((_, i) => i !== idx));
+                          }}
+                          className="absolute top-2 right-3 text-red-500 hover:text-red-700 text-[8px] font-black uppercase tracking-wider cursor-pointer"
+                        >
+                          remover
+                        </button>
+                      )}
+                      
+                      <div className="grid grid-cols-4 gap-2">
+                        <div className="col-span-2 space-y-1">
+                          <label className="text-[7px] font-black uppercase tracking-widest opacity-40">Descripción</label>
+                          <input
+                            type="text"
+                            required
+                            className="w-full px-3 py-1.5 bg-background border border-white/10 rounded-lg text-[9px] font-bold text-foreground admin-input"
+                            placeholder="ej. Servicio de Consultoría"
+                            value={item.description}
+                            onChange={(e) => {
+                              const newDesc = e.target.value;
+                              setManualItems(prev => prev.map((it, i) => i === idx ? { ...it, description: newDesc } : it));
+                            }}
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[7px] font-black uppercase tracking-widest opacity-40">Cant.</label>
+                          <input
+                            type="number"
+                            required
+                            min="1"
+                            className="w-full px-3 py-1.5 bg-background border border-white/10 rounded-lg text-[9px] font-bold text-center text-foreground font-mono admin-input"
+                            value={item.quantity}
+                            onChange={(e) => {
+                              const newQty = parseInt(e.target.value) || 1;
+                              setManualItems(prev => prev.map((it, i) => i === idx ? { ...it, quantity: newQty } : it));
+                            }}
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[7px] font-black uppercase tracking-widest opacity-40">Precio Unit. (MXN)</label>
+                          <input
+                            type="number"
+                            required
+                            min="0.01"
+                            step="0.01"
+                            className="w-full px-3 py-1.5 bg-background border border-white/10 rounded-lg text-[9px] font-bold text-right text-foreground font-mono admin-input"
+                            placeholder="0.00"
+                            value={item.unit_price || ''}
+                            onChange={(e) => {
+                              const newPrice = parseFloat(e.target.value) || 0;
+                              setManualItems(prev => prev.map((it, i) => i === idx ? { ...it, unit_price: newPrice } : it));
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Totales y Timbrado */}
+              <div className="pt-6 border-t border-white/10 flex items-center justify-between text-left">
+                {(() => {
+                  const subtotal = manualItems.reduce((acc, item) => acc + (item.quantity * (item.unit_price || 0)), 0);
+                  const iva = parseFloat((subtotal * 0.16).toFixed(2));
+                  const total = parseFloat((subtotal + iva).toFixed(2));
+
+                  return (
+                    <div className="grid grid-cols-3 gap-6 text-[9px] font-black uppercase tracking-widest">
+                      <div>
+                        <span className="opacity-40 block">Subtotal</span>
+                        <span className="text-xs font-mono font-bold text-white/80">${subtotal.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</span>
+                      </div>
+                      <div>
+                        <span className="opacity-40 block">IVA (16%)</span>
+                        <span className="text-xs font-mono font-bold text-white/80">${iva.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</span>
+                      </div>
+                      <div>
+                        <span className="text-nectar-gold block">Total Facturado</span>
+                        <span className="text-sm font-mono font-black text-nectar-gold">${total.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN</span>
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                <div className="flex gap-3 shrink-0 font-bold">
+                  <button
+                    type="button"
+                    onClick={() => setShowManualInvoiceModal(false)}
+                    className="px-5 py-3 border border-white/10 hover:bg-white/5 text-[9px] font-black uppercase tracking-widest rounded-xl transition-all cursor-pointer"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSubmittingManualInvoice}
+                    className="px-6 py-3 bg-nectar-gold text-background hover:bg-nectar-gold/90 text-[9px] font-black uppercase tracking-widest rounded-xl transition-all font-bold shadow-md cursor-pointer"
+                  >
+                    {isSubmittingManualInvoice ? 'Emitiendo...' : 'Timbrar Factura'}
+                  </button>
+                </div>
+              </div>
+            </form>
           </div>
         </div>
       )}

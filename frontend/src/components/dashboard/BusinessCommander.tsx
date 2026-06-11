@@ -425,7 +425,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
     setIsSubmittingManualInvoice(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/billing/invoices/issue-custom-manual/`, {
+      const response = await fetch(`${API_URL}/billing/invoices/issue-parent-to-tenant/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
