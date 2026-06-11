@@ -641,7 +641,7 @@ class BusinessStatsAPITests(APITestCase):
         )
         self.plan = Plan.objects.create(
             name="Plan Test",
-            slug="plan-test",
+            hours=10,
             description="Test Plan",
             price=1000.00
         )
