@@ -109,23 +109,41 @@ class FacturapiPACService(PACServiceBase):
         }
 
     def create_organization(self, tax_profile):
-        url = f"{self.base_url}/organizations"
-        payload = {
-            "name": tax_profile.razon_social,
-            "rfc": tax_profile.rfc,
-            "tax_system": tax_profile.regimen_fiscal,
-            "zip_code": tax_profile.codigo_postal
+        # 1. Crear organización en Facturapi v2 con su nombre comercial/fiscal
+        url_create = f"{self.base_url}/organizations"
+        create_payload = {
+            "name": tax_profile.razon_social
         }
         try:
-            response = requests.post(url, json=payload, headers=self.headers, timeout=10)
+            response = requests.post(url_create, json=create_payload, headers=self.headers, timeout=10)
             if response.status_code != 201:
                 raise PACError(f"Error al crear organización en Facturapi: {response.text}")
-            return response.json().get("id")
+            org_id = response.json().get("id")
         except Exception as e:
-            raise PACError(f"Fallo de conexión al PAC: {e}")
+            raise PACError(f"Fallo de conexión al PAC al crear organización: {e}")
+
+        # 2. Configurar datos fiscales/legales vía PUT /organizations/{id}/legal en v2
+        url_legal = f"{self.base_url}/organizations/{org_id}/legal"
+        legal_payload = {
+            "name": tax_profile.razon_social,
+            "legal_name": tax_profile.razon_social,
+            "tax_system": tax_profile.regimen_fiscal,
+            "address": {
+                "zip": tax_profile.codigo_postal,
+                "country": "MEX"
+            }
+        }
+        try:
+            legal_resp = requests.put(url_legal, json=legal_payload, headers=self.headers, timeout=10)
+            if legal_resp.status_code not in [200, 201, 204]:
+                raise PACError(f"Error al configurar datos legales en Facturapi: {legal_resp.text}")
+            return org_id
+        except Exception as e:
+            raise PACError(f"Fallo de conexión al PAC al configurar datos legales: {e}")
 
     def upload_sello(self, organization_id, cer_file, key_file, password):
-        url = f"{self.base_url}/organizations/{organization_id}/sello"
+        # En v2 el endpoint cambió de /sello a /certificate
+        url = f"{self.base_url}/organizations/{organization_id}/certificate"
         # Facturapi requiere multipart form data para los sellos
         files = {
             "cer": (cer_file.name, cer_file.read(), "application/x-x509-ca-cert"),
@@ -173,10 +191,12 @@ class FacturapiPACService(PACServiceBase):
         payload = {
             "customer": {
                 "legal_name": customer_info.get("razon_social"),
-                "rfc": customer_info.get("rfc"),
+                "tax_id": customer_info.get("rfc"),
                 "tax_system": customer_info.get("regimen_fiscal", "601"),
-                "zip_code": customer_info.get("codigo_postal"),
-                "email": customer_info.get("email")
+                "email": customer_info.get("email"),
+                "address": {
+                    "zip": customer_info.get("codigo_postal")
+                }
             },
             "items": desglose_items,
             "payment_form": customer_info.get("payment_form", "04"), # Tarjeta de crédito
