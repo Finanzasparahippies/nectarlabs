@@ -664,13 +664,13 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
             const price = billingCycle === 'monthly' ? addon.monthlyPrice : addon.yearlyPrice;
             const savings = billingCycle === 'yearly' ? addon.monthlyPrice * 2 : 0;
             const isAddonActive = tenants.some(t => t.active_addons?.includes(addon.id)) ||
-                                  subscriptions.some(s => s.addon_details?.slug === addon.id && ['active', 'trialing'].includes(s.status));
+              subscriptions.some(s => s.addon_details?.slug === addon.id && ['active', 'trialing'].includes(s.status));
             return (
               <div
                 key={addon.id}
                 className={`bg-card-bg border border-card-border p-8 rounded-[2.5rem] relative overflow-hidden group transition-all duration-500 flex flex-col justify-between min-h-[420px] ${isEnabled
-                    ? 'hover:border-nectar-gold/50 hover:shadow-[0_20px_50px_rgba(198,138,30,0.08)]'
-                    : 'opacity-55'
+                  ? 'hover:border-nectar-gold/50 hover:shadow-[0_20px_50px_rgba(198,138,30,0.08)]'
+                  : 'opacity-55'
                   }`}
               >
                 {/* Accent Background Glow on Hover */}
@@ -1151,11 +1151,38 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
                       );
                     })}
 
-                  {contracts.filter(c => c.is_fully_signed).length === 0 && (
-                    <p className="text-[9px] opacity-40 italic text-center py-6">
-                      No hay contratos firmados/activos registrados en el sistema.
-                    </p>
-                  )}
+                  // 1. Mapeamos los addons directamente de la lista global que retorna tu API backend
+                  {addonsList.map((addon) => {
+                    // Edge Case Solved: Evaluamos si el addon está activo basándonos en el Tenant o en el contrato de forma opcional
+                    const isAddonActive =
+                      (tenantConfig?.active_addons || []).includes(addon.slug) ||
+                      (tenant?.active_addons || []).includes(addon.slug) ||
+                      contracts.some(c => (c.addons || []).some((a: any) => a.slug === addon.slug));
+
+                    return (
+                      <div key={addon.id} className="border border-border/50 rounded-xl p-6 bg-background/50">
+                        <div className="flex justify-between items-start">
+                          <h3>{addon.name}</h3>
+                          <span className={`text-[10px] px-2 py-0.5 rounded-full font-black ${isAddonActive ? 'bg-green-500/10 text-green-400' : 'bg-zinc-500/10 text-zinc-400'
+                            }`}>
+                            {isAddonActive ? 'Activo' : 'Disponible'}
+                          </span>
+                        </div>
+
+                        <p className="text-xs text-foreground/60 mt-2">{addon.description}</p>
+
+                        {/* Si no está activo, mostramos el botón para suscribirse directo con Stripe */}
+                        {!isAddonActive && (
+                          <button
+                            onClick={() => handleSubscribeDirect(addon.id)}
+                            className="mt-4 w-full bg-nectar-gold text-black text-xs font-black py-2 rounded-lg"
+                          >
+                            Adquirir Módulo
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 
