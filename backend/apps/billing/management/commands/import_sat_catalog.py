@@ -1,8 +1,15 @@
 import os
+import unicodedata
 import pandas as pd
 from django.core.management.base import BaseCommand
 from django.db import transaction
 from apps.billing.models import SATProductKey, SATUnitKey
+
+def normalize_text(text):
+    if not text:
+        return ""
+    normalized = unicodedata.normalize('NFKD', str(text))
+    return "".join(c for c in normalized if not unicodedata.combining(c)).lower()
 
 class Command(BaseCommand):
     help = "Imports SAT Product and Unit Catalogs from the Excel file in media/"
@@ -54,6 +61,7 @@ class Command(BaseCommand):
                 SATProductKey(
                     code=code_val,
                     description=desc_val,
+                    normalized_description=normalize_text(desc_val),
                     is_active=True
                 )
             )
@@ -89,6 +97,7 @@ class Command(BaseCommand):
                 SATUnitKey(
                     code=code_val,
                     name=name_val,
+                    normalized_name=normalize_text(name_val),
                     description=None if not desc_val or desc_val == "nan" else desc_val,
                     is_active=True
                 )

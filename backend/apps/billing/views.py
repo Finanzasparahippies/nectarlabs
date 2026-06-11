@@ -9,6 +9,13 @@ from rest_framework.views import APIView
 from django.conf import settings
 
 from django.db import models
+import unicodedata
+
+def normalize_text(text):
+    if not text:
+        return ""
+    normalized = unicodedata.normalize('NFKD', str(text))
+    return "".join(c for c in normalized if not unicodedata.combining(c)).lower()
 from apps.tenants.models import Tenant
 from apps.tenants.permissions import HasAddOnPermission
 from .models import TaxProfile, Invoice, SATProductKey, SATUnitKey
@@ -688,8 +695,9 @@ class SATProductKeySearchView(APIView):
             popular_codes = ["43231500", "80101500", "81111508", "82101500", "84111506", "01010101"]
             qs = SATProductKey.objects.filter(code__in=popular_codes)
         else:
+            normalized_query = normalize_text(query)
             qs = SATProductKey.objects.filter(
-                models.Q(code__icontains=query) | models.Q(description__icontains=query)
+                models.Q(code__icontains=query) | models.Q(normalized_description__icontains=normalized_query)
             )[:50]
         
         serializer = SATProductKeySerializer(qs, many=True)
@@ -706,8 +714,9 @@ class SATUnitKeySearchView(APIView):
             popular_units = ["E48", "H87", "ACT", "KGM", "LTR", "MON"]
             qs = SATUnitKey.objects.filter(code__in=popular_units)
         else:
+            normalized_query = normalize_text(query)
             qs = SATUnitKey.objects.filter(
-                models.Q(code__icontains=query) | models.Q(name__icontains=query)
+                models.Q(code__icontains=query) | models.Q(normalized_name__icontains=normalized_query)
             )[:50]
         
         serializer = SATUnitKeySerializer(qs, many=True)

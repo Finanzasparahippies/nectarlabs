@@ -116,6 +116,7 @@ class SATProductKey(models.Model):
     """
     code = models.CharField(max_length=20, unique=True, db_index=True, verbose_name="Clave SAT")
     description = models.TextField(db_index=True, verbose_name="Descripción")
+    normalized_description = models.TextField(db_index=True, blank=True, null=True, verbose_name="Descripción Normalizada")
     is_active = models.BooleanField(default=True, verbose_name="Vigente")
 
     def __str__(self):
@@ -128,6 +129,7 @@ class SATUnitKey(models.Model):
     """
     code = models.CharField(max_length=20, unique=True, db_index=True, verbose_name="Clave SAT")
     name = models.CharField(max_length=255, verbose_name="Nombre")
+    normalized_name = models.CharField(max_length=255, db_index=True, blank=True, null=True, verbose_name="Nombre Normalizado")
     description = models.TextField(blank=True, null=True, verbose_name="Descripción")
     is_active = models.BooleanField(default=True, verbose_name="Vigente")
 
