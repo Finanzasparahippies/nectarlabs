@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import TaxProfile, Invoice
+from .models import TaxProfile, Invoice, SATProductKey, SATUnitKey
 
 class TaxProfileSerializer(serializers.ModelSerializer):
     # Transient fields for uploading certificates directly to the PAC
@@ -12,6 +12,7 @@ class TaxProfileSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'rfc', 'razon_social', 'regimen_fiscal', 'codigo_postal', 
             'facturapi_organization_id', 'cer_file', 'key_file', 'password',
+            'default_product_key', 'default_unit_key', 'default_unit_name',
             'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'facturapi_organization_id', 'created_at', 'updated_at']
@@ -55,3 +56,15 @@ class InvoiceSerializer(serializers.ModelSerializer):
 
     def get_pdf_url(self, obj):
         return obj.pdf_file.url if obj.pdf_file else None
+
+
+class SATProductKeySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SATProductKey
+        fields = ['id', 'code', 'description', 'is_active']
+
+
+class SATUnitKeySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SATUnitKey
+        fields = ['id', 'code', 'name', 'description', 'is_active']

@@ -14,7 +14,7 @@ from apps.blog.views import PostViewSet
 from apps.tickets.views import TicketViewSet, SupportChatViewSet
 from apps.users.views import UserViewSet
 from apps.tenants.views import TenantViewSet, public_config, guest_auth
-from apps.billing.views import TaxProfileView, InvoiceViewSet, BillingInfoView, BuyStampsView, BuyEmailCreditsView
+from apps.billing.views import TaxProfileView, InvoiceViewSet, BillingInfoView, BuyStampsView, BuyEmailCreditsView, SATProductKeySearchView, SATUnitKeySearchView
 
 router = DefaultRouter()
 router.register(r'plans', PlanViewSet)
@@ -73,6 +73,8 @@ urlpatterns = [
     path('api/billing/info/', BillingInfoView.as_view(), name='billing_info'),
     path('api/billing/buy-stamps/', BuyStampsView.as_view(), name='billing_buy_stamps'),
     path('api/billing/buy-email-credits/', BuyEmailCreditsView.as_view(), name='billing_buy_email_credits'),
+    path('api/billing/sat/products/', SATProductKeySearchView.as_view(), name='billing_sat_products'),
+    path('api/billing/sat/units/', SATUnitKeySearchView.as_view(), name='billing_sat_units'),
 ]
 
 

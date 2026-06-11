@@ -172,11 +172,23 @@ class FacturapiPACService(PACServiceBase):
         for it in items:
             qty = Decimal(str(it['quantity']))
             price = Decimal(str(it['unit_price'])).quantize(Decimal('0.01'))
+            
+            if is_parent_to_tenant:
+                p_key = "43231500"
+                u_key = "E48"
+                u_name = "Unidad de servicio"
+            else:
+                p_key = it.get('product_key') or (tax_profile.default_product_key if tax_profile else "43231500")
+                u_key = it.get('unit_key') or (tax_profile.default_unit_key if tax_profile else "E48")
+                u_name = it.get('unit_name') or (tax_profile.default_unit_name if tax_profile else "Unidad de servicio")
+
             desglose_items.append({
                 "quantity": int(qty),
                 "product": {
                     "description": it['description'],
-                    "product_key": "43231500", # Llave SAT por defecto para Software
+                    "product_key": p_key,
+                    "unit_key": u_key,
+                    "unit_name": u_name,
                     "price": float(price),
                     "taxes": [
                         {

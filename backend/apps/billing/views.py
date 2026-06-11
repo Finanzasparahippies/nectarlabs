@@ -10,8 +10,8 @@ from django.conf import settings
 
 from apps.tenants.models import Tenant
 from apps.tenants.permissions import HasAddOnPermission
-from .models import TaxProfile, Invoice
-from .serializers import TaxProfileSerializer, InvoiceSerializer
+from .models import TaxProfile, Invoice, SATProductKey, SATUnitKey
+from .serializers import TaxProfileSerializer, InvoiceSerializer, SATProductKeySerializer, SATUnitKeySerializer
 from .services import get_pac_service, PACError, LCOSyncError
 
 logger = logging.getLogger(__name__)
@@ -209,7 +209,10 @@ class TaxProfileView(BillingTenantMixin, APIView):
                 rfc=serializer.validated_data['rfc'],
                 razon_social=serializer.validated_data['razon_social'],
                 regimen_fiscal=serializer.validated_data['regimen_fiscal'],
-                codigo_postal=serializer.validated_data['codigo_postal']
+                codigo_postal=serializer.validated_data['codigo_postal'],
+                default_product_key=serializer.validated_data.get('default_product_key', '43231500'),
+                default_unit_key=serializer.validated_data.get('default_unit_key', 'E48'),
+                default_unit_name=serializer.validated_data.get('default_unit_name', 'Unidad de servicio')
             )
             try:
                 org_id = pac.create_organization(profile)
@@ -224,6 +227,9 @@ class TaxProfileView(BillingTenantMixin, APIView):
             profile.razon_social = serializer.validated_data.get('razon_social', profile.razon_social)
             profile.regimen_fiscal = serializer.validated_data.get('regimen_fiscal', profile.regimen_fiscal)
             profile.codigo_postal = serializer.validated_data.get('codigo_postal', profile.codigo_postal)
+            profile.default_product_key = serializer.validated_data.get('default_product_key', profile.default_product_key)
+            profile.default_unit_key = serializer.validated_data.get('default_unit_key', profile.default_unit_key)
+            profile.default_unit_name = serializer.validated_data.get('default_unit_name', profile.default_unit_name)
             profile.save()
 
         # Si se subieron archivos de sellos CSD digitales, subirlos directamente al PAC sin guardarlos en Django
@@ -669,3 +675,39 @@ class BuyEmailCreditsView(BillingTenantMixin, APIView):
             return Response({'url': session.url}, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class SATProductKeySearchView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        query = request.query_params.get('q', '').strip()
+        if len(query) < 2:
+            # Curated popular SAT codes to avoid search fatigue
+            popular_codes = ["43231500", "80101500", "81111508", "82101500", "84111506", "01010101"]
+            qs = SATProductKey.objects.filter(code__in=popular_codes)
+        else:
+            qs = SATProductKey.objects.filter(
+                models.Q(code__icontains=query) | models.Q(description__icontains=query)
+            )[:50]
+        
+        serializer = SATProductKeySerializer(qs, many=True)
+        return Response(serializer.data)
+
+
+class SATUnitKeySearchView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        query = request.query_params.get('q', '').strip()
+        if len(query) < 2:
+            # Curated popular unit codes
+            popular_units = ["E48", "H87", "ACT", "KGM", "LTR", "MON"]
+            qs = SATUnitKey.objects.filter(code__in=popular_units)
+        else:
+            qs = SATUnitKey.objects.filter(
+                models.Q(code__icontains=query) | models.Q(name__icontains=query)
+            )[:50]
+        
+        serializer = SATUnitKeySerializer(qs, many=True)
+        return Response(serializer.data)

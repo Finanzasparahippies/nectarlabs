@@ -33,6 +33,26 @@ class TaxProfile(models.Model):
         help_text="ID de Organización en Facturapi"
     )
     
+    # Default billing keys configurable per tenant
+    default_product_key = models.CharField(
+        max_length=20,
+        default="43231500",
+        verbose_name="Clave SAT de Producto por Defecto",
+        help_text="Clave de producto o servicio por defecto para facturación manual (ej. 43231500 para Software)"
+    )
+    default_unit_key = models.CharField(
+        max_length=20,
+        default="E48",
+        verbose_name="Clave SAT de Unidad por Defecto",
+        help_text="Clave de unidad por defecto para facturación manual (ej. E48 para Unidad de servicio)"
+    )
+    default_unit_name = models.CharField(
+        max_length=100,
+        default="Unidad de servicio",
+        verbose_name="Nombre de Unidad por Defecto",
+        help_text="Nombre de unidad por defecto (ej. Unidad de servicio o Pieza)"
+    )
+    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -88,3 +108,28 @@ class Invoice(models.Model):
 
     def __str__(self):
         return f"CFDI {self.uuid_sat or 'Pendiente'} - {self.tenant.name} (${self.total})"
+
+
+class SATProductKey(models.Model):
+    """
+    Claves oficiales de Productos y Servicios del SAT (catálogo c_ClaveProdServ)
+    """
+    code = models.CharField(max_length=20, unique=True, db_index=True, verbose_name="Clave SAT")
+    description = models.TextField(db_index=True, verbose_name="Descripción")
+    is_active = models.BooleanField(default=True, verbose_name="Vigente")
+
+    def __str__(self):
+        return f"{self.code} - {self.description[:50]}"
+
+
+class SATUnitKey(models.Model):
+    """
+    Claves oficiales de Unidades de Medida del SAT (catálogo c_ClaveUnidad)
+    """
+    code = models.CharField(max_length=20, unique=True, db_index=True, verbose_name="Clave SAT")
+    name = models.CharField(max_length=255, verbose_name="Nombre")
+    description = models.TextField(blank=True, null=True, verbose_name="Descripción")
+    is_active = models.BooleanField(default=True, verbose_name="Vigente")
+
+    def __str__(self):
+        return f"{self.code} - {self.name}"
