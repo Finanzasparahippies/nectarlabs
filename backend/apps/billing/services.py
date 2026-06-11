@@ -116,7 +116,7 @@ class FacturapiPACService(PACServiceBase):
         }
         try:
             response = requests.post(url_create, json=create_payload, headers=self.headers, timeout=10)
-            if response.status_code != 201:
+            if response.status_code not in [200, 201]:
                 raise PACError(f"Error al crear organización en Facturapi: {response.text}")
             org_id = response.json().get("id")
         except Exception as e:
@@ -208,7 +208,7 @@ class FacturapiPACService(PACServiceBase):
             response = requests.post(url, json=payload, headers=headers, timeout=20)
             res_data = response.json()
             
-            if response.status_code != 201:
+            if response.status_code not in [200, 201]:
                 error_msg = res_data.get("message", response.text)
                 if "LCO" in error_msg or "lista de contribuyentes" in error_msg.lower() or "no activo" in error_msg.lower():
                     raise LCOSyncError(f"Sello digital no sincronizado en LCO: {error_msg}")
