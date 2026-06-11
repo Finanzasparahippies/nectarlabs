@@ -265,3 +265,104 @@ def get_pac_service():
     if provider == 'facturapi':
         return FacturapiPACService()
     return MockPACService()
+
+
+def issue_invoice_for_installment(installment):
+    """
+    Intenta emitir y timbrar la factura de forma automática para un abono pagado.
+    """
+    if installment.cfdi_uuid and installment.cfdi_uuid not in ["LCO_PENDING", "FAILED"]:
+        return None  # Ya tiene factura o está en proceso
+
+    from apps.tenants.models import Tenant
+    from apps.billing.models import Invoice
+    from decimal import Decimal
+
+    user = installment.contract.user
+    tenant = Tenant.objects.filter(owner=user).first()
+    if not tenant:
+        logger.warning(f"No tenant found for user {user.username} during auto-invoice.")
+        return None
+
+    profile = getattr(tenant, 'tax_profile', None)
+    if not profile or not profile.facturapi_organization_id:
+        logger.warning(f"Tenant {tenant.name} has no tax profile or facturapi_organization_id configured.")
+        return None
+
+    if not tenant.has_available_stamps():
+        logger.warning(f"Tenant {tenant.name} has no available stamps for auto-invoice.")
+        return None
+
+    # El total de la factura incrementa un 16% por el IVA
+    invoice_total = (installment.amount * Decimal('1.16')).quantize(Decimal('0.01'))
+
+    invoice = Invoice.objects.create(
+        tenant=tenant,
+        stripe_invoice_id=installment.stripe_invoice_id or f"manual-{installment.id}",
+        total=invoice_total,
+        is_tenant_to_customer=False,
+        status=Invoice.Status.PENDING
+    )
+
+    customer_info = {
+        "razon_social": user.get_full_name() or user.username,
+        "rfc": profile.rfc,
+        "regimen_fiscal": profile.regimen_fiscal,
+        "codigo_postal": profile.codigo_postal,
+        "email": user.email
+    }
+
+    items = [{
+        "quantity": 1,
+        "unit_price": float(installment.amount),
+        "description": f"Abono #{installment.installment_number} - Contrato de Ecosistema Digital ({tenant.name})"
+    }]
+
+    pac = get_pac_service()
+    try:
+        res = pac.create_invoice(
+            invoice=invoice,
+            tax_profile=profile,
+            customer_info=customer_info,
+            items=items,
+            is_parent_to_tenant=True
+        )
+        invoice.facturapi_invoice_id = res["facturapi_invoice_id"]
+        invoice.uuid_sat = res["uuid_sat"]
+        invoice.xml_file.save(res["xml_file"].name, res["xml_file"], save=False)
+        invoice.pdf_file.save(res["pdf_file"].name, res["pdf_file"], save=False)
+        invoice.status = Invoice.Status.PAID
+        invoice.error_message = None
+        invoice.save()
+
+        installment.cfdi_uuid = str(res["uuid_sat"])
+        installment.save(update_fields=['cfdi_uuid'])
+
+        tenant.consume_stamp()
+
+        try:
+            from apps.shop.utils import send_payment_receipt_email
+            send_payment_receipt_email(installment)
+        except Exception as mail_err:
+            logger.error(f"Error al enviar correo de confirmación de CFDI automático: {mail_err}")
+
+        return invoice
+
+    except LCOSyncError as e:
+        invoice.status = Invoice.Status.LCO_SYNC_PENDING
+        invoice.error_message = str(e)
+        invoice.save()
+
+        installment.cfdi_uuid = "LCO_PENDING"
+        installment.save(update_fields=['cfdi_uuid'])
+
+        tenant.consume_stamp()
+        return invoice
+
+    except PACError as e:
+        invoice.status = Invoice.Status.FAILED
+        invoice.error_message = str(e)
+        invoice.save()
+        logger.error(f"Error al emitir CFDI automático en el PAC: {e}")
+        return invoice
+

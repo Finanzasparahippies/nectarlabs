@@ -21,7 +21,7 @@ class Subscriber(models.Model):
 from apps.tenants.utils import get_tenant_email_connection, get_platform_sender
 from django.core.mail import get_connection
 
-def send_newsletter_email(subject, template_name, context, recipient_list, tenant=None):
+def send_newsletter_email(subject, template_name, context, recipient_list, tenant=None, html_content=None):
     """
     Utility to send HTML emails for newsletters dynamically routed by tenant status,
     with an automatic failover hybrid channel (Brevo -> Amazon SES -> Zoho/Default).
@@ -52,7 +52,8 @@ def send_newsletter_email(subject, template_name, context, recipient_list, tenan
                     "Puedes contratar un paquete adicional de 1,000 correos por $100 MXN en tu panel de control."
                 )
 
-    html_content = render_to_string(f"newsletter/{template_name}.html", context)
+    if not html_content:
+        html_content = render_to_string(f"newsletter/{template_name}.html", context)
     text_content = f"Visita nuestra web para ver las novedades: {settings.FRONTEND_URL}"
     
     # 1. Determine base connection & from_email/reply_to

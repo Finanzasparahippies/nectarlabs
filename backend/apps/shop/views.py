@@ -481,11 +481,23 @@ class PaymentInstallmentViewSet(viewsets.ModelViewSet):
         is_admin_or_business = self.request.user.is_staff or self.request.user.role in ['ADMIN', 'BUSINESS']
         if not is_admin_or_business:
             # Forzamos a guardar únicamente el archivo recibido y actualizar status
-            serializer.save(
+            instance = serializer.save(
                 receipt_file=self.request.data.get('receipt_file')
             )
         else:
-            serializer.save()
+            instance = serializer.save()
+
+        # Si el estatus cambió a PAID y no tiene CFDI, y la facturación es AUTOMATIC, la emitimos.
+        if instance.status == 'PAID' and not instance.cfdi_uuid:
+            from apps.tenants.models import Tenant
+            tenant = Tenant.objects.filter(owner=instance.contract.user).first()
+            if tenant and tenant.invoicing_mode == Tenant.InvoicingMode.AUTOMATIC:
+                from apps.billing.services import issue_invoice_for_installment
+                try:
+                    issue_invoice_for_installment(instance)
+                except Exception as e:
+                    import logging
+                    logging.getLogger("apps").error(f"Error al emitir CFDI automático en status update: {e}")
 
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
     def checkout_session(self, request, pk=None):
@@ -675,93 +687,25 @@ def stripe_webhook(request):
                 contract.next_payment_date = installment.due_date + timedelta(days=30)
                 contract.save()
                 
-                # Generar factura CFDI automática si solicitaron facturar y hay perfil fiscal configurado
+                # Generar factura CFDI automática si la preferencia del inquilino es AUTOMATIC o si solicitó facturar
+                from apps.tenants.models import Tenant
+                tenant = Tenant.objects.filter(owner=contract.user).first()
                 wants_invoice = session.get('metadata', {}).get('wants_invoice') == 'true'
-                if wants_invoice:
+                if wants_invoice or (tenant and tenant.invoicing_mode == Tenant.InvoicingMode.AUTOMATIC):
+                    from apps.billing.services import issue_invoice_for_installment
                     try:
-                        from apps.tenants.models import Tenant
-                        from apps.billing.models import Invoice
-                        from apps.billing.services import get_pac_service, PACError, LCOSyncError
-                        
-                        user = contract.user
-                        tenant = Tenant.objects.filter(owner=user).first()
-                        if tenant and hasattr(tenant, 'tax_profile') and tenant.tax_profile.facturapi_organization_id:
-                            profile = tenant.tax_profile
-                            
-                            # El total de la factura incrementa un 16% por el IVA
-                            from decimal import Decimal
-                            invoice_total = (installment.amount * Decimal('1.16')).quantize(Decimal('0.01'))
-                            
-                            # Crear registro de factura
-                            invoice = Invoice.objects.create(
-                                tenant=tenant,
-                                stripe_invoice_id=session.get('id'),
-                                total=invoice_total,
-                                status=Invoice.Status.PENDING
-                            )
-                            
-                            # Check if the tenant has enough stamps
-                            if not tenant.has_available_stamps():
-                                invoice.status = Invoice.Status.FAILED
-                                invoice.error_message = "No tienes timbres suficientes en tu balance. Por favor adquiere más timbres."
-                                invoice.save()
-                            else:
-                                customer_info = {
-                                    "razon_social": user.get_full_name() or user.username,
-                                    "rfc": profile.rfc,
-                                    "regimen_fiscal": profile.regimen_fiscal,
-                                    "codigo_postal": profile.codigo_postal,
-                                    "email": user.email
-                                }
-                                
-                                # La unidad precio de los conceptos se pasa sin IVA (Base), ya que el PAC calcula e incrementa el IVA del 16% automáticamente
-                                items = [{
-                                    "quantity": 1,
-                                    "unit_price": float(installment.amount),
-                                    "description": f"Abono #{installment.installment_number} - Contrato de Ecosistema Digital ({tenant.name})"
-                                }]
-                                
-                                pac = get_pac_service()
-                                try:
-                                    res = pac.create_invoice(invoice, profile, customer_info, items, is_parent_to_tenant=True)
-                                    invoice.facturapi_invoice_id = res["facturapi_invoice_id"]
-                                    invoice.uuid_sat = res["uuid_sat"]
-                                    
-                                    # Asignar y guardar archivos del PAC
-                                    invoice.xml_file.save(res["xml_file"].name, res["xml_file"], save=False)
-                                    invoice.pdf_file.save(res["pdf_file"].name, res["pdf_file"], save=False)
-                                    
-                                    invoice.status = Invoice.Status.PAID
-                                    invoice.error_message = None
-                                    invoice.save()
-                                    
-                                    # Vincular UUID al abono
-                                    installment.cfdi_uuid = str(res["uuid_sat"])
-                                    installment.save(update_fields=['cfdi_uuid'])
-                                    
-                                    # Decrement stamp balance
-                                    tenant.consume_stamp()
-                                except LCOSyncError as e:
-                                    invoice.status = Invoice.Status.LCO_SYNC_PENDING
-                                    invoice.error_message = str(e)
-                                    invoice.save()
-                                    
-                                    # Decrement stamp balance
-                                    tenant.consume_stamp()
-                                except PACError as e:
-                                    invoice.status = Invoice.Status.FAILED
-                                    invoice.error_message = str(e)
-                                    invoice.save()
+                        issue_invoice_for_installment(installment)
                     except Exception as cfdi_err:
                         import logging
-                        logging.getLogger(__name__).error(f"Error en facturación automática: {cfdi_err}", exc_info=True)
+                        logging.getLogger(__name__).error(f"Error en facturación automática Stripe Webhook: {cfdi_err}", exc_info=True)
                 
-                # Enviar correo de confirmación de pago (facturación)
-                try:
-                    send_payment_receipt_email(installment)
-                except Exception as mail_err:
-                    import logging
-                    logging.getLogger(__name__).error(f"Error sending payment receipt email: {mail_err}", exc_info=True)
+                # Enviar correo de confirmación de pago (solo si no se facturó automáticamente para evitar duplicidad)
+                if not installment.cfdi_uuid:
+                    try:
+                        send_payment_receipt_email(installment)
+                    except Exception as mail_err:
+                        import logging
+                        logging.getLogger(__name__).error(f"Error sending payment receipt email: {mail_err}", exc_info=True)
             except PaymentInstallment.DoesNotExist:
                 pass
 

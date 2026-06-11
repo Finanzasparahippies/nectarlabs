@@ -211,6 +211,39 @@ function DashboardPageOriginal() {
     }
   };
 
+  const [requestingInvoice, setRequestingInvoice] = useState<number | null>(null);
+
+  const handleRequestInvoice = async (installmentId: number) => {
+    setRequestingInvoice(installmentId);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/billing/invoices/issue-from-installment/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ installment_id: installmentId })
+      });
+      
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Error al emitir la factura.');
+      }
+      
+      const updatedUUID = data.uuid_sat || "LCO_PENDING";
+      setInstallments(prev => prev.map(inst => inst.id === installmentId ? { ...inst, cfdi_uuid: updatedUUID } : inst));
+      showToast('Factura emitida y timbrada con éxito.', 'success');
+      
+      const updatedInvoices = await fetcher('/billing/invoices/').catch(() => []);
+      setInvoices(updatedInvoices.results || updatedInvoices || []);
+    } catch (err: any) {
+      showToast(err.message || 'Error al solicitar la factura.', 'error');
+    } finally {
+      setRequestingInvoice(null);
+    }
+  };
+
   const handleDeleteProject = (projectId: number, projectName: string) => {
     setConfirmDlg({
       title: "Eliminar Proyecto",
@@ -1935,7 +1968,34 @@ function DashboardPageOriginal() {
                                                 )}
                                               </div>
                                             ) : (
-                                              <span className="text-xs text-green-500 font-bold">✓ Pagado</span>
+                                              <div className="flex items-center justify-end gap-2">
+                                                <span className="text-xs text-green-500 font-bold">✓ Pagado</span>
+                                                {(() => {
+                                                  const myTenant = tenants.find(t => t.owner === currentUser?.id) || tenants[0];
+                                                  const hasCFDI = inst.cfdi_uuid && inst.cfdi_uuid !== 'FAILED' && inst.cfdi_uuid !== 'LCO_PENDING';
+                                                  const isManualAdmin = myTenant?.invoicing_mode === 'MANUAL_ADMIN';
+                                                  
+                                                  if (!hasCFDI && !isManualAdmin) {
+                                                    const isPending = inst.cfdi_uuid === 'LCO_PENDING';
+                                                    return (
+                                                      <button
+                                                        onClick={() => handleRequestInvoice(inst.id)}
+                                                        disabled={isPending || requestingInvoice === inst.id}
+                                                        className="px-2.5 py-1 bg-nectar-gold/10 text-nectar-gold hover:bg-nectar-gold hover:text-background text-[8px] font-black uppercase tracking-widest rounded-lg border border-nectar-gold/20 transition-all disabled:opacity-50"
+                                                      >
+                                                        {isPending ? 'Sincronizando SAT...' : requestingInvoice === inst.id ? 'Emitiendo...' : 'Solicitar Factura (CFDI)'}
+                                                      </button>
+                                                    );
+                                                  } else if (hasCFDI) {
+                                                    return (
+                                                      <span className="text-[9px] font-mono text-foreground/45 font-bold block select-all">
+                                                        CFDI: {inst.cfdi_uuid}
+                                                      </span>
+                                                    );
+                                                  }
+                                                  return null;
+                                                })()}
+                                              </div>
                                             )}
                                           </td>
                                         </tr>

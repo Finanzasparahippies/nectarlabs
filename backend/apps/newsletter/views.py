@@ -155,6 +155,27 @@ class SendCampaignView(APIView):
         if not subject or not content:
             return Response({"error": "El asunto (subject) y el contenido (content) son obligatorios."}, status=status.HTTP_400_BAD_REQUEST)
 
+        # Advanced ms-ambar options:
+        template_type = request.data.get('template_type', 'minimalist')
+        bg_image_url = request.data.get('bg_image_url')
+        bg_opacity = request.data.get('bg_opacity', 1.0)
+        bg_saturation = request.data.get('bg_saturation', 100)
+        bg_position = request.data.get('bg_position', 'center')
+        
+        cta_text = request.data.get('cta_text')
+        cta_link = request.data.get('cta_link')
+        ctas = request.data.get('ctas', [])
+        
+        font_family = request.data.get('font_family', 'serif')
+        title_font_family = request.data.get('title_font_family', 'serif')
+        footer_font_family = request.data.get('footer_font_family', 'serif')
+        
+        email_title = request.data.get('email_title')
+        footer_text_opt = request.data.get('footer_text')
+        image_url = request.data.get('image_url')
+        image_style = request.data.get('image_style', {})
+        custom_styles = request.data.get('custom_styles', {})
+
         if not tenant:
             # Main platform / Nectar Labs campaign
             subscribers = Subscriber.objects.filter(tenant__isnull=True, is_active=True)
@@ -181,25 +202,54 @@ class SendCampaignView(APIView):
 
         brand_name = tenant.name if tenant else "Néctar Labs"
         theme_color = tenant.theme_color if tenant else "#C68A1E"
+        
+        # Get absolute logo url for tenant if available
+        logo_absolute_url = None
+        if tenant and tenant.logo:
+            logo_absolute_url = request.build_absolute_uri(tenant.logo.url)
+        elif not tenant:
+            logo_absolute_url = f"{frontend_url}/logos/nectar_logo.png"
+
+        from apps.newsletter.templates import compile_campaign_html
 
         try:
             for sub in subscribers:
-                context = {
-                    "subject": subject,
-                    "title": title or subject,
-                    "content": content,
-                    "cta_url": tenant_url,
-                    "cta_text": "Visitar Sitio",
-                    "unsubscribe_url": f"{tenant_url}/unsubscribe?email={sub.email}&token={sub.token}",
-                    "brand_name": brand_name,
-                    "theme_color": theme_color
-                }
+                unsubscribe_url = f"{tenant_url}/unsubscribe?email={sub.email}&token={sub.token}"
+                
+                # Render campaign HTML dynamically
+                html_content = compile_campaign_html(
+                    subject=subject,
+                    title=title,
+                    content=content,
+                    brand_name=brand_name,
+                    theme_color=theme_color,
+                    unsubscribe_url=unsubscribe_url,
+                    logo_url=logo_absolute_url,
+                    template_type=template_type,
+                    bg_image_url=bg_image_url,
+                    bg_opacity=bg_opacity,
+                    bg_saturation=bg_saturation,
+                    bg_position=bg_position,
+                    cta_text=cta_text,
+                    cta_link=cta_link,
+                    ctas=ctas,
+                    font_family=font_family,
+                    title_font_family=title_font_family,
+                    footer_font_family=footer_font_family,
+                    email_title=email_title,
+                    footer_text=footer_text_opt,
+                    image_url=image_url,
+                    image_style=image_style,
+                    custom_styles=custom_styles
+                )
+                
                 send_newsletter_email(
                     subject=subject,
                     template_name="generic",
-                    context=context,
+                    context={},
                     recipient_list=[sub.email],
-                    tenant=tenant
+                    tenant=tenant,
+                    html_content=html_content
                 )
                 sent_count += 1
         except ValueError as val_err:

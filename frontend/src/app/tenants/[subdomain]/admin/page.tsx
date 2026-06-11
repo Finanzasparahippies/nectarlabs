@@ -97,6 +97,7 @@ export default function TenantAdminPage() {
   const [loadingBilling, setLoadingBilling] = useState(false);
   const [isSavingTaxProfile, setIsSavingTaxProfile] = useState(false);
   const [taxProfileError, setTaxProfileError] = useState<string | null>(null);
+  const [invoicingMode, setInvoicingMode] = useState('AUTOMATIC');
   const [buyingPackage, setBuyingPackage] = useState<number | null>(null);
 
   // Tax Profile Form State
@@ -138,6 +139,21 @@ export default function TenantAdminPage() {
   const [isSendingCampaign, setIsSendingCampaign] = useState(false);
   const [blogPosts, setBlogPosts] = useState<any[]>([]);
   const [selectedPostId, setSelectedPostId] = useState<string>('');
+
+  // Advanced Marketing customizations state
+  const [templateType, setTemplateType] = useState('minimalist');
+  const [bgImageUrl, setBgImageUrl] = useState('');
+  const [bgOpacity, setBgOpacity] = useState('1.0');
+  const [bgSaturation, setBgSaturation] = useState('100');
+  const [bgPosition, setBgPosition] = useState('center');
+  const [ctaText, setCtaText] = useState('');
+  const [ctaLink, setCtaLink] = useState('');
+  const [fontFamily, setFontFamily] = useState('serif');
+  const [titleFontFamily, setTitleFontFamily] = useState('serif');
+  const [footerFontFamily, setFooterFontFamily] = useState('serif');
+  const [emailTitle, setEmailTitle] = useState('');
+  const [footerText, setFooterText] = useState('');
+  const [imageUrl, setImageUrl] = useState('');
 
   // Handle URL query parameters for success/cancel redirects
   useEffect(() => {
@@ -249,7 +265,17 @@ export default function TenantAdminPage() {
         body: formData,
       });
 
+      // También guardar la preferencia de facturación en el inquilino (Tenant)
+      const updatedTenant = await fetcher(`/tenants/${tenantConfig.id}/`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ invoicing_mode: invoicingMode })
+      });
+
       setTaxProfile(profile);
+      setTenantConfig(updatedTenant);
       setPrivateKeyPassword('');
       setCerFile(null);
       setKeyFile(null);
@@ -355,6 +381,7 @@ export default function TenantAdminPage() {
           try {
             const fullConfig = await fetcher(`/tenants/${config.id}/`);
             setTenantConfig(fullConfig);
+            setInvoicingMode(fullConfig.invoicing_mode || 'AUTOMATIC');
             setSmtpHost(fullConfig.custom_smtp_host || '');
             setSmtpPort(fullConfig.custom_smtp_port ? String(fullConfig.custom_smtp_port) : '587');
             setSmtpUsername(fullConfig.custom_smtp_username || '');
@@ -426,7 +453,20 @@ export default function TenantAdminPage() {
         body: JSON.stringify({
           subject: campaignSubject.trim(),
           title: campaignTitle.trim() || campaignSubject.trim(),
-          content: campaignContent.trim()
+          content: campaignContent.trim(),
+          template_type: templateType,
+          bg_image_url: bgImageUrl.trim() || null,
+          bg_opacity: parseFloat(bgOpacity),
+          bg_saturation: parseInt(bgSaturation),
+          bg_position: bgPosition,
+          cta_text: ctaText.trim() || null,
+          cta_link: ctaLink.trim() || null,
+          font_family: fontFamily,
+          title_font_family: titleFontFamily,
+          footer_font_family: footerFontFamily,
+          email_title: emailTitle.trim() || null,
+          footer_text: footerText.trim() || null,
+          image_url: imageUrl.trim() || null
         }),
         headers: {
           'Content-Type': 'application/json'
@@ -437,6 +477,19 @@ export default function TenantAdminPage() {
       setCampaignSubject('');
       setCampaignTitle('');
       setCampaignContent('');
+      setTemplateType('minimalist');
+      setBgImageUrl('');
+      setBgOpacity('1.0');
+      setBgSaturation('100');
+      setBgPosition('center');
+      setCtaText('');
+      setCtaLink('');
+      setFontFamily('serif');
+      setTitleFontFamily('serif');
+      setFooterFontFamily('serif');
+      setEmailTitle('');
+      setFooterText('');
+      setImageUrl('');
       // Reload tenant config to update sent count
       const updated = await fetcher(`/tenants/${tenantConfig.id}/`);
       setTenantConfig(updated);
@@ -1328,6 +1381,19 @@ export default function TenantAdminPage() {
                       </select>
                     </div>
 
+                    <div className="space-y-1">
+                      <label className="text-[8px] uppercase tracking-wider font-black text-white/50">Preferencia de Facturación</label>
+                      <select
+                        value={invoicingMode}
+                        onChange={(e) => setInvoicingMode(e.target.value)}
+                        className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input"
+                      >
+                        <option value="AUTOMATIC">Facturación Automática (al pagar)</option>
+                        <option value="MANUAL_CLIENT">Manual por el Cliente</option>
+                        <option value="MANUAL_ADMIN">Manual por el Administrador</option>
+                      </select>
+                    </div>
+
                     <div className="border-t border-white/5 pt-4 mt-6 space-y-4">
                       <div>
                         <h4 className="text-[9px] font-black uppercase tracking-wide text-white">Certificados de Sello Digital (CSD)</h4>
@@ -1747,104 +1813,413 @@ export default function TenantAdminPage() {
 
       {/* 📧 Modal: Redactar Boletín */}
       {showNewsletterModal && (
-        <div className="fixed inset-0 z-55 bg-background/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="admin-card border rounded-[2rem] p-6 max-w-lg w-full space-y-4 shadow-2xl relative">
+        <div className="fixed inset-0 z-55 bg-background/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
+          <div className="admin-card border rounded-[2rem] p-8 max-w-4xl w-full space-y-6 shadow-2xl relative max-h-[90vh] overflow-y-auto">
             <button 
               onClick={() => setShowNewsletterModal(false)}
-              className="absolute top-4 right-4 text-white/40 hover:text-white text-xs font-bold"
+              className="absolute top-6 right-6 text-white/40 hover:text-white text-xs font-bold"
             >
               ✕
             </button>
-            <div className="border-b border-white/5 pb-2">
+            <div className="border-b border-white/5 pb-4">
               <span className="px-2 py-0.5 bg-nectar-gold/10 text-nectar-gold text-[7px] font-black uppercase tracking-widest rounded-full border border-nectar-gold/20">
                 Email Campaigner
               </span>
-              <h3 className="text-base font-black uppercase tracking-tight text-white mt-2">Nueva Campaña de Boletín</h3>
+              <h3 className="text-lg font-black uppercase tracking-tight text-white mt-2">Nueva Campaña de Boletín</h3>
               <p className="text-[7.5px] text-white/40 uppercase tracking-wider mt-0.5">Enviar un correo masivo a todos los suscriptores activos</p>
             </div>
             
-            <form onSubmit={handleSendCampaign} className="space-y-3">
-              <div className="space-y-1">
-                <label className="text-[7.5px] uppercase tracking-wider font-black text-white/50 block">Importar Post del Blog (Opcional)</label>
-                <select
-                  value={selectedPostId}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    setSelectedPostId(val);
-                    if (val) {
-                      const post = blogPosts.find(p => String(p.id) === val);
-                      if (post) {
-                        setCampaignSubject(`Nuevo Post: ${post.title}`);
-                        setCampaignTitle(post.title);
-                        setCampaignContent(post.content);
+            <form onSubmit={handleSendCampaign} className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {/* Left Column: Form inputs */}
+              <div className="space-y-4">
+                <div className="space-y-1">
+                  <label className="text-[7.5px] uppercase tracking-wider font-black text-white/50 block">Importar Post del Blog (Opcional)</label>
+                  <select
+                    value={selectedPostId}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setSelectedPostId(val);
+                      if (val) {
+                        const post = blogPosts.find(p => String(p.id) === val);
+                        if (post) {
+                          setCampaignSubject(`Nuevo Post: ${post.title}`);
+                          setCampaignTitle(post.title);
+                          setCampaignContent(post.content);
+                        }
+                      } else {
+                        setCampaignSubject('');
+                        setCampaignTitle('');
+                        setCampaignContent('');
                       }
-                    } else {
-                      setCampaignSubject('');
-                      setCampaignTitle('');
-                      setCampaignContent('');
+                    }}
+                    className="w-full border rounded-xl px-3 py-2.5 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input font-bold"
+                  >
+                    <option value="">-- Redactar en Blanco --</option>
+                    {blogPosts.map((post) => (
+                      <option key={post.id} value={String(post.id)}>
+                        {post.title}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[7.5px] uppercase tracking-wider font-black text-white/50 block">Asunto del Correo (Subject)</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Ej. ¡Nueva colección disponible en nuestra tienda!"
+                    value={campaignSubject}
+                    onChange={(e) => setCampaignSubject(e.target.value)}
+                    className="w-full border rounded-xl px-3 py-2.5 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[7.5px] uppercase tracking-wider font-black text-white/50 block">Título de Cabecera (Opcional)</label>
+                  <input
+                    type="text"
+                    placeholder="Ej. ¡Grandes Noticias!"
+                    value={campaignTitle}
+                    onChange={(e) => setCampaignTitle(e.target.value)}
+                    className="w-full border rounded-xl px-3 py-2.5 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[7.5px] uppercase tracking-wider font-black text-white/50 block">Contenido del Mensaje (HTML/Texto)</label>
+                  <textarea
+                    required
+                    rows={6}
+                    placeholder="Escribe el cuerpo del mensaje. Puedes usar etiquetas HTML básicas..."
+                    value={campaignContent}
+                    onChange={(e) => setCampaignContent(e.target.value)}
+                    className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input resize-none font-mono"
+                  />
+                </div>
+
+                {/* Estilo y Tipografía */}
+                <div className="bg-white/[0.02] border border-white/5 p-4 rounded-2xl space-y-3">
+                  <h4 className="text-[8px] font-black uppercase tracking-widest text-white/40 pb-1.5 border-b border-white/5">
+                    Diseño & Tipografía
+                  </h4>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="text-[7px] uppercase tracking-wider font-black text-white/50 block">Plantilla</label>
+                      <select
+                        value={templateType}
+                        onChange={(e) => setTemplateType(e.target.value)}
+                        className="w-full border rounded-xl px-3 py-2 text-[9px] focus:outline-none focus:border-nectar-gold transition-all admin-input font-bold"
+                      >
+                        <option value="minimalist">Minimalista</option>
+                        <option value="moss">Moss (Verde)</option>
+                        <option value="cosmic">Cosmic (Nebulosa)</option>
+                        <option value="glow">Glow (Cyber)</option>
+                        <option value="mist">Mist (Teal)</option>
+                      </select>
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[7px] uppercase tracking-wider font-black text-white/50 block">Fuentes Título</label>
+                      <select
+                        value={titleFontFamily}
+                        onChange={(e) => setTitleFontFamily(e.target.value)}
+                        className="w-full border rounded-xl px-3 py-2 text-[9px] focus:outline-none focus:border-nectar-gold transition-all admin-input font-bold"
+                      >
+                        <option value="serif">Serif</option>
+                        <option value="sans-serif">Sans-Serif</option>
+                        <option value="monospace">Monospace</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="text-[7px] uppercase tracking-wider font-black text-white/50 block">Fuentes Cuerpo</label>
+                      <select
+                        value={fontFamily}
+                        onChange={(e) => setFontFamily(e.target.value)}
+                        className="w-full border rounded-xl px-3 py-2 text-[9px] focus:outline-none focus:border-nectar-gold transition-all admin-input font-bold"
+                      >
+                        <option value="serif">Serif</option>
+                        <option value="sans-serif">Sans-Serif</option>
+                        <option value="monospace">Monospace</option>
+                      </select>
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[7px] uppercase tracking-wider font-black text-white/50 block">Fuentes Footer</label>
+                      <select
+                        value={footerFontFamily}
+                        onChange={(e) => setFooterFontFamily(e.target.value)}
+                        className="w-full border rounded-xl px-3 py-2 text-[9px] focus:outline-none focus:border-nectar-gold transition-all admin-input font-bold"
+                      >
+                        <option value="serif">Serif</option>
+                        <option value="sans-serif">Sans-Serif</option>
+                        <option value="monospace">Monospace</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Llamado a la Acción (CTA) */}
+                <div className="bg-white/[0.02] border border-white/5 p-4 rounded-2xl space-y-3">
+                  <h4 className="text-[8px] font-black uppercase tracking-widest text-white/40 pb-1.5 border-b border-white/5">
+                    Llamado a la Acción (CTA)
+                  </h4>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="text-[7px] uppercase tracking-wider font-black text-white/50 block">Texto Botón</label>
+                      <input
+                        type="text"
+                        placeholder="ej: Registrarme"
+                        value={ctaText}
+                        onChange={(e) => setCtaText(e.target.value)}
+                        className="w-full border rounded-xl px-3 py-2 text-[9px] focus:outline-none focus:border-nectar-gold transition-all admin-input"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[7px] uppercase tracking-wider font-black text-white/50 block">Enlace Botón (URL)</label>
+                      <input
+                        type="url"
+                        placeholder="https://..."
+                        value={ctaLink}
+                        onChange={(e) => setCtaLink(e.target.value)}
+                        className="w-full border rounded-xl px-3 py-2 text-[9px] focus:outline-none focus:border-nectar-gold transition-all admin-input"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Imagen y Fondo */}
+                <div className="bg-white/[0.02] border border-white/5 p-4 rounded-2xl space-y-3">
+                  <h4 className="text-[8px] font-black uppercase tracking-widest text-white/40 pb-1.5 border-b border-white/5">
+                    Imágenes de Portada & Fondo
+                  </h4>
+                  <div className="space-y-1.5">
+                    <label className="text-[7px] uppercase tracking-wider font-black text-white/50 block">Portada URL</label>
+                    <input
+                      type="url"
+                      placeholder="https://..."
+                      value={imageUrl}
+                      onChange={(e) => setImageUrl(e.target.value)}
+                      className="w-full border rounded-xl px-3 py-2 text-[9px] focus:outline-none focus:border-nectar-gold transition-all admin-input"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[7px] uppercase tracking-wider font-black text-white/50 block">Fondo URL</label>
+                    <input
+                      type="url"
+                      placeholder="https://..."
+                      value={bgImageUrl}
+                      onChange={(e) => setBgImageUrl(e.target.value)}
+                      className="w-full border rounded-xl px-3 py-2 text-[9px] focus:outline-none focus:border-nectar-gold transition-all admin-input"
+                    />
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="space-y-1">
+                      <label className="text-[6px] uppercase tracking-wider font-black text-white/40 block">Opacidad</label>
+                      <input
+                        type="number"
+                        min="0.1"
+                        max="1.0"
+                        step="0.1"
+                        value={bgOpacity}
+                        onChange={(e) => setBgOpacity(e.target.value)}
+                        className="w-full border rounded-xl px-2 py-1.5 text-[9px] focus:outline-none focus:border-nectar-gold transition-all admin-input font-mono"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[6px] uppercase tracking-wider font-black text-white/40 block">Saturación %</label>
+                      <input
+                        type="number"
+                        min="0"
+                        max="200"
+                        value={bgSaturation}
+                        onChange={(e) => setBgSaturation(e.target.value)}
+                        className="w-full border rounded-xl px-2 py-1.5 text-[9px] focus:outline-none focus:border-nectar-gold transition-all admin-input font-mono"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[6px] uppercase tracking-wider font-black text-white/40 block">Posición</label>
+                      <select
+                        value={bgPosition}
+                        onChange={(e) => setBgPosition(e.target.value)}
+                        className="w-full border rounded-xl px-2 py-1.5 text-[9px] focus:outline-none focus:border-nectar-gold transition-all admin-input font-bold"
+                      >
+                        <option value="center">Centro</option>
+                        <option value="top">Arriba</option>
+                        <option value="bottom">Abajo</option>
+                        <option value="left">Izquierda</option>
+                        <option value="right">Derecha</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Footer Text */}
+                <div className="bg-white/[0.02] border border-white/5 p-4 rounded-2xl space-y-3">
+                  <h4 className="text-[8px] font-black uppercase tracking-widest text-white/40 pb-1.5 border-b border-white/5">
+                    Footer
+                  </h4>
+                  <div className="space-y-1.5">
+                    <label className="text-[7px] uppercase tracking-wider font-black text-white/50 block">Texto Adicional Footer</label>
+                    <input
+                      type="text"
+                      placeholder="ej: Visita nuestra web o redes."
+                      value={footerText}
+                      onChange={(e) => setFooterText(e.target.value)}
+                      className="w-full border rounded-xl px-3 py-2 text-[9px] focus:outline-none focus:border-nectar-gold transition-all admin-input"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Column: Live Preview */}
+              <div className="flex flex-col h-full min-h-[400px]">
+                <span className="text-[7.5px] uppercase tracking-wider font-black text-white/50 block mb-2">Vista Previa (Branded)</span>
+                
+                {(() => {
+                  const themePreviewStyles = {
+                    minimalist: {
+                      bg: '#ffffff',
+                      text: '#111827',
+                      headerBg: '#f3f4f6',
+                      headerText: '#1f2937',
+                      border: '#e5e7eb',
+                      ctaBg: '#111827',
+                      ctaText: '#ffffff'
+                    },
+                    moss: {
+                      bg: '#f4f6f4',
+                      text: '#1e2d24',
+                      headerBg: '#2d4a36',
+                      headerText: '#ffffff',
+                      border: '#d2dbd3',
+                      ctaBg: '#2d4a36',
+                      ctaText: '#ffffff'
+                    },
+                    cosmic: {
+                      bg: '#0f0c1b',
+                      text: '#f3f0ff',
+                      headerBg: '#1a103c',
+                      headerText: '#a78bfa',
+                      border: '#2e1f5e',
+                      ctaBg: '#7c3aed',
+                      ctaText: '#ffffff'
+                    },
+                    glow: {
+                      bg: '#0d0d0d',
+                      text: '#e5e7eb',
+                      headerBg: '#1a1a1a',
+                      headerText: '#22d3ee',
+                      border: '#262626',
+                      ctaBg: '#22d3ee',
+                      ctaText: '#000000'
+                    },
+                    mist: {
+                      bg: '#f0f4f8',
+                      text: '#243b53',
+                      headerBg: '#d9e2ec',
+                      headerText: '#102a43',
+                      border: '#bcccdc',
+                      ctaBg: '#102a43',
+                      ctaText: '#ffffff'
                     }
-                  }}
-                  className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input"
-                >
-                  <option value="">-- Redactar en Blanco --</option>
-                  {blogPosts.map((post) => (
-                    <option key={post.id} value={String(post.id)}>
-                      {post.title}
-                    </option>
-                  ))}
-                </select>
-              </div>
+                  };
 
-              <div className="space-y-1">
-                <label className="text-[7.5px] uppercase tracking-wider font-black text-white/50 block">Asunto del Correo (Subject)</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Ej. ¡Nueva colección disponible en nuestra tienda!"
-                  value={campaignSubject}
-                  onChange={(e) => setCampaignSubject(e.target.value)}
-                  className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input"
-                />
-              </div>
+                  const selectedTheme = themePreviewStyles[templateType as keyof typeof themePreviewStyles] || themePreviewStyles.minimalist;
+                  
+                  return (
+                    <div
+                      style={{
+                        backgroundColor: selectedTheme.bg,
+                        color: selectedTheme.text,
+                        borderColor: selectedTheme.border,
+                        backgroundImage: bgImageUrl ? `url(${bgImageUrl})` : 'none',
+                        backgroundPosition: bgPosition,
+                        backgroundSize: 'cover',
+                        filter: bgImageUrl ? `saturate(${bgSaturation}%)` : 'none',
+                        opacity: bgImageUrl ? parseFloat(bgOpacity) : 1
+                      }}
+                      className="border rounded-2xl p-5 flex flex-1 flex-col justify-between overflow-y-auto text-black animate-fadeIn"
+                    >
+                      <div>
+                        <div
+                          style={{
+                            backgroundColor: selectedTheme.headerBg,
+                            borderColor: selectedTheme.border,
+                            fontFamily: titleFontFamily === 'serif' ? 'Georgia, serif' : titleFontFamily === 'sans-serif' ? 'sans-serif' : 'monospace'
+                          }}
+                          className="border-b-2 pb-4 mb-4 text-center rounded-xl p-3"
+                        >
+                          {imageUrl && (
+                            <img src={imageUrl} alt="Portada" className="max-h-20 mx-auto mb-2 rounded object-cover" />
+                          )}
+                          <h1 style={{ color: selectedTheme.headerText }} className="text-base font-extrabold tracking-tight">
+                            {tenantConfig.name}
+                          </h1>
+                          <p className="text-[7px] uppercase tracking-widest opacity-60">Boletín Informativo</p>
+                        </div>
 
-              <div className="space-y-1">
-                <label className="text-[7.5px] uppercase tracking-wider font-black text-white/50 block">Título de Cabecera (Opcional)</label>
-                <input
-                  type="text"
-                  placeholder="Ej. ¡Grandes Noticias!"
-                  value={campaignTitle}
-                  onChange={(e) => setCampaignTitle(e.target.value)}
-                  className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input"
-                />
-              </div>
+                        <h2 style={{ fontFamily: titleFontFamily === 'serif' ? 'Georgia, serif' : titleFontFamily === 'sans-serif' ? 'sans-serif' : 'monospace' }} className="text-sm font-bold mb-3">
+                          {campaignTitle || campaignSubject || 'Título del Boletín'}
+                        </h2>
 
-              <div className="space-y-1">
-                <label className="text-[7.5px] uppercase tracking-wider font-black text-white/50 block">Contenido del Mensaje (HTML/Texto)</label>
-                <textarea
-                  required
-                  rows={6}
-                  placeholder="Escribe el cuerpo del mensaje. Puedes usar etiquetas HTML básicas..."
-                  value={campaignContent}
-                  onChange={(e) => setCampaignContent(e.target.value)}
-                  className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input resize-none"
-                />
-              </div>
+                        <div
+                          style={{ fontFamily: fontFamily === 'serif' ? 'Georgia, serif' : fontFamily === 'sans-serif' ? 'sans-serif' : 'monospace' }}
+                          className="text-[11px] leading-relaxed space-y-3"
+                          dangerouslySetInnerHTML={{ __html: campaignContent || '<p className="italic opacity-40">Escribe el contenido para previsualizarlo aquí...</p>' }}
+                        />
 
-              <div className="pt-2 border-t border-white/5 flex justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setShowNewsletterModal(false)}
-                  className="px-4 py-2 border border-white/10 hover:bg-white/5 rounded-xl text-[8px] font-black uppercase tracking-wider transition-all text-white/80"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSendingCampaign}
-                  className="px-6 py-2 bg-nectar-gold text-background hover:bg-nectar-gold/90 rounded-xl text-[8px] font-black uppercase tracking-wider transition-all font-bold shadow-md cursor-pointer"
-                >
-                  {isSendingCampaign ? 'Enviando...' : '🚀 Enviar Campaña'}
-                </button>
+                        {ctaText && (
+                          <div className="mt-4 text-center">
+                            <a
+                              href={ctaLink || '#'}
+                              target="_blank"
+                              rel="noreferrer"
+                              style={{
+                                backgroundColor: selectedTheme.ctaBg,
+                                color: selectedTheme.ctaText,
+                                fontFamily: fontFamily === 'serif' ? 'Georgia, serif' : fontFamily === 'sans-serif' ? 'sans-serif' : 'monospace'
+                              }}
+                              className="inline-block px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-md hover:scale-105 transition-all font-bold"
+                            >
+                              {ctaText}
+                            </a>
+                          </div>
+                        )}
+                      </div>
+
+                      <div
+                        style={{
+                          borderColor: selectedTheme.border,
+                          fontFamily: footerFontFamily === 'serif' ? 'Georgia, serif' : footerFontFamily === 'sans-serif' ? 'sans-serif' : 'monospace'
+                        }}
+                        className="border-t pt-4 mt-6 text-center text-[7.5px] opacity-50 space-y-0.5"
+                      >
+                        <p>© {new Date().getFullYear()} {tenantConfig.name}. Todos los derechos reservados.</p>
+                        {footerText && <p>{footerText}</p>}
+                        <p>Recibes este correo porque te suscribiste a nuestro boletín oficial.</p>
+                        <p className="font-semibold cursor-pointer text-amber-500">Desuscribirse</p>
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                <div className="pt-4 flex justify-end gap-2 mt-auto">
+                  <button
+                    type="button"
+                    onClick={() => setShowNewsletterModal(false)}
+                    className="px-4 py-2 border border-white/10 hover:bg-white/5 rounded-xl text-[8px] font-black uppercase tracking-wider transition-all text-white/80 cursor-pointer font-bold"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSendingCampaign || !campaignSubject.trim() || !campaignContent.trim()}
+                    className="px-6 py-2 bg-nectar-gold text-background hover:bg-nectar-gold/90 rounded-xl text-[8px] font-black uppercase tracking-wider transition-all font-bold shadow-md cursor-pointer"
+                  >
+                    {isSendingCampaign ? 'Enviando...' : '🚀 Enviar Campaña'}
+                  </button>
+                </div>
               </div>
             </form>
           </div>

@@ -100,6 +100,35 @@ export default function BusinessCommander({ stats, installments, setInstallments
   const [isSendingCampaign, setIsSendingCampaign] = useState(false);
   const [blogPosts, setBlogPosts] = useState<any[]>([]);
   const [selectedPostId, setSelectedPostId] = useState<string>('');
+
+  // Advanced Marketing customizations state
+  const [templateType, setTemplateType] = useState('minimalist');
+  const [bgImageUrl, setBgImageUrl] = useState('');
+  const [bgOpacity, setBgOpacity] = useState('1.0');
+  const [bgSaturation, setBgSaturation] = useState('100');
+  const [bgPosition, setBgPosition] = useState('center');
+  const [ctaText, setCtaText] = useState('');
+  const [ctaLink, setCtaLink] = useState('');
+  const [fontFamily, setFontFamily] = useState('serif');
+  const [titleFontFamily, setTitleFontFamily] = useState('serif');
+  const [footerFontFamily, setFooterFontFamily] = useState('serif');
+  const [emailTitle, setEmailTitle] = useState('');
+  const [footerText, setFooterText] = useState('');
+  const [imageUrl, setImageUrl] = useState('');
+
+  // Manual Invoices Custom Modal states
+  const [showManualInvoiceModal, setShowManualInvoiceModal] = useState(false);
+  const [selectedTenantId, setSelectedTenantId] = useState('');
+  const [allTenants, setAllTenants] = useState<any[]>([]);
+  const [manualRfc, setManualRfc] = useState('');
+  const [manualRazonSocial, setManualRazonSocial] = useState('');
+  const [manualRegimenFiscal, setManualRegimenFiscal] = useState('601');
+  const [manualCodigoPostal, setManualCodigoPostal] = useState('');
+  const [manualEmail, setManualEmail] = useState('');
+  const [manualItems, setManualItems] = useState<Array<{ quantity: number; unit_price: number; description: string }>>([
+    { quantity: 1, unit_price: 0, description: '' }
+  ]);
+  const [isSubmittingManualInvoice, setIsSubmittingManualInvoice] = useState(false);
   
   // Kanban states
   const [leads, setLeads] = useState<any[]>([]);
@@ -164,7 +193,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
   useEffect(() => {
     const loadSalesData = async () => {
       try {
-        const [commissionsData, summaryData, promoData, usersData, quotesData, leadsData, contractsData, postsData] = await Promise.all([
+        const [commissionsData, summaryData, promoData, usersData, quotesData, leadsData, contractsData, postsData, tenantsData] = await Promise.all([
           fetcher('/sales-commissions/').catch(() => []),
           fetcher('/sales-commissions/summary/').catch(() => null),
           fetcher('/promo-codes/').catch(() => []),
@@ -173,6 +202,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
           fetcher('/leads/').catch(() => []),
           fetcher('/contracts/').catch(() => []),
           fetcher('/posts/', { isPublic: true }).catch(() => []),
+          fetcher('/tenants/').catch(() => []),
         ]);
         setCommissions(Array.isArray(commissionsData) ? commissionsData : []);
         setCommissionSummary(summaryData);
@@ -182,6 +212,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
         setLeads(Array.isArray(leadsData) ? leadsData : []);
         setContracts(Array.isArray(contractsData) ? contractsData : []);
         setBlogPosts(postsData.results || postsData || []);
+        setAllTenants(tenantsData || []);
       } catch (err) {
         console.error('Error loading sales data:', err);
       } finally {
@@ -273,7 +304,20 @@ export default function BusinessCommander({ stats, installments, setInstallments
         body: JSON.stringify({
           subject: campaignSubject.trim(),
           title: campaignTitle.trim() || campaignSubject.trim(),
-          content: campaignContent.trim()
+          content: campaignContent.trim(),
+          template_type: templateType,
+          bg_image_url: bgImageUrl.trim() || null,
+          bg_opacity: parseFloat(bgOpacity),
+          bg_saturation: parseInt(bgSaturation),
+          bg_position: bgPosition,
+          cta_text: ctaText.trim() || null,
+          cta_link: ctaLink.trim() || null,
+          font_family: fontFamily,
+          title_font_family: titleFontFamily,
+          footer_font_family: footerFontFamily,
+          email_title: emailTitle.trim() || null,
+          footer_text: footerText.trim() || null,
+          image_url: imageUrl.trim() || null
         })
       });
       
@@ -286,10 +330,145 @@ export default function BusinessCommander({ stats, installments, setInstallments
       setCampaignSubject('');
       setCampaignTitle('');
       setCampaignContent('');
+      setTemplateType('minimalist');
+      setBgImageUrl('');
+      setBgOpacity('1.0');
+      setBgSaturation('100');
+      setBgPosition('center');
+      setCtaText('');
+      setCtaLink('');
+      setFontFamily('serif');
+      setTitleFontFamily('serif');
+      setFooterFontFamily('serif');
+      setEmailTitle('');
+      setFooterText('');
+      setImageUrl('');
     } catch (err: any) {
       showToast(err.message || 'Error al enviar la campaña.', 'error');
     } finally {
       setIsSendingCampaign(false);
+    }
+  };
+
+  const [stampingInvoice, setStampingInvoice] = useState<number | null>(null);
+
+  const handleStampInvoice = async (installmentId: number) => {
+    setStampingInvoice(installmentId);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/billing/invoices/issue-from-installment/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ installment_id: installmentId })
+      });
+      
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Error al timbrar la factura.');
+      }
+      
+      const updatedUUID = data.uuid_sat || "LCO_PENDING";
+      setInstallments(prev => prev.map(inst => inst.id === installmentId ? { ...inst, cfdi_uuid: updatedUUID } : inst));
+      showToast('Factura timbrada con éxito.', 'success');
+      
+      if (activeTab === 'invoices') {
+        const res = await fetcher('/billing/invoices/');
+        setSystemInvoices(res.results || res || []);
+      }
+    } catch (err: any) {
+      showToast(err.message || 'Error al timbrar la factura.', 'error');
+    } finally {
+      setStampingInvoice(null);
+    }
+  };
+
+  const handleTenantChange = async (tenantId: string) => {
+    setSelectedTenantId(tenantId);
+    if (!tenantId) return;
+    try {
+      const info = await fetcher(`/billing/info/?tenant_id=${tenantId}`);
+      if (info.tax_profile) {
+        setManualRfc(info.tax_profile.rfc || '');
+        setManualRazonSocial(info.tax_profile.razon_social || '');
+        setManualRegimenFiscal(info.tax_profile.regimen_fiscal || '601');
+        setManualCodigoPostal(info.tax_profile.codigo_postal || '');
+      }
+      const tenant = allTenants.find(t => t.id === tenantId);
+      if (tenant && tenant.owner_email) {
+        setManualEmail(tenant.owner_email);
+      }
+    } catch (err) {
+      console.error('Error prefilling tax profile:', err);
+    }
+  };
+
+  const handleCreateManualInvoice = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedTenantId) {
+      showToast('Selecciona un inquilino.', 'warning');
+      return;
+    }
+    
+    for (const item of manualItems) {
+      if (!item.description.trim() || item.unit_price <= 0 || item.quantity <= 0) {
+        showToast('Todos los conceptos deben tener descripción, cantidad y precio válido.', 'warning');
+        return;
+      }
+    }
+
+    const subtotal = manualItems.reduce((acc, item) => acc + (item.quantity * item.unit_price), 0);
+    const total = parseFloat((subtotal * 1.16).toFixed(2));
+
+    setIsSubmittingManualInvoice(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/billing/invoices/issue-custom-manual/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          tenant_id: selectedTenantId,
+          customer_info: {
+            rfc: manualRfc.trim().toUpperCase(),
+            razon_social: manualRazonSocial.trim(),
+            regimen_fiscal: manualRegimenFiscal,
+            codigo_postal: manualCodigoPostal.trim(),
+            email: manualEmail.trim()
+          },
+          items: manualItems,
+          total: total
+        })
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Error al emitir la factura manual.');
+      }
+
+      showToast('Factura manual emitida y timbrada con éxito.', 'success');
+      setShowManualInvoiceModal(false);
+      
+      setSelectedTenantId('');
+      setManualRfc('');
+      setManualRazonSocial('');
+      setManualRegimenFiscal('601');
+      setManualCodigoPostal('');
+      setManualEmail('');
+      setManualItems([{ quantity: 1, unit_price: 0, description: '' }]);
+
+      if (activeTab === 'invoices') {
+        const res = await fetcher('/billing/invoices/');
+        setSystemInvoices(res.results || res || []);
+      }
+    } catch (err: any) {
+      showToast(err.message || 'Error al crear la factura manual.', 'error');
+    } finally {
+      setIsSubmittingManualInvoice(false);
     }
   };
 
@@ -1502,12 +1681,21 @@ export default function BusinessCommander({ stats, installments, setInstallments
                           </div>
                         ) : (
                           <div className="flex justify-end items-center gap-2">
+                            {inst.status === 'PAID' && (
+                              <button
+                                onClick={() => handleStampInvoice(inst.id)}
+                                disabled={stampingInvoice === inst.id}
+                                className="px-3 py-1.5 bg-green-600 hover:bg-green-500 text-white text-[7px] font-black uppercase tracking-widest rounded-lg hover:scale-105 active:scale-95 transition-all disabled:opacity-50 font-bold shrink-0"
+                              >
+                                {stampingInvoice === inst.id ? 'Timbrando...' : 'Timbrar Factura (PAC)'}
+                              </button>
+                            )}
                             <input
                               type="text"
                               placeholder="UUID CFDI 4.0"
                               value={cfdiInputs[inst.id] || ""}
                               onChange={(e) => setCfdiInputs(prev => ({ ...prev, [inst.id]: e.target.value }))}
-                              className="bg-background border border-card-border rounded-lg px-3 py-1.5 text-[8px] font-mono focus:outline-none focus:border-nectar-gold w-40 text-foreground"
+                              className="bg-background border border-card-border rounded-lg px-3 py-1.5 text-[8px] font-mono focus:outline-none focus:border-nectar-gold w-32 text-foreground"
                             />
                             <button
                               onClick={() => handleSaveCFDI(inst.id)}
@@ -2249,24 +2437,41 @@ export default function BusinessCommander({ stats, installments, setInstallments
               <h2 className="text-xs font-black uppercase tracking-[0.4em] opacity-30 mb-1">Facturas del Sistema</h2>
               <p className="text-[9px] font-bold text-foreground/30 uppercase tracking-wider">Historial completo de timbrado de CFDIs (SAT) de Néctar Labs</p>
             </div>
-            <div className="flex flex-col gap-1 min-w-[250px]">
-              <label className="text-[7.5px] font-black uppercase tracking-widest opacity-40 ml-2">Buscar Inquilino o SAT UUID</label>
-              <div className="relative">
-                <input
-                  type="text"
-                  value={invoiceSearch}
-                  onChange={(e) => setInvoiceSearch(e.target.value)}
-                  placeholder="Buscar..."
-                  className="w-full bg-background border border-card-border rounded-xl px-4 py-2 text-xs text-foreground focus:outline-none focus:border-nectar-gold"
-                />
-                {invoiceSearch && (
-                  <button
-                    onClick={() => setInvoiceSearch('')}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground/45 hover:text-foreground text-xs font-bold"
-                  >
-                    ×
-                  </button>
-                )}
+            <div className="flex flex-col sm:flex-row items-end sm:items-center gap-4 w-full md:w-auto">
+              <button
+                onClick={() => {
+                  setSelectedTenantId('');
+                  setManualRfc('');
+                  setManualRazonSocial('');
+                  setManualRegimenFiscal('601');
+                  setManualCodigoPostal('');
+                  setManualEmail('');
+                  setManualItems([{ quantity: 1, unit_price: 0, description: '' }]);
+                  setShowManualInvoiceModal(true);
+                }}
+                className="px-5 py-2.5 bg-nectar-gold text-background text-[9px] font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 transition-all shadow-md font-bold whitespace-nowrap"
+              >
+                + Factura Manual (Cotizaciones)
+              </button>
+              <div className="flex flex-col gap-1 min-w-[250px] w-full sm:w-auto">
+                <label className="text-[7.5px] font-black uppercase tracking-widest opacity-40 ml-2">Buscar Inquilino o SAT UUID</label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={invoiceSearch}
+                    onChange={(e) => setInvoiceSearch(e.target.value)}
+                    placeholder="Buscar..."
+                    className="w-full bg-background border border-card-border rounded-xl px-4 py-2 text-xs text-foreground focus:outline-none focus:border-nectar-gold"
+                  />
+                  {invoiceSearch && (
+                    <button
+                      onClick={() => setInvoiceSearch('')}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground/45 hover:text-foreground text-xs font-bold"
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -2489,6 +2694,181 @@ export default function BusinessCommander({ stats, installments, setInstallments
                   />
                 </div>
 
+                {/* Estilo y Tipografía */}
+                <div className="bg-background/40 border border-card-border/60 p-5 rounded-2xl space-y-4 text-left">
+                  <h3 className="text-[9px] font-black uppercase tracking-widest opacity-50 border-b border-card-border/30 pb-2">
+                    Diseño & Tipografía
+                  </h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Plantilla de Estilo</label>
+                      <select
+                        value={templateType}
+                        onChange={(e) => setTemplateType(e.target.value)}
+                        className="w-full bg-background border border-card-border rounded-xl px-4 py-2.5 text-xs text-foreground focus:outline-none focus:border-nectar-gold font-bold"
+                      >
+                        <option value="minimalist">Minimalista (Limpio)</option>
+                        <option value="moss">Moss (Bosque / Verde)</option>
+                        <option value="cosmic">Cosmic (Nebulosa / Indigo)</option>
+                        <option value="glow">Glow (Cyber / Neón)</option>
+                        <option value="mist">Mist (Neblina / Celeste)</option>
+                      </select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Tipografía de Título</label>
+                      <select
+                        value={titleFontFamily}
+                        onChange={(e) => setTitleFontFamily(e.target.value)}
+                        className="w-full bg-background border border-card-border rounded-xl px-4 py-2.5 text-xs text-foreground focus:outline-none focus:border-nectar-gold font-bold"
+                      >
+                        <option value="serif">Serif (Clásico)</option>
+                        <option value="sans-serif">Sans-Serif (Moderno)</option>
+                        <option value="monospace">Monospace (Técnico)</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Tipografía de Cuerpo</label>
+                      <select
+                        value={fontFamily}
+                        onChange={(e) => setFontFamily(e.target.value)}
+                        className="w-full bg-background border border-card-border rounded-xl px-4 py-2.5 text-xs text-foreground focus:outline-none focus:border-nectar-gold font-bold"
+                      >
+                        <option value="serif">Serif (Clásico)</option>
+                        <option value="sans-serif">Sans-Serif (Moderno)</option>
+                        <option value="monospace">Monospace (Técnico)</option>
+                      </select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Tipografía del Footer</label>
+                      <select
+                        value={footerFontFamily}
+                        onChange={(e) => setFooterFontFamily(e.target.value)}
+                        className="w-full bg-background border border-card-border rounded-xl px-4 py-2.5 text-xs text-foreground focus:outline-none focus:border-nectar-gold font-bold"
+                      >
+                        <option value="serif">Serif (Clásico)</option>
+                        <option value="sans-serif">Sans-Serif (Moderno)</option>
+                        <option value="monospace">Monospace (Técnico)</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Llamado a la Acción (CTA) */}
+                <div className="bg-background/40 border border-card-border/60 p-5 rounded-2xl space-y-4 text-left">
+                  <h3 className="text-[9px] font-black uppercase tracking-widest opacity-50 border-b border-card-border/30 pb-2">
+                    Llamado a la Acción (CTA)
+                  </h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Texto del Botón</label>
+                      <input
+                        type="text"
+                        placeholder="ej: Visitar Tienda"
+                        value={ctaText}
+                        onChange={(e) => setCtaText(e.target.value)}
+                        className="w-full bg-background border border-card-border rounded-xl px-4 py-2.5 text-xs text-foreground focus:outline-none focus:border-nectar-gold"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Enlace del Botón (URL)</label>
+                      <input
+                        type="url"
+                        placeholder="https://..."
+                        value={ctaLink}
+                        onChange={(e) => setCtaLink(e.target.value)}
+                        className="w-full bg-background border border-card-border rounded-xl px-4 py-2.5 text-xs text-foreground focus:outline-none focus:border-nectar-gold"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Fondo Personalizado */}
+                <div className="bg-background/40 border border-card-border/60 p-5 rounded-2xl space-y-4 text-left">
+                  <h3 className="text-[9px] font-black uppercase tracking-widest opacity-50 border-b border-card-border/30 pb-2">
+                    Imagen de Portada & Fondo de Email
+                  </h3>
+                  <div className="space-y-2">
+                    <label className="text-[8px] font-black uppercase tracking-widest opacity-40">URL de Imagen de Portada (Encabezado)</label>
+                    <input
+                      type="url"
+                      placeholder="https://..."
+                      value={imageUrl}
+                      onChange={(e) => setImageUrl(e.target.value)}
+                      className="w-full bg-background border border-card-border rounded-xl px-4 py-2.5 text-xs text-foreground focus:outline-none focus:border-nectar-gold"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[8px] font-black uppercase tracking-widest opacity-40">URL de Imagen de Fondo (Fondo del Cuerpo)</label>
+                    <input
+                      type="url"
+                      placeholder="https://..."
+                      value={bgImageUrl}
+                      onChange={(e) => setBgImageUrl(e.target.value)}
+                      className="w-full bg-background border border-card-border rounded-xl px-4 py-2.5 text-xs text-foreground focus:outline-none focus:border-nectar-gold"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="space-y-1.5">
+                      <label className="text-[7px] font-black uppercase tracking-widest opacity-40">Opacidad Fondo</label>
+                      <input
+                        type="number"
+                        min="0.1"
+                        max="1.0"
+                        step="0.1"
+                        value={bgOpacity}
+                        onChange={(e) => setBgOpacity(e.target.value)}
+                        className="w-full bg-background border border-card-border rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none focus:border-nectar-gold font-mono"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[7px] font-black uppercase tracking-widest opacity-40">Saturación Fondo %</label>
+                      <input
+                        type="number"
+                        min="0"
+                        max="200"
+                        value={bgSaturation}
+                        onChange={(e) => setBgSaturation(e.target.value)}
+                        className="w-full bg-background border border-card-border rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none focus:border-nectar-gold font-mono"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[7px] font-black uppercase tracking-widest opacity-40">Posición Fondo</label>
+                      <select
+                        value={bgPosition}
+                        onChange={(e) => setBgPosition(e.target.value)}
+                        className="w-full bg-background border border-card-border rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none focus:border-nectar-gold font-bold"
+                      >
+                        <option value="center">Centro</option>
+                        <option value="top">Arriba</option>
+                        <option value="bottom">Abajo</option>
+                        <option value="left">Izquierda</option>
+                        <option value="right">Derecha</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Pie de Página Personalizado */}
+                <div className="bg-background/40 border border-card-border/60 p-5 rounded-2xl space-y-4 text-left">
+                  <h3 className="text-[9px] font-black uppercase tracking-widest opacity-50 border-b border-card-border/30 pb-2">
+                    Pie de Página (Footer)
+                  </h3>
+                  <div className="space-y-2">
+                    <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Texto Adicional del Footer</label>
+                    <input
+                      type="text"
+                      placeholder="ej: Visita nuestras oficinas en CDMX o llámanos."
+                      value={footerText}
+                      onChange={(e) => setFooterText(e.target.value)}
+                      className="w-full bg-background border border-card-border rounded-xl px-4 py-2.5 text-xs text-foreground focus:outline-none focus:border-nectar-gold"
+                    />
+                  </div>
+                </div>
+
                 <button
                   type="submit"
                   disabled={isSendingCampaign || !campaignSubject.trim() || !campaignContent.trim()}
@@ -2505,27 +2885,128 @@ export default function BusinessCommander({ stats, installments, setInstallments
                 Vista Previa del Correo
               </span>
 
-              <div className="mt-6 border border-card-border bg-white rounded-2xl p-6 text-black flex-1 min-h-[350px] flex flex-col justify-between overflow-y-auto">
-                <div>
-                  <div className="border-b-2 border-amber-500 pb-4 mb-6 text-center">
-                    <h1 className="text-xl font-extrabold text-amber-600 tracking-tight">Néctar Labs</h1>
-                    <p className="text-[8px] uppercase tracking-widest text-gray-500">Boletín Informativo</p>
-                  </div>
-                  
-                  <h2 className="text-base font-bold text-gray-900 mb-4">{campaignTitle || campaignSubject || 'Título del Correo'}</h2>
-                  
-                  <div 
-                    className="text-xs text-gray-700 leading-relaxed font-sans space-y-3"
-                    dangerouslySetInnerHTML={{ __html: campaignContent || '<p className="italic text-gray-400">Comienza a escribir para ver la vista previa del contenido aquí...</p>' }}
-                  />
-                </div>
+              {(() => {
+                const themePreviewStyles = {
+                  minimalist: {
+                    bg: '#ffffff',
+                    text: '#111827',
+                    headerBg: '#f3f4f6',
+                    headerText: '#1f2937',
+                    border: '#e5e7eb',
+                    ctaBg: '#111827',
+                    ctaText: '#ffffff'
+                  },
+                  moss: {
+                    bg: '#f4f6f4',
+                    text: '#1e2d24',
+                    headerBg: '#2d4a36',
+                    headerText: '#ffffff',
+                    border: '#d2dbd3',
+                    ctaBg: '#2d4a36',
+                    ctaText: '#ffffff'
+                  },
+                  cosmic: {
+                    bg: '#0f0c1b',
+                    text: '#f3f0ff',
+                    headerBg: '#1a103c',
+                    headerText: '#a78bfa',
+                    border: '#2e1f5e',
+                    ctaBg: '#7c3aed',
+                    ctaText: '#ffffff'
+                  },
+                  glow: {
+                    bg: '#0d0d0d',
+                    text: '#e5e7eb',
+                    headerBg: '#1a1a1a',
+                    headerText: '#22d3ee',
+                    border: '#262626',
+                    ctaBg: '#22d3ee',
+                    ctaText: '#000000'
+                  },
+                  mist: {
+                    bg: '#f0f4f8',
+                    text: '#243b53',
+                    headerBg: '#d9e2ec',
+                    headerText: '#102a43',
+                    border: '#bcccdc',
+                    ctaBg: '#102a43',
+                    ctaText: '#ffffff'
+                  }
+                };
 
-                <div className="border-t border-gray-200 pt-6 mt-8 text-center text-[8px] text-gray-400 space-y-1">
-                  <p>© {new Date().getFullYear()} Néctar Labs. Todos los derechos reservados.</p>
-                  <p>Recibes este correo porque te suscribiste a nuestro boletín oficial.</p>
-                  <p className="text-amber-600 font-semibold cursor-pointer">Desuscribirse</p>
-                </div>
-              </div>
+                const selectedTheme = themePreviewStyles[templateType as keyof typeof themePreviewStyles] || themePreviewStyles.minimalist;
+                return (
+                  <div
+                    style={{
+                      backgroundColor: selectedTheme.bg,
+                      color: selectedTheme.text,
+                      borderColor: selectedTheme.border,
+                      backgroundImage: bgImageUrl ? `url(${bgImageUrl})` : 'none',
+                      backgroundPosition: bgPosition,
+                      backgroundSize: 'cover',
+                      filter: bgImageUrl ? `saturate(${bgSaturation}%)` : 'none',
+                      opacity: bgImageUrl ? parseFloat(bgOpacity) : 1
+                    }}
+                    className="mt-6 border rounded-2xl p-6 flex flex-1 min-h-[350px] flex-col justify-between overflow-y-auto"
+                  >
+                    <div>
+                      <div
+                        style={{
+                          backgroundColor: selectedTheme.headerBg,
+                          borderColor: selectedTheme.border,
+                          fontFamily: titleFontFamily === 'serif' ? 'Georgia, serif' : titleFontFamily === 'sans-serif' ? 'sans-serif' : 'monospace'
+                        }}
+                        className="border-b-2 pb-4 mb-6 text-center rounded-xl p-3"
+                      >
+                        {imageUrl && (
+                          <img src={imageUrl} alt="Campaña" className="max-h-24 mx-auto mb-2 rounded object-cover" />
+                        )}
+                        <h1 style={{ color: selectedTheme.headerText }} className="text-xl font-extrabold tracking-tight">Néctar Labs</h1>
+                        <p className="text-[8px] uppercase tracking-widest opacity-60">Boletín Informativo</p>
+                      </div>
+
+                      <h2 style={{ fontFamily: titleFontFamily === 'serif' ? 'Georgia, serif' : titleFontFamily === 'sans-serif' ? 'sans-serif' : 'monospace' }} className="text-base font-bold mb-4">{campaignTitle || campaignSubject || 'Título del Correo'}</h2>
+
+                      <div
+                        style={{ fontFamily: fontFamily === 'serif' ? 'Georgia, serif' : fontFamily === 'sans-serif' ? 'sans-serif' : 'monospace' }}
+                        className="text-xs leading-relaxed space-y-3"
+                        dangerouslySetInnerHTML={{ __html: campaignContent || '<p className="italic opacity-40">Comienza a escribir para ver la vista previa del contenido aquí...</p>' }}
+                      />
+
+                      {ctaText && (
+                        <div className="mt-6 text-center">
+                          <a
+                            href={ctaLink || '#'}
+                            target="_blank"
+                            rel="noreferrer"
+                            style={{
+                              backgroundColor: selectedTheme.ctaBg,
+                              color: selectedTheme.ctaText,
+                              fontFamily: fontFamily === 'serif' ? 'Georgia, serif' : fontFamily === 'sans-serif' ? 'sans-serif' : 'monospace'
+                            }}
+                            className="inline-block px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest shadow-md hover:scale-105 transition-all font-bold"
+                          >
+                            {ctaText}
+                          </a>
+                        </div>
+                      )}
+                    </div>
+
+                    <div
+                      style={{
+                        borderColor: selectedTheme.border,
+                        fontFamily: footerFontFamily === 'serif' ? 'Georgia, serif' : footerFontFamily === 'sans-serif' ? 'sans-serif' : 'monospace'
+                      }}
+                      className="border-t pt-6 mt-8 text-center text-[8px] opacity-50 space-y-1"
+                    >
+                      <p>© {new Date().getFullYear()} Néctar Labs. Todos los derechos reservados.</p>
+                      {footerText && <p>{footerText}</p>}
+                      <p>Recibes este correo porque te suscribiste a nuestro boletín oficial.</p>
+                      <p className="font-semibold cursor-pointer text-amber-500">Desuscribirse</p>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           </div>
         </section>
@@ -2916,6 +3397,259 @@ export default function BusinessCommander({ stats, installments, setInstallments
             </div>
           </div>
         )}
+
+      {/* ── MODAL FACTURA MANUAL (COTIZACIONES / AJUSTES) ── */}
+      {showManualInvoiceModal && (
+        <div
+          onClick={() => setShowManualInvoiceModal(false)}
+          className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-6 cursor-pointer overflow-y-auto"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-2xl bg-card-bg border border-card-border p-8 md:p-10 rounded-[3rem] shadow-2xl relative space-y-6 text-left cursor-default animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto"
+          >
+            <button
+              onClick={() => setShowManualInvoiceModal(false)}
+              className="absolute top-6 right-6 w-8 h-8 rounded-full border border-card-border text-foreground/40 hover:text-foreground flex items-center justify-center text-xl font-bold"
+            >
+              ×
+            </button>
+
+            <div>
+              <span className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold text-[8px] font-black uppercase tracking-widest rounded-full border border-nectar-gold/20">
+                Facturación SAT
+              </span>
+              <h2 className="text-2xl font-black tracking-tighter mt-4 leading-none">
+                Factura Manual (Cotizaciones / Ajustes)
+              </h2>
+              <p className="text-[10px] opacity-40 uppercase tracking-widest mt-1">
+                Genera y timbra una factura personalizada para cualquier inquilino del sistema.
+              </p>
+            </div>
+
+            <form onSubmit={handleCreateManualInvoice} className="space-y-6">
+              {/* Seleccionar Inquilino */}
+              <div className="space-y-1.5">
+                <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Seleccionar Inquilino (Tenant)</label>
+                <select
+                  required
+                  value={selectedTenantId}
+                  onChange={(e) => handleTenantChange(e.target.value)}
+                  className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-nectar-gold text-foreground font-bold"
+                >
+                  <option value="">-- Elige un Inquilino --</option>
+                  {allTenants.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.brand_name || t.subdomain} ({t.owner_email || 'Sin correo'})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Datos Fiscales */}
+              <div className="bg-background/40 border border-card-border/60 p-5 rounded-2xl space-y-4">
+                <h3 className="text-[9px] font-black uppercase tracking-widest opacity-50 border-b border-card-border/30 pb-2">
+                  Datos de Facturación del Cliente
+                </h3>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-[8px] font-black uppercase tracking-widest opacity-40">RFC</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="XAXX010101000"
+                      value={manualRfc}
+                      onChange={(e) => setManualRfc(e.target.value.toUpperCase())}
+                      className="w-full bg-background border border-card-border rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-nectar-gold text-foreground font-mono uppercase tracking-wider"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Razón Social</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Nombre o Razón Social"
+                      value={manualRazonSocial}
+                      onChange={(e) => setManualRazonSocial(e.target.value)}
+                      className="w-full bg-background border border-card-border rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-nectar-gold text-foreground"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Régimen Fiscal</label>
+                    <select
+                      value={manualRegimenFiscal}
+                      onChange={(e) => setManualRegimenFiscal(e.target.value)}
+                      className="w-full bg-background border border-card-border rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-nectar-gold text-foreground font-bold"
+                    >
+                      <option value="601">601 - General de Ley Personas Morales</option>
+                      <option value="603">603 - Personas Morales con Fines no Lucrativos</option>
+                      <option value="605">605 - Sueldos y Salarios</option>
+                      <option value="606">606 - Arrendamiento</option>
+                      <option value="608">608 - Demás ingresos</option>
+                      <option value="612">612 - Personas Físicas con Actividades Empresariales y Profesionales</option>
+                      <option value="616">616 - Sin obligaciones fiscales</option>
+                      <option value="621">621 - Incorporación Fiscal</option>
+                      <option value="625">625 - Régimen de las Actividades Agrícolas, Ganaderas, Silvícolas y Pesqueras</option>
+                      <option value="626">626 - Régimen Simplificado de Confianza (RESICO)</option>
+                    </select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Código Postal</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="00000"
+                      value={manualCodigoPostal}
+                      onChange={(e) => setManualCodigoPostal(e.target.value)}
+                      className="w-full bg-background border border-card-border rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-nectar-gold text-foreground font-mono"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Email de Envío de Factura</label>
+                  <input
+                    type="email"
+                    required
+                    placeholder="correo@cliente.com"
+                    value={manualEmail}
+                    onChange={(e) => setManualEmail(e.target.value)}
+                    className="w-full bg-background border border-card-border rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-nectar-gold text-foreground"
+                  />
+                </div>
+              </div>
+
+              {/* Conceptos (Items) */}
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <label className="text-[9px] font-black uppercase tracking-widest opacity-50">Conceptos / Ítems de la Factura</label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setManualItems(prev => [...prev, { quantity: 1, unit_price: 0, description: '' }]);
+                    }}
+                    className="text-[8px] font-black text-nectar-gold hover:underline uppercase tracking-widest font-bold"
+                  >
+                    + Agregar Concepto
+                  </button>
+                </div>
+
+                <div className="space-y-3 max-h-[200px] overflow-y-auto pr-2 custom-scrollbar">
+                  {manualItems.map((item, idx) => (
+                    <div key={idx} className="p-4 bg-background border border-card-border/60 rounded-xl space-y-3 relative text-left">
+                      {manualItems.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setManualItems(prev => prev.filter((_, i) => i !== idx));
+                          }}
+                          className="absolute top-2 right-3 text-red-500 hover:text-red-700 text-[8px] font-black uppercase tracking-wider"
+                        >
+                          remover
+                        </button>
+                      )}
+                      
+                      <div className="grid grid-cols-4 gap-2">
+                        <div className="col-span-2 space-y-1">
+                          <label className="text-[7px] font-black uppercase tracking-widest opacity-40">Descripción</label>
+                          <input
+                            type="text"
+                            required
+                            className="w-full px-3 py-1.5 bg-background border border-card-border rounded-lg text-[9px] font-bold text-foreground"
+                            placeholder="ej. Licencia Software o Ajuste de Cotización"
+                            value={item.description}
+                            onChange={(e) => {
+                              const newDesc = e.target.value;
+                              setManualItems(prev => prev.map((it, i) => i === idx ? { ...it, description: newDesc } : it));
+                            }}
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[7px] font-black uppercase tracking-widest opacity-40">Cant.</label>
+                          <input
+                            type="number"
+                            required
+                            min="1"
+                            className="w-full px-3 py-1.5 bg-background border border-card-border rounded-lg text-[9px] font-bold text-center text-foreground font-mono"
+                            value={item.quantity}
+                            onChange={(e) => {
+                              const newQty = parseInt(e.target.value) || 1;
+                              setManualItems(prev => prev.map((it, i) => i === idx ? { ...it, quantity: newQty } : it));
+                            }}
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[7px] font-black uppercase tracking-widest opacity-40">Precio Unit. (MXN)</label>
+                          <input
+                            type="number"
+                            required
+                            min="0.01"
+                            step="0.01"
+                            className="w-full px-3 py-1.5 bg-background border border-card-border rounded-lg text-[9px] font-bold text-right text-foreground font-mono"
+                            placeholder="0.00"
+                            value={item.unit_price || ''}
+                            onChange={(e) => {
+                              const newPrice = parseFloat(e.target.value) || 0;
+                              setManualItems(prev => prev.map((it, i) => i === idx ? { ...it, unit_price: newPrice } : it));
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Totales y Timbrado */}
+              <div className="pt-6 border-t border-card-border/60 flex items-center justify-between text-left">
+                {(() => {
+                  const subtotal = manualItems.reduce((acc, item) => acc + (item.quantity * (item.unit_price || 0)), 0);
+                  const iva = parseFloat((subtotal * 0.16).toFixed(2));
+                  const total = parseFloat((subtotal + iva).toFixed(2));
+
+                  return (
+                    <div className="grid grid-cols-3 gap-6 text-[9px] font-black uppercase tracking-widest">
+                      <div>
+                        <span className="opacity-40 block">Subtotal</span>
+                        <span className="text-xs font-mono font-bold text-foreground/80">${subtotal.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</span>
+                      </div>
+                      <div>
+                        <span className="opacity-40 block">IVA (16%)</span>
+                        <span className="text-xs font-mono font-bold text-foreground/80">${iva.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</span>
+                      </div>
+                      <div>
+                        <span className="text-nectar-gold block">Total Facturado</span>
+                        <span className="text-sm font-mono font-black text-nectar-gold">${total.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN</span>
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                <div className="flex gap-3 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setShowManualInvoiceModal(false)}
+                    className="px-5 py-3 border border-card-border hover:bg-foreground hover:text-background text-[9px] font-black uppercase tracking-widest rounded-xl transition-all"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSubmittingManualInvoice || !selectedTenantId}
+                    className="px-6 py-3 bg-green-600 hover:bg-green-500 text-white text-[9px] font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 disabled:opacity-40 disabled:scale-100 transition-all font-bold shadow-lg shadow-green-950/20"
+                  >
+                    {isSubmittingManualInvoice ? 'Emitiendo y Timbrando...' : 'Timbrar Factura (PAC)'}
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {toast && (
         <Toast

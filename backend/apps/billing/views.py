@@ -270,64 +270,87 @@ class InvoiceViewSet(BillingTenantMixin, viewsets.ModelViewSet):
         # Aislamiento multi-tenant / Seguridad:
         # El usuario debe ser el propietario del contrato del abono, o un administrador del sistema.
         is_system_admin = user.is_staff or getattr(user, 'role', '') == 'ADMIN'
-        if not is_system_admin and installment.contract.user != user:
-            raise PermissionDenied("No tienes permiso para facturar este abono.")
+        if not is_system_admin:
+            if installment.contract.user != user:
+                raise PermissionDenied("No tienes permiso para facturar este abono.")
+            
+            # Si el inquilino configuró facturación manual por admin, el cliente no puede facturar por su cuenta
+            tenant = installment.contract.user.owned_tenants.first()
+            if tenant and tenant.invoicing_mode == 'MANUAL_ADMIN':
+                return Response(
+                    {"error": "La facturación para este portal está configurada como manual por el administrador. Solicita tu factura directamente al administrador."},
+                    status=403
+                )
 
         # Verificar que el abono esté pagado
         if installment.status != PaymentInstallment.Status.PAID:
             return Response({"error": "Solo se pueden facturar abonos que se encuentren en estado 'PAID' (Pagado)."}, status=400)
 
         # Verificar que no tenga ya un UUID de factura
-        if installment.cfdi_uuid:
+        if installment.cfdi_uuid and installment.cfdi_uuid not in ["LCO_PENDING", "FAILED"]:
             return Response({"error": "Este abono ya cuenta con una factura asociada (CFDI)."}, status=400)
 
-        # Resolver el tenant del propietario del contrato
-        tenant = installment.contract.user.owned_tenants.first()
-        if not tenant:
-            return Response({"error": "No se encontró un portal (tenant) asociado al propietario del contrato."}, status=400)
+        from apps.billing.services import issue_invoice_for_installment
+        invoice = issue_invoice_for_installment(installment)
+        if not invoice:
+            return Response({"error": "No se pudo emitir la factura. Verifica que el perfil fiscal esté configurado y tengas timbres suficientes."}, status=400)
 
+        if invoice.status == Invoice.Status.FAILED:
+            return Response({"error": f"Fallo al emitir CFDI en el PAC: {invoice.error_message}"}, status=400)
+
+        return Response(InvoiceSerializer(invoice).data, status=status.HTTP_201_CREATED)
+
+    @action(detail=False, methods=['post'], url_path='issue-custom-manual')
+    def issue_custom_manual(self, request):
+        import uuid
+        user = request.user
+        # Aislamiento/Seguridad: Only platform admin can do this
+        is_system_admin = user.is_staff or getattr(user, 'role', '') == 'ADMIN'
+        if not is_system_admin:
+            raise PermissionDenied("Solo el administrador del sistema puede emitir facturas manuales personalizadas.")
+
+        tenant_id = request.data.get('tenant_id')
+        if not tenant_id:
+            return Response({"error": "El campo 'tenant_id' es obligatorio."}, status=400)
+
+        from apps.tenants.models import Tenant
+        tenant = get_object_or_404(Tenant, id=tenant_id)
         profile = getattr(tenant, 'tax_profile', None)
         if not profile or not profile.facturapi_organization_id:
             return Response(
-                {"error": "El perfil fiscal del portal no está configurado. Por favor, configúralo en la sección de Facturación antes de continuar."},
+                {"error": "El perfil fiscal de este inquilino no está configurado o no tiene sellos en Facturapi."},
                 status=400
             )
+
+        customer_info = request.data.get('customer_info')
+        items = request.data.get('items')
+        total = request.data.get('total')
+
+        if not customer_info or not items or total is None:
+            return Response({"error": "Los campos customer_info, items y total son obligatorios."}, status=400)
+
+        for field in ["rfc", "razon_social", "regimen_fiscal", "codigo_postal", "email"]:
+            if not customer_info.get(field):
+                return Response({"error": f"El campo customer_info.{field} es obligatorio."}, status=400)
 
         # Check stamp balance
         if not tenant.has_available_stamps():
             return Response(
-                {"error": "El portal no cuenta con timbres suficientes en su balance. Adquiere un paquete de timbres para continuar."},
+                {"error": "El inquilino no cuenta con timbres suficientes en su balance."},
                 status=400
             )
 
-        # Crear registro local de factura
         from decimal import Decimal
-        # El total de la factura incrementa un 16% por el IVA
-        invoice_total = (installment.amount * Decimal('1.16')).quantize(Decimal('0.01'))
-
         from apps.billing.models import Invoice
         invoice = Invoice.objects.create(
             tenant=tenant,
-            stripe_invoice_id=installment.stripe_invoice_id or f"manual-{installment.id}",
-            total=invoice_total,
-            is_tenant_to_customer=False,  # Es de Nectar Labs al Tenant
+            stripe_invoice_id=f"manual-custom-{uuid.uuid4().hex[:8]}",
+            total=Decimal(str(total)),
+            is_tenant_to_customer=False,  # Néctar Labs to Tenant
             status=Invoice.Status.PENDING
         )
 
-        customer_info = {
-            "razon_social": installment.contract.user.get_full_name() or installment.contract.user.username,
-            "rfc": profile.rfc,
-            "regimen_fiscal": profile.regimen_fiscal,
-            "codigo_postal": profile.codigo_postal,
-            "email": installment.contract.user.email
-        }
-        
-        items = [{
-            "quantity": 1,
-            "unit_price": float(installment.amount),
-            "description": f"Abono #{installment.installment_number} - Contrato de Ecosistema Digital ({tenant.name})"
-        }]
-
+        from apps.billing.services import get_pac_service, LCOSyncError, PACError
         pac = get_pac_service()
         try:
             res = pac.create_invoice(
@@ -345,20 +368,27 @@ class InvoiceViewSet(BillingTenantMixin, viewsets.ModelViewSet):
             invoice.error_message = None
             invoice.save()
 
-            # Guardar UUID en el abono
-            installment.cfdi_uuid = str(res["uuid_sat"])
-            installment.save(update_fields=['cfdi_uuid'])
-
-            # Consumir timbre
             tenant.consume_stamp()
 
-            # Intentar enviar correo de confirmación de pago
+            # Optional: send receipt email
             try:
-                from apps.shop.utils import send_payment_receipt_email
-                send_payment_receipt_email(installment)
+                from django.core.mail import EmailMultiAlternatives
+                from django.conf import settings
+                subject = f"Tu Factura CFDI de Néctar Labs está lista"
+                text_content = f"Hola, tu factura con UUID {invoice.uuid_sat} ha sido generada y timbrada con éxito."
+                html_content = f"<p>Hola,</p><p>Tu factura de Néctar Labs ha sido generada y timbrada con éxito.</p><p><strong>Folio Fiscal (UUID):</strong> {invoice.uuid_sat}</p><p>Adjunto a este correo encontrarás los archivos XML y PDF correspondientes.</p>"
+                
+                from_email = settings.DEFAULT_FROM_EMAIL
+                msg = EmailMultiAlternatives(subject, text_content, from_email, [customer_info['email']])
+                msg.attach_alternative(html_content, "text/html")
+                if invoice.xml_file:
+                    msg.attach(invoice.xml_file.name, invoice.xml_file.read(), 'text/xml')
+                if invoice.pdf_file:
+                    msg.attach(invoice.pdf_file.name, invoice.pdf_file.read(), 'application/pdf')
+                msg.send()
             except Exception as mail_err:
                 import logging
-                logging.getLogger("apps").error(f"Error al enviar correo de confirmación de CFDI manual: {mail_err}")
+                logging.getLogger("apps").error(f"Error al enviar correo de factura manual: {mail_err}")
 
             return Response(InvoiceSerializer(invoice).data, status=status.HTTP_201_CREATED)
 
@@ -366,9 +396,6 @@ class InvoiceViewSet(BillingTenantMixin, viewsets.ModelViewSet):
             invoice.status = Invoice.Status.LCO_SYNC_PENDING
             invoice.error_message = str(e)
             invoice.save()
-
-            installment.cfdi_uuid = "LCO_PENDING"
-            installment.save(update_fields=['cfdi_uuid'])
 
             tenant.consume_stamp()
             return Response(InvoiceSerializer(invoice).data, status=status.HTTP_202_ACCEPTED)
@@ -378,6 +405,7 @@ class InvoiceViewSet(BillingTenantMixin, viewsets.ModelViewSet):
             invoice.error_message = str(e)
             invoice.save()
             return Response({"error": f"Fallo al emitir CFDI en el PAC: {e}"}, status=400)
+
 
     @action(detail=False, methods=['post'], url_path='issue-to-customer')
     def issue_to_customer(self, request):
