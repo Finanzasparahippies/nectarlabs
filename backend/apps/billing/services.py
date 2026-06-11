@@ -305,8 +305,8 @@ def issue_invoice_for_installment(installment):
         return None
 
     profile = getattr(tenant, 'tax_profile', None)
-    if not profile or not profile.facturapi_organization_id:
-        logger.warning(f"Tenant {tenant.name} has no tax profile or facturapi_organization_id configured.")
+    if not profile:
+        logger.warning(f"Tenant {tenant.name} has no tax profile configured.")
         return None
 
     # El total de la factura incrementa un 16% por el IVA

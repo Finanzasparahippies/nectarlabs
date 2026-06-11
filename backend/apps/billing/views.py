@@ -521,8 +521,11 @@ class InvoiceViewSet(BillingTenantMixin, viewsets.ModelViewSet):
                 return Response({"error": "No tienes timbres suficientes en tu balance para reintentar esta factura."}, status=400)
 
         profile = getattr(tenant, 'tax_profile', None)
-        if not profile or not profile.facturapi_organization_id:
+        if not profile:
             return Response({"error": "No se puede facturar; el perfil fiscal del inquilino no está configurado."}, status=400)
+
+        if not is_parent and not profile.facturapi_organization_id:
+            return Response({"error": "No se puede facturar; la organización del inquilino no está registrada en el PAC."}, status=400)
 
         pac = get_pac_service()
         user = tenant.owner
