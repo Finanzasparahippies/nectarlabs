@@ -259,6 +259,8 @@ class FacturapiPACService(PACServiceBase):
 
 def get_pac_service():
     """Retorna la instancia del PAC service configurado en settings.py"""
+    if getattr(settings, 'TESTING', False):
+        return MockPACService()
     provider = getattr(settings, 'PAC_PROVIDER', 'mock').lower()
     if provider == 'facturapi':
         return FacturapiPACService()

@@ -98,6 +98,8 @@ export default function BusinessCommander({ stats, installments, setInstallments
   const [campaignTitle, setCampaignTitle] = useState('');
   const [campaignContent, setCampaignContent] = useState('');
   const [isSendingCampaign, setIsSendingCampaign] = useState(false);
+  const [blogPosts, setBlogPosts] = useState<any[]>([]);
+  const [selectedPostId, setSelectedPostId] = useState<string>('');
   
   // Kanban states
   const [leads, setLeads] = useState<any[]>([]);
@@ -162,7 +164,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
   useEffect(() => {
     const loadSalesData = async () => {
       try {
-        const [commissionsData, summaryData, promoData, usersData, quotesData, leadsData, contractsData] = await Promise.all([
+        const [commissionsData, summaryData, promoData, usersData, quotesData, leadsData, contractsData, postsData] = await Promise.all([
           fetcher('/sales-commissions/').catch(() => []),
           fetcher('/sales-commissions/summary/').catch(() => null),
           fetcher('/promo-codes/').catch(() => []),
@@ -170,6 +172,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
           fetcher('/quotes/').catch(() => []),
           fetcher('/leads/').catch(() => []),
           fetcher('/contracts/').catch(() => []),
+          fetcher('/posts/', { isPublic: true }).catch(() => []),
         ]);
         setCommissions(Array.isArray(commissionsData) ? commissionsData : []);
         setCommissionSummary(summaryData);
@@ -178,6 +181,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
         setQuotes(Array.isArray(quotesData) ? quotesData : []);
         setLeads(Array.isArray(leadsData) ? leadsData : []);
         setContracts(Array.isArray(contractsData) ? contractsData : []);
+        setBlogPosts(postsData.results || postsData || []);
       } catch (err) {
         console.error('Error loading sales data:', err);
       } finally {
@@ -2419,6 +2423,37 @@ export default function BusinessCommander({ stats, installments, setInstallments
               </span>
               
               <form onSubmit={handleSendCampaign} className="space-y-6 mt-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-4">Importar Post del Blog (Opcional)</label>
+                  <select
+                    value={selectedPostId}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setSelectedPostId(val);
+                      if (val) {
+                        const post = blogPosts.find(p => String(p.id) === val);
+                        if (post) {
+                          setCampaignSubject(`Nuevo Post: ${post.title}`);
+                          setCampaignTitle(post.title);
+                          setCampaignContent(post.content);
+                        }
+                      } else {
+                        setCampaignSubject('');
+                        setCampaignTitle('');
+                        setCampaignContent('');
+                      }
+                    }}
+                    className="w-full px-6 py-4 bg-background border border-card-border rounded-2xl focus:border-nectar-gold outline-none transition-all font-bold text-xs text-foreground"
+                  >
+                    <option value="">-- Redactar en Blanco --</option>
+                    {blogPosts.map((post) => (
+                      <option key={post.id} value={String(post.id)}>
+                        {post.title}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
                 <div className="space-y-2">
                   <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-4">Asunto del Email</label>
                   <input

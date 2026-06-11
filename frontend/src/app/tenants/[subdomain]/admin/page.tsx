@@ -136,6 +136,8 @@ export default function TenantAdminPage() {
   const [campaignTitle, setCampaignTitle] = useState('');
   const [campaignContent, setCampaignContent] = useState('');
   const [isSendingCampaign, setIsSendingCampaign] = useState(false);
+  const [blogPosts, setBlogPosts] = useState<any[]>([]);
+  const [selectedPostId, setSelectedPostId] = useState<string>('');
 
   // Handle URL query parameters for success/cancel redirects
   useEffect(() => {
@@ -368,6 +370,12 @@ export default function TenantAdminPage() {
             setOriginZipCode(fullConfig.shipping_origin_zip_code || '');
           } catch (err) {
             console.error('Error loading full tenant config:', err);
+          }
+          try {
+            const postsData = await fetcher('/posts/', { isPublic: true });
+            setBlogPosts(postsData.results || postsData || []);
+          } catch (postErr) {
+            console.error('Error fetching blog posts for campaigner:', postErr);
           }
         } else {
           setAuthorized(false);
@@ -1756,6 +1764,37 @@ export default function TenantAdminPage() {
             </div>
             
             <form onSubmit={handleSendCampaign} className="space-y-3">
+              <div className="space-y-1">
+                <label className="text-[7.5px] uppercase tracking-wider font-black text-white/50 block">Importar Post del Blog (Opcional)</label>
+                <select
+                  value={selectedPostId}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setSelectedPostId(val);
+                    if (val) {
+                      const post = blogPosts.find(p => String(p.id) === val);
+                      if (post) {
+                        setCampaignSubject(`Nuevo Post: ${post.title}`);
+                        setCampaignTitle(post.title);
+                        setCampaignContent(post.content);
+                      }
+                    } else {
+                      setCampaignSubject('');
+                      setCampaignTitle('');
+                      setCampaignContent('');
+                    }
+                  }}
+                  className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input"
+                >
+                  <option value="">-- Redactar en Blanco --</option>
+                  {blogPosts.map((post) => (
+                    <option key={post.id} value={String(post.id)}>
+                      {post.title}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               <div className="space-y-1">
                 <label className="text-[7.5px] uppercase tracking-wider font-black text-white/50 block">Asunto del Correo (Subject)</label>
                 <input
