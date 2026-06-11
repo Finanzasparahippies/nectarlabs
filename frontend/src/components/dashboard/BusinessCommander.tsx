@@ -54,7 +54,7 @@ interface Financials {
 }
 
 interface BillingItem {
-  id: number;
+  id: number | string;
   client?: string;
   provider?: string;
   plan?: string;
