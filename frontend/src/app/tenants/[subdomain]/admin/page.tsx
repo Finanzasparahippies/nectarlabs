@@ -6,6 +6,7 @@ import { fetcher } from '@/lib/api';
 import Toast from '@/components/ui/Toast';
 import ThemeToggle from '@/components/ThemeToggle';
 import ConfirmModal from '@/components/ui/ConfirmModal';
+import SATAutocomplete from '@/components/ui/SATAutocomplete';
 
 interface TenantConfig {
   id: string;
@@ -108,8 +109,8 @@ export default function TenantAdminPage() {
   const [manualRegimenFiscal, setManualRegimenFiscal] = useState('601');
   const [manualCodigoPostal, setManualCodigoPostal] = useState('');
   const [manualEmail, setManualEmail] = useState('');
-  const [manualItems, setManualItems] = useState<Array<{ quantity: number; unit_price: number; description: string }>>([
-    { quantity: 1, unit_price: 0, description: '' }
+  const [manualItems, setManualItems] = useState<Array<{ quantity: number; unit_price: number; description: string; product_key: string; unit_key: string; unit_name: string }>>([
+    { quantity: 1, unit_price: 0, description: '', product_key: '43231500', unit_key: 'E48', unit_name: 'Unidad de servicio' }
   ]);
   const [isSubmittingManualInvoice, setIsSubmittingManualInvoice] = useState(false);
 
@@ -144,6 +145,9 @@ export default function TenantAdminPage() {
   const [cerFile, setCerFile] = useState<File | null>(null);
   const [keyFile, setKeyFile] = useState<File | null>(null);
   const [privateKeyPassword, setPrivateKeyPassword] = useState('');
+  const [defaultProductKey, setDefaultProductKey] = useState('43231500');
+  const [defaultUnitKey, setDefaultUnitKey] = useState('E48');
+  const [defaultUnitName, setDefaultUnitName] = useState('Unidad de servicio');
 
   // Integrations state
   const [smtpHost, setSmtpHost] = useState('');
@@ -234,6 +238,9 @@ export default function TenantAdminPage() {
           setRazonSocial(info.tax_profile.razon_social || '');
           setRegimenFiscal(info.tax_profile.regimen_fiscal || '601');
           setCodigoPostal(info.tax_profile.codigo_postal || '');
+          setDefaultProductKey(info.tax_profile.default_product_key || '43231500');
+          setDefaultUnitKey(info.tax_profile.default_unit_key || 'E48');
+          setDefaultUnitName(info.tax_profile.default_unit_name || 'Unidad de servicio');
         }
       } catch (err: any) {
         console.error('Error fetching billing info:', err);
@@ -289,6 +296,10 @@ export default function TenantAdminPage() {
       formData.append('razon_social', razonSocial.trim());
       formData.append('regimen_fiscal', regimenFiscal);
       formData.append('codigo_postal', codigoPostal.trim());
+
+      formData.append('default_product_key', defaultProductKey);
+      formData.append('default_unit_key', defaultUnitKey);
+      formData.append('default_unit_name', defaultUnitName);
 
       if (cerFile && keyFile && privateKeyPassword) {
         formData.append('cer_file', cerFile);
@@ -404,6 +415,14 @@ export default function TenantAdminPage() {
         showToast('Todos los conceptos deben tener descripción, cantidad y precio válido.', 'warning');
         return;
       }
+      if (!item.product_key) {
+        showToast('Debes seleccionar una clave de producto SAT para cada concepto.', 'warning');
+        return;
+      }
+      if (!item.unit_key) {
+        showToast('Debes seleccionar una clave de unidad SAT para cada concepto.', 'warning');
+        return;
+      }
     }
 
     const subtotal = manualItems.reduce((acc, item) => acc + (item.quantity * item.unit_price), 0);
@@ -424,7 +443,14 @@ export default function TenantAdminPage() {
             codigo_postal: manualCodigoPostal.trim(),
             email: manualEmail.trim()
           },
-          items: manualItems,
+          items: manualItems.map(it => ({
+            quantity: it.quantity,
+            unit_price: it.unit_price,
+            description: it.description,
+            product_key: it.product_key,
+            unit_key: it.unit_key,
+            unit_name: it.unit_name
+          })),
           total: total
         })
       });
@@ -437,7 +463,14 @@ export default function TenantAdminPage() {
       setManualRegimenFiscal('601');
       setManualCodigoPostal('');
       setManualEmail('');
-      setManualItems([{ quantity: 1, unit_price: 0, description: '' }]);
+      setManualItems([{
+        quantity: 1,
+        unit_price: 0,
+        description: '',
+        product_key: taxProfile?.default_product_key || '43231500',
+        unit_key: taxProfile?.default_unit_key || 'E48',
+        unit_name: taxProfile?.default_unit_name || 'Unidad de servicio'
+      }]);
 
       loadBillingData();
     } catch (err: any) {
@@ -1526,6 +1559,54 @@ export default function TenantAdminPage() {
                       </select>
                     </div>
 
+                    {/* Conceptos por Defecto para Facturas */}
+                    <div className="space-y-4 border-t border-white/5 pt-4 mt-4">
+                      <div>
+                        <h4 className="text-[9px] font-black uppercase tracking-wide text-white">Conceptos por Defecto</h4>
+                        <p className="text-[7px] text-white/40 leading-relaxed mt-1">
+                          Define la clave de producto y unidad SAT preseleccionadas automáticamente para tus facturas manuales.
+                        </p>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-[8px] uppercase tracking-wider font-black text-white/50 block">Producto / Servicio SAT por Defecto</label>
+                        <SATAutocomplete
+                          mode="product"
+                          value={defaultProductKey}
+                          onChange={(code) => setDefaultProductKey(code)}
+                          primaryColor={primaryColor}
+                          placeholder="Buscar clave de producto..."
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                          <label className="text-[8px] uppercase tracking-wider font-black text-white/50 block">Clave Unidad SAT por Defecto</label>
+                          <SATAutocomplete
+                            mode="unit"
+                            value={defaultUnitKey}
+                            onChange={(code, name) => {
+                              setDefaultUnitKey(code);
+                              if (name) setDefaultUnitName(name);
+                            }}
+                            primaryColor={primaryColor}
+                            placeholder="Buscar clave de unidad..."
+                          />
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <label className="text-[8px] uppercase tracking-wider font-black text-white/50 block">Nombre Unidad por Defecto</label>
+                          <input
+                            type="text"
+                            value={defaultUnitName}
+                            onChange={(e) => setDefaultUnitName(e.target.value)}
+                            placeholder="Ej. Unidad de servicio"
+                            className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input font-bold"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
                     <div className="border-t border-white/5 pt-4 mt-6 space-y-4">
                       <div>
                         <h4 className="text-[9px] font-black uppercase tracking-wide text-white">Certificados de Sello Digital (CSD)</h4>
@@ -1596,7 +1677,14 @@ export default function TenantAdminPage() {
                           setManualRegimenFiscal('601');
                           setManualCodigoPostal('');
                           setManualEmail('');
-                          setManualItems([{ quantity: 1, unit_price: 0, description: '' }]);
+                          setManualItems([{
+                            quantity: 1,
+                            unit_price: 0,
+                            description: '',
+                            product_key: taxProfile?.default_product_key || '43231500',
+                            unit_key: taxProfile?.default_unit_key || 'E48',
+                            unit_name: taxProfile?.default_unit_name || 'Unidad de servicio'
+                          }]);
                           setShowManualInvoiceModal(true);
                         }}
                         className="px-3 py-1.5 bg-nectar-gold text-background hover:bg-nectar-gold/90 border border-nectar-gold/20 rounded-lg text-[8px] font-black uppercase tracking-wider transition-all cursor-pointer font-bold"
@@ -2563,7 +2651,14 @@ export default function TenantAdminPage() {
                   <button
                     type="button"
                     onClick={() => {
-                      setManualItems(prev => [...prev, { quantity: 1, unit_price: 0, description: '' }]);
+                      setManualItems(prev => [...prev, {
+                        quantity: 1,
+                        unit_price: 0,
+                        description: '',
+                        product_key: taxProfile?.default_product_key || '43231500',
+                        unit_key: taxProfile?.default_unit_key || 'E48',
+                        unit_name: taxProfile?.default_unit_name || 'Unidad de servicio'
+                      }]);
                     }}
                     className="text-[8px] font-black text-nectar-gold hover:underline uppercase tracking-widest font-bold cursor-pointer"
                   >
@@ -2628,6 +2723,47 @@ export default function TenantAdminPage() {
                             onChange={(e) => {
                               const newPrice = parseFloat(e.target.value) || 0;
                               setManualItems(prev => prev.map((it, i) => i === idx ? { ...it, unit_price: newPrice } : it));
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 border-t border-white/5 pt-3 mt-2">
+                        <div className="space-y-1">
+                          <label className="text-[7px] font-black uppercase tracking-widest opacity-40 block">Clave Producto SAT</label>
+                          <SATAutocomplete
+                            mode="product"
+                            value={item.product_key}
+                            onChange={(code) => {
+                              setManualItems(prev => prev.map((it, i) => i === idx ? { ...it, product_key: code } : it));
+                            }}
+                            primaryColor={primaryColor}
+                            placeholder="Buscar producto..."
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[7px] font-black uppercase tracking-widest opacity-40 block">Clave Unidad SAT</label>
+                          <SATAutocomplete
+                            mode="unit"
+                            value={item.unit_key}
+                            onChange={(code, name) => {
+                              setManualItems(prev => prev.map((it, i) => i === idx ? { ...it, unit_key: code, unit_name: name || it.unit_name } : it));
+                            }}
+                            primaryColor={primaryColor}
+                            placeholder="Buscar unidad..."
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[7px] font-black uppercase tracking-widest opacity-40 block">Nombre Unidad</label>
+                          <input
+                            type="text"
+                            required
+                            className="w-full px-3 py-1.5 bg-background border border-white/10 rounded-lg text-[9px] font-bold text-foreground admin-input font-mono"
+                            placeholder="ej. Unidad de servicio"
+                            value={item.unit_name}
+                            onChange={(e) => {
+                              const newName = e.target.value;
+                              setManualItems(prev => prev.map((it, i) => i === idx ? { ...it, unit_name: newName } : it));
                             }}
                           />
                         </div>
