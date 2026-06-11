@@ -1191,6 +1191,16 @@ export default function BusinessCommander({ stats, installments, setInstallments
           </div>
         )}
 
+        {contract.addons_details && contract.addons_details.length > 0 && (
+          <div className="flex flex-wrap gap-1 mt-0.5">
+            {contract.addons_details.map((addon: any) => (
+              <span key={addon.id} className="px-2 py-0.5 bg-background/50 border border-card-border/50 rounded-lg text-[7.5px] font-black uppercase tracking-wider text-nectar-gold" title={addon.description}>
+                + {addon.name}
+              </span>
+            ))}
+          </div>
+        )}
+
         <p className="text-[9.5px] text-foreground/60 line-clamp-2 leading-relaxed bg-background/30 p-2 rounded-lg border border-card-border/30 font-medium">
           {contract.project_idea || contract.project_quote?.project_name || 'Desarrollo de Software'}
         </p>
