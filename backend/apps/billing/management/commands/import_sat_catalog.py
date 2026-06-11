@@ -37,9 +37,11 @@ class Command(BaseCommand):
             return
 
         # 1. Process Product/Service keys
+        self.stdout.write("Cleaning existing products...")
+        SATProductKey.objects.all().delete()
         self.stdout.write("Parsing Product/Service keys...")
         products_to_create = []
-        existing_products = set(SATProductKey.objects.values_list('code', flat=True))
+        existing_products = set()
 
         for idx, row in df_prod.iterrows():
             code_val = str(row.iloc[0]).strip()
@@ -75,9 +77,11 @@ class Command(BaseCommand):
             self.stdout.write(f"Saved chunk {i // chunk_size + 1}")
 
         # 2. Process Unit keys
+        self.stdout.write("Cleaning existing units...")
+        SATUnitKey.objects.all().delete()
         self.stdout.write("Parsing Unit keys...")
         units_to_create = []
-        existing_units = set(SATUnitKey.objects.values_list('code', flat=True))
+        existing_units = set()
 
         for idx, row in df_unit.iterrows():
             code_val = str(row.iloc[0]).strip()
