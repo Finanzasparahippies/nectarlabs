@@ -2,6 +2,19 @@ from django.db import models
 from django.conf import settings
 from apps.tenants.models import Tenant
 
+from django.core.files.storage import default_storage
+
+# Determine storage class dynamically to allow local/test overrides
+if getattr(settings, 'TESTING', False):
+    from django.core.files.storage import FileSystemStorage
+    cfdi_storage = FileSystemStorage()
+else:
+    try:
+        from cloudinary_storage.storage import RawMediaCloudinaryStorage
+        cfdi_storage = RawMediaCloudinaryStorage()
+    except ImportError:
+        cfdi_storage = default_storage
+
 class TaxProfile(models.Model):
     """
     Información fiscal única de cada negocio (inquilino) delegada en el PAC (Facturapi)
@@ -55,8 +68,8 @@ class Invoice(models.Model):
     )
     
     # Archivos del CFDI guardados
-    xml_file = models.FileField(upload_to='invoices/xml/', blank=True, null=True, verbose_name="Archivo XML CFDI")
-    pdf_file = models.FileField(upload_to='invoices/pdf/', blank=True, null=True, verbose_name="Representación Impresa PDF")
+    xml_file = models.FileField(upload_to='invoices/xml/', storage=cfdi_storage, blank=True, null=True, verbose_name="Archivo XML CFDI")
+    pdf_file = models.FileField(upload_to='invoices/pdf/', storage=cfdi_storage, blank=True, null=True, verbose_name="Representación Impresa PDF")
     
     # Detalles de error (LCO, errores de validación)
     error_message = models.TextField(blank=True, null=True, verbose_name="Detalles de Error")

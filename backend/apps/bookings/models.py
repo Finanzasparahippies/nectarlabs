@@ -1,4 +1,17 @@
 from django.db import models
+from django.conf import settings
+from django.core.files.storage import default_storage
+
+# Determine storage class dynamically to allow local/test overrides
+if getattr(settings, 'TESTING', False):
+    from django.core.files.storage import FileSystemStorage
+    raw_storage = FileSystemStorage()
+else:
+    try:
+        from cloudinary_storage.storage import RawMediaCloudinaryStorage
+        raw_storage = RawMediaCloudinaryStorage()
+    except ImportError:
+        raw_storage = default_storage
 
 class BookingConfig(models.Model):
     tenant = models.OneToOneField('tenants.Tenant', on_delete=models.CASCADE, related_name='booking_config')
@@ -74,7 +87,7 @@ class BookingContract(models.Model):
     manager_signed_at = models.DateTimeField(null=True, blank=True)
     is_fully_signed = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
-    pdf_file = models.FileField(upload_to='contracts/', null=True, blank=True)
+    pdf_file = models.FileField(upload_to='contracts/', storage=raw_storage, null=True, blank=True)
 
     def __str__(self):
         return f"Contrato de Booking - {self.inquiry.name} ({self.inquiry.date})"

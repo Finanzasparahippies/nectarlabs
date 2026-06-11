@@ -4,6 +4,18 @@ from django.conf import settings
 from django.utils import timezone
 from django.utils.text import slugify
 from .storage import R2ContractStorage
+from django.core.files.storage import default_storage
+
+# Determine storage class dynamically to allow local/test overrides
+if getattr(settings, 'TESTING', False):
+    from django.core.files.storage import FileSystemStorage
+    raw_storage = FileSystemStorage()
+else:
+    try:
+        from cloudinary_storage.storage import RawMediaCloudinaryStorage
+        raw_storage = RawMediaCloudinaryStorage()
+    except ImportError:
+        raw_storage = default_storage
 
 def contract_pdf_path(instance, filename):
     # Organizar por Año / Mes / Cliente / NombreArchivo
@@ -317,7 +329,7 @@ class PaymentInstallment(models.Model):
     
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
     payment_method = models.CharField(max_length=50, blank=True, null=True, help_text="Método usado para este pago")
-    receipt_file = models.FileField(upload_to='receipts/%Y/%m/', blank=True, null=True, help_text="Comprobante de SPEI/Depósito subido por cliente")
+    receipt_file = models.FileField(upload_to='receipts/%Y/%m/', storage=raw_storage, blank=True, null=True, help_text="Comprobante de SPEI/Depósito subido por cliente")
     stripe_invoice_id = models.CharField(max_length=150, blank=True, null=True)
     cfdi_uuid = models.CharField(max_length=100, blank=True, null=True, help_text="Folio Fiscal / UUID CFDI del SAT")
     paid_at = models.DateTimeField(blank=True, null=True)
