@@ -892,412 +892,412 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
                   type="button"
                   onClick={() => setManageAddon(null)}
                   className="px-8 py-3.5 text-xs font-black uppercase tracking-widest bg-nectar-gold text-background hover:scale-[1.02] active:scale-95 rounded-xl text-center shadow-lg transition-all"
-
+                >
                   {/* Modal: View Details / Ficha Técnica */}
                   {
-          selectedAddon && (
-                    <div
-                      onClick={() => setSelectedAddon(null)}
-                      className="fixed inset-0 bg-background/80 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-premium cursor-pointer"
-                    >
+                    selectedAddon && (
                       <div
-                        onClick={(e) => e.stopPropagation()}
-                        className="bg-card-bg border border-card-border w-full max-w-2xl rounded-[3rem] p-8 md:p-12 shadow-2xl relative max-h-[90vh] overflow-y-auto cursor-default"
+                        onClick={() => setSelectedAddon(null)}
+                        className="fixed inset-0 bg-background/80 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-premium cursor-pointer"
                       >
-                        {/* Close Button */}
-                        <button
-                          onClick={() => setSelectedAddon(null)}
-                          className="absolute top-6 right-6 w-10 h-10 bg-foreground/5 hover:bg-foreground/10 text-foreground/60 hover:text-foreground rounded-full flex items-center justify-center text-lg font-bold transition-all"
+                        <div
+                          onClick={(e) => e.stopPropagation()}
+                          className="bg-card-bg border border-card-border w-full max-w-2xl rounded-[3rem] p-8 md:p-12 shadow-2xl relative max-h-[90vh] overflow-y-auto cursor-default"
                         >
-                          ✕
-                        </button>
-
-                        <div className="flex items-center gap-4 mb-6">
-                          <div className="p-4 bg-nectar-gold/10 rounded-2xl">
-                            {selectedAddon.icon}
-                          </div>
-                          <div>
-                            <span className="text-[8px] font-black uppercase tracking-widest text-nectar-gold block mb-1">
-                              Ficha Técnica de Add-on
-                            </span>
-                            <h2 className="text-3xl font-black tracking-tight">{selectedAddon.name}</h2>
-                          </div>
-                        </div>
-
-                        <p className="text-xs text-muted mb-8 leading-relaxed">
-                          {selectedAddon.detailedDescription}
-                        </p>
-
-                        <div className="space-y-6 border-t border-card-border pt-8 mb-8">
-                          <div>
-                            <h4 className="text-[10px] font-black uppercase tracking-widest text-nectar-gold mb-3">
-                              Funcionalidades Clave
-                            </h4>
-                            <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                              {selectedAddon.technicalDetails.map((detail, idx) => (
-                                <li key={idx} className="flex items-center gap-2.5 text-xs text-foreground/80">
-                                  <span className="w-1.5 h-1.5 bg-nectar-gold rounded-full shrink-0"></span>
-                                  {detail}
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 border-t border-card-border/50 pt-6">
-                            <div>
-                              <h4 className="text-[10px] font-black uppercase tracking-widest text-nectar-gold mb-2">
-                                Origen en el Ecosistema
-                              </h4>
-                              <p className="text-xs font-mono bg-background/50 border border-card-border/80 p-3.5 rounded-xl truncate text-foreground/80" title={selectedAddon.sourceReference}>
-                                {selectedAddon.sourceReference}
-                              </p>
-                            </div>
-                            <div>
-                              <h4 className="text-[10px] font-black uppercase tracking-widest text-nectar-gold mb-2">
-                                Requerimientos de Infraestructura
-                              </h4>
-                              <p className="text-xs text-foreground/80 leading-relaxed">
-                                {selectedAddon.serverRequirements}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="flex gap-4">
-                          {isStaff ? (
-                            <button
-                              onClick={() => {
-                                setManageAddon(selectedAddon);
-                                setSelectedAddon(null);
-                              }}
-                              className="flex-1 py-4 text-xs font-black uppercase tracking-widest bg-nectar-gold text-background hover:scale-[1.02] active:scale-95 transition-all rounded-xl text-center shadow-lg"
-                            >
-                              Asignar este Add-on a Cliente
-                            </button>
-                          ) : (
-                            <button
-                              onClick={() => {
-                                setRequestAddon(selectedAddon);
-                                setSelectedAddon(null);
-                              }}
-                              className="flex-1 py-4 text-xs font-black uppercase tracking-widest bg-nectar-gold text-background hover:scale-[1.02] active:scale-95 transition-all rounded-xl text-center shadow-lg"
-                            >
-                              {hasPlanContract
-                                ? `Solicitar este Add-on Gratis (Incluido en tu Plan)`
-                                : `Solicitar este Add-on ($${billingCycle === 'monthly' ? selectedAddon.monthlyPrice.toLocaleString('es-MX') : selectedAddon.yearlyPrice.toLocaleString('es-MX')} MXN)`}
-                            </button>
-                          )}
+                          {/* Close Button */}
                           <button
                             onClick={() => setSelectedAddon(null)}
-                            className="px-8 py-4 text-xs font-black uppercase tracking-widest hover:bg-foreground/5 rounded-xl border border-card-border text-center transition-all"
+                            className="absolute top-6 right-6 w-10 h-10 bg-foreground/5 hover:bg-foreground/10 text-foreground/60 hover:text-foreground rounded-full flex items-center justify-center text-lg font-bold transition-all"
                           >
-                            Cerrar
+                            ✕
                           </button>
+
+                          <div className="flex items-center gap-4 mb-6">
+                            <div className="p-4 bg-nectar-gold/10 rounded-2xl">
+                              {selectedAddon.icon}
+                            </div>
+                            <div>
+                              <span className="text-[8px] font-black uppercase tracking-widest text-nectar-gold block mb-1">
+                                Ficha Técnica de Add-on
+                              </span>
+                              <h2 className="text-3xl font-black tracking-tight">{selectedAddon.name}</h2>
+                            </div>
+                          </div>
+
+                          <p className="text-xs text-muted mb-8 leading-relaxed">
+                            {selectedAddon.detailedDescription}
+                          </p>
+
+                          <div className="space-y-6 border-t border-card-border pt-8 mb-8">
+                            <div>
+                              <h4 className="text-[10px] font-black uppercase tracking-widest text-nectar-gold mb-3">
+                                Funcionalidades Clave
+                              </h4>
+                              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                {selectedAddon.technicalDetails.map((detail, idx) => (
+                                  <li key={idx} className="flex items-center gap-2.5 text-xs text-foreground/80">
+                                    <span className="w-1.5 h-1.5 bg-nectar-gold rounded-full shrink-0"></span>
+                                    {detail}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 border-t border-card-border/50 pt-6">
+                              <div>
+                                <h4 className="text-[10px] font-black uppercase tracking-widest text-nectar-gold mb-2">
+                                  Origen en el Ecosistema
+                                </h4>
+                                <p className="text-xs font-mono bg-background/50 border border-card-border/80 p-3.5 rounded-xl truncate text-foreground/80" title={selectedAddon.sourceReference}>
+                                  {selectedAddon.sourceReference}
+                                </p>
+                              </div>
+                              <div>
+                                <h4 className="text-[10px] font-black uppercase tracking-widest text-nectar-gold mb-2">
+                                  Requerimientos de Infraestructura
+                                </h4>
+                                <p className="text-xs text-foreground/80 leading-relaxed">
+                                  {selectedAddon.serverRequirements}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex gap-4">
+                            {isStaff ? (
+                              <button
+                                onClick={() => {
+                                  setManageAddon(selectedAddon);
+                                  setSelectedAddon(null);
+                                }}
+                                className="flex-1 py-4 text-xs font-black uppercase tracking-widest bg-nectar-gold text-background hover:scale-[1.02] active:scale-95 transition-all rounded-xl text-center shadow-lg"
+                              >
+                                Asignar este Add-on a Cliente
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() => {
+                                  setRequestAddon(selectedAddon);
+                                  setSelectedAddon(null);
+                                }}
+                                className="flex-1 py-4 text-xs font-black uppercase tracking-widest bg-nectar-gold text-background hover:scale-[1.02] active:scale-95 transition-all rounded-xl text-center shadow-lg"
+                              >
+                                {hasPlanContract
+                                  ? `Solicitar este Add-on Gratis (Incluido en tu Plan)`
+                                  : `Solicitar este Add-on ($${billingCycle === 'monthly' ? selectedAddon.monthlyPrice.toLocaleString('es-MX') : selectedAddon.yearlyPrice.toLocaleString('es-MX')} MXN)`}
+                              </button>
+                            )}
+                            <button
+                              onClick={() => setSelectedAddon(null)}
+                              className="px-8 py-4 text-xs font-black uppercase tracking-widest hover:bg-foreground/5 rounded-xl border border-card-border text-center transition-all"
+                            >
+                              Cerrar
+                            </button>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  )
+                    )
                   }
 
                   {/* Modal: Request / Solicitar Integración Form */}
                   {
-          requestAddon && (
-                    <div
-                      onClick={() => setRequestAddon(null)}
-                      className="fixed inset-0 bg-background/80 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-premium cursor-pointer"
-                    >
+                    requestAddon && (
                       <div
-                        onClick={(e) => e.stopPropagation()}
-                        className="bg-card-bg border border-card-border w-full max-w-xl rounded-[3rem] p-8 md:p-12 shadow-2xl relative max-h-[90vh] overflow-y-auto cursor-default"
+                        onClick={() => setRequestAddon(null)}
+                        className="fixed inset-0 bg-background/80 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-premium cursor-pointer"
                       >
-                        <button
-                          onClick={() => setRequestAddon(null)}
-                          className="absolute top-6 right-6 w-10 h-10 bg-foreground/5 hover:bg-foreground/10 text-foreground/60 hover:text-foreground rounded-full flex items-center justify-center text-lg font-bold transition-all"
+                        <div
+                          onClick={(e) => e.stopPropagation()}
+                          className="bg-card-bg border border-card-border w-full max-w-xl rounded-[3rem] p-8 md:p-12 shadow-2xl relative max-h-[90vh] overflow-y-auto cursor-default"
                         >
-                          ✕
-                        </button>
+                          <button
+                            onClick={() => setRequestAddon(null)}
+                            className="absolute top-6 right-6 w-10 h-10 bg-foreground/5 hover:bg-foreground/10 text-foreground/60 hover:text-foreground rounded-full flex items-center justify-center text-lg font-bold transition-all"
+                          >
+                            ✕
+                          </button>
 
-                        <div className="mb-8">
-                          <span className="text-[8px] font-black uppercase tracking-widest text-nectar-gold block mb-1">
-                            Nueva Solicitud de Integración
-                          </span>
-                          <h2 className="text-3xl font-black tracking-tight mb-2">Configurar {requestAddon.name}</h2>
-                          <p className="text-xs text-muted leading-relaxed">
-                            {hasPlanContract
-                              ? 'Como cliente con plan activo, estás solicitando este módulo gratis. Se creará un ticket de alta prioridad en Soporte y las horas se deducirán de tu plan.'
-                              : 'Estás solicitando la adición del módulo en tu plan de servicio. Esto creará un ticket en tu panel de Soporte para coordinar la implementación y facturación.'}
-                          </p>
-                        </div>
-
-                        <form onSubmit={handleRequestIntegration} className="space-y-6">
-                          <div className="bg-background/50 border border-card-border p-6 rounded-2xl flex justify-between items-center">
-                            <div>
-                              <span className="text-[8px] font-bold opacity-50 uppercase tracking-widest text-muted block mb-0.5">Módulo Seleccionado</span>
-                              <span className="font-bold text-sm text-foreground">{requestAddon.name}</span>
-                            </div>
-                            <div className="text-right">
-                              <span className="text-[8px] font-bold opacity-50 uppercase tracking-widest text-muted block mb-0.5">Precio de Integración</span>
-                              {hasPlanContract ? (
-                                <span className="font-black text-lg text-nectar-gold text-right">
-                                  $0 MXN
-                                  <span className="text-[9px] font-bold text-muted opacity-60 block">
-                                    Incluido en tu Plan
-                                  </span>
-                                </span>
-                              ) : (
-                                <span className="font-black text-lg text-nectar-gold text-right">
-                                  ${billingCycle === 'monthly' ? requestAddon.monthlyPrice.toLocaleString('es-MX') : requestAddon.yearlyPrice.toLocaleString('es-MX')} MXN
-                                  <span className="text-[9px] font-bold text-muted opacity-60 block">
-                                    / {billingCycle === 'monthly' ? 'mes' : 'año'}
-                                  </span>
-                                </span>
-                              )}
-                            </div>
+                          <div className="mb-8">
+                            <span className="text-[8px] font-black uppercase tracking-widest text-nectar-gold block mb-1">
+                              Nueva Solicitud de Integración
+                            </span>
+                            <h2 className="text-3xl font-black tracking-tight mb-2">Configurar {requestAddon.name}</h2>
+                            <p className="text-xs text-muted leading-relaxed">
+                              {hasPlanContract
+                                ? 'Como cliente con plan activo, estás solicitando este módulo gratis. Se creará un ticket de alta prioridad en Soporte y las horas se deducirán de tu plan.'
+                                : 'Estás solicitando la adición del módulo en tu plan de servicio. Esto creará un ticket en tu panel de Soporte para coordinar la implementación y facturación.'}
+                            </p>
                           </div>
 
-                          <div className="space-y-4 border-t border-card-border/50 pt-4">
-                            <label className="text-[10px] font-black uppercase tracking-widest text-nectar-gold block">
-                              Portal de Destino
-                            </label>
-
-                            {tenants.length > 0 && (
-                              <div className="space-y-2">
-                                <span className="text-[8px] font-bold opacity-50 uppercase tracking-widest text-muted block">
-                                  Selecciona tu Portal
-                                </span>
-                                <select
-                                  value={selectedTenantId}
-                                  onChange={(e) => {
-                                    setSelectedTenantId(e.target.value);
-                                    setTenantErrorMsg(null);
-                                  }}
-                                  className="w-full bg-background/50 border border-card-border focus:border-nectar-gold/60 outline-none rounded-2xl p-4 text-xs text-foreground transition-colors"
-                                >
-                                  {tenants.map(t => (
-                                    <option key={t.id} value={t.id}>
-                                      {t.name} ({t.subdomain}.nectarlabs.dev)
-                                    </option>
-                                  ))}
-                                  <option value="new">+ Registrar un nuevo portal...</option>
-                                </select>
+                          <form onSubmit={handleRequestIntegration} className="space-y-6">
+                            <div className="bg-background/50 border border-card-border p-6 rounded-2xl flex justify-between items-center">
+                              <div>
+                                <span className="text-[8px] font-bold opacity-50 uppercase tracking-widest text-muted block mb-0.5">Módulo Seleccionado</span>
+                                <span className="font-bold text-sm text-foreground">{requestAddon.name}</span>
                               </div>
-                            )}
+                              <div className="text-right">
+                                <span className="text-[8px] font-bold opacity-50 uppercase tracking-widest text-muted block mb-0.5">Precio de Integración</span>
+                                {hasPlanContract ? (
+                                  <span className="font-black text-lg text-nectar-gold text-right">
+                                    $0 MXN
+                                    <span className="text-[9px] font-bold text-muted opacity-60 block">
+                                      Incluido en tu Plan
+                                    </span>
+                                  </span>
+                                ) : (
+                                  <span className="font-black text-lg text-nectar-gold text-right">
+                                    ${billingCycle === 'monthly' ? requestAddon.monthlyPrice.toLocaleString('es-MX') : requestAddon.yearlyPrice.toLocaleString('es-MX')} MXN
+                                    <span className="text-[9px] font-bold text-muted opacity-60 block">
+                                      / {billingCycle === 'monthly' ? 'mes' : 'año'}
+                                    </span>
+                                  </span>
+                                )}
+                              </div>
+                            </div>
 
-                            {selectedTenantId === 'new' && (
-                              <div className="space-y-4 bg-foreground/[0.02] border border-card-border p-5 rounded-2xl animate-premium">
-                                <span className="text-[8px] font-black text-nectar-gold uppercase tracking-widest block mb-2">
-                                  Configurar Nuevo Portal
-                                </span>
+                            <div className="space-y-4 border-t border-card-border/50 pt-4">
+                              <label className="text-[10px] font-black uppercase tracking-widest text-nectar-gold block">
+                                Portal de Destino
+                              </label>
 
+                              {tenants.length > 0 && (
                                 <div className="space-y-2">
-                                  <label htmlFor="newTenantName" className="text-[8px] font-bold opacity-50 uppercase tracking-widest text-muted block">
-                                    Nombre del Portal / Empresa
-                                  </label>
-                                  <input
-                                    id="newTenantName"
-                                    type="text"
-                                    value={newTenantName}
-                                    onChange={(e) => setNewTenantName(e.target.value)}
-                                    placeholder="Ej: Mi Empresa S.A."
+                                  <span className="text-[8px] font-bold opacity-50 uppercase tracking-widest text-muted block">
+                                    Selecciona tu Portal
+                                  </span>
+                                  <select
+                                    value={selectedTenantId}
+                                    onChange={(e) => {
+                                      setSelectedTenantId(e.target.value);
+                                      setTenantErrorMsg(null);
+                                    }}
                                     className="w-full bg-background/50 border border-card-border focus:border-nectar-gold/60 outline-none rounded-2xl p-4 text-xs text-foreground transition-colors"
-                                  />
+                                  >
+                                    {tenants.map(t => (
+                                      <option key={t.id} value={t.id}>
+                                        {t.name} ({t.subdomain}.nectarlabs.dev)
+                                      </option>
+                                    ))}
+                                    <option value="new">+ Registrar un nuevo portal...</option>
+                                  </select>
                                 </div>
-
-                                <div className="space-y-2">
-                                  <label htmlFor="newTenantSubdomain" className="text-[8px] font-bold opacity-50 uppercase tracking-widest text-muted block">
-                                    Sufijo / Subdominio
-                                  </label>
-                                  <div className="flex items-center gap-2 bg-background/50 border border-card-border focus-within:border-nectar-gold/60 rounded-2xl px-4 py-3.5 transition-colors">
-                                    <input
-                                      id="newTenantSubdomain"
-                                      type="text"
-                                      value={newTenantSubdomain}
-                                      onChange={(e) => setNewTenantSubdomain(e.target.value.toLowerCase().replace(/\s+/g, '-'))}
-                                      placeholder="mi-empresa"
-                                      className="bg-transparent border-none outline-none text-xs text-foreground flex-1"
-                                    />
-                                    <span className="text-xs text-muted font-bold font-mono">.nectarlabs.dev</span>
-                                  </div>
-                                  <p className="text-[7.5px] opacity-40 leading-normal mt-1">
-                                    Solo minúsculas, números y guiones. Será la URL final donde se desplegarán tus Add-ons activos.
-                                  </p>
-                                </div>
-                              </div>
-                            )}
-
-                            {tenantErrorMsg && (
-                              <p className="text-[9px] text-red-400 font-bold uppercase tracking-wider bg-red-400/5 border border-red-400/20 px-4 py-2.5 rounded-xl">
-                                ⚠️ {tenantErrorMsg}
-                              </p>
-                            )}
-                          </div>
-
-                          <div>
-                            <label htmlFor="comments" className="text-[10px] font-black uppercase tracking-widest text-nectar-gold block mb-3">
-                              Comentarios o Requerimientos Especiales (Opcional)
-                            </label>
-                            <textarea
-                              id="comments"
-                              rows={4}
-                              value={comments}
-                              onChange={(e) => setComments(e.target.value)}
-                              placeholder="Describe cualquier detalle sobre cómo esperas que se integre en tu plataforma (ej. qué vistas lo contendrán, endpoints específicos, etc.)..."
-                              className="w-full bg-background/50 border border-card-border focus:border-nectar-gold/60 outline-none rounded-2xl p-4 text-xs text-foreground placeholder:text-muted/50 transition-colors resize-none"
-                            />
-                          </div>
-
-                          <div className="flex gap-4 pt-4">
-                            <button
-                              type="submit"
-                              disabled={isSubmitting}
-                              className="flex-1 py-4 text-xs font-black uppercase tracking-widest bg-nectar-gold text-background hover:scale-[1.02] active:scale-95 disabled:opacity-50 transition-all rounded-xl text-center shadow-lg flex items-center justify-center gap-2"
-                            >
-                              {isSubmitting ? (
-                                <>
-                                  <div className="w-4 h-4 border-2 border-background border-t-transparent rounded-full animate-spin"></div>
-                                  Enviando Solicitud...
-                                </>
-                              ) : (
-                                hasPlanContract ? 'Confirmar y Solicitar Gratis' : 'Pagar Suscripción en Stripe'
                               )}
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => setRequestAddon(null)}
-                              className="px-8 py-4 text-xs font-black uppercase tracking-widest hover:bg-foreground/5 rounded-xl border border-card-border text-center transition-all"
-                            >
-                              Cancelar
-                            </button>
-                          </div>
-                        </form>
+
+                              {selectedTenantId === 'new' && (
+                                <div className="space-y-4 bg-foreground/[0.02] border border-card-border p-5 rounded-2xl animate-premium">
+                                  <span className="text-[8px] font-black text-nectar-gold uppercase tracking-widest block mb-2">
+                                    Configurar Nuevo Portal
+                                  </span>
+
+                                  <div className="space-y-2">
+                                    <label htmlFor="newTenantName" className="text-[8px] font-bold opacity-50 uppercase tracking-widest text-muted block">
+                                      Nombre del Portal / Empresa
+                                    </label>
+                                    <input
+                                      id="newTenantName"
+                                      type="text"
+                                      value={newTenantName}
+                                      onChange={(e) => setNewTenantName(e.target.value)}
+                                      placeholder="Ej: Mi Empresa S.A."
+                                      className="w-full bg-background/50 border border-card-border focus:border-nectar-gold/60 outline-none rounded-2xl p-4 text-xs text-foreground transition-colors"
+                                    />
+                                  </div>
+
+                                  <div className="space-y-2">
+                                    <label htmlFor="newTenantSubdomain" className="text-[8px] font-bold opacity-50 uppercase tracking-widest text-muted block">
+                                      Sufijo / Subdominio
+                                    </label>
+                                    <div className="flex items-center gap-2 bg-background/50 border border-card-border focus-within:border-nectar-gold/60 rounded-2xl px-4 py-3.5 transition-colors">
+                                      <input
+                                        id="newTenantSubdomain"
+                                        type="text"
+                                        value={newTenantSubdomain}
+                                        onChange={(e) => setNewTenantSubdomain(e.target.value.toLowerCase().replace(/\s+/g, '-'))}
+                                        placeholder="mi-empresa"
+                                        className="bg-transparent border-none outline-none text-xs text-foreground flex-1"
+                                      />
+                                      <span className="text-xs text-muted font-bold font-mono">.nectarlabs.dev</span>
+                                    </div>
+                                    <p className="text-[7.5px] opacity-40 leading-normal mt-1">
+                                      Solo minúsculas, números y guiones. Será la URL final donde se desplegarán tus Add-ons activos.
+                                    </p>
+                                  </div>
+                                </div>
+                              )}
+
+                              {tenantErrorMsg && (
+                                <p className="text-[9px] text-red-400 font-bold uppercase tracking-wider bg-red-400/5 border border-red-400/20 px-4 py-2.5 rounded-xl">
+                                  ⚠️ {tenantErrorMsg}
+                                </p>
+                              )}
+                            </div>
+
+                            <div>
+                              <label htmlFor="comments" className="text-[10px] font-black uppercase tracking-widest text-nectar-gold block mb-3">
+                                Comentarios o Requerimientos Especiales (Opcional)
+                              </label>
+                              <textarea
+                                id="comments"
+                                rows={4}
+                                value={comments}
+                                onChange={(e) => setComments(e.target.value)}
+                                placeholder="Describe cualquier detalle sobre cómo esperas que se integre en tu plataforma (ej. qué vistas lo contendrán, endpoints específicos, etc.)..."
+                                className="w-full bg-background/50 border border-card-border focus:border-nectar-gold/60 outline-none rounded-2xl p-4 text-xs text-foreground placeholder:text-muted/50 transition-colors resize-none"
+                              />
+                            </div>
+
+                            <div className="flex gap-4 pt-4">
+                              <button
+                                type="submit"
+                                disabled={isSubmitting}
+                                className="flex-1 py-4 text-xs font-black uppercase tracking-widest bg-nectar-gold text-background hover:scale-[1.02] active:scale-95 disabled:opacity-50 transition-all rounded-xl text-center shadow-lg flex items-center justify-center gap-2"
+                              >
+                                {isSubmitting ? (
+                                  <>
+                                    <div className="w-4 h-4 border-2 border-background border-t-transparent rounded-full animate-spin"></div>
+                                    Enviando Solicitud...
+                                  </>
+                                ) : (
+                                  hasPlanContract ? 'Confirmar y Solicitar Gratis' : 'Pagar Suscripción en Stripe'
+                                )}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setRequestAddon(null)}
+                                className="px-8 py-4 text-xs font-black uppercase tracking-widest hover:bg-foreground/5 rounded-xl border border-card-border text-center transition-all"
+                              >
+                                Cancelar
+                              </button>
+                            </div>
+                          </form>
+                        </div>
                       </div>
-                    </div>
-                  )
+                    )
                   }
 
                   {/* Modal: Admin Manage Client Addons */}
                   {
-          manageAddon && (
-                    <div
-                      onClick={() => setManageAddon(null)}
-                      className="fixed inset-0 bg-background/80 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-premium cursor-pointer"
-                    >
+                    manageAddon && (
                       <div
-                        onClick={(e) => e.stopPropagation()}
-                        className="bg-card-bg border border-card-border w-full max-w-xl rounded-[3rem] p-8 md:p-12 shadow-2xl relative max-h-[90vh] overflow-y-auto cursor-default"
+                        onClick={() => setManageAddon(null)}
+                        className="fixed inset-0 bg-background/80 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-premium cursor-pointer"
                       >
-                        <button
-                          onClick={() => setManageAddon(null)}
-                          className="absolute top-6 right-6 w-10 h-10 bg-foreground/5 hover:bg-foreground/10 text-foreground/60 hover:text-foreground rounded-full flex items-center justify-center text-lg font-bold transition-all"
+                        <div
+                          onClick={(e) => e.stopPropagation()}
+                          className="bg-card-bg border border-card-border w-full max-w-xl rounded-[3rem] p-8 md:p-12 shadow-2xl relative max-h-[90vh] overflow-y-auto cursor-default"
                         >
-                          ✕
-                        </button>
+                          <button
+                            onClick={() => setManageAddon(null)}
+                            className="absolute top-6 right-6 w-10 h-10 bg-foreground/5 hover:bg-foreground/10 text-foreground/60 hover:text-foreground rounded-full flex items-center justify-center text-lg font-bold transition-all"
+                          >
+                            ✕
+                          </button>
 
-                        <div className="mb-8">
-                          <span className="text-[8px] font-black uppercase tracking-widest text-nectar-gold block mb-1 font-mono">
-                            Administración de Add-on
-                          </span>
-                          <h2 className="text-3xl font-black tracking-tight mb-2">Asignar {manageAddon.name}</h2>
-                          <p className="text-xs text-muted leading-relaxed">
-                            Activa o desactiva este módulo para cualquier cliente activo del ecosistema. Los cambios se aprovisionarán automáticamente.
-                          </p>
-                        </div>
-
-                        <div className="space-y-4">
-                          <div className="text-[10px] font-black uppercase tracking-widest text-nectar-gold border-b border-card-border pb-3 mb-2">
-                            Lista de Clientes / Contratos Activos
+                          <div className="mb-8">
+                            <span className="text-[8px] font-black uppercase tracking-widest text-nectar-gold block mb-1 font-mono">
+                              Administración de Add-on
+                            </span>
+                            <h2 className="text-3xl font-black tracking-tight mb-2">Asignar {manageAddon.name}</h2>
+                            <p className="text-xs text-muted leading-relaxed">
+                              Activa o desactiva este módulo para cualquier cliente activo del ecosistema. Los cambios se aprovisionarán automáticamente.
+                            </p>
                           </div>
 
-                          <div className="space-y-3 max-h-[40vh] overflow-y-auto pr-1 text-left">
-                            {contracts
-                              .filter(c => c.is_fully_signed)
-                              .map(contract => {
-                                const isActive = (contract.addons || []).includes(manageAddon.id);
-                                const isUpdating = updatingContractId === contract.id;
+                          <div className="space-y-4">
+                            <div className="text-[10px] font-black uppercase tracking-widest text-nectar-gold border-b border-card-border pb-3 mb-2">
+                              Lista de Clientes / Contratos Activos
+                            </div>
+
+                            <div className="space-y-3 max-h-[40vh] overflow-y-auto pr-1 text-left">
+                              {contracts
+                                .filter(c => c.is_fully_signed)
+                                .map(contract => {
+                                  const isActive = (contract.addons || []).includes(manageAddon.id);
+                                  const isUpdating = updatingContractId === contract.id;
+
+                                  return (
+                                    <div key={contract.id} className="flex items-center justify-between p-4 rounded-2xl bg-background/50 border border-card-border/60 hover:border-nectar-gold/30 transition-all">
+                                      <div className="min-w-0 pr-3">
+                                        <span className="font-bold text-xs text-foreground block truncate">
+                                          {contract.full_name}
+                                        </span>
+                                        <span className="text-[8.5px] text-foreground/50 block font-semibold uppercase tracking-wider mt-0.5">
+                                          {contract.plan_name || 'Contrato Personalizado'} (ID: #{contract.id})
+                                        </span>
+                                      </div>
+
+                                      <button
+                                        onClick={() => handleToggleAddon(contract.id, manageAddon.id, isActive)}
+                                        disabled={isUpdating}
+                                        className={`w-10 h-5 rounded-full p-0.5 transition-colors duration-300 focus:outline-none relative flex-shrink-0 ${isActive ? 'bg-nectar-gold' : 'bg-card-border'
+                                          } ${isUpdating ? 'opacity-55 cursor-not-allowed' : ''}`}
+                                      >
+                                        <div className={`w-4 h-4 rounded-full bg-white shadow-md transform transition-transform duration-300 ${isActive ? 'translate-x-5' : 'translate-x-0'
+                                          }`} />
+                                      </button>
+                                    </div>
+                                  );
+                                })}
+
+                  // 1. Mapeamos los addons directamente de la lista global que retorna tu API backend
+                              {addonsList.map((addon) => {
+                                // Edge Case Solved: Evaluamos si el addon está activo basándonos en el Tenant o en el contrato de forma opcional
+                                const isAddonActive =
+                                  (tenantConfig?.active_addons || []).includes(addon.slug) ||
+                                  (tenant?.active_addons || []).includes(addon.slug) ||
+                                  contracts.some(c => (c.addons || []).some((a: any) => a.slug === addon.slug));
 
                                 return (
-                                  <div key={contract.id} className="flex items-center justify-between p-4 rounded-2xl bg-background/50 border border-card-border/60 hover:border-nectar-gold/30 transition-all">
-                                    <div className="min-w-0 pr-3">
-                                      <span className="font-bold text-xs text-foreground block truncate">
-                                        {contract.full_name}
-                                      </span>
-                                      <span className="text-[8.5px] text-foreground/50 block font-semibold uppercase tracking-wider mt-0.5">
-                                        {contract.plan_name || 'Contrato Personalizado'} (ID: #{contract.id})
+                                  <div key={addon.id} className="border border-border/50 rounded-xl p-6 bg-background/50">
+                                    <div className="flex justify-between items-start">
+                                      <h3>{addon.name}</h3>
+                                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-black ${isAddonActive ? 'bg-green-500/10 text-green-400' : 'bg-zinc-500/10 text-zinc-400'
+                                        }`}>
+                                        {isAddonActive ? 'Activo' : 'Disponible'}
                                       </span>
                                     </div>
 
-                                    <button
-                                      onClick={() => handleToggleAddon(contract.id, manageAddon.id, isActive)}
-                                      disabled={isUpdating}
-                                      className={`w-10 h-5 rounded-full p-0.5 transition-colors duration-300 focus:outline-none relative flex-shrink-0 ${isActive ? 'bg-nectar-gold' : 'bg-card-border'
-                                        } ${isUpdating ? 'opacity-55 cursor-not-allowed' : ''}`}
-                                    >
-                                      <div className={`w-4 h-4 rounded-full bg-white shadow-md transform transition-transform duration-300 ${isActive ? 'translate-x-5' : 'translate-x-0'
-                                        }`} />
-                                    </button>
+                                    <p className="text-xs text-foreground/60 mt-2">{addon.description}</p>
+
+                                    {/* Si no está activo, mostramos el botón para suscribirse directo con Stripe */}
+                                    {!isAddonActive && (
+                                      <button
+                                        onClick={() => handleSubscribeDirect(addon.id)}
+                                        className="mt-4 w-full bg-nectar-gold text-black text-xs font-black py-2 rounded-lg"
+                                      >
+                                        Adquirir Módulo
+                                      </button>
+                                    )}
                                   </div>
                                 );
                               })}
+                            </div>
+                          </div>
 
-                  // 1. Mapeamos los addons directamente de la lista global que retorna tu API backend
-                            {addonsList.map((addon) => {
-                              // Edge Case Solved: Evaluamos si el addon está activo basándonos en el Tenant o en el contrato de forma opcional
-                              const isAddonActive =
-                                (tenantConfig?.active_addons || []).includes(addon.slug) ||
-                                (tenant?.active_addons || []).includes(addon.slug) ||
-                                contracts.some(c => (c.addons || []).some((a: any) => a.slug === addon.slug));
-
-                              return (
-                                <div key={addon.id} className="border border-border/50 rounded-xl p-6 bg-background/50">
-                                  <div className="flex justify-between items-start">
-                                    <h3>{addon.name}</h3>
-                                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-black ${isAddonActive ? 'bg-green-500/10 text-green-400' : 'bg-zinc-500/10 text-zinc-400'
-                                      }`}>
-                                      {isAddonActive ? 'Activo' : 'Disponible'}
-                                    </span>
-                                  </div>
-
-                                  <p className="text-xs text-foreground/60 mt-2">{addon.description}</p>
-
-                                  {/* Si no está activo, mostramos el botón para suscribirse directo con Stripe */}
-                                  {!isAddonActive && (
-                                    <button
-                                      onClick={() => handleSubscribeDirect(addon.id)}
-                                      className="mt-4 w-full bg-nectar-gold text-black text-xs font-black py-2 rounded-lg"
-                                    >
-                                      Adquirir Módulo
-                                    </button>
-                                  )}
-                                </div>
-                              );
-                            })}
+                          <div className="flex justify-end pt-8 border-t border-card-border/50 mt-6">
+                            <button
+                              onClick={() => setManageAddon(null)}
+                              className="px-8 py-3.5 text-xs font-black uppercase tracking-widest bg-nectar-gold text-background hover:scale-[1.02] active:scale-95 rounded-xl text-center shadow-lg transition-all"
+                            >
+                              Listo
+                            </button>
                           </div>
                         </div>
-
-                        <div className="flex justify-end pt-8 border-t border-card-border/50 mt-6">
-                          <button
-                            onClick={() => setManageAddon(null)}
-                            className="px-8 py-3.5 text-xs font-black uppercase tracking-widest bg-nectar-gold text-background hover:scale-[1.02] active:scale-95 rounded-xl text-center shadow-lg transition-all"
-                          >
-                            Listo
-                          </button>
-                        </div>
                       </div>
-                    </div>
-                  )
+                    )
                   }
-      </main >
+                </main >
 
-              {/* Premium UI Overlay Elements */}
-              {
-                toast && (
-                  <Toast
-                    message={toast.message}
-                    type={toast.type}
-                    onClose={() => setToast(null)}
-                  />
-                )
-              }
-            </div >
-            );
+                {/* Premium UI Overlay Elements */}
+                {
+                  toast && (
+                    <Toast
+                      message={toast.message}
+                      type={toast.type}
+                      onClose={() => setToast(null)}
+                    />
+                  )
+                }
+              </div >
+              );
 }
