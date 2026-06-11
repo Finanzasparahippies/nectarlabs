@@ -8,6 +8,7 @@ from django.core.exceptions import PermissionDenied
 from rest_framework.views import APIView
 from django.conf import settings
 
+from django.db import models
 from apps.tenants.models import Tenant
 from apps.tenants.permissions import HasAddOnPermission
 from .models import TaxProfile, Invoice, SATProductKey, SATUnitKey
