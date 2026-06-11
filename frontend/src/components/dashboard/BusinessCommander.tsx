@@ -254,7 +254,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
       });
       if (!response.ok) {
         const err = await response.json();
-        throw new Error(err.error || 'Error al solicitar la cancelación.');
+        throw new Error(err.detail || err.error || 'Error al solicitar la cancelación.');
       }
       const updated = await response.json();
       setSystemInvoices(prev => prev.map(inv => inv.id === invoiceId ? updated : inv));
@@ -275,7 +275,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
       });
       if (!response.ok) {
         const err = await response.json();
-        throw new Error(err.error || 'Error al reintentar el timbrado.');
+        throw new Error(err.detail || err.error || 'Error al reintentar el timbrado.');
       }
       const updated = await response.json();
       setSystemInvoices(prev => prev.map(inv => inv.id === invoiceId ? updated : inv));
@@ -367,7 +367,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
       
       const data = await response.json();
       if (!response.ok) {
-        throw new Error(data.error || 'Error al timbrar la factura.');
+        throw new Error(data.detail || data.error || 'Error al timbrar la factura.');
       }
       
       const updatedUUID = data.uuid_sat || "LCO_PENDING";
@@ -447,7 +447,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
 
       const data = await response.json();
       if (!response.ok) {
-        throw new Error(data.error || 'Error al emitir la factura manual.');
+        throw new Error(data.detail || data.error || 'Error al emitir la factura manual.');
       }
 
       showToast('Factura manual emitida y timbrada con éxito.', 'success');

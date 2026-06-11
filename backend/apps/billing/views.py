@@ -216,7 +216,8 @@ class TaxProfileView(BillingTenantMixin, APIView):
                 profile.facturapi_organization_id = org_id
                 profile.save()
             except PACError as e:
-                return Response({"error": f"Fallo al registrar perfil fiscal en el PAC: {e}"}, status=400)
+                err_msg = f"Fallo al registrar perfil fiscal en el PAC: {e}"
+                return Response({"error": err_msg, "detail": err_msg}, status=400)
         else:
             # Actualizar datos locales y en el PAC
             profile.rfc = serializer.validated_data.get('rfc', profile.rfc)
@@ -234,7 +235,8 @@ class TaxProfileView(BillingTenantMixin, APIView):
             try:
                 pac.upload_sello(profile.facturapi_organization_id, cer_file, key_file, password)
             except PACError as e:
-                return Response({"error": f"Error al validar o subir tus sellos CSD al PAC: {e}"}, status=400)
+                err_msg = f"Error al validar o subir tus sellos CSD al PAC: {e}"
+                return Response({"error": err_msg, "detail": err_msg}, status=400)
 
         return Response(TaxProfileSerializer(profile).data)
 
@@ -296,7 +298,15 @@ class InvoiceViewSet(BillingTenantMixin, viewsets.ModelViewSet):
             return Response({"error": "No se pudo emitir la factura. Verifica que el perfil fiscal esté configurado y tengas timbres suficientes."}, status=400)
 
         if invoice.status == Invoice.Status.FAILED:
-            return Response({"error": f"Fallo al emitir CFDI en el PAC: {invoice.error_message}"}, status=400)
+            error_message = invoice.error_message or ""
+            if any(word in error_message.lower() for word in ["sello", "csd", "certificate", "certificado"]):
+                detail_msg = "No se puede timbrar la factura porque no se han configurado los Certificados de Sello Digital (CSD) en Facturapi o no son válidos."
+                return Response(
+                    {"detail": detail_msg, "error": detail_msg},
+                    status=status.HTTP_422_UNPROCESSABLE_ENTITY
+                )
+            detail_msg = f"Fallo al emitir CFDI en el PAC: {invoice.error_message}"
+            return Response({"error": detail_msg, "detail": detail_msg}, status=400)
 
         return Response(InvoiceSerializer(invoice).data, status=status.HTTP_201_CREATED)
 
@@ -404,7 +414,15 @@ class InvoiceViewSet(BillingTenantMixin, viewsets.ModelViewSet):
             invoice.status = Invoice.Status.FAILED
             invoice.error_message = str(e)
             invoice.save()
-            return Response({"error": f"Fallo al emitir CFDI en el PAC: {e}"}, status=400)
+            error_message = str(e)
+            if any(word in error_message.lower() for word in ["sello", "csd", "certificate", "certificado"]):
+                detail_msg = "No se puede timbrar la factura porque no se han configurado los Certificados de Sello Digital (CSD) en Facturapi o no son válidos."
+                return Response(
+                    {"detail": detail_msg, "error": detail_msg},
+                    status=status.HTTP_422_UNPROCESSABLE_ENTITY
+                )
+            detail_msg = f"Fallo al emitir CFDI en el PAC: {e}"
+            return Response({"error": detail_msg, "detail": detail_msg}, status=400)
 
 
     @action(detail=False, methods=['post'], url_path='issue-to-customer')
@@ -476,7 +494,15 @@ class InvoiceViewSet(BillingTenantMixin, viewsets.ModelViewSet):
             invoice.status = Invoice.Status.FAILED
             invoice.error_message = str(e)
             invoice.save()
-            return Response({"error": f"Fallo al emitir CFDI en el PAC: {e}"}, status=400)
+            error_message = str(e)
+            if any(word in error_message.lower() for word in ["sello", "csd", "certificate", "certificado"]):
+                detail_msg = "No se puede timbrar la factura porque no se han configurado los Certificados de Sello Digital (CSD) en Facturapi o no son válidos."
+                return Response(
+                    {"detail": detail_msg, "error": detail_msg},
+                    status=status.HTTP_422_UNPROCESSABLE_ENTITY
+                )
+            detail_msg = f"Fallo al emitir CFDI en el PAC: {e}"
+            return Response({"error": detail_msg, "detail": detail_msg}, status=400)
 
     @action(detail=True, methods=['post'])
     def cancel(self, request, pk=None):
@@ -584,7 +610,15 @@ class InvoiceViewSet(BillingTenantMixin, viewsets.ModelViewSet):
             invoice.status = Invoice.Status.FAILED
             invoice.error_message = str(e)
             invoice.save(update_fields=['status', 'error_message'])
-            return Response({"error": f"Fallo de timbrado en el PAC: {e}"}, status=400)
+            error_message = str(e)
+            if any(word in error_message.lower() for word in ["sello", "csd", "certificate", "certificado"]):
+                detail_msg = "No se puede timbrar la factura porque no se han configurado los Certificados de Sello Digital (CSD) en Facturapi o no son válidos."
+                return Response(
+                    {"detail": detail_msg, "error": detail_msg},
+                    status=status.HTTP_422_UNPROCESSABLE_ENTITY
+                )
+            detail_msg = f"Fallo de timbrado en el PAC: {e}"
+            return Response({"error": detail_msg, "detail": detail_msg}, status=400)
 
 
 class BuyEmailCreditsView(BillingTenantMixin, APIView):

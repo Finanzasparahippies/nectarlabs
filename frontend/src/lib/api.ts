@@ -48,7 +48,7 @@ export async function fetcher(endpoint: string, options: FetcherOptions = {}) {
 
   if (!res.ok) {
     const error = await res.json().catch(() => ({}));
-    let errMsg = error.message || error.detail;
+    let errMsg = error.detail || error.error || error.message;
     if (!errMsg && error && typeof error === 'object') {
       errMsg = Object.entries(error)
         .map(([field, msgs]) => {

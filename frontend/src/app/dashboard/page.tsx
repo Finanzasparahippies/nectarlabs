@@ -228,7 +228,7 @@ function DashboardPageOriginal() {
       
       const data = await response.json();
       if (!response.ok) {
-        throw new Error(data.error || 'Error al emitir la factura.');
+        throw new Error(data.detail || data.error || 'Error al emitir la factura.');
       }
       
       const updatedUUID = data.uuid_sat || "LCO_PENDING";
