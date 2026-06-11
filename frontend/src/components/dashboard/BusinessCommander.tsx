@@ -1356,9 +1356,10 @@ export default function BusinessCommander({ stats, installments, setInstallments
             } flex items-center`}
         >
           Suscripciones Add-ons
-          {addonSubscriptions.filter(s => !s.tenant && ['active', 'trialing'].includes(s.status)).length > 0 && (
+          {/* EDGE CASE SOLVED: Removemos !s.tenant para contar cualquier suscripción activa o en periodo de prueba del usuario */}
+          {addonSubscriptions.filter(s => ['active', 'trialing'].includes(s.status || s.status_name)).length > 0 && (
             <span className="ml-2 px-1.5 py-0.5 text-[8px] font-black bg-red-600 text-white rounded-full animate-pulse flex items-center justify-center min-w-[14px] h-[14px]">
-              {addonSubscriptions.filter(s => !s.tenant && ['active', 'trialing'].includes(s.status)).length}
+              {addonSubscriptions.filter(s => ['active', 'trialing'].includes(s.status || s.status_name)).length}
             </span>
           )}
           {activeTab === 'addons' && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-nectar-gold"></span>}
@@ -3418,11 +3419,10 @@ export default function BusinessCommander({ stats, installments, setInstallments
                                   setEditingSubId(sub.id);
                                   setSelectedTenantIdForSub(sub.tenant || 'none');
                                 }}
-                                className={`px-3 py-1 text-[8px] font-black uppercase tracking-widest transition-all border rounded-xl font-bold hover:scale-105 ${
-                                  sub.tenant
-                                    ? 'bg-foreground/5 text-foreground/60 border-card-border hover:bg-foreground/10 hover:text-foreground'
-                                    : 'bg-nectar-gold/10 text-nectar-gold border-nectar-gold/20 hover:bg-nectar-gold hover:text-background'
-                                }`}
+                                className={`px-3 py-1 text-[8px] font-black uppercase tracking-widest transition-all border rounded-xl font-bold hover:scale-105 ${sub.tenant
+                                  ? 'bg-foreground/5 text-foreground/60 border-card-border hover:bg-foreground/10 hover:text-foreground'
+                                  : 'bg-nectar-gold/10 text-nectar-gold border-nectar-gold/20 hover:bg-nectar-gold hover:text-background'
+                                  }`}
                               >
                                 {sub.tenant ? 'Reasignar' : 'Asignar Inquilino'}
                               </button>
@@ -4360,7 +4360,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
         isOpen={confirmModal !== null}
         title={confirmModal?.title || ''}
         message={confirmModal?.message || ''}
-        onConfirm={confirmModal?.onConfirm || (() => {})}
+        onConfirm={confirmModal?.onConfirm || (() => { })}
         onCancel={() => setConfirmModal(null)}
       />
 
