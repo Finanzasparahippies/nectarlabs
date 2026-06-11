@@ -132,6 +132,8 @@ function DashboardPageOriginal() {
   const [cfdiInputs, setCfdiInputs] = useState<Record<number, string>>({});
   const [wantsInvoiceMap, setWantsInvoiceMap] = useState<Record<number, boolean>>({});
   const [allAddons, setAllAddons] = useState<any[]>([]);
+  const [invoices, setInvoices] = useState<any[]>([]);
+  const [loadingInvoices, setLoadingInvoices] = useState(false);
   
   // Salesperson and Referral Program states
   const [salesSummary, setSalesSummary] = useState<any | null>(null);
@@ -552,8 +554,8 @@ function DashboardPageOriginal() {
           setLogs(logsData);
           setContracts(contractsData);
         } else {
-          // Client / Customers - Load their contracts, installments, projects, active addons, and tenants
-          const [projectsData, ticketsData, contractsData, installmentsData, addonsData, plansData, referralData, tenantsData] = await Promise.all([
+          // Client / Customers - Load their contracts, installments, projects, active addons, tenants, and invoices
+          const [projectsData, ticketsData, contractsData, installmentsData, addonsData, plansData, referralData, tenantsData, invoicesData] = await Promise.all([
             fetcher('/projects/').catch(() => []),
             fetcher('/tickets/').catch(() => []),
             fetcher('/contracts/').catch(() => []),
@@ -561,7 +563,8 @@ function DashboardPageOriginal() {
             fetcher('/addons/').catch(() => []),
             fetcher('/plans/').catch(() => []),
             fetcher('/promo-codes/my-referral-code/').catch(() => null),
-            fetcher('/tenants/').catch(() => [])
+            fetcher('/tenants/').catch(() => []),
+            fetcher('/billing/invoices/').catch(() => [])
           ]);
           setProjects(projectsData);
           setTickets(ticketsData);
@@ -571,6 +574,7 @@ function DashboardPageOriginal() {
           setPlans(plansData || []);
           setMyReferralCode(referralData);
           setTenants(tenantsData || []);
+          setInvoices(invoicesData.results || invoicesData || []);
         }
       } catch (err) {
         console.error("Error loading dashboard data:", err);
@@ -1953,6 +1957,74 @@ function DashboardPageOriginal() {
                 </section>
               );
             })()}
+
+            {/* Mis Facturas (CFDI) for Client/Customer */}
+            {!isStaff && invoices.length > 0 && (
+              <section className="mb-16 bg-card-bg border border-card-border rounded-[2.5rem] p-8 md:p-10 shadow-lg text-left">
+                <div className="mb-8">
+                  <h3 className="text-xs font-black uppercase tracking-[0.3em] opacity-30">Mis Facturas (CFDI)</h3>
+                  <p className="text-[9px] font-bold text-foreground/40 mt-1 uppercase tracking-wider">Historial de comprobantes fiscales timbrados emitidos para tu portal</p>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="border-b border-card-border/50 text-[8px] font-black uppercase tracking-widest opacity-40">
+                        <th className="pb-4">Fecha</th>
+                        <th className="pb-4">Folio Fiscal SAT (UUID)</th>
+                        <th className="pb-4 text-right">Monto</th>
+                        <th className="pb-4 text-center">Estatus</th>
+                        <th className="pb-4 text-right">Descargar</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {invoices.filter(inv => !inv.is_tenant_to_customer).map((inv) => (
+                        <tr key={inv.id} className="border-b border-card-border/30 last:border-0 hover:bg-foreground/[0.01] transition-colors">
+                          <td className="py-4 text-xs font-mono opacity-80">
+                            {new Date(inv.created_at).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })}
+                          </td>
+                          <td className="py-4 font-mono text-[9px] opacity-75 select-all max-w-[250px] truncate" title={inv.uuid_sat || 'No asignado'}>
+                            {inv.uuid_sat || '—'}
+                          </td>
+                          <td className="py-4 text-right font-black text-xs">
+                            ${parseFloat(inv.total).toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN
+                          </td>
+                          <td className="py-4 text-center">
+                            <span className="px-2.5 py-0.5 text-[7px] font-black uppercase tracking-widest rounded-full bg-green-500/10 text-green-500 border border-green-500/25">
+                              {inv.status_display}
+                            </span>
+                          </td>
+                          <td className="py-4 text-right">
+                            <div className="flex justify-end gap-2">
+                              {inv.pdf_url && (
+                                <a
+                                  href={inv.pdf_url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="px-2.5 py-1 bg-card-border hover:bg-foreground hover:text-background text-[8px] font-black uppercase tracking-widest rounded-lg transition-all font-bold"
+                                >
+                                  PDF
+                                </a>
+                              )}
+                              {inv.xml_url && (
+                                <a
+                                  href={inv.xml_url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="px-2.5 py-1 bg-card-border hover:bg-foreground hover:text-background text-[8px] font-black uppercase tracking-widest rounded-lg transition-all font-bold"
+                                >
+                                  XML
+                                </a>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+            )}
 
             {/* Client Specific Sections: Pending Contracts & Empty Onboarding Banner */}
             {!isStaff && contracts.some(c => !c.is_fully_signed) && (

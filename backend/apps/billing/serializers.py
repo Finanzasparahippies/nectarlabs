@@ -37,13 +37,14 @@ class TaxProfileSerializer(serializers.ModelSerializer):
 
 class InvoiceSerializer(serializers.ModelSerializer):
     status_display = serializers.CharField(source='get_status_display', read_only=True)
+    tenant_name = serializers.CharField(source='tenant.name', read_only=True)
     xml_url = serializers.SerializerMethodField()
     pdf_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Invoice
         fields = [
-            'id', 'stripe_invoice_id', 'facturapi_invoice_id', 'uuid_sat',
+            'id', 'tenant_name', 'stripe_invoice_id', 'facturapi_invoice_id', 'uuid_sat',
             'total', 'status', 'status_display', 'xml_file', 'pdf_file', 
             'xml_url', 'pdf_url', 'error_message', 'created_at', 'updated_at'
         ]

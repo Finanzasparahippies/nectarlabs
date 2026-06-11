@@ -86,7 +86,18 @@ export default function BusinessCommander({ stats, installments, setInstallments
   const [cfdiInputs, setCfdiInputs] = useState<Record<number, string>>({});
   
   // Premium Tab State
-  const [activeTab, setActiveTab] = useState<'financials' | 'kanban' | 'quotes' | 'sales'>('financials');
+  const [activeTab, setActiveTab] = useState<'financials' | 'kanban' | 'quotes' | 'sales' | 'invoices' | 'marketing'>('financials');
+
+  // Invoices & Marketing Campaigns states
+  const [systemInvoices, setSystemInvoices] = useState<any[]>([]);
+  const [loadingInvoices, setLoadingInvoices] = useState(false);
+  const [invoiceSearch, setInvoiceSearch] = useState<string>('');
+  
+  // Marketing Campaigns states
+  const [campaignSubject, setCampaignSubject] = useState('');
+  const [campaignTitle, setCampaignTitle] = useState('');
+  const [campaignContent, setCampaignContent] = useState('');
+  const [isSendingCampaign, setIsSendingCampaign] = useState(false);
   
   // Kanban states
   const [leads, setLeads] = useState<any[]>([]);
@@ -177,6 +188,106 @@ export default function BusinessCommander({ stats, installments, setInstallments
     };
     loadSalesData();
   }, []);
+
+  useEffect(() => {
+    if (activeTab === 'invoices') {
+      const loadSystemInvoices = async () => {
+        setLoadingInvoices(true);
+        try {
+          const res = await fetcher('/billing/invoices/');
+          setSystemInvoices(res.results || res || []);
+        } catch (err) {
+          console.error('Error loading system invoices:', err);
+          showToast('Error al cargar las facturas del sistema.', 'error');
+        } finally {
+          setLoadingInvoices(false);
+        }
+      };
+      loadSystemInvoices();
+    }
+  }, [activeTab]);
+
+  const handleCancelInvoice = async (invoiceId: number) => {
+    if (!window.confirm('¿Estás seguro de que deseas solicitar la cancelación de esta factura en el SAT?')) return;
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/billing/invoices/${invoiceId}/cancel/`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || 'Error al solicitar la cancelación.');
+      }
+      const updated = await response.json();
+      setSystemInvoices(prev => prev.map(inv => inv.id === invoiceId ? updated : inv));
+      showToast('Cancelación solicitada con éxito ante el SAT.', 'success');
+    } catch (err: any) {
+      showToast(err.message || 'Error al cancelar la factura.', 'error');
+    }
+  };
+
+  const handleRetryInvoice = async (invoiceId: number) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/billing/invoices/${invoiceId}/retry/`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || 'Error al reintentar el timbrado.');
+      }
+      const updated = await response.json();
+      setSystemInvoices(prev => prev.map(inv => inv.id === invoiceId ? updated : inv));
+      showToast('Factura reintentada y timbrada con éxito.', 'success');
+    } catch (err: any) {
+      showToast(err.message || 'Error al reintentar el timbrado.', 'error');
+    }
+  };
+
+  const handleSendCampaign = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!campaignSubject.trim() || !campaignContent.trim()) {
+      showToast('El Asunto y el Contenido de la campaña son obligatorios.', 'warning');
+      return;
+    }
+    
+    setIsSendingCampaign(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/newsletter/send-campaign/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          subject: campaignSubject.trim(),
+          title: campaignTitle.trim() || campaignSubject.trim(),
+          content: campaignContent.trim()
+        })
+      });
+      
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Error al enviar la campaña.');
+      }
+      
+      showToast(data.message || `Campaña enviada con éxito a ${data.sent_count} suscriptores.`, 'success');
+      setCampaignSubject('');
+      setCampaignTitle('');
+      setCampaignContent('');
+    } catch (err: any) {
+      showToast(err.message || 'Error al enviar la campaña.', 'error');
+    } finally {
+      setIsSendingCampaign(false);
+    }
+  };
 
   const STATUS_ORDER: string[] = ['PROSPECT', 'CONTACTED', 'PROPOSAL', 'WON', 'LOST'];
 
@@ -873,6 +984,24 @@ export default function BusinessCommander({ stats, installments, setInstallments
         >
           Comisiones y Vendedores
           {activeTab === 'sales' && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-nectar-gold"></span>}
+        </button>
+        <button
+          onClick={() => setActiveTab('invoices')}
+          className={`pb-4 text-xs font-black uppercase tracking-widest relative transition-all whitespace-nowrap ${
+            activeTab === 'invoices' ? 'text-nectar-gold' : 'text-foreground/45 hover:text-foreground'
+          }`}
+        >
+          Facturas del Sistema
+          {activeTab === 'invoices' && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-nectar-gold"></span>}
+        </button>
+        <button
+          onClick={() => setActiveTab('marketing')}
+          className={`pb-4 text-xs font-black uppercase tracking-widest relative transition-all whitespace-nowrap ${
+            activeTab === 'marketing' ? 'text-nectar-gold' : 'text-foreground/45 hover:text-foreground'
+          }`}
+        >
+          Campañas de Marketing
+          {activeTab === 'marketing' && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-nectar-gold"></span>}
         </button>
       </div>
 
@@ -2103,6 +2232,265 @@ export default function BusinessCommander({ stats, installments, setInstallments
                   )}
                 </tbody>
               </table>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ── ADMIN SYSTEM INVOICES PANEL ── */}
+      {activeTab === 'invoices' && (
+        <section className="space-y-10 animate-fadeIn text-left">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-card-bg border border-card-border p-6 rounded-[2rem] shadow-lg">
+            <div>
+              <h2 className="text-xs font-black uppercase tracking-[0.4em] opacity-30 mb-1">Facturas del Sistema</h2>
+              <p className="text-[9px] font-bold text-foreground/30 uppercase tracking-wider">Historial completo de timbrado de CFDIs (SAT) de Néctar Labs</p>
+            </div>
+            <div className="flex flex-col gap-1 min-w-[250px]">
+              <label className="text-[7.5px] font-black uppercase tracking-widest opacity-40 ml-2">Buscar Inquilino o SAT UUID</label>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={invoiceSearch}
+                  onChange={(e) => setInvoiceSearch(e.target.value)}
+                  placeholder="Buscar..."
+                  className="w-full bg-background border border-card-border rounded-xl px-4 py-2 text-xs text-foreground focus:outline-none focus:border-nectar-gold"
+                />
+                {invoiceSearch && (
+                  <button
+                    onClick={() => setInvoiceSearch('')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground/45 hover:text-foreground text-xs font-bold"
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-card-bg border border-card-border rounded-[2.5rem] p-8 md:p-10 shadow-lg">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-card-border/50 text-[8px] font-black uppercase tracking-widest opacity-40">
+                    <th className="pb-4">Fecha</th>
+                    <th className="pb-4">Inquilino</th>
+                    <th className="pb-4">Monto (MXN)</th>
+                    <th className="pb-4">Folio Fiscal SAT (UUID)</th>
+                    <th className="pb-4 text-center">Estatus</th>
+                    <th className="pb-4 text-right">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(() => {
+                    const query = invoiceSearch.toLowerCase().trim();
+                    const filtered = systemInvoices.filter(inv => {
+                      if (!query) return true;
+                      return (
+                        (inv.tenant_name && inv.tenant_name.toLowerCase().includes(query)) ||
+                        (inv.uuid_sat && inv.uuid_sat.toLowerCase().includes(query)) ||
+                        (inv.status_display && inv.status_display.toLowerCase().includes(query))
+                      );
+                    });
+
+                    if (loadingInvoices) {
+                      return (
+                        <tr>
+                          <td colSpan={6} className="py-12 text-center text-xs opacity-50">
+                            Cargando facturas...
+                          </td>
+                        </tr>
+                      );
+                    }
+
+                    if (filtered.length === 0) {
+                      return (
+                        <tr>
+                          <td colSpan={6} className="py-12 text-center text-[9px] font-black uppercase tracking-widest opacity-25">
+                            Sin facturas encontradas
+                          </td>
+                        </tr>
+                      );
+                    }
+
+                    return filtered.map((inv) => {
+                      const isPaid = inv.status === 'PAID';
+                      const isFailed = inv.status === 'FAILED';
+                      const isPending = inv.status === 'PENDING';
+                      const isLco = inv.status === 'LCO_SYNC_PENDING';
+                      const isCancelRequested = inv.status === 'CANCEL_REQUESTED';
+                      const isCancelled = inv.status === 'CANCELLED';
+
+                      let badgeClass = 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20';
+                      if (isPaid) badgeClass = 'bg-green-500/10 text-green-500 border-green-500/20';
+                      else if (isFailed || isCancelled) badgeClass = 'bg-red-500/10 text-red-500 border-red-500/20';
+                      else if (isLco || isCancelRequested) badgeClass = 'bg-orange-500/10 text-orange-500 border-orange-500/20';
+
+                      return (
+                        <tr key={inv.id} className="border-b border-card-border/30 last:border-0 hover:bg-foreground/[0.02] transition-colors">
+                          <td className="py-4 text-xs font-mono opacity-80">
+                            {new Date(inv.created_at).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })}
+                          </td>
+                          <td className="py-4 pr-4">
+                            <span className="font-black text-sm">{inv.tenant_name || 'Néctar Labs'}</span>
+                            <span className="text-[7.5px] font-bold block text-foreground/40 mt-0.5">
+                              {inv.stripe_invoice_id ? `Stripe: ${inv.stripe_invoice_id}` : 'Manual'}
+                            </span>
+                          </td>
+                          <td className="py-4 font-black text-xs">
+                            ${parseFloat(inv.total).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                          </td>
+                          <td className="py-4 font-mono text-[9px] opacity-70 select-all max-w-[200px] truncate" title={inv.uuid_sat || 'No asignado'}>
+                            {inv.uuid_sat || '—'}
+                          </td>
+                          <td className="py-4 text-center">
+                            <span className={`px-2.5 py-1 text-[7px] font-black uppercase tracking-widest rounded-full border ${badgeClass}`}>
+                              {inv.status_display}
+                            </span>
+                            {inv.error_message && (
+                              <p className="text-[7px] text-red-400 mt-1 max-w-[150px] truncate mx-auto" title={inv.error_message}>
+                                {inv.error_message}
+                              </p>
+                            )}
+                          </td>
+                          <td className="py-4 text-right">
+                            <div className="flex justify-end gap-2">
+                              {inv.pdf_url && (
+                                <a
+                                  href={inv.pdf_url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="px-2 py-1 bg-card-border hover:bg-foreground hover:text-background text-[7px] font-black uppercase tracking-widest rounded-lg transition-all"
+                                >
+                                  PDF
+                                </a>
+                              )}
+                              {inv.xml_url && (
+                                <a
+                                  href={inv.xml_url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="px-2 py-1 bg-card-border hover:bg-foreground hover:text-background text-[7px] font-black uppercase tracking-widest rounded-lg transition-all"
+                                >
+                                  XML
+                                </a>
+                              )}
+                              {(isFailed || isLco) && (
+                                <button
+                                  onClick={() => handleRetryInvoice(inv.id)}
+                                  className="px-2 py-1 bg-nectar-gold text-background hover:scale-105 text-[7px] font-black uppercase tracking-widest rounded-lg transition-all font-bold"
+                                >
+                                  Reintentar
+                                </button>
+                              )}
+                              {(isPaid || isCancelRequested) && (
+                                <button
+                                  onClick={() => handleCancelInvoice(inv.id)}
+                                  className="px-2 py-1 bg-red-500/10 text-red-500 hover:bg-red-600 hover:text-white text-[7px] font-black uppercase tracking-widest rounded-lg transition-all border border-red-500/20 font-bold"
+                                >
+                                  Cancelar
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    });
+                  })()}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ── ADMIN MARKETING CAMPAIGNS PANEL ── */}
+      {activeTab === 'marketing' && (
+        <section className="space-y-10 animate-fadeIn text-left">
+          <div>
+            <h2 className="text-xs font-black uppercase tracking-[0.4em] opacity-30 mb-1">Campañas de Boletín Informativo</h2>
+            <p className="text-[9px] font-bold text-foreground/30 uppercase tracking-wider">Crea y envía campañas de email masivas a todos los suscriptores principales</p>
+          </div>
+
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+            {/* Form Column */}
+            <div className="bg-card-bg border border-card-border rounded-[2.5rem] p-8 md:p-10 shadow-lg text-left">
+              <span className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold text-[8px] font-black uppercase tracking-widest rounded-full border border-nectar-gold/20">
+                Redactar Campaña
+              </span>
+              
+              <form onSubmit={handleSendCampaign} className="space-y-6 mt-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-4">Asunto del Email</label>
+                  <input
+                    type="text"
+                    required
+                    value={campaignSubject}
+                    onChange={(e) => setCampaignSubject(e.target.value)}
+                    placeholder="ej: ¡Grandes novedades y actualizaciones en Néctar Labs!"
+                    className="w-full px-6 py-4 bg-background border border-card-border rounded-2xl focus:border-nectar-gold outline-none transition-all font-bold text-xs text-foreground"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-4">Título del Boletín (Opcional)</label>
+                  <input
+                    type="text"
+                    value={campaignTitle}
+                    onChange={(e) => setCampaignTitle(e.target.value)}
+                    placeholder="ej: Novedades del Mes"
+                    className="w-full px-6 py-4 bg-background border border-card-border rounded-2xl focus:border-nectar-gold outline-none transition-all font-bold text-xs text-foreground"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-4">Contenido (HTML Soportado)</label>
+                  <textarea
+                    required
+                    rows={8}
+                    value={campaignContent}
+                    onChange={(e) => setCampaignContent(e.target.value)}
+                    placeholder="Escribe el mensaje en HTML..."
+                    className="w-full px-6 py-4 bg-background border border-card-border rounded-2xl focus:border-nectar-gold outline-none transition-all font-medium text-xs text-foreground font-mono"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isSendingCampaign || !campaignSubject.trim() || !campaignContent.trim()}
+                  className="w-full py-4 bg-nectar-gold text-background text-[10px] font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 disabled:opacity-40 disabled:scale-100 transition-all font-bold shadow-lg shadow-nectar-gold/20"
+                >
+                  {isSendingCampaign ? 'Enviando Campaña...' : 'Enviar Campaña Masiva 🚀'}
+                </button>
+              </form>
+            </div>
+
+            {/* Live Preview Column */}
+            <div className="bg-card-bg border border-card-border rounded-[2.5rem] p-8 md:p-10 shadow-lg flex flex-col">
+              <span className="px-3 py-1 bg-foreground/5 text-foreground/60 text-[8px] font-black uppercase tracking-widest rounded-full border border-card-border/60 self-start">
+                Vista Previa del Correo
+              </span>
+
+              <div className="mt-6 border border-card-border bg-white rounded-2xl p-6 text-black flex-1 min-h-[350px] flex flex-col justify-between overflow-y-auto">
+                <div>
+                  <div className="border-b-2 border-amber-500 pb-4 mb-6 text-center">
+                    <h1 className="text-xl font-extrabold text-amber-600 tracking-tight">Néctar Labs</h1>
+                    <p className="text-[8px] uppercase tracking-widest text-gray-500">Boletín Informativo</p>
+                  </div>
+                  
+                  <h2 className="text-base font-bold text-gray-900 mb-4">{campaignTitle || campaignSubject || 'Título del Correo'}</h2>
+                  
+                  <div 
+                    className="text-xs text-gray-700 leading-relaxed font-sans space-y-3"
+                    dangerouslySetInnerHTML={{ __html: campaignContent || '<p className="italic text-gray-400">Comienza a escribir para ver la vista previa del contenido aquí...</p>' }}
+                  />
+                </div>
+
+                <div className="border-t border-gray-200 pt-6 mt-8 text-center text-[8px] text-gray-400 space-y-1">
+                  <p>© {new Date().getFullYear()} Néctar Labs. Todos los derechos reservados.</p>
+                  <p>Recibes este correo porque te suscribiste a nuestro boletín oficial.</p>
+                  <p className="text-amber-600 font-semibold cursor-pointer">Desuscribirse</p>
+                </div>
+              </div>
             </div>
           </div>
         </section>

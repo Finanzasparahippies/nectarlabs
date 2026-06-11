@@ -44,7 +44,7 @@ from django.conf import settings
 from apps.users.views import RegisterView, VerifyEmailView
 from apps.newsletter.views import SubscribeView, UnsubscribeView, SendCampaignView
 from apps.dashboard.views import BusinessStatsView
-from apps.shop.views import stripe_webhook
+from apps.shop.views import stripe_webhook, facturapi_webhook
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -66,6 +66,7 @@ urlpatterns = [
     path('api/auth/', include('rest_framework.urls')),
     path("ckeditor5/", include('django_ckeditor_5.urls')),
     path('api/shop/stripe-webhook/', stripe_webhook, name='stripe_webhook'),
+    path('api/shop/facturapi-webhook/', facturapi_webhook, name='facturapi_webhook'),
     path('api/shop/checkout/', ShopCheckoutView.as_view(), name='shop_checkout'),
     path('api/shop/shipping-rates/', GetShippingRatesView.as_view(), name='shop_shipping_rates'),
     path('api/billing/tax-profile/', TaxProfileView.as_view(), name='billing_tax_profile'),

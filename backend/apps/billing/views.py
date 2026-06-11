@@ -245,6 +245,12 @@ class InvoiceViewSet(BillingTenantMixin, viewsets.ModelViewSet):
     serializer_class = InvoiceSerializer
 
     def get_queryset(self):
+        user = self.request.user
+        is_system_admin = user.is_staff or getattr(user, 'role', '') == 'ADMIN'
+        
+        if is_system_admin and not self.request.query_params.get('tenant_id'):
+            return Invoice.objects.all()
+            
         tenant = self.get_tenant()
         return Invoice.objects.filter(tenant=tenant)
 

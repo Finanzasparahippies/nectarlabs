@@ -1208,3 +1208,219 @@ class BillingSystemTests(APITestCase):
             price_kwargs = mock_price_create.call_args[1]
             self.assertEqual(price_kwargs["idempotency_key"], "stamp_package_price_100_15000") # 100 * 1.50 * 100 = 15000 cents
 
+    @patch('requests.get')
+    def test_facturapi_webhook_invoice_created_updates_status_and_downloads_files(self, mock_requests_get):
+        """
+        Verify that facturapi-webhook handles invoice.created event, transitions status to PAID,
+        decrements stamp balance, downloads files, and updates PaymentInstallment.
+        """
+        # Create a pending invoice
+        invoice = Invoice.objects.create(
+            tenant=self.tenant,
+            stripe_invoice_id="stripe_inv_test",
+            facturapi_invoice_id="inv_test_webhook_123",
+            total=Decimal("100.00"),
+            status=Invoice.Status.PENDING,
+            is_tenant_to_customer=False
+        )
+        
+        # Link installment
+        self.installment.stripe_invoice_id = "stripe_inv_test"
+        self.installment.save()
+        
+        self.tenant.stamp_balance = 10
+        self.tenant.save()
+
+        # Mock requests.get for file downloads
+        mock_xml = MagicMock()
+        mock_xml.status_code = 200
+        mock_xml.content = b"<xml>factura</xml>"
+        
+        mock_pdf = MagicMock()
+        mock_pdf.status_code = 200
+        mock_pdf.content = b"pdf content"
+        
+        mock_requests_get.side_effect = [mock_xml, mock_pdf]
+
+        url = reverse('facturapi_webhook')
+        payload = {
+            "type": "invoice.created",
+            "data": {
+                "object": {
+                    "id": "inv_test_webhook_123",
+                    "uuid": "a3c428a2-25de-4dfb-90f7-872ab67262ba",
+                    "total": 100.00
+                }
+            }
+        }
+
+        response = self.client.post(url, payload, format='json')
+        self.assertEqual(response.status_code, 200)
+
+        # Refresh objects
+        invoice.refresh_from_db()
+        self.tenant.refresh_from_db()
+        self.installment.refresh_from_db()
+
+        self.assertEqual(invoice.status, Invoice.Status.PAID)
+        self.assertEqual(str(invoice.uuid_sat), "a3c428a2-25de-4dfb-90f7-872ab67262ba")
+        self.assertEqual(invoice.xml_file.read(), b"<xml>factura</xml>")
+        self.assertEqual(invoice.pdf_file.read(), b"pdf content")
+        self.assertEqual(self.tenant.stamp_balance, 9)
+        self.assertEqual(self.installment.cfdi_uuid, "a3c428a2-25de-4dfb-90f7-872ab67262ba")
+
+    def test_facturapi_webhook_invoice_cancelled(self):
+        """
+        Verify that facturapi-webhook handles invoice.cancelled event, transitioning Invoice status to CANCELLED.
+        """
+        invoice = Invoice.objects.create(
+            tenant=self.tenant,
+            facturapi_invoice_id="inv_test_webhook_123",
+            total=Decimal("100.00"),
+            status=Invoice.Status.PAID
+        )
+
+        url = reverse('facturapi_webhook')
+        payload = {
+            "type": "invoice.cancelled",
+            "data": {
+                "object": {
+                    "id": "inv_test_webhook_123"
+                }
+            }
+        }
+
+        response = self.client.post(url, payload, format='json')
+        self.assertEqual(response.status_code, 200)
+
+        invoice.refresh_from_db()
+        self.assertEqual(invoice.status, Invoice.Status.CANCELLED)
+
+    def test_facturapi_webhook_invoice_failed(self):
+        """
+        Verify that facturapi-webhook handles invoice.failed event, transitioning Invoice status to FAILED and logging the error message.
+        """
+        invoice = Invoice.objects.create(
+            tenant=self.tenant,
+            facturapi_invoice_id="inv_test_webhook_123",
+            total=Decimal("100.00"),
+            status=Invoice.Status.PENDING
+        )
+
+        url = reverse('facturapi_webhook')
+        payload = {
+            "type": "invoice.failed",
+            "data": {
+                "object": {
+                    "id": "inv_test_webhook_123",
+                    "message": "RFC RFC123456789 no existe en LCO"
+                }
+            }
+        }
+
+        response = self.client.post(url, payload, format='json')
+        self.assertEqual(response.status_code, 200)
+
+        invoice.refresh_from_db()
+        self.assertEqual(invoice.status, Invoice.Status.FAILED)
+        self.assertEqual(invoice.error_message, "RFC RFC123456789 no existe en LCO")
+
+    @patch('requests.get')
+    def test_facturapi_webhook_external_invoice_creation(self, mock_requests_get):
+        """
+        Verify that if an invoice is created on Facturapi but doesn't exist locally,
+        the webhook automatically creates a local Invoice instance for the matching TaxProfile tenant,
+        downloads files, and decrements stamp balance.
+        """
+        TaxProfile.objects.create(
+            tenant=self.tenant,
+            rfc="XAXX010101000",
+            razon_social="Tenant Enterprise",
+            regimen_fiscal="601",
+            codigo_postal="06000",
+            facturapi_organization_id="org_ext_123"
+        )
+        
+        self.tenant.stamp_balance = 5
+        self.tenant.save()
+
+        # Mock files download
+        mock_xml = MagicMock()
+        mock_xml.status_code = 200
+        mock_xml.content = b"<xml>external</xml>"
+        mock_pdf = MagicMock()
+        mock_pdf.status_code = 200
+        mock_pdf.content = b"pdf external"
+        mock_requests_get.side_effect = [mock_xml, mock_pdf]
+
+        url = reverse('facturapi_webhook')
+        payload = {
+            "type": "invoice.created",
+            "organization": "org_ext_123",
+            "data": {
+                "object": {
+                    "id": "inv_ext_123",
+                    "uuid": "b4d528a2-25de-4dfb-90f7-872ab67262ba",
+                    "total": 150.00
+                }
+            }
+        }
+
+        response = self.client.post(url, payload, format='json')
+        self.assertEqual(response.status_code, 200)
+
+        # Verify Invoice was created
+        invoice = Invoice.objects.filter(facturapi_invoice_id="inv_ext_123").first()
+        self.assertIsNotNone(invoice)
+        self.assertEqual(invoice.tenant, self.tenant)
+        self.assertEqual(invoice.status, Invoice.Status.PAID)
+        self.assertEqual(invoice.total, Decimal("150.00"))
+        self.assertEqual(invoice.is_tenant_to_customer, True)
+        self.assertEqual(invoice.xml_file.read(), b"<xml>external</xml>")
+        self.assertEqual(invoice.pdf_file.read(), b"pdf external")
+        
+        self.tenant.refresh_from_db()
+        self.assertEqual(self.tenant.stamp_balance, 4)
+
+    def test_facturapi_webhook_signature_verification(self):
+        """
+        Verify webhook signature verification when FACTURAPI_WEBHOOK_SECRET is set.
+        """
+        from django.test import override_settings
+        import hmac
+        import hashlib
+        import json
+
+        url = reverse('facturapi_webhook')
+        payload = {
+            "type": "invoice.cancelled",
+            "data": {
+                "object": {
+                    "id": "inv_some_id"
+                }
+            }
+        }
+        
+        # 1. Verification enabled, request has no signature -> 400
+        with override_settings(FACTURAPI_WEBHOOK_SECRET="mysecret"):
+            response = self.client.post(url, payload, format='json')
+            self.assertEqual(response.status_code, 400)
+
+        # 2. Verification enabled, request has invalid signature -> 401
+        with override_settings(FACTURAPI_WEBHOOK_SECRET="mysecret"):
+            response = self.client.post(url, payload, format='json', HTTP_FACTURAPI_SIGNATURE="badsig")
+            self.assertEqual(response.status_code, 401)
+
+        # 3. Verification enabled, request has valid signature -> 200
+        with override_settings(FACTURAPI_WEBHOOK_SECRET="mysecret"):
+            body_bytes = json.dumps(payload).encode('utf-8')
+            digest = hmac.new(b"mysecret", msg=body_bytes, digestmod=hashlib.sha256).hexdigest()
+            # Post using generic content_type and raw body to ensure content matches exact signature
+            response = self.client.post(
+                url,
+                data=json.dumps(payload),
+                content_type="application/json",
+                HTTP_FACTURAPI_SIGNATURE=digest
+            )
+            self.assertEqual(response.status_code, 200)
+

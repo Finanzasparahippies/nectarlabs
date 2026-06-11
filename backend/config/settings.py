@@ -253,6 +253,11 @@ STRIPE_PUBLISHABLE_KEY = env("STRIPE_PUBLISHABLE_KEY", default="")
 STRIPE_SECRET_KEY = env("STRIPE_SECRET_KEY", default="")
 STRIPE_WEBHOOK_SECRET = env("STRIPE_WEBHOOK_SECRET", default="")
 
+# PAC Facturación (Facturapi)
+PAC_PROVIDER = env("PAC_PROVIDER", default="mock")
+PAC_API_KEY = env("PAC_API_KEY", default=env("FACTURAPI_SECRET_KEY", default=""))
+FACTURAPI_WEBHOOK_SECRET = env("FACTURAPI_WEBHOOK_SECRET", default="")
+
 # Groq AI (Support Chat Assistant)
 GROQ_API_KEY = env("GROQ_API_KEY", default="")
 

@@ -1,6 +1,7 @@
 from django.urls import reverse
 from django.core import mail
 from rest_framework import status
+from django.contrib.auth import get_user_model
 from apps.tenants.test_base import BaseTenantAddonTestCase, logger
 from apps.shop.models import Contract
 from apps.newsletter.models import Subscriber
@@ -234,3 +235,38 @@ class NewsletterAddonTests(BaseTenantAddonTestCase):
             format='json'
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_system_admin_send_campaign(self):
+        """
+        Verify that a system admin (staff) can send a campaign to main platform subscribers (tenant = None).
+        """
+        logger.info("Executing test_system_admin_send_campaign...")
+        
+        # Create a system admin user
+        admin_user = get_user_model().objects.create_user(
+            username="sysadmin",
+            email="admin@nectarlabs.dev",
+            password="password123",
+            role=get_user_model().Role.ADMIN,
+            is_staff=True
+        )
+        
+        # Create subscribers for the main platform (tenant = None)
+        Subscriber.objects.create(email="platform_sub1@example.com", tenant=None, is_active=True)
+        Subscriber.objects.create(email="platform_sub2@example.com", tenant=None, is_active=True)
+        
+        self.client.force_authenticate(user=admin_user)
+        
+        url = reverse('newsletter_send_campaign')
+        payload = {
+            "subject": "Platform Update",
+            "title": "Welcome to the New Nectar Labs Platform!",
+            "content": "<p>We have launched new modular updates.</p>"
+        }
+        
+        mail.outbox = []
+        response = self.client.post(url, payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("Campaña enviada con éxito", response.data['message'])
+        self.assertEqual(response.data['sent_count'], 2)
+        self.assertEqual(len(mail.outbox), 2)

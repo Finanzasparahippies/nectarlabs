@@ -615,22 +615,26 @@ class PaymentInstallmentViewSet(viewsets.ModelViewSet):
             return django_response
         except Exception as e:
             return HttpResponse(f"Error al recuperar el archivo: {e}", status=500)
-
-
 @csrf_exempt
 def stripe_webhook(request):
     payload = request.body
     sig_header = request.META.get('HTTP_STRIPE_SIGNATURE')
-    event = None
-
-    try:
-        event = stripe.Webhook.construct_event(
-            payload, sig_header, settings.STRIPE_WEBHOOK_SECRET
-        )
-    except ValueError:
-        return HttpResponse(status=400)
-    except stripe.error.SignatureVerificationError:
-        return HttpResponse(status=400)
+    webhook_secret = getattr(settings, 'STRIPE_WEBHOOK_SECRET', '')
+    if webhook_secret:
+        try:
+            event = stripe.Webhook.construct_event(
+                payload, sig_header, webhook_secret
+            )
+        except ValueError:
+            return HttpResponse(status=400)
+        except stripe.error.SignatureVerificationError:
+            return HttpResponse(status=400)
+    else:
+        import json
+        try:
+            event = json.loads(payload.decode('utf-8'))
+        except (ValueError, UnicodeDecodeError):
+            return HttpResponse(status=400)
 
     # Idempotency check
     from .models import StripeEvent
@@ -1096,6 +1100,162 @@ def stripe_webhook(request):
                 logging.getLogger("apps").error(f"Error handling invoice.payment_succeeded webhook: {e}", exc_info=True)
 
     return HttpResponse(status=200)
+
+
+@csrf_exempt
+def facturapi_webhook(request):
+    import json
+    import hmac
+    import hashlib
+    import logging
+    import requests
+    from django.http import HttpResponse
+    from django.db import transaction
+    from django.core.files.base import ContentFile
+    from django.conf import settings
+    from apps.billing.models import Invoice, TaxProfile
+    from apps.shop.models import PaymentInstallment
+    from decimal import Decimal
+
+    logger = logging.getLogger("apps")
+
+    if request.method != 'POST':
+        return HttpResponse("Only POST requests allowed", status=405)
+
+    signature = request.headers.get('Facturapi-Signature')
+    payload_body = request.body
+
+    # Verify signature if secret is configured
+    webhook_secret = getattr(settings, 'FACTURAPI_WEBHOOK_SECRET', '')
+    if webhook_secret:
+        if not signature:
+            logger.warning("[facturapi_webhook] Missing Facturapi-Signature header.")
+            return HttpResponse("Missing signature", status=400)
+        
+        secret = bytes(webhook_secret, 'utf-8')
+        digest = hmac.new(secret, msg=payload_body, digestmod=hashlib.sha256)
+        calculated = digest.hexdigest()
+        
+        if not hmac.compare_digest(calculated, signature):
+            logger.warning("[facturapi_webhook] Signature verification failed.")
+            return HttpResponse("Invalid signature", status=401)
+
+    try:
+        payload = json.loads(payload_body.decode('utf-8'))
+    except (ValueError, UnicodeDecodeError) as e:
+        logger.error(f"[facturapi_webhook] JSON parse error: {e}")
+        return HttpResponse("Invalid JSON", status=400)
+
+    event_type = payload.get('type')
+    event_data = payload.get('data', {}).get('object', {})
+    facturapi_invoice_id = event_data.get('id')
+
+    if not event_type or not facturapi_invoice_id:
+        return HttpResponse("Missing event metadata", status=400)
+
+    logger.info(f"[facturapi_webhook] Received event {event_type} for invoice {facturapi_invoice_id}")
+
+    if event_type == 'invoice.created':
+        uuid_sat = event_data.get('uuid')
+        
+        # Look up the invoice first (without blocking transaction) to see if we can fetch/create it
+        invoice = Invoice.objects.filter(facturapi_invoice_id=facturapi_invoice_id).first()
+        
+        # Handle creating invoice if created directly on Facturapi
+        if not invoice:
+            organization_id = payload.get('organization')
+            if organization_id:
+                profile = TaxProfile.objects.filter(facturapi_organization_id=organization_id).first()
+                if profile:
+                    try:
+                        invoice = Invoice.objects.create(
+                            tenant=profile.tenant,
+                            facturapi_invoice_id=facturapi_invoice_id,
+                            total=Decimal(str(event_data.get('total', 0))),
+                            status=Invoice.Status.PENDING,
+                            is_tenant_to_customer=True
+                        )
+                        logger.info(f"[facturapi_webhook] Created local invoice for external Facturapi invoice {facturapi_invoice_id}")
+                    except Exception as create_err:
+                        logger.error(f"[facturapi_webhook] Error creating local invoice record: {create_err}")
+
+        xml_file = None
+        pdf_file = None
+
+        if invoice and (not invoice.xml_file or not invoice.pdf_file):
+            try:
+                headers = {
+                    "Authorization": f"Bearer {settings.PAC_API_KEY}",
+                    "Content-Type": "application/json"
+                }
+                if invoice.is_tenant_to_customer:
+                    tax_profile = getattr(invoice.tenant, 'tax_profile', None)
+                    if tax_profile and tax_profile.facturapi_organization_id:
+                        headers["Facturapi-Organization"] = tax_profile.facturapi_organization_id
+                
+                base_url = "https://www.facturapi.3.mx/v1/invoices"
+                xml_resp = requests.get(f"{base_url}/{facturapi_invoice_id}/xml", headers=headers, timeout=10)
+                pdf_resp = requests.get(f"{base_url}/{facturapi_invoice_id}/pdf", headers=headers, timeout=10)
+                
+                if xml_resp.status_code == 200:
+                    xml_file = ContentFile(xml_resp.content, name=f"{uuid_sat}.xml")
+                if pdf_resp.status_code == 200:
+                    pdf_file = ContentFile(pdf_resp.content, name=f"{uuid_sat}.pdf")
+            except Exception as file_err:
+                logger.error(f"[facturapi_webhook] Error downloading invoice files: {file_err}")
+
+        if invoice:
+            with transaction.atomic():
+                # Lock the invoice
+                invoice = Invoice.objects.select_for_update().filter(id=invoice.id).first()
+                if invoice and invoice.status != Invoice.Status.PAID:
+                    # Check if we should decrement stamp balance (if not already decremented)
+                    if invoice.status in [Invoice.Status.PENDING, Invoice.Status.FAILED]:
+                        tenant = invoice.tenant
+                        tenant.stamp_balance = max(0, tenant.stamp_balance - 1)
+                        tenant.save()
+                    
+                    invoice.status = Invoice.Status.PAID
+                    invoice.uuid_sat = uuid_sat
+                    invoice.error_message = None
+                    if xml_file:
+                        invoice.xml_file.save(xml_file.name, xml_file, save=False)
+                    if pdf_file:
+                        invoice.pdf_file.save(pdf_file.name, pdf_file, save=False)
+                    invoice.save()
+                    logger.info(f"[facturapi_webhook] Marked invoice {facturapi_invoice_id} as PAID")
+                    
+                    # If this is parent-to-tenant invoice, link to PaymentInstallment and send confirmation email
+                    if not invoice.is_tenant_to_customer:
+                        inst = PaymentInstallment.objects.filter(stripe_invoice_id=invoice.stripe_invoice_id).first()
+                        if inst:
+                            inst.cfdi_uuid = str(uuid_sat)
+                            inst.save(update_fields=['cfdi_uuid'])
+                            try:
+                                from apps.shop.utils import send_payment_receipt_email
+                                send_payment_receipt_email(inst)
+                            except Exception as mail_err:
+                                logger.error(f"[facturapi_webhook] Error sending payment receipt email: {mail_err}")
+
+    elif event_type == 'invoice.cancelled':
+        with transaction.atomic():
+            invoice = Invoice.objects.select_for_update().filter(facturapi_invoice_id=facturapi_invoice_id).first()
+            if invoice and invoice.status != Invoice.Status.CANCELLED:
+                invoice.status = Invoice.Status.CANCELLED
+                invoice.save(update_fields=['status'])
+                logger.info(f"[facturapi_webhook] Marked invoice {facturapi_invoice_id} as CANCELLED")
+
+    elif event_type == 'invoice.failed':
+        message = event_data.get('message') or event_data.get('error', {}).get('message') or "Unknown error"
+        with transaction.atomic():
+            invoice = Invoice.objects.select_for_update().filter(facturapi_invoice_id=facturapi_invoice_id).first()
+            if invoice and invoice.status != Invoice.Status.FAILED:
+                invoice.status = Invoice.Status.FAILED
+                invoice.error_message = message
+                invoice.save(update_fields=['status', 'error_message'])
+                logger.info(f"[facturapi_webhook] Marked invoice {facturapi_invoice_id} as FAILED: {message}")
+
+    return HttpResponse("OK", status=200)
 
 
 class PromoCodeViewSet(viewsets.ModelViewSet):

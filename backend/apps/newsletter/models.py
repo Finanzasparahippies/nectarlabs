@@ -71,29 +71,33 @@ def send_newsletter_email(subject, template_name, context, recipient_list, tenan
     if connection is not None:
         providers.append(("Tenant SMTP", connection, from_email))
     else:
-        # For platform campaigns, attempt Brevo first, then SES, then Zoho/Default
-        # Brevo (Free)
-        if settings.BREVO_EMAIL_HOST_USER and settings.BREVO_EMAIL_HOST_PASSWORD:
-            providers.append(("Brevo SMTP", {
-                'host': settings.BREVO_EMAIL_HOST,
-                'port': settings.BREVO_EMAIL_PORT,
-                'username': settings.BREVO_EMAIL_HOST_USER,
-                'password': settings.BREVO_EMAIL_HOST_PASSWORD,
-                'use_tls': settings.BREVO_EMAIL_USE_TLS,
-            }, from_email))
-            
-        # Amazon SES (Failover/Paid)
-        if settings.SES_EMAIL_HOST_USER and settings.SES_EMAIL_HOST_PASSWORD:
-            providers.append(("Amazon SES", {
-                'host': settings.SES_EMAIL_HOST,
-                'port': settings.SES_EMAIL_PORT,
-                'username': settings.SES_EMAIL_HOST_USER,
-                'password': settings.SES_EMAIL_HOST_PASSWORD,
-                'use_tls': settings.SES_EMAIL_USE_TLS,
-            }, from_email))
-            
-        # Zoho/Default (Fallback)
-        providers.append(("Zoho/Default SMTP", None, from_email))
+        # Check if we are running in testing environment to use locmem
+        if getattr(settings, 'TESTING', False) or getattr(settings, 'EMAIL_BACKEND', None) == 'django.core.mail.backends.locmem.EmailBackend':
+            providers.append(("Testing locmem", None, from_email))
+        else:
+            # For platform campaigns, attempt Brevo first, then SES, then Zoho/Default
+            # Brevo (Free)
+            if settings.BREVO_EMAIL_HOST_USER and settings.BREVO_EMAIL_HOST_PASSWORD:
+                providers.append(("Brevo SMTP", {
+                    'host': settings.BREVO_EMAIL_HOST,
+                    'port': settings.BREVO_EMAIL_PORT,
+                    'username': settings.BREVO_EMAIL_HOST_USER,
+                    'password': settings.BREVO_EMAIL_HOST_PASSWORD,
+                    'use_tls': settings.BREVO_EMAIL_USE_TLS,
+                }, from_email))
+                
+            # Amazon SES (Failover/Paid)
+            if settings.SES_EMAIL_HOST_USER and settings.SES_EMAIL_HOST_PASSWORD:
+                providers.append(("Amazon SES", {
+                    'host': settings.SES_EMAIL_HOST,
+                    'port': settings.SES_EMAIL_PORT,
+                    'username': settings.SES_EMAIL_HOST_USER,
+                    'password': settings.SES_EMAIL_HOST_PASSWORD,
+                    'use_tls': settings.SES_EMAIL_USE_TLS,
+                }, from_email))
+                
+            # Zoho/Default (Fallback)
+            providers.append(("Zoho/Default SMTP", None, from_email))
 
     # Attempt to send using the providers sequentially until successful
     last_error = None
