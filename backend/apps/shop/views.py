@@ -1143,6 +1143,8 @@ def stripe_webhook(request):
             except Exception as e:
                 import logging
                 logging.getLogger("apps").error(f"Error handling invoice.payment_succeeded webhook: {e}", exc_info=True)
+                if getattr(settings, 'TESTING', False):
+                    raise e
 
     return HttpResponse(status=200)
 
