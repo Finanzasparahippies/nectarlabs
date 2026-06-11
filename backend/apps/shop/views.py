@@ -753,7 +753,6 @@ def stripe_webhook(request):
                     
                     # --- CREATE OR UPDATE AddOnSubscription ---
                     try:
-                        from apps.shop.models import AddOnSubscription, AddOn
                         from apps.tenants.models import Tenant
                         addon = AddOn.objects.get(id=addon_id)
                         tenant = Tenant.objects.filter(owner=contract.user).first()
@@ -811,7 +810,6 @@ def stripe_webhook(request):
                         
                         # Sync it back to the newly created/activated tenant in AddOnSubscription
                         try:
-                            from apps.shop.models import AddOnSubscription, AddOn
                             addon = AddOn.objects.get(id=addon_id)
                             AddOnSubscription.objects.filter(user=user, addon=addon).update(tenant=tenant)
                         except Exception:
@@ -968,7 +966,6 @@ def stripe_webhook(request):
         addon_id = metadata.get('addon_id')
         
         try:
-            from apps.shop.models import AddOnSubscription
             addon_sub = None
             if subscription_id:
                 addon_sub = AddOnSubscription.objects.filter(stripe_subscription_id=subscription_id).first()
@@ -1002,7 +999,6 @@ def stripe_webhook(request):
         addon_id = metadata.get('addon_id')
         
         try:
-            from apps.shop.models import AddOnSubscription
             addon_sub = None
             if subscription_id:
                 addon_sub = AddOnSubscription.objects.filter(stripe_subscription_id=subscription_id).first()
