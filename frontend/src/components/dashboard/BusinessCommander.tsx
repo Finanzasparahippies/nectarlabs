@@ -3180,6 +3180,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
                 );
               })()}
             </div>
+          </div>
         </section>
       )}
 
