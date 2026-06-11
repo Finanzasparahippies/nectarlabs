@@ -1145,7 +1145,7 @@ def facturapi_webhook(request):
                     if tax_profile and tax_profile.facturapi_organization_id:
                         headers["Facturapi-Organization"] = tax_profile.facturapi_organization_id
                 
-                base_url = "https://www.facturapi.3.mx/v1/invoices"
+                base_url = "https://www.facturapi.io/v1/invoices"
                 xml_resp = requests.get(f"{base_url}/{facturapi_invoice_id}/xml", headers=headers, timeout=10)
                 pdf_resp = requests.get(f"{base_url}/{facturapi_invoice_id}/pdf", headers=headers, timeout=10)
                 

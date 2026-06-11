@@ -102,7 +102,7 @@ class FacturapiPACService(PACServiceBase):
     """
     def __init__(self):
         self.api_key = getattr(settings, 'PAC_API_KEY', '')
-        self.base_url = "https://www.facturapi.3.mx/v1" # Sandbox de Facturapi
+        self.base_url = "https://www.facturapi.io/v1" 
         self.headers = {
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json"
