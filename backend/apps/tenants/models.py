@@ -168,7 +168,7 @@ class Tenant(models.Model):
 
     @property
     def active_addons(self):
-        from apps.shop.models import AddOn, Contract
+        from apps.shop.models import AddOn, Contract, AddOnSubscription
         # If tenant owner has an active, fully signed contract with a plan, return all active addons
         has_plan = Contract.objects.filter(
             user=self.owner,
@@ -188,6 +188,13 @@ class Tenant(models.Model):
                 contracts__is_active=True,
                 contracts__is_fully_signed=True
             ).values_list('slug', flat=True).distinct())
+            
+            # Synchronize active subscriptions
+            active_subs = AddOnSubscription.objects.filter(
+                user=self.owner,
+                status__in=['active', 'trialing']
+            ).values_list('addon__slug', flat=True)
+            addons.update(active_subs)
             
         if self.newsletter_plan == 'PREMIUM':
             addons.add('newsletter-campaigner')

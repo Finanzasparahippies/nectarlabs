@@ -7,8 +7,8 @@ from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse
 import stripe
-from .models import Plan, Product, Contract, PaymentInstallment, AddOn, PromoCode, SalesCommission
-from .serializers import PlanSerializer, ProductSerializer, ContractSerializer, PaymentInstallmentSerializer, AddOnSerializer, PromoCodeSerializer, SalesCommissionSerializer
+from .models import Plan, Product, Contract, PaymentInstallment, AddOn, PromoCode, SalesCommission, AddOnSubscription
+from .serializers import PlanSerializer, ProductSerializer, ContractSerializer, PaymentInstallmentSerializer, AddOnSerializer, PromoCodeSerializer, SalesCommissionSerializer, AddOnSubscriptionSerializer
 from .utils import generate_contract_pdf, send_contract_emails, send_payment_receipt_email, send_addon_payment_receipt_email
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
@@ -175,6 +175,17 @@ class AddOnViewSet(viewsets.ModelViewSet):
             return Response({'url': session.url}, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class AddOnSubscriptionViewSet(viewsets.ModelViewSet):
+    serializer_class = AddOnSubscriptionSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_staff or user.role in ['ADMIN', 'BUSINESS']:
+            return AddOnSubscription.objects.all().order_by('-created_at')
+        return AddOnSubscription.objects.filter(user=user).order_by('-created_at')
+
 
 class ContractViewSet(viewsets.ModelViewSet):
     serializer_class = ContractSerializer
@@ -739,6 +750,31 @@ def stripe_webhook(request):
                             payment_commitment_method='STRIPE'
                         )
                     contract.addons.add(addon_id)
+                    
+                    # --- CREATE OR UPDATE AddOnSubscription ---
+                    try:
+                        from apps.shop.models import AddOnSubscription, AddOn
+                        from apps.tenants.models import Tenant
+                        addon = AddOn.objects.get(id=addon_id)
+                        tenant = Tenant.objects.filter(owner=contract.user).first()
+                        subscription_id = session.get('subscription')
+                        billing_cycle = session.get('metadata', {}).get('billing_cycle', 'monthly')
+                        
+                        price = addon.yearly_price if billing_cycle == 'yearly' else addon.monthly_price
+
+                        AddOnSubscription.objects.update_or_create(
+                            user=user,
+                            addon=addon,
+                            defaults={
+                                'tenant': tenant,
+                                'stripe_subscription_id': subscription_id,
+                                'status': 'active',
+                                'billing_cycle': billing_cycle,
+                                'price_paid': price
+                            }
+                        )
+                    except Exception as sub_err:
+                        _webhook_logger.error(f"[stripe_webhook] Error creating/updating AddOnSubscription in webhook: {sub_err}", exc_info=True)
                 except Exception as core_err:
                     _webhook_logger.error(
                         f"[stripe_webhook] addon_subscription: error in core activation for user={user_id} addon={addon_id}: {core_err}",
@@ -772,6 +808,14 @@ def stripe_webhook(request):
                             if not tenant.is_active:
                                 tenant.is_active = True
                                 tenant.save()
+                        
+                        # Sync it back to the newly created/activated tenant in AddOnSubscription
+                        try:
+                            from apps.shop.models import AddOnSubscription, AddOn
+                            addon = AddOn.objects.get(id=addon_id)
+                            AddOnSubscription.objects.filter(user=user, addon=addon).update(tenant=tenant)
+                        except Exception:
+                            pass
                 except Exception as tenant_err:
                     _webhook_logger.error(f"Error creating/activating tenant on addon subscription: {tenant_err}", exc_info=True)
 
@@ -918,18 +962,67 @@ def stripe_webhook(request):
     # Procesar cancelación de suscripción
     elif event['type'] == 'customer.subscription.deleted':
         subscription = event['data']['object']
+        subscription_id = subscription.get('id')
         metadata = subscription.get('metadata', {})
         user_id = metadata.get('user_id')
         addon_id = metadata.get('addon_id')
         
-        if user_id and addon_id:
-            try:
+        try:
+            from apps.shop.models import AddOnSubscription
+            addon_sub = None
+            if subscription_id:
+                addon_sub = AddOnSubscription.objects.filter(stripe_subscription_id=subscription_id).first()
+            if not addon_sub and user_id and addon_id:
+                addon_sub = AddOnSubscription.objects.filter(user_id=user_id, addon_id=addon_id).first()
+            
+            if addon_sub:
+                addon_sub.status = 'canceled'
+                addon_sub.save()
+                
                 # Buscar el contrato activo del usuario y remover el add-on
+                contract = Contract.objects.filter(user=addon_sub.user, is_active=True).first()
+                if contract:
+                    contract.addons.remove(addon_sub.addon)
+            elif user_id and addon_id:
+                # Fallback anterior
                 contract = Contract.objects.filter(user_id=user_id, is_active=True).first()
                 if contract:
                     contract.addons.remove(addon_id)
-            except Exception:
-                pass
+        except Exception as del_err:
+            import logging
+            logging.getLogger("apps").error(f"Error handling customer.subscription.deleted: {del_err}", exc_info=True)
+
+    # Procesar actualización de suscripción (ej. pagos fallidos o exitosos cambiantes)
+    elif event['type'] == 'customer.subscription.updated':
+        subscription = event['data']['object']
+        subscription_id = subscription.get('id')
+        stripe_status = subscription.get('status') # active, past_due, trialing, incomplete, etc.
+        metadata = subscription.get('metadata', {})
+        user_id = metadata.get('user_id')
+        addon_id = metadata.get('addon_id')
+        
+        try:
+            from apps.shop.models import AddOnSubscription
+            addon_sub = None
+            if subscription_id:
+                addon_sub = AddOnSubscription.objects.filter(stripe_subscription_id=subscription_id).first()
+            if not addon_sub and user_id and addon_id:
+                addon_sub = AddOnSubscription.objects.filter(user_id=user_id, addon_id=addon_id).first()
+                
+            if addon_sub:
+                addon_sub.status = stripe_status
+                addon_sub.save()
+                
+                # Sincronizar el add-on en el contrato activo
+                contract = Contract.objects.filter(user=addon_sub.user, is_active=True).first()
+                if contract:
+                    if stripe_status in ['active', 'trialing']:
+                        contract.addons.add(addon_sub.addon)
+                    else:
+                        contract.addons.remove(addon_sub.addon)
+        except Exception as upd_err:
+            import logging
+            logging.getLogger("apps").error(f"Error handling customer.subscription.updated: {upd_err}", exc_info=True)
 
     # Acreditación de timbres en renovación/primer pago de suscripción mensual
     elif event['type'] == 'invoice.payment_succeeded':

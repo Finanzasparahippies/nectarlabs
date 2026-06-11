@@ -519,6 +519,60 @@ class AddOn(models.Model):
         return f"{self.name} (${self.monthly_price}/mes)"
 
 
+class AddOnSubscription(models.Model):
+    class Status(models.TextChoices):
+        ACTIVE = 'active', 'Activo'
+        TRIALING = 'trialing', 'Periodo de Prueba'
+        PAST_DUE = 'past_due', 'Pago Atrasado'
+        CANCELED = 'canceled', 'Cancelado'
+        INCOMPLETE = 'incomplete', 'Incompleto'
+
+    tenant = models.ForeignKey(
+        'tenants.Tenant',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='addon_subscriptions'
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='addon_subscriptions'
+    )
+    addon = models.ForeignKey(
+        AddOn,
+        on_delete=models.CASCADE,
+        related_name='subscriptions'
+    )
+    stripe_subscription_id = models.CharField(
+        max_length=255,
+        unique=True,
+        db_index=True,
+        null=True,
+        blank=True
+    )
+    status = models.CharField(
+        max_length=50,
+        choices=Status.choices,
+        default=Status.ACTIVE
+    )
+    billing_cycle = models.CharField(
+        max_length=20,
+        default='monthly',
+        choices=[('monthly', 'Mensual'), ('yearly', 'Anual')]
+    )
+    price_paid = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=0.00
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.user.email} - {self.addon.name} ({self.get_status_display()})"
+
+
 class PromoCode(models.Model):
     class CodeType(models.TextChoices):
         CLIENT = 'CLIENT', 'Cliente'

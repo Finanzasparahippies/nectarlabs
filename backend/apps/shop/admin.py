@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Plan, Product, Order, AddOn, Contract, PaymentInstallment, PromoCode
+from .models import Plan, Product, Order, AddOn, Contract, PaymentInstallment, PromoCode, AddOnSubscription
 
 @admin.register(Plan)
 class PlanAdmin(admin.ModelAdmin):
@@ -51,3 +51,9 @@ class PromoCodeAdmin(admin.ModelAdmin):
     search_fields = ('code', 'referrer__email')
     ordering = ('-created_at',)
 
+
+@admin.register(AddOnSubscription)
+class AddOnSubscriptionAdmin(admin.ModelAdmin):
+    list_display = ('id', 'user', 'tenant', 'addon', 'stripe_subscription_id', 'status', 'billing_cycle', 'created_at')
+    list_filter = ('status', 'billing_cycle', 'created_at')
+    search_fields = ('user__email', 'tenant__name', 'addon__name', 'stripe_subscription_id')

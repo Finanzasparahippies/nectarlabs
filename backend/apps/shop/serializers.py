@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Plan, Product, Contract, PaymentInstallment, AddOn, PromoCode, SalesCommission, Order, OrderItem
+from .models import Plan, Product, Contract, PaymentInstallment, AddOn, PromoCode, SalesCommission, Order, OrderItem, AddOnSubscription
 
 class PlanSerializer(serializers.ModelSerializer):
     class Meta:
@@ -112,3 +112,15 @@ class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = '__all__'
+
+
+class AddOnSubscriptionSerializer(serializers.ModelSerializer):
+    addon_details = AddOnSerializer(source='addon', read_only=True)
+    user_email = serializers.EmailField(source='user.email', read_only=True)
+    tenant_name = serializers.CharField(source='tenant.name', read_only=True)
+    tenant_subdomain = serializers.CharField(source='tenant.subdomain', read_only=True)
+
+    class Meta:
+        model = AddOnSubscription
+        fields = '__all__'
+
