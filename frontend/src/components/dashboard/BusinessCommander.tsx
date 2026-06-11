@@ -88,12 +88,17 @@ export default function BusinessCommander({ stats, installments, setInstallments
   const [cfdiInputs, setCfdiInputs] = useState<Record<number, string>>({});
 
   // Premium Tab State
-  const [activeTab, setActiveTab] = useState<'financials' | 'kanban' | 'quotes' | 'sales' | 'invoices' | 'marketing'>('financials');
+  const [activeTab, setActiveTab] = useState<'financials' | 'kanban' | 'quotes' | 'sales' | 'invoices' | 'marketing' | 'addons'>('financials');
 
   // Invoices & Marketing Campaigns states
   const [systemInvoices, setSystemInvoices] = useState<any[]>([]);
   const [loadingInvoices, setLoadingInvoices] = useState(false);
   const [invoiceSearch, setInvoiceSearch] = useState<string>('');
+
+  // Add-on subscriptions states
+  const [addonSubscriptions, setAddonSubscriptions] = useState<any[]>([]);
+  const [loadingAddons, setLoadingAddons] = useState(false);
+  const [addonSearch, setAddonSearch] = useState<string>('');
 
   // Marketing Campaigns states
   const [campaignSubject, setCampaignSubject] = useState('');
@@ -267,6 +272,24 @@ export default function BusinessCommander({ stats, installments, setInstallments
         }
       };
       loadSystemInvoices();
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (activeTab === 'addons') {
+      const loadAddonSubscriptions = async () => {
+        setLoadingAddons(true);
+        try {
+          const res = await fetcher('/addon-subscriptions/');
+          setAddonSubscriptions(Array.isArray(res) ? res : []);
+        } catch (err) {
+          console.error('Error loading addon subscriptions:', err);
+          showToast('Error al cargar las suscripciones de Add-ons.', 'error');
+        } finally {
+          setLoadingAddons(false);
+        }
+      };
+      loadAddonSubscriptions();
     }
   }, [activeTab]);
 
@@ -1280,6 +1303,14 @@ export default function BusinessCommander({ stats, installments, setInstallments
         >
           Campañas de Marketing
           {activeTab === 'marketing' && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-nectar-gold"></span>}
+        </button>
+        <button
+          onClick={() => setActiveTab('addons')}
+          className={`pb-4 text-xs font-black uppercase tracking-widest relative transition-all whitespace-nowrap ${activeTab === 'addons' ? 'text-nectar-gold' : 'text-foreground/45 hover:text-foreground'
+            }`}
+        >
+          Suscripciones Add-ons
+          {activeTab === 'addons' && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-nectar-gold"></span>}
         </button>
       </div>
 
@@ -3148,6 +3179,151 @@ export default function BusinessCommander({ stats, installments, setInstallments
                   </div>
                 );
               })()}
+            </div>
+        </section>
+      )}
+
+      {activeTab === 'addons' && (
+        <section className="space-y-10 animate-fadeIn text-left">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-card-bg border border-card-border p-6 rounded-[2rem] shadow-lg">
+            <div>
+              <h2 className="text-xs font-black uppercase tracking-[0.4em] opacity-30 mb-1">Suscripciones de Add-ons</h2>
+              <p className="text-[9px] font-bold text-foreground/30 uppercase tracking-wider">Historial y control de módulos activos en inquilinos de Néctar Labs</p>
+            </div>
+            <div className="flex flex-col sm:flex-row items-end sm:items-center gap-4 w-full md:w-auto">
+              <div className="flex flex-col gap-1 min-w-[250px] w-full sm:w-auto">
+                <label className="text-[7.5px] font-black uppercase tracking-widest opacity-40 ml-2">Buscar Cliente, Inquilino o Add-on</label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={addonSearch}
+                    onChange={(e) => setAddonSearch(e.target.value)}
+                    placeholder="Buscar..."
+                    className="w-full bg-background border border-card-border rounded-xl px-4 py-2 text-xs text-foreground focus:outline-none focus:border-nectar-gold"
+                  />
+                  {addonSearch && (
+                    <button
+                      onClick={() => setAddonSearch('')}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground/45 hover:text-foreground text-xs font-bold"
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-card-bg border border-card-border rounded-[2.5rem] p-8 md:p-10 shadow-lg">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-card-border/50 text-[8px] font-black uppercase tracking-widest opacity-40">
+                    <th className="pb-4">Fecha</th>
+                    <th className="pb-4">Inquilino / Cliente</th>
+                    <th className="pb-4">Add-on / Módulo</th>
+                    <th className="pb-4">Esquema</th>
+                    <th className="pb-4">Monto (MXN)</th>
+                    <th className="pb-4 text-center">Estatus</th>
+                    <th className="pb-4 text-right">Stripe ID</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(() => {
+                    const query = addonSearch.toLowerCase().trim();
+                    const filtered = addonSubscriptions.filter(sub => {
+                      if (!query) return true;
+                      return (
+                        (sub.user_email && sub.user_email.toLowerCase().includes(query)) ||
+                        (sub.tenant_name && sub.tenant_name.toLowerCase().includes(query)) ||
+                        (sub.addon_details?.name && sub.addon_details.name.toLowerCase().includes(query)) ||
+                        (sub.stripe_subscription_id && sub.stripe_subscription_id.toLowerCase().includes(query))
+                      );
+                    });
+
+                    if (loadingAddons) {
+                      return (
+                        <tr>
+                          <td colSpan={7} className="py-12 text-center text-xs opacity-50">
+                            Cargando suscripciones...
+                          </td>
+                        </tr>
+                      );
+                    }
+
+                    if (filtered.length === 0) {
+                      return (
+                        <tr>
+                          <td colSpan={7} className="py-12 text-center text-[9px] font-black uppercase tracking-widest opacity-25">
+                            Sin suscripciones encontradas
+                          </td>
+                        </tr>
+                      );
+                    }
+
+                    return filtered.map((sub) => {
+                      const isActive = sub.status === 'active';
+                      const isTrialing = sub.status === 'trialing';
+                      const isPastDue = sub.status === 'past_due';
+                      const isCanceled = sub.status === 'canceled';
+                      const isIncomplete = sub.status === 'incomplete';
+
+                      let badgeClass = 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20';
+                      let statusText = sub.status;
+                      if (isActive) {
+                        badgeClass = 'bg-green-500/10 text-green-500 border-green-500/20';
+                        statusText = 'Activo';
+                      } else if (isTrialing) {
+                        badgeClass = 'bg-blue-500/10 text-blue-500 border-blue-500/20';
+                        statusText = 'Prueba';
+                      } else if (isPastDue) {
+                        badgeClass = 'bg-orange-500/10 text-orange-500 border-orange-500/20';
+                        statusText = 'Atrasado';
+                      } else if (isCanceled) {
+                        badgeClass = 'bg-red-500/10 text-red-500 border-red-500/20';
+                        statusText = 'Cancelado';
+                      } else if (isIncomplete) {
+                        badgeClass = 'bg-gray-500/10 text-gray-400 border-gray-500/20';
+                        statusText = 'Incompleto';
+                      }
+
+                      return (
+                        <tr key={sub.id} className="border-b border-card-border/30 last:border-0 hover:bg-foreground/[0.02] transition-colors">
+                          <td className="py-4 text-xs font-mono opacity-80">
+                            {new Date(sub.created_at).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })}
+                          </td>
+                          <td className="py-4 pr-4">
+                            <span className="font-black text-sm">{sub.tenant_name || 'Néctar Labs'}</span>
+                            <span className="text-[7.5px] font-bold block text-foreground/40 mt-0.5">
+                              {sub.user_email} {sub.tenant_subdomain ? `(${sub.tenant_subdomain})` : ''}
+                            </span>
+                          </td>
+                          <td className="py-4 pr-4">
+                            <span className="font-black text-xs text-nectar-gold">{sub.addon_details?.name || 'Módulo'}</span>
+                            <span className="text-[7.5px] font-bold block text-foreground/40 mt-0.5 uppercase">
+                              Ref: {sub.addon_details?.slug || '—'}
+                            </span>
+                          </td>
+                          <td className="py-4 font-black text-xs uppercase tracking-wider">
+                            {sub.billing_cycle === 'yearly' ? 'Anual' : 'Mensual'}
+                          </td>
+                          <td className="py-4 font-black text-xs">
+                            ${parseFloat(sub.price_paid).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                          </td>
+                          <td className="py-4 text-center">
+                            <span className={`px-2.5 py-1 text-[7px] font-black uppercase tracking-widest rounded-full border ${badgeClass}`}>
+                              {statusText}
+                            </span>
+                          </td>
+                          <td className="py-4 text-right font-mono text-[9px] opacity-70 select-all" title={sub.stripe_subscription_id || 'Sin Stripe ID'}>
+                            {sub.stripe_subscription_id || '—'}
+                          </td>
+                        </tr>
+                      );
+                    });
+                  })()}
+                </tbody>
+              </table>
             </div>
           </div>
         </section>

@@ -220,6 +220,7 @@ export default function AddonsPage() {
   const [hasPlanContract, setHasPlanContract] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'warning' | 'info' } | null>(null);
   const [fetching, setFetching] = useState(true);
+  const [subscriptions, setSubscriptions] = useState<any[]>([]);
 
   const showToast = (message: string, type: 'success' | 'error' | 'warning' | 'info' = 'success') => {
     setToast({ message, type });
@@ -269,6 +270,16 @@ export default function AddonsPage() {
           }
         } catch (tenantsErr) {
           console.error("Error loading tenants:", tenantsErr);
+        }
+
+        // Fetch active addon subscriptions
+        try {
+          const subsData = await fetcher('/addon-subscriptions/');
+          if (Array.isArray(subsData)) {
+            setSubscriptions(subsData);
+          }
+        } catch (subsErr) {
+          console.error("Error loading subscriptions:", subsErr);
         }
 
         const data = await fetcher('/addons/');
@@ -346,6 +357,15 @@ export default function AddonsPage() {
         console.error("Error loading tenants in fallback:", tenantsErr);
       }
 
+      try {
+        const subsData = await fetcher('/addon-subscriptions/');
+        if (Array.isArray(subsData)) {
+          setSubscriptions(subsData);
+        }
+      } catch (subsErr) {
+        console.error("Error loading subscriptions in fallback:", subsErr);
+      }
+
       const mapped = fallbackAddons.map(a => ({
         ...a,
         icon: getAddonIcon(a.id)
@@ -368,6 +388,20 @@ export default function AddonsPage() {
 
     loadAddons();
   }, []);
+
+  const handleOpenBillingPortal = async () => {
+    try {
+      setIsSubmitting(true);
+      const data = await fetcher('/addons/customer_portal/', { method: 'POST' });
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    } catch (err: any) {
+      showToast(err.message || "Error al abrir el portal de Stripe", "error");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const handleToggleAddon = async (contractId: number, addonSlug: string, isCurrentlyActive: boolean) => {
     try {
@@ -629,6 +663,8 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
             const isEnabled = ['logistics-gps', 'mexico-invoicing', 'newsletter-campaigner', 'ecommerce-combo'].includes(addon.id);
             const price = billingCycle === 'monthly' ? addon.monthlyPrice : addon.yearlyPrice;
             const savings = billingCycle === 'yearly' ? addon.monthlyPrice * 2 : 0;
+            const isAddonActive = tenants.some(t => t.active_addons?.includes(addon.id)) ||
+                                  subscriptions.some(s => s.addon_details?.slug === addon.id && ['active', 'trialing'].includes(s.status));
             return (
               <div
                 key={addon.id}
@@ -652,9 +688,16 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
                 <div>
                   {/* Category Badge & Icon */}
                   <div className="flex justify-between items-start mb-8">
-                    <span className="text-[8px] font-black uppercase tracking-widest text-nectar-gold bg-nectar-gold/5 border border-nectar-gold/15 px-3 py-1.5 rounded-full">
-                      {addon.categoryBadge}
-                    </span>
+                    <div className="flex flex-col gap-1.5 items-start">
+                      <span className="text-[8px] font-black uppercase tracking-widest text-nectar-gold bg-nectar-gold/5 border border-nectar-gold/15 px-3 py-1.5 rounded-full">
+                        {addon.categoryBadge}
+                      </span>
+                      {isAddonActive && (
+                        <span className="text-[7px] font-black uppercase tracking-widest text-emerald-400 bg-emerald-400/5 border border-emerald-400/20 px-2.5 py-1.5 rounded-md">
+                          ✓ Módulo Activo
+                        </span>
+                      )}
+                    </div>
                     <div className={`p-3 bg-foreground/5 rounded-2xl transition-all duration-500 ${isEnabled ? 'group-hover:bg-nectar-gold/10 group-hover:scale-110' : ''}`}>
                       {addon.icon}
                     </div>
@@ -725,6 +768,23 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
                         >
                           Asignar Cliente
                         </button>
+                      ) : isAddonActive ? (
+                        hasPlanContract ? (
+                          <button
+                            disabled
+                            className="w-full py-4 text-[9px] font-black uppercase tracking-widest bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-xl cursor-default text-center"
+                          >
+                            Incluido Activo
+                          </button>
+                        ) : (
+                          <button
+                            onClick={handleOpenBillingPortal}
+                            disabled={isSubmitting}
+                            className="w-full py-4 text-[9px] font-black uppercase tracking-widest bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 active:scale-95 transition-all rounded-xl shadow-lg text-center"
+                          >
+                            {isSubmitting ? 'Cargando...' : 'Administrar Suscripción'}
+                          </button>
+                        )
                       ) : (
                         <button
                           onClick={() => setRequestAddon(addon)}
