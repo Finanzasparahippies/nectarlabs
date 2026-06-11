@@ -416,7 +416,7 @@ export default function AddonsPage() {
           setIsSubmitting(false);
           return;
         }
-        
+
         const createdTenant = await fetcher('/tenants/', {
           method: 'POST',
           body: JSON.stringify({
@@ -564,21 +564,19 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
             <div className="bg-card-bg border border-card-border p-1.5 rounded-2xl flex items-center gap-2 relative z-10 shadow-sm">
               <button
                 onClick={() => setBillingCycle('monthly')}
-                className={`px-6 py-2.5 rounded-xl font-black uppercase tracking-widest text-[9px] transition-all duration-300 ${
-                  billingCycle === 'monthly'
-                    ? 'bg-nectar-gold text-background shadow-md'
-                    : 'text-foreground/60 hover:text-foreground hover:bg-foreground/5'
-                }`}
+                className={`px-6 py-2.5 rounded-xl font-black uppercase tracking-widest text-[9px] transition-all duration-300 ${billingCycle === 'monthly'
+                  ? 'bg-nectar-gold text-background shadow-md'
+                  : 'text-foreground/60 hover:text-foreground hover:bg-foreground/5'
+                  }`}
               >
                 Pago Mensual
               </button>
               <button
                 onClick={() => setBillingCycle('yearly')}
-                className={`px-6 py-2.5 rounded-xl font-black uppercase tracking-widest text-[9px] transition-all duration-300 ${
-                  billingCycle === 'yearly'
-                    ? 'bg-nectar-gold text-background shadow-md'
-                    : 'text-foreground/60 hover:text-foreground hover:bg-foreground/5'
-                }`}
+                className={`px-6 py-2.5 rounded-xl font-black uppercase tracking-widest text-[9px] transition-all duration-300 ${billingCycle === 'yearly'
+                  ? 'bg-nectar-gold text-background shadow-md'
+                  : 'text-foreground/60 hover:text-foreground hover:bg-foreground/5'
+                  }`}
               >
                 Pago Anual <span className="text-[7px] text-nectar-forest dark:text-nectar-cream bg-white/20 px-1 py-0.5 rounded ml-1 font-bold">2 meses gratis</span>
               </button>
@@ -634,11 +632,10 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
             return (
               <div
                 key={addon.id}
-                className={`bg-card-bg border border-card-border p-8 rounded-[2.5rem] relative overflow-hidden group transition-all duration-500 flex flex-col justify-between min-h-[420px] ${
-                  isEnabled 
-                    ? 'hover:border-nectar-gold/50 hover:shadow-[0_20px_50px_rgba(198,138,30,0.08)]' 
+                className={`bg-card-bg border border-card-border p-8 rounded-[2.5rem] relative overflow-hidden group transition-all duration-500 flex flex-col justify-between min-h-[420px] ${isEnabled
+                    ? 'hover:border-nectar-gold/50 hover:shadow-[0_20px_50px_rgba(198,138,30,0.08)]'
                     : 'opacity-55'
-                }`}
+                  }`}
               >
                 {/* Accent Background Glow on Hover */}
                 {isEnabled && (
@@ -704,12 +701,11 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
                         </div>
                       )}
                     </div>
-                    <span className={`text-[8px] font-black uppercase tracking-wider px-2.5 py-1 rounded-md border ${
-                      addon.complexity === 'Muy Alta' ? 'text-red-400 bg-red-400/5 border-red-400/20' :
+                    <span className={`text-[8px] font-black uppercase tracking-wider px-2.5 py-1 rounded-md border ${addon.complexity === 'Muy Alta' ? 'text-red-400 bg-red-400/5 border-red-400/20' :
                       addon.complexity === 'Alta' ? 'text-orange-400 bg-orange-400/5 border-orange-400/20' :
-                      addon.complexity === 'Media' ? 'text-yellow-400 bg-yellow-400/5 border-yellow-400/20' :
-                      'text-emerald-400 bg-emerald-400/5 border-emerald-400/20'
-                    }`}>
+                        addon.complexity === 'Media' ? 'text-yellow-400 bg-yellow-400/5 border-yellow-400/20' :
+                          'text-emerald-400 bg-emerald-400/5 border-emerald-400/20'
+                      }`}>
                       Complejidad: {addon.complexity}
                     </span>
                   </div>
@@ -756,11 +752,11 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
 
         {/* Modal: View Details / Ficha Técnica */}
         {selectedAddon && (
-          <div 
+          <div
             onClick={() => setSelectedAddon(null)}
             className="fixed inset-0 bg-background/80 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-premium cursor-pointer"
           >
-            <div 
+            <div
               onClick={(e) => e.stopPropagation()}
               className="bg-card-bg border border-card-border w-full max-w-2xl rounded-[3rem] p-8 md:p-12 shadow-2xl relative max-h-[90vh] overflow-y-auto cursor-default"
             >
@@ -860,11 +856,11 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
 
         {/* Modal: Request / Solicitar Integración Form */}
         {requestAddon && (
-          <div 
+          <div
             onClick={() => setRequestAddon(null)}
             className="fixed inset-0 bg-background/80 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-premium cursor-pointer"
           >
-            <div 
+            <div
               onClick={(e) => e.stopPropagation()}
               className="bg-card-bg border border-card-border w-full max-w-xl rounded-[3rem] p-8 md:p-12 shadow-2xl relative max-h-[90vh] overflow-y-auto cursor-default"
             >
@@ -917,7 +913,7 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
                   <label className="text-[10px] font-black uppercase tracking-widest text-nectar-gold block">
                     Portal de Destino
                   </label>
-                  
+
                   {tenants.length > 0 && (
                     <div className="space-y-2">
                       <span className="text-[8px] font-bold opacity-50 uppercase tracking-widest text-muted block">
@@ -946,7 +942,7 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
                       <span className="text-[8px] font-black text-nectar-gold uppercase tracking-widest block mb-2">
                         Configurar Nuevo Portal
                       </span>
-                      
+
                       <div className="space-y-2">
                         <label htmlFor="newTenantName" className="text-[8px] font-bold opacity-50 uppercase tracking-widest text-muted block">
                           Nombre del Portal / Empresa
@@ -982,7 +978,7 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
                       </div>
                     </div>
                   )}
-                  
+
                   {tenantErrorMsg && (
                     <p className="text-[9px] text-red-400 font-bold uppercase tracking-wider bg-red-400/5 border border-red-400/20 px-4 py-2.5 rounded-xl">
                       ⚠️ {tenantErrorMsg}
@@ -1034,11 +1030,11 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
 
         {/* Modal: Admin Manage Client Addons */}
         {manageAddon && (
-          <div 
+          <div
             onClick={() => setManageAddon(null)}
             className="fixed inset-0 bg-background/80 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-premium cursor-pointer"
           >
-            <div 
+            <div
               onClick={(e) => e.stopPropagation()}
               className="bg-card-bg border border-card-border w-full max-w-xl rounded-[3rem] p-8 md:p-12 shadow-2xl relative max-h-[90vh] overflow-y-auto cursor-default"
             >
@@ -1063,14 +1059,14 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
                 <div className="text-[10px] font-black uppercase tracking-widest text-nectar-gold border-b border-card-border pb-3 mb-2">
                   Lista de Clientes / Contratos Activos
                 </div>
-                
+
                 <div className="space-y-3 max-h-[40vh] overflow-y-auto pr-1 text-left">
                   {contracts
                     .filter(c => c.is_fully_signed)
                     .map(contract => {
                       const isActive = (contract.addons || []).includes(manageAddon.id);
                       const isUpdating = updatingContractId === contract.id;
-                      
+
                       return (
                         <div key={contract.id} className="flex items-center justify-between p-4 rounded-2xl bg-background/50 border border-card-border/60 hover:border-nectar-gold/30 transition-all">
                           <div className="min-w-0 pr-3">
@@ -1085,13 +1081,11 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
                           <button
                             onClick={() => handleToggleAddon(contract.id, manageAddon.id, isActive)}
                             disabled={isUpdating}
-                            className={`w-10 h-5 rounded-full p-0.5 transition-colors duration-300 focus:outline-none relative flex-shrink-0 ${
-                              isActive ? 'bg-nectar-gold' : 'bg-card-border'
-                            } ${isUpdating ? 'opacity-55 cursor-not-allowed' : ''}`}
+                            className={`w-10 h-5 rounded-full p-0.5 transition-colors duration-300 focus:outline-none relative flex-shrink-0 ${isActive ? 'bg-nectar-gold' : 'bg-card-border'
+                              } ${isUpdating ? 'opacity-55 cursor-not-allowed' : ''}`}
                           >
-                            <div className={`w-4 h-4 rounded-full bg-white shadow-md transform transition-transform duration-300 ${
-                              isActive ? 'translate-x-5' : 'translate-x-0'
-                            }`} />
+                            <div className={`w-4 h-4 rounded-full bg-white shadow-md transform transition-transform duration-300 ${isActive ? 'translate-x-5' : 'translate-x-0'
+                              }`} />
                           </button>
                         </div>
                       );
