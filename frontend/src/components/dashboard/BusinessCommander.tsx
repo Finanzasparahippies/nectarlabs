@@ -99,6 +99,9 @@ export default function BusinessCommander({ stats, installments, setInstallments
   const [addonSubscriptions, setAddonSubscriptions] = useState<any[]>([]);
   const [loadingAddons, setLoadingAddons] = useState(false);
   const [addonSearch, setAddonSearch] = useState<string>('');
+  const [editingSubId, setEditingSubId] = useState<number | null>(null);
+  const [selectedTenantIdForSub, setSelectedTenantIdForSub] = useState<string>('');
+  const [isSubmittingAssign, setIsSubmittingAssign] = useState(false);
 
   // Marketing Campaigns states
   const [campaignSubject, setCampaignSubject] = useState('');
@@ -226,7 +229,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
   useEffect(() => {
     const loadSalesData = async () => {
       try {
-        const [commissionsData, summaryData, promoData, usersData, quotesData, leadsData, contractsData, postsData, tenantsData] = await Promise.all([
+        const [commissionsData, summaryData, promoData, usersData, quotesData, leadsData, contractsData, postsData, tenantsData, addonsData] = await Promise.all([
           fetcher('/sales-commissions/').catch(() => []),
           fetcher('/sales-commissions/summary/').catch(() => null),
           fetcher('/promo-codes/').catch(() => []),
@@ -236,6 +239,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
           fetcher('/contracts/').catch(() => []),
           fetcher('/posts/', { isPublic: true }).catch(() => []),
           fetcher('/tenants/').catch(() => []),
+          fetcher('/addon-subscriptions/').catch(() => []),
         ]);
         setCommissions(Array.isArray(commissionsData) ? commissionsData : []);
         setCommissionSummary(summaryData);
@@ -246,6 +250,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
         setContracts(Array.isArray(contractsData) ? contractsData : []);
         setBlogPosts(postsData.results || postsData || []);
         setAllTenants(tenantsData || []);
+        setAddonSubscriptions(Array.isArray(addonsData) ? addonsData : []);
       } catch (err) {
         console.error('Error loading sales data:', err);
       } finally {
@@ -256,6 +261,37 @@ export default function BusinessCommander({ stats, installments, setInstallments
     };
     loadSalesData();
   }, []);
+
+  const handleAssignTenant = async (subscriptionId: number, tenantId: string) => {
+    setIsSubmittingAssign(true);
+    try {
+      const token = localStorage.getItem('token');
+      const payloadTenant = tenantId && tenantId !== 'none' ? tenantId : null;
+
+      const response = await fetch(`${API_URL}/addon-subscriptions/${subscriptionId}/`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ tenant: payloadTenant })
+      });
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.detail || err.error || 'Error al asignar el inquilino');
+      }
+
+      const updated = await response.json();
+      setAddonSubscriptions(prev => prev.map(sub => sub.id === subscriptionId ? updated : sub));
+      showToast('Inquilino asignado con éxito a la suscripción.', 'success');
+      setEditingSubId(null);
+    } catch (err: any) {
+      showToast(err.message || 'Error al asignar el inquilino.', 'error');
+    } finally {
+      setIsSubmittingAssign(false);
+    }
+  };
 
   useEffect(() => {
     if (activeTab === 'invoices') {
@@ -1307,9 +1343,14 @@ export default function BusinessCommander({ stats, installments, setInstallments
         <button
           onClick={() => setActiveTab('addons')}
           className={`pb-4 text-xs font-black uppercase tracking-widest relative transition-all whitespace-nowrap ${activeTab === 'addons' ? 'text-nectar-gold' : 'text-foreground/45 hover:text-foreground'
-            }`}
+            } flex items-center`}
         >
           Suscripciones Add-ons
+          {addonSubscriptions.filter(s => !s.tenant && ['active', 'trialing'].includes(s.status)).length > 0 && (
+            <span className="ml-2 px-1.5 py-0.5 text-[8px] font-black bg-red-600 text-white rounded-full animate-pulse flex items-center justify-center min-w-[14px] h-[14px]">
+              {addonSubscriptions.filter(s => !s.tenant && ['active', 'trialing'].includes(s.status)).length}
+            </span>
+          )}
           {activeTab === 'addons' && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-nectar-gold"></span>}
         </button>
       </div>
@@ -3227,6 +3268,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
                     <th className="pb-4">Monto (MXN)</th>
                     <th className="pb-4 text-center">Estatus</th>
                     <th className="pb-4 text-right">Stripe ID</th>
+                    <th className="pb-4 text-center">Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -3245,7 +3287,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
                     if (loadingAddons) {
                       return (
                         <tr>
-                          <td colSpan={7} className="py-12 text-center text-xs opacity-50">
+                          <td colSpan={8} className="py-12 text-center text-xs opacity-50">
                             Cargando suscripciones...
                           </td>
                         </tr>
@@ -3255,7 +3297,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
                     if (filtered.length === 0) {
                       return (
                         <tr>
-                          <td colSpan={7} className="py-12 text-center text-[9px] font-black uppercase tracking-widest opacity-25">
+                          <td colSpan={8} className="py-12 text-center text-[9px] font-black uppercase tracking-widest opacity-25">
                             Sin suscripciones encontradas
                           </td>
                         </tr>
@@ -3268,6 +3310,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
                       const isPastDue = sub.status === 'past_due';
                       const isCanceled = sub.status === 'canceled';
                       const isIncomplete = sub.status === 'incomplete';
+                      const isEditing = editingSubId === sub.id;
 
                       let badgeClass = 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20';
                       let statusText = sub.status;
@@ -3294,10 +3337,21 @@ export default function BusinessCommander({ stats, installments, setInstallments
                             {new Date(sub.created_at).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })}
                           </td>
                           <td className="py-4 pr-4">
-                            <span className="font-black text-sm">{sub.tenant_name || 'Néctar Labs'}</span>
-                            <span className="text-[7.5px] font-bold block text-foreground/40 mt-0.5">
-                              {sub.user_email} {sub.tenant_subdomain ? `(${sub.tenant_subdomain})` : ''}
-                            </span>
+                            {sub.tenant ? (
+                              <>
+                                <span className="font-black text-sm">{sub.tenant_name}</span>
+                                <span className="text-[7.5px] font-bold block text-foreground/40 mt-0.5">
+                                  {sub.user_email} {sub.tenant_subdomain ? `(${sub.tenant_subdomain})` : ''}
+                                </span>
+                              </>
+                            ) : (
+                              <>
+                                <span className="font-black text-sm text-red-400">⚠️ Pendiente de Asignar</span>
+                                <span className="text-[7.5px] font-bold block text-foreground/40 mt-0.5">
+                                  Adquirido por: {sub.user_email}
+                                </span>
+                              </>
+                            )}
                           </td>
                           <td className="py-4 pr-4">
                             <span className="font-black text-xs text-nectar-gold">{sub.addon_details?.name || 'Módulo'}</span>
@@ -3318,6 +3372,51 @@ export default function BusinessCommander({ stats, installments, setInstallments
                           </td>
                           <td className="py-4 text-right font-mono text-[9px] opacity-70 select-all" title={sub.stripe_subscription_id || 'Sin Stripe ID'}>
                             {sub.stripe_subscription_id || '—'}
+                          </td>
+                          <td className="py-4 text-center">
+                            {isEditing ? (
+                              <div className="flex items-center justify-center gap-2">
+                                <select
+                                  value={selectedTenantIdForSub}
+                                  onChange={(e) => setSelectedTenantIdForSub(e.target.value)}
+                                  className="bg-background border border-card-border rounded-xl px-2 py-1 text-[9px] text-foreground focus:outline-none focus:border-nectar-gold font-bold cursor-pointer max-w-[180px]"
+                                >
+                                  <option value="none">-- Sin Inquilino --</option>
+                                  {allTenants.map((t: any) => (
+                                    <option key={t.id} value={t.id}>
+                                      {t.name} ({t.subdomain})
+                                    </option>
+                                  ))}
+                                </select>
+                                <button
+                                  onClick={() => handleAssignTenant(sub.id, selectedTenantIdForSub)}
+                                  disabled={isSubmittingAssign}
+                                  className="px-2 py-1 bg-green-500/10 text-green-500 hover:bg-green-500 hover:text-white rounded-lg text-[8px] font-black uppercase tracking-widest transition-all border border-green-500/20 font-bold disabled:opacity-50"
+                                >
+                                  {isSubmittingAssign ? '...' : '✓'}
+                                </button>
+                                <button
+                                  onClick={() => setEditingSubId(null)}
+                                  className="px-2 py-1 bg-red-500/10 text-red-400 hover:bg-red-600 hover:text-white rounded-lg text-[8px] font-black uppercase tracking-widest transition-all border border-red-500/20 font-bold"
+                                >
+                                  ✗
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => {
+                                  setEditingSubId(sub.id);
+                                  setSelectedTenantIdForSub(sub.tenant || 'none');
+                                }}
+                                className={`px-3 py-1 text-[8px] font-black uppercase tracking-widest transition-all border rounded-xl font-bold hover:scale-105 ${
+                                  sub.tenant
+                                    ? 'bg-foreground/5 text-foreground/60 border-card-border hover:bg-foreground/10 hover:text-foreground'
+                                    : 'bg-nectar-gold/10 text-nectar-gold border-nectar-gold/20 hover:bg-nectar-gold hover:text-background'
+                                }`}
+                              >
+                                {sub.tenant ? 'Reasignar' : 'Asignar Inquilino'}
+                              </button>
+                            )}
                           </td>
                         </tr>
                       );
