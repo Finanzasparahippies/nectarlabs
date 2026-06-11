@@ -289,10 +289,6 @@ def issue_invoice_for_installment(installment):
         logger.warning(f"Tenant {tenant.name} has no tax profile or facturapi_organization_id configured.")
         return None
 
-    if not tenant.has_available_stamps():
-        logger.warning(f"Tenant {tenant.name} has no available stamps for auto-invoice.")
-        return None
-
     # El total de la factura incrementa un 16% por el IVA
     invoice_total = (installment.amount * Decimal('1.16')).quantize(Decimal('0.01'))
 
@@ -303,6 +299,13 @@ def issue_invoice_for_installment(installment):
         is_tenant_to_customer=False,
         status=Invoice.Status.PENDING
     )
+
+    if not tenant.has_available_stamps():
+        logger.warning(f"Tenant {tenant.name} has no available stamps for auto-invoice.")
+        invoice.status = Invoice.Status.FAILED
+        invoice.error_message = "No tienes timbres suficientes en tu balance. Adquiere un paquete de timbres para continuar."
+        invoice.save()
+        return invoice
 
     customer_info = {
         "razon_social": user.get_full_name() or user.username,

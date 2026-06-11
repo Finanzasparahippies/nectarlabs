@@ -245,7 +245,7 @@ class InvoiceViewSet(BillingTenantMixin, viewsets.ModelViewSet):
     serializer_class = InvoiceSerializer
 
     def get_permissions(self):
-        if self.action in ['list', 'retrieve', 'issue_from_installment']:
+        if self.action in ['issue_from_installment']:
             return [permissions.IsAuthenticated()]
         return [permissions.IsAuthenticated(), HasAddOnPermission()]
 
