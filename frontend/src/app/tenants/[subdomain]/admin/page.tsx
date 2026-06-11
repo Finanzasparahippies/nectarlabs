@@ -121,6 +121,13 @@ export default function TenantAdminPage() {
     onConfirm: () => void;
   } | null>(null);
 
+  // Cancel Invoice Modal State
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancelInvoiceId, setCancelInvoiceId] = useState<number | null>(null);
+  const [cancelMotive, setCancelMotive] = useState('02');
+  const [cancelSubstitution, setCancelSubstitution] = useState('');
+  const [isSubmittingCancel, setIsSubmittingCancel] = useState(false);
+
   // New Client Modal states
   const [showNewClientModal, setShowNewClientModal] = useState(false);
   const [newClientEmail, setNewClientEmail] = useState('');
@@ -319,14 +326,14 @@ export default function TenantAdminPage() {
     }
   };
 
-  const handleCancelInvoice = async (invoiceId: number, motive: string = '02') => {
+  const handleCancelInvoice = async (invoiceId: number, motive: string = '02', substitution: string = '') => {
     try {
       const updatedInvoice = await fetcher(`/billing/invoices/${invoiceId}/cancel/?tenant_id=${tenantConfig?.id}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ motive })
+        body: JSON.stringify({ motive, substitution })
       });
       showToast('Cancelación solicitada con éxito.', 'success');
       setInvoices(invoices.map(inv => inv.id === invoiceId ? updatedInvoice : inv));
@@ -1714,15 +1721,10 @@ export default function TenantAdminPage() {
                                   {(inv.status === 'PAID' || inv.status === 'CANCEL_REQUESTED') && (
                                     <button
                                       onClick={() => {
-                                        setConfirmModal({
-                                          isOpen: true,
-                                          title: 'Cancelar Factura',
-                                          message: `¿Estás seguro de que deseas cancelar la factura con folio SAT/UUID ${inv.uuid_sat || ''}? (Motivo: 02 - Comprobante emitido con errores sin relación)`,
-                                          onConfirm: () => {
-                                            handleCancelInvoice(inv.id, '02');
-                                            setConfirmModal(null);
-                                          }
-                                        });
+                                        setCancelInvoiceId(inv.id);
+                                        setCancelMotive('02');
+                                        setCancelSubstitution('');
+                                        setShowCancelModal(true);
                                       }}
                                       className="px-2 py-1 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-[7.5px] font-black uppercase tracking-widest rounded transition-all"
                                     >
@@ -2776,6 +2778,111 @@ export default function TenantAdminPage() {
                   className="px-6 py-3 bg-nectar-gold text-background text-[9px] font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 disabled:opacity-40 disabled:scale-100 transition-all font-bold shadow-lg shadow-nectar-gold/25 cursor-pointer"
                 >
                   {isSubmittingNewClient ? 'Creando...' : 'Crear Cliente'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showCancelModal && tenantConfig && (
+        <div
+          onClick={() => setShowCancelModal(false)}
+          className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-6 cursor-pointer overflow-y-auto"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              backgroundColor: tenantConfig.card_bg_color || '#050a06',
+              borderColor: tenantConfig.border_color || '#151F18'
+            }}
+            className="w-full max-w-md border p-8 md:p-10 rounded-[3rem] shadow-2xl relative space-y-6 text-left cursor-default animate-in fade-in zoom-in-95 duration-200 admin-card"
+          >
+            <button
+              onClick={() => setShowCancelModal(false)}
+              className="absolute top-6 right-6 w-8 h-8 rounded-full border border-white/10 text-white/40 hover:text-white flex items-center justify-center text-xl font-bold cursor-pointer admin-border"
+            >
+              ×
+            </button>
+
+            <div>
+              <span className="px-3 py-1 bg-red-500/10 text-red-500 text-[8px] font-black uppercase tracking-widest rounded-full border border-red-500/20">
+                Cancelación SAT
+              </span>
+              <h2 className="text-2xl font-black tracking-tighter mt-4 leading-none text-white">
+                Cancelar Factura CFDI
+              </h2>
+              <p className="text-[10px] opacity-40 uppercase tracking-widest mt-1">
+                Selecciona el motivo de cancelación ante el SAT.
+              </p>
+            </div>
+
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                if (!cancelInvoiceId) return;
+                if (cancelMotive === '01' && !cancelSubstitution.trim()) {
+                  showToast('El folio sustituto es obligatorio para el motivo 01.', 'warning');
+                  return;
+                }
+                setIsSubmittingCancel(true);
+                try {
+                  await handleCancelInvoice(cancelInvoiceId, cancelMotive, cancelSubstitution.trim());
+                  setShowCancelModal(false);
+                } finally {
+                  setIsSubmittingCancel(false);
+                }
+              }}
+              className="space-y-4"
+            >
+              <div className="space-y-1.5">
+                <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Motivo de Cancelación *</label>
+                <select
+                  value={cancelMotive}
+                  onChange={(e) => {
+                    setCancelMotive(e.target.value);
+                    if (e.target.value !== '01') setCancelSubstitution('');
+                  }}
+                  className="w-full bg-background border border-white/10 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-nectar-gold text-foreground font-bold admin-input"
+                >
+                  <option value="02">02 - Comprobante emitido con errores sin relación</option>
+                  <option value="03">03 - Operación no realizada</option>
+                  <option value="01">01 - Comprobante emitido con errores con relación</option>
+                  <option value="04">04 - Operación nominativa relacionada en la factura global</option>
+                </select>
+              </div>
+
+              {cancelMotive === '01' && (
+                <div className="space-y-1.5 animate-fadeIn">
+                  <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Folio Sustituto (UUID o ID de Facturapi) *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="ej. 123e4567-e89b-12d3-a456-426614174000"
+                    value={cancelSubstitution}
+                    onChange={(e) => setCancelSubstitution(e.target.value)}
+                    className="w-full bg-background border border-white/10 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-nectar-gold text-foreground font-mono admin-input"
+                  />
+                  <p className="text-[8px] opacity-40 uppercase tracking-widest">
+                    Especifica el UUID de la factura que reemplaza a la factura actual.
+                  </p>
+                </div>
+              )}
+
+              <div className="pt-6 border-t border-white/10 flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowCancelModal(false)}
+                  className="px-5 py-3 border border-white/10 hover:bg-white/5 text-[9px] font-black uppercase tracking-widest rounded-xl transition-all cursor-pointer text-white/80"
+                >
+                  Regresar
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmittingCancel}
+                  className="px-6 py-3 bg-red-600 hover:bg-red-500 text-white text-[9px] font-black uppercase tracking-widest rounded-xl transition-all font-bold shadow-lg cursor-pointer"
+                >
+                  {isSubmittingCancel ? 'Cancelando...' : 'Confirmar Cancelación'}
                 </button>
               </div>
             </form>

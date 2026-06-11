@@ -29,7 +29,7 @@ class PACServiceBase:
         """Genera y timbra una factura CFDI 4.0 en el PAC"""
         raise NotImplementedError()
 
-    def cancel_invoice(self, invoice):
+    def cancel_invoice(self, invoice, motive='02', substitution=None):
         """Solicita la cancelación del CFDI ante el SAT"""
         raise NotImplementedError()
 
@@ -81,8 +81,8 @@ class MockPACService(PACServiceBase):
             "pdf_file": ContentFile(pdf_content, name=f"{mock_uuid}.pdf"),
         }
 
-    def cancel_invoice(self, invoice, motive='02'):
-        logger.info(f"[MockPAC] Solicitando cancelación para CFDI SAT UUID: {invoice.uuid_sat} con motivo {motive}")
+    def cancel_invoice(self, invoice, motive='02', substitution=None):
+        logger.info(f"[MockPAC] Solicitando cancelación para CFDI SAT UUID: {invoice.uuid_sat} con motivo {motive}, sustitución: {substitution}")
         # Si el total es muy alto, simulamos que requiere aceptación del receptor
         if invoice.total >= Decimal('5000.00'):
             return "CANCEL_REQUESTED"
@@ -232,7 +232,7 @@ class FacturapiPACService(PACServiceBase):
         except Exception as e:
             raise PACError(f"Error en flujo de timbrado Facturapi: {e}")
 
-    def cancel_invoice(self, invoice, motive='02'):
+    def cancel_invoice(self, invoice, motive='02', substitution=None):
         # Requiere el header de la organización correspondiente
         headers = self.headers.copy()
         if getattr(invoice, 'is_tenant_to_customer', False):
@@ -242,6 +242,8 @@ class FacturapiPACService(PACServiceBase):
 
         # CFDI 4.0 requires motive query param (e.g. 02 - Comprobante emitido con errores sin relación)
         url = f"{self.base_url}/invoices/{invoice.facturapi_invoice_id}?motive={motive}"
+        if motive == '01' and substitution:
+            url += f"&substitution={substitution.strip()}"
         try:
             # Facturapi requiere DELETE para cancelar facturas
             response = requests.delete(url, headers=headers, timeout=15)

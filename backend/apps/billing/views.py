@@ -513,9 +513,10 @@ class InvoiceViewSet(BillingTenantMixin, viewsets.ModelViewSet):
             return Response({"error": "Solo se pueden cancelar facturas timbradas con éxito."}, status=400)
 
         motive = request.data.get('motive', '02')
+        substitution = request.data.get('substitution')
         pac = get_pac_service()
         try:
-            new_status = pac.cancel_invoice(invoice, motive=motive)
+            new_status = pac.cancel_invoice(invoice, motive=motive, substitution=substitution)
             invoice.status = new_status
             invoice.save(update_fields=['status'])
             return Response(InvoiceSerializer(invoice).data)
