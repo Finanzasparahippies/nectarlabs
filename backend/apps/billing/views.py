@@ -322,32 +322,30 @@ class InvoiceViewSet(BillingTenantMixin, viewsets.ModelViewSet):
 
         tenant_id = request.data.get('tenant_id')
         if not tenant_id:
-            return Response({"error": "El campo 'tenant_id' es obligatorio."}, status=400)
+            return Response({"error": "El campo 'tenant_id' es obligatorio.", "detail": "El campo 'tenant_id' es obligatorio."}, status=400)
 
         from apps.tenants.models import Tenant
         tenant = get_object_or_404(Tenant, id=tenant_id)
         profile = getattr(tenant, 'tax_profile', None)
-        if not profile or not profile.facturapi_organization_id:
-            return Response(
-                {"error": "El perfil fiscal de este inquilino no está configurado o no tiene sellos en Facturapi."},
-                status=400
-            )
 
         customer_info = request.data.get('customer_info')
         items = request.data.get('items')
         total = request.data.get('total')
 
         if not customer_info or not items or total is None:
-            return Response({"error": "Los campos customer_info, items y total son obligatorios."}, status=400)
+            err_msg = "Los campos customer_info, items y total son obligatorios."
+            return Response({"error": err_msg, "detail": err_msg}, status=400)
 
         for field in ["rfc", "razon_social", "regimen_fiscal", "codigo_postal", "email"]:
             if not customer_info.get(field):
-                return Response({"error": f"El campo customer_info.{field} es obligatorio."}, status=400)
+                err_msg = f"El campo customer_info.{field} es obligatorio."
+                return Response({"error": err_msg, "detail": err_msg}, status=400)
 
         # Check stamp balance
         if not tenant.has_available_stamps():
+            err_msg = "El inquilino no cuenta con timbres suficientes en su balance."
             return Response(
-                {"error": "El inquilino no cuenta con timbres suficientes en su balance."},
+                {"error": err_msg, "detail": err_msg},
                 status=400
             )
 
