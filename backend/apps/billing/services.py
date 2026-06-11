@@ -300,13 +300,6 @@ def issue_invoice_for_installment(installment):
         status=Invoice.Status.PENDING
     )
 
-    if not tenant.has_available_stamps():
-        logger.warning(f"Tenant {tenant.name} has no available stamps for auto-invoice.")
-        invoice.status = Invoice.Status.FAILED
-        invoice.error_message = "No tienes timbres suficientes en tu balance. Adquiere un paquete de timbres para continuar."
-        invoice.save()
-        return invoice
-
     customer_info = {
         "razon_social": user.get_full_name() or user.username,
         "rfc": profile.rfc,
@@ -341,8 +334,6 @@ def issue_invoice_for_installment(installment):
         installment.cfdi_uuid = str(res["uuid_sat"])
         installment.save(update_fields=['cfdi_uuid'])
 
-        tenant.consume_stamp()
-
         try:
             from apps.shop.utils import send_payment_receipt_email
             send_payment_receipt_email(installment)
@@ -359,7 +350,6 @@ def issue_invoice_for_installment(installment):
         installment.cfdi_uuid = "LCO_PENDING"
         installment.save(update_fields=['cfdi_uuid'])
 
-        tenant.consume_stamp()
         return invoice
 
     except PACError as e:

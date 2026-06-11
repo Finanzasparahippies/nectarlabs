@@ -341,14 +341,6 @@ class InvoiceViewSet(BillingTenantMixin, viewsets.ModelViewSet):
                 err_msg = f"El campo customer_info.{field} es obligatorio."
                 return Response({"error": err_msg, "detail": err_msg}, status=400)
 
-        # Check stamp balance
-        if not tenant.has_available_stamps():
-            err_msg = "El inquilino no cuenta con timbres suficientes en su balance."
-            return Response(
-                {"error": err_msg, "detail": err_msg},
-                status=400
-            )
-
         from decimal import Decimal
         from apps.billing.models import Invoice
         invoice = Invoice.objects.create(
@@ -376,9 +368,6 @@ class InvoiceViewSet(BillingTenantMixin, viewsets.ModelViewSet):
             invoice.status = Invoice.Status.PAID
             invoice.error_message = None
             invoice.save()
-
-            tenant.consume_stamp()
-
             # Optional: send receipt email
             try:
                 from django.core.mail import EmailMultiAlternatives
@@ -405,8 +394,6 @@ class InvoiceViewSet(BillingTenantMixin, viewsets.ModelViewSet):
             invoice.status = Invoice.Status.LCO_SYNC_PENDING
             invoice.error_message = str(e)
             invoice.save()
-
-            tenant.consume_stamp()
             return Response(InvoiceSerializer(invoice).data, status=status.HTTP_202_ACCEPTED)
 
         except PACError as e:
@@ -528,7 +515,7 @@ class InvoiceViewSet(BillingTenantMixin, viewsets.ModelViewSet):
         tenant = invoice.tenant
 
         # Check stamp balance if we are retrying a FAILED invoice
-        if original_status == Invoice.Status.FAILED:
+        if original_status == Invoice.Status.FAILED and not is_parent:
             if not tenant.has_available_stamps():
                 return Response({"error": "No tienes timbres suficientes en tu balance para reintentar esta factura."}, status=400)
 
@@ -579,7 +566,7 @@ class InvoiceViewSet(BillingTenantMixin, viewsets.ModelViewSet):
             invoice.error_message = None
             invoice.save()
 
-            if original_status == Invoice.Status.FAILED:
+            if original_status == Invoice.Status.FAILED and not is_parent:
                 tenant.consume_stamp()
 
             # Enviar el correo de confirmación de facturación
@@ -600,7 +587,7 @@ class InvoiceViewSet(BillingTenantMixin, viewsets.ModelViewSet):
             invoice.error_message = str(e)
             invoice.save(update_fields=['status', 'error_message'])
 
-            if original_status == Invoice.Status.FAILED:
+            if original_status == Invoice.Status.FAILED and not is_parent:
                 tenant.consume_stamp()
 
             return Response({"error": f"Sello no activo (SAT LCO). Reintentando más tarde automáticamente: {e}"}, status=400)

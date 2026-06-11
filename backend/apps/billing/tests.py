@@ -1058,9 +1058,9 @@ class BillingSystemTests(APITestCase):
         self.assertEqual(len(sent_mail.attachments), 2)
 
     @patch('apps.billing.services.get_pac_service')
-    def test_stripe_webhook_automatic_invoicing_fails_when_no_stamps(self, mock_get_pac):
+    def test_stripe_webhook_automatic_invoicing_succeeds_when_no_stamps_parent_to_tenant(self, mock_get_pac):
         """
-        Verify automatic invoicing fails and creates FAILED invoice when stamp balance is 0.
+        Verify automatic invoicing succeeds (Parent-to-Tenant) and creates PAID invoice even when stamp balance is 0.
         """
         # Configure tax profile first
         profile = TaxProfile.objects.create(
@@ -1075,6 +1075,17 @@ class BillingSystemTests(APITestCase):
         # Zero stamps
         self.tenant.stamp_balance = 0
         self.tenant.save()
+        
+        # Setup mock PAC service response
+        mock_pac = MagicMock()
+        mock_uuid = "a3c428a2-25de-4dfb-90f7-872ab67262ba"
+        mock_pac.create_invoice.return_value = {
+            "facturapi_invoice_id": "inv_mock_123",
+            "uuid_sat": mock_uuid,
+            "xml_file": SimpleUploadedFile("123.xml", b"<xml></xml>"),
+            "pdf_file": SimpleUploadedFile("123.pdf", b"pdf_data")
+        }
+        mock_get_pac.return_value = mock_pac
         
         url = reverse('stripe_webhook')
         payload = {
@@ -1100,11 +1111,11 @@ class BillingSystemTests(APITestCase):
             )
             self.assertEqual(response.status_code, 200)
             
-        # Invoice should exist in FAILED state
+        # Invoice should exist in PAID state
         invoice = Invoice.objects.filter(tenant=self.tenant).first()
         self.assertIsNotNone(invoice)
-        self.assertEqual(invoice.status, Invoice.Status.FAILED)
-        self.assertIn("timbres suficientes", invoice.error_message)
+        self.assertEqual(invoice.status, Invoice.Status.PAID)
+        self.assertEqual(self.tenant.stamp_balance, 0)
 
     def test_ambassador_free_stamps_usage(self):
         """
