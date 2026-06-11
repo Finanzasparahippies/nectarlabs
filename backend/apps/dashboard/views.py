@@ -181,14 +181,33 @@ class BusinessStatsView(APIView):
         if cached_data:
             return Response(cached_data)
 
-        # 1. Ventas Totales (MRR de contratos activos + total de órdenes pagadas, EXCLUYE diseño de marca transitorio)
+        # 1. Ventas Totales (MRR de contratos activos + total de órdenes pagadas + suscripciones activas de addons, EXCLUYE diseño de marca transitorio)
+        from apps.shop.models import AddOnSubscription
         active_contracts = Contract.objects.filter(is_active=True).select_related('plan').prefetch_related('addons')
         contracts_mrr = 0
         designer_fees = 0
+        counted_user_addons = set()
+
         for contract in active_contracts:
-            plan_price = contract.plan.price if contract.plan else sum(addon.monthly_price for addon in contract.addons.all())
+            if contract.plan:
+                plan_price = contract.plan.price
+            else:
+                plan_price = 0
+                for addon in contract.addons.all():
+                    plan_price += addon.monthly_price
+                    counted_user_addons.add((contract.user_id, addon.id))
             contracts_mrr += plan_price
             designer_fees += contract.brand_design_price
+
+        # Sumar suscripciones de Add-ons activas/trialing que no hayan sido contadas en un contrato sin plan
+        addon_subs = AddOnSubscription.objects.filter(status__in=['active', 'trialing']).select_related('addon')
+        for sub in addon_subs:
+            if (sub.user_id, sub.addon_id) not in counted_user_addons:
+                mrr_contribution = sub.price_paid
+                if sub.billing_cycle == 'yearly':
+                    mrr_contribution = sub.price_paid / 12
+                contracts_mrr += mrr_contribution
+                counted_user_addons.add((sub.user_id, sub.addon_id))
         
         paid_orders_total = Order.objects.filter(status='PAID').aggregate(Sum('total'))['total__sum'] or 0
         gross_sales = float(contracts_mrr) + float(paid_orders_total)
@@ -233,6 +252,54 @@ class BusinessStatsView(APIView):
                     "days_remaining": days_left,
                     "status": status_label
                 })
+
+        # Proyectar fecha de siguiente pago para AddOnSubscriptions y agregarlas al calendario
+        import calendar
+        import datetime
+        today = timezone.now().date()
+        for sub in addon_subs:
+            created_at = sub.created_at
+            if not created_at:
+                created_at = timezone.now()
+            created_date = created_at.date()
+            
+            if sub.billing_cycle == 'yearly':
+                try:
+                    next_payment_date = datetime.date(today.year, created_date.month, created_date.day)
+                except ValueError:
+                    next_payment_date = datetime.date(today.year, created_date.month, 28)
+                if next_payment_date < today:
+                    try:
+                        next_payment_date = datetime.date(today.year + 1, created_date.month, created_date.day)
+                    except ValueError:
+                        next_payment_date = datetime.date(today.year + 1, created_date.month, 28)
+            else: # monthly
+                day = created_date.day
+                _, last_day = calendar.monthrange(today.year, today.month)
+                candidate_day = min(day, last_day)
+                next_payment_date = datetime.date(today.year, today.month, candidate_day)
+                if next_payment_date < today:
+                    next_m = today.month + 1
+                    next_y = today.year
+                    if next_m > 12:
+                        next_m = 1
+                        next_y += 1
+                    _, last_day_next = calendar.monthrange(next_y, next_m)
+                    candidate_day = min(day, last_day_next)
+                    next_payment_date = datetime.date(next_y, next_m, candidate_day)
+            
+            days_left = (next_payment_date - today).days
+            status_label = "overdue" if days_left < 0 else ("upcoming" if days_left <= 7 else "paid")
+            client_name = sub.user.get_full_name() or sub.user.username
+            client_billing.append({
+                "id": f"addon-{sub.id}",
+                "client": client_name,
+                "plan": f"Complemento: {sub.addon.name}",
+                "amount": float(sub.price_paid),
+                "next_payment_date": str(next_payment_date),
+                "days_remaining": days_left,
+                "status": status_label
+            })
 
         server_billing = []
         for server in ServerCost.objects.filter(is_active=True):
@@ -281,16 +348,35 @@ class BusinessStatsView(APIView):
             end_of_month = next_month - datetime.timedelta(days=1)
             end_of_month_dt = make_aware(datetime.datetime.combine(end_of_month, datetime.time.max))
 
-            # Ventas de contratos activos firmados hasta este mes (solo precio del plan, excluye diseño de marca transitorio)
+            # Ventas de contratos activos firmados hasta este mes (solo precio del plan + addons, excluye diseño de marca transitorio)
             month_contracts = Contract.objects.filter(
                 is_active=True,
                 signed_at__lte=end_of_month_dt
             ).select_related('plan').prefetch_related('addons')
             
             month_sales = 0
+            month_counted = set()
             for contract in month_contracts:
-                plan_price = contract.plan.price if contract.plan else sum(addon.monthly_price for addon in contract.addons.all())
+                if contract.plan:
+                    plan_price = contract.plan.price
+                else:
+                    plan_price = 0
+                    for addon in contract.addons.all():
+                        plan_price += addon.monthly_price
+                        month_counted.add((contract.user_id, addon.id))
                 month_sales += plan_price
+
+            month_addon_subs = AddOnSubscription.objects.filter(
+                status__in=['active', 'trialing'],
+                created_at__lte=end_of_month_dt
+            ).select_related('addon')
+            for sub in month_addon_subs:
+                if (sub.user_id, sub.addon_id) not in month_counted:
+                    mrr_contribution = sub.price_paid
+                    if sub.billing_cycle == 'yearly':
+                        mrr_contribution = sub.price_paid / 12
+                    month_sales += mrr_contribution
+                    month_counted.add((sub.user_id, sub.addon_id))
             
             # Ventas de la tienda en este mes
             month_orders = Order.objects.filter(

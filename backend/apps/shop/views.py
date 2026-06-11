@@ -746,6 +746,10 @@ def stripe_webhook(request):
                         contract = Contract.objects.create(
                             user=user,
                             full_name=user.get_full_name() or user.username,
+                            tax_id='XAXX010101000',
+                            address='Suscripción Digital (Stripe)',
+                            project_idea='Suscripción a Add-ons y Complementos',
+                            signature_base64='STRIPE_SUBSCRIPTION_ACTIVE',
                             is_fully_signed=True,
                             payment_commitment_method='STRIPE'
                         )
