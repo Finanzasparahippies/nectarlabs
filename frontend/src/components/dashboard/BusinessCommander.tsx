@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { fetcher, API_URL } from '@/lib/api';
 import Toast from '../ui/Toast';
+import ConfirmModal from '../ui/ConfirmModal';
 
 const getInlineViewUrl = (url: string | null | undefined, type: 'quote' | 'contract' | 'receipt', id: string | number) => {
   if (!url) return '';
@@ -84,7 +85,7 @@ interface BusinessCommanderProps {
 export default function BusinessCommander({ stats, installments, setInstallments }: BusinessCommanderProps) {
   const [activePoint, setActivePoint] = useState<number | null>(null);
   const [cfdiInputs, setCfdiInputs] = useState<Record<number, string>>({});
-  
+
   // Premium Tab State
   const [activeTab, setActiveTab] = useState<'financials' | 'kanban' | 'quotes' | 'sales' | 'invoices' | 'marketing'>('financials');
 
@@ -92,7 +93,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
   const [systemInvoices, setSystemInvoices] = useState<any[]>([]);
   const [loadingInvoices, setLoadingInvoices] = useState(false);
   const [invoiceSearch, setInvoiceSearch] = useState<string>('');
-  
+
   // Marketing Campaigns states
   const [campaignSubject, setCampaignSubject] = useState('');
   const [campaignTitle, setCampaignTitle] = useState('');
@@ -118,6 +119,24 @@ export default function BusinessCommander({ stats, installments, setInstallments
 
   // Manual Invoices Custom Modal states
   const [showManualInvoiceModal, setShowManualInvoiceModal] = useState(false);
+
+  // New User / Client Modal states
+  const [showNewUserModal, setShowNewUserModal] = useState(false);
+  const [newUserEmail, setNewUserEmail] = useState('');
+  const [newUsername, setNewUsername] = useState('');
+  const [newUserPassword, setNewUserPassword] = useState('');
+  const [newUserRole, setNewUserRole] = useState('CUSTOMER');
+  const [newUserTenantId, setNewUserTenantId] = useState('');
+  const [newUserEmailVerified, setNewUserEmailVerified] = useState(true);
+  const [isSubmittingNewUser, setIsSubmittingNewUser] = useState(false);
+
+  // ConfirmModal dynamic state
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+  } | null>(null);
   const [selectedTenantId, setSelectedTenantId] = useState('');
   const [allTenants, setAllTenants] = useState<any[]>([]);
   const [manualRfc, setManualRfc] = useState('');
@@ -129,7 +148,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
     { quantity: 1, unit_price: 0, description: '' }
   ]);
   const [isSubmittingManualInvoice, setIsSubmittingManualInvoice] = useState(false);
-  
+
   // Kanban states
   const [leads, setLeads] = useState<any[]>([]);
   const [contracts, setContracts] = useState<any[]>([]);
@@ -291,7 +310,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
       showToast('El Asunto y el Contenido de la campaña son obligatorios.', 'warning');
       return;
     }
-    
+
     setIsSendingCampaign(true);
     try {
       const token = localStorage.getItem('token');
@@ -320,12 +339,12 @@ export default function BusinessCommander({ stats, installments, setInstallments
           image_url: imageUrl.trim() || null
         })
       });
-      
+
       const data = await response.json();
       if (!response.ok) {
         throw new Error(data.error || 'Error al enviar la campaña.');
       }
-      
+
       showToast(data.message || `Campaña enviada con éxito a ${data.sent_count} suscriptores.`, 'success');
       setCampaignSubject('');
       setCampaignTitle('');
@@ -364,16 +383,16 @@ export default function BusinessCommander({ stats, installments, setInstallments
         },
         body: JSON.stringify({ installment_id: installmentId })
       });
-      
+
       const data = await response.json();
       if (!response.ok) {
         throw new Error(data.detail || data.error || 'Error al timbrar la factura.');
       }
-      
+
       const updatedUUID = data.uuid_sat || "LCO_PENDING";
       setInstallments(prev => prev.map(inst => inst.id === installmentId ? { ...inst, cfdi_uuid: updatedUUID } : inst));
       showToast('Factura timbrada con éxito.', 'success');
-      
+
       if (activeTab === 'invoices') {
         const res = await fetcher('/billing/invoices/');
         setSystemInvoices(res.results || res || []);
@@ -411,7 +430,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
       showToast('Selecciona un inquilino.', 'warning');
       return;
     }
-    
+
     for (const item of manualItems) {
       if (!item.description.trim() || item.unit_price <= 0 || item.quantity <= 0) {
         showToast('Todos los conceptos deben tener descripción, cantidad y precio válido.', 'warning');
@@ -452,7 +471,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
 
       showToast('Factura manual emitida y timbrada con éxito.', 'success');
       setShowManualInvoiceModal(false);
-      
+
       setSelectedTenantId('');
       setManualRfc('');
       setManualRazonSocial('');
@@ -479,14 +498,14 @@ export default function BusinessCommander({ stats, installments, setInstallments
     if (contract.project_quote && (contract.project_quote.salesperson || contract.project_quote.salesperson_id)) {
       return contract.project_quote.salesperson || contract.project_quote.salesperson_id;
     }
-    
+
     // 2. Via promo_code (which has referrer if it's a SELLER code)
     if (contract.promo_code && contract.promo_code.referrer) {
       const referrerId = contract.promo_code.referrer.id || contract.promo_code.referrer;
       const isSalesperson = users.some(u => u.id === referrerId && u.role === 'SALES');
       if (isSalesperson) return referrerId;
     }
-    
+
     // 3. Via Lead with the same email
     const clientEmail = contract.user?.email || contract.client_email || contract.prospect_email;
     if (clientEmail) {
@@ -495,23 +514,23 @@ export default function BusinessCommander({ stats, installments, setInstallments
         return matchedLead.salesperson;
       }
     }
-    
+
     // 4. Via user.referrer
     if (contract.user && contract.user.referrer) {
       const referrerId = contract.user.referrer.id || contract.user.referrer;
       const isSalesperson = users.some(u => u.id === referrerId && u.role === 'SALES');
       if (isSalesperson) return referrerId;
     }
-    
+
     return null;
   };
 
   const handleMoveLeadStatus = async (leadId: number, targetStatus: string) => {
     const originalLeads = [...leads];
-    
+
     // Optimistic UI update
     setLeads(prev => prev.map(l => l.id === leadId ? { ...l, status: targetStatus } : l));
-    
+
     try {
       const token = localStorage.getItem('token');
       const response = await fetch(`${API_URL}/leads/${leadId}/`, {
@@ -522,11 +541,11 @@ export default function BusinessCommander({ stats, installments, setInstallments
         },
         body: JSON.stringify({ status: targetStatus })
       });
-      
+
       if (!response.ok) {
         throw new Error('Error al actualizar el estado en el servidor.');
       }
-      
+
       const updated = await response.json();
       setLeads(prev => prev.map(l => l.id === leadId ? updated : l));
       showToast(`Prospecto movido con éxito.`, 'success');
@@ -917,29 +936,29 @@ export default function BusinessCommander({ stats, installments, setInstallments
     const createdDate = lead.created_at
       ? new Date(lead.created_at).toLocaleDateString('es-MX', { day: '2-digit', month: 'short' })
       : '—';
-    
+
     // Determine movement options
     const statusIdx = STATUS_ORDER.indexOf(lead.status);
     const canMoveLeft = statusIdx > 0;
     const canMoveRight = statusIdx < 4 && lead.status !== 'PROPOSAL'; // For Proposal, we show Won / Lost explicitly
-    
+
     return (
       <div className="bg-card-bg/60 border border-card-border p-5 rounded-2xl hover:border-nectar-gold/40 transition-all duration-300 flex flex-col gap-3 relative group shadow-sm hover:shadow-md text-left">
         <div className="flex justify-between items-start gap-2 w-full min-w-0">
           <span className="font-black text-xs text-foreground uppercase tracking-wide truncate max-w-[170px]">{lead.name}</span>
           <span className="text-[8px] font-bold text-foreground/40 font-mono shrink-0">{createdDate}</span>
         </div>
-        
+
         {lead.email && (
           <p className="text-[8.5px] text-foreground/50 font-mono truncate" title={lead.email}>{lead.email}</p>
         )}
-        
+
         {lead.project_idea && (
           <p className="text-[9.5px] text-foreground/60 line-clamp-2 leading-relaxed bg-background/30 p-2 rounded-lg border border-card-border/30 font-medium">
             {lead.project_idea}
           </p>
         )}
-        
+
         <div className="flex justify-between items-center pt-1 gap-2">
           <div className="min-w-0">
             <span className="text-[7.5px] font-black uppercase tracking-wider text-foreground/35 block">Valor Est.</span>
@@ -947,7 +966,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
               ${parseFloat(lead.estimated_value || 0).toLocaleString('es-MX', { maximumFractionDigits: 0 })}
             </span>
           </div>
-          
+
           <div className="text-right shrink-0">
             <span className="text-[7.5px] font-black uppercase tracking-wider text-foreground/35 block">Vendedor</span>
             <span className="px-2 py-0.5 bg-foreground/5 rounded text-[8px] font-black text-foreground/60 border border-card-border/50 truncate max-w-[100px] inline-block">
@@ -1009,7 +1028,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
     const signedDate = contract.signed_at
       ? new Date(contract.signed_at).toLocaleDateString('es-MX', { day: '2-digit', month: 'short' })
       : '—';
-      
+
     const contractValue = contract.project_quote?.total_price
       ? parseFloat(contract.project_quote.total_price)
       : contract.plan?.price
@@ -1022,7 +1041,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
           <span className="font-black text-xs text-foreground uppercase tracking-wide truncate max-w-[180px]">{contract.full_name}</span>
           <span className="text-[8px] font-bold text-nectar-gold/60 font-mono shrink-0">{signedDate}</span>
         </div>
-        
+
         <p className="text-[8.5px] text-foreground/50 font-mono truncate" title={clientEmail}>{clientEmail}</p>
 
         {contract.plan && (
@@ -1030,7 +1049,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
             Plan: {contract.plan.name}
           </div>
         )}
-        
+
         <p className="text-[9.5px] text-foreground/60 line-clamp-2 leading-relaxed bg-background/30 p-2 rounded-lg border border-card-border/30 font-medium">
           {contract.project_idea || contract.project_quote?.project_name || 'Desarrollo de Software'}
         </p>
@@ -1042,7 +1061,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
               {contractValue > 0 ? `$${contractValue.toLocaleString('es-MX', { maximumFractionDigits: 0 })}` : 'Variable'}
             </span>
           </div>
-          
+
           <div className="text-right shrink-0">
             <span className="text-[7.5px] font-black uppercase tracking-wider text-foreground/35 block">Vendedor</span>
             <span className="px-2 py-0.5 bg-nectar-gold/10 rounded text-[8px] font-black text-nectar-gold/80 border border-nectar-gold/20 truncate max-w-[100px] inline-block">
@@ -1050,7 +1069,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
             </span>
           </div>
         </div>
-        
+
         {contract.pdf_file && (
           <a
             href={getInlineViewUrl(contract.pdf_file, 'contract', contract.id)}
@@ -1134,54 +1153,48 @@ export default function BusinessCommander({ stats, installments, setInstallments
       <div className="flex border-b border-card-border pb-px mb-12 gap-8 overflow-x-auto">
         <button
           onClick={() => setActiveTab('financials')}
-          className={`pb-4 text-xs font-black uppercase tracking-widest relative transition-all whitespace-nowrap ${
-            activeTab === 'financials' ? 'text-nectar-gold' : 'text-foreground/45 hover:text-foreground'
-          }`}
+          className={`pb-4 text-xs font-black uppercase tracking-widest relative transition-all whitespace-nowrap ${activeTab === 'financials' ? 'text-nectar-gold' : 'text-foreground/45 hover:text-foreground'
+            }`}
         >
           Resumen Financiero
           {activeTab === 'financials' && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-nectar-gold"></span>}
         </button>
         <button
           onClick={() => setActiveTab('kanban')}
-          className={`pb-4 text-xs font-black uppercase tracking-widest relative transition-all whitespace-nowrap ${
-            activeTab === 'kanban' ? 'text-nectar-gold' : 'text-foreground/45 hover:text-foreground'
-          }`}
+          className={`pb-4 text-xs font-black uppercase tracking-widest relative transition-all whitespace-nowrap ${activeTab === 'kanban' ? 'text-nectar-gold' : 'text-foreground/45 hover:text-foreground'
+            }`}
         >
           Kanban de Ventas
           {activeTab === 'kanban' && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-nectar-gold"></span>}
         </button>
         <button
           onClick={() => setActiveTab('quotes')}
-          className={`pb-4 text-xs font-black uppercase tracking-widest relative transition-all whitespace-nowrap ${
-            activeTab === 'quotes' ? 'text-nectar-gold' : 'text-foreground/45 hover:text-foreground'
-          }`}
+          className={`pb-4 text-xs font-black uppercase tracking-widest relative transition-all whitespace-nowrap ${activeTab === 'quotes' ? 'text-nectar-gold' : 'text-foreground/45 hover:text-foreground'
+            }`}
         >
           Cotizaciones Modulares
           {activeTab === 'quotes' && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-nectar-gold"></span>}
         </button>
         <button
           onClick={() => setActiveTab('sales')}
-          className={`pb-4 text-xs font-black uppercase tracking-widest relative transition-all whitespace-nowrap ${
-            activeTab === 'sales' ? 'text-nectar-gold' : 'text-foreground/45 hover:text-foreground'
-          }`}
+          className={`pb-4 text-xs font-black uppercase tracking-widest relative transition-all whitespace-nowrap ${activeTab === 'sales' ? 'text-nectar-gold' : 'text-foreground/45 hover:text-foreground'
+            }`}
         >
           Comisiones y Vendedores
           {activeTab === 'sales' && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-nectar-gold"></span>}
         </button>
         <button
           onClick={() => setActiveTab('invoices')}
-          className={`pb-4 text-xs font-black uppercase tracking-widest relative transition-all whitespace-nowrap ${
-            activeTab === 'invoices' ? 'text-nectar-gold' : 'text-foreground/45 hover:text-foreground'
-          }`}
+          className={`pb-4 text-xs font-black uppercase tracking-widest relative transition-all whitespace-nowrap ${activeTab === 'invoices' ? 'text-nectar-gold' : 'text-foreground/45 hover:text-foreground'
+            }`}
         >
           Facturas del Sistema
           {activeTab === 'invoices' && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-nectar-gold"></span>}
         </button>
         <button
           onClick={() => setActiveTab('marketing')}
-          className={`pb-4 text-xs font-black uppercase tracking-widest relative transition-all whitespace-nowrap ${
-            activeTab === 'marketing' ? 'text-nectar-gold' : 'text-foreground/45 hover:text-foreground'
-          }`}
+          className={`pb-4 text-xs font-black uppercase tracking-widest relative transition-all whitespace-nowrap ${activeTab === 'marketing' ? 'text-nectar-gold' : 'text-foreground/45 hover:text-foreground'
+            }`}
         >
           Campañas de Marketing
           {activeTab === 'marketing' && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-nectar-gold"></span>}
@@ -1731,7 +1744,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
               <h2 className="text-xs font-black uppercase tracking-[0.4em] opacity-30 mb-1">Pipeline de Ventas</h2>
               <p className="text-[9px] font-bold text-foreground/30 uppercase tracking-wider">Monitoreo y administración de prospectos y contratos en tiempo real</p>
             </div>
-            
+
             {/* Filters */}
             <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
               {/* Salesperson Filter */}
@@ -1982,7 +1995,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
                                   Enviar
                                 </button>
                               )}
-                              
+
                               {quote.status !== 'APPROVED' && quote.status !== 'REJECTED' && (
                                 <>
                                   <button
@@ -2626,7 +2639,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
               <span className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold text-[8px] font-black uppercase tracking-widest rounded-full border border-nectar-gold/20">
                 Redactar Campaña
               </span>
-              
+
               <form onSubmit={handleSendCampaign} className="space-y-6 mt-6">
                 <div className="space-y-2">
                   <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-4">Importar Post del Blog (Opcional)</label>
@@ -3270,133 +3283,133 @@ export default function BusinessCommander({ stats, installments, setInstallments
             onClick={(e) => e.stopPropagation()}
             className="w-full max-w-lg bg-card-bg border border-card-border p-8 md:p-10 rounded-[3rem] shadow-2xl relative space-y-6 text-left cursor-default animate-in fade-in zoom-in-95 duration-200"
           >
-                <button
-                  onClick={() => setShowPromoModal(false)}
-                  className="absolute top-6 right-6 w-8 h-8 rounded-full border border-card-border text-foreground/40 hover:text-foreground flex items-center justify-center text-xl font-bold"
-                >
-                  ×
-                </button>
+            <button
+              onClick={() => setShowPromoModal(false)}
+              className="absolute top-6 right-6 w-8 h-8 rounded-full border border-card-border text-foreground/40 hover:text-foreground flex items-center justify-center text-xl font-bold"
+            >
+              ×
+            </button>
 
-                <div>
-                  <span className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold text-[8px] font-black uppercase tracking-widest rounded-full border border-nectar-gold/20">
-                    Administración
-                  </span>
-                  <h2 className="text-2xl font-black tracking-tighter mt-4 leading-none">
-                    {editingPromoId !== null ? 'Editar Código Promocional' : 'Nuevo Código Promocional'}
-                  </h2>
-                  <p className="text-[10px] opacity-40 uppercase tracking-widest mt-1">
-                    {editingPromoId !== null ? 'Modifica los valores del código seleccionado' : 'Crea códigos de referidos o de descuento general'}
-                  </p>
-                </div>
-
-                {promoError && (
-                  <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-500 text-[10px] font-bold rounded-xl text-center uppercase tracking-wider">
-                    {promoError}
-                  </div>
-                )}
-
-                <form onSubmit={handleCreatePromoCode} className="space-y-5">
-                  <div className="space-y-1.5">
-                    <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Código promocional</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="ej: AMIGO10, NECTAR20"
-                      value={promoCode}
-                      onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
-                      className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-nectar-gold text-foreground font-mono uppercase tracking-widest"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                      <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Tipo de Código</label>
-                      <select
-                        value={promoCodeType}
-                        onChange={(e) => setPromoCodeType(e.target.value as any)}
-                        className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-nectar-gold text-foreground"
-                      >
-                        <option value="CLIENT">👥 Cliente / Descuento General</option>
-                        <option value="SELLER">🏷️ Vendedor / Referido</option>
-                      </select>
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Descuento (%)</label>
-                      <input
-                        type="number"
-                        min="0"
-                        max="100"
-                        step="0.01"
-                        required
-                        value={promoDiscount}
-                        onChange={(e) => setPromoDiscount(parseFloat(e.target.value) || 0)}
-                        className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-nectar-gold text-foreground font-mono"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Usuario Referidor (Opcional)</label>
-                    <select
-                      value={promoReferrer}
-                      onChange={(e) => setPromoReferrer(e.target.value)}
-                      className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-nectar-gold text-foreground"
-                    >
-                      <option value="">Ninguno (Descuento General)</option>
-                      {users.map(u => (
-                        <option key={u.id} value={u.id}>
-                          {u.username} ({u.role} - {u.email})
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                      <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Límite de Usos (Opcional)</label>
-                      <input
-                        type="number"
-                        placeholder="Sin límite"
-                        value={promoMaxUses}
-                        onChange={(e) => setPromoMaxUses(e.target.value)}
-                        className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-nectar-gold text-foreground font-mono"
-                      />
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Vence El (Opcional)</label>
-                      <input
-                        type="date"
-                        value={promoValidUntil}
-                        onChange={(e) => setPromoValidUntil(e.target.value)}
-                        className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-nectar-gold text-foreground font-mono"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="pt-6 border-t border-card-border/65 flex justify-end gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setShowPromoModal(false)}
-                      className="px-5 py-3 border border-card-border hover:bg-foreground hover:text-background text-[9px] font-black uppercase tracking-widest rounded-xl transition-all"
-                    >
-                      Cancelar
-                    </button>
-                    <button
-                      type="submit"
-                      disabled={isSubmittingPromo}
-                      className="px-6 py-3 bg-nectar-gold text-background text-[9px] font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 disabled:opacity-40 disabled:scale-100 transition-all font-bold shadow-lg shadow-nectar-gold/25"
-                    >
-                      {isSubmittingPromo 
-                        ? (editingPromoId !== null ? 'Guardando...' : 'Creando...') 
-                        : (editingPromoId !== null ? 'Guardar Cambios' : 'Crear Código')}
-                    </button>
-                </div>
-              </form>
+            <div>
+              <span className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold text-[8px] font-black uppercase tracking-widest rounded-full border border-nectar-gold/20">
+                Administración
+              </span>
+              <h2 className="text-2xl font-black tracking-tighter mt-4 leading-none">
+                {editingPromoId !== null ? 'Editar Código Promocional' : 'Nuevo Código Promocional'}
+              </h2>
+              <p className="text-[10px] opacity-40 uppercase tracking-widest mt-1">
+                {editingPromoId !== null ? 'Modifica los valores del código seleccionado' : 'Crea códigos de referidos o de descuento general'}
+              </p>
             </div>
+
+            {promoError && (
+              <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-500 text-[10px] font-bold rounded-xl text-center uppercase tracking-wider">
+                {promoError}
+              </div>
+            )}
+
+            <form onSubmit={handleCreatePromoCode} className="space-y-5">
+              <div className="space-y-1.5">
+                <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Código promocional</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="ej: AMIGO10, NECTAR20"
+                  value={promoCode}
+                  onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                  className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-nectar-gold text-foreground font-mono uppercase tracking-widest"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Tipo de Código</label>
+                  <select
+                    value={promoCodeType}
+                    onChange={(e) => setPromoCodeType(e.target.value as any)}
+                    className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-nectar-gold text-foreground"
+                  >
+                    <option value="CLIENT">👥 Cliente / Descuento General</option>
+                    <option value="SELLER">🏷️ Vendedor / Referido</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Descuento (%)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="0.01"
+                    required
+                    value={promoDiscount}
+                    onChange={(e) => setPromoDiscount(parseFloat(e.target.value) || 0)}
+                    className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-nectar-gold text-foreground font-mono"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Usuario Referidor (Opcional)</label>
+                <select
+                  value={promoReferrer}
+                  onChange={(e) => setPromoReferrer(e.target.value)}
+                  className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-nectar-gold text-foreground"
+                >
+                  <option value="">Ninguno (Descuento General)</option>
+                  {users.map(u => (
+                    <option key={u.id} value={u.id}>
+                      {u.username} ({u.role} - {u.email})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Límite de Usos (Opcional)</label>
+                  <input
+                    type="number"
+                    placeholder="Sin límite"
+                    value={promoMaxUses}
+                    onChange={(e) => setPromoMaxUses(e.target.value)}
+                    className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-nectar-gold text-foreground font-mono"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Vence El (Opcional)</label>
+                  <input
+                    type="date"
+                    value={promoValidUntil}
+                    onChange={(e) => setPromoValidUntil(e.target.value)}
+                    className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-nectar-gold text-foreground font-mono"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-6 border-t border-card-border/65 flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowPromoModal(false)}
+                  className="px-5 py-3 border border-card-border hover:bg-foreground hover:text-background text-[9px] font-black uppercase tracking-widest rounded-xl transition-all"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmittingPromo}
+                  className="px-6 py-3 bg-nectar-gold text-background text-[9px] font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 disabled:opacity-40 disabled:scale-100 transition-all font-bold shadow-lg shadow-nectar-gold/25"
+                >
+                  {isSubmittingPromo
+                    ? (editingPromoId !== null ? 'Guardando...' : 'Creando...')
+                    : (editingPromoId !== null ? 'Guardar Cambios' : 'Crear Código')}
+                </button>
+              </div>
+            </form>
           </div>
-        )}
+        </div>
+      )}
 
       {/* ── MODAL FACTURA MANUAL (COTIZACIONES / AJUSTES) ── */}
       {showManualInvoiceModal && (
@@ -3552,7 +3565,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
                           remover
                         </button>
                       )}
-                      
+
                       <div className="grid grid-cols-4 gap-2">
                         <div className="col-span-2 space-y-1">
                           <label className="text-[7px] font-black uppercase tracking-widest opacity-40">Descripción</label>
