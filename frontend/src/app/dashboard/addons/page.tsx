@@ -662,44 +662,35 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
               ))}
             </>
           ) : addonsList.map((addon) => {
-            // Habilitar solo los módulos estables del catálogo multi-tenant
-            const isEnabled = ['logistics-gps', 'mexico-invoicing', 'newsletter-campaigner', 'ecommerce-combo', 'live-chat', 'booking-signature', 'analytics-apm'].includes(addon.slug || addon.id);
+            // Desacoplado: Todos los addons que vienen del backend están disponibles para contratarse de forma independiente
+            const isEnabled = true;
             const price = billingCycle === 'monthly' ? addon.monthlyPrice : addon.yearlyPrice;
             const savings = billingCycle === 'yearly' ? addon.monthlyPrice * 2 : 0;
 
-            // EDGE CASE SOLVED: Buscamos el objeto activo dentro del array de tenants del usuario
+            // Buscamos el inquilino activo del usuario para mapear si ya lo tiene comprado
             const currentActiveTenant = tenants.find(t => t.id === selectedTenantId) || tenants[0];
 
-            // VALIDACIÓN ROBUSTA: Validar activación multi-tenant por string slug de base de datos
+            // SOLUCIÓN RAÍZ: Validamos usando addon.id (que tiene el string del slug según tu mapeo de API)
             const isAddonActive =
-              tenants.some(t => t.active_addons?.includes(addon.slug)) ||
-              (currentActiveTenant?.active_addons || []).includes(addon.slug) ||
-              subscriptions.some(s => s.addon_details?.slug === addon.slug && ['active', 'trialing'].includes(s.status)) ||
-              contracts.some(c => (c.addons || []).some((a: any) => a.slug === addon.slug));
+              tenants.some(t => t.active_addons?.includes(addon.id)) ||
+              (currentActiveTenant?.active_addons || []).includes(addon.id) ||
+              subscriptions.some(s => s.addon_details?.slug === addon.id && ['active', 'trialing'].includes(s.status)) ||
+              contracts.some(c => (c.addons || []).some((a: any) => a.id === addon.id || a.slug === addon.id));
 
             return (
               <div
                 key={addon.id}
-                className={`bg-card-bg border border-card-border p-8 rounded-[2.5rem] relative overflow-hidden group transition-all duration-500 flex flex-col justify-between min-h-[420px] ${isEnabled
-                  ? 'hover:border-nectar-gold/50 hover:shadow-[0_20px_50px_rgba(198,138,30,0.08)]'
-                  : 'opacity-55'
-                  }`}
+                className="bg-card-bg border border-card-border p-8 rounded-[2.5rem] relative overflow-hidden group transition-all duration-500 flex flex-col justify-between min-h-[420px] hover:border-nectar-gold/50 hover:shadow-[0_20px_50px_rgba(198,138,30,0.08)]"
               >
-                {isEnabled && (
-                  <div className="absolute -top-32 -right-32 w-64 h-64 bg-nectar-gold/5 blur-[80px] rounded-full group-hover:bg-nectar-gold/10 transition-all duration-700 pointer-events-none -z-10"></div>
-                )}
-
-                {!isEnabled && (
-                  <div className="absolute top-4 right-4 bg-red-500/10 border border-red-500/20 text-red-400 text-[7px] font-black uppercase tracking-widest px-2.5 py-1 rounded-md flex items-center gap-1 font-bold">
-                    🔒 En desarrollo / Bloqueado
-                  </div>
-                )}
+                {/* Accent Background Glow on Hover */}
+                <div className="absolute -top-32 -right-32 w-64 h-64 bg-nectar-gold/5 blur-[80px] rounded-full group-hover:bg-nectar-gold/10 transition-all duration-700 pointer-events-none -z-10"></div>
 
                 <div>
+                  {/* Category Badge & Icon */}
                   <div className="flex justify-between items-start mb-8">
                     <div className="flex flex-col gap-1.5 items-start">
                       <span className="text-[8px] font-black uppercase tracking-widest text-nectar-gold bg-nectar-gold/5 border border-nectar-gold/15 px-3 py-1.5 rounded-full">
-                        {addon.categoryBadge || addon.category_badge}
+                        {addon.categoryBadge}
                       </span>
                       {isAddonActive && (
                         <span className="text-[7px] font-black uppercase tracking-widest text-emerald-400 bg-emerald-400/5 border border-emerald-400/20 px-2.5 py-1.5 rounded-md">
@@ -707,12 +698,13 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
                         </span>
                       )}
                     </div>
-                    <div className={`p-3 bg-foreground/5 rounded-2xl transition-all duration-500 ${isEnabled ? 'group-hover:bg-nectar-gold/10 group-hover:scale-110' : ''}`}>
+                    <div className="p-3 bg-foreground/5 rounded-2xl transition-all duration-500 group-hover:bg-nectar-gold/10 group-hover:scale-110">
                       {addon.icon}
                     </div>
                   </div>
 
-                  <h3 className={`text-2xl font-black tracking-tight mb-3 transition-colors duration-300 ${isEnabled ? 'group-hover:text-nectar-gold' : ''}`}>
+                  {/* Title & Description */}
+                  <h3 className="text-2xl font-black tracking-tight mb-3 transition-colors duration-300 group-hover:text-nectar-gold">
                     {addon.name}
                   </h3>
                   <p className="text-xs text-muted mb-6 leading-relaxed">
@@ -720,6 +712,7 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
                   </p>
                 </div>
 
+                {/* Pricing & Call to Action */}
                 <div>
                   <div className="border-t border-card-border/80 pt-6 mb-6 flex items-baseline justify-between">
                     <div>
@@ -732,7 +725,7 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
                             </span>
                           </div>
                           <p className="text-[9px] text-muted mt-1">
-                            Soporte técnico integrado • <span className="line-through opacity-50">${addon.monthlyPrice || addon.monthly_price}/mes</span>
+                            Soporte técnico integrado • <span className="line-through opacity-50">${addon.monthlyPrice}/mes</span>
                           </p>
                         </div>
                       ) : (
@@ -760,61 +753,50 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
                     </span>
                   </div>
 
-                  {isEnabled ? (
-                    <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedAddon(addon)}
+                      className="w-full py-4 text-[9px] font-black uppercase tracking-widest text-nectar-gold hover:text-foreground hover:bg-foreground/5 rounded-xl border border-nectar-gold/20 hover:border-transparent transition-all duration-300 text-center"
+                    >
+                      Ver Ficha
+                    </button>
+                    {isStaff ? (
                       <button
                         type="button"
-                        onClick={() => setSelectedAddon(addon)}
-                        className="w-full py-4 text-[9px] font-black uppercase tracking-widest text-nectar-gold hover:text-foreground hover:bg-foreground/5 rounded-xl border border-nectar-gold/20 hover:border-transparent transition-all duration-300 text-center"
+                        onClick={() => setManageAddon(addon)}
+                        className="w-full py-4 text-[9px] font-black uppercase tracking-widest bg-nectar-gold text-background hover:scale-[1.03] active:scale-95 transition-all rounded-xl shadow-lg shadow-nectar-gold/10 hover:shadow-nectar-gold/25"
                       >
-                        Ver Ficha
+                        Asignar Cliente
                       </button>
-                      {isStaff ? (
+                    ) : isAddonActive ? (
+                      hasPlanContract ? (
                         <button
-                          type="button"
-                          onClick={() => setManageAddon(addon)}
-                          className="w-full py-4 text-[9px] font-black uppercase tracking-widest bg-nectar-gold text-background hover:scale-[1.03] active:scale-95 transition-all rounded-xl shadow-lg shadow-nectar-gold/10 hover:shadow-nectar-gold/25"
+                          disabled
+                          className="w-full py-4 text-[9px] font-black uppercase tracking-widest bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-xl cursor-default text-center"
                         >
-                          Asignar Cliente
+                          Incluido Activo
                         </button>
-                      ) : isAddonActive ? (
-                        hasPlanContract ? (
-                          <button
-                            disabled
-                            className="w-full py-4 text-[9px] font-black uppercase tracking-widest bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-xl cursor-default text-center"
-                          >
-                            Incluido Activo
-                          </button>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={handleOpenBillingPortal}
-                            disabled={isSubmitting}
-                            className="w-full py-4 text-[9px] font-black uppercase tracking-widest bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 active:scale-95 transition-all rounded-xl shadow-lg text-center"
-                          >
-                            {isSubmitting ? 'Cargando...' : 'Administrar Suscripción'}
-                          </button>
-                        )
                       ) : (
                         <button
                           type="button"
-                          onClick={() => setRequestAddon(addon)}
-                          className="w-full py-4 text-[9px] font-black uppercase tracking-widest bg-nectar-gold text-background hover:scale-[1.03] active:scale-95 transition-all rounded-xl shadow-lg shadow-nectar-gold/10 hover:shadow-nectar-gold/25"
+                          onClick={handleOpenBillingPortal}
+                          disabled={isSubmitting}
+                          className="w-full py-4 text-[9px] font-black uppercase tracking-widest bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 active:scale-95 transition-all rounded-xl shadow-lg text-center"
                         >
-                          {hasPlanContract ? 'Solicitar Gratis' : 'Solicitar'}
+                          {isSubmitting ? 'Cargando...' : 'Administrar Suscripción'}
                         </button>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="w-full">
+                      )
+                    ) : (
                       <button
-                        disabled
-                        className="w-full py-4 text-[9px] font-black uppercase tracking-widest bg-card-border/30 text-foreground/45 rounded-xl border border-card-border/20 cursor-not-allowed text-center"
+                        type="button"
+                        onClick={() => setRequestAddon(addon)}
+                        className="w-full py-4 text-[9px] font-black uppercase tracking-widest bg-nectar-gold text-background hover:scale-[1.03] active:scale-95 transition-all rounded-xl shadow-lg shadow-nectar-gold/10 hover:shadow-nectar-gold/25"
                       >
-                        🔒 Módulo en desarrollo
+                        {hasPlanContract ? 'Solicitar Gratis' : 'Solicitar'}
                       </button>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
               </div>
             );
