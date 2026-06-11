@@ -261,15 +261,16 @@ export default function BusinessCommander({ stats, installments, setInstallments
     }
   }, [activeTab]);
 
-  const handleCancelInvoice = async (invoiceId: number) => {
-    if (!window.confirm('¿Estás seguro de que deseas solicitar la cancelación de esta factura en el SAT?')) return;
+  const handleCancelInvoice = async (invoiceId: number, motive: string = '02') => {
     try {
       const token = localStorage.getItem('token');
       const response = await fetch(`${API_URL}/billing/invoices/${invoiceId}/cancel/`, {
         method: 'POST',
         headers: {
+          'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
-        }
+        },
+        body: JSON.stringify({ motive })
       });
       if (!response.ok) {
         const err = await response.json();
@@ -301,6 +302,58 @@ export default function BusinessCommander({ stats, installments, setInstallments
       showToast('Factura reintentada y timbrada con éxito.', 'success');
     } catch (err: any) {
       showToast(err.message || 'Error al reintentar el timbrado.', 'error');
+    }
+  };
+
+  const handleCreateNewUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newUserEmail.trim()) {
+      showToast('El email es obligatorio.', 'warning');
+      return;
+    }
+    setIsSubmittingNewUser(true);
+    try {
+      const token = localStorage.getItem('token');
+      const payload: any = {
+        email: newUserEmail.trim(),
+        role: newUserRole,
+        is_email_verified: newUserEmailVerified
+      };
+      if (newUsername.trim()) payload.username = newUsername.trim();
+      if (newUserPassword.trim()) payload.password = newUserPassword.trim();
+      if (newUserTenantId) payload.tenant = parseInt(newUserTenantId);
+
+      const response = await fetch(`${API_URL}/users/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        const firstErr = Object.values(data)[0];
+        const errorMsg = Array.isArray(firstErr) ? firstErr[0] : (data.detail || data.error || 'Error al crear el usuario.');
+        throw new Error(errorMsg);
+      }
+
+      showToast(`Usuario/Cliente ${data.email} creado con éxito.`, 'success');
+      setShowNewUserModal(false);
+      setNewUserEmail('');
+      setNewUsername('');
+      setNewUserPassword('');
+      setNewUserRole('CUSTOMER');
+      setNewUserTenantId('');
+      setNewUserEmailVerified(true);
+
+      const usersData = await fetcher('/users/');
+      setUsers(Array.isArray(usersData) ? usersData : []);
+    } catch (err: any) {
+      showToast(err.message || 'Error al crear el usuario.', 'error');
+    } finally {
+      setIsSubmittingNewUser(false);
     }
   };
 
@@ -598,7 +651,6 @@ export default function BusinessCommander({ stats, installments, setInstallments
   };
 
   const handleDeleteQuote = async (quoteId: string) => {
-    if (!window.confirm("¿Estás seguro de que deseas eliminar esta cotización permanentemente?")) return;
     try {
       const token = localStorage.getItem('token');
       const response = await fetch(`${API_URL}/quotes/${quoteId}/`, {
@@ -895,7 +947,6 @@ export default function BusinessCommander({ stats, installments, setInstallments
   };
 
   const handleDeletePromoCode = async (codeId: number, codeStr: string) => {
-    if (!window.confirm(`¿Estás seguro de que deseas eliminar el código ${codeStr}?`)) return;
     try {
       const token = localStorage.getItem('token');
       const response = await fetch(`${API_URL}/promo-codes/${codeId}/`, {
@@ -2035,7 +2086,17 @@ export default function BusinessCommander({ stats, installments, setInstallments
                               )}
 
                               <button
-                                onClick={() => handleDeleteQuote(quote.id)}
+                                onClick={() => {
+                                  setConfirmModal({
+                                    isOpen: true,
+                                    title: 'Eliminar Cotización',
+                                    message: `¿Estás seguro de que deseas eliminar la cotización para ${quote.client_name}? Esta acción no se puede deshacer.`,
+                                    onConfirm: () => {
+                                      handleDeleteQuote(quote.id);
+                                      setConfirmModal(null);
+                                    }
+                                  });
+                                }}
                                 className="px-2 py-1 bg-red-500/5 hover:bg-red-500 text-red-500 hover:text-white text-xs rounded transition-all"
                               >
                                 ✖
@@ -2420,7 +2481,17 @@ export default function BusinessCommander({ stats, installments, setInstallments
                           Editar
                         </button>
                         <button
-                          onClick={() => handleDeletePromoCode(code.id, code.code)}
+                          onClick={() => {
+                            setConfirmModal({
+                              isOpen: true,
+                              title: 'Eliminar Código de Promoción',
+                              message: `¿Estás seguro de que deseas eliminar el código ${code.code}? Esta acción no se puede deshacer.`,
+                              onConfirm: () => {
+                                handleDeletePromoCode(code.id, code.code);
+                                setConfirmModal(null);
+                              }
+                            });
+                          }}
                           className="px-3 py-1 bg-red-500/10 text-red-500 hover:bg-red-600 hover:text-white rounded-xl text-[7px] font-black uppercase tracking-widest transition-all border border-red-500/20 font-bold"
                         >
                           Eliminar
@@ -2465,6 +2536,20 @@ export default function BusinessCommander({ stats, installments, setInstallments
                 className="px-5 py-2.5 bg-nectar-gold text-background text-[9px] font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 transition-all shadow-md font-bold whitespace-nowrap"
               >
                 + Factura Manual (Cotizaciones)
+              </button>
+              <button
+                onClick={() => {
+                  setNewUserEmail('');
+                  setNewUsername('');
+                  setNewUserPassword('');
+                  setNewUserRole('CUSTOMER');
+                  setNewUserTenantId('');
+                  setNewUserEmailVerified(true);
+                  setShowNewUserModal(true);
+                }}
+                className="px-5 py-2.5 bg-foreground/10 hover:bg-foreground hover:text-background text-[9px] font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 transition-all shadow-md font-bold whitespace-nowrap"
+              >
+                + Nuevo Usuario / Cliente
               </button>
               <div className="flex flex-col gap-1 min-w-[250px] w-full sm:w-auto">
                 <label className="text-[7.5px] font-black uppercase tracking-widest opacity-40 ml-2">Buscar Inquilino o SAT UUID</label>
@@ -2606,7 +2691,17 @@ export default function BusinessCommander({ stats, installments, setInstallments
                               )}
                               {(isPaid || isCancelRequested) && (
                                 <button
-                                  onClick={() => handleCancelInvoice(inv.id)}
+                                  onClick={() => {
+                                    setConfirmModal({
+                                      isOpen: true,
+                                      title: 'Cancelar Factura',
+                                      message: `¿Estás seguro de que deseas cancelar la factura con folio SAT/UUID ${inv.uuid_sat || ''}? (Motivo: 02 - Comprobante emitido con errores sin relación)`,
+                                      onConfirm: () => {
+                                        handleCancelInvoice(inv.id, '02');
+                                        setConfirmModal(null);
+                                      }
+                                    });
+                                  }}
                                   className="px-2 py-1 bg-red-500/10 text-red-500 hover:bg-red-600 hover:text-white text-[7px] font-black uppercase tracking-widest rounded-lg transition-all border border-red-500/20 font-bold"
                                 >
                                   Cancelar
@@ -3663,6 +3758,143 @@ export default function BusinessCommander({ stats, installments, setInstallments
           </div>
         </div>
       )}
+
+      {showNewUserModal && (
+        <div
+          onClick={() => setShowNewUserModal(false)}
+          className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-6 cursor-pointer overflow-y-auto"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-md bg-card-bg border border-card-border p-8 md:p-10 rounded-[3rem] shadow-2xl relative space-y-6 text-left cursor-default animate-in fade-in zoom-in-95 duration-200"
+          >
+            <button
+              onClick={() => setShowNewUserModal(false)}
+              className="absolute top-6 right-6 w-8 h-8 rounded-full border border-card-border text-foreground/40 hover:text-foreground flex items-center justify-center text-xl font-bold"
+            >
+              ×
+            </button>
+
+            <div>
+              <span className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold text-[8px] font-black uppercase tracking-widest rounded-full border border-nectar-gold/20">
+                Administración
+              </span>
+              <h2 className="text-2xl font-black tracking-tighter mt-4 leading-none">
+                Nuevo Usuario / Cliente
+              </h2>
+              <p className="text-[10px] opacity-40 uppercase tracking-widest mt-1">
+                Crea un nuevo usuario en la plataforma y asócialo opcionalmente a un inquilino.
+              </p>
+            </div>
+
+            <form onSubmit={handleCreateNewUser} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Email Principal *</label>
+                <input
+                  type="email"
+                  required
+                  placeholder="usuario@dominio.com"
+                  value={newUserEmail}
+                  onChange={(e) => setNewUserEmail(e.target.value)}
+                  className="w-full bg-background border border-card-border rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-nectar-gold text-foreground"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Nombre de Usuario (Opcional)</label>
+                <input
+                  type="text"
+                  placeholder="ej. minombre"
+                  value={newUsername}
+                  onChange={(e) => setNewUsername(e.target.value)}
+                  className="w-full bg-background border border-card-border rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-nectar-gold text-foreground"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Contraseña (Opcional)</label>
+                <input
+                  type="password"
+                  placeholder="••••••••"
+                  value={newUserPassword}
+                  onChange={(e) => setNewUserPassword(e.target.value)}
+                  className="w-full bg-background border border-card-border rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-nectar-gold text-foreground font-mono"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Rol de Usuario</label>
+                  <select
+                    value={newUserRole}
+                    onChange={(e) => setNewUserRole(e.target.value)}
+                    className="w-full bg-background border border-card-border rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-nectar-gold text-foreground font-bold"
+                  >
+                    <option value="CUSTOMER">Cliente</option>
+                    <option value="BUSINESS">Inquilino (Business Owner)</option>
+                    <option value="STAFF">Staff de Ventas</option>
+                    <option value="ADMIN">Administrador Global</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Asociar Inquilino (SaaS)</label>
+                  <select
+                    value={newUserTenantId}
+                    onChange={(e) => setNewUserTenantId(e.target.value)}
+                    className="w-full bg-background border border-card-border rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-nectar-gold text-foreground"
+                  >
+                    <option value="">Ninguno</option>
+                    {allTenants.map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.brand_name || t.subdomain}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 pt-2">
+                <input
+                  type="checkbox"
+                  id="newUserEmailVerified"
+                  checked={newUserEmailVerified}
+                  onChange={(e) => setNewUserEmailVerified(e.target.checked)}
+                  className="w-4 h-4 bg-background border border-card-border rounded accent-nectar-gold"
+                />
+                <label htmlFor="newUserEmailVerified" className="text-[9px] font-black uppercase tracking-widest opacity-60 cursor-pointer">
+                  Email Verificado
+                </label>
+              </div>
+
+              <div className="pt-6 border-t border-card-border/60 flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowNewUserModal(false)}
+                  className="px-5 py-3 border border-card-border hover:bg-foreground hover:text-background text-[9px] font-black uppercase tracking-widest rounded-xl transition-all"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmittingNewUser}
+                  className="px-6 py-3 bg-nectar-gold text-background text-[9px] font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 disabled:opacity-40 disabled:scale-100 transition-all font-bold shadow-lg shadow-nectar-gold/25"
+                >
+                  {isSubmittingNewUser ? 'Creando...' : 'Crear Usuario'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      <ConfirmModal
+        isOpen={confirmModal !== null}
+        title={confirmModal?.title || ''}
+        message={confirmModal?.message || ''}
+        onConfirm={confirmModal?.onConfirm || (() => {})}
+        onCancel={() => setConfirmModal(null)}
+      />
 
       {toast && (
         <Toast

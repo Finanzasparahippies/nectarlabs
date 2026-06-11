@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { fetcher } from '@/lib/api';
 import Toast from '@/components/ui/Toast';
 import ThemeToggle from '@/components/ThemeToggle';
+import ConfirmModal from '@/components/ui/ConfirmModal';
 
 interface TenantConfig {
   id: string;
@@ -111,6 +112,22 @@ export default function TenantAdminPage() {
     { quantity: 1, unit_price: 0, description: '' }
   ]);
   const [isSubmittingManualInvoice, setIsSubmittingManualInvoice] = useState(false);
+
+  // ConfirmModal dynamic state
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+  } | null>(null);
+
+  // New Client Modal states
+  const [showNewClientModal, setShowNewClientModal] = useState(false);
+  const [newClientEmail, setNewClientEmail] = useState('');
+  const [newClientUsername, setNewClientUsername] = useState('');
+  const [newClientPassword, setNewClientPassword] = useState('');
+  const [newClientEmailVerified, setNewClientEmailVerified] = useState(true);
+  const [isSubmittingNewClient, setIsSubmittingNewClient] = useState(false);
 
   // Tax Profile Form State
   const [rfc, setRfc] = useState('');
@@ -302,16 +319,57 @@ export default function TenantAdminPage() {
     }
   };
 
-  const handleCancelInvoice = async (invoiceId: number) => {
-    if (!confirm('¿Estás seguro de que deseas cancelar esta factura ante el SAT?')) return;
+  const handleCancelInvoice = async (invoiceId: number, motive: string = '02') => {
     try {
       const updatedInvoice = await fetcher(`/billing/invoices/${invoiceId}/cancel/?tenant_id=${tenantConfig?.id}`, {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ motive })
       });
       showToast('Cancelación solicitada con éxito.', 'success');
       setInvoices(invoices.map(inv => inv.id === invoiceId ? updatedInvoice : inv));
     } catch (err: any) {
       showToast(err.message || 'Error al solicitar la cancelación.', 'error');
+    }
+  };
+
+  const handleCreateClient = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newClientEmail.trim()) {
+      showToast('El email es obligatorio.', 'warning');
+      return;
+    }
+    setIsSubmittingNewClient(true);
+    try {
+      const payload: any = {
+        email: newClientEmail.trim(),
+        role: 'CUSTOMER',
+        is_email_verified: newClientEmailVerified
+      };
+      if (newClientUsername.trim()) payload.username = newClientUsername.trim();
+      if (newClientPassword.trim()) payload.password = newClientPassword.trim();
+      if (tenantConfig?.id) payload.tenant = parseInt(tenantConfig.id);
+
+      const data = await fetcher('/users/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      });
+
+      showToast(`Cliente ${data.email} creado con éxito.`, 'success');
+      setShowNewClientModal(false);
+      setNewClientEmail('');
+      setNewClientUsername('');
+      setNewClientPassword('');
+      setNewClientEmailVerified(true);
+    } catch (err: any) {
+      showToast(err.message || 'Error al crear el cliente.', 'error');
+    } finally {
+      setIsSubmittingNewClient(false);
     }
   };
 
@@ -1539,6 +1597,18 @@ export default function TenantAdminPage() {
                         + Factura Manual
                       </button>
                       <button
+                        onClick={() => {
+                          setNewClientEmail('');
+                          setNewClientUsername('');
+                          setNewClientPassword('');
+                          setNewClientEmailVerified(true);
+                          setShowNewClientModal(true);
+                        }}
+                        className="px-3 py-1.5 bg-white/10 hover:bg-white/20 border border-white/10 rounded-lg text-[8px] font-black uppercase tracking-wider transition-all text-white cursor-pointer font-bold"
+                      >
+                        + Nuevo Cliente
+                      </button>
+                      <button
                         onClick={loadBillingData}
                         disabled={loadingBilling}
                         className="px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/5 rounded-lg text-[8px] font-black uppercase tracking-wider transition-all text-white/80 cursor-pointer"
@@ -1643,7 +1713,17 @@ export default function TenantAdminPage() {
                                   )}
                                   {(inv.status === 'PAID' || inv.status === 'CANCEL_REQUESTED') && (
                                     <button
-                                      onClick={() => handleCancelInvoice(inv.id)}
+                                      onClick={() => {
+                                        setConfirmModal({
+                                          isOpen: true,
+                                          title: 'Cancelar Factura',
+                                          message: `¿Estás seguro de que deseas cancelar la factura con folio SAT/UUID ${inv.uuid_sat || ''}? (Motivo: 02 - Comprobante emitido con errores sin relación)`,
+                                          onConfirm: () => {
+                                            handleCancelInvoice(inv.id, '02');
+                                            setConfirmModal(null);
+                                          }
+                                        });
+                                      }}
                                       className="px-2 py-1 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-[7.5px] font-black uppercase tracking-widest rounded transition-all"
                                     >
                                       Cancelar
@@ -2601,6 +2681,115 @@ export default function TenantAdminPage() {
           </div>
         </div>
       )}
+
+      {showNewClientModal && tenantConfig && (
+        <div
+          onClick={() => setShowNewClientModal(false)}
+          className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-6 cursor-pointer overflow-y-auto"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              backgroundColor: tenantConfig.card_bg_color || '#050a06',
+              borderColor: tenantConfig.border_color || '#151F18'
+            }}
+            className="w-full max-w-md border p-8 md:p-10 rounded-[3rem] shadow-2xl relative space-y-6 text-left cursor-default animate-in fade-in zoom-in-95 duration-200 admin-card"
+          >
+            <button
+              onClick={() => setShowNewClientModal(false)}
+              className="absolute top-6 right-6 w-8 h-8 rounded-full border border-white/10 text-white/40 hover:text-white flex items-center justify-center text-xl font-bold cursor-pointer admin-border"
+            >
+              ×
+            </button>
+
+            <div>
+              <span className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold text-[8px] font-black uppercase tracking-widest rounded-full border border-nectar-gold/20">
+                Clientes
+              </span>
+              <h2 className="text-2xl font-black tracking-tighter mt-4 leading-none text-white">
+                Nuevo Cliente / Usuario
+              </h2>
+              <p className="text-[10px] opacity-40 uppercase tracking-widest mt-1">
+                Registra un nuevo cliente para este portal. El rol será automáticamente asignado como Cliente.
+              </p>
+            </div>
+
+            <form onSubmit={handleCreateClient} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Email Principal *</label>
+                <input
+                  type="email"
+                  required
+                  placeholder="cliente@correo.com"
+                  value={newClientEmail}
+                  onChange={(e) => setNewClientEmail(e.target.value)}
+                  className="w-full bg-background border border-white/10 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-nectar-gold text-foreground admin-input"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Nombre de Usuario (Opcional)</label>
+                <input
+                  type="text"
+                  placeholder="ej. clientejuan"
+                  value={newClientUsername}
+                  onChange={(e) => setNewClientUsername(e.target.value)}
+                  className="w-full bg-background border border-white/10 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-nectar-gold text-foreground admin-input"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Contraseña (Opcional)</label>
+                <input
+                  type="password"
+                  placeholder="••••••••"
+                  value={newClientPassword}
+                  onChange={(e) => setNewClientPassword(e.target.value)}
+                  className="w-full bg-background border border-white/10 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-nectar-gold text-foreground font-mono admin-input"
+                />
+              </div>
+
+              <div className="flex items-center gap-2 pt-2">
+                <input
+                  type="checkbox"
+                  id="newClientEmailVerified"
+                  checked={newClientEmailVerified}
+                  onChange={(e) => setNewClientEmailVerified(e.target.checked)}
+                  className="w-4 h-4 bg-background border border-white/10 rounded accent-nectar-gold"
+                />
+                <label htmlFor="newClientEmailVerified" className="text-[9px] font-black uppercase tracking-widest opacity-60 cursor-pointer text-white/80">
+                  Email Verificado
+                </label>
+              </div>
+
+              <div className="pt-6 border-t border-white/10 flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowNewClientModal(false)}
+                  className="px-5 py-3 border border-white/10 hover:bg-white/5 text-[9px] font-black uppercase tracking-widest rounded-xl transition-all cursor-pointer text-white/80"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmittingNewClient}
+                  className="px-6 py-3 bg-nectar-gold text-background text-[9px] font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 disabled:opacity-40 disabled:scale-100 transition-all font-bold shadow-lg shadow-nectar-gold/25 cursor-pointer"
+                >
+                  {isSubmittingNewClient ? 'Creando...' : 'Crear Cliente'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      <ConfirmModal
+        isOpen={confirmModal !== null}
+        title={confirmModal?.title || ''}
+        message={confirmModal?.message || ''}
+        onConfirm={confirmModal?.onConfirm || (() => {})}
+        onCancel={() => setConfirmModal(null)}
+      />
 
       {toast && (
         <Toast

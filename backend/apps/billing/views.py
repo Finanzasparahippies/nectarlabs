@@ -512,9 +512,10 @@ class InvoiceViewSet(BillingTenantMixin, viewsets.ModelViewSet):
         if invoice.status not in [Invoice.Status.PAID, Invoice.Status.CANCEL_REQUESTED]:
             return Response({"error": "Solo se pueden cancelar facturas timbradas con éxito."}, status=400)
 
+        motive = request.data.get('motive', '02')
         pac = get_pac_service()
         try:
-            new_status = pac.cancel_invoice(invoice)
+            new_status = pac.cancel_invoice(invoice, motive=motive)
             invoice.status = new_status
             invoice.save(update_fields=['status'])
             return Response(InvoiceSerializer(invoice).data)
