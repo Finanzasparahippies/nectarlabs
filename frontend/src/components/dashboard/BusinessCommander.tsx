@@ -2583,7 +2583,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
                                   XML
                                 </a>
                               )}
-                              {(isFailed || isLco) && (
+                              {(isFailed || isLco || isPending) && (
                                 <button
                                   onClick={() => handleRetryInvoice(inv.id)}
                                   className="px-2 py-1 bg-nectar-gold text-background hover:scale-105 text-[7px] font-black uppercase tracking-widest rounded-lg transition-all font-bold"

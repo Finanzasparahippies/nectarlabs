@@ -1632,7 +1632,7 @@ export default function TenantAdminPage() {
                               </td>
                               <td className="py-3 px-2 text-right">
                                 <div className="flex items-center justify-end gap-1.5">
-                                  {(inv.status === 'LCO_SYNC_PENDING' || inv.status === 'FAILED') && (
+                                  {(inv.status === 'LCO_SYNC_PENDING' || inv.status === 'FAILED' || inv.status === 'PENDING') && (
                                     <button
                                       onClick={() => handleRetryInvoice(inv.id)}
                                       disabled={(!billingInfo?.is_ambassador && (billingInfo?.stamp_balance ?? 0) === 0) || (billingInfo?.is_ambassador && ((billingInfo?.free_stamps_left ?? 0) + (billingInfo?.stamp_balance ?? 0)) === 0)}

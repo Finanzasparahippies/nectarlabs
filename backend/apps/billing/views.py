@@ -341,6 +341,22 @@ class InvoiceViewSet(BillingTenantMixin, viewsets.ModelViewSet):
                 err_msg = f"El campo customer_info.{field} es obligatorio."
                 return Response({"error": err_msg, "detail": err_msg}, status=400)
 
+        # Create or update the tenant's TaxProfile locally using the manual customer info
+        if not profile:
+            profile = TaxProfile.objects.create(
+                tenant=tenant,
+                rfc=customer_info['rfc'].strip().upper(),
+                razon_social=customer_info['razon_social'].strip(),
+                regimen_fiscal=customer_info['regimen_fiscal'].strip(),
+                codigo_postal=customer_info['codigo_postal'].strip()
+            )
+        else:
+            profile.rfc = customer_info['rfc'].strip().upper()
+            profile.razon_social = customer_info['razon_social'].strip()
+            profile.regimen_fiscal = customer_info['regimen_fiscal'].strip()
+            profile.codigo_postal = customer_info['codigo_postal'].strip()
+            profile.save()
+
         from decimal import Decimal
         from apps.billing.models import Invoice
         invoice = Invoice.objects.create(
@@ -508,8 +524,8 @@ class InvoiceViewSet(BillingTenantMixin, viewsets.ModelViewSet):
     @action(detail=True, methods=['post'])
     def retry(self, request, pk=None):
         invoice = self.get_object()
-        if invoice.status not in [Invoice.Status.LCO_SYNC_PENDING, Invoice.Status.FAILED]:
-            return Response({"error": "Solo se pueden reintentar facturas fallidas o pendientes por sincronía LCO."}, status=400)
+        if invoice.status not in [Invoice.Status.LCO_SYNC_PENDING, Invoice.Status.FAILED, Invoice.Status.PENDING]:
+            return Response({"error": "Solo se pueden reintentar facturas fallidas, pendientes o en sincronía LCO."}, status=400)
 
         original_status = invoice.status
         tenant = invoice.tenant
