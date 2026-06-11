@@ -311,8 +311,8 @@ class InvoiceViewSet(BillingTenantMixin, viewsets.ModelViewSet):
 
         return Response(InvoiceSerializer(invoice).data, status=status.HTTP_201_CREATED)
 
-    @action(detail=False, methods=['post'], url_path='issue-custom-manual')
-    def issue_custom_manual(self, request):
+    @action(detail=False, methods=['post'], url_path='issue-parent-to-tenant')
+    def issue_parent_to_tenant(self, request):
         import uuid
         user = request.user
         # Aislamiento/Seguridad: Only platform admin can do this
@@ -411,8 +411,8 @@ class InvoiceViewSet(BillingTenantMixin, viewsets.ModelViewSet):
             return Response({"error": detail_msg, "detail": detail_msg}, status=400)
 
 
-    @action(detail=False, methods=['post'], url_path='issue-to-customer')
-    def issue_to_customer(self, request):
+    @action(detail=False, methods=['post'], url_path='issue-tenant-to-client')
+    def issue_tenant_to_client(self, request):
         tenant = self.get_tenant()
         profile = getattr(tenant, 'tax_profile', None)
         if not profile or not profile.facturapi_organization_id:
@@ -513,6 +513,7 @@ class InvoiceViewSet(BillingTenantMixin, viewsets.ModelViewSet):
 
         original_status = invoice.status
         tenant = invoice.tenant
+        is_parent = not invoice.is_tenant_to_customer
 
         # Check stamp balance if we are retrying a FAILED invoice
         if original_status == Invoice.Status.FAILED and not is_parent:
@@ -525,8 +526,6 @@ class InvoiceViewSet(BillingTenantMixin, viewsets.ModelViewSet):
 
         pac = get_pac_service()
         user = tenant.owner
-        
-        is_parent = not invoice.is_tenant_to_customer
         
         if is_parent:
             customer_info = {

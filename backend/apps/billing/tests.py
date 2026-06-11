@@ -472,7 +472,7 @@ class BillingSystemTests(APITestCase):
             facturapi_organization_id="org_mock_tenant_123"
         )
 
-        url = reverse('billing-invoice-list') + "issue-to-customer/"
+        url = reverse('billing-invoice-list') + "issue-tenant-to-client/"
         
         payload = {
             "customer_info": {
@@ -518,7 +518,7 @@ class BillingSystemTests(APITestCase):
             facturapi_organization_id="org_mock_tenant_lco"
         )
 
-        url = reverse('billing-invoice-list') + "issue-to-customer/"
+        url = reverse('billing-invoice-list') + "issue-tenant-to-client/"
         
         payload = {
             "customer_info": {
@@ -656,7 +656,7 @@ class BillingSystemTests(APITestCase):
             facturapi_organization_id="org_mock_tenant_123"
         )
         
-        url = reverse('billing-invoice-list') + "issue-to-customer/"
+        url = reverse('billing-invoice-list') + "issue-tenant-to-client/"
         payload = {
             "customer_info": {
                 "rfc": "XAXX010101000",
@@ -690,7 +690,7 @@ class BillingSystemTests(APITestCase):
             facturapi_organization_id="org_mock_tenant_123"
         )
         
-        url = reverse('billing-invoice-list') + "issue-to-customer/"
+        url = reverse('billing-invoice-list') + "issue-tenant-to-client/"
         payload = {
             "customer_info": {
                 "rfc": "XAXX010101000",
@@ -725,7 +725,7 @@ class BillingSystemTests(APITestCase):
             facturapi_organization_id="org_mock_tenant_lco"
         )
         
-        url = reverse('billing-invoice-list') + "issue-to-customer/"
+        url = reverse('billing-invoice-list') + "issue-tenant-to-client/"
         payload = {
             "customer_info": {
                 "rfc": "LCO999999AAA",
