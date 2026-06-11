@@ -75,7 +75,7 @@ class Tenant(models.Model):
         help_text="Créditos extra de correo contratados (múltiplos de 10,000)"
     )
     newsletter_sent_this_month = models.PositiveIntegerField(default=0)
-    newsletter_last_reset = models.DateField(default=timezone.now)
+    newsletter_last_reset = models.DateField(default=timezone.localdate)
 
     # Bring Your Own SMTP (BYO SMTP)
     custom_smtp_host = models.CharField(max_length=255, blank=True, null=True)
@@ -103,7 +103,7 @@ class Tenant(models.Model):
 
     # Ambassador plan stamps tracking
     stamps_used_this_month = models.PositiveIntegerField(default=0)
-    stamps_last_reset = models.DateField(default=timezone.now)
+    stamps_last_reset = models.DateField(default=timezone.localdate)
 
     class InvoicingMode(models.TextChoices):
         AUTOMATIC = 'AUTOMATIC', 'Facturación Automática (al pagar)'
