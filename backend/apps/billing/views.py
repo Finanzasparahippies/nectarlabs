@@ -243,6 +243,7 @@ class TaxProfileView(BillingTenantMixin, APIView):
 
 class InvoiceViewSet(BillingTenantMixin, viewsets.ModelViewSet):
     serializer_class = InvoiceSerializer
+    addon_slug = 'mexico-invoicing'
 
     def get_permissions(self):
         if self.action in ['issue_from_installment']:
