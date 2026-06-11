@@ -662,14 +662,18 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
               ))}
             </>
           ) : addonsList.map((addon) => {
+            // Habilitar solo los módulos estables del catálogo multi-tenant
             const isEnabled = ['logistics-gps', 'mexico-invoicing', 'newsletter-campaigner', 'ecommerce-combo', 'live-chat', 'booking-signature', 'analytics-apm'].includes(addon.slug || addon.id);
             const price = billingCycle === 'monthly' ? addon.monthlyPrice : addon.yearlyPrice;
             const savings = billingCycle === 'yearly' ? addon.monthlyPrice * 2 : 0;
 
-            // FUENTE DE VERDAD: Evaluar activación multi-tenant por string slug de base de datos
+            // EDGE CASE SOLVED: Buscamos el objeto activo dentro del array de tenants del usuario
+            const currentActiveTenant = tenants.find(t => t.id === selectedTenantId) || tenants[0];
+
+            // VALIDACIÓN ROBUSTA: Validar activación multi-tenant por string slug de base de datos
             const isAddonActive =
               tenants.some(t => t.active_addons?.includes(addon.slug)) ||
-              (tenantConfig?.active_addons || []).includes(addon.slug) ||
+              (currentActiveTenant?.active_addons || []).includes(addon.slug) ||
               subscriptions.some(s => s.addon_details?.slug === addon.slug && ['active', 'trialing'].includes(s.status)) ||
               contracts.some(c => (c.addons || []).some((a: any) => a.slug === addon.slug));
 
