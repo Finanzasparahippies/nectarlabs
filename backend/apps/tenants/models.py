@@ -105,6 +105,18 @@ class Tenant(models.Model):
     stamps_used_this_month = models.PositiveIntegerField(default=0)
     stamps_last_reset = models.DateField(default=timezone.now)
 
+    class InvoicingMode(models.TextChoices):
+        AUTOMATIC = 'AUTOMATIC', 'Facturación Automática (al pagar)'
+        MANUAL_CLIENT = 'MANUAL_CLIENT', 'Manual por el Cliente'
+        MANUAL_ADMIN = 'MANUAL_ADMIN', 'Manual por el Administrador'
+
+    invoicing_mode = models.CharField(
+        max_length=20,
+        choices=InvoicingMode.choices,
+        default=InvoicingMode.AUTOMATIC,
+        help_text="Preferencia de facturación para los abonos de este inquilino."
+    )
+
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

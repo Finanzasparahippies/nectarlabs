@@ -240,9 +240,12 @@ class TaxProfileView(BillingTenantMixin, APIView):
 
 
 class InvoiceViewSet(BillingTenantMixin, viewsets.ModelViewSet):
-    permission_classes = [permissions.IsAuthenticated, HasAddOnPermission]
-    addon_slug = 'mexico-invoicing'
     serializer_class = InvoiceSerializer
+
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve', 'issue_from_installment']:
+            return [permissions.IsAuthenticated()]
+        return [permissions.IsAuthenticated(), HasAddOnPermission()]
 
     def get_queryset(self):
         user = self.request.user
@@ -253,6 +256,128 @@ class InvoiceViewSet(BillingTenantMixin, viewsets.ModelViewSet):
             
         tenant = self.get_tenant()
         return Invoice.objects.filter(tenant=tenant)
+
+    @action(detail=False, methods=['post'], url_path='issue-from-installment')
+    def issue_from_installment(self, request):
+        user = request.user
+        installment_id = request.data.get('installment_id')
+        if not installment_id:
+            return Response({"error": "El campo 'installment_id' es obligatorio."}, status=400)
+
+        from apps.shop.models import PaymentInstallment
+        installment = get_object_or_404(PaymentInstallment, id=installment_id)
+
+        # Aislamiento multi-tenant / Seguridad:
+        # El usuario debe ser el propietario del contrato del abono, o un administrador del sistema.
+        is_system_admin = user.is_staff or getattr(user, 'role', '') == 'ADMIN'
+        if not is_system_admin and installment.contract.user != user:
+            raise PermissionDenied("No tienes permiso para facturar este abono.")
+
+        # Verificar que el abono esté pagado
+        if installment.status != PaymentInstallment.Status.PAID:
+            return Response({"error": "Solo se pueden facturar abonos que se encuentren en estado 'PAID' (Pagado)."}, status=400)
+
+        # Verificar que no tenga ya un UUID de factura
+        if installment.cfdi_uuid:
+            return Response({"error": "Este abono ya cuenta con una factura asociada (CFDI)."}, status=400)
+
+        # Resolver el tenant del propietario del contrato
+        tenant = installment.contract.user.owned_tenants.first()
+        if not tenant:
+            return Response({"error": "No se encontró un portal (tenant) asociado al propietario del contrato."}, status=400)
+
+        profile = getattr(tenant, 'tax_profile', None)
+        if not profile or not profile.facturapi_organization_id:
+            return Response(
+                {"error": "El perfil fiscal del portal no está configurado. Por favor, configúralo en la sección de Facturación antes de continuar."},
+                status=400
+            )
+
+        # Check stamp balance
+        if not tenant.has_available_stamps():
+            return Response(
+                {"error": "El portal no cuenta con timbres suficientes en su balance. Adquiere un paquete de timbres para continuar."},
+                status=400
+            )
+
+        # Crear registro local de factura
+        from decimal import Decimal
+        # El total de la factura incrementa un 16% por el IVA
+        invoice_total = (installment.amount * Decimal('1.16')).quantize(Decimal('0.01'))
+
+        from apps.billing.models import Invoice
+        invoice = Invoice.objects.create(
+            tenant=tenant,
+            stripe_invoice_id=installment.stripe_invoice_id or f"manual-{installment.id}",
+            total=invoice_total,
+            is_tenant_to_customer=False,  # Es de Nectar Labs al Tenant
+            status=Invoice.Status.PENDING
+        )
+
+        customer_info = {
+            "razon_social": installment.contract.user.get_full_name() or installment.contract.user.username,
+            "rfc": profile.rfc,
+            "regimen_fiscal": profile.regimen_fiscal,
+            "codigo_postal": profile.codigo_postal,
+            "email": installment.contract.user.email
+        }
+        
+        items = [{
+            "quantity": 1,
+            "unit_price": float(installment.amount),
+            "description": f"Abono #{installment.installment_number} - Contrato de Ecosistema Digital ({tenant.name})"
+        }]
+
+        pac = get_pac_service()
+        try:
+            res = pac.create_invoice(
+                invoice=invoice,
+                tax_profile=profile,
+                customer_info=customer_info,
+                items=items,
+                is_parent_to_tenant=True
+            )
+            invoice.facturapi_invoice_id = res["facturapi_invoice_id"]
+            invoice.uuid_sat = res["uuid_sat"]
+            invoice.xml_file.save(res["xml_file"].name, res["xml_file"], save=False)
+            invoice.pdf_file.save(res["pdf_file"].name, res["pdf_file"], save=False)
+            invoice.status = Invoice.Status.PAID
+            invoice.error_message = None
+            invoice.save()
+
+            # Guardar UUID en el abono
+            installment.cfdi_uuid = str(res["uuid_sat"])
+            installment.save(update_fields=['cfdi_uuid'])
+
+            # Consumir timbre
+            tenant.consume_stamp()
+
+            # Intentar enviar correo de confirmación de pago
+            try:
+                from apps.shop.utils import send_payment_receipt_email
+                send_payment_receipt_email(installment)
+            except Exception as mail_err:
+                import logging
+                logging.getLogger("apps").error(f"Error al enviar correo de confirmación de CFDI manual: {mail_err}")
+
+            return Response(InvoiceSerializer(invoice).data, status=status.HTTP_201_CREATED)
+
+        except LCOSyncError as e:
+            invoice.status = Invoice.Status.LCO_SYNC_PENDING
+            invoice.error_message = str(e)
+            invoice.save()
+
+            installment.cfdi_uuid = "LCO_PENDING"
+            installment.save(update_fields=['cfdi_uuid'])
+
+            tenant.consume_stamp()
+            return Response(InvoiceSerializer(invoice).data, status=status.HTTP_202_ACCEPTED)
+
+        except PACError as e:
+            invoice.status = Invoice.Status.FAILED
+            invoice.error_message = str(e)
+            invoice.save()
+            return Response({"error": f"Fallo al emitir CFDI en el PAC: {e}"}, status=400)
 
     @action(detail=False, methods=['post'], url_path='issue-to-customer')
     def issue_to_customer(self, request):

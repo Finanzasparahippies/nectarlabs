@@ -179,6 +179,9 @@ class SendCampaignView(APIView):
                 else:
                     tenant_url = f"https://{tenant.subdomain}.nectarlabs.dev"
 
+        brand_name = tenant.name if tenant else "Néctar Labs"
+        theme_color = tenant.theme_color if tenant else "#C68A1E"
+
         try:
             for sub in subscribers:
                 context = {
@@ -187,7 +190,9 @@ class SendCampaignView(APIView):
                     "content": content,
                     "cta_url": tenant_url,
                     "cta_text": "Visitar Sitio",
-                    "unsubscribe_url": f"{tenant_url}/unsubscribe?email={sub.email}&token={sub.token}"
+                    "unsubscribe_url": f"{tenant_url}/unsubscribe?email={sub.email}&token={sub.token}",
+                    "brand_name": brand_name,
+                    "theme_color": theme_color
                 }
                 send_newsletter_email(
                     subject=subject,
