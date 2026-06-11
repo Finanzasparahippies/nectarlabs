@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { fetcher, API_URL } from '@/lib/api';
 import Toast from '../ui/Toast';
 import ConfirmModal from '../ui/ConfirmModal';
+import SATAutocomplete from '../ui/SATAutocomplete';
 
 const getInlineViewUrl = (url: string | null | undefined, type: 'quote' | 'contract' | 'receipt', id: string | number) => {
   if (!url) return '';
@@ -152,8 +153,8 @@ export default function BusinessCommander({ stats, installments, setInstallments
   const [manualRegimenFiscal, setManualRegimenFiscal] = useState('601');
   const [manualCodigoPostal, setManualCodigoPostal] = useState('');
   const [manualEmail, setManualEmail] = useState('');
-  const [manualItems, setManualItems] = useState<Array<{ quantity: number; unit_price: number; description: string }>>([
-    { quantity: 1, unit_price: 0, description: '' }
+  const [manualItems, setManualItems] = useState<Array<{ quantity: number; unit_price: number; description: string; product_key: string; unit_key: string; unit_name: string }>>([
+    { quantity: 1, unit_price: 0, description: '', product_key: '43231500', unit_key: 'E48', unit_name: 'Unidad de servicio' }
   ]);
   const [isSubmittingManualInvoice, setIsSubmittingManualInvoice] = useState(false);
 
@@ -497,6 +498,14 @@ export default function BusinessCommander({ stats, installments, setInstallments
         showToast('Todos los conceptos deben tener descripción, cantidad y precio válido.', 'warning');
         return;
       }
+      if (!item.product_key) {
+        showToast('Debes seleccionar una clave de producto SAT para cada concepto.', 'warning');
+        return;
+      }
+      if (!item.unit_key) {
+        showToast('Debes seleccionar una clave de unidad SAT para cada concepto.', 'warning');
+        return;
+      }
     }
 
     const subtotal = manualItems.reduce((acc, item) => acc + (item.quantity * item.unit_price), 0);
@@ -520,7 +529,14 @@ export default function BusinessCommander({ stats, installments, setInstallments
             codigo_postal: manualCodigoPostal.trim(),
             email: manualEmail.trim()
           },
-          items: manualItems,
+          items: manualItems.map(it => ({
+            quantity: it.quantity,
+            unit_price: it.unit_price,
+            description: it.description,
+            product_key: it.product_key,
+            unit_key: it.unit_key,
+            unit_name: it.unit_name
+          })),
           total: total
         })
       });
@@ -539,7 +555,14 @@ export default function BusinessCommander({ stats, installments, setInstallments
       setManualRegimenFiscal('601');
       setManualCodigoPostal('');
       setManualEmail('');
-      setManualItems([{ quantity: 1, unit_price: 0, description: '' }]);
+      setManualItems([{
+        quantity: 1,
+        unit_price: 0,
+        description: '',
+        product_key: '43231500',
+        unit_key: 'E48',
+        unit_name: 'Unidad de servicio'
+      }]);
 
       if (activeTab === 'invoices') {
         const res = await fetcher('/billing/invoices/');
@@ -2538,7 +2561,14 @@ export default function BusinessCommander({ stats, installments, setInstallments
                   setManualRegimenFiscal('601');
                   setManualCodigoPostal('');
                   setManualEmail('');
-                  setManualItems([{ quantity: 1, unit_price: 0, description: '' }]);
+                  setManualItems([{
+                    quantity: 1,
+                    unit_price: 0,
+                    description: '',
+                    product_key: '43231500',
+                    unit_key: 'E48',
+                    unit_name: 'Unidad de servicio'
+                  }]);
                   setShowManualInvoiceModal(true);
                 }}
                 className="px-5 py-2.5 bg-nectar-gold text-background text-[9px] font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 transition-all shadow-md font-bold whitespace-nowrap"
@@ -3641,7 +3671,14 @@ export default function BusinessCommander({ stats, installments, setInstallments
                   <button
                     type="button"
                     onClick={() => {
-                      setManualItems(prev => [...prev, { quantity: 1, unit_price: 0, description: '' }]);
+                      setManualItems(prev => [...prev, {
+                        quantity: 1,
+                        unit_price: 0,
+                        description: '',
+                        product_key: '43231500',
+                        unit_key: 'E48',
+                        unit_name: 'Unidad de servicio'
+                      }]);
                     }}
                     className="text-[8px] font-black text-nectar-gold hover:underline uppercase tracking-widest font-bold"
                   >
@@ -3706,6 +3743,47 @@ export default function BusinessCommander({ stats, installments, setInstallments
                             onChange={(e) => {
                               const newPrice = parseFloat(e.target.value) || 0;
                               setManualItems(prev => prev.map((it, i) => i === idx ? { ...it, unit_price: newPrice } : it));
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 border-t border-white/5 pt-3 mt-2">
+                        <div className="space-y-1">
+                          <label className="text-[7px] font-black uppercase tracking-widest opacity-40 block">Clave Producto SAT</label>
+                          <SATAutocomplete
+                            mode="product"
+                            value={item.product_key}
+                            onChange={(code) => {
+                              setManualItems(prev => prev.map((it, i) => i === idx ? { ...it, product_key: code } : it));
+                            }}
+                            primaryColor="#C68A1E"
+                            placeholder="Buscar producto..."
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[7px] font-black uppercase tracking-widest opacity-40 block">Clave Unidad SAT</label>
+                          <SATAutocomplete
+                            mode="unit"
+                            value={item.unit_key}
+                            onChange={(code, name) => {
+                              setManualItems(prev => prev.map((it, i) => i === idx ? { ...it, unit_key: code, unit_name: name || it.unit_name } : it));
+                            }}
+                            primaryColor="#C68A1E"
+                            placeholder="Buscar unidad..."
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[7px] font-black uppercase tracking-widest opacity-40 block">Nombre Unidad</label>
+                          <input
+                            type="text"
+                            required
+                            className="w-full px-3 py-1.5 bg-background border border-card-border rounded-lg text-[9px] font-bold text-foreground font-mono"
+                            placeholder="ej. Unidad de servicio"
+                            value={item.unit_name}
+                            onChange={(e) => {
+                              const newName = e.target.value;
+                              setManualItems(prev => prev.map((it, i) => i === idx ? { ...it, unit_name: newName } : it));
                             }}
                           />
                         </div>

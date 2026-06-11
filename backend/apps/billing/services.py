@@ -174,9 +174,9 @@ class FacturapiPACService(PACServiceBase):
             price = Decimal(str(it['unit_price'])).quantize(Decimal('0.01'))
             
             if is_parent_to_tenant:
-                p_key = "43231500"
-                u_key = "E48"
-                u_name = "Unidad de servicio"
+                p_key = it.get('product_key') or "43231500"
+                u_key = it.get('unit_key') or "E48"
+                u_name = it.get('unit_name') or "Unidad de servicio"
             else:
                 p_key = it.get('product_key') or (tax_profile.default_product_key if tax_profile else "43231500")
                 u_key = it.get('unit_key') or (tax_profile.default_unit_key if tax_profile else "E48")
