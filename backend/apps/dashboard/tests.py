@@ -623,3 +623,116 @@ class LeadAppointmentTests(APITestCase):
         self.assertIn(addon2, appt.addons.all())
 
 
+class BusinessStatsAPITests(APITestCase):
+    def setUp(self):
+        from apps.shop.models import Plan, AddOn
+        self.ceo = User.objects.create_user(
+            username="saul_ceo_stats",
+            email="saul_stats@nectarlabs.dev",
+            password="securepassword",
+            role=User.Role.ADMIN,
+            is_staff=True
+        )
+        self.client_user = User.objects.create_user(
+            username="client_stats",
+            email="client_stats@example.com",
+            password="password123",
+            role=User.Role.BUSINESS
+        )
+        self.plan = Plan.objects.create(
+            name="Plan Test",
+            slug="plan-test",
+            description="Test Plan",
+            price=1000.00
+        )
+        self.addon = AddOn.objects.create(
+            slug="test-addon",
+            name="Test Addon",
+            monthly_price=200.00,
+            yearly_price=2000.00,
+            description="test description",
+            detailed_description="detailed",
+            origin_project="project",
+            source_reference="ref",
+            server_requirements="none"
+        )
+        # Activar cache para el test
+        from django.core.cache import cache
+        cache.clear()
+
+    def test_stats_mrr_and_cashflow_with_addon_subscriptions(self):
+        from apps.shop.models import Contract, AddOnSubscription
+        from django.utils import timezone
+        
+        # 1. Contrato activo con plan
+        contract = Contract.objects.create(
+            user=self.client_user,
+            plan=self.plan,
+            full_name="Client Stats Company",
+            tax_id='XAXX010101000',
+            address='Calle 123',
+            project_idea='Idea',
+            signature_base64='sig',
+            is_fully_signed=True,
+            is_active=True,
+            next_payment_date=timezone.now().date()
+        )
+        
+        # 2. Suscripción de Addon activa (debería sumarse al MRR y aparecer en calendario)
+        sub1 = AddOnSubscription.objects.create(
+            user=self.client_user,
+            addon=self.addon,
+            status='active',
+            billing_cycle='monthly',
+            price_paid=200.00
+        )
+        
+        self.client.force_authenticate(user=self.ceo)
+        response = self.client.get(reverse('business_stats'))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        
+        # MRR total = Plan (1000) + Addon sub (200) = 1200
+        self.assertEqual(response.data['financials']['contracts_mrr'], 1200.00)
+        self.assertEqual(response.data['financials']['gross_sales'], 1200.00)
+        
+        # Ambos deben aparecer en client_billing
+        billing_ids = [b['id'] for b in response.data['client_billing']]
+        self.assertIn(contract.id, billing_ids)
+        self.assertIn(f"addon-{sub1.id}", billing_ids)
+
+    def test_stats_no_double_counting_planless_contracts(self):
+        from apps.shop.models import Contract, AddOnSubscription
+        from django.utils import timezone
+        
+        # Contrato sin plan pero con el addon en la relación ManyToMany
+        contract = Contract.objects.create(
+            user=self.client_user,
+            plan=None,
+            full_name="Client Stats Company 2",
+            tax_id='XAXX010101000',
+            address='Calle 123',
+            project_idea='Idea',
+            signature_base64='sig',
+            is_fully_signed=True,
+            is_active=True,
+            next_payment_date=timezone.now().date()
+        )
+        contract.addons.add(self.addon)
+        
+        # Suscripción de Addon activa para el mismo addon
+        sub1 = AddOnSubscription.objects.create(
+            user=self.client_user,
+            addon=self.addon,
+            status='active',
+            billing_cycle='monthly',
+            price_paid=200.00
+        )
+        
+        self.client.force_authenticate(user=self.ceo)
+        response = self.client.get(reverse('business_stats'))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        
+        # El addon vale 200. No se debe contar doble: MRR = 200 (del contrato o la suscripción, deduplicado)
+        self.assertEqual(response.data['financials']['contracts_mrr'], 200.00)
+
+
