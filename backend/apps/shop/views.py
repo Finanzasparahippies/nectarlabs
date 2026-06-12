@@ -730,7 +730,9 @@ def stripe_webhook(request):
                 import logging as _logging
                 _webhook_logger = _logging.getLogger(__name__)
                 contract = None
+                user = None
                 try:
+
                     from django.contrib.auth import get_user_model
                     User = get_user_model()
                     user = User.objects.get(id=user_id)
@@ -832,20 +834,19 @@ def stripe_webhook(request):
 
                 # Notificar al equipo de soporte (email + realtime frontend admin)
                 try:
-                    addon_obj = AddOn.objects.get(id=addon_id)
-                    _user_obj = user if 'user' in dir() and user else (
-                        contract.user if contract else None
-                    )
-                    _tenant_obj = None
-                    try:
-                        from apps.tenants.models import Tenant as _Tenant
-                        _tenant_obj = _Tenant.objects.filter(owner=_user_obj).first() if _user_obj else None
-                    except Exception:
-                        pass
-                    if _user_obj:
-                        notify_support_addon_subscription(_user_obj, addon_obj, tenant=_tenant_obj)
+                    _notify_user = contract.user if contract else user
+                    if _notify_user:
+                        addon_obj = AddOn.objects.get(id=addon_id)
+                        _tenant_obj = None
+                        try:
+                            from apps.tenants.models import Tenant as _Tenant
+                            _tenant_obj = _Tenant.objects.filter(owner=_notify_user).first()
+                        except Exception:
+                            pass
+                        notify_support_addon_subscription(_notify_user, addon_obj, tenant=_tenant_obj)
                 except Exception as notify_err:
                     _webhook_logger.error(f"[stripe_webhook] Error sending support notification for addon subscription: {notify_err}", exc_info=True)
+
 
                 
                 # --- AUTO-CREATE IMPLEMENTATION TICKET ---

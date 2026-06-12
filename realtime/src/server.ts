@@ -348,6 +348,7 @@ const internalServer = http.createServer((req, res) => {
   });
 });
 
-internalServer.listen(INTERNAL_PORT, '127.0.0.1', () => {
-  console.log(`[Realtime] Servidor HTTP interno escuchando en 127.0.0.1:${INTERNAL_PORT}`);
+internalServer.listen(INTERNAL_PORT, '0.0.0.0', () => {
+  console.log(`[Realtime] Servidor HTTP interno escuchando en 0.0.0.0:${INTERNAL_PORT} (acceso inter-contenedor habilitado)`);
 });
+
