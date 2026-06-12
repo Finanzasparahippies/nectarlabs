@@ -3932,6 +3932,9 @@ export default function BusinessCommander({ stats, installments, setInstallments
               <span className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold text-[8px] font-black uppercase tracking-widest rounded-full border border-nectar-gold/20">
                 Facturación SAT
               </span>
+            </div>
+
+            <form onSubmit={handleCreateManualInvoice} className="space-y-6">
               {/* Seleccionar Inquilino */}
               <div className="space-y-1.5">
                 <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Seleccionar Inquilino (Tenant)</label>
@@ -4327,7 +4330,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
                     {isSubmittingManualInvoice ? 'Emitiendo y Timbrando...' : 'Timbrar Factura (PAC)'}
                   </button>
                 </div>
-              </div>
+              </form>
             </div>
           </div>
           <CreateCustomerModal
