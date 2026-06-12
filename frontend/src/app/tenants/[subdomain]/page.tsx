@@ -6,6 +6,8 @@ import dynamic from 'next/dynamic';
 import Toast from '@/components/ui/Toast';
 import SATAutocomplete from '@/components/ui/SATAutocomplete';
 import ConfirmModal from '@/components/ui/ConfirmModal';
+import CreateCustomerModal from '@/components/ui/CreateCustomerModal';
+import { fetcher } from '@/lib/api';
 
 const ChatWidget = dynamic(() => import('@/components/addons/live-chat/ChatWidget'), { ssr: false });
 const BookingCanvas = dynamic(() => import('@/components/addons/booking-signature/BookingCanvas'), { ssr: false });
@@ -41,6 +43,7 @@ interface TenantConfig {
   pollen_count?: number;
   pollen_blur?: number;
   active_addons?: string[];
+  owner?: number;
 }
 
 
@@ -781,8 +784,8 @@ export default function TenantPortalPage() {
                     { slug: 'patreon-sponsorship', component: <SponsorTiers primaryColor={primaryColor} /> },
                     { slug: 'analytics-apm', component: <TelemetryDashboard primaryColor={primaryColor} /> },
                     { slug: 'newsletter-campaigner', component: <SubscribeForm tenantId={tenantConfig.id} subdomain={subdomain} primaryColor={primaryColor} /> },
-                    { slug: 'mexico-invoicing', component: <SATInvoicingForm tenantId={tenantConfig.id} subdomain={subdomain} primaryColor={primaryColor} /> },
-                    { slug: 'ecommerce-combo', component: <EcommerceStore tenantId={tenantConfig.id} subdomain={subdomain} primaryColor={primaryColor} /> },
+                    {slug: 'mexico-invoicing', component: <SATInvoicingForm tenantId={tenantConfig.id} subdomain={subdomain} primaryColor={primaryColor} ownerId={tenantConfig.owner} showToast={showToast} />},
+                    {slug: 'ecommerce-combo', component: <EcommerceStore tenantId={tenantConfig.id} subdomain={subdomain} primaryColor={primaryColor} />},
                   ].find(tab => tab.slug === activeAddonTab)?.component}
                 </div>
               </div>
@@ -1193,9 +1196,11 @@ interface SATInvoicingFormProps {
   tenantId: string;
   subdomain: string;
   primaryColor: string;
+  ownerId?: number;
+  showToast?: (message: string, type: 'success' | 'error' | 'warning' | 'info') => void;
 }
 
-function SATInvoicingForm({ tenantId, subdomain, primaryColor }: SATInvoicingFormProps) {
+function SATInvoicingForm({ tenantId, subdomain, primaryColor, ownerId, showToast }: SATInvoicingFormProps) {
   const [rfc, setRfc] = useState('');
   const [razonSocial, setRazonSocial] = useState('');
   const [regimenFiscal, setRegimenFiscal] = useState('601');
@@ -1213,6 +1218,53 @@ function SATInvoicingForm({ tenantId, subdomain, primaryColor }: SATInvoicingFor
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+
+  // Tenant Admin detection states (to allow selecting/registering clients directly)
+  const [isTenantAdmin, setIsTenantAdmin] = useState(false);
+  const [tenantUsers, setTenantUsers] = useState<any[]>([]);
+  const [tenantContracts, setTenantContracts] = useState<any[]>([]);
+  const [selectedCustomer, setSelectedCustomer] = useState<any | null>(null);
+  const [customerSearchQuery, setCustomerSearchQuery] = useState('');
+  const [showNewClientModal, setShowNewClientModal] = useState(false);
+
+  // Helper load billing users data
+  const loadBillingData = async () => {
+    try {
+      const usersRes = await fetcher('/users/');
+      setTenantUsers(usersRes.results || usersRes || []);
+    } catch (err) {
+      console.error('Error loading tenant users in public form:', err);
+    }
+    try {
+      const contractsRes = await fetcher('/contracts/');
+      setTenantContracts(contractsRes.results || contractsRes || []);
+    } catch (err) {
+      console.error('Error loading tenant contracts in public form:', err);
+    }
+  };
+
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      const globalToken = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+      if (!globalToken || globalToken === 'null' || globalToken === 'undefined') return;
+
+      try {
+        const me = await fetcher('/users/me/');
+        const isOwner = ownerId ? String(me.id) === String(ownerId) : false;
+        const isSystemAdmin = me.is_staff || me.role === 'ADMIN';
+        const isStaffOfTenant = me.role === 'STAFF' && String(me.tenant) === String(tenantId);
+        
+        if (isOwner || isSystemAdmin || isStaffOfTenant || me.role === 'BUSINESS') {
+          setIsTenantAdmin(true);
+          await loadBillingData();
+        }
+      } catch (err) {
+        console.error('Error verifying admin status in public invoicing form:', err);
+      }
+    };
+
+    checkAdminStatus();
+  }, [tenantId, ownerId]);
 
   const handleDescriptionChange = async (idx: number, val: string) => {
     setManualItems(prev => prev.map((it, i) => i === idx ? { ...it, description: val } : it));
@@ -1333,6 +1385,7 @@ function SATInvoicingForm({ tenantId, subdomain, primaryColor }: SATInvoicingFor
   const total = parseFloat((subtotal + iva).toFixed(2));
 
   return (
+    <>
     <form onSubmit={handleSubmit} className="max-w-4xl mx-auto p-6 md:p-8 rounded-[2rem] bg-white/[0.01] backdrop-blur-md border border-white/5 space-y-8 text-left tenant-card relative overflow-hidden">
       <div className="absolute -top-32 -right-32 w-64 h-64 rounded-full blur-[120px] opacity-10 pointer-events-none" style={{ backgroundColor: primaryColor }}></div>
       
@@ -1356,6 +1409,120 @@ function SATInvoicingForm({ tenantId, subdomain, primaryColor }: SATInvoicingFor
       {/* Datos Fiscales */}
       <div className="space-y-4">
         <h4 className="text-[10px] font-black uppercase tracking-widest text-white/40 border-b border-white/5 pb-2">1. Datos de Facturación</h4>
+        
+        {isTenantAdmin && (
+          <div className="space-y-3 p-5 bg-white/[0.02] border border-white/5 rounded-2xl relative mb-4">
+            <label className="text-[8px] font-black uppercase tracking-widest text-white/50 block">Seleccionar Cliente Registrado</label>
+            
+            {selectedCustomer ? (
+              /* Selected Customer Card */
+              <div className="flex items-center justify-between p-4 bg-nectar-gold/10 border border-nectar-gold/30 rounded-xl animate-in fade-in zoom-in-95 duration-150">
+                <div>
+                  <span className="text-[7.5px] font-black uppercase tracking-widest text-nectar-gold">Cliente Seleccionado ✓</span>
+                  <h4 className="text-xs font-bold text-white mt-0.5">{selectedCustomer.username || 'Usuario'}</h4>
+                  <p className="text-[9px] text-white/50">{selectedCustomer.email}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedCustomer(null);
+                    setEmail('');
+                    setRfc('');
+                    setRazonSocial('');
+                    setCodigoPostal('');
+                  }}
+                  className="px-3 py-1.5 bg-white/5 hover:bg-red-500/10 text-white/60 hover:text-red-400 border border-white/10 hover:border-red-500/20 rounded-xl text-[8px] font-black uppercase tracking-wider transition-all cursor-pointer font-bold"
+                >
+                  Quitar
+                </button>
+              </div>
+            ) : (
+              /* Search input + filtered results */
+              <div className="space-y-2 relative">
+                <div className="flex gap-2">
+                  <div className="flex-1 relative">
+                    <input
+                      type="text"
+                      value={customerSearchQuery}
+                      onChange={(e) => setCustomerSearchQuery(e.target.value)}
+                      placeholder={tenantUsers.length === 0 ? "No tienes clientes registrados aún" : "Buscar cliente por nombre o email..."}
+                      disabled={tenantUsers.length === 0}
+                      className="w-full bg-transparent border border-white/10 rounded-xl px-4 py-2.5 pl-10 text-xs focus:outline-none focus:border-nectar-gold text-white placeholder:text-white/20 admin-input font-bold disabled:opacity-50"
+                    />
+                    <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/30 select-none text-[10px]">🔍</div>
+                    {customerSearchQuery && (
+                      <button
+                        type="button"
+                        onClick={() => setCustomerSearchQuery('')}
+                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-white/40 hover:text-white text-xs font-bold"
+                      >
+                        ×
+                      </button>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowNewClientModal(true);
+                    }}
+                    className="px-4 py-2.5 bg-white/10 hover:bg-white/20 border border-white/10 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all text-white cursor-pointer font-bold whitespace-nowrap shrink-0"
+                  >
+                    + Nuevo
+                  </button>
+                </div>
+                
+                {customerSearchQuery.trim() !== '' && tenantUsers.length > 0 && (
+                  <div className="absolute left-0 right-0 mt-1 bg-[#050a06]/95 border border-white/10 rounded-2xl shadow-2xl p-2 z-50 max-h-48 overflow-y-auto space-y-1 backdrop-blur-md">
+                    {(() => {
+                      const query = customerSearchQuery.toLowerCase().trim();
+                      const filtered = tenantUsers.filter(u => 
+                        (u.username && u.username.toLowerCase().includes(query)) ||
+                        (u.email && u.email.toLowerCase().includes(query))
+                      );
+                      
+                      if (filtered.length === 0) {
+                        return (
+                          <div className="p-3 text-center text-white/30 text-[8px] uppercase tracking-wider font-bold">
+                            Sin clientes coincidentes
+                          </div>
+                        );
+                      }
+                      
+                      return filtered.map(u => {
+                        const contract = tenantContracts.find(c => c.user === u.id);
+                        return (
+                          <button
+                            key={u.id}
+                            type="button"
+                            onClick={() => {
+                              setSelectedCustomer(u);
+                              setEmail(u.email);
+                              setCustomerSearchQuery('');
+                              if (contract) {
+                                setRfc(contract.tax_id || '');
+                                setRazonSocial(contract.full_name || '');
+                              } else {
+                                setRazonSocial(u.username || '');
+                              }
+                            }}
+                            className="w-full text-left p-3 rounded-xl hover:bg-nectar-gold/10 border border-transparent hover:border-nectar-gold/20 flex flex-col gap-0.5 transition-all cursor-pointer group"
+                          >
+                            <span className="text-xs font-bold text-white group-hover:text-nectar-gold transition-colors">{u.username || 'Usuario'}</span>
+                            <span className="text-[9.5px] text-white/50">{u.email}</span>
+                            {contract?.tax_id && (
+                              <span className="text-[8px] text-nectar-gold/80 font-mono mt-0.5">RFC: {contract.tax_id}</span>
+                            )}
+                          </button>
+                        );
+                      });
+                    })()}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-1.5">
             <label className="text-[8px] font-black uppercase tracking-widest text-white/50">RFC (Receptor)</label>
@@ -1663,6 +1830,27 @@ function SATInvoicingForm({ tenantId, subdomain, primaryColor }: SATInvoicingFor
         </button>
       </div>
     </form>
+
+    <CreateCustomerModal
+      isOpen={showNewClientModal}
+      onClose={() => setShowNewClientModal(false)}
+      onSuccess={async (newCustomer) => {
+        await loadBillingData();
+        if (newCustomer && newCustomer.id) {
+          setSelectedCustomer(newCustomer);
+          setEmail(newCustomer.email);
+          if (newCustomer.username) setRazonSocial(newCustomer.username);
+        }
+      }}
+      tenantId={tenantId}
+      primaryColor={primaryColor}
+      themeConfig={{
+        cardBgColor: '#050a06',
+        borderColor: 'rgba(255, 255, 255, 0.05)'
+      }}
+      showToast={showToast || console.log}
+    />
+    </>
   );
 }
 
