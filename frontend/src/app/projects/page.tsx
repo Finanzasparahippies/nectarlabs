@@ -120,7 +120,7 @@ export default function ProjectsPage() {
     const staff = localStorage.getItem('is_staff') === 'true';
     const role = localStorage.getItem('user_role') || '';
     setUserRole(role);
-    setIsStaff((staff || role === 'ADMIN' || role === 'BUSINESS') && role !== 'DESIGNER');
+    setIsStaff((staff || role === 'ADMIN') && role !== 'DESIGNER');
     loadData();
 
     // Live timer ticking

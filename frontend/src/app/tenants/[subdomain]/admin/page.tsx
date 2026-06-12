@@ -2797,121 +2797,120 @@ export default function TenantAdminPage() {
                   Datos de Facturación del Cliente
                 </h3>
 
-                {tenantUsers.length > 0 && (
-                  <div className="space-y-3">
-                    <label className="text-[8px] font-black uppercase tracking-widest opacity-40 block">Cliente de la Factura</label>
-                    
-                    {selectedCustomer ? (
-                      /* Selected Customer Card */
-                      <div className="flex items-center justify-between p-4 bg-[#C68A1E]/10 border border-[#C68A1E]/30 rounded-2xl animate-in fade-in zoom-in-95 duration-150">
-                        <div>
-                          <span className="text-[8px] font-black uppercase tracking-widest text-[#C68A1E]">Cliente Seleccionado ✓</span>
-                          <h4 className="text-xs font-bold text-white mt-1">{selectedCustomer.username || 'Usuario'}</h4>
-                          <p className="text-[9px] text-white/50">{selectedCustomer.email}</p>
+                <div className="space-y-3">
+                  <label className="text-[8px] font-black uppercase tracking-widest opacity-40 block">Cliente de la Factura</label>
+                  
+                  {selectedCustomer ? (
+                    /* Selected Customer Card */
+                    <div className="flex items-center justify-between p-4 bg-[#C68A1E]/10 border border-[#C68A1E]/30 rounded-2xl animate-in fade-in zoom-in-95 duration-150">
+                      <div>
+                        <span className="text-[8px] font-black uppercase tracking-widest text-[#C68A1E]">Cliente Seleccionado ✓</span>
+                        <h4 className="text-xs font-bold text-white mt-1">{selectedCustomer.username || 'Usuario'}</h4>
+                        <p className="text-[9px] text-white/50">{selectedCustomer.email}</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedCustomer(null);
+                          setManualEmail('');
+                          setManualRfc('');
+                          setManualRazonSocial('');
+                          setManualCodigoPostal('');
+                        }}
+                        className="px-3 py-1.5 bg-white/5 hover:bg-red-500/10 text-white/60 hover:text-red-400 border border-white/10 hover:border-red-500/20 rounded-xl text-[8px] font-black uppercase tracking-wider transition-all cursor-pointer font-bold"
+                      >
+                        Quitar
+                      </button>
+                    </div>
+                  ) : (
+                    /* Search input + filtered results */
+                    <div className="space-y-2 relative">
+                      <div className="flex gap-2">
+                        <div className="flex-1 relative">
+                          <input
+                            type="text"
+                            value={customerSearchQuery}
+                            onChange={(e) => setCustomerSearchQuery(e.target.value)}
+                            placeholder={tenantUsers.length === 0 ? "No tienes clientes registrados aún" : "Buscar cliente por nombre o email..."}
+                            disabled={tenantUsers.length === 0}
+                            className="w-full bg-background border border-white/10 rounded-xl px-4 py-2.5 pl-10 text-xs focus:outline-none focus:border-[#C68A1E] text-foreground placeholder:text-white/20 admin-input font-bold disabled:opacity-50"
+                          />
+                          <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/30 select-none text-[10px]">🔍</div>
+                          {customerSearchQuery && (
+                            <button
+                              type="button"
+                              onClick={() => setCustomerSearchQuery('')}
+                              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-white/40 hover:text-white text-xs font-bold"
+                            >
+                              ×
+                            </button>
+                          )}
                         </div>
                         <button
                           type="button"
                           onClick={() => {
-                            setSelectedCustomer(null);
-                            setManualEmail('');
-                            setManualRfc('');
-                            setManualRazonSocial('');
-                            setManualCodigoPostal('');
+                            setNewClientEmail('');
+                            setNewClientUsername('');
+                            setNewClientPassword('');
+                            setNewClientEmailVerified(true);
+                            setShowNewClientModal(true);
                           }}
-                          className="px-3 py-1.5 bg-white/5 hover:bg-red-500/10 text-white/60 hover:text-red-400 border border-white/10 hover:border-red-500/20 rounded-xl text-[8px] font-black uppercase tracking-wider transition-all cursor-pointer font-bold"
+                          className="px-4 py-2.5 bg-white/10 hover:bg-white/20 border border-white/10 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all text-white cursor-pointer font-bold whitespace-nowrap shrink-0"
                         >
-                          Quitar
+                          + Nuevo
                         </button>
                       </div>
-                    ) : (
-                      /* Search input + filtered results */
-                      <div className="space-y-2 relative">
-                        <div className="flex gap-2">
-                          <div className="flex-1 relative">
-                            <input
-                              type="text"
-                              value={customerSearchQuery}
-                              onChange={(e) => setCustomerSearchQuery(e.target.value)}
-                              placeholder="Buscar cliente por nombre o email..."
-                              className="w-full bg-background border border-white/10 rounded-xl px-4 py-2.5 pl-10 text-xs focus:outline-none focus:border-[#C68A1E] text-foreground placeholder:text-white/20 admin-input font-bold"
-                            />
-                            <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/30 select-none text-[10px]">🔍</div>
-                            {customerSearchQuery && (
-                              <button
-                                type="button"
-                                onClick={() => setCustomerSearchQuery('')}
-                                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-white/40 hover:text-white text-xs font-bold"
-                              >
-                                ×
-                              </button>
-                            )}
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setNewClientEmail('');
-                              setNewClientUsername('');
-                              setNewClientPassword('');
-                              setNewClientEmailVerified(true);
-                              setShowNewClientModal(true);
-                            }}
-                            className="px-4 py-2.5 bg-white/10 hover:bg-white/20 border border-white/10 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all text-white cursor-pointer font-bold whitespace-nowrap shrink-0"
-                          >
-                            + Nuevo
-                          </button>
-                        </div>
-                        
-                        {customerSearchQuery.trim() !== '' && (
-                          <div className="absolute left-0 right-0 mt-1 bg-[#050a06]/95 border border-white/10 rounded-2xl shadow-2xl p-2 z-50 max-h-48 overflow-y-auto space-y-1 backdrop-blur-md">
-                            {(() => {
-                              const query = customerSearchQuery.toLowerCase().trim();
-                              const filtered = tenantUsers.filter(u => 
-                                (u.username && u.username.toLowerCase().includes(query)) ||
-                                (u.email && u.email.toLowerCase().includes(query))
+                      
+                      {customerSearchQuery.trim() !== '' && tenantUsers.length > 0 && (
+                        <div className="absolute left-0 right-0 mt-1 bg-[#050a06]/95 border border-white/10 rounded-2xl shadow-2xl p-2 z-50 max-h-48 overflow-y-auto space-y-1 backdrop-blur-md">
+                          {(() => {
+                            const query = customerSearchQuery.toLowerCase().trim();
+                            const filtered = tenantUsers.filter(u => 
+                              (u.username && u.username.toLowerCase().includes(query)) ||
+                              (u.email && u.email.toLowerCase().includes(query))
+                            );
+                            
+                            if (filtered.length === 0) {
+                              return (
+                                <div className="p-3 text-center text-white/30 text-[8px] uppercase tracking-wider font-bold">
+                                  Sin clientes coincidentes
+                                </div>
                               );
-                              
-                              if (filtered.length === 0) {
-                                return (
-                                  <div className="p-3 text-center text-white/30 text-[8px] uppercase tracking-wider font-bold">
-                                    Sin clientes coincidentes
-                                  </div>
-                                );
-                              }
-                              
-                              return filtered.map(u => {
-                                const contract = tenantContracts.find(c => c.user === u.id);
-                                return (
-                                  <button
-                                    key={u.id}
-                                    type="button"
-                                    onClick={() => {
-                                      setSelectedCustomer(u);
-                                      setManualEmail(u.email);
-                                      setCustomerSearchQuery('');
-                                      if (contract) {
-                                        setManualRfc(contract.tax_id || '');
-                                        setManualRazonSocial(contract.full_name || '');
-                                      } else {
-                                        setManualRazonSocial(u.username || '');
-                                      }
-                                    }}
-                                    className="w-full text-left p-3 rounded-xl hover:bg-[#C68A1E]/10 border border-transparent hover:border-[#C68A1E]/20 flex flex-col gap-0.5 transition-all cursor-pointer group"
-                                  >
-                                    <span className="text-xs font-bold text-white group-hover:text-[#C68A1E] transition-colors">{u.username || 'Usuario'}</span>
-                                    <span className="text-[9.5px] text-white/50">{u.email}</span>
-                                    {contract?.tax_id && (
-                                      <span className="text-[8px] text-[#C68A1E]/80 font-mono mt-0.5">RFC: {contract.tax_id}</span>
-                                    )}
-                                  </button>
-                                );
-                              });
-                            })()}
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )}
+                            }
+                            
+                            return filtered.map(u => {
+                              const contract = tenantContracts.find(c => c.user === u.id);
+                              return (
+                                <button
+                                  key={u.id}
+                                  type="button"
+                                  onClick={() => {
+                                    setSelectedCustomer(u);
+                                    setManualEmail(u.email);
+                                    setCustomerSearchQuery('');
+                                    if (contract) {
+                                      setManualRfc(contract.tax_id || '');
+                                      setManualRazonSocial(contract.full_name || '');
+                                    } else {
+                                      setManualRazonSocial(u.username || '');
+                                    }
+                                  }}
+                                  className="w-full text-left p-3 rounded-xl hover:bg-[#C68A1E]/10 border border-transparent hover:border-[#C68A1E]/20 flex flex-col gap-0.5 transition-all cursor-pointer group"
+                                >
+                                  <span className="text-xs font-bold text-white group-hover:text-[#C68A1E] transition-colors">{u.username || 'Usuario'}</span>
+                                  <span className="text-[9.5px] text-white/50">{u.email}</span>
+                                  {contract?.tax_id && (
+                                    <span className="text-[8px] text-[#C68A1E]/80 font-mono mt-0.5">RFC: {contract.tax_id}</span>
+                                  )}
+                                </button>
+                              );
+                            });
+                          })()}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
