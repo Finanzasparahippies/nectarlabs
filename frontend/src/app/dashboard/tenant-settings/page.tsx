@@ -42,6 +42,7 @@ interface Tenant {
   is_active: boolean;
   created_at: string;
   updated_at: string;
+  invoicing_mode?: string;
 }
 
 interface Product {
