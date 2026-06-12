@@ -501,7 +501,8 @@ class ContractViewSet(viewsets.ModelViewSet):
         if user.is_staff or getattr(user, 'role', '') == 'ADMIN':
             return Contract.objects.all()
         elif getattr(user, 'role', '') == 'BUSINESS':
-            return Contract.objects.filter(user__tenant__in=user.owned_tenants.all())
+            from django.db.models import Q
+            return Contract.objects.filter(Q(user=user) | Q(user__tenant__in=user.owned_tenants.all())).distinct()
         elif getattr(user, 'role', '') == 'STAFF':
             if user.tenant:
                 return Contract.objects.filter(user__tenant=user.tenant)

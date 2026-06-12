@@ -105,7 +105,7 @@ class UsersAppTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_verify_email_endpoint_success(self):
-        """Verify successful email verification link execution redirects to login."""
+        """Verify successful email verification link execution redirects to frontend verify-email page and then ConfirmEmailView succeeds."""
         unverified_user = User.objects.create_user(
             email='newuser@realclient.com',
             username='newuser',
@@ -117,19 +117,25 @@ class UsersAppTests(APITestCase):
         uid = urlsafe_base64_encode(force_bytes(unverified_user.pk))
         token = default_token_generator.make_token(unverified_user)
         
+        # 1. Test the redirection to frontend
         url = f"/api/users/verify-email/?uid={uid}&token={token}"
         response = self.client.get(url)
         
-        # Should redirect to frontend URL with verified=true
-        expected_redirect = f"{settings.FRONTEND_URL}/login?verified=true"
+        expected_redirect = f"{settings.FRONTEND_URL}/verify-email?uid={uid}&token={token}"
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, expected_redirect)
+        
+        # 2. Test ConfirmEmailView completes verification
+        confirm_url = reverse('confirm_email')
+        confirm_response = self.client.post(confirm_url, {'uid': uid, 'token': token}, format='json')
+        self.assertEqual(confirm_response.status_code, status.HTTP_200_OK)
+        self.assertTrue(confirm_response.data['success'])
         
         unverified_user.refresh_from_db()
         self.assertTrue(unverified_user.is_email_verified)
 
     def test_verify_email_endpoint_invalid_token(self):
-        """Verify that invalid token redirect with verified=false."""
+        """Verify that invalid token redirects to frontend verify-email, but ConfirmEmailView fails."""
         unverified_user = User.objects.create_user(
             email='newuser2@realclient.com',
             username='newuser2',
@@ -139,12 +145,21 @@ class UsersAppTests(APITestCase):
         )
         
         uid = urlsafe_base64_encode(force_bytes(unverified_user.pk))
+        
+        # 1. Test the redirection to frontend
         url = f"/api/users/verify-email/?uid={uid}&token=invalid-token"
         response = self.client.get(url)
         
-        expected_redirect = f"{settings.FRONTEND_URL}/login?verified=false&error=invalid_token"
+        expected_redirect = f"{settings.FRONTEND_URL}/verify-email?uid={uid}&token=invalid-token"
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, expected_redirect)
+        
+        # 2. Test ConfirmEmailView fails
+        confirm_url = reverse('confirm_email')
+        confirm_response = self.client.post(confirm_url, {'uid': uid, 'token': 'invalid-token'}, format='json')
+        self.assertEqual(confirm_response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertFalse(confirm_response.data['success'])
+        self.assertEqual(confirm_response.data['error'], 'invalid_token')
         
         unverified_user.refresh_from_db()
         self.assertFalse(unverified_user.is_email_verified)
