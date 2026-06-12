@@ -1182,6 +1182,8 @@ export default function TenantPortalPage() {
         />
       )}
     </div>
+  );
+}
 // -------------------------------------------------------------
 // NEW ADDON COMPONENTS (White-Label Invoicing & Ecommerce Store)
 // -------------------------------------------------------------
