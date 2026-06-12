@@ -726,9 +726,11 @@ def stripe_webhook(request):
             user_id = session.get('metadata', {}).get('user_id')
             addon_id = session.get('metadata', {}).get('addon_id')
             comments = session.get('metadata', {}).get('comments', '')
+            import logging as _logging
+            _webhook_logger = _logging.getLogger(__name__)
+            _webhook_logger.info(f"[stripe_webhook] addon_subscription recibido: user_id={user_id} addon_id={addon_id}")
             if user_id and addon_id:
-                import logging as _logging
-                _webhook_logger = _logging.getLogger(__name__)
+
                 contract = None
                 user = None
                 try:
@@ -835,6 +837,7 @@ def stripe_webhook(request):
                 # Notificar al equipo de soporte (email + realtime frontend admin)
                 try:
                     _notify_user = contract.user if contract else user
+                    _webhook_logger.info(f"[stripe_webhook] Intentando notify_support: user={getattr(_notify_user, 'email', None)} contract={getattr(contract, 'id', None)}")
                     if _notify_user:
                         addon_obj = AddOn.objects.get(id=addon_id)
                         _tenant_obj = None
@@ -843,7 +846,11 @@ def stripe_webhook(request):
                             _tenant_obj = _Tenant.objects.filter(owner=_notify_user).first()
                         except Exception:
                             pass
+                        _webhook_logger.info(f"[stripe_webhook] Llamando notify_support_addon_subscription addon={addon_obj.name} tenant={getattr(_tenant_obj, 'name', None)}")
                         notify_support_addon_subscription(_notify_user, addon_obj, tenant=_tenant_obj)
+                        _webhook_logger.info("[stripe_webhook] notify_support_addon_subscription completado sin excepción")
+                    else:
+                        _webhook_logger.warning("[stripe_webhook] No se encontró usuario para enviar notificación de soporte")
                 except Exception as notify_err:
                     _webhook_logger.error(f"[stripe_webhook] Error sending support notification for addon subscription: {notify_err}", exc_info=True)
 

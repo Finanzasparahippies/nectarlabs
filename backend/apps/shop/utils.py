@@ -354,6 +354,8 @@ def notify_support_addon_subscription(user, addon, tenant=None):
     import urllib.request
     import json as _json
 
+    _logger = logging.getLogger('apps.shop.notify')
+
     addon_name = getattr(addon, 'name', str(addon))
     user_email = getattr(user, 'email', str(user))
     user_name = getattr(user, 'get_full_name', lambda: '')() or getattr(user, 'username', str(user))
@@ -361,6 +363,8 @@ def notify_support_addon_subscription(user, addon, tenant=None):
     date_str = timezone.now().strftime('%d/%m/%Y %H:%M')
     monthly_price = getattr(addon, 'monthly_price', None)
     price_str = f"${monthly_price:,.2f} MXN/mes" if monthly_price else "N/A"
+
+    _logger.warning(f"[notify_support] INICIO — addon='{addon_name}' user='{user_email}' tenant='{tenant_name}'")
 
     # 1. Email notification to support team
     try:
@@ -370,6 +374,8 @@ def notify_support_addon_subscription(user, addon, tenant=None):
             support_address = support_email_raw.split('<')[1].rstrip('>')
         else:
             support_address = support_email_raw
+
+        _logger.warning(f"[notify_support] Enviando email a soporte: {support_address}")
 
         subject = f"🔔 Nueva Suscripción a Add-on: {addon_name}"
         body_lines = [
@@ -395,14 +401,16 @@ def notify_support_addon_subscription(user, addon, tenant=None):
             to=[support_address],
         )
         email.send()
-        logging.info(f"[notify_support_addon_subscription] Email enviado a {support_address} para addon '{addon_name}'.")
+        _logger.warning(f"[notify_support] ✓ Email enviado a {support_address} para addon '{addon_name}'.")
     except Exception as email_err:
-        logging.error(f"[notify_support_addon_subscription] Error enviando email de soporte: {email_err}", exc_info=True)
+        _logger.error(f"[notify_support] ✗ Error enviando email de soporte: {email_err}", exc_info=True)
 
     # 2. Realtime broadcast to admin frontend
     try:
         realtime_url = getattr(settings, 'REALTIME_INTERNAL_URL', 'http://realtime:4001')
         internal_secret = getattr(settings, 'REALTIME_INTERNAL_SECRET', 'nectar-internal-secret')
+
+        _logger.warning(f"[notify_support] Broadcast realtime → {realtime_url}/internal/broadcast-admin")
 
         payload = _json.dumps({
             "type": "addon_subscription_new",
@@ -423,10 +431,14 @@ def notify_support_addon_subscription(user, addon, tenant=None):
             },
             method="POST",
         )
-        with urllib.request.urlopen(req, timeout=3) as resp:
-            logging.info(f"[notify_support_addon_subscription] Realtime broadcast OK: {resp.read().decode()}")
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            response_body = resp.read().decode()
+            _logger.warning(f"[notify_support] ✓ Realtime broadcast OK: {response_body}")
     except Exception as rt_err:
-        logging.error(f"[notify_support_addon_subscription] Error en broadcast realtime: {rt_err}", exc_info=True)
+        _logger.error(f"[notify_support] ✗ Error en broadcast realtime: {rt_err}", exc_info=True)
+
+    _logger.warning(f"[notify_support] FIN — addon='{addon_name}'")
+
 
 
 
