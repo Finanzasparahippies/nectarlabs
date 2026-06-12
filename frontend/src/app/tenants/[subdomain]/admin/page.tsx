@@ -2134,108 +2134,112 @@ export default function TenantAdminPage() {
                 </div>
               </div>
 
-              {/* === Tarjeta de Clientes/Receptores Facturapi (columna completa) === */}
-              <div className="admin-card border rounded-[2rem] p-6 shadow-lg space-y-5 text-left relative overflow-hidden">
-                <div className="absolute -top-20 -right-20 w-48 h-48 rounded-full blur-[100px] opacity-8 pointer-events-none" style={{ backgroundColor: primaryColor }}></div>
+            </div>
 
-                <div className="flex items-center justify-between border-b border-white/5 pb-4">
-                  <div>
-                    <h3 className="text-xs font-black uppercase tracking-widest text-white">Catálogo de Receptores Fiscales</h3>
-                    <p className="text-[8px] text-white/40 uppercase tracking-wider mt-1">Clientes registrados en Facturapi para timbrar</p>
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={fetchFacCustomers}
-                      disabled={loadingFacCustomers}
-                      className="px-3 py-1.5 text-[8px] font-black uppercase tracking-wider border border-white/10 hover:border-white/20 text-white/60 hover:text-white rounded-xl transition-all disabled:opacity-40 cursor-pointer"
-                    >
-                      {loadingFacCustomers ? '...' : '🔄'}
-                    </button>
-                    <button
-                      onClick={() => openFacCustomerModal()}
-                      className="px-3 py-1.5 text-[8px] font-black uppercase tracking-wider rounded-xl transition-all hover:scale-105 active:scale-95 cursor-pointer"
-                      style={{ backgroundColor: primaryColor, color: '#000' }}
-                    >
-                      + Nuevo Receptor
-                    </button>
-                  </div>
+            {/* === Tarjeta de Clientes/Receptores Facturapi (fuera del grid, ancho completo) === */}
+            <div className="admin-card border rounded-[2rem] p-6 shadow-lg space-y-5 text-left relative overflow-hidden">
+              <div className="absolute -top-20 -right-20 w-48 h-48 rounded-full blur-[100px] opacity-5 pointer-events-none" style={{ backgroundColor: primaryColor }}></div>
+
+              <div className="flex items-center justify-between border-b border-white/5 pb-4">
+                <div>
+                  <h3 className="text-xs font-black uppercase tracking-widest text-white">Catálogo de Receptores Fiscales</h3>
+                  <p className="text-[8px] text-white/40 uppercase tracking-wider mt-1">Clientes registrados en Facturapi para timbrar</p>
                 </div>
-
-                {/* Buscador */}
-                {facCustomers.length > 0 && (
-                  <input
-                    type="text"
-                    placeholder="Buscar por RFC o razón social..."
-                    value={facCustomerSearch}
-                    onChange={(e) => setFacCustomerSearch(e.target.value)}
-                    className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input"
-                  />
-                )}
-
-                {/* Lista de clientes */}
-                {loadingFacCustomers ? (
-                  <div className="py-8 flex items-center justify-center gap-2 text-white/30">
-                    <span className="w-4 h-4 rounded-full border-2 border-t-white/50 border-white/10 animate-spin"></span>
-                    <span className="text-[9px] uppercase tracking-widest font-black">Cargando catálogo...</span>
-                  </div>
-                ) : facCustomers.length === 0 ? (
-                  <div className="py-8 flex flex-col items-center justify-center text-center">
-                    <span className="text-4xl mb-3">👥</span>
-                    <p className="text-[9px] font-black uppercase tracking-widest text-white/30">Sin receptores registrados</p>
-                    <p className="text-[8px] text-white/20 mt-1">Agrega los clientes a quienes emitirás facturas</p>
-                  </div>
-                ) : (
-                  <div className="space-y-2 max-h-64 overflow-y-auto pr-1 scrollbar-thin">
-                    {facCustomers
-                      .filter(c => {
-                        if (!facCustomerSearch.trim()) return true;
-                        const q = facCustomerSearch.toLowerCase();
-                        return (
-                          (c.tax_id || '').toLowerCase().includes(q) ||
-                          (c.legal_name || '').toLowerCase().includes(q) ||
-                          (c.email || '').toLowerCase().includes(q)
-                        );
-                      })
-                      .map((customer) => (
-                        <div
-                          key={customer.id}
-                          className="flex items-center gap-3 p-3 rounded-2xl border border-white/5 hover:border-white/10 bg-white/[0.01] hover:bg-white/[0.03] transition-all group"
-                        >
-                          <div className="w-8 h-8 rounded-xl flex items-center justify-center text-sm shrink-0 font-black" style={{ backgroundColor: `${primaryColor}20`, color: primaryColor }}>
-                            {(customer.legal_name || 'C').charAt(0).toUpperCase()}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-[10px] font-black text-white truncate">{customer.legal_name || '—'}</p>
-                            <p className="text-[8px] text-white/40 font-mono">{customer.tax_id} • {customer.address?.zip || 'CP —'}</p>
-                            {customer.email && (
-                              <p className="text-[7px] text-white/25 truncate">{customer.email}</p>
-                            )}
-                          </div>
-                          <div className="flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                            <button
-                              onClick={() => openFacCustomerModal(customer)}
-                              className="px-2 py-1 text-[7px] font-black uppercase tracking-wider border border-white/10 hover:border-white/30 text-white/50 hover:text-white rounded-lg transition-all cursor-pointer"
-                            >
-                              Editar
-                            </button>
-                            <button
-                              onClick={() => {
-                                if (window.confirm(`¿Eliminar a ${customer.legal_name} del catálogo de Facturapi?`)) {
-                                  handleDeleteFacCustomer(customer.id);
-                                }
-                              }}
-                              disabled={deletingFacCustomerId === customer.id}
-                              className="px-2 py-1 text-[7px] font-black uppercase tracking-wider border border-red-500/20 hover:border-red-500/40 text-red-500/50 hover:text-red-400 rounded-lg transition-all disabled:opacity-40 cursor-pointer"
-                            >
-                              {deletingFacCustomerId === customer.id ? '...' : 'Eliminar'}
-                            </button>
-                          </div>
-                        </div>
-                      ))
-                    }
-                  </div>
-                )}
+                <div className="flex gap-2">
+                  <button
+                    onClick={fetchFacCustomers}
+                    disabled={loadingFacCustomers}
+                    className="px-3 py-1.5 text-[8px] font-black uppercase tracking-wider border border-white/10 hover:border-white/20 text-white/60 hover:text-white rounded-xl transition-all disabled:opacity-40 cursor-pointer"
+                  >
+                    {loadingFacCustomers ? '...' : '🔄'}
+                  </button>
+                  <button
+                    onClick={() => openFacCustomerModal()}
+                    className="px-3 py-1.5 text-[8px] font-black uppercase tracking-wider rounded-xl transition-all hover:scale-105 active:scale-95 cursor-pointer"
+                    style={{ backgroundColor: primaryColor, color: '#000' }}
+                  >
+                    + Nuevo Receptor
+                  </button>
+                </div>
               </div>
+
+              {facCustomers.length > 0 && (
+                <input
+                  type="text"
+                  placeholder="Buscar por RFC o razón social..."
+                  value={facCustomerSearch}
+                  onChange={(e) => setFacCustomerSearch(e.target.value)}
+                  className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input"
+                />
+              )}
+
+              {loadingFacCustomers ? (
+                <div className="py-8 flex items-center justify-center gap-2 text-white/30">
+                  <span className="w-4 h-4 rounded-full border-2 border-t-white/50 border-white/10 animate-spin"></span>
+                  <span className="text-[9px] uppercase tracking-widest font-black">Cargando catálogo...</span>
+                </div>
+              ) : facCustomers.length === 0 ? (
+                <div className="py-8 flex flex-col items-center justify-center text-center">
+                  <span className="text-4xl mb-3">👥</span>
+                  <p className="text-[9px] font-black uppercase tracking-widest text-white/30">Sin receptores registrados</p>
+                  <p className="text-[8px] text-white/20 mt-1">Agrega los clientes a quienes emitirás facturas</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {facCustomers
+                    .filter(c => {
+                      if (!facCustomerSearch.trim()) return true;
+                      const q = facCustomerSearch.toLowerCase();
+                      return (
+                        (c.tax_id || '').toLowerCase().includes(q) ||
+                        (c.legal_name || '').toLowerCase().includes(q) ||
+                        (c.email || '').toLowerCase().includes(q)
+                      );
+                    })
+                    .map((customer) => (
+                      <div
+                        key={customer.id}
+                        className="flex items-center gap-3 p-3 rounded-2xl border border-white/5 hover:border-white/10 bg-white/[0.01] hover:bg-white/[0.03] transition-all group"
+                      >
+                        <div className="w-9 h-9 rounded-xl flex items-center justify-center text-sm shrink-0 font-black" style={{ backgroundColor: `${primaryColor}20`, color: primaryColor }}>
+                          {(customer.legal_name || 'C').charAt(0).toUpperCase()}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[10px] font-black text-white truncate">{customer.legal_name || '—'}</p>
+                          <p className="text-[8px] text-white/40 font-mono">{customer.tax_id} • CP {customer.address?.zip || '—'}</p>
+                          {customer.email && (
+                            <p className="text-[7px] text-white/25 truncate">{customer.email}</p>
+                          )}
+                        </div>
+                        <div className="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                          <button
+                            onClick={() => openFacCustomerModal(customer)}
+                            className="px-2 py-1 text-[7px] font-black uppercase tracking-wider border border-white/10 hover:border-white/30 text-white/50 hover:text-white rounded-lg transition-all cursor-pointer"
+                          >
+                            Editar
+                          </button>
+                          <button
+                            onClick={() => {
+                              if (window.confirm(`¿Eliminar a ${customer.legal_name}?`)) {
+                                handleDeleteFacCustomer(customer.id);
+                              }
+                            }}
+                            disabled={deletingFacCustomerId === customer.id}
+                            className="px-2 py-1 text-[7px] font-black uppercase tracking-wider border border-red-500/20 hover:border-red-500/40 text-red-500/50 hover:text-red-400 rounded-lg transition-all disabled:opacity-40 cursor-pointer"
+                          >
+                            {deletingFacCustomerId === customer.id ? '...' : 'Eliminar'}
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  }
+                </div>
+              )}
+            </div>
+            {/* Columnas principales del billing */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+              {/* === Catálogo de Receptores (col-span-5 junto a config) === */}
+              {/* La tarjeta de receptores queda a ancho completo (space-y-8) - ver abajo */}
 
               {/* Invoices List Column */}
               <div className="lg:col-span-7 space-y-6">
