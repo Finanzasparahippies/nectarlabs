@@ -3928,7 +3928,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
               ×
             </button>
 
-            <div>
+            <form onSubmit={handleCreateManualInvoice} className="space-y-6">
               <span className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold text-[8px] font-black uppercase tracking-widest rounded-full border border-nectar-gold/20">
                 Facturación SAT
               </span>
@@ -4331,6 +4331,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
             </form>
           </div>
         </div>
+      )}
       <CreateCustomerModal
         isOpen={showNewUserModal}
         onClose={() => setShowNewUserModal(false)}
