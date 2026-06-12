@@ -178,14 +178,9 @@ class Tenant(models.Model):
 
     @property
     def is_addons_only(self):
-        from apps.shop.models import AddOnSubscription
         if self.has_active_plan_contract:
             return False
-        return AddOnSubscription.objects.filter(
-            user=self.owner,
-            status__in=['active', 'trialing'],
-            is_activated=True
-        ).exists()
+        return len(self.active_addons) > 0
 
     @property
     def active_addons(self):

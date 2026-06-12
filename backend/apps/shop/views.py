@@ -1099,7 +1099,7 @@ def stripe_webhook(request):
                                 subdomain = f"{base_subdomain}-{counter}"
                                 counter += 1
                             
-                            Tenant.objects.create(
+                            tenant = Tenant.objects.create(
                                 owner=contract.user,
                                 name=contract.full_name or f"Portal de {contract.user.get_full_name() or contract.user.username}",
                                 subdomain=subdomain,
@@ -1401,9 +1401,9 @@ def stripe_webhook(request):
                                 pass
                                 
                         if addon:
+                            tenant = Tenant.objects.filter(owner=user).first()
                             if addon.slug in ['mexico-invoicing', 'ecommerce-combo']:
                                 # Encontrar o crear Tenant
-                                tenant = Tenant.objects.filter(owner=user).first()
                                 if not tenant:
                                     from django.utils.text import slugify
                                     contract = Contract.objects.filter(user=user, is_active=True).first()
@@ -1420,9 +1420,9 @@ def stripe_webhook(request):
                                         subdomain=subdomain,
                                         is_active=True
                                     )
-                            
-                            tenant.stamp_balance = (tenant.stamp_balance or 0) + 20
-                            tenant.save()
+                                if tenant:
+                                    tenant.stamp_balance = (tenant.stamp_balance or 0) + 20
+                                    tenant.save()
 
                         # --- BUCLE INVERTIDO: Autofacturar la suscripción del inquilino ---
                         try:

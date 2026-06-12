@@ -136,7 +136,7 @@ function DashboardPageOriginal() {
   const [loadingInvoices, setLoadingInvoices] = useState(false);
   const [addonSubscriptions, setAddonSubscriptions] = useState<any[]>([]);
   const [activatingSubId, setActivatingSubId] = useState<number | null>(null);
-  
+
   // Salesperson and Referral Program states
   const [salesSummary, setSalesSummary] = useState<any | null>(null);
   const [salesCommissions, setSalesCommissions] = useState<any[]>([]);
@@ -174,12 +174,12 @@ function DashboardPageOriginal() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           status: newStatus,
           paid_at: newStatus === 'PAID' ? new Date().toISOString() : null
         })
       });
-      
+
       if (!response.ok) throw new Error("Status update failed");
       const updated = await response.json();
       setInstallments(prev => prev.map(inst => inst.id === installmentId ? updated : inst));
@@ -192,7 +192,7 @@ function DashboardPageOriginal() {
   const handleSaveCFDI = async (installmentId: number) => {
     const uuid = cfdiInputs[installmentId] || "";
     if (!uuid.trim()) return showToast("Por favor ingresa un folio fiscal válido.", 'warning');
-    
+
     try {
       const token = localStorage.getItem('token');
       const response = await fetch(`${API_URL}/installments/${installmentId}/`, {
@@ -203,7 +203,7 @@ function DashboardPageOriginal() {
         },
         body: JSON.stringify({ cfdi_uuid: uuid })
       });
-      
+
       if (!response.ok) throw new Error("CFDI update failed");
       const updated = await response.json();
       setInstallments(prev => prev.map(inst => inst.id === installmentId ? updated : inst));
@@ -227,16 +227,16 @@ function DashboardPageOriginal() {
         },
         body: JSON.stringify({ installment_id: installmentId })
       });
-      
+
       const data = await response.json();
       if (!response.ok) {
         throw new Error(data.detail || data.error || 'Error al emitir la factura.');
       }
-      
+
       const updatedUUID = data.uuid_sat || "LCO_PENDING";
       setInstallments(prev => prev.map(inst => inst.id === installmentId ? { ...inst, cfdi_uuid: updatedUUID } : inst));
       showToast('Factura emitida y timbrada con éxito.', 'success');
-      
+
       const updatedInvoices = await fetcher('/billing/invoices/').catch(() => []);
       setInvoices(updatedInvoices.results || updatedInvoices || []);
     } catch (err: any) {
@@ -335,7 +335,7 @@ function DashboardPageOriginal() {
       });
       setRetroactiveSuccessMessage(res.message || 'Código aplicado con éxito.');
       setRetroactiveCodeInput('');
-      
+
       // Refresh installments and contracts
       const [updatedInstallments, updatedContracts] = await Promise.all([
         fetcher('/installments/'),
@@ -555,7 +555,7 @@ function DashboardPageOriginal() {
         // 1. Fetch user me first, quickly, to establish session details
         const meData = await fetcher('/users/me/').catch(() => null);
         setCurrentUser(meData);
-        
+
         // 2. Set loading to false immediately to render the Dashboard Shell (Sidebar/Header)
         setLoading(false);
         setFetching(true);
@@ -564,7 +564,7 @@ function DashboardPageOriginal() {
         if (role === 'ADMIN' || staff) {
           // CEO / Admin - Load all operations, metrics, and administration panels
           const [
-            projectsData, ticketsData, logsData, contractsData, 
+            projectsData, ticketsData, logsData, contractsData,
             installmentsData, tenantsData, plansData, addonsData, statsData,
             referralData, addonSubscriptionsData
           ] = await Promise.all([
@@ -580,7 +580,7 @@ function DashboardPageOriginal() {
             fetcher('/promo-codes/my-referral-code/').catch(() => null),
             fetcher('/addon-subscriptions/').catch(() => [])
           ]);
- 
+
           setProjects(projectsData);
           setTickets(ticketsData);
           setLogs(logsData);
@@ -864,11 +864,11 @@ function DashboardPageOriginal() {
                       <div className="flex items-center gap-3 bg-background/50 border border-card-border/80 rounded-2xl p-4 justify-between">
                         <span className="font-mono text-lg font-black tracking-widest text-foreground select-all">{myReferralCode.code}</span>
                         <button
-                           onClick={() => {
-                             navigator.clipboard.writeText(myReferralCode.code);
-                             showToast("¡Código de vendedor copiado al portapapeles!", "success");
-                           }}
-                           className="px-6 py-3 bg-nectar-gold hover:bg-nectar-gold/90 text-background text-[10px] font-black uppercase tracking-widest rounded-xl transition-all hover:scale-[1.02] active:scale-95"
+                          onClick={() => {
+                            navigator.clipboard.writeText(myReferralCode.code);
+                            showToast("¡Código de vendedor copiado al portapapeles!", "success");
+                          }}
+                          className="px-6 py-3 bg-nectar-gold hover:bg-nectar-gold/90 text-background text-[10px] font-black uppercase tracking-widest rounded-xl transition-all hover:scale-[1.02] active:scale-95"
                         >
                           Copiar Código
                         </button>
@@ -1176,7 +1176,7 @@ function DashboardPageOriginal() {
                     <h3 className="text-xs font-black uppercase tracking-[0.3em] opacity-30">Contratos del Ecosistema</h3>
                     <p className="text-[9px] font-bold text-foreground/40 mt-1 uppercase tracking-wider">Historial completo de contratos de Partner Tecnológico</p>
                   </div>
-                  
+
                   {/* Premium segment tabs */}
                   <div className="flex flex-wrap items-center gap-1.5 p-1 rounded-2xl bg-background/50 border border-card-border/80">
                     {(['all', 'nectar', 'custom', 'addons_only'] as const).map((filter) => {
@@ -1191,11 +1191,10 @@ function DashboardPageOriginal() {
                         <button
                           key={filter}
                           onClick={() => setContractFilter(filter)}
-                          className={`px-4 py-2 rounded-xl text-[8.5px] font-black uppercase tracking-wider transition-all duration-300 ${
-                            isActive
+                          className={`px-4 py-2 rounded-xl text-[8.5px] font-black uppercase tracking-wider transition-all duration-300 ${isActive
                               ? 'bg-nectar-gold text-background shadow-md shadow-nectar-gold/10 font-bold'
                               : 'text-foreground/50 hover:text-foreground hover:bg-foreground/5 font-bold'
-                          }`}
+                            }`}
                         >
                           {labels[filter]}
                         </button>
@@ -1268,9 +1267,8 @@ function DashboardPageOriginal() {
                                     viewBox="0 0 24 24"
                                     strokeWidth="2.5"
                                     stroke="currentColor"
-                                    className={`w-4 h-4 transition-transform duration-300 ${
-                                      expandedContracts[contract.id] ? 'rotate-90' : ''
-                                    }`}
+                                    className={`w-4 h-4 transition-transform duration-300 ${expandedContracts[contract.id] ? 'rotate-90' : ''
+                                      }`}
                                   >
                                     <path
                                       strokeLinecap="round"
@@ -1299,11 +1297,11 @@ function DashboardPageOriginal() {
                                   <p className="text-[7px] font-bold text-foreground/45 uppercase tracking-wider">{contract.tax_id}</p>
                                   {(contract.tenant_custom_domain || contract.tenant_subdomain) && (() => {
                                     const host = typeof window !== 'undefined' ? window.location.hostname : '';
-                                    let domain = contract.tenant_custom_domain 
-                                      ? `https://${contract.tenant_custom_domain}` 
+                                    let domain = contract.tenant_custom_domain
+                                      ? `https://${contract.tenant_custom_domain}`
                                       : `https://${contract.tenant_subdomain}.nectarlabs.dev`;
                                     let urlDisplay = contract.tenant_custom_domain || `${contract.tenant_subdomain}.nectarlabs.dev`;
-                                    
+
                                     if (!contract.tenant_custom_domain) {
                                       if (host.includes('localhost')) {
                                         domain = `http://nectarlabs.localhost/tenants/${contract.tenant_subdomain}`;
@@ -1313,7 +1311,7 @@ function DashboardPageOriginal() {
                                         urlDisplay = `${contract.tenant_subdomain}.staging.nectarlabs.dev`;
                                       }
                                     }
-                                    
+
                                     return (
                                       <a
                                         href={domain}
@@ -1330,207 +1328,204 @@ function DashboardPageOriginal() {
                               <td className="py-4 font-bold text-xs">
                                 {contract.plan_name || 'Solo Add-ons / Complementos'}
                               </td>
-                            <td className="py-4 text-center text-[10px] font-bold opacity-60">
-                              {contract.signed_at ? new Date(contract.signed_at).toLocaleDateString('es-ES') : '—'}
-                            </td>
-                            <td className="py-4 text-center text-[10px] font-bold opacity-60">
-                              {contract.developer_signed_at ? new Date(contract.developer_signed_at).toLocaleDateString('es-ES') : '—'}
-                            </td>
-                            <td className="py-4 text-center">
-                              {contract.is_fully_signed ? (
-                                <span className="px-3 py-1 bg-green-500/10 text-green-500 text-[7px] font-black uppercase tracking-widest rounded-full">Activo / Firmado</span>
-                              ) : (
-                                <span className="px-3 py-1 bg-yellow-500/10 text-yellow-500 text-[7px] font-black uppercase tracking-widest rounded-full">Pendiente Firma</span>
-                              )}
-                            </td>
-                            <td className="py-4 text-right">
-                              <div className="flex justify-end gap-2">
-                                {!contract.is_fully_signed && (
-                                  <Link
-                                    href={`/contract/dev-sign/${contract.id}`}
-                                    className="px-3 py-1.5 bg-nectar-gold text-background hover:scale-105 text-[8px] font-black uppercase tracking-widest rounded-lg transition-all"
-                                  >
-                                    Firmar
-                                  </Link>
-                                )}
-                                {contract.pdf_file ? (
-                                  <a
-                                    href={getInlineViewUrl(contract.pdf_file, 'contract', contract.id)}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="px-3 py-1.5 bg-card-border hover:bg-foreground hover:text-background text-[8px] font-black uppercase tracking-widest rounded-lg transition-all inline-block"
-                                  >
-                                    Descargar PDF
-                                  </a>
+                              <td className="py-4 text-center text-[10px] font-bold opacity-60">
+                                {contract.signed_at ? new Date(contract.signed_at).toLocaleDateString('es-ES') : '—'}
+                              </td>
+                              <td className="py-4 text-center text-[10px] font-bold opacity-60">
+                                {contract.developer_signed_at ? new Date(contract.developer_signed_at).toLocaleDateString('es-ES') : '—'}
+                              </td>
+                              <td className="py-4 text-center">
+                                {contract.is_fully_signed ? (
+                                  <span className="px-3 py-1 bg-green-500/10 text-green-500 text-[7px] font-black uppercase tracking-widest rounded-full">Activo / Firmado</span>
                                 ) : (
-                                  <span className="text-[8px] opacity-35 font-bold uppercase py-1.5 inline-block">Sin PDF</span>
+                                  <span className="px-3 py-1 bg-yellow-500/10 text-yellow-500 text-[7px] font-black uppercase tracking-widest rounded-full">Pendiente Firma</span>
                                 )}
-                              </div>
-                            </td>
-                          </tr>
-                          {expandedContracts[contract.id] && (
-                            <tr className="bg-background/40">
-                              <td colSpan={8} className="p-8 border-b border-card-border/30">
-                                <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-                                  {/* Col 1: Addons Toggle Control (1/3 width) */}
-                                  <div className="space-y-6">
-                                    <div className="flex justify-between items-center">
-                                      <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-nectar-gold">
-                                        Control de Add-ons / Complementos
-                                      </h4>
-                                    </div>
-                                    <div className="p-6 rounded-[2rem] bg-card-bg/95 border border-card-border/80 space-y-4">
-                                      <p className="text-[10.5px] text-foreground/60 leading-relaxed uppercase tracking-wider">
-                                        Activa o desactiva módulos de software específicos para este ecosistema. Se aprovisionarán automáticamente en su portal.
-                                      </p>
-                                      <div className="space-y-3 pt-2">
-                                        {allAddons.map(addon => {
-                                          const isActive = (contract.addons || []).includes(addon.slug);
-                                          return (
-                                            <div key={addon.id} className="flex items-center justify-between p-3.5 rounded-2xl bg-background/50 border border-card-border/50 hover:border-nectar-gold/30 transition-all group">
-                                              <div className="min-w-0 pr-3">
-                                                <div className="flex items-center gap-1.5 flex-wrap">
-                                                  <span className="font-black text-xs text-foreground group-hover:text-nectar-gold transition-colors">{addon.name}</span>
-                                                  <span className="px-1.5 py-0.5 bg-nectar-gold/10 text-nectar-gold text-[7px] font-black uppercase tracking-widest rounded border border-nectar-gold/20">
-                                                    {addon.category_badge}
-                                                  </span>
+                              </td>
+                              <td className="py-4 text-right">
+                                <div className="flex justify-end gap-2">
+                                  {!contract.is_fully_signed && (
+                                    <Link
+                                      href={`/contract/dev-sign/${contract.id}`}
+                                      className="px-3 py-1.5 bg-nectar-gold text-background hover:scale-105 text-[8px] font-black uppercase tracking-widest rounded-lg transition-all"
+                                    >
+                                      Firmar
+                                    </Link>
+                                  )}
+                                  {contract.pdf_file ? (
+                                    <a
+                                      href={getInlineViewUrl(contract.pdf_file, 'contract', contract.id)}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      className="px-3 py-1.5 bg-card-border hover:bg-foreground hover:text-background text-[8px] font-black uppercase tracking-widest rounded-lg transition-all inline-block"
+                                    >
+                                      Descargar PDF
+                                    </a>
+                                  ) : (
+                                    <span className="text-[8px] opacity-35 font-bold uppercase py-1.5 inline-block">Sin PDF</span>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                            {expandedContracts[contract.id] && (
+                              <tr className="bg-background/40">
+                                <td colSpan={8} className="p-8 border-b border-card-border/30">
+                                  <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+                                    {/* Col 1: Addons Toggle Control (1/3 width) */}
+                                    <div className="space-y-6">
+                                      <div className="flex justify-between items-center">
+                                        <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-nectar-gold">
+                                          Control de Add-ons / Complementos
+                                        </h4>
+                                      </div>
+                                      <div className="p-6 rounded-[2rem] bg-card-bg/95 border border-card-border/80 space-y-4">
+                                        <p className="text-[10.5px] text-foreground/60 leading-relaxed uppercase tracking-wider">
+                                          Activa o desactiva módulos de software específicos para este ecosistema. Se aprovisionarán automáticamente en su portal.
+                                        </p>
+                                        <div className="space-y-3 pt-2">
+                                          {allAddons.map(addon => {
+                                            const isActive = (contract.addons || []).includes(addon.slug);
+                                            return (
+                                              <div key={addon.id} className="flex items-center justify-between p-3.5 rounded-2xl bg-background/50 border border-card-border/50 hover:border-nectar-gold/30 transition-all group">
+                                                <div className="min-w-0 pr-3">
+                                                  <div className="flex items-center gap-1.5 flex-wrap">
+                                                    <span className="font-black text-xs text-foreground group-hover:text-nectar-gold transition-colors">{addon.name}</span>
+                                                    <span className="px-1.5 py-0.5 bg-nectar-gold/10 text-nectar-gold text-[7px] font-black uppercase tracking-widest rounded border border-nectar-gold/20">
+                                                      {addon.category_badge}
+                                                    </span>
+                                                  </div>
+                                                  <p className="text-[8.5px] text-foreground/50 truncate mt-1" title={addon.description}>
+                                                    {addon.description}
+                                                  </p>
                                                 </div>
-                                                <p className="text-[8.5px] text-foreground/50 truncate mt-1" title={addon.description}>
-                                                  {addon.description}
-                                                </p>
+
+                                                {/* Premium gold toggle switch */}
+                                                <button
+                                                  onClick={() => handleToggleAddon(contract.id, addon.slug, isActive)}
+                                                  className={`w-10 h-5 rounded-full p-0.5 transition-colors duration-300 focus:outline-none relative flex-shrink-0 ${isActive ? 'bg-nectar-gold' : 'bg-card-border'
+                                                    }`}
+                                                >
+                                                  <div className={`w-4 h-4 rounded-full bg-white shadow-md transform transition-transform duration-300 ${isActive ? 'translate-x-5' : 'translate-x-0'
+                                                    }`} />
+                                                </button>
                                               </div>
-                                              
-                                              {/* Premium gold toggle switch */}
-                                              <button
-                                                onClick={() => handleToggleAddon(contract.id, addon.slug, isActive)}
-                                                className={`w-10 h-5 rounded-full p-0.5 transition-colors duration-300 focus:outline-none relative flex-shrink-0 ${
-                                                  isActive ? 'bg-nectar-gold' : 'bg-card-border'
-                                                }`}
-                                              >
-                                                <div className={`w-4 h-4 rounded-full bg-white shadow-md transform transition-transform duration-300 ${
-                                                  isActive ? 'translate-x-5' : 'translate-x-0'
-                                                }`} />
-                                              </button>
+                                            );
+                                          })}
+                                          {allAddons.length === 0 && (
+                                            <p className="text-[9px] opacity-40 italic text-center py-4">No hay Add-ons registrados en el catálogo.</p>
+                                          )}
+                                        </div>
+                                      </div>
+                                    </div>
+
+                                    {/* Col 2 & 3: Installments (2/3 width) */}
+                                    <div className="xl:col-span-2 space-y-6">
+                                      <div className="flex justify-between items-center">
+                                        <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-nectar-gold">
+                                          Mensualidades Obligatorias del Contrato #{contract.id}
+                                        </h4>
+                                        <span className="text-[8px] font-black uppercase tracking-widest opacity-40">
+                                          {installments.filter(inst => inst.contract === contract.id && inst.status === 'PAID').length} de {installments.filter(inst => inst.contract === contract.id).length} Pagados
+                                        </span>
+                                      </div>
+
+                                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        {installments
+                                          .filter(inst => inst.contract === contract.id)
+                                          .sort((a, b) => a.installment_number - b.installment_number)
+                                          .map(inst => (
+                                            <div key={inst.id} className="p-5 rounded-2xl bg-card-bg/95 border border-card-border/80 flex flex-col justify-between gap-4 hover:border-nectar-gold/30 transition-all duration-300">
+                                              <div className="flex justify-between items-start">
+                                                <div>
+                                                  <span className="text-[8px] font-black uppercase tracking-widest opacity-45">Mes {inst.installment_number} de 6</span>
+                                                  <h5 className="font-black text-sm mt-0.5">${parseFloat(inst.amount).toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN</h5>
+                                                </div>
+                                                <select
+                                                  value={inst.status}
+                                                  onChange={(e) => handleUpdateInstallmentStatus(inst.id, e.target.value)}
+                                                  className={`px-2 py-0.5 text-[7px] font-black uppercase tracking-wider rounded-full bg-background border focus:outline-none cursor-pointer transition-colors ${inst.status === 'PAID'
+                                                      ? 'border-green-500/30 text-green-500 bg-green-500/5'
+                                                      : inst.status === 'CANCELLED'
+                                                        ? 'border-red-500/30 text-red-500 bg-red-500/5'
+                                                        : inst.receipt_file
+                                                          ? 'border-orange-500/30 text-orange-500 bg-orange-500/5'
+                                                          : 'border-yellow-500/30 text-yellow-500 bg-yellow-500/5'
+                                                    }`}
+                                                >
+                                                  <option value="PENDING" className="text-yellow-500">Pendiente</option>
+                                                  <option value="PAID" className="text-green-500">Pagado</option>
+                                                  <option value="CANCELLED" className="text-red-500">Cancelado</option>
+                                                </select>
+                                              </div>
+
+                                              <div className="space-y-1.5 text-[9px] border-t border-card-border/40 pt-3">
+                                                <div className="flex justify-between opacity-60">
+                                                  <span>Vence:</span>
+                                                  <span className="font-bold">{inst.due_date}</span>
+                                                </div>
+                                                {inst.receipt_file && (
+                                                  <div className="flex justify-between items-center py-0.5">
+                                                    <span>Comprobante:</span>
+                                                    <a
+                                                      href={getInlineViewUrl(inst.receipt_file, 'receipt', inst.id)}
+                                                      target="_blank"
+                                                      rel="noreferrer"
+                                                      className="text-nectar-gold hover:underline font-bold"
+                                                    >
+                                                      Ver archivo ↗
+                                                    </a>
+                                                  </div>
+                                                )}
+                                              </div>
+
+                                              {inst.status !== 'PAID' && inst.receipt_file && (
+                                                <div className="mt-1">
+                                                  <button
+                                                    onClick={() => handleUpdateInstallmentStatus(inst.id, 'PAID')}
+                                                    className="w-full py-2 bg-green-600 hover:bg-green-500 text-white text-[8px] font-black uppercase tracking-widest rounded-lg hover:scale-[1.02] active:scale-95 transition-all shadow-md"
+                                                  >
+                                                    Aprobar Pago
+                                                  </button>
+                                                </div>
+                                              )}
+
+                                              {inst.status === 'PAID' && (
+                                                <div className="mt-1 border-t border-card-border/30 pt-3 space-y-2">
+                                                  {inst.cfdi_uuid ? (
+                                                    <div className="text-left">
+                                                      <span className="px-2 py-0.5 bg-green-500/10 text-green-400 text-[6.5px] font-black uppercase tracking-widest rounded-full">SAT Timbrada</span>
+                                                      <p className="text-[7px] font-mono text-foreground/45 mt-1 select-all break-all">{inst.cfdi_uuid}</p>
+                                                    </div>
+                                                  ) : (
+                                                    <div className="flex items-center gap-1.5">
+                                                      <input
+                                                        type="text"
+                                                        placeholder="UUID CFDI 4.0"
+                                                        value={cfdiInputs[inst.id] || ""}
+                                                        onChange={(e) => setCfdiInputs(prev => ({ ...prev, [inst.id]: e.target.value }))}
+                                                        className="bg-background border border-card-border/80 rounded-md px-2 py-1 text-[7px] font-mono focus:outline-none focus:border-nectar-gold flex-1 text-foreground"
+                                                      />
+                                                      <button
+                                                        onClick={() => handleSaveCFDI(inst.id)}
+                                                        className="px-2 py-1 bg-nectar-gold text-background text-[7px] font-black uppercase tracking-widest rounded-md hover:scale-[1.02] active:scale-95 transition-all"
+                                                      >
+                                                        Guardar
+                                                      </button>
+                                                    </div>
+                                                  )}
+                                                </div>
+                                              )}
                                             </div>
-                                          );
-                                        })}
-                                        {allAddons.length === 0 && (
-                                          <p className="text-[9px] opacity-40 italic text-center py-4">No hay Add-ons registrados en el catálogo.</p>
+                                          ))}
+                                        {installments.filter(inst => inst.contract === contract.id).length === 0 && (
+                                          <p className="col-span-full text-center text-xs opacity-40 font-bold py-6">No se han generado mensualidades para este contrato.</p>
                                         )}
                                       </div>
                                     </div>
                                   </div>
-
-                                  {/* Col 2 & 3: Installments (2/3 width) */}
-                                  <div className="xl:col-span-2 space-y-6">
-                                    <div className="flex justify-between items-center">
-                                      <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-nectar-gold">
-                                        Mensualidades Obligatorias del Contrato #{contract.id}
-                                      </h4>
-                                      <span className="text-[8px] font-black uppercase tracking-widest opacity-40">
-                                        {installments.filter(inst => inst.contract === contract.id && inst.status === 'PAID').length} de {installments.filter(inst => inst.contract === contract.id).length} Pagados
-                                      </span>
-                                    </div>
-                                    
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    {installments
-                                      .filter(inst => inst.contract === contract.id)
-                                      .sort((a, b) => a.installment_number - b.installment_number)
-                                      .map(inst => (
-                                        <div key={inst.id} className="p-5 rounded-2xl bg-card-bg/95 border border-card-border/80 flex flex-col justify-between gap-4 hover:border-nectar-gold/30 transition-all duration-300">
-                                          <div className="flex justify-between items-start">
-                                            <div>
-                                              <span className="text-[8px] font-black uppercase tracking-widest opacity-45">Mes {inst.installment_number} de 6</span>
-                                              <h5 className="font-black text-sm mt-0.5">${parseFloat(inst.amount).toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN</h5>
-                                            </div>
-                                            <select
-                                              value={inst.status}
-                                              onChange={(e) => handleUpdateInstallmentStatus(inst.id, e.target.value)}
-                                              className={`px-2 py-0.5 text-[7px] font-black uppercase tracking-wider rounded-full bg-background border focus:outline-none cursor-pointer transition-colors ${
-                                                inst.status === 'PAID' 
-                                                  ? 'border-green-500/30 text-green-500 bg-green-500/5' 
-                                                  : inst.status === 'CANCELLED'
-                                                  ? 'border-red-500/30 text-red-500 bg-red-500/5'
-                                                  : inst.receipt_file 
-                                                  ? 'border-orange-500/30 text-orange-500 bg-orange-500/5' 
-                                                  : 'border-yellow-500/30 text-yellow-500 bg-yellow-500/5'
-                                              }`}
-                                            >
-                                              <option value="PENDING" className="text-yellow-500">Pendiente</option>
-                                              <option value="PAID" className="text-green-500">Pagado</option>
-                                              <option value="CANCELLED" className="text-red-500">Cancelado</option>
-                                            </select>
-                                          </div>
-
-                                          <div className="space-y-1.5 text-[9px] border-t border-card-border/40 pt-3">
-                                            <div className="flex justify-between opacity-60">
-                                              <span>Vence:</span>
-                                              <span className="font-bold">{inst.due_date}</span>
-                                            </div>
-                                            {inst.receipt_file && (
-                                              <div className="flex justify-between items-center py-0.5">
-                                                <span>Comprobante:</span>
-                                                <a 
-                                                  href={getInlineViewUrl(inst.receipt_file, 'receipt', inst.id)} 
-                                                  target="_blank" 
-                                                  rel="noreferrer"
-                                                  className="text-nectar-gold hover:underline font-bold"
-                                                >
-                                                  Ver archivo ↗
-                                                </a>
-                                              </div>
-                                            )}
-                                          </div>
-
-                                          {inst.status !== 'PAID' && inst.receipt_file && (
-                                            <div className="mt-1">
-                                              <button
-                                                onClick={() => handleUpdateInstallmentStatus(inst.id, 'PAID')}
-                                                className="w-full py-2 bg-green-600 hover:bg-green-500 text-white text-[8px] font-black uppercase tracking-widest rounded-lg hover:scale-[1.02] active:scale-95 transition-all shadow-md"
-                                              >
-                                                Aprobar Pago
-                                              </button>
-                                            </div>
-                                          )}
-
-                                          {inst.status === 'PAID' && (
-                                            <div className="mt-1 border-t border-card-border/30 pt-3 space-y-2">
-                                              {inst.cfdi_uuid ? (
-                                                <div className="text-left">
-                                                  <span className="px-2 py-0.5 bg-green-500/10 text-green-400 text-[6.5px] font-black uppercase tracking-widest rounded-full">SAT Timbrada</span>
-                                                  <p className="text-[7px] font-mono text-foreground/45 mt-1 select-all break-all">{inst.cfdi_uuid}</p>
-                                                </div>
-                                              ) : (
-                                                <div className="flex items-center gap-1.5">
-                                                  <input
-                                                    type="text"
-                                                    placeholder="UUID CFDI 4.0"
-                                                    value={cfdiInputs[inst.id] || ""}
-                                                    onChange={(e) => setCfdiInputs(prev => ({ ...prev, [inst.id]: e.target.value }))}
-                                                    className="bg-background border border-card-border/80 rounded-md px-2 py-1 text-[7px] font-mono focus:outline-none focus:border-nectar-gold flex-1 text-foreground"
-                                                  />
-                                                  <button
-                                                    onClick={() => handleSaveCFDI(inst.id)}
-                                                    className="px-2 py-1 bg-nectar-gold text-background text-[7px] font-black uppercase tracking-widest rounded-md hover:scale-[1.02] active:scale-95 transition-all"
-                                                  >
-                                                    Guardar
-                                                  </button>
-                                                </div>
-                                              )}
-                                            </div>
-                                          )}
-                                        </div>
-                                      ))}
-                                    {installments.filter(inst => inst.contract === contract.id).length === 0 && (
-                                      <p className="col-span-full text-center text-xs opacity-40 font-bold py-6">No se han generado mensualidades para este contrato.</p>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-                            </td>
-                          </tr>
-                        )}
-                        </React.Fragment>
+                                </td>
+                              </tr>
+                            )}
+                          </React.Fragment>
                         ));
                       })()}
                     </tbody>
@@ -1548,8 +1543,70 @@ function DashboardPageOriginal() {
 
               if (!activeContract) return null;
 
+              const isAddonsOnly = !activeContract.plan;
               const chosenMethod = activeContract.payment_commitment_method || 'SPEI';
               const nextPaymentDate = activeContract.next_payment_date || '';
+
+              if (isAddonsOnly) {
+                return (
+                  <section id="payment-commitment-section" className="mb-16 p-10 rounded-[3rem] bg-card-bg border border-card-border shadow-xl relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-nectar-gold/5 rounded-full blur-3xl -mr-20 -mt-20"></div>
+
+                    <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-10">
+                      {/* Left: Active Add-ons List */}
+                      <div className="space-y-6 text-left">
+                        <header>
+                          <span className="px-3 py-1 bg-green-500/10 text-green-500 text-[8px] font-black uppercase tracking-widest rounded-full">Suscripción Activa ✓</span>
+                          <h2 className="text-3xl font-black tracking-tighter mt-3 mb-1">Mis Add-ons Activos</h2>
+                          <p className="text-[9px] font-black uppercase tracking-widest text-nectar-gold opacity-80">Gestión de Suscripciones y Módulos Ecosistema</p>
+                        </header>
+
+                        <div className="space-y-4">
+                          <label className="text-[9px] font-black uppercase tracking-widest opacity-40 ml-1">Módulos en Suscripción Directa</label>
+                          <div className="space-y-3">
+                            {addonSubscriptions.length > 0 ? (
+                              addonSubscriptions.map(sub => (
+                                <div key={sub.id} className="p-4 bg-background/30 border border-card-border rounded-xl flex items-center justify-between">
+                                  <div>
+                                    <span className="font-bold text-xs text-foreground block">{sub.addon_details?.name}</span>
+                                    <span className="text-[8px] opacity-50 uppercase font-black">Ciclo: {sub.billing_cycle === 'yearly' ? 'Anual' : 'Mensual'} • Tarifa: ${parseFloat(sub.price_paid).toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN</span>
+                                  </div>
+                                  <span className="px-2 py-0.5 bg-green-500/10 text-green-500 text-[8px] font-black uppercase tracking-widest rounded-md border border-green-500/20">
+                                    Activo
+                                  </span>
+                                </div>
+                              ))
+                            ) : (
+                              <div className="p-4 bg-background/30 border border-card-border rounded-xl text-xs opacity-50 italic">
+                                No tienes suscripciones de add-ons activas.
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Right: Facturapi CFDI Invoicing Info */}
+                      <div className="p-8 rounded-[2rem] bg-background/40 border border-card-border/50 flex flex-col justify-between text-left">
+                        <div className="space-y-4">
+                          <h4 className="text-[10px] font-black uppercase tracking-widest text-nectar-gold mb-2">Facturación Fiscal Electrónica (Facturapi)</h4>
+                          <p className="text-xs text-foreground/75 leading-relaxed">
+                            Tus suscripciones de Add-ons se procesan de forma recurrente y segura a través de Stripe.
+                          </p>
+                          <p className="text-xs text-foreground/75 leading-relaxed">
+                            De acuerdo con tu régimen fiscal y perfil de facturación, los CFDI oficiales correspondientes (timbrados con Facturapi) se emitirán automáticamente y estarán disponibles para descargar en la sección de <strong>"Mis Facturas (CFDI)"</strong> abajo al detectarse cada renovación.
+                          </p>
+                          <button
+                            onClick={handleOpenBillingPortal}
+                            className="w-full mt-4 py-2.5 bg-[#635BFF] hover:bg-[#5b53e8] text-white text-center rounded-xl text-[8px] font-black uppercase tracking-widest transition-all shadow-lg shadow-[#635BFF]/10 active:scale-95 font-bold"
+                          >
+                            Pagar en Línea
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </section>
+                );
+              }
 
               return (
                 <section id="payment-commitment-section" className="mb-16 p-10 rounded-[3rem] bg-card-bg border border-card-border shadow-xl relative overflow-hidden group">
@@ -1557,7 +1614,7 @@ function DashboardPageOriginal() {
 
                   <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-10">
                     {/* Left: Commitment details & form */}
-                    <div className="space-y-6">
+                    <div className="space-y-6 text-left">
                       <header>
                         <span className="px-3 py-1 bg-green-500/10 text-green-500 text-[8px] font-black uppercase tracking-widest rounded-full">Trato Cerrado ✓</span>
                         <h2 className="text-3xl font-black tracking-tighter mt-3 mb-1">Compromiso de Pago</h2>
@@ -1627,25 +1684,18 @@ function DashboardPageOriginal() {
                     </div>
 
                     {/* Right: Specific Instructions depending on the chosen method */}
-                    <div className="p-8 rounded-[2rem] bg-background/40 border border-card-border/50 flex flex-col justify-between">
+                    <div className="p-8 rounded-[2rem] bg-background/40 border border-card-border/50 flex flex-col justify-between text-left">
                       {chosenMethod === 'STRIPE' && (
                         <div className="space-y-6 flex flex-col justify-between h-full">
                           <div>
                             <h4 className="text-[10px] font-black uppercase tracking-widest text-nectar-gold mb-2">Pago en línea seguro</h4>
                             <p className="text-xs text-foreground/75 leading-relaxed">
-                              Realiza tu pago directamente con tarjeta a través de Stripe de manera segura y encriptada. El cobro se procesará inmediatamente y activará tu ciclo de horas.
+                              Realiza tu pago directamente con tarjeta a través de Stripe de manera segura y encriptada. El cobro se procesará automáticamente al inicio de cada ciclo de facturación.
                             </p>
-                            <p className="text-[10px] text-foreground/50 mt-2">
-                              Para pagar una mensualidad pendiente, haz clic en "Pagar con Stripe" directamente en la tarjeta de la mensualidad abajo.
+                            <p className="text-xs text-foreground/75 leading-relaxed mt-2">
+                              Los comprobantes fiscales CFDI oficiales correspondientes a cada ciclo se generarán automáticamente y se enlistarán en la sección de <strong>"Mis Facturas (CFDI)"</strong> abajo para su descarga.
                             </p>
                           </div>
-
-                          <button
-                            onClick={handleOpenBillingPortal}
-                            className="w-full py-4 bg-[#635BFF] hover:bg-[#5b53e8] text-white font-black uppercase tracking-widest rounded-xl hover:scale-[1.02] active:scale-95 transition-all text-xs shadow-lg shadow-[#635BFF]/20"
-                          >
-                            Portal de Facturación (Stripe)
-                          </button>
                         </div>
                       )}
 
@@ -1755,7 +1805,7 @@ function DashboardPageOriginal() {
                                   Aplica un código promocional o de referido para descontar tu próxima mensualidad (Mes {nextPendingInstallment.installment_number}).
                                 </p>
                               </div>
-                              
+
                               <div className="flex gap-2">
                                 <input
                                   type="text"
@@ -1772,7 +1822,7 @@ function DashboardPageOriginal() {
                                   {applyingRetroactiveCode ? 'Aplicando...' : 'Aplicar'}
                                 </button>
                               </div>
-                              
+
                               <div className="pt-2 flex justify-between items-center text-[9px] uppercase tracking-wider border-t border-card-border/40">
                                 <span className="text-foreground/40 font-bold">¿Quieres un código personalizado?</span>
                                 <button
@@ -1843,12 +1893,12 @@ function DashboardPageOriginal() {
                                 className="px-4 py-2 border border-card-border hover:bg-foreground hover:text-background text-[8px] font-black uppercase tracking-widest rounded-xl transition-all flex items-center gap-2"
                               >
                                 <span>{paymentsExpanded ? 'Ocultar Calendario' : 'Ver Calendario Completo'}</span>
-                                <svg 
-                                  xmlns="http://www.w3.org/2000/svg" 
-                                  viewBox="0 0 24 24" 
-                                  fill="none" 
-                                  stroke="currentColor" 
-                                  strokeWidth="2.5" 
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="2.5"
                                   className={`w-3.5 h-3.5 transition-transform duration-300 ${paymentsExpanded ? 'rotate-180' : ''}`}
                                 >
                                   <polyline points="6 9 12 15 18 9"></polyline>
@@ -2058,7 +2108,7 @@ function DashboardPageOriginal() {
                                                   const myTenant = tenants.find(t => t.owner === currentUser?.id) || tenants[0];
                                                   const hasCFDI = inst.cfdi_uuid && inst.cfdi_uuid !== 'FAILED' && inst.cfdi_uuid !== 'LCO_PENDING';
                                                   const isManualAdmin = myTenant?.invoicing_mode === 'MANUAL_ADMIN';
-                                                  
+
                                                   if (!hasCFDI && !isManualAdmin) {
                                                     const isPending = inst.cfdi_uuid === 'LCO_PENDING';
                                                     return (
@@ -2195,7 +2245,7 @@ function DashboardPageOriginal() {
                           )}
                           <h4 className="font-black text-sm mt-3">{contract.plan_name || 'Plan de Ingeniería'}</h4>
                           <p className="text-xs text-foreground/75 mt-2">
-                            {hasClientSignature 
+                            {hasClientSignature
                               ? "Hemos recibido tu firma. Nuestro equipo técnico está validando los detalles para activar tu nuevo ecosistema."
                               : "Tu propuesta comercial de proyecto ha sido aprobada. Revisa los términos y firma el contrato digitalmente."
                             }
@@ -2379,16 +2429,16 @@ function DashboardPageOriginal() {
                           {/* Decorative blur elements */}
                           <div className="absolute top-[-20%] right-[-10%] w-64 h-64 bg-nectar-gold/15 rounded-full blur-3xl group-hover:scale-110 transition-transform duration-1000"></div>
                           <div className="absolute bottom-[-20%] left-[-10%] w-64 h-64 bg-nectar-forest/10 rounded-full blur-3xl"></div>
-                          
+
                           <div className="relative z-10 space-y-6">
                             <span className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold text-[8px] font-black uppercase tracking-widest rounded-full border border-nectar-gold/20">
                               Servicio de Add-ons Activo
                             </span>
-                            
+
                             <h3 className="text-3xl font-black tracking-tighter text-foreground leading-none">
                               ¡Bienvenido a tu Suite de Add-ons!
                             </h3>
-                            
+
                             <p className="text-sm font-bold text-foreground/75 leading-relaxed max-w-2xl">
                               Tu portal de soporte y herramientas públicas ha sido aprovisionado de manera automática. Hemos asignado una dirección personalizada para tu negocio bajo el subdominio de Néctar Labs.
                             </p>
@@ -2420,15 +2470,15 @@ function DashboardPageOriginal() {
                             </p>
 
                             <div className="flex flex-wrap gap-4 pt-4">
-                              <Link 
-                                href="/dashboard/tenant-settings" 
+                              <Link
+                                href="/dashboard/tenant-settings"
                                 className="px-8 py-3 bg-nectar-gold text-background font-black uppercase tracking-widest text-[10px] rounded-xl hover:scale-105 active:scale-95 transition-all shadow-lg shadow-nectar-gold/15"
                               >
                                 Personalizar Portal
                               </Link>
-                              
+
                               {tenants.length > 0 && (
-                                <a 
+                                <a
                                   href={(() => {
                                     const tenant = tenants[0];
                                     const host = typeof window !== 'undefined' ? window.location.hostname : '';
@@ -2519,11 +2569,10 @@ function DashboardPageOriginal() {
                                   </span>
                                 )}
                               </div>
-                              <span className={`px-2.5 py-1 text-[7px] font-black uppercase tracking-widest rounded-full border shrink-0 ${
-                                tenant.is_active 
-                                  ? 'bg-green-500/10 text-green-500 border-green-500/20' 
+                              <span className={`px-2.5 py-1 text-[7px] font-black uppercase tracking-widest rounded-full border shrink-0 ${tenant.is_active
+                                  ? 'bg-green-500/10 text-green-500 border-green-500/20'
                                   : 'bg-amber-500/10 text-amber-500 border-amber-500/20'
-                              }`}>
+                                }`}>
                                 {tenant.is_active ? 'Activo' : 'Reservado'}
                               </span>
                             </div>
@@ -2575,11 +2624,10 @@ function DashboardPageOriginal() {
                                   window.open(domain, '_blank', 'noopener,noreferrer');
                                 }
                               }}
-                              className={`flex-1 min-w-[90px] py-2 text-center rounded-xl text-[8px] font-black uppercase tracking-widest transition-all cursor-pointer font-bold ${
-                                tenant.is_active 
+                              className={`flex-1 min-w-[90px] py-2 text-center rounded-xl text-[8px] font-black uppercase tracking-widest transition-all cursor-pointer font-bold ${tenant.is_active
                                   ? 'bg-nectar-gold/10 hover:bg-nectar-gold hover:text-background border border-nectar-gold/20 hover:border-nectar-gold text-nectar-gold'
                                   : 'bg-card-border text-foreground/40 cursor-not-allowed border border-transparent'
-                              }`}
+                                }`}
                               title={tenant.is_active ? 'Abrir Portal' : 'El portal está en estado reservado hasta recibir el pago.'}
                               disabled={!tenant.is_active}
                             >
