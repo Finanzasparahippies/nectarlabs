@@ -207,7 +207,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
   const handleDescriptionChange = async (idx: number, val: string) => {
     // Update the description state first
     setManualItems(prev => prev.map((it, i) => i === idx ? { ...it, description: val } : it));
-    
+
     if (val.trim().length < 2) {
       setSuggestedProducts([]);
       setActiveSuggestionIdx(null);
@@ -397,7 +397,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
           // Auto-refresh the subscriptions list
           fetcher('/addon-subscriptions/')
             .then((res) => setAddonSubscriptions(Array.isArray(res) ? res : []))
-            .catch(() => {});
+            .catch(() => { });
         }
       } catch {
         // ignore parse errors
@@ -3932,7 +3932,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
               <span className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold text-[8px] font-black uppercase tracking-widest rounded-full border border-nectar-gold/20">
                 Facturación SAT
               </span>
-                {/* Seleccionar Inquilino */}
+              {/* Seleccionar Inquilino */}
               <div className="space-y-1.5">
                 <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Seleccionar Inquilino (Tenant)</label>
                 {(() => {
@@ -3961,7 +3961,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
                       </div>
                     );
                   }
-                  
+
                   return (
                     <div className="flex gap-2">
                       <div className="flex-1 relative">
@@ -3986,20 +3986,20 @@ export default function BusinessCommander({ stats, installments, setInstallments
                           <div className="absolute left-0 right-0 mt-1 bg-[#050a06]/95 border border-white/10 rounded-2xl shadow-2xl p-2 z-50 max-h-48 overflow-y-auto space-y-1 backdrop-blur-md">
                             {(() => {
                               const query = tenantSearchQuery.toLowerCase().trim();
-                              const filtered = allTenants.filter(t => 
+                              const filtered = allTenants.filter(t =>
                                 (t.brand_name && t.brand_name.toLowerCase().includes(query)) ||
                                 (t.subdomain && t.subdomain.toLowerCase().includes(query)) ||
                                 (t.owner_email && t.owner_email.toLowerCase().includes(query))
                               );
-                              
+
                               if (filtered.length === 0) {
-                                  return (
-                                    <div className="p-3 text-center text-white/30 text-[8px] uppercase tracking-wider font-bold">
-                                      Sin inquilinos coincidentes
-                                    </div>
-                                  );
+                                return (
+                                  <div className="p-3 text-center text-white/30 text-[8px] uppercase tracking-wider font-bold">
+                                    Sin inquilinos coincidentes
+                                  </div>
+                                );
                               }
-                              
+
                               return filtered.map(t => (
                                 <button
                                   key={t.id}
@@ -4328,150 +4328,149 @@ export default function BusinessCommander({ stats, installments, setInstallments
                   </button>
                 </div>
               </div>
-            </form>
-          </div>
-        </div>
-      <CreateCustomerModal
-        isOpen={showNewUserModal}
-        onClose={() => setShowNewUserModal(false)}
-        onSuccess={async (newUser) => {
-          const usersData = await fetcher('/users/');
-          setUsers(Array.isArray(usersData) ? usersData : []);
-          
-          const tenantsData = await fetcher('/tenants/');
-          setAllTenants(tenantsData || []);
-          
-          if (newUser.tenant) {
-            setSelectedTenantId(String(newUser.tenant));
-            handleTenantChange(newUser.tenant);
-          } else if (newUser.owned_tenants && newUser.owned_tenants.length > 0) {
-            const firstTenant = newUser.owned_tenants[0];
-            setSelectedTenantId(String(firstTenant.id));
-            handleTenantChange(firstTenant.id);
-          }
-        }}
-        showRoleSelect={true}
-        allTenants={allTenants}
-        primaryColor="#C68A1E"
-        showToast={showToast}
-      />
-
-      {showCancelModal && (
-        <div
-          onClick={() => setShowCancelModal(false)}
-          className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-6 cursor-pointer overflow-y-auto"
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-md bg-card-bg border border-card-border p-8 md:p-10 rounded-[3rem] shadow-2xl relative space-y-6 text-left cursor-default animate-in fade-in zoom-in-95 duration-200"
-          >
-            <button
-              onClick={() => setShowCancelModal(false)}
-              className="absolute top-6 right-6 w-8 h-8 rounded-full border border-card-border text-foreground/40 hover:text-foreground flex items-center justify-center text-xl font-bold cursor-pointer"
-            >
-              ×
-            </button>
-
-            <div>
-              <span className="px-3 py-1 bg-red-500/10 text-red-500 text-[8px] font-black uppercase tracking-widest rounded-full border border-red-500/20">
-                Cancelación SAT
-              </span>
-              <h2 className="text-2xl font-black tracking-tighter mt-4 leading-none text-foreground">
-                Cancelar Factura CFDI
-              </h2>
-              <p className="text-[10px] opacity-40 uppercase tracking-widest mt-1">
-                Selecciona el motivo de cancelación ante el SAT.
-              </p>
             </div>
+          </div>
+          <CreateCustomerModal
+            isOpen={showNewUserModal}
+            onClose={() => setShowNewUserModal(false)}
+            onSuccess={async (newUser) => {
+              const usersData = await fetcher('/users/');
+              setUsers(Array.isArray(usersData) ? usersData : []);
 
-            <form
-              onSubmit={async (e) => {
-                e.preventDefault();
-                if (!cancelInvoiceId) return;
-                if (cancelMotive === '01' && !cancelSubstitution.trim()) {
-                  showToast('El folio sustituto es obligatorio para el motivo 01.', 'warning');
-                  return;
-                }
-                setIsSubmittingCancel(true);
-                try {
-                  await handleCancelInvoice(cancelInvoiceId, cancelMotive, cancelSubstitution.trim());
-                  setShowCancelModal(false);
-                } finally {
-                  setIsSubmittingCancel(false);
-                }
-              }}
-              className="space-y-4"
+              const tenantsData = await fetcher('/tenants/');
+              setAllTenants(tenantsData || []);
+
+              if (newUser.tenant) {
+                setSelectedTenantId(String(newUser.tenant));
+                handleTenantChange(newUser.tenant);
+              } else if (newUser.owned_tenants && newUser.owned_tenants.length > 0) {
+                const firstTenant = newUser.owned_tenants[0];
+                setSelectedTenantId(String(firstTenant.id));
+                handleTenantChange(firstTenant.id);
+              }
+            }}
+            showRoleSelect={true}
+            allTenants={allTenants}
+            primaryColor="#C68A1E"
+            showToast={showToast}
+          />
+
+          {showCancelModal && (
+            <div
+              onClick={() => setShowCancelModal(false)}
+              className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-6 cursor-pointer overflow-y-auto"
             >
-              <div className="space-y-1.5">
-                <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Motivo de Cancelación *</label>
-                <select
-                  value={cancelMotive}
-                  onChange={(e) => {
-                    setCancelMotive(e.target.value);
-                    if (e.target.value !== '01') setCancelSubstitution('');
-                  }}
-                  className="w-full bg-background border border-card-border rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-nectar-gold text-foreground font-bold"
+              <div
+                onClick={(e) => e.stopPropagation()}
+                className="w-full max-w-md bg-card-bg border border-card-border p-8 md:p-10 rounded-[3rem] shadow-2xl relative space-y-6 text-left cursor-default animate-in fade-in zoom-in-95 duration-200"
+              >
+                <button
+                  onClick={() => setShowCancelModal(false)}
+                  className="absolute top-6 right-6 w-8 h-8 rounded-full border border-card-border text-foreground/40 hover:text-foreground flex items-center justify-center text-xl font-bold cursor-pointer"
                 >
-                  <option value="02">02 - Comprobante emitido con errores sin relación</option>
-                  <option value="03">03 - Operación no realizada</option>
-                  <option value="01">01 - Comprobante emitido con errores con relación</option>
-                  <option value="04">04 - Operación nominativa relacionada en la factura global</option>
-                </select>
-              </div>
+                  ×
+                </button>
 
-              {cancelMotive === '01' && (
-                <div className="space-y-1.5 animate-fadeIn">
-                  <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Folio Sustituto (UUID o ID de Facturapi) *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="ej. 123e4567-e89b-12d3-a456-426614174000"
-                    value={cancelSubstitution}
-                    onChange={(e) => setCancelSubstitution(e.target.value)}
-                    className="w-full bg-background border border-card-border rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-nectar-gold text-foreground font-mono"
-                  />
-                  <p className="text-[8px] opacity-40 uppercase tracking-widest">
-                    Especifica el UUID de la factura que reemplaza a la factura actual.
+                <div>
+                  <span className="px-3 py-1 bg-red-500/10 text-red-500 text-[8px] font-black uppercase tracking-widest rounded-full border border-red-500/20">
+                    Cancelación SAT
+                  </span>
+                  <h2 className="text-2xl font-black tracking-tighter mt-4 leading-none text-foreground">
+                    Cancelar Factura CFDI
+                  </h2>
+                  <p className="text-[10px] opacity-40 uppercase tracking-widest mt-1">
+                    Selecciona el motivo de cancelación ante el SAT.
                   </p>
                 </div>
-              )}
 
-              <div className="pt-6 border-t border-card-border/60 flex justify-end gap-3">
-                <button
-                  type="button"
-                  onClick={() => setShowCancelModal(false)}
-                  className="px-5 py-3 border border-card-border hover:bg-foreground hover:text-background text-[9px] font-black uppercase tracking-widest rounded-xl transition-all cursor-pointer"
+                <form
+                  onSubmit={async (e) => {
+                    e.preventDefault();
+                    if (!cancelInvoiceId) return;
+                    if (cancelMotive === '01' && !cancelSubstitution.trim()) {
+                      showToast('El folio sustituto es obligatorio para el motivo 01.', 'warning');
+                      return;
+                    }
+                    setIsSubmittingCancel(true);
+                    try {
+                      await handleCancelInvoice(cancelInvoiceId, cancelMotive, cancelSubstitution.trim());
+                      setShowCancelModal(false);
+                    } finally {
+                      setIsSubmittingCancel(false);
+                    }
+                  }}
+                  className="space-y-4"
                 >
-                  Regresar
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmittingCancel}
-                  className="px-6 py-3 bg-red-600 hover:bg-red-500 text-white text-[9px] font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 disabled:opacity-40 disabled:scale-100 transition-all font-bold shadow-lg shadow-red-950/25 cursor-pointer"
-                >
-                  {isSubmittingCancel ? 'Cancelando...' : 'Confirmar Cancelación'}
-                </button>
+                  <div className="space-y-1.5">
+                    <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Motivo de Cancelación *</label>
+                    <select
+                      value={cancelMotive}
+                      onChange={(e) => {
+                        setCancelMotive(e.target.value);
+                        if (e.target.value !== '01') setCancelSubstitution('');
+                      }}
+                      className="w-full bg-background border border-card-border rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-nectar-gold text-foreground font-bold"
+                    >
+                      <option value="02">02 - Comprobante emitido con errores sin relación</option>
+                      <option value="03">03 - Operación no realizada</option>
+                      <option value="01">01 - Comprobante emitido con errores con relación</option>
+                      <option value="04">04 - Operación nominativa relacionada en la factura global</option>
+                    </select>
+                  </div>
+
+                  {cancelMotive === '01' && (
+                    <div className="space-y-1.5 animate-fadeIn">
+                      <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Folio Sustituto (UUID o ID de Facturapi) *</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="ej. 123e4567-e89b-12d3-a456-426614174000"
+                        value={cancelSubstitution}
+                        onChange={(e) => setCancelSubstitution(e.target.value)}
+                        className="w-full bg-background border border-card-border rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-nectar-gold text-foreground font-mono"
+                      />
+                      <p className="text-[8px] opacity-40 uppercase tracking-widest">
+                        Especifica el UUID de la factura que reemplaza a la factura actual.
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="pt-6 border-t border-card-border/60 flex justify-end gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setShowCancelModal(false)}
+                      className="px-5 py-3 border border-card-border hover:bg-foreground hover:text-background text-[9px] font-black uppercase tracking-widest rounded-xl transition-all cursor-pointer"
+                    >
+                      Regresar
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isSubmittingCancel}
+                      className="px-6 py-3 bg-red-600 hover:bg-red-500 text-white text-[9px] font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 disabled:opacity-40 disabled:scale-100 transition-all font-bold shadow-lg shadow-red-950/25 cursor-pointer"
+                    >
+                      {isSubmittingCancel ? 'Cancelando...' : 'Confirmar Cancelación'}
+                    </button>
+                  </div>
+                </form>
               </div>
-            </form>
-          </div>
+            </div>
+          )}
+
+          <ConfirmModal
+            isOpen={confirmModal !== null}
+            title={confirmModal?.title || ''}
+            message={confirmModal?.message || ''}
+            onConfirm={confirmModal?.onConfirm || (() => { })}
+            onCancel={() => setConfirmModal(null)}
+          />
+
+          {toast && (
+            <Toast
+              message={toast.message}
+              type={toast.type}
+              onClose={() => setToast(null)}
+            />
+          )}
         </div>
-      )}
-
-      <ConfirmModal
-        isOpen={confirmModal !== null}
-        title={confirmModal?.title || ''}
-        message={confirmModal?.message || ''}
-        onConfirm={confirmModal?.onConfirm || (() => { })}
-        onCancel={() => setConfirmModal(null)}
-      />
-
-      {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={() => setToast(null)}
-        />
-      )}
-    </div>
-  );
+      );
 }
