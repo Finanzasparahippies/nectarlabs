@@ -4463,15 +4463,18 @@ export default function BusinessCommander({ stats, installments, setInstallments
             onConfirm={confirmModal?.onConfirm || (() => { })}
             onCancel={() => setConfirmModal(null)}
           />
-        </main>
-        {/* Premium UI Overlay Elements */}
-      {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={() => setToast(null)}
-        />
-      )}
-    </div>
-  );
+          </main>
+
+        {/* 2. El Toast se evalúa perfectamente aquí porque sigue dentro del div raíz */}
+        {toast && (
+          <Toast
+            message={toast.message}
+            type={toast.type}
+            onClose={() => setToast(null)}
+          />
+        )}
+
+      {/* 3. Finalmente cerramos el div contenedor general de la página */}
+      </div>
+    );
 }
