@@ -618,7 +618,7 @@ function DashboardPageOriginal() {
           setAddonSubscriptions(addonSubscriptionsData || []);
         } else {
           // Client / Customers - Load their contracts, installments, projects, active addons, tenants, and invoices
-          const [projectsData, ticketsData, contractsData, installmentsData, addonsData, plansData, referralData, tenantsData, invoicesData] = await Promise.all([
+          const [projectsData, ticketsData, contractsData, installmentsData, addonsData, plansData, referralData, tenantsData, invoicesData, addonSubscriptionsData] = await Promise.all([
             fetcher('/projects/').catch(() => []),
             fetcher('/tickets/').catch(() => []),
             fetcher('/contracts/').catch(() => []),
@@ -627,7 +627,8 @@ function DashboardPageOriginal() {
             fetcher('/plans/').catch(() => []),
             fetcher('/promo-codes/my-referral-code/').catch(() => null),
             fetcher('/tenants/').catch(() => []),
-            fetcher('/billing/invoices/').catch(() => [])
+            fetcher('/billing/invoices/').catch(() => []),
+            fetcher('/addon-subscriptions/').catch(() => [])
           ]);
           setProjects(projectsData);
           setTickets(ticketsData);
@@ -638,6 +639,7 @@ function DashboardPageOriginal() {
           setMyReferralCode(referralData);
           setTenants(tenantsData || []);
           setInvoices(invoicesData.results || invoicesData || []);
+          setAddonSubscriptions(addonSubscriptionsData || []);
         }
       } catch (err) {
         console.error("Error loading dashboard data:", err);
