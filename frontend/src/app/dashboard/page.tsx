@@ -1928,6 +1928,7 @@ function DashboardPageOriginal() {
                               )}
                             </div>
                           )}
+                        </div>
                       )}
                     </div>
                   </div>
