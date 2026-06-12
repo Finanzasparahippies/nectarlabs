@@ -4465,16 +4465,15 @@ export default function BusinessCommander({ stats, installments, setInstallments
           />
         </div>
 
-        {/* 2. El Toast se evalúa perfectamente aquí porque sigue dentro del div raíz */}
       {toast && (
         <Toast
           message={toast.message}
           type={toast.type}
-          onClose={() => setToast(null)}
+          onClose={() => setToast(null)
+
+          }
         />
       )}
-
-      {/* 3. Finalmente cerramos el div contenedor general de la página */}
     </div>
   );
 }
