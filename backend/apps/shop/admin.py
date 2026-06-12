@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Plan, Product, Order, AddOn, Contract, PaymentInstallment, PromoCode, AddOnSubscription
+from .models import Plan, Product, Order, AddOn, Contract, PaymentInstallment, PromoCode, AddOnSubscription, SalesCommission, StripeEvent
 
 @admin.register(Plan)
 class PlanAdmin(admin.ModelAdmin):
@@ -57,3 +57,21 @@ class AddOnSubscriptionAdmin(admin.ModelAdmin):
     list_display = ('id', 'user', 'tenant', 'addon', 'stripe_subscription_id', 'status', 'billing_cycle', 'created_at')
     list_filter = ('status', 'billing_cycle', 'created_at')
     search_fields = ('user__email', 'tenant__name', 'addon__name', 'stripe_subscription_id')
+
+
+@admin.register(SalesCommission)
+class SalesCommissionAdmin(admin.ModelAdmin):
+    list_display = ('id', 'referrer', 'contract', 'commission_percentage', 'amount_earned', 'status', 'created_at')
+    list_filter = ('status', 'created_at')
+    search_fields = ('referrer__email', 'contract__full_name')
+    readonly_fields = ('created_at',)
+    ordering = ('-created_at',)
+
+
+@admin.register(StripeEvent)
+class StripeEventAdmin(admin.ModelAdmin):
+    list_display = ('stripe_event_id', 'event_type', 'processed', 'created_at')
+    list_filter = ('event_type', 'processed', 'created_at')
+    search_fields = ('stripe_event_id', 'event_type')
+    readonly_fields = ('created_at',)
+    ordering = ('-created_at',)
