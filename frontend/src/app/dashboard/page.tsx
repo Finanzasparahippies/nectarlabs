@@ -134,6 +134,7 @@ function DashboardPageOriginal() {
   const [selectedPaymentMethods, setSelectedPaymentMethods] = useState<Record<number, string>>({});
   const [allAddons, setAllAddons] = useState<any[]>([]);
   const [invoices, setInvoices] = useState<any[]>([]);
+  const [installmentSearch, setInstallmentSearch] = useState('');
   const [loadingInvoices, setLoadingInvoices] = useState(false);
   const [addonSubscriptions, setAddonSubscriptions] = useState<any[]>([]);
   const [activatingSubId, setActivatingSubId] = useState<number | null>(null);
@@ -1686,17 +1687,36 @@ function DashboardPageOriginal() {
                           )}
                         </div>
 
-                        <div className="space-y-2">
+                        <div className="space-y-3">
                           <label className="text-[9px] font-black uppercase tracking-widest opacity-40 ml-1">Medio de Pago Seleccionado</label>
-                          <select
-                            value={chosenMethod}
-                            onChange={(e) => handleUpdatePaymentMethod(activeContract.id, e.target.value)}
-                            className="w-full bg-background/50 border border-card-border rounded-xl p-4 focus:outline-none focus:border-nectar-gold transition-all text-xs font-bold text-foreground appearance-none"
-                          >
-                            <option value="SPEI">Transferencia Electrónica (SPEI)</option>
-                            <option value="DEPOSIT">Depósito Directo / Practicaja (BBVA)</option>
-                            <option value="STRIPE">Tarjeta de Crédito o Débito (Stripe)</option>
-                          </select>
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            {[
+                              { value: 'SPEI', label: 'SPEI', desc: 'Transferencia electrónica directa', icon: '🏦' },
+                              { value: 'DEPOSIT', label: 'Depósito BBVA', desc: 'Practicaja o sucursal bancaria', icon: '💵' },
+                              { value: 'STRIPE', label: 'Stripe', desc: 'Pago seguro en línea con tarjeta', icon: '💳' }
+                            ].map((method) => {
+                              const isSelected = chosenMethod === method.value;
+                              return (
+                                <button
+                                  key={method.value}
+                                  type="button"
+                                  onClick={() => handleUpdatePaymentMethod(activeContract.id, method.value)}
+                                  className={`flex flex-col items-start p-4 rounded-2xl border text-left transition-all relative cursor-pointer group hover:scale-[1.02] active:scale-95 ${
+                                    isSelected 
+                                      ? 'bg-nectar-gold/10 border-nectar-gold shadow-lg shadow-nectar-gold/5' 
+                                      : 'bg-background/40 border-card-border hover:border-white/20'
+                                  }`}
+                                >
+                                  {isSelected && (
+                                    <span className="absolute top-3 right-3 text-nectar-gold text-[10px]">●</span>
+                                  )}
+                                  <span className="text-lg mb-2">{method.icon}</span>
+                                  <span className="text-[10px] font-black uppercase tracking-wider text-white leading-tight block">{method.label}</span>
+                                  <span className="text-[8px] text-white/45 leading-relaxed mt-1 block">{method.desc}</span>
+                                </button>
+                              );
+                            })}
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -1705,65 +1725,209 @@ function DashboardPageOriginal() {
                     <div className="p-8 rounded-[2rem] bg-background/40 border border-card-border/50 flex flex-col justify-between text-left">
                       {nextPendingMethod === 'STRIPE' && (
                         <div className="space-y-6 flex flex-col justify-between h-full">
-                          <div>
+                          <div className="space-y-3">
                             <h4 className="text-[10px] font-black uppercase tracking-widest text-nectar-gold mb-2">Pago en línea seguro</h4>
                             <p className="text-xs text-foreground/75 leading-relaxed">
                               Realiza tu pago directamente con tarjeta a través de Stripe de manera segura y encriptada. El cobro se procesará automáticamente al inicio de cada ciclo de facturación.
                             </p>
-                            <p className="text-xs text-foreground/75 leading-relaxed mt-2">
+                            <p className="text-xs text-foreground/75 leading-relaxed">
                               Los comprobantes fiscales CFDI oficiales correspondientes a cada ciclo se generarán automáticamente y se enlistarán en la sección de <strong>"Mis Facturas (CFDI)"</strong> abajo para su descarga.
                             </p>
                           </div>
+                          {nextPending && (
+                            <button
+                              onClick={() => handlePayStripe(nextPending.id)}
+                              className="w-full py-3 bg-[#635BFF] hover:bg-[#5b53e8] text-white text-center rounded-xl text-[8px] font-black uppercase tracking-widest transition-all shadow-lg shadow-[#635BFF]/10 active:scale-95 font-bold"
+                            >
+                              💳 Pagar con Stripe ahora
+                            </button>
+                          )}
                         </div>
                       )}
 
                       {nextPendingMethod === 'SPEI' && (
-                        <div className="space-y-4">
-                          <h4 className="text-[10px] font-black uppercase tracking-widest text-nectar-gold mb-2">Instrucciones de Transferencia SPEI</h4>
-                          <div className="space-y-2 text-xs">
-                            <div className="flex justify-between border-b border-card-border/30 py-2">
-                              <span className="opacity-50">Banco Destino:</span>
-                              <span className="font-bold">BBVA México</span>
-                            </div>
-                            <div className="flex justify-between border-b border-card-border/30 py-2">
-                              <span className="opacity-50">Beneficiario:</span>
-                              <span className="font-bold">Jesus Saul Villegas Cruz</span>
-                            </div>
-                            <div className="flex justify-between border-b border-card-border/30 py-2">
-                              <span className="opacity-50">Cuenta CLABE:</span>
-                              <span className="font-bold tracking-wider select-all cursor-pointer hover:text-nectar-gold transition-colors">012 760 02936549837 8</span>
-                            </div>
-                            <div className="flex justify-between py-2">
-                              <span className="opacity-50">Celular Vinculado:</span>
-                              <span className="font-bold">66 2139 0238</span>
+                        <div className="space-y-4 flex flex-col justify-between h-full">
+                          <div className="space-y-4">
+                            <h4 className="text-[10px] font-black uppercase tracking-widest text-nectar-gold mb-2">Instrucciones de Transferencia SPEI</h4>
+                            <div className="space-y-2 text-xs">
+                              <div className="flex justify-between border-b border-card-border/30 py-2">
+                                <span className="opacity-50">Banco Destino:</span>
+                                <span className="font-bold">BBVA México</span>
+                              </div>
+                              <div className="flex justify-between border-b border-card-border/30 py-2">
+                                <span className="opacity-50">Beneficiario:</span>
+                                <span className="font-bold">Jesus Saul Villegas Cruz</span>
+                              </div>
+                              <div className="flex justify-between items-center border-b border-card-border/30 py-2 gap-2">
+                                <span className="opacity-50">Cuenta CLABE:</span>
+                                <div className="flex items-center gap-1.5 min-w-0">
+                                  <span className="font-bold tracking-wider select-all cursor-pointer text-right truncate">012760029365498378</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      navigator.clipboard.writeText('012760029365498378');
+                                      showToast('CLABE copiada al portapapeles', 'success');
+                                    }}
+                                    className="p-1 hover:bg-white/5 border border-white/10 rounded cursor-pointer text-[8px] shrink-0 text-nectar-gold"
+                                    title="Copiar CLABE"
+                                  >
+                                    📋
+                                  </button>
+                                </div>
+                              </div>
+                              <div className="flex justify-between items-center py-2 gap-2">
+                                <span className="opacity-50">Celular Vinculado:</span>
+                                <div className="flex items-center gap-1.5 min-w-0">
+                                  <span className="font-bold text-right truncate">6621390238</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      navigator.clipboard.writeText('6621390238');
+                                      showToast('Celular copiado al portapapeles', 'success');
+                                    }}
+                                    className="p-1 hover:bg-white/5 border border-white/10 rounded cursor-pointer text-[8px] shrink-0 text-nectar-gold"
+                                    title="Copiar Celular"
+                                  >
+                                    📋
+                                  </button>
+                                </div>
+                              </div>
                             </div>
                           </div>
-                          <p className="text-[8px] opacity-40 uppercase tracking-wider text-center mt-4">
-                            * Envía tu comprobante de pago a contacto@finanzasparahippies.com
-                          </p>
+                          
+                          {nextPending && (
+                            <div className="pt-4 border-t border-card-border/30 space-y-4">
+                              <div className="flex items-center justify-between gap-2">
+                                <span className="text-[8px] uppercase tracking-wider font-bold text-foreground/60">¿Requiere Factura?</span>
+                                <div className="flex items-center gap-2">
+                                  <input
+                                    type="checkbox"
+                                    id={`spei-wants-inv-${nextPending.id}`}
+                                    checked={!!wantsInvoiceMap[nextPending.id]}
+                                    onChange={(e) => setWantsInvoiceMap(prev => ({ ...prev, [nextPending.id]: e.target.checked }))}
+                                    className="rounded border-card-border bg-card-bg text-nectar-gold focus:ring-nectar-gold w-3.5 h-3.5 cursor-pointer"
+                                  />
+                                  <label htmlFor={`spei-wants-inv-${nextPending.id}`} className="text-[8px] uppercase tracking-wider font-bold text-foreground/60 cursor-pointer select-none">
+                                    Facturar (+16% IVA)
+                                  </label>
+                                </div>
+                              </div>
+                              
+                              {nextPending.receipt_file ? (
+                                <div className="p-3 bg-green-500/5 border border-green-500/20 rounded-xl flex items-center justify-between">
+                                  <span className="text-[8px] text-green-400 font-black uppercase tracking-widest">✓ Comprobante Subido</span>
+                                  <a
+                                    href={getInlineViewUrl(nextPending.receipt_file, 'receipt', nextPending.id)}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="text-[8px] text-[#C68A1E] hover:underline font-black uppercase tracking-widest"
+                                  >
+                                    Ver Comprobante
+                                  </a>
+                                </div>
+                              ) : (
+                                <div className="space-y-2">
+                                  <span className="text-[8px] font-black uppercase tracking-widest opacity-40 block">Comprobante de Pago</span>
+                                  <label className="flex items-center justify-center gap-2 w-full py-3 border border-dashed border-[#C68A1E]/30 hover:border-[#C68A1E]/60 text-[#C68A1E] hover:bg-[#C68A1E]/5 text-center rounded-xl text-[8px] font-black uppercase tracking-widest transition-all cursor-pointer font-bold">
+                                    <span>📁 Subir Archivo PDF/Imagen</span>
+                                    <input
+                                      type="file"
+                                      accept="image/*,application/pdf"
+                                      className="hidden"
+                                      onChange={(e) => {
+                                        const file = e.target.files?.[0];
+                                        if (file) handleUploadReceipt(nextPending.id, file);
+                                      }}
+                                    />
+                                  </label>
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </div>
                       )}
 
                       {nextPendingMethod === 'DEPOSIT' && (
-                        <div className="space-y-4">
-                          <h4 className="text-[10px] font-black uppercase tracking-widest text-nectar-gold mb-2">Instrucciones de Depósito Directo</h4>
-                          <p className="text-[10px] text-foreground/75 leading-relaxed mb-4">
-                            Puedes realizar tu depósito directo en cualquier sucursal BBVA o Practicaja utilizando los siguientes datos:
-                          </p>
-                          <div className="space-y-2 text-xs">
-                            <div className="flex justify-between border-b border-card-border/30 py-2">
-                              <span className="opacity-50">Beneficiario:</span>
-                              <span className="font-bold">Jesus Saul Villegas Cruz</span>
-                            </div>
-                            <div className="flex justify-between border-b border-card-border/30 py-2">
-                              <span className="opacity-50">Tarjeta de Débito:</span>
-                              <span className="font-bold tracking-wider select-all cursor-pointer hover:text-nectar-gold transition-colors">4152 3144 3553 5540</span>
+                        <div className="space-y-4 flex flex-col justify-between h-full">
+                          <div className="space-y-4">
+                            <h4 className="text-[10px] font-black uppercase tracking-widest text-nectar-gold mb-2">Instrucciones de Depósito Directo</h4>
+                            <p className="text-[10px] text-foreground/75 leading-relaxed">
+                              Puedes realizar tu depósito directo en cualquier sucursal BBVA o Practicaja utilizando los siguientes datos:
+                            </p>
+                            <div className="space-y-2 text-xs">
+                              <div className="flex justify-between border-b border-card-border/30 py-2">
+                                <span className="opacity-50">Beneficiario:</span>
+                                <span className="font-bold">Jesus Saul Villegas Cruz</span>
+                              </div>
+                              <div className="flex justify-between items-center border-b border-card-border/30 py-2 gap-2">
+                                <span className="opacity-50">Tarjeta de Débito:</span>
+                                <div className="flex items-center gap-1.5 min-w-0">
+                                  <span className="font-bold tracking-wider select-all cursor-pointer text-right truncate">4152314435535540</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      navigator.clipboard.writeText('4152314435535540');
+                                      showToast('Tarjeta copiada al portapapeles', 'success');
+                                    }}
+                                    className="p-1 hover:bg-white/5 border border-white/10 rounded cursor-pointer text-[8px] shrink-0 text-nectar-gold"
+                                    title="Copiar Tarjeta"
+                                  >
+                                    📋
+                                  </button>
+                                </div>
+                              </div>
                             </div>
                           </div>
-                          <p className="text-[8px] opacity-40 uppercase tracking-wider text-center mt-4">
-                            * Envía tu comprobante de pago a contacto@finanzasparahippies.com
-                          </p>
-                        </div>
+                          
+                          {nextPending && (
+                            <div className="pt-4 border-t border-card-border/30 space-y-4">
+                              <div className="flex items-center justify-between gap-2">
+                                <span className="text-[8px] uppercase tracking-wider font-bold text-foreground/60">¿Requiere Factura?</span>
+                                <div className="flex items-center gap-2">
+                                  <input
+                                    type="checkbox"
+                                    id={`deposit-wants-inv-${nextPending.id}`}
+                                    checked={!!wantsInvoiceMap[nextPending.id]}
+                                    onChange={(e) => setWantsInvoiceMap(prev => ({ ...prev, [nextPending.id]: e.target.checked }))}
+                                    className="rounded border-card-border bg-card-bg text-nectar-gold focus:ring-nectar-gold w-3.5 h-3.5 cursor-pointer"
+                                  />
+                                  <label htmlFor={`deposit-wants-inv-${nextPending.id}`} className="text-[8px] uppercase tracking-wider font-bold text-foreground/60 cursor-pointer select-none">
+                                    Facturar (+16% IVA)
+                                  </label>
+                                </div>
+                              </div>
+                              
+                              {nextPending.receipt_file ? (
+                                <div className="p-3 bg-green-500/5 border border-green-500/20 rounded-xl flex items-center justify-between">
+                                  <span className="text-[8px] text-green-400 font-black uppercase tracking-widest">✓ Comprobante Subido</span>
+                                  <a
+                                    href={getInlineViewUrl(nextPending.receipt_file, 'receipt', nextPending.id)}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="text-[8px] text-[#C68A1E] hover:underline font-black uppercase tracking-widest"
+                                  >
+                                    Ver Comprobante
+                                  </a>
+                                </div>
+                              ) : (
+                                <div className="space-y-2">
+                                  <span className="text-[8px] font-black uppercase tracking-widest opacity-40 block">Comprobante de Pago</span>
+                                  <label className="flex items-center justify-center gap-2 w-full py-3 border border-dashed border-[#C68A1E]/30 hover:border-[#C68A1E]/60 text-[#C68A1E] hover:bg-[#C68A1E]/5 text-center rounded-xl text-[8px] font-black uppercase tracking-widest transition-all cursor-pointer font-bold">
+                                    <span>📁 Subir Archivo PDF/Imagen</span>
+                                    <input
+                                      type="file"
+                                      accept="image/*,application/pdf"
+                                      className="hidden"
+                                      onChange={(e) => {
+                                        const file = e.target.files?.[0];
+                                        if (file) handleUploadReceipt(nextPending.id, file);
+                                      }}
+                                    />
+                                  </label>
+                                </div>
+                              )}
+                            </div>
+                          )}
                       )}
                     </div>
                   </div>
@@ -2033,8 +2197,17 @@ function DashboardPageOriginal() {
 
                           {/* Collapsible Full Calendar */}
                           {paymentsExpanded && (
-                            <div className="mt-6 animate-fadeIn">
-                              <span className="text-[8px] font-black uppercase tracking-[0.2em] text-foreground/30 mb-4 block">Calendario Completo de Pagos</span>
+                            <div className="mt-6 animate-fadeIn space-y-4">
+                              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                <span className="text-[8px] font-black uppercase tracking-[0.2em] text-foreground/30 font-bold">Calendario Completo de Pagos</span>
+                                <input
+                                  type="text"
+                                  placeholder="Buscar mensualidad, vencimiento o estatus..."
+                                  value={installmentSearch}
+                                  onChange={(e) => setInstallmentSearch(e.target.value)}
+                                  className="bg-white/5 border border-card-border rounded-xl px-4 py-2 text-xs focus:outline-none focus:border-nectar-gold text-foreground placeholder:text-white/20 w-full md:w-64 font-bold"
+                                />
+                              </div>
                               <div className="overflow-x-auto bg-background/30 rounded-2xl border border-card-border/60">
                                 <table className="w-full text-left border-collapse min-w-[650px]">
                                   <thead>
@@ -2047,7 +2220,25 @@ function DashboardPageOriginal() {
                                     </tr>
                                   </thead>
                                   <tbody>
-                                    {activeInstallments.map((inst) => {
+                                    {activeInstallments
+                                      .filter(inst => {
+                                        const q = installmentSearch.toLowerCase().trim();
+                                        if (!q) return true;
+                                        const isPaid = inst.status === 'PAID';
+                                        const isPendingReview = !isPaid && inst.receipt_file;
+                                        let statusText = 'pendiente';
+                                        if (isPaid) statusText = 'pagado';
+                                        else if (isPendingReview) statusText = 'en revisión';
+
+                                        return (
+                                          `mes ${inst.installment_number}`.includes(q) ||
+                                          (inst.due_date && inst.due_date.includes(q)) ||
+                                          (inst.amount && inst.amount.toString().includes(q)) ||
+                                          (inst.project_name && inst.project_name.toLowerCase().includes(q)) ||
+                                          statusText.includes(q)
+                                        );
+                                      })
+                                      .map((inst) => {
                                       const isPaid = inst.status === 'PAID';
                                       const isPendingReview = !isPaid && inst.receipt_file;
                                       const instMethod = selectedPaymentMethods[inst.id] || inst.payment_method || activeContract.payment_commitment_method || 'SPEI';

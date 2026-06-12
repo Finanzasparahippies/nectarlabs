@@ -98,6 +98,14 @@ export default function TenantAdminPage() {
   const [invoices, setInvoices] = useState<any[]>([]);
   const [loadingBilling, setLoadingBilling] = useState(false);
   const [isSavingTaxProfile, setIsSavingTaxProfile] = useState(false);
+  const [tenantUsers, setTenantUsers] = useState<any[]>([]);
+  const [tenantContracts, setTenantContracts] = useState<any[]>([]);
+  const [invoiceSearch, setInvoiceSearch] = useState('');
+  const [customerSearchQuery, setCustomerSearchQuery] = useState('');
+  const [selectedCustomer, setSelectedCustomer] = useState<any | null>(null);
+  const [activeSuggestionIdx, setActiveSuggestionIdx] = useState<number | null>(null);
+  const [suggestedProducts, setSuggestedProducts] = useState<any[]>([]);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
   const [taxProfileError, setTaxProfileError] = useState<string | null>(null);
   const [invoicingMode, setInvoicingMode] = useState('AUTOMATIC');
   const [buyingPackage, setBuyingPackage] = useState<number | null>(null);
@@ -248,6 +256,20 @@ export default function TenantAdminPage() {
 
       const invs = await fetcher(`/billing/invoices/?tenant_id=${tenantConfig.id}`);
       setInvoices(invs.results || invs || []);
+
+      try {
+        const usersRes = await fetcher('/users/');
+        setTenantUsers(usersRes.results || usersRes || []);
+      } catch (err) {
+        console.error('Error loading tenant users:', err);
+      }
+
+      try {
+        const contractsRes = await fetcher('/contracts/');
+        setTenantContracts(contractsRes.results || contractsRes || []);
+      } catch (err) {
+        console.error('Error loading tenant contracts:', err);
+      }
     } catch (err: any) {
       console.error('Error loading billing data:', err);
     } finally {
@@ -384,6 +406,7 @@ export default function TenantAdminPage() {
       setNewClientUsername('');
       setNewClientPassword('');
       setNewClientEmailVerified(true);
+      loadBillingData();
     } catch (err: any) {
       showToast(err.message || 'Error al crear el cliente.', 'error');
     } finally {
@@ -462,7 +485,6 @@ export default function TenantAdminPage() {
       setManualRazonSocial('');
       setManualRegimenFiscal('601');
       setManualCodigoPostal('');
-      setManualEmail('');
       setManualItems([{
         quantity: 1,
         unit_price: 0,
@@ -471,6 +493,8 @@ export default function TenantAdminPage() {
         unit_key: taxProfile?.default_unit_key || 'E48',
         unit_name: taxProfile?.default_unit_name || 'Unidad de servicio'
       }]);
+      setActiveSuggestionIdx(null);
+      setSuggestedProducts([]);
 
       loadBillingData();
     } catch (err: any) {
@@ -479,6 +503,41 @@ export default function TenantAdminPage() {
       setIsSubmittingManualInvoice(false);
     }
   };
+
+  const handleDescriptionChange = async (idx: number, val: string) => {
+    // Update the description state first
+    setManualItems(prev => prev.map((it, i) => i === idx ? { ...it, description: val } : it));
+    
+    if (val.trim().length < 2) {
+      setSuggestedProducts([]);
+      setActiveSuggestionIdx(null);
+      return;
+    }
+
+    setActiveSuggestionIdx(idx);
+    setLoadingSuggestions(true);
+    try {
+      const data = await fetcher(`/billing/sat/products/?q=${encodeURIComponent(val)}`);
+      setSuggestedProducts(data || []);
+    } catch (err) {
+      console.error('Error fetching SAT product suggestions:', err);
+    } finally {
+      setLoadingSuggestions(false);
+    }
+  };
+
+  // Close concept search dropdown on click outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('.concept-search-container')) {
+        setActiveSuggestionIdx(null);
+        setSuggestedProducts([]);
+      }
+    };
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, []);
 
   // Parse Subdomain from Route or Hostname
   useEffect(() => {
@@ -1677,6 +1736,8 @@ export default function TenantAdminPage() {
                           setManualRegimenFiscal('601');
                           setManualCodigoPostal('');
                           setManualEmail('');
+                          setCustomerSearchQuery('');
+                          setSelectedCustomer(null);
                           setManualItems([{
                             quantity: 1,
                             unit_price: 0,
@@ -1713,6 +1774,19 @@ export default function TenantAdminPage() {
                     </div>
                   </div>
 
+                  {/* Search Bar for Invoices */}
+                  {!loadingBilling && invoices.length > 0 && (
+                    <div className="relative">
+                      <input
+                        type="text"
+                        placeholder="Buscar por UUID SAT, total o estado..."
+                        value={invoiceSearch}
+                        onChange={(e) => setInvoiceSearch(e.target.value)}
+                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs focus:outline-none focus:border-nectar-gold text-foreground placeholder:text-white/20 admin-input font-bold"
+                      />
+                    </div>
+                  )}
+
                   {loadingBilling ? (
                     <div className="py-12 flex flex-col items-center justify-center space-y-3">
                       <span className="w-6 h-6 rounded-full border-2 border-t-white border-white/10 animate-spin"></span>
@@ -1736,7 +1810,19 @@ export default function TenantAdminPage() {
                           </tr>
                         </thead>
                         <tbody>
-                          {invoices.map((inv) => (
+                          {invoices
+                            .filter(inv => {
+                              const q = invoiceSearch.toLowerCase().trim();
+                              if (!q) return true;
+                              return (
+                                (inv.uuid_sat && String(inv.uuid_sat).toLowerCase().includes(q)) ||
+                                (inv.stripe_invoice_id && String(inv.stripe_invoice_id).toLowerCase().includes(q)) ||
+                                (inv.facturapi_invoice_id && String(inv.facturapi_invoice_id).toLowerCase().includes(q)) ||
+                                (inv.total && String(inv.total).includes(q)) ||
+                                (inv.status_display && String(inv.status_display).toLowerCase().includes(q))
+                              );
+                            })
+                            .map((inv) => (
                             <tr key={inv.id} className="border-b border-white/5 hover:bg-white/[0.01] transition-all">
                               <td className="py-3 px-2 text-white/60 font-mono">
                                 {new Date(inv.created_at).toLocaleDateString('es-MX', { year: 'numeric', month: '2-digit', day: '2-digit' })}
@@ -2573,6 +2659,107 @@ export default function TenantAdminPage() {
                   Datos de Facturación del Cliente
                 </h3>
 
+                {tenantUsers.length > 0 && (
+                  <div className="space-y-3">
+                    <label className="text-[8px] font-black uppercase tracking-widest opacity-40 block">Cliente de la Factura</label>
+                    
+                    {selectedCustomer ? (
+                      /* Selected Customer Card */
+                      <div className="flex items-center justify-between p-4 bg-[#C68A1E]/10 border border-[#C68A1E]/30 rounded-2xl animate-in fade-in zoom-in-95 duration-150">
+                        <div>
+                          <span className="text-[8px] font-black uppercase tracking-widest text-[#C68A1E]">Cliente Seleccionado ✓</span>
+                          <h4 className="text-xs font-bold text-white mt-1">{selectedCustomer.username || 'Usuario'}</h4>
+                          <p className="text-[9px] text-white/50">{selectedCustomer.email}</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedCustomer(null);
+                            setManualEmail('');
+                            setManualRfc('');
+                            setManualRazonSocial('');
+                            setManualCodigoPostal('');
+                          }}
+                          className="px-3 py-1.5 bg-white/5 hover:bg-red-500/10 text-white/60 hover:text-red-400 border border-white/10 hover:border-red-500/20 rounded-xl text-[8px] font-black uppercase tracking-wider transition-all cursor-pointer font-bold"
+                        >
+                          Quitar
+                        </button>
+                      </div>
+                    ) : (
+                      /* Search input + filtered results */
+                      <div className="space-y-2 relative">
+                        <div className="relative">
+                          <input
+                            type="text"
+                            value={customerSearchQuery}
+                            onChange={(e) => setCustomerSearchQuery(e.target.value)}
+                            placeholder="Buscar cliente por nombre o email..."
+                            className="w-full bg-background border border-white/10 rounded-xl px-4 py-2.5 pl-10 text-xs focus:outline-none focus:border-[#C68A1E] text-foreground placeholder:text-white/20 admin-input font-bold"
+                          />
+                          <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/30 select-none text-[10px]">🔍</div>
+                          {customerSearchQuery && (
+                            <button
+                              type="button"
+                              onClick={() => setCustomerSearchQuery('')}
+                              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-white/40 hover:text-white text-xs font-bold"
+                            >
+                              ×
+                            </button>
+                          )}
+                        </div>
+                        
+                        {customerSearchQuery.trim() !== '' && (
+                          <div className="absolute left-0 right-0 mt-1 bg-[#050a06]/95 border border-white/10 rounded-2xl shadow-2xl p-2 z-50 max-h-48 overflow-y-auto space-y-1 backdrop-blur-md">
+                            {(() => {
+                              const query = customerSearchQuery.toLowerCase().trim();
+                              const filtered = tenantUsers.filter(u => 
+                                (u.username && u.username.toLowerCase().includes(query)) ||
+                                (u.email && u.email.toLowerCase().includes(query))
+                              );
+                              
+                              if (filtered.length === 0) {
+                                return (
+                                  <div className="p-3 text-center text-white/30 text-[8px] uppercase tracking-wider font-bold">
+                                    Sin clientes coincidentes
+                                  </div>
+                                );
+                              }
+                              
+                              return filtered.map(u => {
+                                const contract = tenantContracts.find(c => c.user === u.id);
+                                return (
+                                  <button
+                                    key={u.id}
+                                    type="button"
+                                    onClick={() => {
+                                      setSelectedCustomer(u);
+                                      setManualEmail(u.email);
+                                      setCustomerSearchQuery('');
+                                      if (contract) {
+                                        setManualRfc(contract.tax_id || '');
+                                        setManualRazonSocial(contract.full_name || '');
+                                      } else {
+                                        setManualRazonSocial(u.username || '');
+                                      }
+                                    }}
+                                    className="w-full text-left p-3 rounded-xl hover:bg-[#C68A1E]/10 border border-transparent hover:border-[#C68A1E]/20 flex flex-col gap-0.5 transition-all cursor-pointer group"
+                                  >
+                                    <span className="text-xs font-bold text-white group-hover:text-[#C68A1E] transition-colors">{u.username || 'Usuario'}</span>
+                                    <span className="text-[9.5px] text-white/50">{u.email}</span>
+                                    {contract?.tax_id && (
+                                      <span className="text-[8px] text-[#C68A1E]/80 font-mono mt-0.5">RFC: {contract.tax_id}</span>
+                                    )}
+                                  </button>
+                                );
+                              });
+                            })()}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <label className="text-[8px] font-black uppercase tracking-widest opacity-40">RFC</label>
@@ -2680,9 +2867,8 @@ export default function TenantAdminPage() {
                           remover
                         </button>
                       )}
-                      
                       <div className="grid grid-cols-4 gap-2">
-                        <div className="col-span-2 space-y-1">
+                        <div className="col-span-2 space-y-1 relative concept-search-container">
                           <label className="text-[7px] font-black uppercase tracking-widest opacity-40">Descripción</label>
                           <input
                             type="text"
@@ -2690,11 +2876,49 @@ export default function TenantAdminPage() {
                             className="w-full px-3 py-1.5 bg-background border border-white/10 rounded-lg text-[9px] font-bold text-foreground admin-input"
                             placeholder="ej. Servicio de Consultoría"
                             value={item.description}
-                            onChange={(e) => {
-                              const newDesc = e.target.value;
-                              setManualItems(prev => prev.map((it, i) => i === idx ? { ...it, description: newDesc } : it));
+                            onChange={(e) => handleDescriptionChange(idx, e.target.value)}
+                            onFocus={() => {
+                              if (item.description.trim().length >= 2) {
+                                handleDescriptionChange(idx, item.description);
+                              }
                             }}
                           />
+                          {activeSuggestionIdx === idx && (loadingSuggestions || suggestedProducts.length > 0) && (
+                            <div className="absolute left-0 right-0 mt-1 z-50 max-h-48 overflow-y-auto rounded-xl border border-white/10 bg-[#050a06]/95 backdrop-blur-md shadow-2xl py-1.5 custom-scrollbar">
+                              {loadingSuggestions ? (
+                                <div className="flex items-center justify-center py-3 text-[8px] font-black uppercase tracking-wider text-white/40">
+                                  <span className="w-3 h-3 rounded-full border-2 border-t-white border-white/10 animate-spin mr-2"></span>
+                                  Buscando catálogo SAT...
+                                </div>
+                              ) : (
+                                suggestedProducts.map((prod) => (
+                                  <button
+                                    key={prod.id || prod.code}
+                                    type="button"
+                                    onClick={() => {
+                                      setManualItems(prev => prev.map((it, i) => i === idx ? {
+                                        ...it,
+                                        description: prod.description,
+                                        product_key: prod.code
+                                      } : it));
+                                      setActiveSuggestionIdx(null);
+                                      setSuggestedProducts([]);
+                                    }}
+                                    className="w-full text-left px-3 py-1.5 hover:bg-white/5 transition-colors flex flex-col gap-0.5 border-b border-white/[0.02] last:border-0 cursor-pointer"
+                                  >
+                                    <div className="flex justify-between items-center w-full">
+                                      <span className="text-[8px] font-black font-mono tracking-wider text-nectar-gold">
+                                        {prod.code}
+                                      </span>
+                                    </div>
+                                    <span className="text-[8.5px] text-white/80 font-medium line-clamp-1 uppercase">
+                                      {prod.description}
+                                    </span>
+                                  </button>
+                                ))
+                              )}
+                            </div>
+                          )}
                         </div>
                         <div className="space-y-1">
                           <label className="text-[7px] font-black uppercase tracking-widest opacity-40">Cant.</label>

@@ -805,7 +805,13 @@ def send_addon_contracted_email(user, addon, subdomain, is_activated=True):
     Sends a confirmation email to the client when they successfully subscribe/contract an Add-on.
     Tells them their request has been received (and whether it is activated or pending).
     """
+    logger = logging.getLogger("apps")
     try:
+        # Guard: ensure email backend is configured
+        if not getattr(settings, 'EMAIL_HOST_USER', None) and not getattr(settings, 'EMAIL_HOST', None):
+            logger.error("send_addon_contracted_email: EMAIL_HOST_USER / EMAIL_HOST not configured. Skipping send.")
+            return False
+
         recipient_email = user.email
         name = user.get_full_name() or user.username or "Cliente"
         subject = f"🚀 ¡Tu Add-on {addon.name} está listo! - Néctar Labs" if is_activated else f"⏳ Solicitud de Add-on recibida - Néctar Labs"
@@ -821,19 +827,28 @@ def send_addon_contracted_email(user, addon, subdomain, is_activated=True):
         })
         text_content = strip_tags(html_content)
         
+        bcc_list = []
+        billing_email = getattr(settings, 'EMAIL_BILLING', None)
+        if billing_email:
+            bcc_list.append(billing_email)
+
         email = EmailMultiAlternatives(
             subject=subject,
             body=text_content,
             from_email=get_platform_sender("Néctar Labs Notificaciones"),
             to=[recipient_email],
+            bcc=bcc_list,
             reply_to=[settings.EMAIL_CONTACT]
         )
         email.attach_alternative(html_content, "text/html")
         email.send()
-        logging.getLogger("apps").info(f"Addon contracted email sent to {recipient_email} for addon {addon.id} (activated={is_activated})")
+        logger.info(f"Addon contracted email sent to {recipient_email} for addon {addon.id} (activated={is_activated})")
         return True
     except Exception as e:
-        logging.getLogger("apps").error(f"Error sending addon contracted email: {e}", exc_info=True)
+        logging.getLogger("apps").error(
+            f"Error sending addon contracted email to {getattr(user, 'email', 'unknown')} for addon {getattr(addon, 'id', 'unknown')}: {e}",
+            exc_info=True
+        )
         return False
 
 
@@ -841,7 +856,13 @@ def send_addon_activated_email(user, addon, subdomain):
     """
     Sends a confirmation email to the client when an admin manually activates their requested Add-on.
     """
+    logger = logging.getLogger("apps")
     try:
+        # Guard: ensure email backend is configured
+        if not getattr(settings, 'EMAIL_HOST_USER', None) and not getattr(settings, 'EMAIL_HOST', None):
+            logger.error("send_addon_activated_email: EMAIL_HOST_USER / EMAIL_HOST not configured. Skipping send.")
+            return False
+
         recipient_email = user.email
         name = user.get_full_name() or user.username or "Cliente"
         subject = f"🚀 ¡Tu Add-on {addon.name} ha sido Activado! - Néctar Labs"
@@ -855,20 +876,29 @@ def send_addon_activated_email(user, addon, subdomain):
             'portal_url': portal_url,
         })
         text_content = strip_tags(html_content)
+
+        bcc_list = []
+        billing_email = getattr(settings, 'EMAIL_BILLING', None)
+        if billing_email:
+            bcc_list.append(billing_email)
         
         email = EmailMultiAlternatives(
             subject=subject,
             body=text_content,
             from_email=get_platform_sender("Néctar Labs Notificaciones"),
             to=[recipient_email],
+            bcc=bcc_list,
             reply_to=[settings.EMAIL_CONTACT]
         )
         email.attach_alternative(html_content, "text/html")
         email.send()
-        logging.getLogger("apps").info(f"Addon activated email sent to {recipient_email} for addon {addon.id}")
+        logger.info(f"Addon activated email sent to {recipient_email} for addon {addon.id}")
         return True
     except Exception as e:
-        logging.getLogger("apps").error(f"Error sending addon activated email: {e}", exc_info=True)
+        logging.getLogger("apps").error(
+            f"Error sending addon activated email to {getattr(user, 'email', 'unknown')} for addon {getattr(addon, 'id', 'unknown')}: {e}",
+            exc_info=True
+        )
         return False
 
 

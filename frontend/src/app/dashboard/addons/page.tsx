@@ -222,6 +222,7 @@ export default function AddonsPage() {
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'warning' | 'info' } | null>(null);
   const [fetching, setFetching] = useState(true);
   const [subscriptions, setSubscriptions] = useState<any[]>([]);
+  const [tenantSearch, setTenantSearch] = useState('');
 
   const showToast = (message: string, type: 'success' | 'error' | 'warning' | 'info' = 'success') => {
     setToast({ message, type });
@@ -238,7 +239,8 @@ export default function AddonsPage() {
     const staff = localStorage.getItem('is_staff') === 'true';
     const role = localStorage.getItem('user_role') || '';
     setUserRole(role);
-    setIsStaff((staff || role === 'ADMIN' || role === 'BUSINESS') && role !== 'DESIGNER');
+    const staffCheck = (staff || role === 'ADMIN' || role === 'BUSINESS') && role !== 'DESIGNER';
+    setIsStaff(staffCheck);
     setLoading(false);
     setFetching(true);
 
@@ -260,7 +262,8 @@ export default function AddonsPage() {
 
         // Fetch tenants owned by the user
         try {
-          const tenantsData = await fetcher('/tenants/');
+          const tenantsUrl = staffCheck ? '/tenants/?all=true' : '/tenants/';
+          const tenantsData = await fetcher(tenantsUrl);
           if (Array.isArray(tenantsData)) {
             setTenants(tenantsData);
             if (tenantsData.length > 0) {
@@ -345,7 +348,8 @@ export default function AddonsPage() {
       }
 
       try {
-        const tenantsData = await fetcher('/tenants/');
+        const tenantsUrl = staffCheck ? '/tenants/?all=true' : '/tenants/';
+        const tenantsData = await fetcher(tenantsUrl);
         if (Array.isArray(tenantsData)) {
           setTenants(tenantsData);
           if (tenantsData.length > 0) {
@@ -1120,7 +1124,7 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
         {/* Modal: Admin Manage Client Addons */}
         {manageAddon && (
           <div
-            onClick={() => setManageAddon(null)}
+            onClick={() => { setManageAddon(null); setTenantSearch(''); }}
             className="fixed inset-0 bg-background/80 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-premium cursor-pointer"
           >
             <div
@@ -1129,65 +1133,112 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
             >
               <button
                 type="button"
-                onClick={() => setManageAddon(null)}
+                onClick={() => { setManageAddon(null); setTenantSearch(''); }}
                 className="absolute top-6 right-6 w-10 h-10 bg-foreground/5 hover:bg-foreground/10 text-foreground/60 hover:text-foreground rounded-full flex items-center justify-center text-lg font-bold transition-all"
               >
                 ✕
               </button>
 
-              <div className="mb-8">
+              <div className="mb-6">
                 <span className="text-[8px] font-black uppercase tracking-widest text-nectar-gold block mb-1 font-mono">
-                  Administración de Add-on
+                  Administración de Add-on · Sistema Completo
                 </span>
                 <h2 className="text-3xl font-black tracking-tight mb-2">Asignar {manageAddon.name}</h2>
                 <p className="text-xs text-muted leading-relaxed">
-                  Activa o desactiva este módulo para cualquier cliente activo del ecosistema. Los cambios se aprovisionarán automáticamente.
+                  Activa o desactiva este módulo para cualquier portal activo del ecosistema. Los cambios se aprovisionan de forma inmediata.
                 </p>
               </div>
 
-              <div className="space-y-4">
-                <div className="text-[10px] font-black uppercase tracking-widest text-nectar-gold border-b border-card-border pb-3 mb-2">
-                  Portales / Inquilinos Activos
-                </div>
-
-                <div className="space-y-3 max-h-[40vh] overflow-y-auto pr-1 text-left">
-                  {tenants
-                    .filter(t => t.is_active)
-                    .map(tenant => {
-                      const isActive = (tenant.active_addons || []).includes(manageAddon.id);
-                      const isUpdating = updatingTenantId === tenant.id;
-
-                      return (
-                        <div key={tenant.id} className="flex items-center justify-between p-4 rounded-2xl bg-background/50 border border-card-border/60 hover:border-nectar-gold/30 transition-all">
-                          <div className="min-w-0 pr-3">
-                            <span className="font-bold text-xs text-foreground block truncate">
-                              {tenant.name}
-                            </span>
-                            <span className="text-[8.5px] text-foreground/50 block font-semibold uppercase tracking-wider mt-0.5 font-mono">
-                              {tenant.subdomain}.nectarlabs.dev
-                            </span>
-                          </div>
-
-                          <button
-                            type="button"
-                            onClick={() => handleToggleTenantAddon(tenant.id, manageAddon.id, isActive)}
-                            disabled={isUpdating}
-                            className={`w-10 h-5 rounded-full p-0.5 transition-colors duration-300 focus:outline-none relative flex-shrink-0 ${isActive ? 'bg-nectar-gold' : 'bg-card-border'
-                              } ${isUpdating ? 'opacity-55 cursor-not-allowed' : ''}`}
-                          >
-                            <div className={`w-4 h-4 rounded-full bg-white shadow-md transform transition-transform duration-300 ${isActive ? 'translate-x-5' : 'translate-x-0'
-                              }`} />
-                          </button>
-                        </div>
-                      );
-                    })}
-                </div>
+              {/* Search bar */}
+              <div className="relative mb-5">
+                <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-foreground/30" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                <input
+                  id="tenant-search-admin"
+                  type="text"
+                  value={tenantSearch}
+                  onChange={(e) => setTenantSearch(e.target.value)}
+                  placeholder="Buscar por nombre o subdominio..."
+                  className="w-full bg-background/50 border border-card-border focus:border-nectar-gold/60 outline-none rounded-2xl pl-10 pr-4 py-3 text-xs text-foreground placeholder:text-muted/40 transition-colors"
+                />
+                {tenantSearch && (
+                  <button
+                    type="button"
+                    onClick={() => setTenantSearch('')}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-foreground/30 hover:text-foreground/60 transition-colors text-sm font-bold"
+                  >
+                    ✕
+                  </button>
+                )}
               </div>
 
-              <div className="flex justify-end pt-8 border-t border-card-border/50 mt-6">
+              <div className="space-y-3 max-h-[42vh] overflow-y-auto pr-1 text-left">
+                {(() => {
+                  const filtered = tenants
+                    .filter(t => t.is_active)
+                    .filter(t => {
+                      if (!tenantSearch.trim()) return true;
+                      const q = tenantSearch.toLowerCase();
+                      return t.name?.toLowerCase().includes(q) || t.subdomain?.toLowerCase().includes(q);
+                    });
+
+                  if (filtered.length === 0) {
+                    return (
+                      <div className="text-center py-10 text-foreground/30">
+                        <p className="text-xs font-bold uppercase tracking-widest">Sin resultados</p>
+                        <p className="text-[10px] mt-1">No hay portales activos que coincidan con la búsqueda.</p>
+                      </div>
+                    );
+                  }
+
+                  return filtered.map(tenant => {
+                    const isActive = (tenant.active_addons || []).includes(manageAddon.id);
+                    const isUpdating = updatingTenantId === tenant.id;
+
+                    return (
+                      <div key={tenant.id} className="flex items-center justify-between p-4 rounded-2xl bg-background/50 border border-card-border/60 hover:border-nectar-gold/30 transition-all">
+                        <div className="min-w-0 pr-3">
+                          <span className="font-bold text-xs text-foreground block truncate">
+                            {tenant.name}
+                          </span>
+                          <span className="text-[8.5px] text-foreground/50 block font-semibold uppercase tracking-wider mt-0.5 font-mono">
+                            {tenant.subdomain}.nectarlabs.dev
+                          </span>
+                          {isActive && (
+                            <span className="text-[7px] font-black uppercase tracking-widest text-emerald-400 bg-emerald-400/10 border border-emerald-400/20 px-2 py-0.5 rounded mt-1 inline-block">
+                              ✓ Módulo Activo
+                            </span>
+                          )}
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => handleToggleTenantAddon(tenant.id, manageAddon.id, isActive)}
+                          disabled={isUpdating}
+                          className={`w-10 h-5 rounded-full p-0.5 transition-colors duration-300 focus:outline-none relative flex-shrink-0 ${isActive ? 'bg-nectar-gold' : 'bg-card-border'} ${isUpdating ? 'opacity-55 cursor-not-allowed' : ''}`}
+                        >
+                          {isUpdating ? (
+                            <div className="w-4 h-4 rounded-full bg-white/70 flex items-center justify-center">
+                              <div className="w-2 h-2 border border-nectar-gold/60 border-t-transparent rounded-full animate-spin" />
+                            </div>
+                          ) : (
+                            <div className={`w-4 h-4 rounded-full bg-white shadow-md transform transition-transform duration-300 ${isActive ? 'translate-x-5' : 'translate-x-0'}`} />
+                          )}
+                        </button>
+                      </div>
+                    );
+                  });
+                })()}
+              </div>
+
+              <div className="flex items-center justify-between pt-6 border-t border-card-border/50 mt-6">
+                <span className="text-[9px] text-foreground/30 font-mono">
+                  {tenants.filter(t => t.is_active).length} portales activos en el sistema
+                </span>
                 <button
                   type="button"
-                  onClick={() => setManageAddon(null)}
+                  onClick={() => { setManageAddon(null); setTenantSearch(''); }}
                   className="px-8 py-3.5 text-xs font-black uppercase tracking-widest bg-nectar-gold text-background hover:scale-[1.02] active:scale-95 rounded-xl text-center shadow-lg transition-all"
                 >
                   Listo

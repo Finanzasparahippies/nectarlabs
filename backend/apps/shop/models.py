@@ -441,18 +441,33 @@ class AddOn(models.Model):
     stripe_yearly_price_id = models.CharField(max_length=100, blank=True, null=True, help_text="ID de precio anual de Stripe para suscripciones directas")
 
     def save(self, *args, **kwargs):
-        # Validate existing Stripe Price IDs and clear them if they don't exist on this Stripe account
+        # Validate existing Stripe Price IDs — clear them if they don't exist OR if amount changed
         if getattr(settings, "STRIPE_SECRET_KEY", None) and not getattr(settings, "TESTING", False):
             import stripe
             stripe.api_key = settings.STRIPE_SECRET_KEY
             if self.stripe_price_id:
                 try:
-                    stripe.Price.retrieve(self.stripe_price_id)
+                    existing = stripe.Price.retrieve(self.stripe_price_id)
+                    # Clear if price amount no longer matches to force regeneration
+                    if existing.unit_amount != int(self.monthly_price * 100):
+                        import logging
+                        logging.getLogger("apps").warning(
+                            f"AddOn {self.slug}: stripe_price_id {self.stripe_price_id} has unit_amount "
+                            f"{existing.unit_amount} but model has {int(self.monthly_price * 100)}. Clearing to regenerate."
+                        )
+                        self.stripe_price_id = None
                 except Exception:
                     self.stripe_price_id = None
             if self.stripe_yearly_price_id:
                 try:
-                    stripe.Price.retrieve(self.stripe_yearly_price_id)
+                    existing_yearly = stripe.Price.retrieve(self.stripe_yearly_price_id)
+                    if existing_yearly.unit_amount != int(self.yearly_price * 100):
+                        import logging
+                        logging.getLogger("apps").warning(
+                            f"AddOn {self.slug}: stripe_yearly_price_id {self.stripe_yearly_price_id} has unit_amount "
+                            f"{existing_yearly.unit_amount} but model has {int(self.yearly_price * 100)}. Clearing to regenerate."
+                        )
+                        self.stripe_yearly_price_id = None
                 except Exception:
                     self.stripe_yearly_price_id = None
 

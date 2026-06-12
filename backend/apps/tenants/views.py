@@ -18,6 +18,8 @@ class TenantViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         if user.is_staff or user.role == 'ADMIN':
+            if self.request.query_params.get('all') == 'true':
+                return Tenant.objects.filter(is_active=True).order_by('-created_at')
             return Tenant.objects.all().order_by('-created_at')
         return Tenant.objects.filter(owner=user).order_by('-created_at')
 

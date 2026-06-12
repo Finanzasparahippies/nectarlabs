@@ -169,6 +169,9 @@ export default function BusinessCommander({ stats, installments, setInstallments
     { quantity: 1, unit_price: 0, description: '', product_key: '43231500', unit_key: 'E48', unit_name: 'Unidad de servicio' }
   ]);
   const [isSubmittingManualInvoice, setIsSubmittingManualInvoice] = useState(false);
+  const [activeSuggestionIdx, setActiveSuggestionIdx] = useState<number | null>(null);
+  const [suggestedProducts, setSuggestedProducts] = useState<any[]>([]);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
 
   // Kanban states
   const [leads, setLeads] = useState<any[]>([]);
@@ -185,6 +188,41 @@ export default function BusinessCommander({ stats, installments, setInstallments
     }, 250);
     return () => clearTimeout(handler);
   }, [kanbanSearch]);
+
+  // Close concept search dropdown on click outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('.concept-search-container')) {
+        setActiveSuggestionIdx(null);
+        setSuggestedProducts([]);
+      }
+    };
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, []);
+
+  const handleDescriptionChange = async (idx: number, val: string) => {
+    // Update the description state first
+    setManualItems(prev => prev.map((it, i) => i === idx ? { ...it, description: val } : it));
+    
+    if (val.trim().length < 2) {
+      setSuggestedProducts([]);
+      setActiveSuggestionIdx(null);
+      return;
+    }
+
+    setActiveSuggestionIdx(idx);
+    setLoadingSuggestions(true);
+    try {
+      const data = await fetcher(`/billing/sat/products/?q=${encodeURIComponent(val)}`);
+      setSuggestedProducts(data || []);
+    } catch (err) {
+      console.error('Error fetching SAT product suggestions:', err);
+    } finally {
+      setLoadingSuggestions(false);
+    }
+  };
 
   // Sales Admin Panel state
   const [commissions, setCommissions] = useState<any[]>([]);
@@ -666,6 +704,8 @@ export default function BusinessCommander({ stats, installments, setInstallments
         unit_key: 'E48',
         unit_name: 'Unidad de servicio'
       }]);
+      setActiveSuggestionIdx(null);
+      setSuggestedProducts([]);
 
       if (activeTab === 'invoices') {
         const res = await fetcher('/billing/invoices/');
@@ -4032,7 +4072,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
                       )}
 
                       <div className="grid grid-cols-4 gap-2">
-                        <div className="col-span-2 space-y-1">
+                        <div className="col-span-2 space-y-1 relative concept-search-container">
                           <label className="text-[7px] font-black uppercase tracking-widest opacity-40">Descripción</label>
                           <input
                             type="text"
@@ -4040,11 +4080,49 @@ export default function BusinessCommander({ stats, installments, setInstallments
                             className="w-full px-3 py-1.5 bg-background border border-card-border rounded-lg text-[9px] font-bold text-foreground"
                             placeholder="ej. Licencia Software o Ajuste de Cotización"
                             value={item.description}
-                            onChange={(e) => {
-                              const newDesc = e.target.value;
-                              setManualItems(prev => prev.map((it, i) => i === idx ? { ...it, description: newDesc } : it));
+                            onChange={(e) => handleDescriptionChange(idx, e.target.value)}
+                            onFocus={() => {
+                              if (item.description.trim().length >= 2) {
+                                handleDescriptionChange(idx, item.description);
+                              }
                             }}
                           />
+                          {activeSuggestionIdx === idx && (loadingSuggestions || suggestedProducts.length > 0) && (
+                            <div className="absolute left-0 right-0 mt-1 z-50 max-h-48 overflow-y-auto rounded-xl border border-white/10 bg-[#050a06]/95 backdrop-blur-md shadow-2xl py-1.5 custom-scrollbar">
+                              {loadingSuggestions ? (
+                                <div className="flex items-center justify-center py-3 text-[8px] font-black uppercase tracking-wider text-white/40">
+                                  <span className="w-3 h-3 rounded-full border-2 border-t-white border-white/10 animate-spin mr-2"></span>
+                                  Buscando catálogo SAT...
+                                </div>
+                              ) : (
+                                suggestedProducts.map((prod) => (
+                                  <button
+                                    key={prod.id || prod.code}
+                                    type="button"
+                                    onClick={() => {
+                                      setManualItems(prev => prev.map((it, i) => i === idx ? {
+                                        ...it,
+                                        description: prod.description,
+                                        product_key: prod.code
+                                      } : it));
+                                      setActiveSuggestionIdx(null);
+                                      setSuggestedProducts([]);
+                                    }}
+                                    className="w-full text-left px-3 py-1.5 hover:bg-white/5 transition-colors flex flex-col gap-0.5 border-b border-white/[0.02] last:border-0 cursor-pointer"
+                                  >
+                                    <div className="flex justify-between items-center w-full">
+                                      <span className="text-[8px] font-black font-mono tracking-wider text-nectar-gold">
+                                        {prod.code}
+                                      </span>
+                                    </div>
+                                    <span className="text-[8.5px] text-white/80 font-medium line-clamp-1 uppercase">
+                                      {prod.description}
+                                    </span>
+                                  </button>
+                                ))
+                              )}
+                            </div>
+                          )}
                         </div>
                         <div className="space-y-1">
                           <label className="text-[7px] font-black uppercase tracking-widest opacity-40">Cant.</label>

@@ -62,9 +62,7 @@ class VerifyEmailView(APIView):
         token = request.query_params.get('token')
         
         frontend_url = settings.FRONTEND_URL
-        # Dynamic environment redirect: if settings.FRONTEND_URL is configured as localhost
-        # but the request is coming from a remote staging/production domain, use the request host
-        # to ensure the user redirects to the correct environment.
+        # Dynamic environment redirect
         request_host = request.get_host()
         if request_host and not any(h in request_host.lower() for h in ["localhost", "127.0.0.1", "testserver", "backend"]):
             if any(h in frontend_url.lower() for h in ["localhost", "127.0.0.1"]):
@@ -73,19 +71,34 @@ class VerifyEmailView(APIView):
 
         if not uidb64 or not token:
             return redirect(f"{frontend_url}/login?verified=false&error=missing_params")
-            
+
+        # Redirect to frontend verification page — frontend will POST to /confirm-email/ to complete the flow
+        return redirect(f"{frontend_url}/verify-email?uid={uidb64}&token={token}")
+
+
+class ConfirmEmailView(APIView):
+    """POST endpoint called by the frontend verify-email page to complete email verification."""
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request, *args, **kwargs):
+        uidb64 = request.data.get('uid')
+        token = request.data.get('token')
+
+        if not uidb64 or not token:
+            return Response({'success': False, 'error': 'missing_params'}, status=400)
+
         try:
             uid = force_str(urlsafe_base64_decode(uidb64))
             user = User.objects.get(pk=uid)
         except (TypeError, ValueError, OverflowError, User.DoesNotExist):
             user = None
-            
+
         if user is not None and default_token_generator.check_token(user, token):
             user.is_email_verified = True
             user.save()
-            return redirect(f"{frontend_url}/login?verified=true")
+            return Response({'success': True})
         else:
-            return redirect(f"{frontend_url}/login?verified=false&error=invalid_token")
+            return Response({'success': False, 'error': 'invalid_token'}, status=400)
 
 class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer

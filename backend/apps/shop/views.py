@@ -497,11 +497,17 @@ class ContractViewSet(viewsets.ModelViewSet):
                     import logging
                     logging.error(f"Error auto-healing tenant: {e}", exc_info=True)
 
-        # El administrador (desarrollador) puede ver todos los contratos
-        if self.request.user.is_staff:
+        user = self.request.user
+        if user.is_staff or getattr(user, 'role', '') == 'ADMIN':
             return Contract.objects.all()
+        elif getattr(user, 'role', '') == 'BUSINESS':
+            return Contract.objects.filter(user__tenant__in=user.owned_tenants.all())
+        elif getattr(user, 'role', '') == 'STAFF':
+            if user.tenant:
+                return Contract.objects.filter(user__tenant=user.tenant)
+            return Contract.objects.filter(id=user.id)
         # Los clientes solo ven sus propios contratos
-        return Contract.objects.filter(user=self.request.user)
+        return Contract.objects.filter(user=user)
 
     def perform_create(self, serializer):
         # Asignar el usuario actual al contrato
