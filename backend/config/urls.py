@@ -14,7 +14,11 @@ from apps.blog.views import PostViewSet
 from apps.tickets.views import TicketViewSet, SupportChatViewSet
 from apps.users.views import UserViewSet
 from apps.tenants.views import TenantViewSet, public_config, guest_auth
-from apps.billing.views import TaxProfileView, InvoiceViewSet, BillingInfoView, BuyStampsView, BuyEmailCreditsView, SATProductKeySearchView, SATUnitKeySearchView
+from apps.billing.views import (
+    TaxProfileView, InvoiceViewSet, BillingInfoView, BuyStampsView,
+    BuyEmailCreditsView, SATProductKeySearchView, SATUnitKeySearchView,
+    UploadCSDView, CSDStatusView, FacturapiCustomerView
+)
 
 router = DefaultRouter()
 router.register(r'plans', PlanViewSet)
@@ -77,6 +81,10 @@ urlpatterns = [
     path('api/billing/buy-email-credits/', BuyEmailCreditsView.as_view(), name='billing_buy_email_credits'),
     path('api/billing/sat/products/', SATProductKeySearchView.as_view(), name='billing_sat_products'),
     path('api/billing/sat/units/', SATUnitKeySearchView.as_view(), name='billing_sat_units'),
+    path('api/billing/upload-csd/', UploadCSDView.as_view(), name='billing_upload_csd'),
+    path('api/billing/csd-status/', CSDStatusView.as_view(), name='billing_csd_status'),
+    path('api/billing/facturapi-customers/', FacturapiCustomerView.as_view(), name='billing_facturapi_customers'),
+    path('api/billing/facturapi-customers/<str:pac_customer_id>/', FacturapiCustomerView.as_view(), name='billing_facturapi_customer_detail'),
 ]
 
 

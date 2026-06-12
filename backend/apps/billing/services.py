@@ -25,6 +25,29 @@ class PACServiceBase:
         """Sube y resguarda los sellos CSD (.cer, .key) en el portal del PAC"""
         raise NotImplementedError()
 
+    def get_certificate_status(self, organization_id):
+        """Consulta el estado y vigencia del certificado CSD cargado en el PAC.
+        Retorna dict: {has_certificate, valid_from, valid_to, serial}"""
+        raise NotImplementedError()
+
+    def create_customer(self, organization_id, customer_data):
+        """Crea un receptor/cliente en el PAC para la organización del tenant.
+        customer_data: {rfc, legal_name, tax_system, email, zip}
+        Retorna el ID del cliente en el PAC."""
+        raise NotImplementedError()
+
+    def update_customer(self, organization_id, pac_customer_id, customer_data):
+        """Actualiza los datos de un receptor/cliente existente en el PAC."""
+        raise NotImplementedError()
+
+    def delete_customer(self, organization_id, pac_customer_id):
+        """Elimina un receptor/cliente del catálogo del PAC."""
+        raise NotImplementedError()
+
+    def list_customers(self, organization_id):
+        """Lista los receptores/clientes del catálogo del PAC para la organización."""
+        raise NotImplementedError()
+
     def create_invoice(self, invoice, tax_profile, customer_info, items, is_parent_to_tenant=False):
         """Genera y timbra una factura CFDI 4.0 en el PAC"""
         raise NotImplementedError()
@@ -51,6 +74,35 @@ class MockPACService(PACServiceBase):
         if password == "invalid_sello":
             raise PACError("Clave de CSD incorrecta o certificado dañado.")
         return True
+
+    def get_certificate_status(self, organization_id):
+        logger.info(f"[MockPAC] Consultando estado del certificado para org {organization_id}")
+        # Simula que hay un certificado de demo activo
+        return {
+            "has_certificate": True,
+            "valid_from": "2024-01-01T00:00:00.000Z",
+            "valid_to": "2028-12-31T23:59:59.000Z",
+            "serial": "MOCK-CSD-001",
+        }
+
+    def create_customer(self, organization_id, customer_data):
+        logger.info(f"[MockPAC] Creando cliente {customer_data.get('rfc')} en org {organization_id}")
+        return f"cus_mock_{uuid.uuid4().hex[:12]}"
+
+    def update_customer(self, organization_id, pac_customer_id, customer_data):
+        logger.info(f"[MockPAC] Actualizando cliente {pac_customer_id} en org {organization_id}")
+        return True
+
+    def delete_customer(self, organization_id, pac_customer_id):
+        logger.info(f"[MockPAC] Eliminando cliente {pac_customer_id} de org {organization_id}")
+        return True
+
+    def list_customers(self, organization_id):
+        logger.info(f"[MockPAC] Listando clientes de org {organization_id}")
+        return [
+            {"id": "cus_mock_001", "legal_name": "CLIENTE DEMO SA DE CV", "tax_id": "CDM860329AAA",
+             "tax_system": "601", "email": "demo@cliente.com", "address": {"zip": "06000"}},
+        ]
 
     def create_invoice(self, invoice, tax_profile, customer_info, items, is_parent_to_tenant=False):
         org_id = "parent" if is_parent_to_tenant else (tax_profile.facturapi_organization_id if tax_profile else "unknown")
@@ -103,11 +155,18 @@ class FacturapiPACService(PACServiceBase):
     """
     def __init__(self):
         self.api_key = getattr(settings, 'PAC_API_KEY', '')
-        self.base_url = "https://www.facturapi.io/v2" 
+        self.base_url = "https://www.facturapi.io/v2"
         self.headers = {
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json"
         }
+
+    def _org_headers(self, organization_id):
+        """Headers con el selector de organización subordinada para Facturapi v2."""
+        h = self.headers.copy()
+        if organization_id:
+            h["Facturapi-Organization"] = organization_id
+        return h
 
     def create_organization(self, tax_profile):
         # 1. Crear organización en Facturapi v2 con su nombre comercial/fiscal
@@ -145,20 +204,106 @@ class FacturapiPACService(PACServiceBase):
     def upload_sello(self, organization_id, cer_file, key_file, password):
         # En v2 el endpoint cambió de /sello a /certificate
         url = f"{self.base_url}/organizations/{organization_id}/certificate"
-        # Facturapi requiere multipart form data para los sellos
         files = {
             "cer": (cer_file.name, cer_file.read(), "application/x-x509-ca-cert"),
             "key": (key_file.name, key_file.read(), "application/octet-stream"),
         }
         data = {"password": password}
         try:
-            # Facturapi requiere enviar archivos con Multipart
             response = requests.put(url, files=files, data=data, headers={"Authorization": f"Bearer {self.api_key}"}, timeout=15)
             if response.status_code not in [200, 201, 204]:
                 raise PACError(f"Error al subir sellos CSD a Facturapi: {response.text}")
             return True
+        except PACError:
+            raise
         except Exception as e:
             raise PACError(f"Fallo de conexión para carga de sellos: {e}")
+
+    def get_certificate_status(self, organization_id):
+        url = f"{self.base_url}/organizations/{organization_id}/certificate"
+        try:
+            response = requests.get(url, headers={"Authorization": f"Bearer {self.api_key}"}, timeout=10)
+            if response.status_code == 404:
+                return {"has_certificate": False, "valid_from": None, "valid_to": None, "serial": None}
+            if response.status_code not in [200, 201]:
+                raise PACError(f"Error al consultar certificado en Facturapi: {response.text}")
+            data = response.json()
+            return {
+                "has_certificate": True,
+                "valid_from": data.get("valid_from"),
+                "valid_to": data.get("valid_to"),
+                "serial": data.get("serial_number"),
+            }
+        except PACError:
+            raise
+        except Exception as e:
+            raise PACError(f"Fallo de conexión al consultar certificado: {e}")
+
+    def create_customer(self, organization_id, customer_data):
+        url = f"{self.base_url}/customers"
+        payload = {
+            "legal_name": customer_data.get("legal_name"),
+            "tax_id": customer_data.get("rfc"),
+            "tax_system": customer_data.get("tax_system", "601"),
+            "email": customer_data.get("email"),
+            "phone": customer_data.get("phone", ""),
+            "address": {"zip": customer_data.get("zip", "")},
+        }
+        try:
+            response = requests.post(url, json=payload, headers=self._org_headers(organization_id), timeout=10)
+            if response.status_code not in [200, 201]:
+                raise PACError(f"Error al crear cliente en Facturapi: {response.text}")
+            return response.json().get("id")
+        except PACError:
+            raise
+        except Exception as e:
+            raise PACError(f"Fallo de conexión al crear cliente: {e}")
+
+    def update_customer(self, organization_id, pac_customer_id, customer_data):
+        url = f"{self.base_url}/customers/{pac_customer_id}"
+        payload = {
+            "legal_name": customer_data.get("legal_name"),
+            "tax_id": customer_data.get("rfc"),
+            "tax_system": customer_data.get("tax_system", "601"),
+            "email": customer_data.get("email"),
+            "phone": customer_data.get("phone", ""),
+            "address": {"zip": customer_data.get("zip", "")},
+        }
+        try:
+            response = requests.put(url, json=payload, headers=self._org_headers(organization_id), timeout=10)
+            if response.status_code not in [200, 201, 204]:
+                raise PACError(f"Error al actualizar cliente en Facturapi: {response.text}")
+            return True
+        except PACError:
+            raise
+        except Exception as e:
+            raise PACError(f"Fallo de conexión al actualizar cliente: {e}")
+
+    def delete_customer(self, organization_id, pac_customer_id):
+        url = f"{self.base_url}/customers/{pac_customer_id}"
+        try:
+            response = requests.delete(url, headers=self._org_headers(organization_id), timeout=10)
+            if response.status_code not in [200, 204]:
+                raise PACError(f"Error al eliminar cliente en Facturapi: {response.text}")
+            return True
+        except PACError:
+            raise
+        except Exception as e:
+            raise PACError(f"Fallo de conexión al eliminar cliente: {e}")
+
+    def list_customers(self, organization_id):
+        url = f"{self.base_url}/customers"
+        try:
+            response = requests.get(url, headers=self._org_headers(organization_id), timeout=10)
+            if response.status_code not in [200, 201]:
+                raise PACError(f"Error al listar clientes de Facturapi: {response.text}")
+            data = response.json()
+            # Facturapi v2 devuelve {data: [...], total_pages: N, page: N}
+            return data.get("data", data) if isinstance(data, dict) else data
+        except PACError:
+            raise
+        except Exception as e:
+            raise PACError(f"Fallo de conexión al listar clientes: {e}")
 
     def create_invoice(self, invoice, tax_profile, customer_info, items, is_parent_to_tenant=False):
         # Para timbrar a nombre de la organización subordinada, Facturapi requiere el header "Facturapi-Organization"

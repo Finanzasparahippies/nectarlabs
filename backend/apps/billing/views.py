@@ -749,3 +749,211 @@ class SATUnitKeySearchView(APIView):
         
         serializer = SATUnitKeySerializer(qs, many=True)
         return Response(serializer.data)
+
+
+class UploadCSDView(BillingTenantMixin, APIView):
+    """
+    Endpoint dedicado para subir los archivos CSD (.cer + .key + password)
+    directamente al PAC sin modificar ningún dato fiscal del TaxProfile.
+    """
+    permission_classes = [permissions.IsAuthenticated, HasAddOnPermission]
+    addon_slug = 'mexico-invoicing'
+
+    def post(self, request):
+        tenant = self.get_tenant()
+        profile = TaxProfile.objects.filter(tenant=tenant).first()
+        if not profile:
+            return Response(
+                {"error": "Debes configurar el perfil fiscal antes de subir los sellos CSD."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        if not profile.facturapi_organization_id:
+            return Response(
+                {"error": "La organización del tenant no está registrada en Facturapi. Guarda primero el perfil fiscal."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        cer_file = request.FILES.get('cer_file')
+        key_file = request.FILES.get('key_file')
+        password = request.data.get('password', '').strip()
+
+        if not cer_file or not key_file or not password:
+            return Response(
+                {"error": "Se requieren los tres campos: cer_file, key_file y password."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Validar extensiones de archivo en el servidor
+        if not cer_file.name.lower().endswith('.cer'):
+            return Response({"error": "El archivo de certificado debe tener extensión .cer"}, status=400)
+        if not key_file.name.lower().endswith('.key'):
+            return Response({"error": "El archivo de llave privada debe tener extensión .key"}, status=400)
+
+        pac = get_pac_service()
+        try:
+            pac.upload_sello(profile.facturapi_organization_id, cer_file, key_file, password)
+            return Response({
+                "status": "ok",
+                "message": "Sellos CSD cargados y registrados en Facturapi con éxito."
+            })
+        except PACError as e:
+            return Response(
+                {"error": f"Error al subir sellos CSD al PAC: {e}"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+
+class CSDStatusView(BillingTenantMixin, APIView):
+    """
+    Consulta el estado y vigencia del certificado CSD actualmente
+    cargado en Facturapi para la organización del tenant.
+    """
+    permission_classes = [permissions.IsAuthenticated, HasAddOnPermission]
+    addon_slug = 'mexico-invoicing'
+
+    def get(self, request):
+        tenant = self.get_tenant()
+        profile = TaxProfile.objects.filter(tenant=tenant).first()
+        if not profile or not profile.facturapi_organization_id:
+            return Response({
+                "has_certificate": False,
+                "valid_from": None,
+                "valid_to": None,
+                "serial": None,
+                "detail": "No hay organización registrada en el PAC."
+            })
+        pac = get_pac_service()
+        try:
+            cert_status = pac.get_certificate_status(profile.facturapi_organization_id)
+            return Response(cert_status)
+        except PACError as e:
+            return Response({
+                "has_certificate": False,
+                "valid_from": None,
+                "valid_to": None,
+                "serial": None,
+                "detail": str(e)
+            })
+
+
+class FacturapiCustomerView(BillingTenantMixin, APIView):
+    """
+    CRUD de clientes/receptores fiscales en el catálogo de Facturapi
+    de la organización subordinada del tenant.
+
+    GET    /billing/facturapi-customers/           → lista clientes
+    POST   /billing/facturapi-customers/           → crea cliente
+    PUT    /billing/facturapi-customers/<pac_id>/  → actualiza cliente
+    DELETE /billing/facturapi-customers/<pac_id>/  → elimina cliente
+    """
+    permission_classes = [permissions.IsAuthenticated, HasAddOnPermission]
+    addon_slug = 'mexico-invoicing'
+
+    def _get_validated_profile(self, tenant):
+        profile = TaxProfile.objects.filter(tenant=tenant).first()
+        if not profile or not profile.facturapi_organization_id:
+            return None, Response(
+                {"error": "El perfil fiscal no está configurado o no tiene organización en Facturapi."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        return profile, None
+
+    def _validate_customer_data(self, data):
+        errors = {}
+        rfc = (data.get('rfc') or '').strip().upper()
+        if not rfc or len(rfc) not in [12, 13]:
+            errors['rfc'] = 'RFC inválido (debe tener 12 o 13 caracteres).'
+        if not data.get('legal_name', '').strip():
+            errors['legal_name'] = 'La razón social es obligatoria.'
+        if not data.get('zip', '').strip():
+            errors['zip'] = 'El código postal es obligatorio.'
+        return errors, rfc
+
+    def get(self, request):
+        tenant = self.get_tenant()
+        profile, err = self._get_validated_profile(tenant)
+        if err:
+            return err
+        pac = get_pac_service()
+        try:
+            customers = pac.list_customers(profile.facturapi_organization_id)
+            return Response({"customers": customers})
+        except PACError as e:
+            return Response({"error": str(e)}, status=status.HTTP_502_BAD_GATEWAY)
+
+    def post(self, request):
+        tenant = self.get_tenant()
+        profile, err = self._get_validated_profile(tenant)
+        if err:
+            return err
+
+        data = request.data
+        errors, rfc = self._validate_customer_data(data)
+        if errors:
+            return Response({"errors": errors}, status=status.HTTP_400_BAD_REQUEST)
+
+        customer_data = {
+            "rfc": rfc,
+            "legal_name": data.get('legal_name', '').strip(),
+            "tax_system": data.get('tax_system', '601').strip(),
+            "email": data.get('email', '').strip(),
+            "phone": data.get('phone', '').strip(),
+            "zip": data.get('zip', '').strip(),
+        }
+        pac = get_pac_service()
+        try:
+            pac_id = pac.create_customer(profile.facturapi_organization_id, customer_data)
+            return Response({
+                "pac_customer_id": pac_id,
+                "message": "Cliente registrado en Facturapi con éxito.",
+                "customer": {**customer_data, "id": pac_id}
+            }, status=status.HTTP_201_CREATED)
+        except PACError as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    def put(self, request, pac_customer_id=None):
+        if not pac_customer_id:
+            return Response({"error": "Se requiere el ID del cliente en Facturapi."}, status=400)
+        tenant = self.get_tenant()
+        profile, err = self._get_validated_profile(tenant)
+        if err:
+            return err
+
+        data = request.data
+        errors, rfc = self._validate_customer_data(data)
+        if errors:
+            return Response({"errors": errors}, status=status.HTTP_400_BAD_REQUEST)
+
+        customer_data = {
+            "rfc": rfc,
+            "legal_name": data.get('legal_name', '').strip(),
+            "tax_system": data.get('tax_system', '601').strip(),
+            "email": data.get('email', '').strip(),
+            "phone": data.get('phone', '').strip(),
+            "zip": data.get('zip', '').strip(),
+        }
+        pac = get_pac_service()
+        try:
+            pac.update_customer(profile.facturapi_organization_id, pac_customer_id, customer_data)
+            return Response({
+                "pac_customer_id": pac_customer_id,
+                "message": "Cliente actualizado en Facturapi con éxito.",
+                "customer": {**customer_data, "id": pac_customer_id}
+            })
+        except PACError as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pac_customer_id=None):
+        if not pac_customer_id:
+            return Response({"error": "Se requiere el ID del cliente en Facturapi."}, status=400)
+        tenant = self.get_tenant()
+        profile, err = self._get_validated_profile(tenant)
+        if err:
+            return err
+
+        pac = get_pac_service()
+        try:
+            pac.delete_customer(profile.facturapi_organization_id, pac_customer_id)
+            return Response({"message": "Cliente eliminado del catálogo de Facturapi."})
+        except PACError as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
