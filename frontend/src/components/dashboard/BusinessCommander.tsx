@@ -4333,6 +4333,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
               </form>
             </div>
           </div>
+        )}
           <CreateCustomerModal
             isOpen={showNewUserModal}
             onClose={() => setShowNewUserModal(false)}
