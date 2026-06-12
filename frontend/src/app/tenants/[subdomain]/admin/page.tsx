@@ -7,6 +7,7 @@ import Toast from '@/components/ui/Toast';
 import ThemeToggle from '@/components/ThemeToggle';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import SATAutocomplete from '@/components/ui/SATAutocomplete';
+import CreateCustomerModal from '@/components/ui/CreateCustomerModal';
 
 interface TenantConfig {
   id: string;
@@ -1635,6 +1636,8 @@ export default function TenantAdminPage() {
                           onChange={(code) => setDefaultProductKey(code)}
                           primaryColor={primaryColor}
                           placeholder="Buscar clave de producto..."
+                          subdomain={subdomain}
+                          tenantId={tenantConfig?.id}
                         />
                       </div>
 
@@ -1650,6 +1653,8 @@ export default function TenantAdminPage() {
                             }}
                             primaryColor={primaryColor}
                             placeholder="Buscar clave de unidad..."
+                            subdomain={subdomain}
+                            tenantId={tenantConfig?.id}
                           />
                         </div>
 
@@ -2688,24 +2693,39 @@ export default function TenantAdminPage() {
                     ) : (
                       /* Search input + filtered results */
                       <div className="space-y-2 relative">
-                        <div className="relative">
-                          <input
-                            type="text"
-                            value={customerSearchQuery}
-                            onChange={(e) => setCustomerSearchQuery(e.target.value)}
-                            placeholder="Buscar cliente por nombre o email..."
-                            className="w-full bg-background border border-white/10 rounded-xl px-4 py-2.5 pl-10 text-xs focus:outline-none focus:border-[#C68A1E] text-foreground placeholder:text-white/20 admin-input font-bold"
-                          />
-                          <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/30 select-none text-[10px]">🔍</div>
-                          {customerSearchQuery && (
-                            <button
-                              type="button"
-                              onClick={() => setCustomerSearchQuery('')}
-                              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-white/40 hover:text-white text-xs font-bold"
-                            >
-                              ×
-                            </button>
-                          )}
+                        <div className="flex gap-2">
+                          <div className="flex-1 relative">
+                            <input
+                              type="text"
+                              value={customerSearchQuery}
+                              onChange={(e) => setCustomerSearchQuery(e.target.value)}
+                              placeholder="Buscar cliente por nombre o email..."
+                              className="w-full bg-background border border-white/10 rounded-xl px-4 py-2.5 pl-10 text-xs focus:outline-none focus:border-[#C68A1E] text-foreground placeholder:text-white/20 admin-input font-bold"
+                            />
+                            <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/30 select-none text-[10px]">🔍</div>
+                            {customerSearchQuery && (
+                              <button
+                                type="button"
+                                onClick={() => setCustomerSearchQuery('')}
+                                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-white/40 hover:text-white text-xs font-bold"
+                              >
+                                ×
+                              </button>
+                            )}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setNewClientEmail('');
+                              setNewClientUsername('');
+                              setNewClientPassword('');
+                              setNewClientEmailVerified(true);
+                              setShowNewClientModal(true);
+                            }}
+                            className="px-4 py-2.5 bg-white/10 hover:bg-white/20 border border-white/10 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all text-white cursor-pointer font-bold whitespace-nowrap shrink-0"
+                          >
+                            + Nuevo
+                          </button>
                         </div>
                         
                         {customerSearchQuery.trim() !== '' && (
@@ -2853,7 +2873,7 @@ export default function TenantAdminPage() {
                   </button>
                 </div>
 
-                <div className="space-y-3 max-h-[200px] overflow-y-auto pr-2 custom-scrollbar">
+                <div className="space-y-3">
                   {manualItems.map((item, idx) => (
                     <div key={idx} className="p-4 bg-background border border-white/5 rounded-xl space-y-3 relative text-left admin-card">
                       {manualItems.length > 1 && (
@@ -2963,6 +2983,8 @@ export default function TenantAdminPage() {
                             }}
                             primaryColor={primaryColor}
                             placeholder="Buscar producto..."
+                            subdomain={subdomain}
+                            tenantId={tenantConfig?.id}
                           />
                         </div>
                         <div className="space-y-1">
@@ -2975,6 +2997,8 @@ export default function TenantAdminPage() {
                             }}
                             primaryColor={primaryColor}
                             placeholder="Buscar unidad..."
+                            subdomain={subdomain}
+                            tenantId={tenantConfig?.id}
                           />
                         </div>
                         <div className="space-y-1">
@@ -3044,106 +3068,25 @@ export default function TenantAdminPage() {
         </div>
       )}
 
-      {showNewClientModal && tenantConfig && (
-        <div
-          onClick={() => setShowNewClientModal(false)}
-          className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-6 cursor-pointer overflow-y-auto"
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              backgroundColor: tenantConfig.card_bg_color || '#050a06',
-              borderColor: tenantConfig.border_color || '#151F18'
-            }}
-            className="w-full max-w-md border p-8 md:p-10 rounded-[3rem] shadow-2xl relative space-y-6 text-left cursor-default animate-in fade-in zoom-in-95 duration-200 admin-card"
-          >
-            <button
-              onClick={() => setShowNewClientModal(false)}
-              className="absolute top-6 right-6 w-8 h-8 rounded-full border border-white/10 text-white/40 hover:text-white flex items-center justify-center text-xl font-bold cursor-pointer admin-border"
-            >
-              ×
-            </button>
-
-            <div>
-              <span className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold text-[8px] font-black uppercase tracking-widest rounded-full border border-nectar-gold/20">
-                Clientes
-              </span>
-              <h2 className="text-2xl font-black tracking-tighter mt-4 leading-none text-white">
-                Nuevo Cliente / Usuario
-              </h2>
-              <p className="text-[10px] opacity-40 uppercase tracking-widest mt-1">
-                Registra un nuevo cliente para este portal. El rol será automáticamente asignado como Cliente.
-              </p>
-            </div>
-
-            <form onSubmit={handleCreateClient} className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Email Principal *</label>
-                <input
-                  type="email"
-                  required
-                  placeholder="cliente@correo.com"
-                  value={newClientEmail}
-                  onChange={(e) => setNewClientEmail(e.target.value)}
-                  className="w-full bg-background border border-white/10 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-nectar-gold text-foreground admin-input"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Nombre de Usuario (Opcional)</label>
-                <input
-                  type="text"
-                  placeholder="ej. clientejuan"
-                  value={newClientUsername}
-                  onChange={(e) => setNewClientUsername(e.target.value)}
-                  className="w-full bg-background border border-white/10 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-nectar-gold text-foreground admin-input"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Contraseña (Opcional)</label>
-                <input
-                  type="password"
-                  placeholder="••••••••"
-                  value={newClientPassword}
-                  onChange={(e) => setNewClientPassword(e.target.value)}
-                  className="w-full bg-background border border-white/10 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-nectar-gold text-foreground font-mono admin-input"
-                />
-              </div>
-
-              <div className="flex items-center gap-2 pt-2">
-                <input
-                  type="checkbox"
-                  id="newClientEmailVerified"
-                  checked={newClientEmailVerified}
-                  onChange={(e) => setNewClientEmailVerified(e.target.checked)}
-                  className="w-4 h-4 bg-background border border-white/10 rounded accent-nectar-gold"
-                />
-                <label htmlFor="newClientEmailVerified" className="text-[9px] font-black uppercase tracking-widest opacity-60 cursor-pointer text-white/80">
-                  Email Verificado
-                </label>
-              </div>
-
-              <div className="pt-6 border-t border-white/10 flex justify-end gap-3">
-                <button
-                  type="button"
-                  onClick={() => setShowNewClientModal(false)}
-                  className="px-5 py-3 border border-white/10 hover:bg-white/5 text-[9px] font-black uppercase tracking-widest rounded-xl transition-all cursor-pointer text-white/80"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmittingNewClient}
-                  className="px-6 py-3 bg-nectar-gold text-background text-[9px] font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 disabled:opacity-40 disabled:scale-100 transition-all font-bold shadow-lg shadow-nectar-gold/25 cursor-pointer"
-                >
-                  {isSubmittingNewClient ? 'Creando...' : 'Crear Cliente'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <CreateCustomerModal
+        isOpen={showNewClientModal}
+        onClose={() => setShowNewClientModal(false)}
+        onSuccess={async (newCustomer) => {
+          await loadBillingData();
+          if (newCustomer && newCustomer.id) {
+            setSelectedCustomer(newCustomer);
+            setManualEmail(newCustomer.email);
+            setManualRazonSocial(newCustomer.username || '');
+          }
+        }}
+        tenantId={tenantConfig?.id}
+        primaryColor={primaryColor}
+        themeConfig={{
+          cardBgColor: tenantConfig?.card_bg_color || '#050a06',
+          borderColor: tenantConfig?.border_color || '#151F18'
+        }}
+        showToast={showToast}
+      />
 
       {showCancelModal && tenantConfig && (
         <div

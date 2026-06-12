@@ -9,6 +9,8 @@ interface SATAutocompleteProps {
   mode: 'product' | 'unit';
   placeholder?: string;
   primaryColor?: string;
+  subdomain?: string;
+  tenantId?: string;
 }
 
 export default function SATAutocomplete({
@@ -16,7 +18,9 @@ export default function SATAutocomplete({
   onChange,
   mode,
   placeholder = 'Buscar...',
-  primaryColor = '#C68A1E'
+  primaryColor = '#C68A1E',
+  subdomain,
+  tenantId
 }: SATAutocompleteProps) {
   const [query, setQuery] = useState('');
   const [isOpen, setIsOpen] = useState(false);
@@ -25,6 +29,18 @@ export default function SATAutocomplete({
   const [selectedLabel, setSelectedLabel] = useState('');
   const containerRef = useRef<HTMLDivElement>(null);
   const searchTimeout = useRef<NodeJS.Timeout | null>(null);
+
+  // Helper to build query URL with tenant context
+  const buildUrl = (endpoint: string, qParam: string) => {
+    let url = `${endpoint}?q=${encodeURIComponent(qParam)}`;
+    if (subdomain) {
+      url += `&subdomain=${encodeURIComponent(subdomain)}`;
+    }
+    if (tenantId) {
+      url += `&tenant_id=${encodeURIComponent(tenantId)}`;
+    }
+    return url;
+  };
 
   // Load the label of the current code on initialization or value change
   useEffect(() => {
@@ -37,7 +53,7 @@ export default function SATAutocomplete({
     const fetchCurrentLabel = async () => {
       try {
         const endpoint = mode === 'product' ? '/billing/sat/products/' : '/billing/sat/units/';
-        const res = await fetcher(`${endpoint}?q=${encodeURIComponent(value)}`);
+        const res = await fetcher(buildUrl(endpoint, value));
         const exactMatch = res.find((item: any) => item.code === value);
         if (exactMatch) {
           const label = mode === 'product' ? exactMatch.description : exactMatch.name;
@@ -62,7 +78,7 @@ export default function SATAutocomplete({
     setLoading(true);
     try {
       const endpoint = mode === 'product' ? '/billing/sat/products/' : '/billing/sat/units/';
-      const data = await fetcher(`${endpoint}?q=${encodeURIComponent(searchQuery)}`);
+      const data = await fetcher(buildUrl(endpoint, searchQuery));
       setResults(data || []);
     } catch (err) {
       console.error('Error fetching SAT catalog:', err);

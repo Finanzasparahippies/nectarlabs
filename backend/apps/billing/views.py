@@ -262,6 +262,8 @@ class InvoiceViewSet(BillingTenantMixin, viewsets.ModelViewSet):
     def get_permissions(self):
         if self.action in ['issue_from_installment']:
             return [permissions.IsAuthenticated()]
+        if self.action == 'issue_tenant_to_client':
+            return [permissions.AllowAny(), HasAddOnPermission()]
         return [permissions.IsAuthenticated(), HasAddOnPermission()]
 
     def get_queryset(self):
@@ -443,7 +445,31 @@ class InvoiceViewSet(BillingTenantMixin, viewsets.ModelViewSet):
 
     @action(detail=False, methods=['post'], url_path='issue-tenant-to-client')
     def issue_tenant_to_client(self, request):
-        tenant = self.get_tenant()
+        user = request.user
+        tenant = None
+        
+        # 1. Si el usuario está autenticado y es administrador/staff, buscar por tenant_id si se pasa
+        if user and user.is_authenticated:
+            if user.is_staff or getattr(user, 'role', '') == 'ADMIN':
+                tenant_id = request.query_params.get('tenant_id') or request.data.get('tenant_id')
+                if tenant_id:
+                    tenant = get_object_or_404(Tenant, id=tenant_id)
+            if not tenant:
+                # Si es un usuario de negocio, obtener su propio tenant
+                tenant = Tenant.objects.filter(owner=user).first()
+                
+        # 2. Si no se ha resuelto (petición anónima/pública desde el portal del inquilino)
+        if not tenant:
+            tenant_id = request.query_params.get('tenant_id') or request.data.get('tenant_id')
+            subdomain = request.query_params.get('subdomain') or request.data.get('subdomain')
+            if tenant_id:
+                tenant = get_object_or_404(Tenant, id=tenant_id)
+            elif subdomain:
+                tenant = get_object_or_404(Tenant, subdomain=subdomain.lower())
+                
+        if not tenant:
+            return Response({"error": "No se pudo determinar el portal (tenant) para procesar la factura."}, status=400)
+
         profile = getattr(tenant, 'tax_profile', None)
         if not profile or not profile.facturapi_organization_id:
             return Response(
@@ -686,7 +712,8 @@ class BuyEmailCreditsView(BillingTenantMixin, APIView):
 
 
 class SATProductKeySearchView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny, HasAddOnPermission]
+    addon_slug = 'mexico-invoicing'
 
     def get(self, request):
         query = request.query_params.get('q', '').strip()
@@ -705,7 +732,8 @@ class SATProductKeySearchView(APIView):
 
 
 class SATUnitKeySearchView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny, HasAddOnPermission]
+    addon_slug = 'mexico-invoicing'
 
     def get(self, request):
         query = request.query_params.get('q', '').strip()

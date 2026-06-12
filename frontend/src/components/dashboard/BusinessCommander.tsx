@@ -4,6 +4,7 @@ import { fetcher, API_URL } from '@/lib/api';
 import Toast from '../ui/Toast';
 import ConfirmModal from '../ui/ConfirmModal';
 import SATAutocomplete from '../ui/SATAutocomplete';
+import CreateCustomerModal from '../ui/CreateCustomerModal';
 
 const getInlineViewUrl = (url: string | null | undefined, type: 'quote' | 'contract' | 'receipt', id: string | number) => {
   if (!url) return '';
@@ -159,6 +160,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
   const [isSubmittingCancel, setIsSubmittingCancel] = useState(false);
 
   const [selectedTenantId, setSelectedTenantId] = useState('');
+  const [tenantSearchQuery, setTenantSearchQuery] = useState('');
   const [allTenants, setAllTenants] = useState<any[]>([]);
   const [manualRfc, setManualRfc] = useState('');
   const [manualRazonSocial, setManualRazonSocial] = useState('');
@@ -3930,31 +3932,109 @@ export default function BusinessCommander({ stats, installments, setInstallments
               <span className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold text-[8px] font-black uppercase tracking-widest rounded-full border border-nectar-gold/20">
                 Facturación SAT
               </span>
-              <h2 className="text-2xl font-black tracking-tighter mt-4 leading-none">
-                Factura Manual (Cotizaciones / Ajustes)
-              </h2>
-              <p className="text-[10px] opacity-40 uppercase tracking-widest mt-1">
-                Genera y timbra una factura personalizada para cualquier inquilino del sistema.
-              </p>
-            </div>
-
-            <form onSubmit={handleCreateManualInvoice} className="space-y-6">
-              {/* Seleccionar Inquilino */}
+                {/* Seleccionar Inquilino */}
               <div className="space-y-1.5">
                 <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Seleccionar Inquilino (Tenant)</label>
-                <select
-                  required
-                  value={selectedTenantId}
-                  onChange={(e) => handleTenantChange(e.target.value)}
-                  className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-nectar-gold text-foreground font-bold"
-                >
-                  <option value="">-- Elige un Inquilino --</option>
-                  {allTenants.map((t) => (
-                    <option key={t.id} value={t.id}>
-                      {t.brand_name || t.subdomain} ({t.owner_email || 'Sin correo'})
-                    </option>
-                  ))}
-                </select>
+                {(() => {
+                  const selectedTenant = allTenants.find(t => String(t.id) === String(selectedTenantId));
+                  if (selectedTenant) {
+                    return (
+                      <div className="flex items-center justify-between p-4 bg-[#C68A1E]/10 border border-[#C68A1E]/30 rounded-2xl animate-in fade-in zoom-in-95 duration-150">
+                        <div>
+                          <span className="text-[8px] font-black uppercase tracking-widest text-[#C68A1E]">Inquilino Seleccionado ✓</span>
+                          <h4 className="text-xs font-bold text-white mt-1">{selectedTenant.brand_name || selectedTenant.subdomain}</h4>
+                          <p className="text-[9px] text-white/50">{selectedTenant.owner_email || 'Sin correo'}</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedTenantId('');
+                            setManualEmail('');
+                            setManualRfc('');
+                            setManualRazonSocial('');
+                            setManualCodigoPostal('');
+                          }}
+                          className="px-3 py-1.5 bg-white/5 hover:bg-red-500/10 text-white/60 hover:text-red-400 border border-white/10 hover:border-red-500/20 rounded-xl text-[8px] font-black uppercase tracking-wider transition-all cursor-pointer font-bold"
+                        >
+                          Quitar
+                        </button>
+                      </div>
+                    );
+                  }
+                  
+                  return (
+                    <div className="flex gap-2">
+                      <div className="flex-1 relative">
+                        <input
+                          type="text"
+                          value={tenantSearchQuery}
+                          onChange={(e) => setTenantSearchQuery(e.target.value)}
+                          placeholder="Buscar inquilino por nombre o subdominio..."
+                          className="w-full bg-background border border-card-border rounded-xl px-4 py-3 pl-10 text-xs focus:outline-none focus:border-nectar-gold text-foreground placeholder:text-white/20 font-bold"
+                        />
+                        <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/30 select-none text-[10px]">🔍</div>
+                        {tenantSearchQuery && (
+                          <button
+                            type="button"
+                            onClick={() => setTenantSearchQuery('')}
+                            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-white/40 hover:text-white text-xs font-bold"
+                          >
+                            ×
+                          </button>
+                        )}
+                        {tenantSearchQuery.trim() !== '' && (
+                          <div className="absolute left-0 right-0 mt-1 bg-[#050a06]/95 border border-white/10 rounded-2xl shadow-2xl p-2 z-50 max-h-48 overflow-y-auto space-y-1 backdrop-blur-md">
+                            {(() => {
+                              const query = tenantSearchQuery.toLowerCase().trim();
+                              const filtered = allTenants.filter(t => 
+                                (t.brand_name && t.brand_name.toLowerCase().includes(query)) ||
+                                (t.subdomain && t.subdomain.toLowerCase().includes(query)) ||
+                                (t.owner_email && t.owner_email.toLowerCase().includes(query))
+                              );
+                              
+                              if (filtered.length === 0) {
+                                  return (
+                                    <div className="p-3 text-center text-white/30 text-[8px] uppercase tracking-wider font-bold">
+                                      Sin inquilinos coincidentes
+                                    </div>
+                                  );
+                              }
+                              
+                              return filtered.map(t => (
+                                <button
+                                  key={t.id}
+                                  type="button"
+                                  onClick={() => {
+                                    handleTenantChange(t.id);
+                                    setTenantSearchQuery('');
+                                  }}
+                                  className="w-full text-left p-3 rounded-xl hover:bg-[#C68A1E]/10 border border-transparent hover:border-[#C68A1E]/20 flex flex-col gap-0.5 transition-all cursor-pointer group"
+                                >
+                                  <span className="text-xs font-bold text-white group-hover:text-[#C68A1E] transition-colors">{t.brand_name || t.subdomain}</span>
+                                  <span className="text-[9.5px] text-white/50">{t.owner_email || 'Sin correo'}</span>
+                                </button>
+                              ));
+                            })()}
+                          </div>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setNewUserEmail('');
+                          setNewUsername('');
+                          setNewUserPassword('');
+                          setNewUserRole('BUSINESS');
+                          setNewUserTenantId('');
+                          setNewUserEmailVerified(true);
+                          setShowNewUserModal(true);
+                        }}
+                        className="px-4 py-3 bg-white/10 hover:bg-white/20 border border-white/10 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all text-white cursor-pointer font-bold whitespace-nowrap shrink-0"
+                      >
+                        + Nuevo
+                      </button>
+                    </div>
+                  );
               </div>
 
               {/* Datos Fiscales */}
@@ -4056,7 +4136,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
                   </button>
                 </div>
 
-                <div className="space-y-3 max-h-[200px] overflow-y-auto pr-2 custom-scrollbar">
+                <div className="space-y-3">
                   {manualItems.map((item, idx) => (
                     <div key={idx} className="p-4 bg-background border border-card-border/60 rounded-xl space-y-3 relative text-left">
                       {manualItems.length > 1 && (
@@ -4167,6 +4247,8 @@ export default function BusinessCommander({ stats, installments, setInstallments
                             }}
                             primaryColor="#C68A1E"
                             placeholder="Buscar producto..."
+                            subdomain={allTenants.find(t => t.id === selectedTenantId)?.subdomain}
+                            tenantId={selectedTenantId}
                           />
                         </div>
                         <div className="space-y-1">
@@ -4179,6 +4261,8 @@ export default function BusinessCommander({ stats, installments, setInstallments
                             }}
                             primaryColor="#C68A1E"
                             placeholder="Buscar unidad..."
+                            subdomain={allTenants.find(t => t.id === selectedTenantId)?.subdomain}
+                            tenantId={selectedTenantId}
                           />
                         </div>
                         <div className="space-y-1">
@@ -4246,136 +4330,30 @@ export default function BusinessCommander({ stats, installments, setInstallments
             </form>
           </div>
         </div>
-      )}
-
-      {showNewUserModal && (
-        <div
-          onClick={() => setShowNewUserModal(false)}
-          className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-6 cursor-pointer overflow-y-auto"
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-md bg-card-bg border border-card-border p-8 md:p-10 rounded-[3rem] shadow-2xl relative space-y-6 text-left cursor-default animate-in fade-in zoom-in-95 duration-200"
-          >
-            <button
-              onClick={() => setShowNewUserModal(false)}
-              className="absolute top-6 right-6 w-8 h-8 rounded-full border border-card-border text-foreground/40 hover:text-foreground flex items-center justify-center text-xl font-bold"
-            >
-              ×
-            </button>
-
-            <div>
-              <span className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold text-[8px] font-black uppercase tracking-widest rounded-full border border-nectar-gold/20">
-                Administración
-              </span>
-              <h2 className="text-2xl font-black tracking-tighter mt-4 leading-none">
-                Nuevo Usuario / Cliente
-              </h2>
-              <p className="text-[10px] opacity-40 uppercase tracking-widest mt-1">
-                Crea un nuevo usuario en la plataforma y asócialo opcionalmente a un inquilino.
-              </p>
-            </div>
-
-            <form onSubmit={handleCreateNewUser} className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Email Principal *</label>
-                <input
-                  type="email"
-                  required
-                  placeholder="usuario@dominio.com"
-                  value={newUserEmail}
-                  onChange={(e) => setNewUserEmail(e.target.value)}
-                  className="w-full bg-background border border-card-border rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-nectar-gold text-foreground"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Nombre de Usuario (Opcional)</label>
-                <input
-                  type="text"
-                  placeholder="ej. minombre"
-                  value={newUsername}
-                  onChange={(e) => setNewUsername(e.target.value)}
-                  className="w-full bg-background border border-card-border rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-nectar-gold text-foreground"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Contraseña (Opcional)</label>
-                <input
-                  type="password"
-                  placeholder="••••••••"
-                  value={newUserPassword}
-                  onChange={(e) => setNewUserPassword(e.target.value)}
-                  className="w-full bg-background border border-card-border rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-nectar-gold text-foreground font-mono"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Rol de Usuario</label>
-                  <select
-                    value={newUserRole}
-                    onChange={(e) => setNewUserRole(e.target.value)}
-                    className="w-full bg-background border border-card-border rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-nectar-gold text-foreground font-bold"
-                  >
-                    <option value="CUSTOMER">Cliente</option>
-                    <option value="BUSINESS">Inquilino (Business Owner)</option>
-                    <option value="STAFF">Staff de Ventas</option>
-                    <option value="ADMIN">Administrador Global</option>
-                  </select>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Asociar Inquilino (SaaS)</label>
-                  <select
-                    value={newUserTenantId}
-                    onChange={(e) => setNewUserTenantId(e.target.value)}
-                    className="w-full bg-background border border-card-border rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-nectar-gold text-foreground"
-                  >
-                    <option value="">Ninguno</option>
-                    {allTenants.map((t) => (
-                      <option key={t.id} value={t.id}>
-                        {t.brand_name || t.subdomain}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2 pt-2">
-                <input
-                  type="checkbox"
-                  id="newUserEmailVerified"
-                  checked={newUserEmailVerified}
-                  onChange={(e) => setNewUserEmailVerified(e.target.checked)}
-                  className="w-4 h-4 bg-background border border-card-border rounded accent-nectar-gold"
-                />
-                <label htmlFor="newUserEmailVerified" className="text-[9px] font-black uppercase tracking-widest opacity-60 cursor-pointer">
-                  Email Verificado
-                </label>
-              </div>
-
-              <div className="pt-6 border-t border-card-border/60 flex justify-end gap-3">
-                <button
-                  type="button"
-                  onClick={() => setShowNewUserModal(false)}
-                  className="px-5 py-3 border border-card-border hover:bg-foreground hover:text-background text-[9px] font-black uppercase tracking-widest rounded-xl transition-all"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmittingNewUser}
-                  className="px-6 py-3 bg-nectar-gold text-background text-[9px] font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 disabled:opacity-40 disabled:scale-100 transition-all font-bold shadow-lg shadow-nectar-gold/25"
-                >
-                  {isSubmittingNewUser ? 'Creando...' : 'Crear Usuario'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <CreateCustomerModal
+        isOpen={showNewUserModal}
+        onClose={() => setShowNewUserModal(false)}
+        onSuccess={async (newUser) => {
+          const usersData = await fetcher('/users/');
+          setUsers(Array.isArray(usersData) ? usersData : []);
+          
+          const tenantsData = await fetcher('/tenants/');
+          setAllTenants(tenantsData || []);
+          
+          if (newUser.tenant) {
+            setSelectedTenantId(String(newUser.tenant));
+            handleTenantChange(newUser.tenant);
+          } else if (newUser.owned_tenants && newUser.owned_tenants.length > 0) {
+            const firstTenant = newUser.owned_tenants[0];
+            setSelectedTenantId(String(firstTenant.id));
+            handleTenantChange(firstTenant.id);
+          }
+        }}
+        showRoleSelect={true}
+        allTenants={allTenants}
+        primaryColor="#C68A1E"
+        showToast={showToast}
+      />
 
       {showCancelModal && (
         <div
