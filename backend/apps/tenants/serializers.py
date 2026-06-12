@@ -14,6 +14,8 @@ class TenantSerializer(serializers.ModelSerializer):
     is_ambassador = serializers.ReadOnlyField()
     free_stamps_left = serializers.ReadOnlyField()
     subscriber_count = serializers.SerializerMethodField()
+    has_active_plan_contract = serializers.ReadOnlyField()
+    is_addons_only = serializers.ReadOnlyField()
 
     class Meta:
         model = Tenant
@@ -22,7 +24,7 @@ class TenantSerializer(serializers.ModelSerializer):
             'allowed_origins', 'custom_domain', 'welcome_message', 'require_customer_info',
             'logo', 'logo_url', 'portal_title', 'footer_text', 'is_active', 'created_at', 'updated_at',
             'active_addons', 'stamp_balance', 'newsletter_plan', 'newsletter_sent_this_month', 'newsletter_extra_credits',
-            'invoicing_mode',
+            'invoicing_mode', 'has_active_plan_contract', 'is_addons_only',
             # 6-Color Palette (Dark & Light)
             'theme_color', 'accent_color', 'bg_color', 'card_bg_color', 'text_color', 'border_color',
             'theme_color_light', 'accent_color_light', 'bg_color_light', 'card_bg_color_light', 'text_color_light', 'border_color_light',
@@ -47,7 +49,7 @@ class TenantSerializer(serializers.ModelSerializer):
         read_only_fields = [
             'id', 'owner', 'api_key', 'created_at', 'updated_at', 
             'is_ambassador', 'free_stamps_left', 'stamps_used_this_month', 'stamps_last_reset',
-            'subscriber_count'
+            'subscriber_count', 'has_active_plan_contract', 'is_addons_only'
         ]
 
     def get_owner_email(self, obj):
@@ -76,13 +78,15 @@ class TenantSerializer(serializers.ModelSerializer):
 class TenantPublicSerializer(serializers.ModelSerializer):
     active_addons = serializers.ReadOnlyField()
     logo_url = serializers.SerializerMethodField()
+    has_active_plan_contract = serializers.ReadOnlyField()
+    is_addons_only = serializers.ReadOnlyField()
 
     class Meta:
         model = Tenant
         fields = [
             'id', 'name', 'subdomain', 'logo_url', 
             'welcome_message', 'require_customer_info', 'active_addons',
-            'portal_title', 'footer_text',
+            'portal_title', 'footer_text', 'has_active_plan_contract', 'is_addons_only',
             # 6-Color Palette (Dark & Light)
             'theme_color', 'accent_color', 'bg_color', 'card_bg_color', 'text_color', 'border_color',
             'theme_color_light', 'accent_color_light', 'bg_color_light', 'card_bg_color_light', 'text_color_light', 'border_color_light',

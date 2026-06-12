@@ -1,0 +1,3 @@
+STATUS: 500
+DATA: {'error': "cannot access local variable 'stripe' where it is not associated with a value"}
+CONTENT: b'{"error":"cannot access local variable \'stripe\' where it is not associated with a value"}'

@@ -167,32 +167,46 @@ class Tenant(models.Model):
         return False
 
     @property
-    def active_addons(self):
-        from apps.shop.models import AddOn, Contract, AddOnSubscription
-        # If tenant owner has an active, fully signed contract with a plan, return all active addons
-        has_plan = Contract.objects.filter(
+    def has_active_plan_contract(self):
+        from apps.shop.models import Contract
+        return Contract.objects.filter(
             user=self.owner,
             is_active=True,
             is_fully_signed=True,
             plan__isnull=False
         ).exists()
+
+    @property
+    def is_addons_only(self):
+        from apps.shop.models import AddOnSubscription
+        if self.has_active_plan_contract:
+            return False
+        return AddOnSubscription.objects.filter(
+            user=self.owner,
+            status__in=['active', 'trialing'],
+            is_activated=True
+        ).exists()
+
+    @property
+    def active_addons(self):
+        from apps.shop.models import AddOn, Contract, AddOnSubscription
         
         addons = set()
-        if has_plan:
+        if self.has_active_plan_contract:
             addons.update(AddOn.objects.filter(is_active=True).values_list('slug', flat=True).distinct())
         else:
-            # Return only the ones explicitly purchased or assigned via active, fully signed contracts
+            # Return only the ones explicitly purchased or assigned via active contracts
             addons.update(AddOn.objects.filter(
                 is_active=True,
                 contracts__user=self.owner,
-                contracts__is_active=True,
-                contracts__is_fully_signed=True
+                contracts__is_active=True
             ).values_list('slug', flat=True).distinct())
             
             # Synchronize active subscriptions
             active_subs = AddOnSubscription.objects.filter(
                 user=self.owner,
-                status__in=['active', 'trialing']
+                status__in=['active', 'trialing'],
+                is_activated=True
             ).values_list('addon__slug', flat=True)
             addons.update(active_subs)
             

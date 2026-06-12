@@ -800,3 +800,76 @@ def send_autofactura_email(user, invoice):
         return False
 
 
+def send_addon_contracted_email(user, addon, subdomain, is_activated=True):
+    """
+    Sends a confirmation email to the client when they successfully subscribe/contract an Add-on.
+    Tells them their request has been received (and whether it is activated or pending).
+    """
+    try:
+        recipient_email = user.email
+        name = user.get_full_name() or user.username or "Cliente"
+        subject = f"🚀 ¡Tu Add-on {addon.name} está listo! - Néctar Labs" if is_activated else f"⏳ Solicitud de Add-on recibida - Néctar Labs"
+        
+        portal_url = f"https://{subdomain}.nectarlabs.dev" if subdomain else None
+            
+        html_content = render_to_string('shop/emails/addon_contracted.html', {
+            'subject': subject,
+            'name': name,
+            'addon': addon,
+            'portal_url': portal_url,
+            'is_activated': is_activated,
+        })
+        text_content = strip_tags(html_content)
+        
+        email = EmailMultiAlternatives(
+            subject=subject,
+            body=text_content,
+            from_email=get_platform_sender("Néctar Labs Notificaciones"),
+            to=[recipient_email],
+            reply_to=[settings.EMAIL_CONTACT]
+        )
+        email.attach_alternative(html_content, "text/html")
+        email.send()
+        logging.getLogger("apps").info(f"Addon contracted email sent to {recipient_email} for addon {addon.id} (activated={is_activated})")
+        return True
+    except Exception as e:
+        logging.getLogger("apps").error(f"Error sending addon contracted email: {e}", exc_info=True)
+        return False
+
+
+def send_addon_activated_email(user, addon, subdomain):
+    """
+    Sends a confirmation email to the client when an admin manually activates their requested Add-on.
+    """
+    try:
+        recipient_email = user.email
+        name = user.get_full_name() or user.username or "Cliente"
+        subject = f"🚀 ¡Tu Add-on {addon.name} ha sido Activado! - Néctar Labs"
+        
+        portal_url = f"https://{subdomain}.nectarlabs.dev" if subdomain else None
+            
+        html_content = render_to_string('shop/emails/addon_activated.html', {
+            'subject': subject,
+            'name': name,
+            'addon': addon,
+            'portal_url': portal_url,
+        })
+        text_content = strip_tags(html_content)
+        
+        email = EmailMultiAlternatives(
+            subject=subject,
+            body=text_content,
+            from_email=get_platform_sender("Néctar Labs Notificaciones"),
+            to=[recipient_email],
+            reply_to=[settings.EMAIL_CONTACT]
+        )
+        email.attach_alternative(html_content, "text/html")
+        email.send()
+        logging.getLogger("apps").info(f"Addon activated email sent to {recipient_email} for addon {addon.id}")
+        return True
+    except Exception as e:
+        logging.getLogger("apps").error(f"Error sending addon activated email: {e}", exc_info=True)
+        return False
+
+
+

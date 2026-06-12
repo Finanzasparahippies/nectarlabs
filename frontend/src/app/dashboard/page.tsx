@@ -134,6 +134,8 @@ function DashboardPageOriginal() {
   const [allAddons, setAllAddons] = useState<any[]>([]);
   const [invoices, setInvoices] = useState<any[]>([]);
   const [loadingInvoices, setLoadingInvoices] = useState(false);
+  const [addonSubscriptions, setAddonSubscriptions] = useState<any[]>([]);
+  const [activatingSubId, setActivatingSubId] = useState<number | null>(null);
   
   // Salesperson and Referral Program states
   const [salesSummary, setSalesSummary] = useState<any | null>(null);
@@ -318,7 +320,7 @@ function DashboardPageOriginal() {
   const activeContract = selectedActiveContractId
     ? activeContracts.find(c => c.id === selectedActiveContractId) || activeContracts[0]
     : activeContracts[0];
-  const isAddonOnly = contracts.some(c => c.is_fully_signed && !c.plan);
+  const isAddonOnly = contracts.some(c => !c.plan);
 
   const handleApplyRetroactiveCode = async () => {
     if (!retroactiveCodeInput.trim() || !activeContract) return;
@@ -419,6 +421,30 @@ function DashboardPageOriginal() {
       setTenants(tenantsData);
     } catch (err) {
       showToast("Error al actualizar los Add-ons del cliente.", 'error');
+    }
+  };
+
+  const handleActivateAddon = async (subId: number) => {
+    try {
+      setActivatingSubId(subId);
+      const res = await fetcher(`/addon-subscriptions/${subId}/activate/`, {
+        method: 'POST'
+      });
+      if (res.status === 'activated') {
+        showToast("Add-on activado y asignado exitosamente.", "success");
+        const subs = await fetcher('/addon-subscriptions/');
+        setAddonSubscriptions(subs);
+        const [updatedContracts, updatedTenants] = await Promise.all([
+          fetcher('/contracts/'),
+          fetcher('/tenants/')
+        ]);
+        setContracts(updatedContracts);
+        setTenants(updatedTenants);
+      }
+    } catch (err: any) {
+      showToast(err.message || "Error al activar el Add-on.", "error");
+    } finally {
+      setActivatingSubId(null);
     }
   };
 
@@ -540,7 +566,7 @@ function DashboardPageOriginal() {
           const [
             projectsData, ticketsData, logsData, contractsData, 
             installmentsData, tenantsData, plansData, addonsData, statsData,
-            referralData
+            referralData, addonSubscriptionsData
           ] = await Promise.all([
             fetcher('/projects/').catch(() => []),
             fetcher('/tickets/').catch(() => []),
@@ -551,9 +577,10 @@ function DashboardPageOriginal() {
             fetcher('/plans/').catch(() => []),
             fetcher('/addons/').catch(() => []),
             fetcher('/dashboard/business-stats/').catch(() => null),
-            fetcher('/promo-codes/my-referral-code/').catch(() => null)
+            fetcher('/promo-codes/my-referral-code/').catch(() => null),
+            fetcher('/addon-subscriptions/').catch(() => [])
           ]);
-
+ 
           setProjects(projectsData);
           setTickets(ticketsData);
           setLogs(logsData);
@@ -564,6 +591,7 @@ function DashboardPageOriginal() {
           setAllAddons(addonsData || []);
           setBusinessStats(statsData);
           setMyReferralCode(referralData);
+          setAddonSubscriptions(addonSubscriptionsData || []);
         } else if (role === 'SALES') {
           // Sales Person - Load only commissions, referral summaries, and promo code metrics
           const [summaryData, commissionsData, referralData] = await Promise.all([
@@ -576,16 +604,18 @@ function DashboardPageOriginal() {
           setMyReferralCode(referralData);
         } else if (role === 'DEVELOPER' || role === 'DESIGNER') {
           // Staff Developers / Designers - Load only assigned projects, logs, and technical contracts
-          const [projectsData, ticketsData, logsData, contractsData] = await Promise.all([
+          const [projectsData, ticketsData, logsData, contractsData, addonSubscriptionsData] = await Promise.all([
             fetcher('/projects/').catch(() => []),
             fetcher('/tickets/').catch(() => []),
             fetcher('/logs/').catch(() => []),
-            fetcher('/contracts/').catch(() => [])
+            fetcher('/contracts/').catch(() => []),
+            fetcher('/addon-subscriptions/').catch(() => [])
           ]);
           setProjects(projectsData);
           setTickets(ticketsData);
           setLogs(logsData);
           setContracts(contractsData);
+          setAddonSubscriptions(addonSubscriptionsData || []);
         } else {
           // Client / Customers - Load their contracts, installments, projects, active addons, tenants, and invoices
           const [projectsData, ticketsData, contractsData, installmentsData, addonsData, plansData, referralData, tenantsData, invoicesData] = await Promise.all([
@@ -622,7 +652,28 @@ function DashboardPageOriginal() {
 
     // Check URL for Stripe payment results
     const params = new URLSearchParams(window.location.search);
-    if (params.get('payment') === 'success') {
+    const payment = params.get('payment');
+    const sessionId = params.get('session_id');
+
+    if (payment === 'success') {
+      if (sessionId) {
+        const syncSession = async () => {
+          try {
+            const res = await fetcher('/addons/sync-checkout-session/', {
+              method: 'POST',
+              body: JSON.stringify({ session_id: sessionId })
+            });
+            if (res.status === 'success') {
+              showToast("¡Add-on contratado y activado exitosamente!", "success");
+              loadData();
+            }
+          } catch (err: any) {
+            console.error("Error syncing checkout session:", err);
+          }
+        };
+        syncSession();
+      }
+
       setNotification({
         type: 'polling',
         title: 'Verificando Pago',
@@ -630,7 +681,7 @@ function DashboardPageOriginal() {
         attempts: 1
       });
       window.history.replaceState({}, document.title, window.location.pathname);
-    } else if (params.get('payment') === 'cancel') {
+    } else if (payment === 'cancel') {
       setNotification({
         type: 'cancel',
         title: 'Pago Cancelado',
@@ -654,13 +705,14 @@ function DashboardPageOriginal() {
         const role = localStorage.getItem('user_role') || '';
         const isActuallyStaff = (staff || role === 'ADMIN' || role === 'BUSINESS') && role !== 'DESIGNER';
 
-        const [projectsData, ticketsData, logsData, contractsData, installmentsData, tenantsData] = await Promise.all([
+        const [projectsData, ticketsData, logsData, contractsData, installmentsData, tenantsData, addonSubsData] = await Promise.all([
           fetcher('/projects/'),
           fetcher('/tickets/'),
           fetcher('/logs/'),
           fetcher('/contracts/'),
           fetcher('/installments/'),
-          fetcher('/tenants/')
+          fetcher('/tenants/'),
+          isActuallyStaff ? fetcher('/addon-subscriptions/') : Promise.resolve([])
         ]);
 
         setProjects(projectsData);
@@ -669,6 +721,9 @@ function DashboardPageOriginal() {
         setContracts(contractsData);
         setInstallments(installmentsData);
         setTenants(tenantsData);
+        if (isActuallyStaff) {
+          setAddonSubscriptions(addonSubsData);
+        }
 
         if (isActuallyStaff) {
           const statsData = await fetcher('/dashboard/business-stats/');
@@ -1078,6 +1133,35 @@ function DashboardPageOriginal() {
                       >
                         Firmar y Cerrar
                       </Link>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* Developer Specific Section: Pending Add-ons to Activate */}
+            {isStaff && addonSubscriptions.some((sub: any) => !sub.is_activated && (sub.status === 'active' || sub.status === 'trialing')) && (
+              <section className="mb-16 p-10 rounded-[3rem] bg-nectar-gold text-background shadow-2xl relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-20 -mt-20"></div>
+                <h2 className="text-3xl font-black tracking-tighter mb-6 relative z-10">Add-ons por Activar</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 relative z-10">
+                  {addonSubscriptions.filter((sub: any) => !sub.is_activated && (sub.status === 'active' || sub.status === 'trialing')).map((sub: any) => (
+                    <div key={sub.id} className="bg-background/10 backdrop-blur-md border border-background/20 p-6 rounded-2xl flex flex-col justify-between">
+                      <div>
+                        <p className="text-[8px] font-black uppercase tracking-widest opacity-60">Cliente</p>
+                        <h4 className="font-black text-lg truncate" title={sub.user_email}>{sub.user_email}</h4>
+                        <p className="text-[9px] font-bold mt-1 opacity-80">{sub.addon_details?.name || 'Módulo/Add-on'}</p>
+                        {sub.tenant_subdomain && (
+                          <p className="text-[8px] font-bold mt-1 opacity-60">Tenant: {sub.tenant_subdomain}</p>
+                        )}
+                      </div>
+                      <button
+                        onClick={() => handleActivateAddon(sub.id)}
+                        disabled={activatingSubId === sub.id}
+                        className="mt-6 py-3 bg-background text-nectar-gold text-center rounded-xl text-[9px] font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all font-bold disabled:opacity-50"
+                      >
+                        {activatingSubId === sub.id ? 'Activando...' : 'Activar Add-on'}
+                      </button>
                     </div>
                   ))}
                 </div>
@@ -2155,9 +2239,14 @@ function DashboardPageOriginal() {
                   <p className="text-xl font-bold opacity-80 mb-10 leading-relaxed">
                     Solo falta un paso para activar tu ecosistema de ingeniería. Firma tu contrato de Partner Tecnológico y comencemos a construir.
                   </p>
-                  <Link href="/onboarding" className="inline-block px-12 py-6 bg-nectar-gold text-background font-black uppercase tracking-widest rounded-2xl hover:scale-105 transition-all shadow-xl shadow-nectar-gold/20">
-                    Finalizar Onboarding
-                  </Link>
+                  <div className="flex flex-wrap gap-4">
+                    <Link href="/onboarding" className="inline-block px-12 py-6 bg-nectar-gold text-background font-black uppercase tracking-widest rounded-2xl hover:scale-105 transition-all shadow-xl shadow-nectar-gold/20">
+                      Finalizar Onboarding
+                    </Link>
+                    <Link href="/dashboard/addons" className="inline-block px-12 py-6 border border-nectar-gold text-nectar-gold hover:bg-nectar-gold/10 font-black uppercase tracking-widest rounded-2xl hover:scale-105 transition-all">
+                      Contratar un Add-on
+                    </Link>
+                  </div>
                 </div>
               </section>
             )}

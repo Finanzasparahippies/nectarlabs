@@ -3,7 +3,7 @@ from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APITestCase
-from apps.shop.models import Plan, Contract, PaymentInstallment, AddOn, PromoCode, SalesCommission
+from apps.shop.models import Plan, Contract, PaymentInstallment, AddOn, PromoCode, SalesCommission, AddOnSubscription
 from apps.tenants.models import Tenant
 from datetime import date, timedelta
 from unittest.mock import patch, MagicMock
@@ -1363,5 +1363,111 @@ class SkydropxAndStripeIdempotencyTests(APITestCase):
             
             self.assertEqual(first_call_args["idempotency_key"], "addon_price_monthly_addon-idempotente_50000")
             self.assertEqual(second_call_args["idempotency_key"], "addon_price_yearly_addon-idempotente_500000")
+
+
+class AddOnSubscriptionViewSetTests(APITestCase):
+    def setUp(self):
+        self.ceo = User.objects.create_user(
+            username="saul_ceo_addon",
+            email="saul_ceo@nectarlabs.dev",
+            password="securepassword",
+            role=User.Role.ADMIN,
+            is_staff=True
+        )
+        self.client_user = User.objects.create_user(
+            username="client_addon",
+            email="client_addon@example.com",
+            password="clientpassword",
+            role=User.Role.BUSINESS
+        )
+        self.plan = Plan.objects.create(
+            name="Plan Test",
+            price=5000.00,
+            hours=20,
+            description="Testing plan"
+        )
+        self.addon = AddOn.objects.create(
+            slug="test-addon",
+            name="Test Addon",
+            monthly_price=150.00,
+            yearly_price=1500.00,
+            complexity=AddOn.Complexity.LOW
+        )
+
+    def test_perform_create_with_active_contract_plan(self):
+        # Create an active contract with a plan for the user
+        contract = Contract.objects.create(
+            user=self.client_user,
+            plan=self.plan,
+            full_name="Plan Client Company",
+            is_active=True,
+            is_fully_signed=True
+        )
+        
+        self.client.force_authenticate(user=self.client_user)
+        url = reverse('addonsubscription-list')
+        response = self.client.post(url, {
+            'addon': self.addon.id,
+            'billing_cycle': 'monthly'
+        }, format='json')
+        
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        sub = AddOnSubscription.objects.get(id=response.data['id'])
+        self.assertFalse(sub.is_activated)
+        self.assertEqual(sub.price_paid, 0.00)
+
+    def test_perform_create_without_active_contract_plan(self):
+        self.client.force_authenticate(user=self.client_user)
+        url = reverse('addonsubscription-list')
+        response = self.client.post(url, {
+            'addon': self.addon.id,
+            'billing_cycle': 'monthly'
+        }, format='json')
+        
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        sub = AddOnSubscription.objects.get(id=response.data['id'])
+        self.assertTrue(sub.is_activated)
+
+    def test_admin_activate_and_deactivate(self):
+        # Create subscription with is_activated=False
+        sub = AddOnSubscription.objects.create(
+            user=self.client_user,
+            addon=self.addon,
+            is_activated=False,
+            price_paid=0.00
+        )
+        
+        # Create contract for user
+        contract = Contract.objects.create(
+            user=self.client_user,
+            full_name="Client Company",
+            is_active=True,
+            is_fully_signed=True
+        )
+        
+        # 1. Non-staff try to activate
+        self.client.force_authenticate(user=self.client_user)
+        url_activate = reverse('addonsubscription-activate', kwargs={'pk': sub.id})
+        response = self.client.post(url_activate, format='json')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        
+        # 2. Admin activates
+        self.client.force_authenticate(user=self.ceo)
+        response = self.client.post(url_activate, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        
+        sub.refresh_from_db()
+        self.assertTrue(sub.is_activated)
+        self.assertIn(self.addon, contract.addons.all())
+        
+        # 3. Admin deactivates
+        url_deactivate = reverse('addonsubscription-deactivate', kwargs={'pk': sub.id})
+        response = self.client.post(url_deactivate, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        
+        sub.refresh_from_db()
+        self.assertFalse(sub.is_activated)
+        self.assertNotIn(self.addon, contract.addons.all())
+
 
 

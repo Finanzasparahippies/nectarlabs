@@ -212,6 +212,7 @@ export default function AddonsPage() {
   const [manageAddon, setManageAddon] = useState<Addon | null>(null);
   const [contracts, setContracts] = useState<any[]>([]);
   const [updatingContractId, setUpdatingContractId] = useState<number | null>(null);
+  const [updatingTenantId, setUpdatingTenantId] = useState<string | null>(null);
   const [comments, setComments] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successTicketId, setSuccessTicketId] = useState<number | null>(null);
@@ -249,7 +250,7 @@ export default function AddonsPage() {
           if (Array.isArray(contractsData)) {
             setContracts(contractsData);
             const planContractExists = contractsData.some(
-              (c: any) => c.is_active && c.is_fully_signed && c.plan !== null && c.plan !== undefined
+              (c: any) => c.is_active && c.plan !== null && c.plan !== undefined
             );
             setHasPlanContract(planContractExists);
           }
@@ -335,7 +336,7 @@ export default function AddonsPage() {
         if (Array.isArray(contractsData)) {
           setContracts(contractsData);
           const planContractExists = contractsData.some(
-            (c: any) => c.is_active && c.is_fully_signed && c.plan !== null && c.plan !== undefined
+            (c: any) => c.is_active && c.plan !== null && c.plan !== undefined
           );
           setHasPlanContract(planContractExists);
         }
@@ -424,6 +425,24 @@ export default function AddonsPage() {
       showToast("Error al actualizar los Add-ons del cliente.", 'error');
     } finally {
       setUpdatingContractId(null);
+    }
+  };
+
+  const handleToggleTenantAddon = async (tenantId: string, addonSlug: string, isCurrentlyActive: boolean) => {
+    try {
+      setUpdatingTenantId(tenantId);
+      const res = await fetcher('/contracts/toggle-addon/', {
+        method: 'POST',
+        body: JSON.stringify({ tenant_id: tenantId, addon_slug: addonSlug, is_active: !isCurrentlyActive })
+      });
+      if (res.status === 'success') {
+        setTenants(prev => prev.map(t => t.id === tenantId ? { ...t, active_addons: res.active_addons } : t));
+        showToast("Add-on actualizado exitosamente para el portal.", "success");
+      }
+    } catch (err: any) {
+      showToast(err.message || "Error al actualizar el Add-on.", "error");
+    } finally {
+      setUpdatingTenantId(null);
     }
   };
 
@@ -543,6 +562,19 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
           priority: 'HIGH'
         })
       });
+
+      // Register the pending AddOnSubscription in the backend
+      const addonId = requestAddon.dbId || requestAddon.id;
+      await fetcher('/addon-subscriptions/', {
+        method: 'POST',
+        body: JSON.stringify({
+          addon: addonId,
+          billing_cycle: billingCycle,
+        })
+      }).catch(err => {
+        console.error("Error creating pending addon subscription record:", err);
+      });
+
       setSuccessTicketId(data.id);
       setComments('');
       setNewTenantName('');
@@ -675,7 +707,7 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
               tenants.some(t => t.active_addons?.includes(addon.id)) ||
               (currentActiveTenant?.active_addons || []).includes(addon.id) ||
               subscriptions.some(s => s.addon_details?.slug === addon.id && ['active', 'trialing'].includes(s.status)) ||
-              contracts.some(c => (c.addons || []).some((a: any) => a.id === addon.id || a.slug === addon.id));
+              contracts.some(c => (c.addons || []).includes(addon.id));
 
             return (
               <div
@@ -1115,30 +1147,30 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
 
               <div className="space-y-4">
                 <div className="text-[10px] font-black uppercase tracking-widest text-nectar-gold border-b border-card-border pb-3 mb-2">
-                  Lista de Clientes / Contratos Activos
+                  Portales / Inquilinos Activos
                 </div>
 
                 <div className="space-y-3 max-h-[40vh] overflow-y-auto pr-1 text-left">
-                  {contracts
-                    .filter(c => c.is_fully_signed)
-                    .map(contract => {
-                      const isActive = (contract.addons || []).includes(manageAddon.id);
-                      const isUpdating = updatingContractId === contract.id;
+                  {tenants
+                    .filter(t => t.is_active)
+                    .map(tenant => {
+                      const isActive = (tenant.active_addons || []).includes(manageAddon.id);
+                      const isUpdating = updatingTenantId === tenant.id;
 
                       return (
-                        <div key={contract.id} className="flex items-center justify-between p-4 rounded-2xl bg-background/50 border border-card-border/60 hover:border-nectar-gold/30 transition-all">
+                        <div key={tenant.id} className="flex items-center justify-between p-4 rounded-2xl bg-background/50 border border-card-border/60 hover:border-nectar-gold/30 transition-all">
                           <div className="min-w-0 pr-3">
                             <span className="font-bold text-xs text-foreground block truncate">
-                              {contract.full_name}
+                              {tenant.name}
                             </span>
-                            <span className="text-[8.5px] text-foreground/50 block font-semibold uppercase tracking-wider mt-0.5">
-                              {contract.plan_name || 'Contrato Personalizado'} (ID: #{contract.id})
+                            <span className="text-[8.5px] text-foreground/50 block font-semibold uppercase tracking-wider mt-0.5 font-mono">
+                              {tenant.subdomain}.nectarlabs.dev
                             </span>
                           </div>
 
                           <button
                             type="button"
-                            onClick={() => handleToggleAddon(contract.id, manageAddon.id, isActive)}
+                            onClick={() => handleToggleTenantAddon(tenant.id, manageAddon.id, isActive)}
                             disabled={isUpdating}
                             className={`w-10 h-5 rounded-full p-0.5 transition-colors duration-300 focus:outline-none relative flex-shrink-0 ${isActive ? 'bg-nectar-gold' : 'bg-card-border'
                               } ${isUpdating ? 'opacity-55 cursor-not-allowed' : ''}`}

@@ -123,4 +123,5 @@ class AddOnSubscriptionSerializer(serializers.ModelSerializer):
     class Meta:
         model = AddOnSubscription
         fields = '__all__'
+        read_only_fields = ['user', 'tenant', 'stripe_subscription_id', 'status', 'price_paid', 'is_activated']
 

@@ -93,6 +93,27 @@ class AddOnViewSet(viewsets.ModelViewSet):
         addon = self.get_object()
         billing_cycle = request.data.get('billing_cycle', 'monthly')
         
+        # Auto-healer: Validate price existence on Stripe and heal if needed
+        if getattr(settings, "STRIPE_SECRET_KEY", None) and not getattr(settings, "TESTING", False):
+            stripe.api_key = settings.STRIPE_SECRET_KEY
+            healed = False
+            if billing_cycle == 'yearly' and addon.stripe_yearly_price_id:
+                try:
+                    stripe.Price.retrieve(addon.stripe_yearly_price_id)
+                except Exception:
+                    addon.stripe_yearly_price_id = None
+                    healed = True
+            elif billing_cycle != 'yearly' and addon.stripe_price_id:
+                try:
+                    stripe.Price.retrieve(addon.stripe_price_id)
+                except Exception:
+                    addon.stripe_price_id = None
+                    healed = True
+            
+            if healed:
+                addon.save()
+                addon.refresh_from_db()
+
         if billing_cycle == 'yearly':
             price_id = addon.stripe_yearly_price_id
             cycle_name = 'anual'
@@ -135,16 +156,18 @@ class AddOnViewSet(viewsets.ModelViewSet):
                 'subscription_data': {
                     'metadata': {
                         'user_id': request.user.id,
+                        'addon_id': addon.id,
                         'addon_slug': addon.slug, 
                         'type': 'addon_subscription',
                         'comments': comments_truncated
                     }
                 },
-                'success_url': f"{get_frontend_origin(request)}/dashboard?payment=success&addon_slug={addon.slug}",
+                'success_url': f"{get_frontend_origin(request)}/dashboard?payment=success&addon_slug={addon.slug}&session_id={{CHECKOUT_SESSION_ID}}",
                 'cancel_url': f"{get_frontend_origin(request)}/dashboard?payment=cancel",
                 'metadata': {
                     'user_id': request.user.id,
                     'addon_id': addon.id,
+                    'addon_slug': addon.slug,
                     'type': 'addon_subscription',
                     'comments': comments_truncated
                 }
@@ -154,6 +177,123 @@ class AddOnViewSet(viewsets.ModelViewSet):
 
             session = stripe.checkout.Session.create(**session_kwargs)
             return Response({'url': session.url}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @action(detail=False, methods=['post'], url_path='sync-checkout-session', permission_classes=[permissions.IsAuthenticated])
+    def sync_checkout_session(self, request):
+        session_id = request.data.get('session_id')
+        if not session_id:
+            return Response({'error': 'Falta el parámetro session_id.'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        if not getattr(settings, "STRIPE_SECRET_KEY", None):
+            return Response({'error': 'Stripe no está configurado.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            
+        import stripe
+        stripe.api_key = settings.STRIPE_SECRET_KEY
+        
+        try:
+            session = stripe.checkout.Session.retrieve(session_id)
+            if session.get('payment_status') != 'paid':
+                return Response({'status': 'pending', 'message': 'El pago no ha sido completado.'}, status=status.HTTP_200_OK)
+                
+            metadata = session.get('metadata', {})
+            if metadata.get('type') != 'addon_subscription':
+                return Response({'error': 'Sesión inválida.'}, status=status.HTTP_400_BAD_REQUEST)
+                
+            user_id = metadata.get('user_id')
+            addon_id = metadata.get('addon_id')
+            addon_slug = metadata.get('addon_slug')
+            comments = metadata.get('comments', '')
+            
+            from django.contrib.auth import get_user_model
+            User = get_user_model()
+            user = User.objects.get(id=user_id)
+            
+            if user.role == User.Role.CUSTOMER:
+                user.role = User.Role.BUSINESS
+                user.save()
+                
+            contract = Contract.objects.filter(user=user, is_active=True).first()
+            if not contract:
+                contract = Contract.objects.create(
+                    user=user,
+                    full_name=user.get_full_name() or user.username,
+                    tax_id='XAXX010101000',
+                    address='Suscripción Digital (Stripe)',
+                    project_idea='Suscripción a Add-ons y Complementos',
+                    signature_base64='STRIPE_SUBSCRIPTION_ACTIVE',
+                    is_fully_signed=True,
+                    payment_commitment_method='STRIPE'
+                )
+            
+            addon = None
+            if addon_id:
+                try:
+                    addon = AddOn.objects.get(id=addon_id)
+                except AddOn.DoesNotExist:
+                    pass
+            if not addon and addon_slug:
+                try:
+                    addon = AddOn.objects.get(slug=addon_slug)
+                    addon_id = addon.id
+                except AddOn.DoesNotExist:
+                    pass
+                    
+            if not addon:
+                return Response({'error': 'Módulo no encontrado.'}, status=status.HTTP_404_NOT_FOUND)
+                
+            contract.addons.add(addon)
+            
+            from apps.tenants.models import Tenant
+            tenant = Tenant.objects.filter(owner=contract.user).first()
+            subscription_id = session.get('subscription')
+            billing_cycle = metadata.get('billing_cycle', 'monthly')
+            price = addon.yearly_price if billing_cycle == 'yearly' else addon.monthly_price
+            
+            addon_sub, created = AddOnSubscription.objects.update_or_create(
+                user=user,
+                addon=addon,
+                defaults={
+                    'tenant': tenant,
+                    'stripe_subscription_id': subscription_id,
+                    'status': 'active',
+                    'billing_cycle': billing_cycle,
+                    'price_paid': price,
+                    'is_activated': True
+                }
+            )
+            
+            if not tenant:
+                from django.utils.text import slugify
+                base_subdomain = slugify(contract.full_name or contract.user.username)
+                if not base_subdomain:
+                    base_subdomain = slugify(contract.user.username) or f"client-{contract.user.id}"
+                
+                subdomain = base_subdomain
+                counter = 1
+                while Tenant.objects.filter(subdomain=subdomain).exists():
+                    subdomain = f"{base_subdomain}-{counter}"
+                    counter += 1
+                
+                tenant = Tenant.objects.create(
+                    owner=contract.user,
+                    name=contract.full_name or f"Portal de {contract.user.get_full_name() or contract.user.username}",
+                    subdomain=subdomain,
+                    is_active=True
+                )
+                addon_sub.tenant = tenant
+                addon_sub.save()
+            else:
+                if not tenant.is_active:
+                    tenant.is_active = True
+                    tenant.save()
+                    
+            return Response({
+                'status': 'success',
+                'addon_slug': addon.slug,
+                'active_addons': tenant.active_addons
+            }, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -188,10 +328,147 @@ class AddOnSubscriptionViewSet(viewsets.ModelViewSet):
             return AddOnSubscription.objects.all().order_by('-created_at')
         return AddOnSubscription.objects.filter(user=user).order_by('-created_at')
 
+    def perform_create(self, serializer):
+        user = self.request.user
+        addon = serializer.validated_data.get('addon')
+        from apps.tenants.models import Tenant
+        tenant = Tenant.objects.filter(owner=user).first()
+        
+        # Check if they have an active plan contract (so they get it for free)
+        has_plan = Contract.objects.filter(
+            user=user,
+            is_active=True,
+            plan__isnull=False
+        ).exists()
+        
+        if has_plan:
+            # It's a free request, set is_activated=False (pending admin review/activation)
+            addon_sub = serializer.save(
+                user=user,
+                tenant=tenant,
+                is_activated=False,
+                price_paid=0.00,
+                status=AddOnSubscription.Status.ACTIVE
+            )
+            
+            # Send notification to support team
+            try:
+                from apps.shop.utils import notify_support_addon_subscription, send_addon_contracted_email
+                notify_support_addon_subscription(user, addon, tenant=tenant)
+                
+                # Send confirmation email to client (is_activated=False)
+                tenant_subdomain = tenant.subdomain if tenant else None
+                send_addon_contracted_email(user, addon, tenant_subdomain, is_activated=False)
+            except Exception as notify_err:
+                import logging
+                logging.getLogger("apps").error(f"Error notifying support/client for free addon request: {notify_err}", exc_info=True)
+        else:
+            # Paid flow - Stripe webhook will handle creation, but if created directly, default to True
+            serializer.save(user=user, tenant=tenant, is_activated=True)
+
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
+    def activate(self, request, pk=None):
+        if not (request.user.is_staff or request.user.role == 'ADMIN'):
+            return Response({'error': 'No tienes permisos para activar add-ons'}, status=status.HTTP_403_FORBIDDEN)
+            
+        addon_sub = self.get_object()
+        addon_sub.is_activated = True
+        addon_sub.save()
+        
+        # Add the addon to their active contract to keep contract addons in sync
+        contract = Contract.objects.filter(user=addon_sub.user, is_active=True).first()
+        if contract:
+            contract.addons.add(addon_sub.addon)
+            
+        # Send confirmation email to client
+        try:
+            from apps.tenants.models import Tenant
+            tenant = Tenant.objects.filter(owner=addon_sub.user).first()
+            from apps.shop.utils import send_addon_activated_email
+            tenant_subdomain = tenant.subdomain if tenant else None
+            send_addon_activated_email(addon_sub.user, addon_sub.addon, tenant_subdomain)
+        except Exception as email_err:
+            import logging
+            logging.getLogger("apps").error(f"Error sending activation email: {email_err}", exc_info=True)
+            
+        return Response({'status': 'activated', 'is_activated': True}, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
+    def deactivate(self, request, pk=None):
+        if not (request.user.is_staff or request.user.role == 'ADMIN'):
+            return Response({'error': 'No tienes permisos para desactivar add-ons'}, status=status.HTTP_403_FORBIDDEN)
+            
+        addon_sub = self.get_object()
+        addon_sub.is_activated = False
+        addon_sub.save()
+        
+        # Remove the addon from their active contract
+        contract = Contract.objects.filter(user=addon_sub.user, is_active=True).first()
+        if contract:
+            contract.addons.remove(addon_sub.addon)
+            
+        return Response({'status': 'deactivated', 'is_activated': False}, status=status.HTTP_200_OK)
+
+
 
 class ContractViewSet(viewsets.ModelViewSet):
     serializer_class = ContractSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+    @action(detail=False, methods=['post'], url_path='toggle-addon', permission_classes=[permissions.IsAuthenticated])
+    def toggle_addon(self, request):
+        if not (request.user.is_staff or getattr(request.user, 'role', '') == 'ADMIN'):
+            return Response({'error': 'No tienes permisos para realizar esta acción.'}, status=status.HTTP_403_FORBIDDEN)
+            
+        tenant_id = request.data.get('tenant_id')
+        addon_slug = request.data.get('addon_slug')
+        is_active = request.data.get('is_active')
+        
+        if not tenant_id or not addon_slug:
+            return Response({'error': 'Faltan parámetros tenant_id o addon_slug'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        from apps.tenants.models import Tenant
+        from django.shortcuts import get_object_or_404
+        tenant = get_object_or_404(Tenant, id=tenant_id)
+        user = tenant.owner
+        
+        contract = Contract.objects.filter(user=user, is_active=True).first()
+        if not contract:
+            contract = Contract.objects.create(
+                user=user,
+                full_name=user.get_full_name() or user.username,
+                tax_id='XAXX010101000',
+                address='Asignación Manual de Add-ons (Admin)',
+                project_idea='Asignación Manual de Add-ons',
+                signature_base64='MANUAL_ASSIGNMENT_ACTIVE',
+                is_fully_signed=True,
+                payment_commitment_method='CASH'
+            )
+            
+        try:
+            addon = AddOn.objects.get(slug=addon_slug)
+        except AddOn.DoesNotExist:
+            return Response({'error': f'Add-on con slug {addon_slug} no encontrado.'}, status=status.HTTP_404_NOT_FOUND)
+            
+        if is_active:
+            contract.addons.add(addon)
+            AddOnSubscription.objects.update_or_create(
+                user=user,
+                addon=addon,
+                defaults={
+                    'tenant': tenant,
+                    'status': 'active',
+                    'is_activated': True
+                }
+            )
+        else:
+            contract.addons.remove(addon)
+            AddOnSubscription.objects.filter(user=user, addon=addon).update(is_activated=False)
+            
+        return Response({
+            'status': 'success',
+            'active_addons': tenant.active_addons
+        })
 
     def get_queryset(self):
         # Auto-healer: ensure all signed contracts have a tenant
@@ -453,7 +730,6 @@ def get_or_create_generic_stripe_product(name, description, metadata_key, metada
 def get_or_create_stripe_coupon(promo):
     if getattr(settings, "TESTING", False) or not getattr(settings, "STRIPE_SECRET_KEY", None):
         return "dummy_coupon_id"
-    import stripe
     stripe.api_key = settings.STRIPE_SECRET_KEY
     coupon_id = f"django_{promo.code.lower()}"
     try:
@@ -726,11 +1002,12 @@ def stripe_webhook(request):
         elif session.get('metadata', {}).get('type') == 'addon_subscription':
             user_id = session.get('metadata', {}).get('user_id')
             addon_id = session.get('metadata', {}).get('addon_id')
+            addon_slug = session.get('metadata', {}).get('addon_slug')
             comments = session.get('metadata', {}).get('comments', '')
             import logging as _logging
             _webhook_logger = _logging.getLogger(__name__)
-            _webhook_logger.info(f"[stripe_webhook] addon_subscription recibido: user_id={user_id} addon_id={addon_id}")
-            if user_id and addon_id:
+            _webhook_logger.info(f"[stripe_webhook] addon_subscription recibido: user_id={user_id} addon_id={addon_id} addon_slug={addon_slug}")
+            if user_id and (addon_id or addon_slug):
 
                 contract = None
                 user = None
@@ -759,31 +1036,46 @@ def stripe_webhook(request):
                             is_fully_signed=True,
                             payment_commitment_method='STRIPE'
                         )
-                    contract.addons.add(addon_id)
                     
-                    # --- CREATE OR UPDATE AddOnSubscription ---
-                    try:
-                        from apps.tenants.models import Tenant
-                        addon = AddOn.objects.get(id=addon_id)
-                        tenant = Tenant.objects.filter(owner=contract.user).first()
-                        subscription_id = session.get('subscription')
-                        billing_cycle = session.get('metadata', {}).get('billing_cycle', 'monthly')
-                        
-                        price = addon.yearly_price if billing_cycle == 'yearly' else addon.monthly_price
+                    addon = None
+                    if addon_id:
+                        try:
+                            addon = AddOn.objects.get(id=addon_id)
+                        except AddOn.DoesNotExist:
+                            pass
+                    if not addon and addon_slug:
+                        try:
+                            addon = AddOn.objects.get(slug=addon_slug)
+                            addon_id = addon.id
+                        except AddOn.DoesNotExist:
+                            pass
+                            
+                    if addon:
+                        contract.addons.add(addon)
+                    
+                        # --- CREATE OR UPDATE AddOnSubscription ---
+                        try:
+                            from apps.tenants.models import Tenant
+                            tenant = Tenant.objects.filter(owner=contract.user).first()
+                            subscription_id = session.get('subscription')
+                            billing_cycle = session.get('metadata', {}).get('billing_cycle', 'monthly')
+                            
+                            price = addon.yearly_price if billing_cycle == 'yearly' else addon.monthly_price
 
-                        AddOnSubscription.objects.update_or_create(
-                            user=user,
-                            addon=addon,
-                            defaults={
-                                'tenant': tenant,
-                                'stripe_subscription_id': subscription_id,
-                                'status': 'active',
-                                'billing_cycle': billing_cycle,
-                                'price_paid': price
-                            }
-                        )
-                    except Exception as sub_err:
-                        _webhook_logger.error(f"[stripe_webhook] Error creating/updating AddOnSubscription in webhook: {sub_err}", exc_info=True)
+                            AddOnSubscription.objects.update_or_create(
+                                user=user,
+                                addon=addon,
+                                defaults={
+                                    'tenant': tenant,
+                                    'stripe_subscription_id': subscription_id,
+                                    'status': 'active',
+                                    'billing_cycle': billing_cycle,
+                                    'price_paid': price,
+                                    'is_activated': True
+                                }
+                            )
+                        except Exception as sub_err:
+                            _webhook_logger.error(f"[stripe_webhook] Error creating/updating AddOnSubscription in webhook: {sub_err}", exc_info=True)
                 except Exception as core_err:
                     _webhook_logger.error(
                         f"[stripe_webhook] addon_subscription: error in core activation for user={user_id} addon={addon_id}: {core_err}",
@@ -832,6 +1124,14 @@ def stripe_webhook(request):
                     if contract:
                         addon = AddOn.objects.get(id=addon_id)
                         send_addon_payment_receipt_email(contract.user, addon, session)
+                        try:
+                            from apps.shop.utils import send_addon_contracted_email
+                            from apps.tenants.models import Tenant
+                            _tenant_obj = Tenant.objects.filter(owner=contract.user).first()
+                            tenant_subdomain = _tenant_obj.subdomain if _tenant_obj else None
+                            send_addon_contracted_email(contract.user, addon, tenant_subdomain, is_activated=True)
+                        except Exception as contracted_mail_err:
+                            _webhook_logger.error(f"[stripe_webhook] Error sending addon contracted email: {contracted_mail_err}", exc_info=True)
                 except Exception as mail_err:
                     _webhook_logger.error(f"Error sending addon subscription payment receipt email: {mail_err}", exc_info=True)
 
@@ -996,13 +1296,20 @@ def stripe_webhook(request):
         metadata = subscription.get('metadata', {})
         user_id = metadata.get('user_id')
         addon_id = metadata.get('addon_id')
+        addon_slug = metadata.get('addon_slug')
         
         try:
             addon_sub = None
             if subscription_id:
                 addon_sub = AddOnSubscription.objects.filter(stripe_subscription_id=subscription_id).first()
-            if not addon_sub and user_id and addon_id:
-                addon_sub = AddOnSubscription.objects.filter(user_id=user_id, addon_id=addon_id).first()
+            if not addon_sub and user_id and (addon_id or addon_slug):
+                from django.db.models import Q
+                q = Q(user_id=user_id)
+                if addon_id:
+                    q &= Q(addon_id=addon_id)
+                elif addon_slug:
+                    q &= Q(addon__slug=addon_slug)
+                addon_sub = AddOnSubscription.objects.filter(q).first()
             
             if addon_sub:
                 addon_sub.status = 'canceled'
@@ -1029,13 +1336,20 @@ def stripe_webhook(request):
         metadata = subscription.get('metadata', {})
         user_id = metadata.get('user_id')
         addon_id = metadata.get('addon_id')
+        addon_slug = metadata.get('addon_slug')
         
         try:
             addon_sub = None
             if subscription_id:
                 addon_sub = AddOnSubscription.objects.filter(stripe_subscription_id=subscription_id).first()
-            if not addon_sub and user_id and addon_id:
-                addon_sub = AddOnSubscription.objects.filter(user_id=user_id, addon_id=addon_id).first()
+            if not addon_sub and user_id and (addon_id or addon_slug):
+                from django.db.models import Q
+                q = Q(user_id=user_id)
+                if addon_id:
+                    q &= Q(addon_id=addon_id)
+                elif addon_slug:
+                    q &= Q(addon__slug=addon_slug)
+                addon_sub = AddOnSubscription.objects.filter(q).first()
                 
             if addon_sub:
                 addon_sub.status = stripe_status
@@ -1065,33 +1379,47 @@ def stripe_webhook(request):
                 if metadata.get('type') == 'addon_subscription':
                     user_id = metadata.get('user_id')
                     addon_id = metadata.get('addon_id')
-                    if user_id and addon_id:
+                    addon_slug = metadata.get('addon_slug')
+                    if user_id and (addon_id or addon_slug):
                         from django.contrib.auth import get_user_model
                         from apps.tenants.models import Tenant
 
                         User = get_user_model()
                         user = User.objects.get(id=user_id)
-                        addon = AddOn.objects.get(id=addon_id)
                         
-                        if addon.slug in ['mexico-invoicing', 'ecommerce-combo']:
-                            # Encontrar o crear Tenant
-                            tenant = Tenant.objects.filter(owner=user).first()
-                            if not tenant:
-                                from django.utils.text import slugify
-                                contract = Contract.objects.filter(user=user, is_active=True).first()
-                                full_name = contract.full_name if contract else (user.get_full_name() or user.username)
-                                base_subdomain = slugify(full_name) or f"client-{user.id}"
-                                subdomain = base_subdomain
-                                counter = 1
-                                while Tenant.objects.filter(subdomain=subdomain).exists():
-                                    subdomain = f"{base_subdomain}-{counter}"
-                                    counter += 1
-                                tenant = Tenant.objects.create(
-                                    owner=user,
-                                    name=f"Portal de {full_name}",
-                                    subdomain=subdomain,
-                                    is_active=True
-                                )
+                        addon = None
+                        if addon_id:
+                            try:
+                                addon = AddOn.objects.get(id=addon_id)
+                            except AddOn.DoesNotExist:
+                                pass
+                        if not addon and addon_slug:
+                            try:
+                                addon = AddOn.objects.get(slug=addon_slug)
+                                addon_id = addon.id
+                            except AddOn.DoesNotExist:
+                                pass
+                                
+                        if addon:
+                            if addon.slug in ['mexico-invoicing', 'ecommerce-combo']:
+                                # Encontrar o crear Tenant
+                                tenant = Tenant.objects.filter(owner=user).first()
+                                if not tenant:
+                                    from django.utils.text import slugify
+                                    contract = Contract.objects.filter(user=user, is_active=True).first()
+                                    full_name = contract.full_name if contract else (user.get_full_name() or user.username)
+                                    base_subdomain = slugify(full_name) or f"client-{user.id}"
+                                    subdomain = base_subdomain
+                                    counter = 1
+                                    while Tenant.objects.filter(subdomain=subdomain).exists():
+                                        subdomain = f"{base_subdomain}-{counter}"
+                                        counter += 1
+                                    tenant = Tenant.objects.create(
+                                        owner=user,
+                                        name=f"Portal de {full_name}",
+                                        subdomain=subdomain,
+                                        is_active=True
+                                    )
                             
                             tenant.stamp_balance = (tenant.stamp_balance or 0) + 20
                             tenant.save()

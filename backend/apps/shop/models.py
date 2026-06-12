@@ -440,6 +440,21 @@ class AddOn(models.Model):
     stripe_yearly_price_id = models.CharField(max_length=100, blank=True, null=True, help_text="ID de precio anual de Stripe para suscripciones directas")
 
     def save(self, *args, **kwargs):
+        # Validate existing Stripe Price IDs and clear them if they don't exist on this Stripe account
+        if getattr(settings, "STRIPE_SECRET_KEY", None) and not getattr(settings, "TESTING", False):
+            import stripe
+            stripe.api_key = settings.STRIPE_SECRET_KEY
+            if self.stripe_price_id:
+                try:
+                    stripe.Price.retrieve(self.stripe_price_id)
+                except Exception:
+                    self.stripe_price_id = None
+            if self.stripe_yearly_price_id:
+                try:
+                    stripe.Price.retrieve(self.stripe_yearly_price_id)
+                except Exception:
+                    self.stripe_yearly_price_id = None
+
         super().save(*args, **kwargs)
         
         updated = False
@@ -565,6 +580,10 @@ class AddOnSubscription(models.Model):
         max_digits=10,
         decimal_places=2,
         default=0.00
+    )
+    is_activated = models.BooleanField(
+        default=True,
+        help_text="Indica si el add-on ha sido activado por el administrador para este inquilino."
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

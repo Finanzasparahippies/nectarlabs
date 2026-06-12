@@ -746,6 +746,8 @@ export default function TenantPortalPage() {
                       { slug: 'patreon-sponsorship', label: 'Sponsorship', icon: '💎' },
                       { slug: 'analytics-apm', label: 'Métricas APM', icon: '📊' },
                       { slug: 'newsletter-campaigner', label: 'Boletín', icon: '✉️' },
+                      { slug: 'mexico-invoicing', label: 'Facturación SAT', icon: '🧾' },
+                      { slug: 'ecommerce-combo', label: 'Tienda Online', icon: '🛍️' },
                     ]
                       .filter(tab => activeAddonsList.includes(tab.slug))
                       .map(tab => {
@@ -777,6 +779,8 @@ export default function TenantPortalPage() {
                     { slug: 'patreon-sponsorship', component: <SponsorTiers primaryColor={primaryColor} /> },
                     { slug: 'analytics-apm', component: <TelemetryDashboard primaryColor={primaryColor} /> },
                     { slug: 'newsletter-campaigner', component: <SubscribeForm tenantId={tenantConfig.id} subdomain={subdomain} primaryColor={primaryColor} /> },
+                    { slug: 'mexico-invoicing', component: <SATInvoicingForm tenantId={tenantConfig.id} subdomain={subdomain} primaryColor={primaryColor} /> },
+                    { slug: 'ecommerce-combo', component: <EcommerceStore tenantId={tenantConfig.id} subdomain={subdomain} primaryColor={primaryColor} /> },
                   ].find(tab => tab.slug === activeAddonTab)?.component}
                 </div>
               </div>
@@ -1006,7 +1010,7 @@ export default function TenantPortalPage() {
                           </div>
 
                           <div className="space-y-1">
-                            <label className="text-[8.5px] font-black uppercase tracking-wider text-white/40">Detalle / Requerimientos</label>
+                            <label className="text-[8.5px] font-black uppercase tracking-wider text-white/45">Detalle / Requerimientos</label>
                             <textarea
                               value={newTicketDesc}
                               onChange={(e) => setNewTicketDesc(e.target.value)}
@@ -1175,6 +1179,587 @@ export default function TenantPortalPage() {
           onConfirm={confirmDlg.onConfirm}
           onCancel={() => setConfirmDlg(null)}
         />
+      )}
+    </div>
+  );
+}
+
+// -------------------------------------------------------------
+// NEW ADDON COMPONENTS (White-Label Invoicing & Ecommerce Store)
+// -------------------------------------------------------------
+
+interface SATInvoicingFormProps {
+  tenantId: string;
+  subdomain: string;
+  primaryColor: string;
+}
+
+function SATInvoicingForm({ tenantId, subdomain, primaryColor }: SATInvoicingFormProps) {
+  const [rfc, setRfc] = useState('');
+  const [razonSocial, setRazonSocial] = useState('');
+  const [regimenFiscal, setRegimenFiscal] = useState('601');
+  const [codigoPostal, setCodigoPostal] = useState('');
+  const [email, setEmail] = useState('');
+  const [reference, setReference] = useState('');
+  const [amount, setAmount] = useState('');
+  const [usoCfdi, setUsoCfdi] = useState('G03');
+  
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setErrorMsg(null);
+    setSuccessMsg(null);
+
+    try {
+      const res = await fetch('/api/billing/invoices/issue-tenant-to-client/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          customer_info: {
+            rfc: rfc.trim().toUpperCase(),
+            razon_social: razonSocial.trim(),
+            regimen_fiscal: regimenFiscal,
+            codigo_postal: codigoPostal.trim(),
+            email: email.trim()
+          },
+          items: [
+            {
+              quantity: 1,
+              unit_price: parseFloat(amount),
+              description: `Consumo/Compra Ref: ${reference.trim()}`
+            }
+          ],
+          total: parseFloat(amount)
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.detail || data.error || 'No se pudo emitir la factura.');
+      }
+
+      setSuccessMsg(`Factura emitida y timbrada con éxito. Folio SAT (UUID): ${data.uuid_sat || 'Pendiente LCO'}. El PDF/XML se han enviado a tu correo.`);
+      setRfc('');
+      setRazonSocial('');
+      setCodigoPostal('');
+      setEmail('');
+      setReference('');
+      setAmount('');
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Error al emitir la factura.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="max-w-xl mx-auto p-6 rounded-2xl bg-white/[0.02] border border-white/5 space-y-6 text-left">
+      <div>
+        <h3 className="text-lg font-black uppercase text-white tracking-wide">Solicitar Factura SAT</h3>
+        <p className="text-[10px] text-white/50 uppercase tracking-widest mt-1">Ingresa tus datos fiscales para emitir tu CFDI 4.0</p>
+      </div>
+
+      {errorMsg && (
+        <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-bold rounded-xl">
+          ⚠️ {errorMsg}
+        </div>
+      )}
+
+      {successMsg && (
+        <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold rounded-xl">
+          ✓ {successMsg}
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="space-y-1">
+            <label className="text-[8px] uppercase tracking-wider font-black text-white/50">RFC</label>
+            <input
+              type="text"
+              required
+              maxLength={13}
+              placeholder="Ej. NLA260529AAA"
+              value={rfc}
+              onChange={(e) => setRfc(e.target.value.toUpperCase())}
+              className="w-full border border-white/10 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-nectar-gold bg-transparent text-white transition-all font-mono"
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-[8px] uppercase tracking-wider font-black text-white/50">Razón Social</label>
+            <input
+              type="text"
+              required
+              placeholder="Ej. Nombre Completo o Empresa"
+              value={razonSocial}
+              onChange={(e) => setRazonSocial(e.target.value)}
+              className="w-full border border-white/10 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-nectar-gold bg-transparent text-white transition-all"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="space-y-1">
+            <label className="text-[8px] uppercase tracking-wider font-black text-white/50">Código Postal</label>
+            <input
+              type="text"
+              required
+              maxLength={5}
+              placeholder="Ej. 06000"
+              value={codigoPostal}
+              onChange={(e) => setCodigoPostal(e.target.value)}
+              className="w-full border border-white/10 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-nectar-gold bg-transparent text-white transition-all"
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-[8px] uppercase tracking-wider font-black text-white/50">Correo de Envío</label>
+            <input
+              type="email"
+              required
+              placeholder="cliente@ejemplo.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full border border-white/10 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-nectar-gold bg-transparent text-white transition-all"
+            />
+          </div>
+        </div>
+
+        <div className="space-y-1">
+          <label className="text-[8px] uppercase tracking-wider font-black text-white/50">Régimen Fiscal</label>
+          <select
+            value={regimenFiscal}
+            onChange={(e) => setRegimenFiscal(e.target.value)}
+            className="w-full border border-white/10 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-nectar-gold bg-black text-white transition-all"
+          >
+            <option value="601">601 - General de Ley Personas Morales</option>
+            <option value="603">603 - Personas Morales con Fines no Lucrativos</option>
+            <option value="605">605 - Sueldos y Salarios e Ingresos Asimilados a Salarios</option>
+            <option value="606">606 - Arrendamiento</option>
+            <option value="612">612 - Personas Físicas con Actividades Empresariales y Profesionales</option>
+            <option value="621">621 - Incorporación Fiscal</option>
+            <option value="625">625 - Régimen Simplificado de Confianza (RESICO)</option>
+            <option value="626">626 - Régimen Simplificado de Confianza Personas Morales</option>
+          </select>
+        </div>
+
+        <div className="space-y-1">
+          <label className="text-[8px] uppercase tracking-wider font-black text-white/50">Uso de CFDI</label>
+          <select
+            value={usoCfdi}
+            onChange={(e) => setUsoCfdi(e.target.value)}
+            className="w-full border border-white/10 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-nectar-gold bg-black text-white transition-all"
+          >
+            <option value="G01">G01 - Adquisición de mercancías</option>
+            <option value="G03">G03 - Gastos en general</option>
+            <option value="I01">I01 - Construcciones</option>
+            <option value="D01">D01 - Honorarios médicos, dentales y gastos hospitalarios</option>
+            <option value="D02">D02 - Gastos médicos por incapacidad o discapacidad</option>
+            <option value="S01">S01 - Sin efectos fiscales</option>
+            <option value="CP01">CP01 - Pagos</option>
+          </select>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4 border-t border-white/5 pt-4">
+          <div className="space-y-1">
+            <label className="text-[8px] uppercase tracking-wider font-black text-white/50">ID de Referencia (Ticket/Orden)</label>
+            <input
+              type="text"
+              required
+              placeholder="Ej. ORDER-123"
+              value={reference}
+              onChange={(e) => setReference(e.target.value)}
+              className="w-full border border-white/10 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-nectar-gold bg-transparent text-white transition-all"
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-[8px] uppercase tracking-wider font-black text-white/50">Monto Total ($ MXN)</label>
+            <input
+              type="number"
+              step="0.01"
+              required
+              placeholder="Ej. 250.00"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              className="w-full border border-white/10 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-nectar-gold bg-transparent text-white transition-all"
+            />
+          </div>
+        </div>
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full py-3.5 text-black font-black uppercase tracking-widest text-[9px] rounded-xl transition-all cursor-pointer disabled:opacity-50 mt-4 animate-premium"
+          style={{ backgroundColor: primaryColor }}
+        >
+          {loading ? 'Generando Factura SAT...' : 'Emitir Factura SAT'}
+        </button>
+      </form>
+    </div>
+  );
+}
+
+interface EcommerceStoreProps {
+  tenantId: string;
+  subdomain: string;
+  primaryColor: string;
+}
+
+function EcommerceStore({ tenantId, subdomain, primaryColor }: EcommerceStoreProps) {
+  const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
+  
+  const [fullName, setFullName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [streetAndNumber, setStreetAndNumber] = useState('');
+  const [suburb, setSuburb] = useState('');
+  const [city, setCity] = useState('');
+  const [state, setState] = useState('');
+  const [postalCode, setPostalCode] = useState('');
+  const [country, setCountry] = useState('MX');
+  
+  const [fetchingRates, setFetchingRates] = useState(false);
+  const [shippingRates, setShippingRates] = useState<any[]>([]);
+  const [selectedRate, setSelectedRate] = useState<any | null>(null);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const res = await fetch(`/api/products/?subdomain=${subdomain}`);
+        if (!res.ok) throw new Error('Error al cargar productos');
+        const data = await res.json();
+        setProducts(Array.isArray(data) ? data : (data.results || []));
+      } catch (err) {
+        console.error('Error fetching products:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProducts();
+  }, [subdomain]);
+
+  const handleFetchShippingRates = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFetchingRates(true);
+    setErrorMsg(null);
+    setShippingRates([]);
+    setSelectedRate(null);
+
+    try {
+      const res = await fetch('/api/shop/shipping-rates/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          subdomain,
+          destination: {
+            zip_code: postalCode.trim(),
+            street_and_number: streetAndNumber.trim(),
+            suburb: suburb.trim(),
+            city: city.trim(),
+            state: state.trim(),
+            country: country.trim()
+          }
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'No se pudieron calcular tarifas de envío.');
+      
+      const rates = data.rates || [];
+      setShippingRates(rates);
+      if (rates.length > 0) {
+        setSelectedRate(rates[0]);
+      } else {
+        throw new Error('No se encontraron tarifas de envío disponibles para esta dirección.');
+      }
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Error al calcular el envío.');
+    } finally {
+      setFetchingRates(false);
+    }
+  };
+
+  const handleCreateCheckoutSession = async () => {
+    if (!selectedProduct || !selectedRate) return;
+    setCheckoutLoading(true);
+    setErrorMsg(null);
+
+    try {
+      const res = await fetch('/api/shop/checkout/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          subdomain,
+          email: email.trim(),
+          full_name: fullName.trim(),
+          phone: phone.trim(),
+          street_and_number: streetAndNumber.trim(),
+          suburb: suburb.trim(),
+          city: city.trim(),
+          state: state.trim(),
+          postal_code: postalCode.trim(),
+          country: country.trim(),
+          items: [
+            {
+              product_id: selectedProduct.id,
+              quantity: 1
+            }
+          ],
+          skydropx_rate_id: selectedRate.rate_id,
+          shipping_cost: parseFloat(selectedRate.amount),
+          shipping_cost_base: parseFloat(selectedRate.amount),
+          shipping_provider: selectedRate.provider
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Error al iniciar pasarela de pago.');
+
+      if (data.checkout_url) {
+        window.location.href = data.checkout_url;
+      } else {
+        throw new Error('No se recibió la URL de pago.');
+      }
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Error al procesar el pago.');
+      setCheckoutLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="py-12 flex justify-center items-center animate-premium">
+        <div className="w-8 h-8 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: primaryColor, borderTopColor: 'transparent' }}></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-8 text-left animate-premium">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {products.map((product) => (
+          <div key={product.id} className="border border-white/5 rounded-2xl bg-white/[0.02] p-5 flex flex-col justify-between hover:border-white/10 transition-all duration-300">
+            <div>
+              {product.image && (
+                <img src={product.image} alt={product.name} className="w-full h-36 object-cover rounded-xl mb-4 border border-white/5" />
+              )}
+              <h4 className="text-sm font-black uppercase text-white">{product.name}</h4>
+              <p className="text-[10px] text-white/50 mt-1 line-clamp-2">{product.description}</p>
+            </div>
+            
+            <div className="mt-4 border-t border-white/5 pt-3 flex justify-between items-center">
+              <div>
+                <span className="text-xs font-black text-white font-mono">${parseFloat(product.price).toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN</span>
+                <span className="block text-[8px] text-white/30 uppercase mt-0.5">Stock: {product.stock} pz</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedProduct(product);
+                  setShippingRates([]);
+                  setSelectedRate(null);
+                  setErrorMsg(null);
+                }}
+                disabled={product.stock <= 0}
+                className="px-3.5 py-2 text-[9px] font-black uppercase tracking-widest text-black rounded-lg hover:scale-102 active:scale-95 transition-all cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+                style={{ backgroundColor: primaryColor }}
+              >
+                {product.stock <= 0 ? 'Sin Stock' : 'Comprar'}
+              </button>
+            </div>
+          </div>
+        ))}
+
+        {products.length === 0 && (
+          <div className="col-span-full py-12 text-center text-white/30 text-xs">
+            Aún no hay productos disponibles en el catálogo de esta tienda.
+          </div>
+        )}
+      </div>
+
+      {selectedProduct && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center p-4">
+          <div className="bg-[#0b0f0c] border border-white/10 w-full max-w-xl rounded-2xl p-6 md:p-8 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+            <button
+              type="button"
+              onClick={() => setSelectedProduct(null)}
+              className="absolute top-4 right-4 text-white/40 hover:text-white text-sm cursor-pointer"
+            >
+              ✕
+            </button>
+
+            <div className="mb-6 flex gap-4 items-center">
+              {selectedProduct.image && (
+                <img src={selectedProduct.image} alt={selectedProduct.name} className="w-12 h-12 object-cover rounded-lg border border-white/5 shrink-0" />
+              )}
+              <div>
+                <span className="text-[8px] font-black uppercase tracking-widest text-white/40 block mb-0.5">Completar Compra</span>
+                <h3 className="text-base font-black text-white uppercase">{selectedProduct.name}</h3>
+                <span className="text-[10px] font-mono font-bold text-nectar-gold">${parseFloat(selectedProduct.price).toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN</span>
+              </div>
+            </div>
+
+            {errorMsg && (
+              <div className="mb-4 p-3.5 bg-red-500/10 border border-red-500/20 text-red-400 text-[10px] uppercase font-bold rounded-xl">
+                ⚠️ {errorMsg}
+              </div>
+            )}
+
+            {shippingRates.length === 0 ? (
+              <form onSubmit={handleFetchShippingRates} className="space-y-4">
+                <h4 className="text-[9px] font-black uppercase tracking-widest text-white/50 border-b border-white/5 pb-2">Información de Envío y Contacto</h4>
+                
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-[8px] uppercase tracking-wider font-black text-white/45">Nombre Completo</label>
+                    <input
+                      type="text" required placeholder="Carlos Mendoza" value={fullName} onChange={(e) => setFullName(e.target.value)}
+                      className="w-full border border-white/10 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-nectar-gold bg-transparent text-white"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[8px] uppercase tracking-wider font-black text-white/45">Correo Electrónico</label>
+                    <input
+                      type="email" required placeholder="correo@ejemplo.com" value={email} onChange={(e) => setEmail(e.target.value)}
+                      className="w-full border border-white/10 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-nectar-gold bg-transparent text-white"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-[8px] uppercase tracking-wider font-black text-white/45">Teléfono</label>
+                    <input
+                      type="tel" required placeholder="5512345678" value={phone} onChange={(e) => setPhone(e.target.value)}
+                      className="w-full border border-white/10 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-nectar-gold bg-transparent text-white"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[8px] uppercase tracking-wider font-black text-white/45">Código Postal</label>
+                    <input
+                      type="text" required maxLength={5} placeholder="06000" value={postalCode} onChange={(e) => setPostalCode(e.target.value)}
+                      className="w-full border border-white/10 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-nectar-gold bg-transparent text-white"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[8px] uppercase tracking-wider font-black text-white/45">Calle y Número</label>
+                  <input
+                    type="text" required placeholder="Av. Paseo de la Reforma #123" value={streetAndNumber} onChange={(e) => setStreetAndNumber(e.target.value)}
+                    className="w-full border border-white/10 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-nectar-gold bg-transparent text-white"
+                  />
+                </div>
+
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="space-y-1">
+                    <label className="text-[8px] uppercase tracking-wider font-black text-white/45">Colonia</label>
+                    <input
+                      type="text" required placeholder="Juárez" value={suburb} onChange={(e) => setSuburb(e.target.value)}
+                      className="w-full border border-white/10 rounded-xl px-2 py-2 text-xs focus:outline-none focus:border-nectar-gold bg-transparent text-white"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[8px] uppercase tracking-wider font-black text-white/45">Ciudad</label>
+                    <input
+                      type="text" required placeholder="Cuauhtémoc" value={city} onChange={(e) => setCity(e.target.value)}
+                      className="w-full border border-white/10 rounded-xl px-2 py-2 text-xs focus:outline-none focus:border-nectar-gold bg-transparent text-white"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[8px] uppercase tracking-wider font-black text-white/45">Estado</label>
+                    <input
+                      type="text" required placeholder="CDMX" value={state} onChange={(e) => setState(e.target.value)}
+                      className="w-full border border-white/10 rounded-xl px-2 py-2 text-xs focus:outline-none focus:border-nectar-gold bg-transparent text-white"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={fetchingRates}
+                  className="w-full py-3.5 text-black font-black uppercase tracking-widest text-[9px] rounded-xl transition-all cursor-pointer disabled:opacity-50 mt-4 animate-premium"
+                  style={{ backgroundColor: primaryColor }}
+                >
+                  {fetchingRates ? 'Calculando costos de envío...' : 'Calcular Envío'}
+                </button>
+              </form>
+            ) : (
+              <div className="space-y-6 animate-premium">
+                <h4 className="text-[9px] font-black uppercase tracking-widest text-white/55 border-b border-white/5 pb-2">Selecciona un Proveedor de Envío</h4>
+                
+                <div className="space-y-2">
+                  {shippingRates.map((rate, idx) => (
+                    <div
+                      key={idx}
+                      onClick={() => setSelectedRate(rate)}
+                      className="flex justify-between items-center p-3 border rounded-xl cursor-pointer hover:bg-white/[0.02] transition-all"
+                      style={{ borderColor: selectedRate?.rate_id === rate.rate_id ? primaryColor : 'rgba(255,255,255,0.05)' }}
+                    >
+                      <div>
+                        <span className="text-xs font-black text-white uppercase">{rate.provider}</span>
+                        <span className="block text-[8px] text-white/40 uppercase mt-0.5">Entrega estimada: {rate.days} días</span>
+                      </div>
+                      <span className="text-xs font-mono font-bold text-white">${parseFloat(rate.amount).toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN</span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="border-t border-white/5 pt-4 space-y-2 text-xs">
+                  <div className="flex justify-between text-white/60">
+                    <span>Producto:</span>
+                    <span>${parseFloat(selectedProduct.price).toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN</span>
+                  </div>
+                  {selectedRate && (
+                    <div className="flex justify-between text-white/60">
+                      <span>Envío ({selectedRate.provider}):</span>
+                      <span>${parseFloat(selectedRate.amount).toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between font-bold text-white border-t border-white/5 pt-2">
+                    <span>Total a Pagar:</span>
+                    <span className="text-nectar-gold font-mono">${(parseFloat(selectedProduct.price) + (selectedRate ? parseFloat(selectedRate.amount) : 0)).toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN</span>
+                  </div>
+                </div>
+
+                <div className="flex gap-3 mt-4">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShippingRates([]);
+                      setSelectedRate(null);
+                    }}
+                    className="flex-1 py-3 text-[9px] font-black uppercase tracking-widest hover:bg-white/5 border border-white/10 text-white rounded-xl text-center transition-all cursor-pointer"
+                  >
+                    ← Modificar Envío
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCreateCheckoutSession}
+                    disabled={checkoutLoading || !selectedRate}
+                    className="flex-1 py-3 text-[9px] font-black uppercase tracking-widest text-black rounded-xl text-center hover:scale-102 active:scale-95 transition-all cursor-pointer disabled:opacity-50"
+                    style={{ backgroundColor: primaryColor }}
+                  >
+                    {checkoutLoading ? 'Procesando Stripe...' : 'Proceder al Pago'}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
       )}
     </div>
   );
