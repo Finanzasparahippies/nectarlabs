@@ -148,6 +148,25 @@ def seed_addons():
             ]
         },
         {
+            "slug": "automatic-invoicing",
+            "name": "Facturación Automática SAT",
+            "category_badge": "CONTABILIDAD Y FISCAL",
+            "description": "Timbrado automático e inmediato de facturas CFDI 4.0 al recibir pagos de tus clientes finales.",
+            "detailed_description": "Módulo de facturación automática como agregado del módulo de facturación SAT México. Permite automatizar al 100% el timbrado de facturas al recibir pagos de abonos o mensualidades.",
+            "monthly_price": 199.00,
+            "yearly_price": 1990.00,
+            "origin_project": "nectarlabs-main",
+            "source_reference": "backend/apps/shop/views.py",
+            "complexity": AddOn.Complexity.MEDIUM,
+            "server_requirements": "Módulo Facturación SAT México activo + Configuración fiscal completa y sellos CSD vigentes.",
+            "technical_details": [
+                "Timbrado desatendido inmediato post-pago",
+                "Envío automático de XML y PDF a clientes finales",
+                "Notificaciones de estado de timbrado al tenant",
+                "Reintentos automáticos ante caídas del PAC/SAT"
+            ]
+        },
+        {
             "slug": "ecommerce-combo",
             "name": "Combo E-commerce Automatizado",
             "category_badge": "E-COMMERCE COMBO",

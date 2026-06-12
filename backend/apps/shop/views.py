@@ -785,11 +785,11 @@ class PaymentInstallmentViewSet(viewsets.ModelViewSet):
         else:
             instance = serializer.save()
 
-        # Si el estatus cambió a PAID y no tiene CFDI, la emitimos si se solicitó explícitamente (wants_invoice) o si la facturación es AUTOMATIC.
+        # Si el estatus cambió a PAID y no tiene CFDI, la emitimos si se solicitó explícitamente (wants_invoice) o si la facturación es AUTOMATIC y el tenant tiene contratado el agregado.
         if instance.status == 'PAID' and not instance.cfdi_uuid:
             from apps.tenants.models import Tenant
             tenant = Tenant.objects.filter(owner=instance.contract.user).first()
-            if instance.wants_invoice or (tenant and tenant.invoicing_mode == Tenant.InvoicingMode.AUTOMATIC):
+            if instance.wants_invoice or (tenant and tenant.invoicing_mode == Tenant.InvoicingMode.AUTOMATIC and 'automatic-invoicing' in tenant.active_addons):
                 from apps.billing.services import issue_invoice_for_installment
                 try:
                     issue_invoice_for_installment(instance)
@@ -985,11 +985,11 @@ def stripe_webhook(request):
                 contract.next_payment_date = installment.due_date + timedelta(days=30)
                 contract.save()
                 
-                # Generar factura CFDI automática si la preferencia del inquilino es AUTOMATIC o si solicitó facturar
+                # Generar factura CFDI automática si la preferencia del inquilino es AUTOMATIC y posee el agregado, o si solicitó facturar
                 from apps.tenants.models import Tenant
                 tenant = Tenant.objects.filter(owner=contract.user).first()
                 wants_invoice = session.get('metadata', {}).get('wants_invoice') == 'true'
-                if wants_invoice or (tenant and tenant.invoicing_mode == Tenant.InvoicingMode.AUTOMATIC):
+                if wants_invoice or (tenant and tenant.invoicing_mode == Tenant.InvoicingMode.AUTOMATIC and 'automatic-invoicing' in tenant.active_addons):
                     from apps.billing.services import issue_invoice_for_installment
                     try:
                         issue_invoice_for_installment(installment)

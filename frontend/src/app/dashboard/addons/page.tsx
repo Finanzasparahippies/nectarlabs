@@ -697,7 +697,7 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
                 </div>
               ))}
             </>
-          ) : addonsList.map((addon) => {
+          ) : addonsList.filter(addon => addon.id !== 'automatic-invoicing').map((addon) => {
             // Desacoplado: Todos los addons que vienen del backend están disponibles para contratarse de forma independiente
             const isEnabled = true;
             const price = billingCycle === 'monthly' ? addon.monthlyPrice : addon.yearlyPrice;

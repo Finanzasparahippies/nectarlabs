@@ -198,6 +198,7 @@ export default function TenantPortalPage() {
         const res = await fetch(`/api/tenants/public-config/?subdomain=${subdomain}`);
         if (!res.ok) throw new Error('Portal no encontrado o inactivo');
         const data = await res.json();
+        if (!data.is_active) throw new Error('Portal no activo');
         setTenantConfig(data);
 
         // Check for local credentials

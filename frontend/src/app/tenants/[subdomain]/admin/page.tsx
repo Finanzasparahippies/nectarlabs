@@ -307,9 +307,82 @@ export default function TenantAdminPage() {
     }
   };
 
+  const [isAcquiringAutoInvoicing, setIsAcquiringAutoInvoicing] = useState(false);
+
+  const handleAcquireAutomaticInvoicing = async () => {
+    if (!tenantConfig) return;
+    setIsAcquiringAutoInvoicing(true);
+    try {
+      const addons = await fetcher('/addons/');
+      const autoAddon = addons.find((a: any) => a.slug === 'automatic-invoicing');
+      if (!autoAddon) {
+        showToast('El agregado de facturación automática no está disponible en este momento.', 'error');
+        return;
+      }
+
+      const response = await fetcher(`/addons/${autoAddon.id}/subscribe/`, {
+        method: 'POST',
+        body: JSON.stringify({ billing_cycle: 'monthly' }),
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.url) {
+        window.location.href = response.url;
+      } else {
+        showToast('No se recibió la URL de suscripción de Stripe.', 'error');
+      }
+    } catch (err: any) {
+      showToast(err.message || 'Error al iniciar el checkout de Stripe.', 'error');
+    } finally {
+      setIsAcquiringAutoInvoicing(false);
+    }
+  };
+
+  const [isAcquiringMexicoInvoicing, setIsAcquiringMexicoInvoicing] = useState(false);
+
+  const handleAcquireMexicoInvoicing = async () => {
+    if (!tenantConfig) return;
+    setIsAcquiringMexicoInvoicing(true);
+    try {
+      const addons = await fetcher('/addons/');
+      const invoicingAddon = addons.find((a: any) => a.slug === 'mexico-invoicing');
+      if (!invoicingAddon) {
+        showToast('El Add-on de Facturación SAT México no está disponible en este momento.', 'error');
+        return;
+      }
+
+      const response = await fetcher(`/addons/${invoicingAddon.id}/subscribe/`, {
+        method: 'POST',
+        body: JSON.stringify({ billing_cycle: 'monthly' }),
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.url) {
+        window.location.href = response.url;
+      } else {
+        showToast('No se recibió la URL de suscripción de Stripe.', 'error');
+      }
+    } catch (err: any) {
+      showToast(err.message || 'Error al iniciar el checkout de Stripe.', 'error');
+    } finally {
+      setIsAcquiringMexicoInvoicing(false);
+    }
+  };
+
   const handleSaveTaxProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!tenantConfig) return;
+
+    const hasAutoAddon = tenantConfig.active_addons?.includes('automatic-invoicing');
+    if (invoicingMode === 'AUTOMATIC' && !hasAutoAddon) {
+      showToast('Debes contratar el agregado de Facturación Automática para activar esta opción.', 'error');
+      return;
+    }
+
     setIsSavingTaxProfile(true);
     setTaxProfileError(null);
 
@@ -1413,7 +1486,34 @@ export default function TenantAdminPage() {
         )}
 
         {activeTab === 'billing' && (
-          <div className="space-y-8 animate-in fade-in duration-300">
+          !tenantConfig?.active_addons?.includes('mexico-invoicing') ? (
+            <div className="admin-card border rounded-[2rem] p-12 text-center flex flex-col items-center justify-center min-h-[450px] relative overflow-hidden group">
+              <div className="absolute -top-32 -right-32 w-64 h-64 bg-[#C68A1E]/5 blur-[80px] rounded-full group-hover:bg-[#C68A1E]/10 transition-all duration-700 pointer-events-none"></div>
+              <div className="w-16 h-16 rounded-2xl bg-[#C68A1E]/10 border border-[#C68A1E]/20 text-[#C68A1E] flex items-center justify-center text-3xl shadow-lg shadow-[#C68A1E]/10 mb-6 animate-[bounce_3s_infinite]">
+                🔒
+              </div>
+              <h3 className="text-xl font-black uppercase tracking-wider text-white">Facturación SAT Desactivada</h3>
+              <p className="text-sm text-white/50 max-w-md leading-relaxed mt-2 mb-8">
+                Para configurar tu perfil fiscal, subir certificados CSD y emitir facturas, necesitas contratar el Add-on de Facturación SAT México en la plataforma de Néctar Labs.
+              </p>
+              <button
+                type="button"
+                onClick={handleAcquireMexicoInvoicing}
+                disabled={isAcquiringMexicoInvoicing}
+                className="px-8 py-3.5 bg-[#C68A1E] hover:bg-[#C68A1E]/90 text-background text-xs font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 transition-all shadow-lg shadow-[#C68A1E]/25 font-bold flex items-center justify-center gap-2 cursor-pointer"
+              >
+                {isAcquiringMexicoInvoicing ? (
+                  <>
+                    <span className="w-4 h-4 rounded-full border-2 border-background border-t-transparent animate-spin"></span>
+                    Procesando...
+                  </>
+                ) : (
+                  'Contratar Facturación SAT ($499.00 MXN/mes)'
+                )}
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-8 animate-in fade-in duration-300">
             {/* Header card */}
             <div className="admin-card border rounded-[2rem] p-8 relative overflow-hidden flex flex-col md:flex-row items-center gap-6">
               <div className="absolute -top-32 -right-32 w-64 h-64 rounded-full blur-[100px] opacity-10 pointer-events-none" style={{ backgroundColor: primaryColor }}></div>
@@ -1618,6 +1718,38 @@ export default function TenantAdminPage() {
                         <option value="MANUAL_ADMIN">Manual por el Administrador</option>
                       </select>
                     </div>
+
+                    {invoicingMode === 'AUTOMATIC' && !tenantConfig?.active_addons?.includes('automatic-invoicing') && (
+                      <div className="p-4.5 rounded-2xl bg-gradient-to-br from-[#C68A1E]/10 to-transparent border border-[#C68A1E]/30 space-y-3.5 mt-3 animate-premium text-left relative overflow-hidden">
+                        <div className="absolute -right-8 -bottom-8 w-24 h-24 bg-[#C68A1E]/5 blur-2xl rounded-full pointer-events-none"></div>
+                        <div className="flex items-start gap-2.5">
+                          <span className="text-lg leading-none mt-0.5">✨</span>
+                          <div>
+                            <h4 className="text-[10px] font-black uppercase tracking-wider text-[#C68A1E]">
+                              Función Premium Requerida
+                            </h4>
+                            <p className="text-[9.5px] text-white/60 leading-relaxed mt-1">
+                              El timbrado desatendido e inmediato de facturas de abonos/mensualidades es una característica de facturación avanzada. Requiere contratar el agregado de Facturación Automática.
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={handleAcquireAutomaticInvoicing}
+                          disabled={isAcquiringAutoInvoicing}
+                          className="w-full py-2.5 bg-[#C68A1E] hover:bg-[#C68A1E]/90 text-background font-black uppercase tracking-widest text-[8.5px] rounded-xl transition-all duration-300 hover:scale-[1.01] active:scale-95 disabled:opacity-40 flex items-center justify-center gap-1.5 cursor-pointer shadow-lg shadow-[#C68A1E]/15 font-bold"
+                        >
+                          {isAcquiringAutoInvoicing ? (
+                            <>
+                              <span className="w-3 h-3 rounded-full border border-t-transparent border-background animate-spin"></span>
+                              Procesando...
+                            </>
+                          ) : (
+                            'Contratar Timbrado Automático ($199.00 MXN/mes)'
+                          )}
+                        </button>
+                      </div>
+                    )}
 
                     {/* Conceptos por Defecto para Facturas */}
                     <div className="space-y-4 border-t border-white/5 pt-4 mt-4">
@@ -1921,7 +2053,7 @@ export default function TenantAdminPage() {
                 </div>
               </div>
             </div>
-          </div>
+          )
         )}
 
         {activeTab === 'integrations' && (

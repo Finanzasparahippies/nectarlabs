@@ -83,19 +83,19 @@ def public_config(request):
     
     if tenant_id:
         try:
-            tenant = Tenant.objects.filter(id=uuid.UUID(tenant_id), is_active=True).first()
+            tenant = Tenant.objects.filter(id=uuid.UUID(tenant_id)).first()
         except ValueError:
             return Response({'error': 'Invalid tenant_id format'}, status=status.HTTP_400_BAD_REQUEST)
     elif api_key:
         try:
-            tenant = Tenant.objects.filter(api_key=uuid.UUID(api_key), is_active=True).first()
+            tenant = Tenant.objects.filter(api_key=uuid.UUID(api_key)).first()
         except ValueError:
             return Response({'error': 'Invalid API Key format'}, status=status.HTTP_400_BAD_REQUEST)
     elif subdomain:
-        tenant = Tenant.objects.filter(subdomain=subdomain.lower(), is_active=True).first()
+        tenant = Tenant.objects.filter(subdomain=subdomain.lower()).first()
     elif host:
         # Check custom domain first
-        tenant = Tenant.objects.filter(custom_domain=host.lower(), is_active=True).first()
+        tenant = Tenant.objects.filter(custom_domain=host.lower()).first()
         
         # If not found and it's a *.nectarlabs.dev or staging.nectarlabs.dev subdomain, parse it
         if not tenant:
@@ -105,7 +105,7 @@ def public_config(request):
                 potential_sub = host_parts[0]
                 # Filter out system subdomains
                 if potential_sub not in ['www', 'api', 'admin', 'staging']:
-                    tenant = Tenant.objects.filter(subdomain=potential_sub.lower(), is_active=True).first()
+                    tenant = Tenant.objects.filter(subdomain=potential_sub.lower()).first()
 
     if not tenant:
         return Response({'error': 'Tenant not found or inactive'}, status=status.HTTP_404_NOT_FOUND)

@@ -64,6 +64,17 @@ class TenantSerializer(serializers.ModelSerializer):
     def get_subscriber_count(self, obj):
         return obj.subscribers.filter(is_active=True).count()
 
+    def validate_invoicing_mode(self, value):
+        if value == 'AUTOMATIC':
+            # Check if tenant has the automatic-invoicing addon active
+            # self.instance represents the tenant being updated
+            if self.instance:
+                if 'automatic-invoicing' not in self.instance.active_addons:
+                    raise serializers.ValidationError(
+                        "Para activar la facturación automática, debes tener contratado el agregado de facturación automática (automatic-invoicing)."
+                    )
+        return value
+
     def to_representation(self, instance):
         ret = super().to_representation(instance)
         if instance.logo:
@@ -87,6 +98,7 @@ class TenantPublicSerializer(serializers.ModelSerializer):
             'id', 'name', 'subdomain', 'logo_url', 
             'welcome_message', 'require_customer_info', 'active_addons',
             'portal_title', 'footer_text', 'has_active_plan_contract', 'is_addons_only',
+            'is_active', 'owner',
             # 6-Color Palette (Dark & Light)
             'theme_color', 'accent_color', 'bg_color', 'card_bg_color', 'text_color', 'border_color',
             'theme_color_light', 'accent_color_light', 'bg_color_light', 'card_bg_color_light', 'text_color_light', 'border_color_light',
