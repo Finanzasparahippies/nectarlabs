@@ -113,7 +113,7 @@ class Tenant(models.Model):
     invoicing_mode = models.CharField(
         max_length=20,
         choices=InvoicingMode.choices,
-        default=InvoicingMode.AUTOMATIC,
+        default=InvoicingMode.MANUAL_CLIENT,
         help_text="Preferencia de facturación para los abonos de este inquilino."
     )
 

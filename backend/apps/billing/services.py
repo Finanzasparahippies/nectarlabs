@@ -66,7 +66,8 @@ class MockPACService(PACServiceBase):
         for item in items:
             total_items += Decimal(str(item['quantity'])) * Decimal(str(item['unit_price']))
         
-        if abs(Decimal(str(invoice.total)) - total_items) > Decimal('0.05'):
+        total_items_with_tax = (total_items * Decimal('1.16')).quantize(Decimal('0.01'))
+        if abs(Decimal(str(invoice.total)) - total_items) > Decimal('0.05') and abs(Decimal(str(invoice.total)) - total_items_with_tax) > Decimal('0.05'):
             raise PACError("Error del SAT: El total no coincide con el desglose de conceptos por discrepancia de centavos.")
 
         mock_uuid = uuid.uuid4()

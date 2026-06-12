@@ -769,18 +769,21 @@ class PaymentInstallmentViewSet(viewsets.ModelViewSet):
     def perform_update(self, serializer):
         is_admin_or_business = self.request.user.is_staff or self.request.user.role in ['ADMIN', 'BUSINESS']
         if not is_admin_or_business:
-            # Forzamos a guardar únicamente el archivo recibido y actualizar status
+            wants_inv = self.request.data.get('wants_invoice')
+            wants_inv_bool = wants_inv == 'true' or wants_inv is True
             instance = serializer.save(
-                receipt_file=self.request.data.get('receipt_file')
+                receipt_file=self.request.data.get('receipt_file'),
+                payment_method=self.request.data.get('payment_method'),
+                wants_invoice=wants_inv_bool
             )
         else:
             instance = serializer.save()
 
-        # Si el estatus cambió a PAID y no tiene CFDI, y la facturación es AUTOMATIC, la emitimos.
+        # Si el estatus cambió a PAID y no tiene CFDI, la emitimos si se solicitó explícitamente (wants_invoice) o si la facturación es AUTOMATIC.
         if instance.status == 'PAID' and not instance.cfdi_uuid:
             from apps.tenants.models import Tenant
             tenant = Tenant.objects.filter(owner=instance.contract.user).first()
-            if tenant and tenant.invoicing_mode == Tenant.InvoicingMode.AUTOMATIC:
+            if instance.wants_invoice or (tenant and tenant.invoicing_mode == Tenant.InvoicingMode.AUTOMATIC):
                 from apps.billing.services import issue_invoice_for_installment
                 try:
                     issue_invoice_for_installment(instance)

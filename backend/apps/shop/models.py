@@ -328,6 +328,7 @@ class PaymentInstallment(models.Model):
     amount = models.DecimalField(max_digits=10, decimal_places=2, help_text="Monto final a pagar (después de descuentos)")
     
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
+    wants_invoice = models.BooleanField(default=False, help_text="Si el cliente requiere factura para esta mensualidad")
     payment_method = models.CharField(max_length=50, blank=True, null=True, help_text="Método usado para este pago")
     receipt_file = models.FileField(upload_to='receipts/%Y/%m/', storage=raw_storage, blank=True, null=True, help_text="Comprobante de SPEI/Depósito subido por cliente")
     stripe_invoice_id = models.CharField(max_length=150, blank=True, null=True)

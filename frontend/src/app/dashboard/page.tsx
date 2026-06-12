@@ -131,6 +131,7 @@ function DashboardPageOriginal() {
   const [expandedContracts, setExpandedContracts] = useState<Record<number, boolean>>({});
   const [cfdiInputs, setCfdiInputs] = useState<Record<number, string>>({});
   const [wantsInvoiceMap, setWantsInvoiceMap] = useState<Record<number, boolean>>({});
+  const [selectedPaymentMethods, setSelectedPaymentMethods] = useState<Record<number, string>>({});
   const [allAddons, setAllAddons] = useState<any[]>([]);
   const [invoices, setInvoices] = useState<any[]>([]);
   const [loadingInvoices, setLoadingInvoices] = useState(false);
@@ -453,6 +454,14 @@ function DashboardPageOriginal() {
       const formData = new FormData();
       formData.append('receipt_file', file);
 
+      const wantsInvoice = !!wantsInvoiceMap[installmentId];
+      const inst = installments.find(i => i.id === installmentId);
+      const contract = contracts.find(c => c.id === inst?.contract);
+      const method = selectedPaymentMethods[installmentId] || inst?.payment_method || contract?.payment_commitment_method || 'SPEI';
+
+      formData.append('wants_invoice', wantsInvoice ? 'true' : 'false');
+      formData.append('payment_method', method);
+
       const token = localStorage.getItem('token');
       const response = await fetch(`${API_URL}/installments/${installmentId}/`, {
         method: 'PATCH',
@@ -463,7 +472,7 @@ function DashboardPageOriginal() {
       });
       if (!response.ok) throw new Error("Upload failed");
       const updated = await response.json();
-      setInstallments(prev => prev.map(inst => inst.id === installmentId ? { ...inst, receipt_file: updated.receipt_file, status: updated.status } : inst));
+      setInstallments(prev => prev.map(inst => inst.id === installmentId ? { ...inst, receipt_file: updated.receipt_file, status: updated.status, wants_invoice: updated.wants_invoice, payment_method: updated.payment_method } : inst));
       showToast("Comprobante subido con éxito. El equipo de administración lo validará a la brevedad.", 'success');
     } catch (err) {
       showToast("Error al subir el comprobante de pago", 'error');
@@ -1546,6 +1555,13 @@ function DashboardPageOriginal() {
               if (!activeContract) return null;
 
               const isAddonsOnly = !activeContract.plan;
+              const activeInstallments = installments
+                .filter(inst => inst.contract === activeContract.id)
+                .sort((a, b) => a.installment_number - b.installment_number);
+              const nextPending = activeInstallments.find(inst => inst.status !== 'PAID');
+              const nextPendingMethod = nextPending
+                ? (selectedPaymentMethods[nextPending.id] || nextPending.payment_method || activeContract.payment_commitment_method || 'SPEI')
+                : (activeContract.payment_commitment_method || 'SPEI');
               const chosenMethod = activeContract.payment_commitment_method || 'SPEI';
               const nextPaymentDate = activeContract.next_payment_date || '';
 
@@ -1687,7 +1703,7 @@ function DashboardPageOriginal() {
 
                     {/* Right: Specific Instructions depending on the chosen method */}
                     <div className="p-8 rounded-[2rem] bg-background/40 border border-card-border/50 flex flex-col justify-between text-left">
-                      {chosenMethod === 'STRIPE' && (
+                      {nextPendingMethod === 'STRIPE' && (
                         <div className="space-y-6 flex flex-col justify-between h-full">
                           <div>
                             <h4 className="text-[10px] font-black uppercase tracking-widest text-nectar-gold mb-2">Pago en línea seguro</h4>
@@ -1701,7 +1717,7 @@ function DashboardPageOriginal() {
                         </div>
                       )}
 
-                      {chosenMethod === 'SPEI' && (
+                      {nextPendingMethod === 'SPEI' && (
                         <div className="space-y-4">
                           <h4 className="text-[10px] font-black uppercase tracking-widest text-nectar-gold mb-2">Instrucciones de Transferencia SPEI</h4>
                           <div className="space-y-2 text-xs">
@@ -1728,7 +1744,7 @@ function DashboardPageOriginal() {
                         </div>
                       )}
 
-                      {chosenMethod === 'DEPOSIT' && (
+                      {nextPendingMethod === 'DEPOSIT' && (
                         <div className="space-y-4">
                           <h4 className="text-[10px] font-black uppercase tracking-widest text-nectar-gold mb-2">Instrucciones de Depósito Directo</h4>
                           <p className="text-[10px] text-foreground/75 leading-relaxed mb-4">
@@ -1948,34 +1964,49 @@ function DashboardPageOriginal() {
                                     )}
                                   </div>
 
-                                  <div className="w-full md:w-auto min-w-[150px] flex flex-col gap-2 justify-end">
-                                    {chosenMethod === 'STRIPE' && (
-                                      <div className="flex items-center gap-2 justify-end">
-                                        <input
-                                          type="checkbox"
-                                          id={`wants-invoice-${nextPending.id}`}
-                                          checked={!!wantsInvoiceMap[nextPending.id]}
-                                          onChange={(e) => setWantsInvoiceMap(prev => ({ ...prev, [nextPending.id]: e.target.checked }))}
-                                          className="rounded border-card-border bg-card-bg dark:border-white/20 dark:bg-black/40 text-nectar-gold focus:ring-nectar-gold w-3 h-3 cursor-pointer"
-                                        />
-                                        <label htmlFor={`wants-invoice-${nextPending.id}`} className="text-[8px] uppercase tracking-wider font-bold text-foreground/60 cursor-pointer select-none">
-                                          Facturar (+16% IVA)
-                                        </label>
-                                      </div>
-                                    )}
-                                    {chosenMethod === 'STRIPE' ? (
+                                  <div className="w-full md:w-auto min-w-[160px] flex flex-col gap-2 justify-end bg-background/25 border border-card-border/40 p-3 rounded-xl">
+                                    {/* Selector de Método de Pago */}
+                                    <div className="flex flex-col gap-1 w-full text-left">
+                                      <label className="text-[7px] font-black uppercase tracking-widest opacity-40">Método de Pago</label>
+                                      <select
+                                        value={nextPendingMethod}
+                                        onChange={(e) => setSelectedPaymentMethods(prev => ({ ...prev, [nextPending.id]: e.target.value }))}
+                                        className="w-full bg-background/50 border border-card-border rounded-lg px-2 py-1 focus:outline-none focus:border-nectar-gold text-[9px] font-bold text-foreground"
+                                      >
+                                        <option value="SPEI">SPEI (Transferencia)</option>
+                                        <option value="DEPOSIT">Depósito (BBVA)</option>
+                                        <option value="STRIPE">Tarjeta (Stripe)</option>
+                                      </select>
+                                    </div>
+
+                                    {/* Checkbox Facturar */}
+                                    <div className="flex items-center gap-2 justify-end mt-1">
+                                      <input
+                                        type="checkbox"
+                                        id={`wants-invoice-${nextPending.id}`}
+                                        checked={!!wantsInvoiceMap[nextPending.id]}
+                                        onChange={(e) => setWantsInvoiceMap(prev => ({ ...prev, [nextPending.id]: e.target.checked }))}
+                                        className="rounded border-card-border bg-card-bg dark:border-white/20 dark:bg-black/40 text-nectar-gold focus:ring-nectar-gold w-3 h-3 cursor-pointer"
+                                      />
+                                      <label htmlFor={`wants-invoice-${nextPending.id}`} className="text-[8px] uppercase tracking-wider font-bold text-foreground/60 cursor-pointer select-none">
+                                        Facturar (+16% IVA)
+                                      </label>
+                                    </div>
+
+                                    {/* Botón de Acción */}
+                                    {nextPendingMethod === 'STRIPE' ? (
                                       <button
                                         onClick={() => handlePayStripe(nextPending.id)}
-                                        className="w-full py-2.5 bg-[#635BFF] hover:bg-[#5b53e8] text-white text-center rounded-xl text-[8px] font-black uppercase tracking-widest transition-all shadow-lg shadow-[#635BFF]/10 active:scale-95 font-bold"
+                                        className="w-full py-2 bg-[#635BFF] hover:bg-[#5b53e8] text-white text-center rounded-xl text-[8px] font-black uppercase tracking-widest transition-all shadow-lg shadow-[#635BFF]/10 active:scale-95 font-bold mt-1"
                                       >
                                         Pagar con Stripe
                                       </button>
                                     ) : nextPending.receipt_file ? (
-                                      <p className="text-[8px] text-center opacity-60 italic font-bold py-2 px-4 bg-background/40 rounded-xl border border-card-border/30 w-full">
+                                      <p className="text-[8px] text-center opacity-60 italic font-bold py-2 px-4 bg-background/40 rounded-xl border border-card-border/30 w-full mt-1">
                                         Comprobante en validación
                                       </p>
                                     ) : (
-                                      <label className="w-full block py-2.5 border border-dashed border-nectar-gold/50 text-nectar-gold hover:bg-nectar-gold hover:text-background text-center rounded-xl text-[8px] font-black uppercase tracking-widest transition-all cursor-pointer hover:border-solid font-bold">
+                                      <label className="w-full block py-2 border border-dashed border-nectar-gold/50 text-nectar-gold hover:bg-nectar-gold hover:text-background text-center rounded-xl text-[8px] font-black uppercase tracking-widest transition-all cursor-pointer hover:border-solid font-bold mt-1">
                                         Subir Comprobante
                                         <input
                                           type="file"
@@ -2019,6 +2050,7 @@ function DashboardPageOriginal() {
                                     {activeInstallments.map((inst) => {
                                       const isPaid = inst.status === 'PAID';
                                       const isPendingReview = !isPaid && inst.receipt_file;
+                                      const instMethod = selectedPaymentMethods[inst.id] || inst.payment_method || activeContract.payment_commitment_method || 'SPEI';
                                       let statusText = 'Pendiente';
                                       let bgClass = 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20';
                                       if (isPaid) {
@@ -2063,21 +2095,32 @@ function DashboardPageOriginal() {
                                           <td className="p-4 text-right pr-6">
                                             {!isPaid ? (
                                               <div className="flex flex-col items-end gap-1.5 justify-end">
-                                                {chosenMethod === 'STRIPE' && (
-                                                  <div className="flex items-center gap-1.5 justify-end">
-                                                    <input
-                                                      type="checkbox"
-                                                      id={`wants-invoice-${inst.id}`}
-                                                      checked={!!wantsInvoiceMap[inst.id]}
-                                                      onChange={(e) => setWantsInvoiceMap(prev => ({ ...prev, [inst.id]: e.target.checked }))}
-                                                      className="rounded border-card-border bg-card-bg dark:border-white/20 dark:bg-black/40 text-nectar-gold focus:ring-nectar-gold w-3 h-3 cursor-pointer"
-                                                    />
-                                                    <label htmlFor={`wants-invoice-${inst.id}`} className="text-[7.5px] uppercase font-bold text-foreground/50 cursor-pointer select-none">
-                                                      Facturar (+16%)
-                                                    </label>
-                                                  </div>
-                                                )}
-                                                {chosenMethod === 'STRIPE' ? (
+                                                {/* Selector de Método de Pago */}
+                                                <select
+                                                  value={instMethod}
+                                                  onChange={(e) => setSelectedPaymentMethods(prev => ({ ...prev, [inst.id]: e.target.value }))}
+                                                  className="bg-background/50 border border-card-border rounded-lg px-2 py-1 focus:outline-none focus:border-nectar-gold text-[9px] font-bold text-foreground"
+                                                >
+                                                  <option value="SPEI">SPEI (Trans.)</option>
+                                                  <option value="DEPOSIT">Depósito</option>
+                                                  <option value="STRIPE">Tarjeta (Stripe)</option>
+                                                </select>
+
+                                                {/* Checkbox Facturar */}
+                                                <div className="flex items-center gap-1.5 justify-end">
+                                                  <input
+                                                    type="checkbox"
+                                                    id={`wants-invoice-${inst.id}`}
+                                                    checked={!!wantsInvoiceMap[inst.id]}
+                                                    onChange={(e) => setWantsInvoiceMap(prev => ({ ...prev, [inst.id]: e.target.checked }))}
+                                                    className="rounded border-card-border bg-card-bg dark:border-white/20 dark:bg-black/40 text-nectar-gold focus:ring-nectar-gold w-3 h-3 cursor-pointer"
+                                                  />
+                                                  <label htmlFor={`wants-invoice-${inst.id}`} className="text-[7.5px] uppercase font-bold text-foreground/50 cursor-pointer select-none">
+                                                    Facturar (+16%)
+                                                  </label>
+                                                </div>
+
+                                                {instMethod === 'STRIPE' ? (
                                                   <button
                                                     onClick={() => handlePayStripe(inst.id)}
                                                     className="px-3 py-1.5 bg-[#635BFF] hover:bg-[#5b53e8] text-white text-[8px] font-black uppercase tracking-widest rounded-lg transition-all"

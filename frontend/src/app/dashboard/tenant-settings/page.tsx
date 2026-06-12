@@ -120,6 +120,7 @@ export default function TenantSettingsPage() {
   const [editFooterText, setEditFooterText] = useState('');
   const [editRequireCustomerInfo, setEditRequireCustomerInfo] = useState(true);
   const [editAllowedOrigins, setEditAllowedOrigins] = useState('');
+  const [editInvoicingMode, setEditInvoicingMode] = useState('MANUAL_CLIENT');
 
   // Undo History & Custom Particle settings
   const [historyLength, setHistoryLength] = useState(0);
@@ -156,6 +157,7 @@ export default function TenantSettingsPage() {
     editFooterText,
     editRequireCustomerInfo,
     editAllowedOrigins,
+    editInvoicingMode,
   });
 
   useEffect(() => {
@@ -164,7 +166,7 @@ export default function TenantSettingsPage() {
     editName, editSubdomain, editCustomDomain, editThemeColor, editAccentColor, editBgColor, editCardBgColor, editTextColor, editBorderColor,
     editThemeColorLight, editAccentColorLight, editBgColorLight, editCardBgColorLight, editTextColorLight, editBorderColorLight,
     editPollenActive, editPollenIcon, editPollenColor, editPollenCount, editPollenBlur,
-    editLogoUrl, editWelcomeMessage, editPortalTitle, editFooterText, editRequireCustomerInfo, editAllowedOrigins
+    editLogoUrl, editWelcomeMessage, editPortalTitle, editFooterText, editRequireCustomerInfo, editAllowedOrigins, editInvoicingMode
   ]);
 
   const pushToHistory = () => {
@@ -349,6 +351,7 @@ export default function TenantSettingsPage() {
     setEditFooterText(tenant.footer_text || '');
     setEditRequireCustomerInfo(tenant.require_customer_info);
     setEditAllowedOrigins(tenant.allowed_origins || '');
+    setEditInvoicingMode(tenant.invoicing_mode || 'MANUAL_CLIENT');
     setDomainValidationResult(null);
 
     undoStackRef.current = [];
@@ -415,6 +418,7 @@ export default function TenantSettingsPage() {
       formData.append('footer_text', editFooterText.trim());
       formData.append('require_customer_info', String(editRequireCustomerInfo));
       formData.append('allowed_origins', editAllowedOrigins.trim());
+      formData.append('invoicing_mode', editInvoicingMode);
 
       if (editLogoFile) {
         formData.append('logo', editLogoFile);
@@ -957,6 +961,22 @@ export default function TenantSettingsPage() {
                             type="checkbox"
                             checked={editRequireCustomerInfo}
                             onChange={(e) => { pushToHistory(); setEditRequireCustomerInfo(e.target.checked); }}
+                            className="sr-only peer"
+                          />
+                          <div className="w-11 h-6 bg-card-border peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-nectar-gold"></div>
+                        </label>
+                      </div>
+
+                      <div className="flex items-center justify-between p-4 bg-background/50 border border-card-border rounded-xl">
+                        <div>
+                          <h4 className="text-xs font-black uppercase tracking-wide text-foreground">Facturación Automática de Servicios</h4>
+                          <p className="text-[9px] text-foreground/40 uppercase mt-0.5">Emitir factura fiscal CFDI automáticamente al procesarse cada uno de tus pagos.</p>
+                        </div>
+                        <label className="relative inline-flex items-center cursor-pointer select-none">
+                          <input
+                            type="checkbox"
+                            checked={editInvoicingMode === 'AUTOMATIC'}
+                            onChange={(e) => { pushToHistory(); setEditInvoicingMode(e.target.checked ? 'AUTOMATIC' : 'MANUAL_CLIENT'); }}
                             className="sr-only peer"
                           />
                           <div className="w-11 h-6 bg-card-border peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-nectar-gold"></div>
