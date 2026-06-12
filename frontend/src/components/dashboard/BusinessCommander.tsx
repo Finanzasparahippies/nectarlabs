@@ -4464,6 +4464,9 @@ export default function BusinessCommander({ stats, installments, setInstallments
             onCancel={() => setConfirmModal(null)}
           />
 
+          <main />
+
+
           {toast && (
             <Toast
               message={toast.message}
