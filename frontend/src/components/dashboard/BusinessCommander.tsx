@@ -4463,17 +4463,16 @@ export default function BusinessCommander({ stats, installments, setInstallments
             onConfirm={confirmModal?.onConfirm || (() => { })}
             onCancel={() => setConfirmModal(null)}
           />
+
+          {toast && (
+            <Toast
+              message={toast.message}
+              type={toast.type}
+              onClose={() => setToast(null)
+
+              }
+            />
+          )}
         </div>
-
-      {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={() => setToast(null)
-
-          }
-        />
-      )}
-    </div>
-  );
+      );
 }
