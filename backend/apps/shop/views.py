@@ -131,10 +131,11 @@ class AddOnViewSet(viewsets.ModelViewSet):
                 }],
                 'mode': 'subscription',
                 'allow_promotion_codes': True,
+                # AddOnViewSet en Django
                 'subscription_data': {
                     'metadata': {
                         'user_id': request.user.id,
-                        'addon_id': addon.id,
+                        'addon_slug': addon.slug, 
                         'type': 'addon_subscription',
                         'comments': comments_truncated
                     }
