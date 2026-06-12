@@ -215,7 +215,7 @@ class FacturapiPACService(PACServiceBase):
                 raise PACError(f"Error al subir sellos CSD a Facturapi: {response.text}")
             return True
         except PACError:
-            raise
+            raise 
         except Exception as e:
             raise PACError(f"Fallo de conexión para carga de sellos: {e}")
 
