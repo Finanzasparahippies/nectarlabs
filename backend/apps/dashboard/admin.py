@@ -39,9 +39,9 @@ class ProjectAdvanceAdmin(admin.ModelAdmin):
 
 @admin.register(ProjectQuote)
 class ProjectQuoteAdmin(admin.ModelAdmin):
-    list_display = ('id', 'client', 'tenant', 'status', 'total_price', 'created_at')
-    list_filter = ('status', 'tenant', 'created_at')
-    search_fields = ('client__email', 'tenant__name')
+    list_display = ('id', 'client_name', 'client_email', 'salesperson', 'status', 'total_price', 'created_at')
+    list_filter = ('status', 'created_at')
+    search_fields = ('client_name', 'client_email', 'project_name')
     readonly_fields = ('created_at',)
     ordering = ('-created_at',)
 
@@ -54,9 +54,9 @@ class LeadAppointmentInline(admin.TabularInline):
 
 @admin.register(Lead)
 class LeadAdmin(admin.ModelAdmin):
-    list_display = ('name', 'email', 'phone', 'tenant', 'status', 'source', 'assigned_to', 'created_at')
-    list_filter = ('status', 'source', 'tenant', 'created_at')
-    search_fields = ('name', 'email', 'phone', 'tenant__name', 'assigned_to__email')
+    list_display = ('name', 'email', 'phone', 'salesperson', 'status', 'estimated_value', 'created_at')
+    list_filter = ('status', 'created_at')
+    search_fields = ('name', 'email', 'phone', 'salesperson__email')
     readonly_fields = ('created_at',)
     ordering = ('-created_at',)
     inlines = [LeadAppointmentInline]
@@ -64,10 +64,10 @@ class LeadAdmin(admin.ModelAdmin):
 
 @admin.register(LeadAppointment)
 class LeadAppointmentAdmin(admin.ModelAdmin):
-    list_display = ('lead', 'scheduled_at', 'created_by', 'created_at')
-    list_filter = ('scheduled_at', 'created_at')
-    search_fields = ('lead__name', 'lead__email', 'notes')
+    list_display = ('lead', 'date', 'time', 'salesperson', 'status', 'created_at')
+    list_filter = ('status', 'date', 'created_at')
+    search_fields = ('lead__name', 'lead__email', 'notes', 'salesperson__email')
     readonly_fields = ('created_at',)
-    ordering = ('-scheduled_at',)
+    ordering = ('-date', '-time')
 
 

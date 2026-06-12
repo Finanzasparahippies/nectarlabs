@@ -61,17 +61,16 @@ class AddOnSubscriptionAdmin(admin.ModelAdmin):
 
 @admin.register(SalesCommission)
 class SalesCommissionAdmin(admin.ModelAdmin):
-    list_display = ('id', 'referrer', 'contract', 'commission_percentage', 'amount_earned', 'status', 'created_at')
+    list_display = ('id', 'salesperson', 'installment', 'commission_percentage', 'amount', 'status', 'created_at')
     list_filter = ('status', 'created_at')
-    search_fields = ('referrer__email', 'contract__full_name')
+    search_fields = ('salesperson__email', 'installment__contract__full_name')
     readonly_fields = ('created_at',)
     ordering = ('-created_at',)
 
 
 @admin.register(StripeEvent)
 class StripeEventAdmin(admin.ModelAdmin):
-    list_display = ('stripe_event_id', 'event_type', 'processed', 'created_at')
-    list_filter = ('event_type', 'processed', 'created_at')
-    search_fields = ('stripe_event_id', 'event_type')
+    list_display = ('event_id', 'created_at')
+    search_fields = ('event_id',)
     readonly_fields = ('created_at',)
     ordering = ('-created_at',)
