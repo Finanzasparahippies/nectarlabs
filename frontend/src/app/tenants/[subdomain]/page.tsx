@@ -1227,6 +1227,74 @@ function SATInvoicingForm({ tenantId, subdomain, primaryColor, ownerId, showToas
   const [customerSearchQuery, setCustomerSearchQuery] = useState('');
   const [showNewClientModal, setShowNewClientModal] = useState(false);
 
+  const [showAdminLogin, setShowAdminLogin] = useState(false);
+  const [adminEmail, setAdminEmail] = useState('');
+  const [adminPassword, setAdminPassword] = useState('');
+  const [adminLoginLoading, setAdminLoginLoading] = useState(false);
+  const [adminLoginError, setAdminLoginError] = useState('');
+
+  const handleAdminLoginSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAdminLoginLoading(true);
+    setAdminLoginError('');
+
+    try {
+      const data = await fetcher('/token/', {
+        method: 'POST',
+        body: JSON.stringify({ email: adminEmail.trim(), password: adminPassword }),
+      });
+
+      if (data.access) {
+        const prevToken = localStorage.getItem('token');
+        localStorage.setItem('token', data.access);
+
+        try {
+          const me = await fetcher('/users/me/');
+          const isOwner = ownerId ? String(me.id) === String(ownerId) : false;
+          const isSystemAdmin = me.is_staff || me.role === 'ADMIN';
+          const isStaffOfTenant = me.role === 'STAFF' && String(me.tenant) === String(tenantId);
+          
+          if (isOwner || isSystemAdmin || isStaffOfTenant || me.role === 'BUSINESS') {
+            localStorage.setItem('refresh_token', data.refresh);
+            localStorage.setItem('user_email', adminEmail.trim());
+            localStorage.setItem('is_staff', me.is_staff ? 'true' : 'false');
+            localStorage.setItem('user_role', me.role || '');
+            
+            setIsTenantAdmin(true);
+            await loadBillingData();
+            
+            if (showToast) {
+              showToast('Modo Administrador activado con éxito', 'success');
+            }
+            setShowAdminLogin(false);
+            setAdminEmail('');
+            setAdminPassword('');
+          } else {
+            if (prevToken && prevToken !== 'null' && prevToken !== 'undefined') {
+              localStorage.setItem('token', prevToken);
+            } else {
+              localStorage.removeItem('token');
+            }
+            setAdminLoginError('El usuario ingresado no tiene permisos de administrador para este portal.');
+          }
+        } catch (meErr: any) {
+          if (prevToken && prevToken !== 'null' && prevToken !== 'undefined') {
+            localStorage.setItem('token', prevToken);
+          } else {
+            localStorage.removeItem('token');
+          }
+          setAdminLoginError(meErr.message || 'Error al validar permisos de usuario.');
+        }
+      } else {
+        setAdminLoginError('Credenciales inválidas');
+      }
+    } catch (err: any) {
+      setAdminLoginError(err.message || 'Email o contraseña incorrectos');
+    } finally {
+      setAdminLoginLoading(false);
+    }
+  };
+
   // Helper load billing users data
   const loadBillingData = async () => {
     try {
@@ -1408,7 +1476,34 @@ function SATInvoicingForm({ tenantId, subdomain, primaryColor, ownerId, showToas
 
       {/* Datos Fiscales */}
       <div className="space-y-4">
-        <h4 className="text-[10px] font-black uppercase tracking-widest text-white/40 border-b border-white/5 pb-2">1. Datos de Facturación</h4>
+        <div className="flex justify-between items-center border-b border-white/5 pb-2">
+          <h4 className="text-[10px] font-black uppercase tracking-widest text-white/40">1. Datos de Facturación</h4>
+          {!isTenantAdmin ? (
+            <button
+              type="button"
+              onClick={() => setShowAdminLogin(true)}
+              className="text-[9px] font-black hover:underline uppercase tracking-widest cursor-pointer text-nectar-gold"
+            >
+              🔑 Modo Administrador
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => {
+                localStorage.removeItem('token');
+                setIsTenantAdmin(false);
+                setSelectedCustomer(null);
+                setEmail('');
+                setRfc('');
+                setRazonSocial('');
+                setCodigoPostal('');
+              }}
+              className="text-[9px] font-black hover:underline uppercase tracking-widest cursor-pointer text-red-400"
+            >
+              🔒 Salir de Admin
+            </button>
+          )}
+        </div>
         
         {isTenantAdmin && (
           <div className="space-y-3 p-5 bg-white/[0.02] border border-white/5 rounded-2xl relative mb-4">
@@ -1850,6 +1945,102 @@ function SATInvoicingForm({ tenantId, subdomain, primaryColor, ownerId, showToas
       }}
       showToast={showToast || console.log}
     />
+
+    {showAdminLogin && (
+      <div
+        onClick={() => setShowAdminLogin(false)}
+        className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[60] flex items-center justify-center p-6 cursor-pointer overflow-y-auto"
+      >
+        <div
+          onClick={(e) => e.stopPropagation()}
+          style={{
+            backgroundColor: '#050a06',
+            borderColor: 'rgba(255, 255, 255, 0.05)'
+          }}
+          className="w-full max-w-md border p-8 md:p-10 rounded-[3rem] shadow-2xl relative space-y-6 text-left cursor-default animate-in fade-in zoom-in-95 duration-200"
+        >
+          <button
+            type="button"
+            onClick={() => setShowAdminLogin(false)}
+            className="absolute top-6 right-6 w-8 h-8 rounded-full border border-white/10 text-white/40 hover:text-white flex items-center justify-center text-xl font-bold cursor-pointer"
+          >
+            ×
+          </button>
+
+          <div>
+            <span 
+              className="px-3 py-1 text-[8px] font-black uppercase tracking-widest rounded-full border"
+              style={{ 
+                backgroundColor: `${primaryColor}15`, 
+                color: primaryColor,
+                borderColor: `${primaryColor}20` 
+              }}
+            >
+              Seguridad
+            </span>
+            <h2 className="text-2xl font-black tracking-tighter mt-4 leading-none text-white uppercase">
+              Modo Administrador
+            </h2>
+            <p className="text-[10px] opacity-40 uppercase tracking-widest mt-1 text-white/70">
+              Inicia sesión con tu cuenta de administrador o dueño para habilitar la búsqueda e inscripción de clientes.
+            </p>
+          </div>
+
+          {adminLoginError && (
+            <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-bold rounded-xl text-center">
+              ⚠️ {adminLoginError}
+            </div>
+          )}
+
+          <form onSubmit={handleAdminLoginSubmit} className="space-y-4">
+            <div className="space-y-1.5">
+              <label className="text-[8px] font-black uppercase tracking-widest opacity-40 text-white/60">Email del Administrador</label>
+              <input
+                type="email"
+                required
+                placeholder="admin@nectarlabs.dev"
+                value={adminEmail}
+                onChange={(e) => setAdminEmail(e.target.value)}
+                className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-nectar-gold text-white"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-[8px] font-black uppercase tracking-widest opacity-40 text-white/60">Contraseña</label>
+              <input
+                type="password"
+                required
+                placeholder="••••••••"
+                value={adminPassword}
+                onChange={(e) => setAdminPassword(e.target.value)}
+                className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-nectar-gold text-white font-mono"
+              />
+            </div>
+
+            <div className="pt-6 border-t border-white/10 flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setShowAdminLogin(false)}
+                className="px-5 py-3 border border-white/10 hover:bg-white/5 text-[9px] font-black uppercase tracking-widest rounded-xl transition-all cursor-pointer text-white/80"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                disabled={adminLoginLoading}
+                className="px-6 py-3 text-[9px] font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 disabled:opacity-40 disabled:scale-100 transition-all font-bold shadow-lg cursor-pointer"
+                style={{
+                  backgroundColor: primaryColor,
+                  color: '#000000',
+                }}
+              >
+                {adminLoginLoading ? 'Autenticando...' : 'Iniciar Sesión'}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    )}
     </>
   );
 }
