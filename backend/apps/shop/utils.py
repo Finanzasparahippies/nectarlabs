@@ -344,6 +344,93 @@ def send_addon_payment_receipt_email(user, addon, session):
         logging.error(f"Error sending addon payment receipt email for addon {addon.id} and user {user.id}: {e}", exc_info=True)
 
 
+def notify_support_addon_subscription(user, addon, tenant=None):
+    """
+    Notify the Néctar Labs support team when a client successfully subscribes to an Add-on:
+    1. Sends an alert email to settings.EMAIL_SUPPORT (soporte@nectarlabs.dev).
+    2. Broadcasts an 'addon_subscription_new' event to all connected ADMIN users via the
+       realtime service's internal HTTP endpoint so the admin panel shows a live alert.
+    """
+    import urllib.request
+    import json as _json
+
+    addon_name = getattr(addon, 'name', str(addon))
+    user_email = getattr(user, 'email', str(user))
+    user_name = getattr(user, 'get_full_name', lambda: '')() or getattr(user, 'username', str(user))
+    tenant_name = getattr(tenant, 'name', None) if tenant else None
+    date_str = timezone.now().strftime('%d/%m/%Y %H:%M')
+    monthly_price = getattr(addon, 'monthly_price', None)
+    price_str = f"${monthly_price:,.2f} MXN/mes" if monthly_price else "N/A"
+
+    # 1. Email notification to support team
+    try:
+        support_email_raw = settings.EMAIL_SUPPORT
+        # Extract plain address from "Name <email>" format
+        if '<' in support_email_raw:
+            support_address = support_email_raw.split('<')[1].rstrip('>')
+        else:
+            support_address = support_email_raw
+
+        subject = f"🔔 Nueva Suscripción a Add-on: {addon_name}"
+        body_lines = [
+            f"Se ha registrado una nueva suscripción a un Add-on en Néctar Labs.",
+            "",
+            f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+            f"  Add-on     : {addon_name}",
+            f"  Precio     : {price_str}",
+            f"  Cliente    : {user_name} <{user_email}>",
+            f"  Tenant     : {tenant_name or 'Sin tenant asignado aún'}",
+            f"  Fecha/Hora : {date_str}",
+            f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+            "",
+            "Entra al panel de administración (Business Commander > Add-ons) para asignar "
+            "el tenant y activar el módulo.",
+        ]
+        body = "\n".join(body_lines)
+
+        email = EmailMultiAlternatives(
+            subject=subject,
+            body=body,
+            from_email=get_platform_sender("Néctar Labs Notificaciones"),
+            to=[support_address],
+        )
+        email.send()
+        logging.info(f"[notify_support_addon_subscription] Email enviado a {support_address} para addon '{addon_name}'.")
+    except Exception as email_err:
+        logging.error(f"[notify_support_addon_subscription] Error enviando email de soporte: {email_err}", exc_info=True)
+
+    # 2. Realtime broadcast to admin frontend
+    try:
+        realtime_url = getattr(settings, 'REALTIME_INTERNAL_URL', 'http://realtime:4001')
+        internal_secret = getattr(settings, 'REALTIME_INTERNAL_SECRET', 'nectar-internal-secret')
+
+        payload = _json.dumps({
+            "type": "addon_subscription_new",
+            "addon_name": addon_name,
+            "user_email": user_email,
+            "user_name": user_name,
+            "tenant_name": tenant_name,
+            "price": price_str,
+            "timestamp": timezone.now().isoformat(),
+        }).encode("utf-8")
+
+        req = urllib.request.Request(
+            f"{realtime_url}/internal/broadcast-admin",
+            data=payload,
+            headers={
+                "Content-Type": "application/json",
+                "X-Internal-Secret": internal_secret,
+            },
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=3) as resp:
+            logging.info(f"[notify_support_addon_subscription] Realtime broadcast OK: {resp.read().decode()}")
+    except Exception as rt_err:
+        logging.error(f"[notify_support_addon_subscription] Error en broadcast realtime: {rt_err}", exc_info=True)
+
+
+
+
 def generate_installments_for_contract(contract):
     """
     Generates payment installments for development and design independently.

@@ -4,6 +4,7 @@ import { parse } from 'url';
 import dotenv from 'dotenv';
 import pool from './db.js';
 import { generateAiReplyStream } from './ai.js';
+import http from 'http';
 
 dotenv.config();
 
@@ -33,6 +34,19 @@ const broadcastToRoom = (chatId: number, data: any) => {
       client.ws.send(payload);
     }
   }
+};
+
+// Helper to broadcast JSON data to ALL connected ADMIN users regardless of chat subscription
+const broadcastToAdmins = (data: any) => {
+  const payload = JSON.stringify(data);
+  let count = 0;
+  for (const client of connections) {
+    if (client.role === 'ADMIN' && client.ws.readyState === WebSocket.OPEN) {
+      client.ws.send(payload);
+      count++;
+    }
+  }
+  console.log(`[Realtime] broadcastToAdmins: enviado a ${count} administradores conectados.`);
 };
 
 wss.on('connection', async (ws, req) => {
@@ -296,4 +310,44 @@ wss.on('connection', async (ws, req) => {
     console.error('[Realtime] Error durante la inicialización de la conexión:', err);
     try { ws.close(4000, 'Internal Server Error'); } catch {}
   }
+});
+
+// ─── Internal HTTP Server for backend-to-realtime broadcasts ─────────────────
+// Only accepts connections from localhost/127.0.0.1
+const INTERNAL_PORT = parseInt(process.env.INTERNAL_PORT || '4001', 10);
+const INTERNAL_SECRET = process.env.INTERNAL_SECRET || 'nectar-internal-secret';
+
+const internalServer = http.createServer((req, res) => {
+  // Only POST to /internal/broadcast-admin
+  if (req.method !== 'POST' || req.url !== '/internal/broadcast-admin') {
+    res.writeHead(404);
+    res.end('Not found');
+    return;
+  }
+
+  // Validate internal secret header
+  const secret = req.headers['x-internal-secret'];
+  if (secret !== INTERNAL_SECRET) {
+    res.writeHead(401);
+    res.end('Unauthorized');
+    return;
+  }
+
+  let body = '';
+  req.on('data', (chunk) => { body += chunk.toString(); });
+  req.on('end', () => {
+    try {
+      const payload = JSON.parse(body);
+      broadcastToAdmins(payload);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, admins_online: [...connections].filter(c => c.role === 'ADMIN').length }));
+    } catch (e) {
+      res.writeHead(400);
+      res.end('Invalid JSON');
+    }
+  });
+});
+
+internalServer.listen(INTERNAL_PORT, '127.0.0.1', () => {
+  console.log(`[Realtime] Servidor HTTP interno escuchando en 127.0.0.1:${INTERNAL_PORT}`);
 });

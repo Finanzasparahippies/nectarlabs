@@ -103,6 +103,10 @@ export default function BusinessCommander({ stats, installments, setInstallments
   const [selectedTenantIdForSub, setSelectedTenantIdForSub] = useState<string>('');
   const [isSubmittingAssign, setIsSubmittingAssign] = useState(false);
 
+  // Realtime addon subscription notifications
+  const [addonNotifCount, setAddonNotifCount] = useState(0);
+
+
   // Marketing Campaigns states
   const [campaignSubject, setCampaignSubject] = useState('');
   const [campaignTitle, setCampaignTitle] = useState('');
@@ -328,6 +332,46 @@ export default function BusinessCommander({ stats, installments, setInstallments
       loadAddonSubscriptions();
     }
   }, [activeTab]);
+
+  // ─── Realtime WebSocket: listen for new addon subscription events ───────────
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${protocol}//${window.location.host}/ws/?token=${encodeURIComponent(token)}`;
+    const ws = new WebSocket(wsUrl);
+
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === 'addon_subscription_new') {
+          // Increment badge
+          setAddonNotifCount((prev) => prev + 1);
+          // Show toast with details
+          showToast(
+            `🔔 Nueva suscripción: ${data.addon_name} — ${data.user_name || data.user_email}`,
+            'info'
+          );
+          // Auto-refresh the subscriptions list
+          fetcher('/addon-subscriptions/')
+            .then((res) => setAddonSubscriptions(Array.isArray(res) ? res : []))
+            .catch(() => {});
+        }
+      } catch {
+        // ignore parse errors
+      }
+    };
+
+    return () => {
+      if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
+        ws.close();
+      }
+    };
+  }, []);
+
+
 
   const handleCancelInvoice = async (invoiceId: number, motive: string = '02', substitution: string = '') => {
     try {
@@ -1351,18 +1395,18 @@ export default function BusinessCommander({ stats, installments, setInstallments
           {activeTab === 'marketing' && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-nectar-gold"></span>}
         </button>
         <button
-          onClick={() => setActiveTab('addons')}
+          onClick={() => { setActiveTab('addons'); setAddonNotifCount(0); }}
           className={`pb-4 text-xs font-black uppercase tracking-widest relative transition-all whitespace-nowrap ${activeTab === 'addons' ? 'text-nectar-gold' : 'text-foreground/45 hover:text-foreground'
             } flex items-center`}
         >
           Suscripciones Add-ons
-          {/* EDGE CASE SOLVED: Removemos !s.tenant para contar cualquier suscripción activa o en periodo de prueba del usuario */}
-          {addonSubscriptions.filter(s => ['active', 'trialing'].includes(s.status || s.status_name)).length > 0 && (
-            <span className="ml-2 px-1.5 py-0.5 text-[8px] font-black bg-red-600 text-white rounded-full animate-pulse flex items-center justify-center min-w-[14px] h-[14px]">
-              {addonSubscriptions.filter(s => ['active', 'trialing'].includes(s.status || s.status_name)).length}
+          {addonNotifCount > 0 && (
+            <span className="ml-2 px-1.5 py-0.5 text-[8px] font-black bg-amber-500 text-white rounded-full animate-pulse flex items-center justify-center min-w-[14px] h-[14px]">
+              {addonNotifCount}
             </span>
           )}
           {activeTab === 'addons' && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-nectar-gold"></span>}
+
         </button>
       </div>
 

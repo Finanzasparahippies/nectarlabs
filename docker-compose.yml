@@ -12,6 +12,9 @@ services:
     environment:
       - DEBUG=True
       - ENVIRONMENT=local
+      - REALTIME_INTERNAL_URL=http://realtime:4001
+      - REALTIME_INTERNAL_SECRET=nectar-internal-secret
+
     ports:
       - "8001:8000"
     logging:
@@ -108,11 +111,15 @@ services:
       - .env
     environment:
       - PORT=4000
+      - INTERNAL_PORT=4001
+      - INTERNAL_SECRET=nectar-internal-secret
       - DJANGO_SECRET_KEY=${SECRET_KEY}
     ports:
       - "4000:4000"
+      - "4001:4001"
     depends_on:
       - redis
+
     networks:
       - prod_network
 

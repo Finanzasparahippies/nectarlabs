@@ -9,7 +9,8 @@ from django.http import HttpResponse
 import stripe
 from .models import Plan, Product, Contract, PaymentInstallment, AddOn, PromoCode, SalesCommission, AddOnSubscription
 from .serializers import PlanSerializer, ProductSerializer, ContractSerializer, PaymentInstallmentSerializer, AddOnSerializer, PromoCodeSerializer, SalesCommissionSerializer, AddOnSubscriptionSerializer
-from .utils import generate_contract_pdf, send_contract_emails, send_payment_receipt_email, send_addon_payment_receipt_email
+from .utils import generate_contract_pdf, send_contract_emails, send_payment_receipt_email, send_addon_payment_receipt_email, notify_support_addon_subscription
+
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
@@ -828,6 +829,24 @@ def stripe_webhook(request):
                         send_addon_payment_receipt_email(contract.user, addon, session)
                 except Exception as mail_err:
                     _webhook_logger.error(f"Error sending addon subscription payment receipt email: {mail_err}", exc_info=True)
+
+                # Notificar al equipo de soporte (email + realtime frontend admin)
+                try:
+                    addon_obj = AddOn.objects.get(id=addon_id)
+                    _user_obj = user if 'user' in dir() and user else (
+                        contract.user if contract else None
+                    )
+                    _tenant_obj = None
+                    try:
+                        from apps.tenants.models import Tenant as _Tenant
+                        _tenant_obj = _Tenant.objects.filter(owner=_user_obj).first() if _user_obj else None
+                    except Exception:
+                        pass
+                    if _user_obj:
+                        notify_support_addon_subscription(_user_obj, addon_obj, tenant=_tenant_obj)
+                except Exception as notify_err:
+                    _webhook_logger.error(f"[stripe_webhook] Error sending support notification for addon subscription: {notify_err}", exc_info=True)
+
                 
                 # --- AUTO-CREATE IMPLEMENTATION TICKET ---
                 try:

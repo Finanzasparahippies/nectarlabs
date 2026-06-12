@@ -231,6 +231,11 @@ EMAIL_NEWSLETTER = env("EMAIL_NEWSLETTER", default="Nectar Labs <hola@nectarlabs
 EMAIL_CONTACT = env("EMAIL_CONTACT", default="Nectar Labs <contacto@nectarlabs.dev>")
 EMAIL_BILLING = env("EMAIL_BILLING", default="Nectar Labs Facturación <facturacion@nectarlabs.dev>")
 
+# Realtime service internal HTTP endpoint (Node.js, internal network)
+REALTIME_INTERNAL_URL = env("REALTIME_INTERNAL_URL", default="http://realtime:4001")
+REALTIME_INTERNAL_SECRET = env("REALTIME_INTERNAL_SECRET", default="nectar-internal-secret")
+
+
 # SMTP Brevo (Plan Gratuito)
 BREVO_EMAIL_HOST = env("BREVO_EMAIL_HOST", default="smtp-relay.brevo.com")
 BREVO_EMAIL_PORT = env.int("BREVO_EMAIL_PORT", default=587)
