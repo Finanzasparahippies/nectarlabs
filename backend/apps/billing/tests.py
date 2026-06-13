@@ -1435,3 +1435,361 @@ class BillingSystemTests(APITestCase):
             )
             self.assertEqual(response.status_code, 200)
 
+    def test_facturapi_customer_crud_as_tenant(self):
+        """
+        Verify that a tenant can perform CRUD operations on customers using MockPACService.
+        """
+        self.client.force_authenticate(user=self.client_user)
+        
+        # Configure tax profile for tenant
+        TaxProfile.objects.create(
+            tenant=self.tenant,
+            rfc="XAXX010101000",
+            razon_social="Tenant Enterprise",
+            regimen_fiscal="601",
+            codigo_postal="06000",
+            facturapi_organization_id="org_mock_tenant_123"
+        )
+        
+        # 1. GET (list customers)
+        url = reverse('billing_facturapi_customers')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("customers", response.data)
+        self.assertEqual(len(response.data["customers"]), 1)
+        self.assertEqual(response.data["customers"][0]["id"], "cus_mock_001")
+        
+        # 2. POST (create customer)
+        payload = {
+            "rfc": "XAXX010101000",
+            "legal_name": "Test Customer",
+            "tax_system": "601",
+            "email": "customer@test.com",
+            "phone": "5551234567",
+            "zip": "01000"
+        }
+        response = self.client.post(url, payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertIn("pac_customer_id", response.data)
+        self.assertTrue(response.data["pac_customer_id"].startswith("cus_mock_"))
+        
+        # 3. POST (invalid validation error)
+        payload_invalid = {
+            "rfc": "invalid",
+            "legal_name": "",
+            "zip": ""
+        }
+        response = self.client.post(url, payload_invalid, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("errors", response.data)
+        
+        # 4. PUT (update customer)
+        pac_customer_id = "cus_mock_001"
+        url_detail = reverse('billing_facturapi_customer_detail', kwargs={'pac_customer_id': pac_customer_id})
+        response = self.client.put(url_detail, payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["pac_customer_id"], pac_customer_id)
+        
+        # 5. DELETE (delete customer)
+        response = self.client.delete(url_detail)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("message", response.data)
+
+    def test_facturapi_customer_crud_as_ceo_global(self):
+        """
+        Verify that the system admin (CEO) can manage customers globally (no tenant_id needed).
+        """
+        self.client.force_authenticate(user=self.ceo)
+        
+        # 1. GET (list customers globally)
+        url = reverse('billing_facturapi_customers')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("customers", response.data)
+        
+        # 2. POST (create customer globally)
+        payload = {
+            "rfc": "XAXX010101000",
+            "legal_name": "Global Customer",
+            "tax_system": "601",
+            "email": "global@test.com",
+            "phone": "5559876543",
+            "zip": "02000"
+        }
+        response = self.client.post(url, payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(response.data["pac_customer_id"].startswith("cus_mock_"))
+        
+        # 3. PUT (update global customer)
+        pac_customer_id = response.data["pac_customer_id"]
+        url_detail = reverse('billing_facturapi_customer_detail', kwargs={'pac_customer_id': pac_customer_id})
+        response = self.client.put(url_detail, payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        
+        # 4. DELETE (delete global customer)
+        response = self.client.delete(url_detail)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_facturapi_product_crud_as_tenant(self):
+        """
+        Verify product CRUD operations for a tenant.
+        """
+        self.client.force_authenticate(user=self.client_user)
+        TaxProfile.objects.create(
+            tenant=self.tenant,
+            rfc="XAXX010101000",
+            razon_social="Tenant Enterprise",
+            regimen_fiscal="601",
+            codigo_postal="06000",
+            facturapi_organization_id="org_mock_tenant_123"
+        )
+        
+        # 1. GET (list products)
+        url = reverse('billing_facturapi_products')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("products", response.data)
+        self.assertEqual(len(response.data["products"]), 1)
+        self.assertEqual(response.data["products"][0]["id"], "prod_mock_001")
+        
+        # 2. POST (create product)
+        payload = {
+            "description": "Premium Support Hours",
+            "price": 1500.00,
+            "product_key": "43231500",
+            "unit_key": "E48"
+        }
+        response = self.client.post(url, payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertIn("pac_product_id", response.data)
+        self.assertTrue(response.data["pac_product_id"].startswith("prod_mock_"))
+        
+        # 3. POST (validation error)
+        payload_invalid = {
+            "description": "",
+            "price": -10.0,
+            "product_key": ""
+        }
+        response = self.client.post(url, payload_invalid, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("errors", response.data)
+        
+        # 4. PUT (update product)
+        pac_product_id = "prod_mock_001"
+        url_detail = reverse('billing_facturapi_product_detail', kwargs={'pac_product_id': pac_product_id})
+        response = self.client.put(url_detail, payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["pac_product_id"], pac_product_id)
+        
+        # 5. DELETE (delete product)
+        response = self.client.delete(url_detail)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("message", response.data)
+
+    def test_facturapi_product_crud_as_ceo_global(self):
+        """
+        Verify global product CRUD operations for CEO/admin.
+        """
+        self.client.force_authenticate(user=self.ceo)
+        url = reverse('billing_facturapi_products')
+        
+        # 1. GET
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("products", response.data)
+        
+        # 2. POST
+        payload = {
+            "description": "Global Plan Item",
+            "price": 999.99,
+            "product_key": "43231500",
+            "unit_key": "E48"
+        }
+        response = self.client.post(url, payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        pac_product_id = response.data["pac_product_id"]
+        
+        # 3. PUT
+        url_detail = reverse('billing_facturapi_product_detail', kwargs={'pac_product_id': pac_product_id})
+        response = self.client.put(url_detail, payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        
+        # 4. DELETE
+        response = self.client.delete(url_detail)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_facturapi_receipt_as_tenant(self):
+        """
+        Verify receipt creation and listing for a tenant.
+        """
+        self.client.force_authenticate(user=self.client_user)
+        TaxProfile.objects.create(
+            tenant=self.tenant,
+            rfc="XAXX010101000",
+            razon_social="Tenant Enterprise",
+            regimen_fiscal="601",
+            codigo_postal="06000",
+            facturapi_organization_id="org_mock_tenant_123"
+        )
+        
+        # Set stamps
+        self.tenant.stamp_balance = 5
+        self.tenant.save()
+        
+        # 1. GET (list receipts)
+        url = reverse('billing_facturapi_receipts')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("receipts", response.data)
+        
+        # 2. POST (create receipt)
+        payload = {
+            "payment_form": "03",
+            "items": [
+                {
+                    "quantity": 1,
+                    "product": {
+                        "description": "Consulting service",
+                        "price": 1000.00,
+                        "product_key": "90111800",
+                        "unit_key": "E48"
+                    }
+                }
+            ]
+        }
+        response = self.client.post(url, payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertIn("id", response.data)
+        
+        # Stamp balance check
+        self.tenant.refresh_from_db()
+        self.assertEqual(self.tenant.stamp_balance, 4)
+        
+        # 3. POST (fails when stamps are 0)
+        self.tenant.stamp_balance = 0
+        self.tenant.save()
+        response = self.client.post(url, payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("timbres suficientes", response.data["error"])
+
+    def test_facturapi_receipt_as_ceo_global(self):
+        """
+        Verify global receipt creation for CEO (does not consume stamps or check balance).
+        """
+        self.client.force_authenticate(user=self.ceo)
+        url = reverse('billing_facturapi_receipts')
+        
+        payload = {
+            "payment_form": "01",
+            "items": [
+                {
+                    "quantity": 2,
+                    "product": {
+                        "description": "System Admin Service",
+                        "price": 500.00,
+                        "product_key": "90111800",
+                        "unit_key": "E48"
+                    }
+                }
+            ]
+        }
+        response = self.client.post(url, payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_facturapi_retention_as_tenant(self):
+        """
+        Verify retention creation and listing for a tenant.
+        """
+        self.client.force_authenticate(user=self.client_user)
+        TaxProfile.objects.create(
+            tenant=self.tenant,
+            rfc="XAXX010101000",
+            razon_social="Tenant Enterprise",
+            regimen_fiscal="601",
+            codigo_postal="06000",
+            facturapi_organization_id="org_mock_tenant_123"
+        )
+        
+        self.tenant.stamp_balance = 5
+        self.tenant.save()
+        
+        # 1. GET (list retenciones)
+        url = reverse('billing_facturapi_retentions')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("retentions", response.data)
+        
+        # 2. POST (create retention)
+        payload = {
+            "customer": {
+                "legal_name": "John Doe",
+                "tax_id": "XAXX010101000",
+                "tax_system": "616",
+                "address": {"zip": "83240"}
+            },
+            "cve_retenc": "03",
+            "periodo": {
+                "mes_ini": "01",
+                "mes_fin": "12",
+                "ejerc": 2026
+            },
+            "totales": {
+                "monto_tot_operacion": 1000.00,
+                "monto_tot_grav": 1000.00,
+                "monto_tot_exent": 0.00,
+                "monto_tot_ret": 100.00,
+                "retenciones": [
+                    {
+                        "impuesto": "001",
+                        "monto_ret": 100.00,
+                        "tipo_pago_ret": "Pago provisional"
+                    }
+                ]
+            }
+        }
+        response = self.client.post(url, payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertIn("id", response.data)
+        
+        # Stamp balance check
+        self.tenant.refresh_from_db()
+        self.assertEqual(self.tenant.stamp_balance, 4)
+        
+        # 3. POST (fails when stamps are 0)
+        self.tenant.stamp_balance = 0
+        self.tenant.save()
+        response = self.client.post(url, payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("timbres suficientes", response.data["error"])
+
+    def test_facturapi_retention_as_ceo_global(self):
+        """
+        Verify global retention creation for CEO.
+        """
+        self.client.force_authenticate(user=self.ceo)
+        url = reverse('billing_facturapi_retentions')
+        
+        payload = {
+            "customer": {
+                "legal_name": "Global Person",
+                "tax_id": "XAXX010101000",
+                "tax_system": "616",
+                "address": {"zip": "83240"}
+            },
+            "cve_retenc": "03",
+            "periodo": {
+                "mes_ini": "01",
+                "mes_fin": "12",
+                "ejerc": 2026
+            },
+            "totales": {
+                "monto_tot_operacion": 1000.00,
+                "monto_tot_grav": 1000.00,
+                "monto_tot_exent": 0.00,
+                "monto_tot_ret": 100.00
+            }
+        }
+        response = self.client.post(url, payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+
