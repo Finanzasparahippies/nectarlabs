@@ -165,12 +165,12 @@ export default function SATAutocomplete({
       {isOpen && (
         <div className="absolute left-0 right-0 mt-1.5 z-50 max-h-60 overflow-y-auto rounded-xl border border-white/10 bg-[#050a06]/95 backdrop-blur-md shadow-2xl py-1.5 custom-scrollbar autocomplete-dropdown">
           {loading ? (
-            <div className="flex items-center justify-center py-4 text-[8px] font-black uppercase tracking-wider text-white/40">
-              <span className="w-3 h-3 rounded-full border-2 border-t-white border-white/10 animate-spin mr-2"></span>
+            <div className="flex items-center justify-center py-4 text-[8px] font-black uppercase tracking-wider sat-status text-white/40">
+              <span className="w-3 h-3 rounded-full border-2 border-t-white border-white/10 animate-spin mr-2 sat-spinner"></span>
               Buscando catálogo...
             </div>
           ) : results.length === 0 ? (
-            <div className="py-3 px-4 text-[8px] font-black uppercase tracking-wider text-white/30 text-center">
+            <div className="py-3 px-4 text-[8px] font-black uppercase tracking-wider text-center sat-status text-white/30">
               No se encontraron resultados
             </div>
           ) : (
@@ -186,8 +186,8 @@ export default function SATAutocomplete({
                 >
                   <div className="flex justify-between items-center w-full">
                     <span 
-                      className="text-[9px] font-black font-mono tracking-wider"
-                      style={{ color: isSelected ? primaryColor : '#FFFFFF' }}
+                      className="text-[9px] font-black font-mono tracking-wider sat-code text-white"
+                      style={isSelected ? { color: primaryColor } : {}}
                     >
                       {item.code}
                     </span>
@@ -197,7 +197,7 @@ export default function SATAutocomplete({
                       </span>
                     )}
                   </div>
-                  <span className="text-[8px] text-white/60 font-medium line-clamp-2 uppercase">
+                  <span className="text-[8px] font-medium line-clamp-2 uppercase sat-label text-white/60">
                     {itemLabel}
                   </span>
                 </button>

@@ -1135,6 +1135,19 @@ export default function TenantAdminPage() {
         #tenant-admin-root .autocomplete-dropdown button:hover {
           background-color: ${primaryColor}15 !important;
         }
+        #tenant-admin-root .autocomplete-dropdown .sat-code {
+          color: ${tenantConfig.text_color || '#FFFFFF'} !important;
+        }
+        #tenant-admin-root .autocomplete-dropdown .sat-label {
+          color: rgba(255, 255, 255, 0.6) !important;
+        }
+        #tenant-admin-root .autocomplete-dropdown .sat-status {
+          color: rgba(255, 255, 255, 0.4) !important;
+        }
+        #tenant-admin-root .autocomplete-dropdown .sat-spinner {
+          border-color: rgba(255, 255, 255, 0.1) !important;
+          border-top-color: ${tenantConfig.text_color || '#FFFFFF'} !important;
+        }
       `}</style>
 
       {/* Header Panel */}

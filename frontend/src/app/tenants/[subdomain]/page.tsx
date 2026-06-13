@@ -595,6 +595,19 @@ export default function TenantPortalPage() {
         #tenant-portal-root .autocomplete-dropdown button:hover {
           background-color: ${primaryColor}15 !important;
         }
+        #tenant-portal-root .autocomplete-dropdown .sat-code {
+          color: ${isDarkMode ? (tenantConfig.text_color || '#FFFFFF') : '#111827'} !important;
+        }
+        #tenant-portal-root .autocomplete-dropdown .sat-label {
+          color: ${isDarkMode ? 'rgba(255, 255, 255, 0.6)' : 'rgba(17, 24, 39, 0.7)'} !important;
+        }
+        #tenant-portal-root .autocomplete-dropdown .sat-status {
+          color: ${isDarkMode ? 'rgba(255, 255, 255, 0.4)' : 'rgba(17, 24, 39, 0.5)'} !important;
+        }
+        #tenant-portal-root .autocomplete-dropdown .sat-spinner {
+          border-color: ${isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(17, 24, 39, 0.1)'} !important;
+          border-top-color: ${isDarkMode ? (tenantConfig.text_color || '#FFFFFF') : '#111827'} !important;
+        }
         #tenant-portal-root .tenant-footer {
           background-color: ${isDarkMode ? (tenantConfig.card_bg_color || '#050a06') + 'a0' : (tenantConfig.card_bg_color_light || '#FFFFFF')} !important;
           border-color: ${isDarkMode ? (tenantConfig.border_color || '#151F18') : (tenantConfig.border_color_light || '#E5E7EB')} !important;
