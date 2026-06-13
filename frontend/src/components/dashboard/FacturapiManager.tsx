@@ -942,7 +942,7 @@ export default function FacturapiManager({
                   onChange={(code) => setProdKey(code)}
                   primaryColor={primaryColor}
                   placeholder="Buscar clave de producto..."
-                  tenantId={tenantId}
+                  tenantId={tenantId ? String(tenantId) : undefined}
                 />
               </div>
 
@@ -954,7 +954,7 @@ export default function FacturapiManager({
                   onChange={(code) => setProdUnitKey(code)}
                   primaryColor={primaryColor}
                   placeholder="Buscar clave de unidad..."
-                  tenantId={tenantId}
+                  tenantId={tenantId ? String(tenantId) : undefined}
                 />
               </div>
 
