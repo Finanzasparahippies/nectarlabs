@@ -2408,13 +2408,10 @@ export default function TenantAdminPage() {
               </div>
 
             </div>
-                </div>
-              </div>
             )}
             </div>
-          </div>
-        )
-      )}
+          )
+        )}
 
         {activeTab === 'integrations' && (
           <div className="max-w-4xl mx-auto animate-in fade-in duration-300">

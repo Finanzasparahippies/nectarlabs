@@ -29,6 +29,7 @@ function DashboardSidebarContent() {
   const [userRole, setUserRole] = useState('');
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [tenants, setTenants] = useState<any[]>([]);
+  const [currentUser, setCurrentUser] = useState<any | null>(null);
 
   // Responsive navigation and mobile drawer state
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -89,6 +90,7 @@ function DashboardSidebarContent() {
       try {
         const meData = await fetcher('/users/me/');
         if (meData) {
+          setCurrentUser(meData);
           localStorage.setItem('user_role', meData.role || '');
           localStorage.setItem('is_staff', meData.is_staff ? 'true' : 'false');
           checkAuth(meData.role || '', meData.is_staff);
@@ -610,16 +612,43 @@ function DashboardSidebarContent() {
           </nav>
         </div>
 
-        <div className="pt-6 border-t border-card-border/60 flex items-center justify-between">
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-3 py-3 text-red-500/60 hover:text-red-500 transition-all font-black uppercase tracking-widest text-[9px]"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" />
-            </svg>
-            Cerrar Sesión
-          </button>
+        <div className="space-y-4 pt-6 border-t border-card-border/60">
+          {currentUser && (
+            <div className="p-4 rounded-3xl bg-foreground/[0.02] border border-white/5 flex items-center gap-3.5 w-full hover:bg-foreground/[0.04] transition-all duration-300 relative overflow-hidden group">
+              <div className="absolute -right-8 -bottom-8 w-16 h-16 bg-nectar-gold/5 blur-xl rounded-full pointer-events-none"></div>
+              
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-nectar-gold to-yellow-600/30 flex items-center justify-center border border-nectar-gold/20 relative shrink-0 shadow-lg shadow-nectar-gold/5">
+                <span className="text-background font-black text-xs font-mono tracking-wider">
+                  {currentUser.username?.substring(0, 2).toUpperCase() || currentUser.email?.substring(0, 2).toUpperCase() || 'US'}
+                </span>
+                <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-green-500 border-2 border-card-bg shadow-[0_0_6px_rgba(34,197,94,0.6)] animate-pulse animate-duration-1000"></div>
+              </div>
+
+              <div className="flex-1 min-w-0 text-left">
+                <span className="block font-black text-[10px] text-white uppercase tracking-wider truncate">
+                  {currentUser.username || 'Usuario'}
+                </span>
+                <span className="block text-[8px] text-white/40 truncate font-mono mt-0.5">
+                  {currentUser.email}
+                </span>
+                <span className="inline-block px-2 py-0.5 bg-nectar-gold/10 text-nectar-gold border border-nectar-gold/20 text-[6.5px] font-black rounded-full uppercase tracking-wider mt-1.5 font-bold">
+                  {currentUser.role === 'ADMIN' ? 'CEO / Admin' : currentUser.role === 'STAFF' ? 'Staff' : currentUser.role === 'BUSINESS' ? 'Tenant Admin' : currentUser.role === 'DEVELOPER' ? 'Developer' : currentUser.role === 'DESIGNER' ? 'Designer' : currentUser.role === 'SALES' ? 'Sales Oracle' : 'Client'}
+                </span>
+              </div>
+            </div>
+          )}
+
+          <div className="flex items-center justify-between">
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-3 py-3 text-red-500/60 hover:text-red-500 transition-all font-black uppercase tracking-widest text-[9px]"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" />
+              </svg>
+              Cerrar Sesión
+            </button>
+          </div>
         </div>
       </div>
 
@@ -663,6 +692,45 @@ function DashboardSidebarContent() {
           <nav className="flex-1">
             {renderNavLinks()}
           </nav>
+          
+          {/* Profile Widget */}
+          {currentUser && (
+            <div className="w-full transition-all duration-300">
+              {isCollapsed ? (
+                <div className="flex justify-center w-full relative group cursor-pointer" title={`${currentUser.username || currentUser.email} (${currentUser.role === 'ADMIN' ? 'CEO / Admin' : currentUser.role === 'STAFF' ? 'Staff' : currentUser.role === 'BUSINESS' ? 'Tenant Admin' : currentUser.role === 'DEVELOPER' ? 'Developer' : currentUser.role === 'DESIGNER' ? 'Designer' : currentUser.role === 'SALES' ? 'Sales Oracle' : 'Client'})`}>
+                  <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-nectar-gold to-yellow-600/30 flex items-center justify-center border border-nectar-gold/20 relative shadow-lg shadow-nectar-gold/5 hover:scale-105 active:scale-95 transition-all">
+                    <span className="text-background font-black text-xs font-mono tracking-wider">
+                      {currentUser.username?.substring(0, 2).toUpperCase() || currentUser.email?.substring(0, 2).toUpperCase() || 'U'}
+                    </span>
+                    <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-green-500 border-2 border-card-bg shadow-[0_0_6px_rgba(34,197,94,0.6)] animate-pulse"></div>
+                  </div>
+                </div>
+              ) : (
+                <div className="p-4 rounded-3xl bg-foreground/[0.02] border border-white/5 flex items-center gap-3.5 w-full hover:bg-foreground/[0.04] transition-all duration-300 relative overflow-hidden group">
+                  <div className="absolute -right-8 -bottom-8 w-16 h-16 bg-nectar-gold/5 blur-xl rounded-full pointer-events-none group-hover:bg-nectar-gold/10 transition-all duration-500"></div>
+                  
+                  <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-nectar-gold to-yellow-600/30 flex items-center justify-center border border-nectar-gold/20 relative shrink-0 shadow-lg shadow-nectar-gold/5">
+                    <span className="text-background font-black text-xs font-mono tracking-wider">
+                      {currentUser.username?.substring(0, 2).toUpperCase() || currentUser.email?.substring(0, 2).toUpperCase() || 'US'}
+                    </span>
+                    <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-green-500 border-2 border-card-bg shadow-[0_0_6px_rgba(34,197,94,0.6)] animate-pulse"></div>
+                  </div>
+
+                  <div className="flex-1 min-w-0 text-left">
+                    <span className="block font-black text-[10px] text-white uppercase tracking-wider truncate">
+                      {currentUser.username || 'Usuario'}
+                    </span>
+                    <span className="block text-[8px] text-white/40 truncate font-mono mt-0.5">
+                      {currentUser.email}
+                    </span>
+                    <span className="inline-block px-2 py-0.5 bg-nectar-gold/10 text-nectar-gold border border-nectar-gold/20 text-[6.5px] font-black rounded-full uppercase tracking-wider mt-1.5 font-bold">
+                      {currentUser.role === 'ADMIN' ? 'CEO / Admin' : currentUser.role === 'STAFF' ? 'Staff' : currentUser.role === 'BUSINESS' ? 'Tenant Admin' : currentUser.role === 'DEVELOPER' ? 'Developer' : currentUser.role === 'DESIGNER' ? 'Designer' : currentUser.role === 'SALES' ? 'Sales Oracle' : 'Client'}
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
           
           <div className={`pt-6 border-t border-card-border/60 flex ${isCollapsed ? 'flex-col items-center gap-4' : 'items-center justify-between gap-2'} w-full`}>
             {!isCollapsed ? (

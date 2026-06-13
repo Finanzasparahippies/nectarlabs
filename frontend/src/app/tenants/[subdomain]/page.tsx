@@ -1750,12 +1750,174 @@ function SATInvoicingForm({ tenantId, subdomain, primaryColor, ownerId, showToas
             <div className="space-y-1.5">
               <label className="text-[8px] font-black uppercase tracking-widest text-white/50">Email de Recepción de Factura</label>
               <input
-          ))}
+                type="email"
+                required
+                placeholder="ejemplo@email.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full border border-white/10 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-nectar-gold bg-transparent text-white font-mono"
+              />
             </div>
           </div>
 
-          {/* Totales y Timbrado */}
-          <div className="pt-6 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-6">
+          {/* 2. Conceptos o Ticket Input */}
+          {isTenantAdmin ? (
+            <div className="space-y-4 border-t border-white/5 pt-6 mt-6 animate-in fade-in duration-250">
+              <div className="flex justify-between items-center">
+                <h4 className="text-[10px] font-black uppercase tracking-widest text-white/40">2. Conceptos a Facturar</h4>
+                <button
+                  type="button"
+                  onClick={() => setManualItems([...manualItems, { quantity: 1, unit_price: 0, description: '', product_key: '43231500', unit_key: 'E48', unit_name: 'Unidad de servicio' }])}
+                  className="px-2.5 py-1 bg-white/5 hover:bg-white/15 border border-white/10 rounded-lg text-[8px] font-black uppercase tracking-wider transition-all text-white cursor-pointer font-bold"
+                >
+                  + Agregar Concepto
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                {manualItems.map((item, idx) => (
+                  <div key={idx} className="p-5 bg-white/[0.01] border border-white/5 rounded-2xl space-y-4 relative text-left">
+                    {manualItems.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => setManualItems(manualItems.filter((_, i) => i !== idx))}
+                        className="absolute top-4 right-4 text-red-400 hover:text-red-300 text-[8px] uppercase tracking-widest font-black"
+                      >
+                        ✕ Eliminar
+                      </button>
+                    )}
+
+                    <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+                      <div className="md:col-span-2 space-y-1.5">
+                        <label className="text-[8px] font-black uppercase tracking-widest text-white/50">Cant.</label>
+                        <input
+                          type="number"
+                          required
+                          min={1}
+                          value={item.quantity}
+                          onChange={(e) => {
+                            const val = parseInt(e.target.value) || 1;
+                            setManualItems(manualItems.map((it, i) => i === idx ? { ...it, quantity: val } : it));
+                          }}
+                          className="w-full border border-white/10 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-nectar-gold bg-transparent text-white font-mono"
+                        />
+                      </div>
+                      
+                      <div className="md:col-span-3 space-y-1.5">
+                        <label className="text-[8px] font-black uppercase tracking-widest text-white/50">Precio Unitario</label>
+                        <input
+                          type="number"
+                          required
+                          min={0}
+                          step="any"
+                          value={item.unit_price}
+                          onChange={(e) => {
+                            const val = parseFloat(e.target.value) || 0;
+                            setManualItems(manualItems.map((it, i) => i === idx ? { ...it, unit_price: val } : it));
+                          }}
+                          className="w-full border border-white/10 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-nectar-gold bg-transparent text-white font-mono"
+                        />
+                      </div>
+
+                      <div className="md:col-span-7 space-y-1.5 relative concept-search-container">
+                        <label className="text-[8px] font-black uppercase tracking-widest text-white/50">Descripción del Concepto</label>
+                        <input
+                          type="text"
+                          required
+                          placeholder="Ej. Renta de oficina del mes"
+                          value={item.description}
+                          onChange={(e) => handleDescriptionChange(idx, e.target.value)}
+                          className="w-full border border-white/10 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-nectar-gold bg-transparent text-white font-bold"
+                        />
+                        {activeSuggestionIdx === idx && suggestedProducts.length > 0 && (
+                          <div className="absolute left-0 right-0 mt-1 bg-[#050a06]/95 border border-white/10 rounded-2xl shadow-2xl p-2 z-50 max-h-48 overflow-y-auto space-y-1 backdrop-blur-md autocomplete-dropdown">
+                            {suggestedProducts.map((p: any) => (
+                              <button
+                                key={p.code}
+                                type="button"
+                                onClick={() => {
+                                  setManualItems(manualItems.map((it, i) => i === idx ? { ...it, product_key: p.code, description: p.name } : it));
+                                  setActiveSuggestionIdx(null);
+                                  setSuggestedProducts([]);
+                                }}
+                                className="w-full text-left p-2.5 rounded-xl hover:bg-nectar-gold/10 border border-transparent hover:border-nectar-gold/20 flex flex-col gap-0.5 transition-all cursor-pointer group"
+                              >
+                                <span className="text-[10px] font-bold text-white group-hover:text-nectar-gold transition-colors">{p.name}</span>
+                                <span className="text-[8px] text-white/40 font-mono">Clave: {p.code} | Categoria: {p.class_name}</span>
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <label className="text-[8px] font-black uppercase tracking-widest text-white/50 block">Producto / Servicio SAT</label>
+                        <SATAutocomplete
+                          mode="product"
+                          value={item.product_key}
+                          onChange={(code) => setManualItems(manualItems.map((it, i) => i === idx ? { ...it, product_key: code } : it))}
+                          primaryColor={primaryColor}
+                          placeholder="Buscar clave de producto..."
+                          subdomain={subdomain}
+                          tenantId={tenantId}
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1.5">
+                          <label className="text-[8px] font-black uppercase tracking-widest text-white/50 block">Clave Unidad SAT</label>
+                          <SATAutocomplete
+                            mode="unit"
+                            value={item.unit_key}
+                            onChange={(code, name) => setManualItems(manualItems.map((it, i) => i === idx ? { ...it, unit_key: code, unit_name: name || it.unit_name } : it))}
+                            primaryColor={primaryColor}
+                            placeholder="Buscar clave..."
+                            subdomain={subdomain}
+                            tenantId={tenantId}
+                          />
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <label className="text-[8px] font-black uppercase tracking-widest text-white/50 block">Nombre Unidad</label>
+                          <input
+                            type="text"
+                            value={item.unit_name}
+                            onChange={(e) => setManualItems(manualItems.map((it, i) => i === idx ? { ...it, unit_name: e.target.value } : it))}
+                            className="w-full border border-white/10 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-nectar-gold bg-transparent text-white font-bold"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4 border-t border-white/5 pt-6 mt-6 animate-in fade-in duration-250">
+              <h4 className="text-[10px] font-black uppercase tracking-widest text-white/40">2. Información del Ticket</h4>
+              <div className="space-y-1.5">
+                <label className="text-[8px] font-black uppercase tracking-widest text-white/50">Número de Ticket o Recibo</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Ej. rec_mock_001"
+                  value={ticketNumber}
+                  onChange={(e) => setTicketNumber(e.target.value)}
+                  className="w-full border border-white/10 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-nectar-gold bg-transparent text-white font-mono uppercase"
+                />
+                <p className="text-[8px] text-white/30 uppercase tracking-wider">
+                  Ingresa el ID o código de ticket impreso en tu nota de compra para recuperar tus conceptos automáticamente.
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Totales y Timbrado */}
+        <div className="pt-6 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-6">
+          {isTenantAdmin ? (
             <div className="flex gap-8 text-[9px] font-black uppercase tracking-widest w-full md:w-auto">
               <div>
                 <span className="opacity-40 block">Subtotal</span>
@@ -1770,23 +1932,28 @@ function SATInvoicingForm({ tenantId, subdomain, primaryColor, ownerId, showToas
                 <span className="text-base font-mono font-black text-nectar-gold">${total.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN</span>
               </div>
             </div>
+          ) : (
+            <div className="text-[8px] text-white/40 uppercase tracking-wider font-bold">
+              El total y desglose de IVA se calcularán directamente del ticket.
+            </div>
+          )}
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="px-8 py-3.5 text-black font-black uppercase tracking-widest text-[9.5px] rounded-xl transition-all cursor-pointer disabled:opacity-50 w-full md:w-auto hover:scale-102 active:scale-98"
-              style={{ backgroundColor: primaryColor }}
-            >
-              {loading ? (
-                <div className="flex items-center justify-center gap-2">
-                  <span className="w-3.5 h-3.5 rounded-full border-2 border-t-black border-black/10 animate-spin"></span>
-                  Emitiendo Factura...
-                </div>
-              ) : (
-                '✓ Solicitar y Timbrar Factura'
-              )}
-            </button>
-          </div>
+          <button
+            type="submit"
+            disabled={loading}
+            className="px-8 py-3.5 text-black font-black uppercase tracking-widest text-[9.5px] rounded-xl transition-all cursor-pointer disabled:opacity-50 w-full md:w-auto hover:scale-102 active:scale-98 font-bold"
+            style={{ backgroundColor: primaryColor }}
+          >
+            {loading ? (
+              <div className="flex items-center justify-center gap-2">
+                <span className="w-3.5 h-3.5 rounded-full border-2 border-t-black border-black/10 animate-spin"></span>
+                Emitiendo Factura...
+              </div>
+            ) : (
+              '✓ Solicitar y Timbrar Factura'
+            )}
+          </button>
+        </div>
       </form>
 
       <CreateCustomerModal
