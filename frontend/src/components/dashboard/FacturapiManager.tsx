@@ -5,7 +5,7 @@ import { fetcher } from '@/lib/api';
 import SATAutocomplete from '@/components/ui/SATAutocomplete';
 
 interface FacturapiManagerProps {
-  tenantId?: string;
+  tenantId?: string | number;
   primaryColor?: string;
 }
 

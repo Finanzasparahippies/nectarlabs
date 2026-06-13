@@ -2139,7 +2139,7 @@ export default function TenantAdminPage() {
 
             {/* === Tarjeta de Clientes/Receptores/Productos/Recibos/Retenciones Facturapi === */}
             {tenantConfig?.id && (
-              <FacturapiManager tenantId={tenantConfig.id} primaryColor={primaryColor} />
+              <FacturapiManager tenantId={String(tenantConfig.id)} primaryColor={primaryColor} />
             )}
             {/* Columnas principales del billing */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
