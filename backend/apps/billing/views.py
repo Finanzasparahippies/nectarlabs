@@ -480,9 +480,31 @@ class InvoiceViewSet(BillingTenantMixin, viewsets.ModelViewSet):
         customer_info = request.data.get("customer_info")
         items = request.data.get("items")
         total = request.data.get("total")
+        receipt_id = request.data.get("receipt_id") or request.data.get("ticket_number")
+
+        if receipt_id:
+            pac = get_pac_service()
+            try:
+                receipt = pac.retrieve_receipt(profile.facturapi_organization_id, receipt_id)
+                desglose_items = []
+                for item in receipt.get("items", []):
+                    prod = item.get("product", {})
+                    desglose_items.append({
+                        "quantity": int(item.get("quantity", 1)),
+                        "product": {
+                            "description": prod.get("description"),
+                            "price": float(prod.get("price", 0)),
+                            "product_key": prod.get("product_key"),
+                            "unit_key": prod.get("unit_key", "E48")
+                        }
+                    })
+                items = desglose_items
+                total = float(receipt.get("total", 0))
+            except Exception as e:
+                return Response({"error": f"No se pudo consultar o validar el ticket ingresado: {e}"}, status=400)
 
         if not customer_info or not items or total is None:
-            return Response({"error": "Los campos customer_info, items y total son obligatorios."}, status=400)
+            return Response({"error": "Los campos de facturación (cliente, conceptos o ticket) son obligatorios."}, status=400)
 
         # Basic customer_info validations
         for field in ["rfc", "razon_social", "regimen_fiscal", "codigo_postal", "email"]:

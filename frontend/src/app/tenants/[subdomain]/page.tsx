@@ -811,8 +811,8 @@ export default function TenantPortalPage() {
                     { slug: 'patreon-sponsorship', component: <SponsorTiers primaryColor={primaryColor} /> },
                     { slug: 'analytics-apm', component: <TelemetryDashboard primaryColor={primaryColor} /> },
                     { slug: 'newsletter-campaigner', component: <SubscribeForm tenantId={tenantConfig.id} subdomain={subdomain} primaryColor={primaryColor} /> },
-                    {slug: 'mexico-invoicing', component: <SATInvoicingForm tenantId={tenantConfig.id} subdomain={subdomain} primaryColor={primaryColor} ownerId={tenantConfig.owner} showToast={showToast} />},
-                    {slug: 'ecommerce-combo', component: <EcommerceStore tenantId={tenantConfig.id} subdomain={subdomain} primaryColor={primaryColor} />},
+                    { slug: 'mexico-invoicing', component: <SATInvoicingForm tenantId={tenantConfig.id} subdomain={subdomain} primaryColor={primaryColor} ownerId={tenantConfig.owner} showToast={showToast} /> },
+                    { slug: 'ecommerce-combo', component: <EcommerceStore tenantId={tenantConfig.id} subdomain={subdomain} primaryColor={primaryColor} /> },
                   ].find(tab => tab.slug === activeAddonTab)?.component}
                 </div>
               </div>
@@ -1234,14 +1234,15 @@ function SATInvoicingForm({ tenantId, subdomain, primaryColor, ownerId, showToas
   const [codigoPostal, setCodigoPostal] = useState('');
   const [email, setEmail] = useState('');
   const [usoCfdi, setUsoCfdi] = useState('G03');
-  
+  const [ticketNumber, setTicketNumber] = useState('');
+
   const [manualItems, setManualItems] = useState<Array<{ quantity: number; unit_price: number; description: string; product_key: string; unit_key: string; unit_name: string }>>([
     { quantity: 1, unit_price: 0, description: '', product_key: '43231500', unit_key: 'E48', unit_name: 'Unidad de servicio' }
   ]);
   const [activeSuggestionIdx, setActiveSuggestionIdx] = useState<number | null>(null);
   const [suggestedProducts, setSuggestedProducts] = useState<any[]>([]);
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
-  
+
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -1280,16 +1281,16 @@ function SATInvoicingForm({ tenantId, subdomain, primaryColor, ownerId, showToas
           const isOwner = ownerId ? String(me.id) === String(ownerId) : false;
           const isSystemAdmin = me.is_staff || me.role === 'ADMIN';
           const isStaffOfTenant = me.role === 'STAFF' && String(me.tenant) === String(tenantId);
-          
+
           if (isOwner || isSystemAdmin || isStaffOfTenant || me.role === 'BUSINESS') {
             localStorage.setItem('refresh_token', data.refresh);
             localStorage.setItem('user_email', adminEmail.trim());
             localStorage.setItem('is_staff', me.is_staff ? 'true' : 'false');
             localStorage.setItem('user_role', me.role || '');
-            
+
             setIsTenantAdmin(true);
             await loadBillingData();
-            
+
             if (showToast) {
               showToast('Modo Administrador activado con éxito', 'success');
             }
@@ -1348,7 +1349,7 @@ function SATInvoicingForm({ tenantId, subdomain, primaryColor, ownerId, showToas
         const isOwner = ownerId ? String(me.id) === String(ownerId) : false;
         const isSystemAdmin = me.is_staff || me.role === 'ADMIN';
         const isStaffOfTenant = me.role === 'STAFF' && String(me.tenant) === String(tenantId);
-        
+
         if (isOwner || isSystemAdmin || isStaffOfTenant || me.role === 'BUSINESS') {
           setIsTenantAdmin(true);
           await loadBillingData();
@@ -1363,7 +1364,7 @@ function SATInvoicingForm({ tenantId, subdomain, primaryColor, ownerId, showToas
 
   const handleDescriptionChange = async (idx: number, val: string) => {
     setManualItems(prev => prev.map((it, i) => i === idx ? { ...it, description: val } : it));
-    
+
     if (val.trim().length < 2) {
       setSuggestedProducts([]);
       setActiveSuggestionIdx(null);
@@ -1404,19 +1405,27 @@ function SATInvoicingForm({ tenantId, subdomain, primaryColor, ownerId, showToas
     setErrorMsg(null);
     setSuccessMsg(null);
 
-    for (const item of manualItems) {
-      if (!item.description.trim()) {
-        setErrorMsg('La descripción es obligatoria para todos los conceptos.');
-        setLoading(false);
-        return;
+    if (isTenantAdmin) {
+      for (const item of manualItems) {
+        if (!item.description.trim()) {
+          setErrorMsg('La descripción es obligatoria para todos los conceptos.');
+          setLoading(false);
+          return;
+        }
+        if (!item.product_key) {
+          setErrorMsg('Debes seleccionar una clave de producto SAT para cada concepto.');
+          setLoading(false);
+          return;
+        }
+        if (!item.unit_key) {
+          setErrorMsg('Debes seleccionar una clave de unidad SAT para cada concepto.');
+          setLoading(false);
+          return;
+        }
       }
-      if (!item.product_key) {
-        setErrorMsg('Debes seleccionar una clave de producto SAT para cada concepto.');
-        setLoading(false);
-        return;
-      }
-      if (!item.unit_key) {
-        setErrorMsg('Debes seleccionar una clave de unidad SAT para cada concepto.');
+    } else {
+      if (!ticketNumber.trim()) {
+        setErrorMsg('El número de ticket es obligatorio para emitir la factura.');
         setLoading(false);
         return;
       }
@@ -1427,32 +1436,39 @@ function SATInvoicingForm({ tenantId, subdomain, primaryColor, ownerId, showToas
     const total = parseFloat((subtotal + iva).toFixed(2));
 
     try {
+      const payload: any = {
+        tenant_id: tenantId,
+        subdomain: subdomain,
+        customer_info: {
+          rfc: rfc.trim().toUpperCase(),
+          razon_social: razonSocial.trim(),
+          regimen_fiscal: regimenFiscal,
+          codigo_postal: codigoPostal.trim(),
+          email: email.trim(),
+          use: usoCfdi
+        }
+      };
+
+      if (isTenantAdmin) {
+        payload.items = manualItems.map(it => ({
+          quantity: it.quantity,
+          unit_price: it.unit_price,
+          description: it.description,
+          product_key: it.product_key,
+          unit_key: it.unit_key,
+          unit_name: it.unit_name
+        }));
+        payload.total = total;
+      } else {
+        payload.ticket_number = ticketNumber.trim();
+      }
+
       const res = await fetch('/api/billing/invoices/issue-tenant-to-client/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          tenant_id: tenantId,
-          subdomain: subdomain,
-          customer_info: {
-            rfc: rfc.trim().toUpperCase(),
-            razon_social: razonSocial.trim(),
-            regimen_fiscal: regimenFiscal,
-            codigo_postal: codigoPostal.trim(),
-            email: email.trim(),
-            use: usoCfdi
-          },
-          items: manualItems.map(it => ({
-            quantity: it.quantity,
-            unit_price: it.unit_price,
-            description: it.description,
-            product_key: it.product_key,
-            unit_key: it.unit_key,
-            unit_name: it.unit_name
-          })),
-          total: total
-        })
+        body: JSON.stringify(payload)
       });
 
       const data = await res.json();
@@ -1465,6 +1481,7 @@ function SATInvoicingForm({ tenantId, subdomain, primaryColor, ownerId, showToas
       setRazonSocial('');
       setCodigoPostal('');
       setEmail('');
+      setTicketNumber('');
       setManualItems([
         { quantity: 1, unit_price: 0, description: '', product_key: '43231500', unit_key: 'E48', unit_name: 'Unidad de servicio' }
       ]);
@@ -1481,593 +1498,412 @@ function SATInvoicingForm({ tenantId, subdomain, primaryColor, ownerId, showToas
 
   return (
     <>
-    <form onSubmit={handleSubmit} className="max-w-4xl mx-auto p-6 md:p-8 rounded-[2rem] bg-white/[0.01] backdrop-blur-md border border-white/5 space-y-8 text-left tenant-card relative overflow-hidden">
-      <div className="absolute -top-32 -right-32 w-64 h-64 rounded-full blur-[120px] opacity-10 pointer-events-none" style={{ backgroundColor: primaryColor }}></div>
-      
-      <div>
-        <h3 className="text-xl font-black uppercase text-white tracking-wide">Solicitar Factura SAT</h3>
-        <p className="text-[10px] text-white/50 uppercase tracking-widest mt-1">Ingresa tus datos fiscales para emitir tu CFDI 4.0 de forma automática</p>
-      </div>
+      <form onSubmit={handleSubmit} className="max-w-4xl mx-auto p-6 md:p-8 rounded-[2rem] bg-white/[0.01] backdrop-blur-md border border-white/5 space-y-8 text-left tenant-card relative overflow-hidden">
+        <div className="absolute -top-32 -right-32 w-64 h-64 rounded-full blur-[120px] opacity-10 pointer-events-none" style={{ backgroundColor: primaryColor }}></div>
 
-      {errorMsg && (
-        <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-bold rounded-xl animate-pulse">
-          ⚠️ {errorMsg}
+        <div>
+          <h3 className="text-xl font-black uppercase text-white tracking-wide">Solicitar Factura SAT</h3>
+          <p className="text-[10px] text-white/50 uppercase tracking-widest mt-1">Ingresa tus datos fiscales para emitir tu CFDI 4.0 de forma automática</p>
         </div>
-      )}
 
-      {successMsg && (
-        <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold rounded-xl">
-          ✓ {successMsg}
-        </div>
-      )}
+        {errorMsg && (
+          <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-bold rounded-xl animate-pulse">
+            ⚠️ {errorMsg}
+          </div>
+        )}
 
-      {/* Datos Fiscales */}
-      <div className="space-y-4">
-        <div className="flex justify-between items-center border-b border-white/5 pb-2">
-          <h4 className="text-[10px] font-black uppercase tracking-widest text-white/40">1. Datos de Facturación</h4>
-          {!isTenantAdmin ? (
-            <button
-              type="button"
-              onClick={() => setShowAdminLogin(true)}
-              className="text-[9px] font-black hover:underline uppercase tracking-widest cursor-pointer text-nectar-gold"
-            >
-              🔑 Modo Administrador
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={() => {
-                localStorage.removeItem('token');
-                setIsTenantAdmin(false);
-                setSelectedCustomer(null);
-                setEmail('');
-                setRfc('');
-                setRazonSocial('');
-                setCodigoPostal('');
-              }}
-              className="text-[9px] font-black hover:underline uppercase tracking-widest cursor-pointer text-red-400"
-            >
-              🔒 Salir de Admin
-            </button>
-          )}
-        </div>
-        
-        {isTenantAdmin && (
-          <div className="space-y-3 p-5 bg-white/[0.02] border border-white/5 rounded-2xl relative mb-4">
-            <label className="text-[8px] font-black uppercase tracking-widest text-white/50 block">Seleccionar Cliente Registrado</label>
-            
-            {selectedCustomer ? (
-              /* Selected Customer Card */
-              <div className="flex items-center justify-between p-4 bg-nectar-gold/10 border border-nectar-gold/30 rounded-xl animate-in fade-in zoom-in-95 duration-150">
-                <div>
-                  <span className="text-[7.5px] font-black uppercase tracking-widest text-nectar-gold">Cliente Seleccionado ✓</span>
-                  <h4 className="text-xs font-bold text-white mt-0.5">{selectedCustomer.username || 'Usuario'}</h4>
-                  <p className="text-[9px] text-white/50">{selectedCustomer.email}</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSelectedCustomer(null);
-                    setEmail('');
-                    setRfc('');
-                    setRazonSocial('');
-                    setCodigoPostal('');
-                  }}
-                  className="px-3 py-1.5 bg-white/5 hover:bg-red-500/10 text-white/60 hover:text-red-400 border border-white/10 hover:border-red-500/20 rounded-xl text-[8px] font-black uppercase tracking-wider transition-all cursor-pointer font-bold"
-                >
-                  Quitar
-                </button>
-              </div>
+        {successMsg && (
+          <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold rounded-xl">
+            ✓ {successMsg}
+          </div>
+        )}
+
+        {/* Datos Fiscales */}
+        <div className="space-y-4">
+          <div className="flex justify-between items-center border-b border-white/5 pb-2">
+            <h4 className="text-[10px] font-black uppercase tracking-widest text-white/40">1. Datos de Facturación</h4>
+            {!isTenantAdmin ? (
+              <button
+                type="button"
+                onClick={() => setShowAdminLogin(true)}
+                className="text-[9px] font-black hover:underline uppercase tracking-widest cursor-pointer text-nectar-gold"
+              >
+                🔑 Modo Administrador
+              </button>
             ) : (
-              /* Search input + filtered results */
-              <div className="space-y-2 relative">
-                <div className="flex gap-2">
-                  <div className="flex-1 relative">
-                    <input
-                      type="text"
-                      value={customerSearchQuery}
-                      onChange={(e) => setCustomerSearchQuery(e.target.value)}
-                      placeholder={tenantUsers.length === 0 ? "No tienes clientes registrados aún" : "Buscar cliente por nombre o email..."}
-                      disabled={tenantUsers.length === 0}
-                      className="w-full bg-transparent border border-white/10 rounded-xl px-4 py-2.5 pl-10 text-xs focus:outline-none focus:border-nectar-gold text-white placeholder:text-white/20 admin-input font-bold disabled:opacity-50"
-                    />
-                    <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/30 select-none text-[10px]">🔍</div>
-                    {customerSearchQuery && (
-                      <button
-                        type="button"
-                        onClick={() => setCustomerSearchQuery('')}
-                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-white/40 hover:text-white text-xs font-bold"
-                      >
-                        ×
-                      </button>
-                    )}
+              <button
+                type="button"
+                onClick={() => {
+                  localStorage.removeItem('token');
+                  setIsTenantAdmin(false);
+                  setSelectedCustomer(null);
+                  setEmail('');
+                  setRfc('');
+                  setRazonSocial('');
+                  setCodigoPostal('');
+                }}
+                className="text-[9px] font-black hover:underline uppercase tracking-widest cursor-pointer text-red-400"
+              >
+                🔒 Salir de Admin
+              </button>
+            )}
+          </div>
+
+          {isTenantAdmin && (
+            <div className="space-y-3 p-5 bg-white/[0.02] border border-white/5 rounded-2xl relative mb-4">
+              <label className="text-[8px] font-black uppercase tracking-widest text-white/50 block">Seleccionar Cliente Registrado</label>
+
+              {selectedCustomer ? (
+                /* Selected Customer Card */
+                <div className="flex items-center justify-between p-4 bg-nectar-gold/10 border border-nectar-gold/30 rounded-xl animate-in fade-in zoom-in-95 duration-150">
+                  <div>
+                    <span className="text-[7.5px] font-black uppercase tracking-widest text-nectar-gold">Cliente Seleccionado ✓</span>
+                    <h4 className="text-xs font-bold text-white mt-0.5">{selectedCustomer.username || 'Usuario'}</h4>
+                    <p className="text-[9px] text-white/50">{selectedCustomer.email}</p>
                   </div>
                   <button
                     type="button"
                     onClick={() => {
-                      setShowNewClientModal(true);
+                      setSelectedCustomer(null);
+                      setEmail('');
+                      setRfc('');
+                      setRazonSocial('');
+                      setCodigoPostal('');
                     }}
-                    className="px-4 py-2.5 bg-white/10 hover:bg-white/20 border border-white/10 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all text-white cursor-pointer font-bold whitespace-nowrap shrink-0"
+                    className="px-3 py-1.5 bg-white/5 hover:bg-red-500/10 text-white/60 hover:text-red-400 border border-white/10 hover:border-red-500/20 rounded-xl text-[8px] font-black uppercase tracking-wider transition-all cursor-pointer font-bold"
                   >
-                    + Nuevo
+                    Quitar
                   </button>
                 </div>
-                
-                {customerSearchQuery.trim() !== '' && tenantUsers.length > 0 && (
-                  <div className="absolute left-0 right-0 mt-1 bg-[#050a06]/95 border border-white/10 rounded-2xl shadow-2xl p-2 z-50 max-h-48 overflow-y-auto space-y-1 backdrop-blur-md autocomplete-dropdown">
-                    {(() => {
-                      const query = customerSearchQuery.toLowerCase().trim();
-                      const filtered = tenantUsers.filter(u => 
-                        (u.username && u.username.toLowerCase().includes(query)) ||
-                        (u.email && u.email.toLowerCase().includes(query))
-                      );
-                      
-                      if (filtered.length === 0) {
-                        return (
-                          <div className="p-3 text-center text-white/30 text-[8px] uppercase tracking-wider font-bold">
-                            Sin clientes coincidentes
-                          </div>
-                        );
-                      }
-                      
-                      return filtered.map(u => {
-                        const contract = tenantContracts.find(c => c.user === u.id);
-                        return (
-                          <button
-                            key={u.id}
-                            type="button"
-                            onClick={() => {
-                              setSelectedCustomer(u);
-                              setEmail(u.email);
-                              setCustomerSearchQuery('');
-                              if (contract) {
-                                setRfc(contract.tax_id || '');
-                                setRazonSocial(contract.full_name || '');
-                              } else {
-                                setRazonSocial(u.username || '');
-                              }
-                            }}
-                            className="w-full text-left p-3 rounded-xl hover:bg-nectar-gold/10 border border-transparent hover:border-nectar-gold/20 flex flex-col gap-0.5 transition-all cursor-pointer group"
-                          >
-                            <span className="text-xs font-bold text-white group-hover:text-nectar-gold transition-colors">{u.username || 'Usuario'}</span>
-                            <span className="text-[9.5px] text-white/50">{u.email}</span>
-                            {contract?.tax_id && (
-                              <span className="text-[8px] text-nectar-gold/80 font-mono mt-0.5">RFC: {contract.tax_id}</span>
-                            )}
-                          </button>
-                        );
-                      });
-                    })()}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        )}
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-1.5">
-            <label className="text-[8px] font-black uppercase tracking-widest text-white/50">RFC (Receptor)</label>
-            <input
-              type="text"
-              required
-              maxLength={13}
-              placeholder="XAXX010101000"
-              value={rfc}
-              onChange={(e) => setRfc(e.target.value.toUpperCase())}
-              className="w-full border border-white/10 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-nectar-gold bg-transparent text-white font-mono uppercase"
-            />
-          </div>
-          <div className="space-y-1.5">
-            <label className="text-[8px] font-black uppercase tracking-widest text-white/50">Razón Social o Nombre Completo</label>
-            <input
-              type="text"
-              required
-              placeholder="PUBLICO EN GENERAL"
-              value={razonSocial}
-              onChange={(e) => setRazonSocial(e.target.value)}
-              className="w-full border border-white/10 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-nectar-gold bg-transparent text-white"
-            />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-1.5">
-            <label className="text-[8px] font-black uppercase tracking-widest text-white/50">Régimen Fiscal</label>
-            <select
-              value={regimenFiscal}
-              onChange={(e) => setRegimenFiscal(e.target.value)}
-              className="w-full border border-white/10 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-nectar-gold bg-[#0b0f0c] text-white font-bold"
-            >
-              <option value="601">601 - General de Ley Personas Morales</option>
-              <option value="603">603 - Personas Morales con Fines no Lucrativos</option>
-              <option value="605">605 - Sueldos y Salarios e Ingresos Asimilados a Salarios</option>
-              <option value="606">606 - Arrendamiento</option>
-              <option value="608">608 - Demás ingresos</option>
-              <option value="612">612 - Personas Físicas con Actividades Empresariales y Profesionales</option>
-              <option value="616">616 - Sin obligaciones fiscales</option>
-              <option value="621">621 - Incorporación Fiscal</option>
-              <option value="625">625 - Régimen de las Actividades Agrícolas, Ganaderas, Silvícolas y Pesqueras</option>
-              <option value="626">626 - Régimen Simplificado de Confianza (RESICO)</option>
-            </select>
-          </div>
-          <div className="space-y-1.5">
-            <label className="text-[8px] font-black uppercase tracking-widest text-white/50">Código Postal del Domicilio Fiscal</label>
-            <input
-              type="text"
-              required
-              maxLength={5}
-              placeholder="00000"
-              value={codigoPostal}
-              onChange={(e) => setCodigoPostal(e.target.value)}
-              className="w-full border border-white/10 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-nectar-gold bg-transparent text-white font-mono"
-            />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-1.5">
-            <label className="text-[8px] font-black uppercase tracking-widest text-white/50">Uso de CFDI</label>
-            <select
-              value={usoCfdi}
-              onChange={(e) => setUsoCfdi(e.target.value)}
-              className="w-full border border-white/10 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-nectar-gold bg-[#0b0f0c] text-white font-bold"
-            >
-              <option value="G01">G01 - Adquisición de mercancías</option>
-              <option value="G03">G03 - Gastos en general</option>
-              <option value="I01">I01 - Construcciones</option>
-              <option value="I02">I02 - Mobiliario y equipo de oficina por inversiones</option>
-              <option value="I04">I04 - Equipo de transporte</option>
-              <option value="I08">I08 - Otra maquinaria y equipo</option>
-              <option value="D01">D01 - Honorarios médicos, dentales y gastos hospitalarios</option>
-              <option value="D02">D02 - Gastos médicos por incapacidad o discapacidad</option>
-              <option value="D04">D04 - Donativos</option>
-              <option value="D07">D07 - Primas por seguros de gastos médicos</option>
-              <option value="D08">D08 - Gastos de transportación escolar obligatoria</option>
-              <option value="D10">D10 - Depósitos en cuentas especiales para el ahorro, primas que tengan como base planes de pensiones</option>
-              <option value="S01">S01 - Sin efectos fiscales</option>
-              <option value="CP01">CP01 - Pagos</option>
-              <option value="CN01">CN01 - Nómina</option>
-            </select>
-          </div>
-          <div className="space-y-1.5">
-            <label className="text-[8px] font-black uppercase tracking-widest text-white/50">Email de Recepción de Factura</label>
-            <input
-              type="email"
-              required
-              placeholder="cliente@ejemplo.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full border border-white/10 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-nectar-gold bg-transparent text-white"
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Conceptos */}
-      <div className="space-y-4">
-        <div className="flex justify-between items-center border-b border-white/5 pb-2">
-          <h4 className="text-[10px] font-black uppercase tracking-widest text-white/40">2. Conceptos a Facturar</h4>
-          <button
-            type="button"
-            onClick={() => {
-              setManualItems(prev => [...prev, {
-                quantity: 1,
-                unit_price: 0,
-                description: '',
-                product_key: '43231500',
-                unit_key: 'E48',
-                unit_name: 'Unidad de servicio'
-              }]);
-            }}
-            className="text-[8.5px] font-black hover:underline uppercase tracking-widest cursor-pointer"
-            style={{ color: primaryColor }}
-          >
-            + Agregar Concepto
-          </button>
-        </div>
-
-        <div className="space-y-4">
-          {manualItems.map((item, idx) => (
-            <div key={idx} className="p-5 bg-white/[0.01] border border-white/5 rounded-2xl space-y-4 relative text-left">
-              {manualItems.length > 1 && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setManualItems(prev => prev.filter((_, i) => i !== idx));
-                  }}
-                  className="absolute top-3 right-4 text-red-400 hover:text-red-600 text-[8px] font-black uppercase tracking-widest cursor-pointer"
-                >
-                  remover
-                </button>
-              )}
-              
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-                <div className="col-span-2 space-y-1 relative concept-search-container">
-                  <label className="text-[7.5px] font-black uppercase tracking-widest text-white/40">Descripción del Servicio/Producto</label>
-                  <input
-                    type="text"
-                    required
-                    className="w-full px-3.5 py-2 bg-transparent border border-white/10 rounded-xl text-[10px] font-bold text-white focus:outline-none focus:border-nectar-gold"
-                    placeholder="ej. Desarrollo de Módulo Web"
-                    value={item.description}
-                    onChange={(e) => handleDescriptionChange(idx, e.target.value)}
-                    onFocus={() => {
-                      if (item.description.trim().length >= 2) {
-                        handleDescriptionChange(idx, item.description);
-                      }
-                    }}
-                  />
-                  {activeSuggestionIdx === idx && (loadingSuggestions || suggestedProducts.length > 0) && (
-                    <div className="absolute left-0 right-0 mt-1 z-50 max-h-48 overflow-y-auto rounded-xl border border-white/10 bg-[#050a06]/95 backdrop-blur-md shadow-2xl py-1.5 custom-scrollbar">
-                      {loadingSuggestions ? (
-                        <div className="flex items-center justify-center py-3 text-[8px] font-black uppercase tracking-wider text-white/40">
-                          <span className="w-3 h-3 rounded-full border-2 border-t-white border-white/10 animate-spin mr-2"></span>
-                          Buscando catálogo SAT...
-                        </div>
-                      ) : (
-                        suggestedProducts.map((prod) => (
-                          <button
-                            key={prod.id || prod.code}
-                            type="button"
-                            onClick={() => {
-                              setManualItems(prev => prev.map((it, i) => i === idx ? {
-                                ...it,
-                                description: prod.description,
-                                product_key: prod.code
-                              } : it));
-                              setActiveSuggestionIdx(null);
-                              setSuggestedProducts([]);
-                            }}
-                            className="w-full text-left px-3 py-1.5 hover:bg-white/5 transition-colors flex flex-col gap-0.5 border-b border-white/[0.02] last:border-0 cursor-pointer"
-                          >
-                            <div className="flex justify-between items-center w-full">
-                              <span className="text-[8px] font-black font-mono tracking-wider text-nectar-gold">
-                                {prod.code}
-                              </span>
-                            </div>
-                            <span className="text-[8.5px] text-white/80 font-medium line-clamp-1 uppercase">
-                              {prod.description}
-                            </span>
-                          </button>
-                        ))
+              ) : (
+                /* Search input + filtered results */
+                <div className="space-y-2 relative">
+                  <div className="flex gap-2">
+                    <div className="flex-1 relative">
+                      <input
+                        type="text"
+                        value={customerSearchQuery}
+                        onChange={(e) => setCustomerSearchQuery(e.target.value)}
+                        placeholder={tenantUsers.length === 0 ? "No tienes clientes registrados aún" : "Buscar cliente por nombre o email..."}
+                        disabled={tenantUsers.length === 0}
+                        className="w-full bg-transparent border border-white/10 rounded-xl px-4 py-2.5 pl-10 text-xs focus:outline-none focus:border-nectar-gold text-white placeholder:text-white/20 admin-input font-bold disabled:opacity-50"
+                      />
+                      <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/30 select-none text-[10px]">🔍</div>
+                      {customerSearchQuery && (
+                        <button
+                          type="button"
+                          onClick={() => setCustomerSearchQuery('')}
+                          className="absolute right-3.5 top-1/2 -translate-y-1/2 text-white/40 hover:text-white text-xs font-bold"
+                        >
+                          ×
+                        </button>
                       )}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowNewClientModal(true);
+                      }}
+                      className="px-4 py-2.5 bg-white/10 hover:bg-white/20 border border-white/10 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all text-white cursor-pointer font-bold whitespace-nowrap shrink-0"
+                    >
+                      + Nuevo
+                    </button>
+                  </div>
+
+                  {customerSearchQuery.trim() !== '' && tenantUsers.length > 0 && (
+                    <div className="absolute left-0 right-0 mt-1 bg-[#050a06]/95 border border-white/10 rounded-2xl shadow-2xl p-2 z-50 max-h-48 overflow-y-auto space-y-1 backdrop-blur-md autocomplete-dropdown">
+                      {(() => {
+                        const query = customerSearchQuery.toLowerCase().trim();
+                        const filtered = tenantUsers.filter(u =>
+                          (u.username && u.username.toLowerCase().includes(query)) ||
+                          (u.email && u.email.toLowerCase().includes(query))
+                        );
+
+                        if (filtered.length === 0) {
+                          return (
+                            <div className="p-3 text-center text-white/30 text-[8px] uppercase tracking-wider font-bold">
+                              Sin clientes coincidentes
+                            </div>
+                          );
+                        }
+
+                        return filtered.map(u => {
+                          const contract = tenantContracts.find(c => c.user === u.id);
+                          return (
+                            <button
+                              key={u.id}
+                              type="button"
+                              onClick={() => {
+                                setSelectedCustomer(u);
+                                setEmail(u.email);
+                                setCustomerSearchQuery('');
+                                if (contract) {
+                                  setRfc(contract.tax_id || '');
+                                  setRazonSocial(contract.full_name || '');
+                                } else {
+                                  setRazonSocial(u.username || '');
+                                }
+                              }}
+                              className="w-full text-left p-3 rounded-xl hover:bg-nectar-gold/10 border border-transparent hover:border-nectar-gold/20 flex flex-col gap-0.5 transition-all cursor-pointer group"
+                            >
+                              <span className="text-xs font-bold text-white group-hover:text-nectar-gold transition-colors">{u.username || 'Usuario'}</span>
+                              <span className="text-[9.5px] text-white/50">{u.email}</span>
+                              {contract?.tax_id && (
+                                <span className="text-[8px] text-nectar-gold/80 font-mono mt-0.5">RFC: {contract.tax_id}</span>
+                              )}
+                            </button>
+                          );
+                        });
+                      })()}
                     </div>
                   )}
                 </div>
-                
-                <div className="space-y-1">
-                  <label className="text-[7.5px] font-black uppercase tracking-widest text-white/40">Cantidad</label>
-                  <input
-                    type="number"
-                    required
-                    min="1"
-                    className="w-full px-3.5 py-2 bg-transparent border border-white/10 rounded-xl text-[10px] font-bold text-center text-white font-mono"
-                    value={item.quantity}
-                    onChange={(e) => {
-                      const newQty = parseInt(e.target.value) || 1;
-                      setManualItems(prev => prev.map((it, i) => i === idx ? { ...it, quantity: newQty } : it));
-                    }}
-                  />
-                </div>
-                
-                <div className="space-y-1">
-                  <label className="text-[7.5px] font-black uppercase tracking-widest text-white/40">Precio Unitario (MXN)</label>
-                  <input
-                    type="number"
-                    required
-                    min="0.01"
-                    step="0.01"
-                    className="w-full px-3.5 py-2 bg-transparent border border-white/10 rounded-xl text-[10px] font-bold text-right text-white font-mono"
-                    placeholder="0.00"
-                    value={item.unit_price || ''}
-                    onChange={(e) => {
-                      const newPrice = parseFloat(e.target.value) || 0;
-                      setManualItems(prev => prev.map((it, i) => i === idx ? { ...it, unit_price: newPrice } : it));
-                    }}
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 border-t border-white/5 pt-3">
-                <div className="space-y-1">
-                  <label className="text-[7.5px] font-black uppercase tracking-widest text-white/40 block">Clave Producto SAT</label>
-                  <SATAutocomplete
-                    mode="product"
-                    value={item.product_key}
-                    onChange={(code) => {
-                      setManualItems(prev => prev.map((it, i) => i === idx ? { ...it, product_key: code } : it));
-                    }}
-                    primaryColor={primaryColor}
-                    placeholder="Clave SAT..."
-                    subdomain={subdomain}
-                    tenantId={tenantId}
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-[7.5px] font-black uppercase tracking-widest text-white/40 block">Clave Unidad SAT</label>
-                  <SATAutocomplete
-                    mode="unit"
-                    value={item.unit_key}
-                    onChange={(code, name) => {
-                      setManualItems(prev => prev.map((it, i) => i === idx ? { ...it, unit_key: code, unit_name: name || it.unit_name } : it));
-                    }}
-                    primaryColor={primaryColor}
-                    placeholder="Clave Unidad..."
-                    subdomain={subdomain}
-                    tenantId={tenantId}
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-[7.5px] font-black uppercase tracking-widest text-white/40 block">Nombre de Unidad</label>
-                  <input
-                    type="text"
-                    required
-                    className="w-full px-3.5 py-2 bg-transparent border border-white/10 rounded-xl text-[10px] font-bold text-white font-mono"
-                    placeholder="ej. Unidad de servicio"
-                    value={item.unit_name}
-                    onChange={(e) => {
-                      const newName = e.target.value;
-                      setManualItems(prev => prev.map((it, i) => i === idx ? { ...it, unit_name: newName } : it));
-                    }}
-                  />
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Totales y Timbrado */}
-      <div className="pt-6 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-6">
-        <div className="flex gap-8 text-[9px] font-black uppercase tracking-widest w-full md:w-auto">
-          <div>
-            <span className="opacity-40 block">Subtotal</span>
-            <span className="text-sm font-mono font-bold text-white/80">${subtotal.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</span>
-          </div>
-          <div>
-            <span className="opacity-40 block">IVA (16%)</span>
-            <span className="text-sm font-mono font-bold text-white/80">${iva.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</span>
-          </div>
-          <div>
-            <span className="text-nectar-gold block">Total Facturado</span>
-            <span className="text-base font-mono font-black text-nectar-gold">${total.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN</span>
-          </div>
-        </div>
-
-        <button
-          type="submit"
-          disabled={loading}
-          className="px-8 py-3.5 text-black font-black uppercase tracking-widest text-[9.5px] rounded-xl transition-all cursor-pointer disabled:opacity-50 w-full md:w-auto hover:scale-102 active:scale-98"
-          style={{ backgroundColor: primaryColor }}
-        >
-          {loading ? (
-            <div className="flex items-center justify-center gap-2">
-              <span className="w-3.5 h-3.5 rounded-full border-2 border-t-black border-black/10 animate-spin"></span>
-              Emitiendo Factura...
-            </div>
-          ) : (
-            '✓ Solicitar y Timbrar Factura'
-          )}
-        </button>
-      </div>
-    </form>
-
-    <CreateCustomerModal
-      isOpen={showNewClientModal}
-      onClose={() => setShowNewClientModal(false)}
-      onSuccess={async (newCustomer) => {
-        await loadBillingData();
-        if (newCustomer && newCustomer.id) {
-          setSelectedCustomer(newCustomer);
-          setEmail(newCustomer.email);
-          if (newCustomer.username) setRazonSocial(newCustomer.username);
-        }
-      }}
-      tenantId={tenantId}
-      primaryColor={primaryColor}
-      themeConfig={{
-        cardBgColor: '#050a06',
-        borderColor: 'rgba(255, 255, 255, 0.05)'
-      }}
-      showToast={showToast || console.log}
-    />
-
-    {showAdminLogin && (
-      <div
-        onClick={() => setShowAdminLogin(false)}
-        className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[60] flex items-center justify-center p-6 cursor-pointer overflow-y-auto"
-      >
-        <div
-          onClick={(e) => e.stopPropagation()}
-          style={{
-            backgroundColor: '#050a06',
-            borderColor: 'rgba(255, 255, 255, 0.05)'
-          }}
-          className="w-full max-w-md border p-8 md:p-10 rounded-[3rem] shadow-2xl relative space-y-6 text-left cursor-default animate-in fade-in zoom-in-95 duration-200"
-        >
-          <button
-            type="button"
-            onClick={() => setShowAdminLogin(false)}
-            className="absolute top-6 right-6 w-8 h-8 rounded-full border border-white/10 text-white/40 hover:text-white flex items-center justify-center text-xl font-bold cursor-pointer"
-          >
-            ×
-          </button>
-
-          <div>
-            <span 
-              className="px-3 py-1 text-[8px] font-black uppercase tracking-widest rounded-full border"
-              style={{ 
-                backgroundColor: `${primaryColor}15`, 
-                color: primaryColor,
-                borderColor: `${primaryColor}20` 
-              }}
-            >
-              Seguridad
-            </span>
-            <h2 className="text-2xl font-black tracking-tighter mt-4 leading-none text-white uppercase">
-              Modo Administrador
-            </h2>
-            <p className="text-[10px] opacity-40 uppercase tracking-widest mt-1 text-white/70">
-              Inicia sesión con tu cuenta de administrador o dueño para habilitar la búsqueda e inscripción de clientes.
-            </p>
-          </div>
-
-          {adminLoginError && (
-            <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-bold rounded-xl text-center">
-              ⚠️ {adminLoginError}
+              )}
             </div>
           )}
 
-          <form onSubmit={handleAdminLoginSubmit} className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="text-[8px] font-black uppercase tracking-widest opacity-40 text-white/60">Email del Administrador</label>
+              <label className="text-[8px] font-black uppercase tracking-widest text-white/50">RFC (Receptor)</label>
               <input
-                type="email"
+                type="text"
                 required
-                placeholder="admin@nectarlabs.dev"
-                value={adminEmail}
-                onChange={(e) => setAdminEmail(e.target.value)}
-                className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-nectar-gold text-white"
+                maxLength={13}
+                placeholder="XAXX010101000"
+                value={rfc}
+                onChange={(e) => setRfc(e.target.value.toUpperCase())}
+                className="w-full border border-white/10 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-nectar-gold bg-transparent text-white font-mono uppercase"
               />
             </div>
-
             <div className="space-y-1.5">
-              <label className="text-[8px] font-black uppercase tracking-widest opacity-40 text-white/60">Contraseña</label>
+              <label className="text-[8px] font-black uppercase tracking-widest text-white/50">Razón Social o Nombre Completo</label>
               <input
-                type="password"
+                type="text"
                 required
-                placeholder="••••••••"
-                value={adminPassword}
-                onChange={(e) => setAdminPassword(e.target.value)}
-                className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-nectar-gold text-white font-mono"
+                placeholder="PUBLICO EN GENERAL"
+                value={razonSocial}
+                onChange={(e) => setRazonSocial(e.target.value)}
+                className="w-full border border-white/10 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-nectar-gold bg-transparent text-white"
               />
             </div>
+          </div>
 
-            <div className="pt-6 border-t border-white/10 flex justify-end gap-3">
-              <button
-                type="button"
-                onClick={() => setShowAdminLogin(false)}
-                className="px-5 py-3 border border-white/10 hover:bg-white/5 text-[9px] font-black uppercase tracking-widest rounded-xl transition-all cursor-pointer text-white/80"
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label className="text-[8px] font-black uppercase tracking-widest text-white/50">Régimen Fiscal</label>
+              <select
+                value={regimenFiscal}
+                onChange={(e) => setRegimenFiscal(e.target.value)}
+                className="w-full border border-white/10 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-nectar-gold bg-[#0b0f0c] text-white font-bold"
               >
-                Cancelar
-              </button>
-              <button
-                type="submit"
-                disabled={adminLoginLoading}
-                className="px-6 py-3 text-[9px] font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 disabled:opacity-40 disabled:scale-100 transition-all font-bold shadow-lg cursor-pointer"
+                <option value="601">601 - General de Ley Personas Morales</option>
+                <option value="603">603 - Personas Morales con Fines no Lucrativos</option>
+                <option value="605">605 - Sueldos y Salarios e Ingresos Asimilados a Salarios</option>
+                <option value="606">606 - Arrendamiento</option>
+                <option value="608">608 - Demás ingresos</option>
+                <option value="612">612 - Personas Físicas con Actividades Empresariales y Profesionales</option>
+                <option value="616">616 - Sin obligaciones fiscales</option>
+                <option value="621">621 - Incorporación Fiscal</option>
+                <option value="625">625 - Régimen de las Actividades Agrícolas, Ganaderas, Silvícolas y Pesqueras</option>
+                <option value="626">626 - Régimen Simplificado de Confianza (RESICO)</option>
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-[8px] font-black uppercase tracking-widest text-white/50">Código Postal del Domicilio Fiscal</label>
+              <input
+                type="text"
+                required
+                maxLength={5}
+                placeholder="00000"
+                value={codigoPostal}
+                onChange={(e) => setCodigoPostal(e.target.value)}
+                className="w-full border border-white/10 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-nectar-gold bg-transparent text-white font-mono"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label className="text-[8px] font-black uppercase tracking-widest text-white/50">Uso de CFDI</label>
+              <select
+                value={usoCfdi}
+                onChange={(e) => setUsoCfdi(e.target.value)}
+                className="w-full border border-white/10 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-nectar-gold bg-[#0b0f0c] text-white font-bold"
+              >
+                <option value="G01">G01 - Adquisición de mercancías</option>
+                <option value="G03">G03 - Gastos en general</option>
+                <option value="I01">I01 - Construcciones</option>
+                <option value="I02">I02 - Mobiliario y equipo de oficina por inversiones</option>
+                <option value="I04">I04 - Equipo de transporte</option>
+                <option value="I08">I08 - Otra maquinaria y equipo</option>
+                <option value="D01">D01 - Honorarios médicos, dentales y gastos hospitalarios</option>
+                <option value="D02">D02 - Gastos médicos por incapacidad o discapacidad</option>
+                <option value="D04">D04 - Donativos</option>
+                <option value="D07">D07 - Primas por seguros de gastos médicos</option>
+                <option value="D08">D08 - Gastos de transportación escolar obligatoria</option>
+                <option value="D10">D10 - Depósitos en cuentas especiales para el ahorro, primas que tengan como base planes de pensiones</option>
+                <option value="S01">S01 - Sin efectos fiscales</option>
+                <option value="CP01">CP01 - Pagos</option>
+                <option value="CN01">CN01 - Nómina</option>
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-[8px] font-black uppercase tracking-widest text-white/50">Email de Recepción de Factura</label>
+              <input
+          ))}
+            </div>
+          </div>
+
+          {/* Totales y Timbrado */}
+          <div className="pt-6 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="flex gap-8 text-[9px] font-black uppercase tracking-widest w-full md:w-auto">
+              <div>
+                <span className="opacity-40 block">Subtotal</span>
+                <span className="text-sm font-mono font-bold text-white/80">${subtotal.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</span>
+              </div>
+              <div>
+                <span className="opacity-40 block">IVA (16%)</span>
+                <span className="text-sm font-mono font-bold text-white/80">${iva.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</span>
+              </div>
+              <div>
+                <span className="text-nectar-gold block">Total Facturado</span>
+                <span className="text-base font-mono font-black text-nectar-gold">${total.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN</span>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="px-8 py-3.5 text-black font-black uppercase tracking-widest text-[9.5px] rounded-xl transition-all cursor-pointer disabled:opacity-50 w-full md:w-auto hover:scale-102 active:scale-98"
+              style={{ backgroundColor: primaryColor }}
+            >
+              {loading ? (
+                <div className="flex items-center justify-center gap-2">
+                  <span className="w-3.5 h-3.5 rounded-full border-2 border-t-black border-black/10 animate-spin"></span>
+                  Emitiendo Factura...
+                </div>
+              ) : (
+                '✓ Solicitar y Timbrar Factura'
+              )}
+            </button>
+          </div>
+      </form>
+
+      <CreateCustomerModal
+        isOpen={showNewClientModal}
+        onClose={() => setShowNewClientModal(false)}
+        onSuccess={async (newCustomer) => {
+          await loadBillingData();
+          if (newCustomer && newCustomer.id) {
+            setSelectedCustomer(newCustomer);
+            setEmail(newCustomer.email);
+            if (newCustomer.username) setRazonSocial(newCustomer.username);
+          }
+        }}
+        tenantId={tenantId}
+        primaryColor={primaryColor}
+        themeConfig={{
+          cardBgColor: '#050a06',
+          borderColor: 'rgba(255, 255, 255, 0.05)'
+        }}
+        showToast={showToast || console.log}
+      />
+
+      {showAdminLogin && (
+        <div
+          onClick={() => setShowAdminLogin(false)}
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[60] flex items-center justify-center p-6 cursor-pointer overflow-y-auto"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              backgroundColor: '#050a06',
+              borderColor: 'rgba(255, 255, 255, 0.05)'
+            }}
+            className="w-full max-w-md border p-8 md:p-10 rounded-[3rem] shadow-2xl relative space-y-6 text-left cursor-default animate-in fade-in zoom-in-95 duration-200"
+          >
+            <button
+              type="button"
+              onClick={() => setShowAdminLogin(false)}
+              className="absolute top-6 right-6 w-8 h-8 rounded-full border border-white/10 text-white/40 hover:text-white flex items-center justify-center text-xl font-bold cursor-pointer"
+            >
+              ×
+            </button>
+
+            <div>
+              <span
+                className="px-3 py-1 text-[8px] font-black uppercase tracking-widest rounded-full border"
                 style={{
-                  backgroundColor: primaryColor,
-                  color: '#000000',
+                  backgroundColor: `${primaryColor}15`,
+                  color: primaryColor,
+                  borderColor: `${primaryColor}20`
                 }}
               >
-                {adminLoginLoading ? 'Autenticando...' : 'Iniciar Sesión'}
-              </button>
+                Seguridad
+              </span>
+              <h2 className="text-2xl font-black tracking-tighter mt-4 leading-none text-white uppercase">
+                Modo Administrador
+              </h2>
+              <p className="text-[10px] opacity-40 uppercase tracking-widest mt-1 text-white/70">
+                Inicia sesión con tu cuenta de administrador o dueño para habilitar la búsqueda e inscripción de clientes.
+              </p>
             </div>
-          </form>
+
+            {adminLoginError && (
+              <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-bold rounded-xl text-center">
+                ⚠️ {adminLoginError}
+              </div>
+            )}
+
+            <form onSubmit={handleAdminLoginSubmit} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-[8px] font-black uppercase tracking-widest opacity-40 text-white/60">Email del Administrador</label>
+                <input
+                  type="email"
+                  required
+                  placeholder="admin@nectarlabs.dev"
+                  value={adminEmail}
+                  onChange={(e) => setAdminEmail(e.target.value)}
+                  className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-nectar-gold text-white"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[8px] font-black uppercase tracking-widest opacity-40 text-white/60">Contraseña</label>
+                <input
+                  type="password"
+                  required
+                  placeholder="••••••••"
+                  value={adminPassword}
+                  onChange={(e) => setAdminPassword(e.target.value)}
+                  className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-nectar-gold text-white font-mono"
+                />
+              </div>
+
+              <div className="pt-6 border-t border-white/10 flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowAdminLogin(false)}
+                  className="px-5 py-3 border border-white/10 hover:bg-white/5 text-[9px] font-black uppercase tracking-widest rounded-xl transition-all cursor-pointer text-white/80"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={adminLoginLoading}
+                  className="px-6 py-3 text-[9px] font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 disabled:opacity-40 disabled:scale-100 transition-all font-bold shadow-lg cursor-pointer"
+                  style={{
+                    backgroundColor: primaryColor,
+                    color: '#000000',
+                  }}
+                >
+                  {adminLoginLoading ? 'Autenticando...' : 'Iniciar Sesión'}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
-      </div>
-    )}
+      )}
     </>
   );
 }
@@ -2082,7 +1918,7 @@ function EcommerceStore({ tenantId, subdomain, primaryColor }: EcommerceStorePro
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
-  
+
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -2092,7 +1928,7 @@ function EcommerceStore({ tenantId, subdomain, primaryColor }: EcommerceStorePro
   const [state, setState] = useState('');
   const [postalCode, setPostalCode] = useState('');
   const [country, setCountry] = useState('MX');
-  
+
   const [fetchingRates, setFetchingRates] = useState(false);
   const [shippingRates, setShippingRates] = useState<any[]>([]);
   const [selectedRate, setSelectedRate] = useState<any | null>(null);
@@ -2143,7 +1979,7 @@ function EcommerceStore({ tenantId, subdomain, primaryColor }: EcommerceStorePro
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'No se pudieron calcular tarifas de envío.');
-      
+
       const rates = data.rates || [];
       setShippingRates(rates);
       if (rates.length > 0) {
@@ -2227,7 +2063,7 @@ function EcommerceStore({ tenantId, subdomain, primaryColor }: EcommerceStorePro
               <h4 className="text-sm font-black uppercase text-white">{product.name}</h4>
               <p className="text-[10px] text-white/50 mt-1 line-clamp-2">{product.description}</p>
             </div>
-            
+
             <div className="mt-4 border-t border-white/5 pt-3 flex justify-between items-center">
               <div>
                 <span className="text-xs font-black text-white font-mono">${parseFloat(product.price).toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN</span>
@@ -2289,7 +2125,7 @@ function EcommerceStore({ tenantId, subdomain, primaryColor }: EcommerceStorePro
             {shippingRates.length === 0 ? (
               <form onSubmit={handleFetchShippingRates} className="space-y-4">
                 <h4 className="text-[9px] font-black uppercase tracking-widest text-white/50 border-b border-white/5 pb-2">Información de Envío y Contacto</h4>
-                
+
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
                     <label className="text-[8px] uppercase tracking-wider font-black text-white/45">Nombre Completo</label>
@@ -2368,7 +2204,7 @@ function EcommerceStore({ tenantId, subdomain, primaryColor }: EcommerceStorePro
             ) : (
               <div className="space-y-6 animate-premium">
                 <h4 className="text-[9px] font-black uppercase tracking-widest text-white/55 border-b border-white/5 pb-2">Selecciona un Proveedor de Envío</h4>
-                
+
                 <div className="space-y-2">
                   {shippingRates.map((rate, idx) => (
                     <div

@@ -74,6 +74,10 @@ class PACServiceBase:
         """Lista los recibos en el PAC."""
         raise NotImplementedError()
 
+    def retrieve_receipt(self, organization_id, receipt_id):
+        """Obtiene un recibo específico del PAC."""
+        raise NotImplementedError()
+
     def create_retention(self, organization_id, retention_data):
         """Crea una retención en el PAC.
         retention_data: {customer, cve_retenc, periodo, totales}"""
@@ -172,6 +176,27 @@ class MockPACService(PACServiceBase):
         return [
             {"id": "rec_mock_001", "folio_number": 123, "payment_form": "08", "total": 1234.56, "status": "valid"}
         ]
+
+    def retrieve_receipt(self, organization_id, receipt_id):
+        logger.info(f"[MockPAC] Consultando recibo {receipt_id} de org {organization_id}")
+        return {
+            "id": receipt_id,
+            "folio_number": 123,
+            "payment_form": "08",
+            "total": 1432.09,
+            "status": "valid",
+            "items": [
+                {
+                    "quantity": 1,
+                    "product": {
+                        "description": "Servicio de Hospedaje en Habitación Doble",
+                        "price": 1234.56,
+                        "product_key": "90111800",
+                        "unit_key": "DAY"
+                    }
+                }
+            ]
+        }
 
     def create_retention(self, organization_id, retention_data):
         logger.info(f"[MockPAC] Creando retención para org {organization_id}")
@@ -498,6 +523,18 @@ class FacturapiPACService(PACServiceBase):
             raise
         except Exception as e:
             raise PACError(f"Fallo de conexión al listar recibos: {e}")
+
+    def retrieve_receipt(self, organization_id, receipt_id):
+        url = f"{self.base_url}/receipts/{receipt_id}"
+        try:
+            response = requests.get(url, headers=self._org_headers(organization_id), timeout=10)
+            if response.status_code not in [200, 201]:
+                raise PACError(f"Error al obtener recibo en Facturapi: {response.text}")
+            return response.json()
+        except PACError:
+            raise
+        except Exception as e:
+            raise PACError(f"Fallo de conexión al obtener recibo: {e}")
 
     def create_retention(self, organization_id, retention_data):
         url = f"{self.base_url}/retentions"

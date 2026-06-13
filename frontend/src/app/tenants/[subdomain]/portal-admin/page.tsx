@@ -2070,6 +2070,7 @@ export default function TenantAdminPage() {
                   )}
                 </div>
               </div>
+            </div>
             )}
 
             {/* Subtab 3: Configuración y CSD */}
