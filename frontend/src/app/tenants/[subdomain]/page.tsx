@@ -573,13 +573,27 @@ export default function TenantPortalPage() {
           background-color: ${isDarkMode ? (tenantConfig.card_bg_color || '#050a06') + 'a0' : (tenantConfig.card_bg_color_light || '#FFFFFF')} !important;
           border-color: ${isDarkMode ? (tenantConfig.border_color || '#151F18') : (tenantConfig.border_color_light || '#E5E7EB')} !important;
         }
-        #tenant-portal-root .tenant-input {
+        #tenant-portal-root .tenant-input, #tenant-portal-root .admin-input {
           background-color: ${isDarkMode ? (tenantConfig.bg_color || '#020403') : (tenantConfig.card_bg_color_light || '#FFFFFF')} !important;
           border-color: ${isDarkMode ? (tenantConfig.border_color || '#151F18') : (tenantConfig.border_color_light || '#E5E7EB')} !important;
           color: ${isDarkMode ? (tenantConfig.text_color || '#FFFFFF') : (tenantConfig.text_color_light || '#111827')} !important;
         }
         #tenant-portal-root .tenant-border {
           border-color: ${isDarkMode ? (tenantConfig.border_color || '#151F18') : (tenantConfig.border_color_light || '#E5E7EB')} !important;
+        }
+        #tenant-portal-root select option {
+          background-color: ${isDarkMode ? (tenantConfig.card_bg_color || '#050a06') : '#FFFFFF'} !important;
+          color: ${isDarkMode ? (tenantConfig.text_color || '#FFFFFF') : '#111827'} !important;
+        }
+        #tenant-portal-root .autocomplete-dropdown {
+          background-color: ${isDarkMode ? (tenantConfig.card_bg_color || '#050a06') : '#FFFFFF'} !important;
+          border-color: ${isDarkMode ? (tenantConfig.border_color || '#151F18') : (tenantConfig.border_color_light || '#E5E7EB')} !important;
+        }
+        #tenant-portal-root .autocomplete-dropdown button {
+          color: ${isDarkMode ? (tenantConfig.text_color || '#FFFFFF') : '#111827'} !important;
+        }
+        #tenant-portal-root .autocomplete-dropdown button:hover {
+          background-color: ${primaryColor}15 !important;
         }
         #tenant-portal-root .tenant-footer {
           background-color: ${isDarkMode ? (tenantConfig.card_bg_color || '#050a06') + 'a0' : (tenantConfig.card_bg_color_light || '#FFFFFF')} !important;
@@ -1567,7 +1581,7 @@ function SATInvoicingForm({ tenantId, subdomain, primaryColor, ownerId, showToas
                 </div>
                 
                 {customerSearchQuery.trim() !== '' && tenantUsers.length > 0 && (
-                  <div className="absolute left-0 right-0 mt-1 bg-[#050a06]/95 border border-white/10 rounded-2xl shadow-2xl p-2 z-50 max-h-48 overflow-y-auto space-y-1 backdrop-blur-md">
+                  <div className="absolute left-0 right-0 mt-1 bg-[#050a06]/95 border border-white/10 rounded-2xl shadow-2xl p-2 z-50 max-h-48 overflow-y-auto space-y-1 backdrop-blur-md autocomplete-dropdown">
                     {(() => {
                       const query = customerSearchQuery.toLowerCase().trim();
                       const filtered = tenantUsers.filter(u => 

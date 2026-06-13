@@ -74,6 +74,7 @@ export default function TenantAdminPage() {
   const [authorized, setAuthorized] = useState(false);
   const [userMe, setUserMe] = useState<any | null>(null);
   const [activeTab, setActiveTab] = useState<'metrics' | 'branding' | 'billing' | 'integrations'>('metrics');
+  const [billingSubTab, setBillingSubTab] = useState<'catalog' | 'history' | 'config'>('catalog');
 
   // Customization Form State
   const [editName, setEditName] = useState('');
@@ -1120,6 +1121,20 @@ export default function TenantAdminPage() {
         #tenant-admin-root .admin-border {
           border-color: ${tenantConfig.border_color || '#151F18'} !important;
         }
+        #tenant-admin-root select option {
+          background-color: ${tenantConfig.card_bg_color || '#050a06'} !important;
+          color: ${tenantConfig.text_color || '#FFFFFF'} !important;
+        }
+        #tenant-admin-root .autocomplete-dropdown {
+          background-color: ${tenantConfig.card_bg_color || '#050a06'} !important;
+          border-color: ${tenantConfig.border_color || '#151F18'} !important;
+        }
+        #tenant-admin-root .autocomplete-dropdown button {
+          color: ${tenantConfig.text_color || '#FFFFFF'} !important;
+        }
+        #tenant-admin-root .autocomplete-dropdown button:hover {
+          background-color: ${primaryColor}15 !important;
+        }
       `}</style>
 
       {/* Header Panel */}
@@ -1701,10 +1716,49 @@ export default function TenantAdminPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-              {/* Form Column */}
-              <div className="lg:col-span-5 space-y-6">
-                {/* Control de Timbres Card */}
+            {/* Sub-navegación Billing */}
+            <div className="flex flex-wrap items-center gap-2 p-1.5 rounded-2xl bg-white/[0.02] border border-white/5 w-fit">
+              {[
+                { id: 'catalog', label: '🗂️ Catálogos y Facturación' },
+                { id: 'history', label: '📊 Timbres e Historial' },
+                { id: 'config', label: '⚙️ Configuración SAT y CSD' }
+              ].map((sub) => (
+                <button
+                  key={sub.id}
+                  type="button"
+                  onClick={() => setBillingSubTab(sub.id as any)}
+                  className={`px-5 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all duration-300 cursor-pointer ${
+                    billingSubTab === sub.id
+                      ? 'text-background shadow-lg shadow-nectar-gold/15'
+                      : 'text-white/50 hover:text-white hover:bg-white/5'
+                  }`}
+                  style={{
+                    backgroundColor: billingSubTab === sub.id ? primaryColor : 'transparent',
+                    color: billingSubTab === sub.id ? '#000000' : ''
+                  }}
+                >
+                  {sub.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Subtab 1: Catálogos */}
+            {billingSubTab === 'catalog' && (
+              <div className="animate-in fade-in duration-300">
+                {/* === Tarjeta de Clientes/Receptores/Productos/Recibos/Retenciones Facturapi === */}
+            {tenantConfig?.id && (
+              <FacturapiManager tenantId={String(tenantConfig.id)} primaryColor={primaryColor} />
+            )}
+            {/* Columnas principales del billing */}
+              </div>
+            )}
+
+            {/* Subtab 2: Timbres e Historial */}
+            {billingSubTab === 'history' && (
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 animate-in fade-in duration-300">
+                {/* Left: Timbres */}
+                <div className="lg:col-span-5 space-y-6">
+                  {/* Control de Timbres Card */}
                 <div className="admin-card border rounded-[2rem] p-6 shadow-lg space-y-6 relative overflow-hidden text-left">
                   {/* Decorative background glow */}
                   <div className="absolute -top-24 -left-24 w-48 h-48 rounded-full blur-[80px] opacity-10 pointer-events-none" style={{ backgroundColor: primaryColor }}></div>
@@ -1807,348 +1861,10 @@ export default function TenantAdminPage() {
                     </div>
                   </div>
                 </div>
-
-                {/* Configuración Fiscal Card */}
-                <div className="admin-card border rounded-[2rem] p-6 shadow-lg space-y-6 text-left">
-                  <div className="border-b border-white/5 pb-4">
-                    <h3 className="text-xs font-black uppercase tracking-widest text-white">Configuración Fiscal</h3>
-                    <p className="text-[8px] text-white/40 uppercase tracking-wider mt-1">Perfil emisor registrado ante el SAT</p>
-                  </div>
-
-                  {taxProfileError && (
-                    <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-400 text-[9px] uppercase tracking-wider font-bold rounded-xl">
-                      ⚠️ {taxProfileError}
-                    </div>
-                  )}
-
-                  <form onSubmit={handleSaveTaxProfile} className="space-y-4">
-                    <div className="space-y-1">
-                      <label className="text-[8px] uppercase tracking-wider font-black text-white/50">Razón Social o Nombre Oficial</label>
-                      <input
-                        type="text"
-                        required
-                        placeholder="Ej. NÉCTAR LABS SA DE CV"
-                        value={razonSocial}
-                        onChange={(e) => setRazonSocial(e.target.value)}
-                        className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input"
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-1">
-                        <label className="text-[8px] uppercase tracking-wider font-black text-white/50">RFC</label>
-                        <input
-                          type="text"
-                          required
-                          maxLength={13}
-                          placeholder="Ej. NLA260529AAA"
-                          value={rfc}
-                          onChange={(e) => setRfc(e.target.value.toUpperCase())}
-                          className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input font-mono"
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-[8px] uppercase tracking-wider font-black text-white/50">Código Postal</label>
-                        <input
-                          type="text"
-                          required
-                          maxLength={5}
-                          placeholder="Ej. 06000"
-                          value={codigoPostal}
-                          onChange={(e) => setCodigoPostal(e.target.value.replace(/\D/g, ''))}
-                          className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input font-mono"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="text-[8px] uppercase tracking-wider font-black text-white/50">Régimen Fiscal (SAT)</label>
-                      <select
-                        value={regimenFiscal}
-                        onChange={(e) => setRegimenFiscal(e.target.value)}
-                        className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input"
-                      >
-                        <option value="601">601 - General de Ley Personas Morales</option>
-                        <option value="603">603 - Personas Morales con Fines no Lucrativos</option>
-                        <option value="605">605 - Sueldos y Salarios e Ingresos Asimilados a Salarios</option>
-                        <option value="606">606 - Arrendamiento</option>
-                        <option value="612">612 - Personas Físicas con Actividades Empresariales y Profesionales</option>
-                        <option value="616">616 - Sin obligaciones fiscales</option>
-                        <option value="621">621 - Incorporación Fiscal</option>
-                        <option value="626">626 - Régimen Simplificado de Confianza (RESICO)</option>
-                      </select>
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="text-[8px] uppercase tracking-wider font-black text-white/50">Preferencia de Facturación</label>
-                      <select
-                        value={invoicingMode}
-                        onChange={(e) => setInvoicingMode(e.target.value)}
-                        className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input"
-                      >
-                        <option value="AUTOMATIC">Facturación Automática (al pagar)</option>
-                        <option value="MANUAL_CLIENT">Manual por el Cliente</option>
-                        <option value="MANUAL_ADMIN">Manual por el Administrador</option>
-                      </select>
-                    </div>
-
-                    {invoicingMode === 'AUTOMATIC' && !tenantConfig?.active_addons?.includes('automatic-invoicing') && (
-                      <div className="p-4.5 rounded-2xl bg-gradient-to-br from-[#C68A1E]/10 to-transparent border border-[#C68A1E]/30 space-y-3.5 mt-3 animate-premium text-left relative overflow-hidden">
-                        <div className="absolute -right-8 -bottom-8 w-24 h-24 bg-[#C68A1E]/5 blur-2xl rounded-full pointer-events-none"></div>
-                        <div className="flex items-start gap-2.5">
-                          <span className="text-lg leading-none mt-0.5">✨</span>
-                          <div>
-                            <h4 className="text-[10px] font-black uppercase tracking-wider text-[#C68A1E]">
-                              Función Premium Requerida
-                            </h4>
-                            <p className="text-[9.5px] text-white/60 leading-relaxed mt-1">
-                              El timbrado desatendido e inmediato de facturas de abonos/mensualidades es una característica de facturación avanzada. Requiere contratar el agregado de Facturación Automática.
-                            </p>
-                          </div>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={handleAcquireAutomaticInvoicing}
-                          disabled={isAcquiringAutoInvoicing}
-                          className="w-full py-2.5 bg-[#C68A1E] hover:bg-[#C68A1E]/90 text-background font-black uppercase tracking-widest text-[8.5px] rounded-xl transition-all duration-300 hover:scale-[1.01] active:scale-95 disabled:opacity-40 flex items-center justify-center gap-1.5 cursor-pointer shadow-lg shadow-[#C68A1E]/15 font-bold"
-                        >
-                          {isAcquiringAutoInvoicing ? (
-                            <>
-                              <span className="w-3 h-3 rounded-full border border-t-transparent border-background animate-spin"></span>
-                              Procesando...
-                            </>
-                          ) : (
-                            'Contratar Timbrado Automático ($199.00 MXN/mes)'
-                          )}
-                        </button>
-                      </div>
-                    )}
-
-                    {/* Conceptos por Defecto para Facturas */}
-                    <div className="space-y-4 border-t border-white/5 pt-4 mt-4">
-                      <div>
-                        <h4 className="text-[9px] font-black uppercase tracking-wide text-white">Conceptos por Defecto</h4>
-                        <p className="text-[7px] text-white/40 leading-relaxed mt-1">
-                          Define la clave de producto y unidad SAT preseleccionadas automáticamente para tus facturas manuales.
-                        </p>
-                      </div>
-
-                      <div className="space-y-1.5">
-                        <label className="text-[8px] uppercase tracking-wider font-black text-white/50 block">Producto / Servicio SAT por Defecto</label>
-                        <SATAutocomplete
-                          mode="product"
-                          value={defaultProductKey}
-                          onChange={(code) => setDefaultProductKey(code)}
-                          primaryColor={primaryColor}
-                          placeholder="Buscar clave de producto..."
-                          subdomain={subdomain}
-                          tenantId={tenantConfig?.id}
-                        />
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-1.5">
-                          <label className="text-[8px] uppercase tracking-wider font-black text-white/50 block">Clave Unidad SAT por Defecto</label>
-                          <SATAutocomplete
-                            mode="unit"
-                            value={defaultUnitKey}
-                            onChange={(code, name) => {
-                              setDefaultUnitKey(code);
-                              if (name) setDefaultUnitName(name);
-                            }}
-                            primaryColor={primaryColor}
-                            placeholder="Buscar clave de unidad..."
-                            subdomain={subdomain}
-                            tenantId={tenantConfig?.id}
-                          />
-                        </div>
-
-                        <div className="space-y-1.5">
-                          <label className="text-[8px] uppercase tracking-wider font-black text-white/50 block">Nombre Unidad por Defecto</label>
-                          <input
-                            type="text"
-                            value={defaultUnitName}
-                            onChange={(e) => setDefaultUnitName(e.target.value)}
-                            placeholder="Ej. Unidad de servicio"
-                            className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input font-bold"
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="border-t border-white/5 pt-4 mt-6">
-                      <div className="pt-4 border-t border-white/5 flex justify-end">
-                        <button
-                          type="submit"
-                          disabled={isSavingTaxProfile}
-                          className="px-6 py-2.5 text-[9px] font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 disabled:opacity-40 disabled:scale-100 transition-all font-bold shadow-lg"
-                          style={{ backgroundColor: primaryColor, color: '#000000' }}
-                        >
-                          {isSavingTaxProfile ? 'Guardando Ajustes...' : 'Guardar Configuración'}
-                        </button>
-                      </div>
-                    </div>
-                  </form>
                 </div>
-
-                {/* === Tarjeta de Sellos CSD (Independiente) === */}
-                <div className="admin-card border rounded-[2rem] p-6 shadow-lg space-y-5 text-left relative overflow-hidden">
-                  <div className="absolute -bottom-16 -right-16 w-40 h-40 rounded-full blur-[80px] opacity-5 pointer-events-none" style={{ backgroundColor: primaryColor }}></div>
-
-                  <div className="border-b border-white/5 pb-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="text-xs font-black uppercase tracking-widest text-white">Sello Digital CSD</h3>
-                        <p className="text-[8px] text-white/40 uppercase tracking-wider mt-1">Certificado de sello digital para timbrar</p>
-                      </div>
-                      {/* Badge de vigencia del certificado */}
-                      {loadingCsdStatus ? (
-                        <span className="w-4 h-4 rounded-full border-2 border-t-white/50 border-white/10 animate-spin"></span>
-                      ) : csdStatus?.has_certificate ? (
-                        <div className="flex flex-col items-end gap-0.5">
-                          <span className="px-2.5 py-0.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[7px] font-black rounded-full uppercase tracking-widest">✅ Sello Activo</span>
-                          {csdStatus.valid_to && (
-                            <span className="text-[7px] text-white/30 font-mono">
-                              Vigente hasta: {new Date(csdStatus.valid_to).toLocaleDateString('es-MX')}
-                            </span>
-                          )}
-                        </div>
-                      ) : (
-                        <span className="px-2.5 py-0.5 bg-amber-500/10 text-amber-400 border border-amber-500/20 text-[7px] font-black rounded-full uppercase tracking-widest">⚠️ Sin Sello</span>
-                      )}
-                    </div>
-                    <p className="text-[7px] text-white/30 leading-relaxed mt-3">
-                      Néctar Labs delega el resguardo directamente al PAC (Facturapi) mediante su API. Las llaves <strong className="text-white/50">nunca tocan nuestros servidores</strong>.
-                    </p>
-                  </div>
-
-                  <form onSubmit={handleUploadCSD} className="space-y-4">
-                    {/* Dropzone .cer */}
-                    <div className="space-y-1.5">
-                      <label className="text-[8px] uppercase tracking-wider font-black text-white/50 block">Archivo Certificado (.cer)</label>
-                      <label
-                        htmlFor="csd-cer-upload"
-                        className={`flex items-center gap-3 p-3 border-2 border-dashed rounded-xl cursor-pointer transition-all ${
-                          csdCerFile ? 'border-emerald-500/40 bg-emerald-500/5' : csdCerError ? 'border-red-500/40 bg-red-500/5' : 'border-white/10 hover:border-white/30 hover:bg-white/[0.02]'
-                        }`}
-                      >
-                        <span className="text-xl">{csdCerFile ? '📄' : '⬆️'}</span>
-                        <div className="flex-1 min-w-0">
-                          <p className={`text-[10px] font-black truncate ${ csdCerFile ? 'text-emerald-400' : 'text-white/40' }`}>
-                            {csdCerFile ? csdCerFile.name : 'Seleccionar archivo .cer'}
-                          </p>
-                          {csdCerFile && (
-                            <p className="text-[8px] text-white/30 mt-0.5">{(csdCerFile.size / 1024).toFixed(1)} KB</p>
-                          )}
-                        </div>
-                        {csdCerFile && (
-                          <button type="button" onClick={(ev) => { ev.preventDefault(); setCsdCerFile(null); setCsdCerError(null); }} className="text-white/30 hover:text-white/60 text-sm shrink-0">✕</button>
-                        )}
-                      </label>
-                      <input
-                        id="csd-cer-upload"
-                        type="file"
-                        accept=".cer"
-                        className="hidden"
-                        onChange={(e) => {
-                          const f = e.target.files?.[0] || null;
-                          if (f && !f.name.toLowerCase().endsWith('.cer')) {
-                            setCsdCerError('El archivo debe tener extensión .cer');
-                            setCsdCerFile(null);
-                          } else {
-                            setCsdCerFile(f);
-                            setCsdCerError(null);
-                          }
-                          e.target.value = '';
-                        }}
-                      />
-                      {csdCerError && <p className="text-[8px] text-red-400 font-bold">{csdCerError}</p>}
-                    </div>
-
-                    {/* Dropzone .key */}
-                    <div className="space-y-1.5">
-                      <label className="text-[8px] uppercase tracking-wider font-black text-white/50 block">Archivo Llave Privada (.key)</label>
-                      <label
-                        htmlFor="csd-key-upload"
-                        className={`flex items-center gap-3 p-3 border-2 border-dashed rounded-xl cursor-pointer transition-all ${
-                          csdKeyFile ? 'border-emerald-500/40 bg-emerald-500/5' : csdKeyError ? 'border-red-500/40 bg-red-500/5' : 'border-white/10 hover:border-white/30 hover:bg-white/[0.02]'
-                        }`}
-                      >
-                        <span className="text-xl">{csdKeyFile ? '🔐' : '⬆️'}</span>
-                        <div className="flex-1 min-w-0">
-                          <p className={`text-[10px] font-black truncate ${ csdKeyFile ? 'text-emerald-400' : 'text-white/40' }`}>
-                            {csdKeyFile ? csdKeyFile.name : 'Seleccionar archivo .key'}
-                          </p>
-                          {csdKeyFile && (
-                            <p className="text-[8px] text-white/30 mt-0.5">{(csdKeyFile.size / 1024).toFixed(1)} KB</p>
-                          )}
-                        </div>
-                        {csdKeyFile && (
-                          <button type="button" onClick={(ev) => { ev.preventDefault(); setCsdKeyFile(null); setCsdKeyError(null); }} className="text-white/30 hover:text-white/60 text-sm shrink-0">✕</button>
-                        )}
-                      </label>
-                      <input
-                        id="csd-key-upload"
-                        type="file"
-                        accept=".key"
-                        className="hidden"
-                        onChange={(e) => {
-                          const f = e.target.files?.[0] || null;
-                          if (f && !f.name.toLowerCase().endsWith('.key')) {
-                            setCsdKeyError('El archivo debe tener extensión .key');
-                            setCsdKeyFile(null);
-                          } else {
-                            setCsdKeyFile(f);
-                            setCsdKeyError(null);
-                          }
-                          e.target.value = '';
-                        }}
-                      />
-                      {csdKeyError && <p className="text-[8px] text-red-400 font-bold">{csdKeyError}</p>}
-                    </div>
-
-                    {/* Password */}
-                    <div className="space-y-1.5">
-                      <label className="text-[8px] uppercase tracking-wider font-black text-white/50">Contraseña de la Llave Privada</label>
-                      <input
-                        type="password"
-                        placeholder="••••••••••••"
-                        value={csdPassword}
-                        onChange={(e) => setCsdPassword(e.target.value)}
-                        className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input"
-                      />
-                    </div>
-
-                    <button
-                      type="submit"
-                      disabled={isUploadingCSD || !csdCerFile || !csdKeyFile || !csdPassword.trim()}
-                      className="w-full py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2 shadow-lg"
-                      style={{ backgroundColor: primaryColor, color: '#000' }}
-                    >
-                      {isUploadingCSD ? (
-                        <><span className="w-3.5 h-3.5 rounded-full border-2 border-t-black/30 border-black/10 animate-spin"></span> Subiendo al PAC...</>
-                      ) : (
-                        '🔐 Subir Sellos CSD a Facturapi'
-                      )}
-                    </button>
-                  </form>
-                </div>
-              </div>
-
-            </div>
-
-            {/* === Tarjeta de Clientes/Receptores/Productos/Recibos/Retenciones Facturapi === */}
-            {tenantConfig?.id && (
-              <FacturapiManager tenantId={String(tenantConfig.id)} primaryColor={primaryColor} />
-            )}
-            {/* Columnas principales del billing */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-              {/* === Catálogo de Receptores (col-span-5 junto a config) === */}
-              {/* La tarjeta de receptores queda a ancho completo (space-y-8) - ver abajo */}
-
-              {/* Invoices List Column */}
-              <div className="lg:col-span-7 space-y-6">
-                <div className="admin-card border rounded-[2rem] p-6 shadow-lg space-y-6">
+                {/* Right: Historial */}
+                <div className="lg:col-span-7 space-y-6">
+                  <div className="admin-card border rounded-[2rem] p-6 shadow-lg space-y-6">
                   <div className="flex justify-between items-center border-b border-white/5 pb-4">
                     <div>
                       <h3 className="text-xs font-black uppercase tracking-widest text-white">Historial de CFDIs</h3>
@@ -2341,6 +2057,346 @@ export default function TenantAdminPage() {
                   )}
                 </div>
               </div>
+            )}
+
+            {/* Subtab 3: Configuración y CSD */}
+            {billingSubTab === 'config' && (
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 animate-in fade-in duration-300">
+                {/* Left: Configuración Fiscal */}
+                <div className="lg:col-span-7">
+                  {/* Configuración Fiscal Card */}
+                <div className="admin-card border rounded-[2rem] p-6 shadow-lg space-y-6 text-left">
+                  <div className="border-b border-white/5 pb-4">
+                    <h3 className="text-xs font-black uppercase tracking-widest text-white">Configuración Fiscal</h3>
+                    <p className="text-[8px] text-white/40 uppercase tracking-wider mt-1">Perfil emisor registrado ante el SAT</p>
+                  </div>
+
+                  {taxProfileError && (
+                    <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-400 text-[9px] uppercase tracking-wider font-bold rounded-xl">
+                      ⚠️ {taxProfileError}
+                    </div>
+                  )}
+
+                  <form onSubmit={handleSaveTaxProfile} className="space-y-4">
+                    <div className="space-y-1">
+                      <label className="text-[8px] uppercase tracking-wider font-black text-white/50">Razón Social o Nombre Oficial</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Ej. NÉCTAR LABS SA DE CV"
+                        value={razonSocial}
+                        onChange={(e) => setRazonSocial(e.target.value)}
+                        className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <label className="text-[8px] uppercase tracking-wider font-black text-white/50">RFC</label>
+                        <input
+                          type="text"
+                          required
+                          maxLength={13}
+                          placeholder="Ej. NLA260529AAA"
+                          value={rfc}
+                          onChange={(e) => setRfc(e.target.value.toUpperCase())}
+                          className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input font-mono"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[8px] uppercase tracking-wider font-black text-white/50">Código Postal</label>
+                        <input
+                          type="text"
+                          required
+                          maxLength={5}
+                          placeholder="Ej. 06000"
+                          value={codigoPostal}
+                          onChange={(e) => setCodigoPostal(e.target.value.replace(/\D/g, ''))}
+                          className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input font-mono"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[8px] uppercase tracking-wider font-black text-white/50">Régimen Fiscal (SAT)</label>
+                      <select
+                        value={regimenFiscal}
+                        onChange={(e) => setRegimenFiscal(e.target.value)}
+                        className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input"
+                      >
+                        <option value="601">601 - General de Ley Personas Morales</option>
+                        <option value="603">603 - Personas Morales con Fines no Lucrativos</option>
+                        <option value="605">605 - Sueldos y Salarios e Ingresos Asimilados a Salarios</option>
+                        <option value="606">606 - Arrendamiento</option>
+                        <option value="612">612 - Personas Físicas con Actividades Empresariales y Profesionales</option>
+                        <option value="616">616 - Sin obligaciones fiscales</option>
+                        <option value="621">621 - Incorporación Fiscal</option>
+                        <option value="626">626 - Régimen Simplificado de Confianza (RESICO)</option>
+                      </select>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[8px] uppercase tracking-wider font-black text-white/50">Preferencia de Facturación</label>
+                      <select
+                        value={invoicingMode}
+                        onChange={(e) => setInvoicingMode(e.target.value)}
+                        className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input"
+                      >
+                        <option value="AUTOMATIC">Facturación Automática (al pagar)</option>
+                        <option value="MANUAL_CLIENT">Manual por el Cliente</option>
+                        <option value="MANUAL_ADMIN">Manual por el Administrador</option>
+                      </select>
+                    </div>
+
+                    {invoicingMode === 'AUTOMATIC' && !tenantConfig?.active_addons?.includes('automatic-invoicing') && (
+                      <div className="p-4.5 rounded-2xl bg-gradient-to-br from-[#C68A1E]/10 to-transparent border border-[#C68A1E]/30 space-y-3.5 mt-3 animate-premium text-left relative overflow-hidden">
+                        <div className="absolute -right-8 -bottom-8 w-24 h-24 bg-[#C68A1E]/5 blur-2xl rounded-full pointer-events-none"></div>
+                        <div className="flex items-start gap-2.5">
+                          <span className="text-lg leading-none mt-0.5">✨</span>
+                          <div>
+                            <h4 className="text-[10px] font-black uppercase tracking-wider text-[#C68A1E]">
+                              Función Premium Requerida
+                            </h4>
+                            <p className="text-[9.5px] text-white/60 leading-relaxed mt-1">
+                              El timbrado desatendido e inmediato de facturas de abonos/mensualidades es una característica de facturación avanzada. Requiere contratar el agregado de Facturación Automática.
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={handleAcquireAutomaticInvoicing}
+                          disabled={isAcquiringAutoInvoicing}
+                          className="w-full py-2.5 bg-[#C68A1E] hover:bg-[#C68A1E]/90 text-background font-black uppercase tracking-widest text-[8.5px] rounded-xl transition-all duration-300 hover:scale-[1.01] active:scale-95 disabled:opacity-40 flex items-center justify-center gap-1.5 cursor-pointer shadow-lg shadow-[#C68A1E]/15 font-bold"
+                        >
+                          {isAcquiringAutoInvoicing ? (
+                            <>
+                              <span className="w-3 h-3 rounded-full border border-t-transparent border-background animate-spin"></span>
+                              Procesando...
+                            </>
+                          ) : (
+                            'Contratar Timbrado Automático ($199.00 MXN/mes)'
+                          )}
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Conceptos por Defecto para Facturas */}
+                    <div className="space-y-4 border-t border-white/5 pt-4 mt-4">
+                      <div>
+                        <h4 className="text-[9px] font-black uppercase tracking-wide text-white">Conceptos por Defecto</h4>
+                        <p className="text-[7px] text-white/40 leading-relaxed mt-1">
+                          Define la clave de producto y unidad SAT preseleccionadas automáticamente para tus facturas manuales.
+                        </p>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-[8px] uppercase tracking-wider font-black text-white/50 block">Producto / Servicio SAT por Defecto</label>
+                        <SATAutocomplete
+                          mode="product"
+                          value={defaultProductKey}
+                          onChange={(code) => setDefaultProductKey(code)}
+                          primaryColor={primaryColor}
+                          placeholder="Buscar clave de producto..."
+                          subdomain={subdomain}
+                          tenantId={tenantConfig?.id}
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                          <label className="text-[8px] uppercase tracking-wider font-black text-white/50 block">Clave Unidad SAT por Defecto</label>
+                          <SATAutocomplete
+                            mode="unit"
+                            value={defaultUnitKey}
+                            onChange={(code, name) => {
+                              setDefaultUnitKey(code);
+                              if (name) setDefaultUnitName(name);
+                            }}
+                            primaryColor={primaryColor}
+                            placeholder="Buscar clave de unidad..."
+                            subdomain={subdomain}
+                            tenantId={tenantConfig?.id}
+                          />
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <label className="text-[8px] uppercase tracking-wider font-black text-white/50 block">Nombre Unidad por Defecto</label>
+                          <input
+                            type="text"
+                            value={defaultUnitName}
+                            onChange={(e) => setDefaultUnitName(e.target.value)}
+                            placeholder="Ej. Unidad de servicio"
+                            className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input font-bold"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="border-t border-white/5 pt-4 mt-6">
+                      <div className="pt-4 border-t border-white/5 flex justify-end">
+                        <button
+                          type="submit"
+                          disabled={isSavingTaxProfile}
+                          className="px-6 py-2.5 text-[9px] font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 disabled:opacity-40 disabled:scale-100 transition-all font-bold shadow-lg"
+                          style={{ backgroundColor: primaryColor, color: '#000000' }}
+                        >
+                          {isSavingTaxProfile ? 'Guardando Ajustes...' : 'Guardar Configuración'}
+                        </button>
+                      </div>
+                    </div>
+                  </form>
+                </div>
+                </div>
+                {/* Right: Sellos CSD */}
+                <div className="lg:col-span-5">
+                  {/* === Tarjeta de Sellos CSD (Independiente) === */}
+                <div className="admin-card border rounded-[2rem] p-6 shadow-lg space-y-5 text-left relative overflow-hidden">
+                  <div className="absolute -bottom-16 -right-16 w-40 h-40 rounded-full blur-[80px] opacity-5 pointer-events-none" style={{ backgroundColor: primaryColor }}></div>
+
+                  <div className="border-b border-white/5 pb-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="text-xs font-black uppercase tracking-widest text-white">Sello Digital CSD</h3>
+                        <p className="text-[8px] text-white/40 uppercase tracking-wider mt-1">Certificado de sello digital para timbrar</p>
+                      </div>
+                      {/* Badge de vigencia del certificado */}
+                      {loadingCsdStatus ? (
+                        <span className="w-4 h-4 rounded-full border-2 border-t-white/50 border-white/10 animate-spin"></span>
+                      ) : csdStatus?.has_certificate ? (
+                        <div className="flex flex-col items-end gap-0.5">
+                          <span className="px-2.5 py-0.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[7px] font-black rounded-full uppercase tracking-widest">✅ Sello Activo</span>
+                          {csdStatus.valid_to && (
+                            <span className="text-[7px] text-white/30 font-mono">
+                              Vigente hasta: {new Date(csdStatus.valid_to).toLocaleDateString('es-MX')}
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="px-2.5 py-0.5 bg-amber-500/10 text-amber-400 border border-amber-500/20 text-[7px] font-black rounded-full uppercase tracking-widest">⚠️ Sin Sello</span>
+                      )}
+                    </div>
+                    <p className="text-[7px] text-white/30 leading-relaxed mt-3">
+                      Néctar Labs delega el resguardo directamente al PAC (Facturapi) mediante su API. Las llaves <strong className="text-white/50">nunca tocan nuestros servidores</strong>.
+                    </p>
+                  </div>
+
+                  <form onSubmit={handleUploadCSD} className="space-y-4">
+                    {/* Dropzone .cer */}
+                    <div className="space-y-1.5">
+                      <label className="text-[8px] uppercase tracking-wider font-black text-white/50 block">Archivo Certificado (.cer)</label>
+                      <label
+                        htmlFor="csd-cer-upload"
+                        className={`flex items-center gap-3 p-3 border-2 border-dashed rounded-xl cursor-pointer transition-all ${
+                          csdCerFile ? 'border-emerald-500/40 bg-emerald-500/5' : csdCerError ? 'border-red-500/40 bg-red-500/5' : 'border-white/10 hover:border-white/30 hover:bg-white/[0.02]'
+                        }`}
+                      >
+                        <span className="text-xl">{csdCerFile ? '📄' : '⬆️'}</span>
+                        <div className="flex-1 min-w-0">
+                          <p className={`text-[10px] font-black truncate ${ csdCerFile ? 'text-emerald-400' : 'text-white/40' }`}>
+                            {csdCerFile ? csdCerFile.name : 'Seleccionar archivo .cer'}
+                          </p>
+                          {csdCerFile && (
+                            <p className="text-[8px] text-white/30 mt-0.5">{(csdCerFile.size / 1024).toFixed(1)} KB</p>
+                          )}
+                        </div>
+                        {csdCerFile && (
+                          <button type="button" onClick={(ev) => { ev.preventDefault(); setCsdCerFile(null); setCsdCerError(null); }} className="text-white/30 hover:text-white/60 text-sm shrink-0">✕</button>
+                        )}
+                      </label>
+                      <input
+                        id="csd-cer-upload"
+                        type="file"
+                        accept=".cer"
+                        className="hidden"
+                        onChange={(e) => {
+                          const f = e.target.files?.[0] || null;
+                          if (f && !f.name.toLowerCase().endsWith('.cer')) {
+                            setCsdCerError('El archivo debe tener extensión .cer');
+                            setCsdCerFile(null);
+                          } else {
+                            setCsdCerFile(f);
+                            setCsdCerError(null);
+                          }
+                          e.target.value = '';
+                        }}
+                      />
+                      {csdCerError && <p className="text-[8px] text-red-400 font-bold">{csdCerError}</p>}
+                    </div>
+
+                    {/* Dropzone .key */}
+                    <div className="space-y-1.5">
+                      <label className="text-[8px] uppercase tracking-wider font-black text-white/50 block">Archivo Llave Privada (.key)</label>
+                      <label
+                        htmlFor="csd-key-upload"
+                        className={`flex items-center gap-3 p-3 border-2 border-dashed rounded-xl cursor-pointer transition-all ${
+                          csdKeyFile ? 'border-emerald-500/40 bg-emerald-500/5' : csdKeyError ? 'border-red-500/40 bg-red-500/5' : 'border-white/10 hover:border-white/30 hover:bg-white/[0.02]'
+                        }`}
+                      >
+                        <span className="text-xl">{csdKeyFile ? '🔐' : '⬆️'}</span>
+                        <div className="flex-1 min-w-0">
+                          <p className={`text-[10px] font-black truncate ${ csdKeyFile ? 'text-emerald-400' : 'text-white/40' }`}>
+                            {csdKeyFile ? csdKeyFile.name : 'Seleccionar archivo .key'}
+                          </p>
+                          {csdKeyFile && (
+                            <p className="text-[8px] text-white/30 mt-0.5">{(csdKeyFile.size / 1024).toFixed(1)} KB</p>
+                          )}
+                        </div>
+                        {csdKeyFile && (
+                          <button type="button" onClick={(ev) => { ev.preventDefault(); setCsdKeyFile(null); setCsdKeyError(null); }} className="text-white/30 hover:text-white/60 text-sm shrink-0">✕</button>
+                        )}
+                      </label>
+                      <input
+                        id="csd-key-upload"
+                        type="file"
+                        accept=".key"
+                        className="hidden"
+                        onChange={(e) => {
+                          const f = e.target.files?.[0] || null;
+                          if (f && !f.name.toLowerCase().endsWith('.key')) {
+                            setCsdKeyError('El archivo debe tener extensión .key');
+                            setCsdKeyFile(null);
+                          } else {
+                            setCsdKeyFile(f);
+                            setCsdKeyError(null);
+                          }
+                          e.target.value = '';
+                        }}
+                      />
+                      {csdKeyError && <p className="text-[8px] text-red-400 font-bold">{csdKeyError}</p>}
+                    </div>
+
+                    {/* Password */}
+                    <div className="space-y-1.5">
+                      <label className="text-[8px] uppercase tracking-wider font-black text-white/50">Contraseña de la Llave Privada</label>
+                      <input
+                        type="password"
+                        placeholder="••••••••••••"
+                        value={csdPassword}
+                        onChange={(e) => setCsdPassword(e.target.value)}
+                        className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input"
+                      />
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={isUploadingCSD || !csdCerFile || !csdKeyFile || !csdPassword.trim()}
+                      className="w-full py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2 shadow-lg"
+                      style={{ backgroundColor: primaryColor, color: '#000' }}
+                    >
+                      {isUploadingCSD ? (
+                        <><span className="w-3.5 h-3.5 rounded-full border-2 border-t-black/30 border-black/10 animate-spin"></span> Subiendo al PAC...</>
+                      ) : (
+                        '🔐 Subir Sellos CSD a Facturapi'
+                      )}
+                    </button>
+                  </form>
+                </div>
+              </div>
+
+            </div>
+                </div>
+              </div>
+            )}
             </div>
           </div>
         )

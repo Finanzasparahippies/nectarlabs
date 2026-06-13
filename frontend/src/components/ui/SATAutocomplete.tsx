@@ -163,7 +163,7 @@ export default function SATAutocomplete({
       </div>
 
       {isOpen && (
-        <div className="absolute left-0 right-0 mt-1.5 z-50 max-h-60 overflow-y-auto rounded-xl border border-white/10 bg-[#050a06]/95 backdrop-blur-md shadow-2xl py-1.5 custom-scrollbar">
+        <div className="absolute left-0 right-0 mt-1.5 z-50 max-h-60 overflow-y-auto rounded-xl border border-white/10 bg-[#050a06]/95 backdrop-blur-md shadow-2xl py-1.5 custom-scrollbar autocomplete-dropdown">
           {loading ? (
             <div className="flex items-center justify-center py-4 text-[8px] font-black uppercase tracking-wider text-white/40">
               <span className="w-3 h-3 rounded-full border-2 border-t-white border-white/10 animate-spin mr-2"></span>
