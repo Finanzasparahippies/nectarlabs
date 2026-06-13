@@ -203,6 +203,19 @@ function DashboardSidebarContent() {
       )
     },
     {
+      label: 'Facturación Néctar',
+      href: '/dashboard?tab=billing-global',
+      show: isCEO,
+      active: pathname === '/dashboard' && activeTab === 'billing-global',
+      icon: (active: boolean) => (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={`w-4 h-4 transition-all duration-300 group-hover:scale-110 ${active ? 'text-nectar-gold' : 'text-foreground/45 group-hover:text-foreground'}`}>
+          <rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect>
+          <line x1="12" y1="4" x2="12" y2="20"></line>
+          <line x1="2" y1="10" x2="22" y2="10"></line>
+        </svg>
+      )
+    },
+    {
       label: 'Rendimiento',
       href: '/dashboard/performance',
       show: isCEO,
@@ -472,7 +485,7 @@ function DashboardSidebarContent() {
 
   // Renderizador común del listado de navegación
   const renderNavLinks = () => {
-    const workspaceLabels = ['Dashboard', 'Compromiso de Pago', 'Contratar Plan', 'Control de la Colmena', 'Rendimiento', 'Panel de Recolección', 'Configuración Soporte', 'Ajustes de la Colmena', 'Perfil'];
+    const workspaceLabels = ['Dashboard', 'Compromiso de Pago', 'Contratar Plan', 'Control de la Colmena', 'Facturación Néctar', 'Rendimiento', 'Panel de Recolección', 'Configuración Soporte', 'Ajustes de la Colmena', 'Perfil'];
     const workspaceLinks = navLinks.filter(link => link.show && workspaceLabels.includes(link.label));
     const operationsLinks = navLinks.filter(link => link.show && !workspaceLabels.includes(link.label));
 

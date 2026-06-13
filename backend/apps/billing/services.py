@@ -48,6 +48,41 @@ class PACServiceBase:
         """Lista los receptores/clientes del catálogo del PAC para la organización."""
         raise NotImplementedError()
 
+    def create_product(self, organization_id, product_data):
+        """Crea un producto en el PAC.
+        product_data: {description, price, product_key, unit_key}"""
+        raise NotImplementedError()
+
+    def update_product(self, organization_id, pac_product_id, product_data):
+        """Actualiza un producto en el PAC."""
+        raise NotImplementedError()
+
+    def delete_product(self, organization_id, pac_product_id):
+        """Elimina un producto en el PAC."""
+        raise NotImplementedError()
+
+    def list_products(self, organization_id):
+        """Lista los productos en el PAC."""
+        raise NotImplementedError()
+
+    def create_receipt(self, organization_id, receipt_data):
+        """Crea un recibo en el PAC.
+        receipt_data: {folio_number, payment_form, items}"""
+        raise NotImplementedError()
+
+    def list_receipts(self, organization_id):
+        """Lista los recibos en el PAC."""
+        raise NotImplementedError()
+
+    def create_retention(self, organization_id, retention_data):
+        """Crea una retención en el PAC.
+        retention_data: {customer, cve_retenc, periodo, totales}"""
+        raise NotImplementedError()
+
+    def list_retentions(self, organization_id):
+        """Lista las retenciones en el PAC."""
+        raise NotImplementedError()
+
     def create_invoice(self, invoice, tax_profile, customer_info, items, is_parent_to_tenant=False):
         """Genera y timbra una factura CFDI 4.0 en el PAC"""
         raise NotImplementedError()
@@ -102,6 +137,60 @@ class MockPACService(PACServiceBase):
         return [
             {"id": "cus_mock_001", "legal_name": "CLIENTE DEMO SA DE CV", "tax_id": "CDM860329AAA",
              "tax_system": "601", "email": "demo@cliente.com", "address": {"zip": "06000"}},
+        ]
+
+    def create_product(self, organization_id, product_data):
+        logger.info(f"[MockPAC] Creando producto {product_data.get('description')} en org {organization_id}")
+        return f"prod_mock_{uuid.uuid4().hex[:12]}"
+
+    def update_product(self, organization_id, pac_product_id, product_data):
+        logger.info(f"[MockPAC] Actualizando producto {pac_product_id} en org {organization_id}")
+        return True
+
+    def delete_product(self, organization_id, pac_product_id):
+        logger.info(f"[MockPAC] Eliminando producto {pac_product_id} de org {organization_id}")
+        return True
+
+    def list_products(self, organization_id):
+        logger.info(f"[MockPAC] Listando productos de org {organization_id}")
+        return [
+            {"id": "prod_mock_001", "description": "Noche de hotel, renta de habitación doble", "price": 1234.56, "product_key": "90111800", "unit_key": "DAY"}
+        ]
+
+    def create_receipt(self, organization_id, receipt_data):
+        logger.info(f"[MockPAC] Creando recibo para org {organization_id}")
+        return {
+            "id": f"rec_mock_{uuid.uuid4().hex[:12]}",
+            "folio_number": receipt_data.get("folio_number"),
+            "payment_form": receipt_data.get("payment_form"),
+            "total": sum(float(item["product"]["price"]) * float(item["quantity"]) for item in receipt_data.get("items", [])),
+            "status": "valid"
+        }
+
+    def list_receipts(self, organization_id):
+        logger.info(f"[MockPAC] Listando recibos de org {organization_id}")
+        return [
+            {"id": "rec_mock_001", "folio_number": 123, "payment_form": "08", "total": 1234.56, "status": "valid"}
+        ]
+
+    def create_retention(self, organization_id, retention_data):
+        logger.info(f"[MockPAC] Creando retención para org {organization_id}")
+        return {
+            "id": f"ret_mock_{uuid.uuid4().hex[:12]}",
+            "customer": retention_data.get("customer"),
+            "cve_retenc": retention_data.get("cve_retenc"),
+            "status": "valid"
+        }
+
+    def list_retentions(self, organization_id):
+        logger.info(f"[MockPAC] Listando retenciones de org {organization_id}")
+        return [
+            {
+                "id": "ret_mock_001",
+                "customer": {"legal_name": "JOHN DOE", "tax_id": "XAXX010101000"},
+                "cve_retenc": "03",
+                "status": "valid"
+            }
         ]
 
     def create_invoice(self, invoice, tax_profile, customer_info, items, is_parent_to_tenant=False):
@@ -304,6 +393,164 @@ class FacturapiPACService(PACServiceBase):
             raise
         except Exception as e:
             raise PACError(f"Fallo de conexión al listar clientes: {e}")
+
+    def create_product(self, organization_id, product_data):
+        url = f"{self.base_url}/products"
+        payload = {
+            "description": product_data.get("description"),
+            "price": float(product_data.get("price")),
+            "product_key": product_data.get("product_key"),
+            "unit_key": product_data.get("unit_key", "E48"),
+        }
+        try:
+            response = requests.post(url, json=payload, headers=self._org_headers(organization_id), timeout=10)
+            if response.status_code not in [200, 201]:
+                raise PACError(f"Error al crear producto en Facturapi: {response.text}")
+            return response.json().get("id")
+        except PACError:
+            raise
+        except Exception as e:
+            raise PACError(f"Fallo de conexión al crear producto: {e}")
+
+    def update_product(self, organization_id, pac_product_id, product_data):
+        url = f"{self.base_url}/products/{pac_product_id}"
+        payload = {
+            "description": product_data.get("description"),
+            "price": float(product_data.get("price")),
+            "product_key": product_data.get("product_key"),
+            "unit_key": product_data.get("unit_key", "E48"),
+        }
+        try:
+            response = requests.put(url, json=payload, headers=self._org_headers(organization_id), timeout=10)
+            if response.status_code not in [200, 201, 204]:
+                raise PACError(f"Error al actualizar producto en Facturapi: {response.text}")
+            return True
+        except PACError:
+            raise
+        except Exception as e:
+            raise PACError(f"Fallo de conexión al actualizar producto: {e}")
+
+    def delete_product(self, organization_id, pac_product_id):
+        url = f"{self.base_url}/products/{pac_product_id}"
+        try:
+            response = requests.delete(url, headers=self._org_headers(organization_id), timeout=10)
+            if response.status_code not in [200, 204]:
+                raise PACError(f"Error al eliminar producto en Facturapi: {response.text}")
+            return True
+        except PACError:
+            raise
+        except Exception as e:
+            raise PACError(f"Fallo de conexión al eliminar producto: {e}")
+
+    def list_products(self, organization_id):
+        url = f"{self.base_url}/products"
+        try:
+            response = requests.get(url, headers=self._org_headers(organization_id), timeout=10)
+            if response.status_code not in [200, 201]:
+                raise PACError(f"Error al listar productos en Facturapi: {response.text}")
+            data = response.json()
+            return data.get("data", data) if isinstance(data, dict) else data
+        except PACError:
+            raise
+        except Exception as e:
+            raise PACError(f"Fallo de conexión al listar productos: {e}")
+
+    def create_receipt(self, organization_id, receipt_data):
+        url = f"{self.base_url}/receipts"
+        # Mapeamos los conceptos redondeando el precio a 2 decimales
+        desglose_items = []
+        for item in receipt_data.get("items", []):
+            prod = item.get("product", {})
+            desglose_items.append({
+                "quantity": int(item.get("quantity", 1)),
+                "product": {
+                    "description": prod.get("description"),
+                    "price": float(Decimal(str(prod.get("price"))).quantize(Decimal('0.01'))),
+                    "product_key": prod.get("product_key"),
+                    "unit_key": prod.get("unit_key", "E48")
+                }
+            })
+        
+        payload = {
+            "folio_number": receipt_data.get("folio_number"),
+            "payment_form": receipt_data.get("payment_form", "01"),
+            "items": desglose_items
+        }
+        try:
+            response = requests.post(url, json=payload, headers=self._org_headers(organization_id), timeout=15)
+            if response.status_code not in [200, 201]:
+                raise PACError(f"Error al crear recibo en Facturapi: {response.text}")
+            return response.json()
+        except PACError:
+            raise
+        except Exception as e:
+            raise PACError(f"Fallo de conexión al crear recibo: {e}")
+
+    def list_receipts(self, organization_id):
+        url = f"{self.base_url}/receipts"
+        try:
+            response = requests.get(url, headers=self._org_headers(organization_id), timeout=10)
+            if response.status_code not in [200, 201]:
+                raise PACError(f"Error al listar recibos en Facturapi: {response.text}")
+            data = response.json()
+            return data.get("data", data) if isinstance(data, dict) else data
+        except PACError:
+            raise
+        except Exception as e:
+            raise PACError(f"Fallo de conexión al listar recibos: {e}")
+
+    def create_retention(self, organization_id, retention_data):
+        url = f"{self.base_url}/retentions"
+        payload = {
+            "customer": {
+                "legal_name": retention_data.get("customer", {}).get("legal_name"),
+                "tax_id": retention_data.get("customer", {}).get("tax_id"),
+                "tax_system": retention_data.get("customer", {}).get("tax_system", "616"),
+                "email": retention_data.get("customer", {}).get("email"),
+                "address": {
+                    "zip": retention_data.get("customer", {}).get("address", {}).get("zip")
+                }
+            },
+            "cve_retenc": retention_data.get("cve_retenc"),
+            "periodo": {
+                "mes_ini": int(retention_data.get("periodo", {}).get("mes_ini")),
+                "mes_fin": int(retention_data.get("periodo", {}).get("mes_fin")),
+                "ejerc": int(retention_data.get("periodo", {}).get("ejerc"))
+            },
+            "totales": {
+                "monto_tot_operacion": float(retention_data.get("totales", {}).get("monto_tot_operacion")),
+                "monto_tot_exent": float(retention_data.get("totales", {}).get("monto_tot_exent")),
+                "imp_retenidos": [
+                    {
+                        "monto_ret": float(imp.get("monto_ret")),
+                        "tipo_pago_ret": imp.get("tipo_pago_ret"),
+                        "impuesto": imp.get("impuesto")
+                    } for imp in retention_data.get("totales", {}).get("imp_retenidos", [])
+                ]
+            }
+        }
+        try:
+            response = requests.post(url, json=payload, headers=self._org_headers(organization_id), timeout=15)
+            if response.status_code not in [200, 201]:
+                raise PACError(f"Error al crear retención en Facturapi: {response.text}")
+            return response.json()
+        except PACError:
+            raise
+        except Exception as e:
+            raise PACError(f"Fallo de conexión al crear retención: {e}")
+
+    def list_retentions(self, organization_id):
+        url = f"{self.base_url}/retentions"
+        try:
+            response = requests.get(url, headers=self._org_headers(organization_id), timeout=10)
+            if response.status_code not in [200, 201]:
+                raise PACError(f"Error al listar retenciones en Facturapi: {response.text}")
+            data = response.json()
+            return data.get("data", data) if isinstance(data, dict) else data
+        except PACError:
+            raise
+        except Exception as e:
+            raise PACError(f"Fallo de conexión al listar retenciones: {e}")
 
     def create_invoice(self, invoice, tax_profile, customer_info, items, is_parent_to_tenant=False):
         # Para timbrar a nombre de la organización subordinada, Facturapi requiere el header "Facturapi-Organization"

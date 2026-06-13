@@ -836,28 +836,32 @@ class CSDStatusView(BillingTenantMixin, APIView):
             })
 
 
-class FacturapiCustomerView(BillingTenantMixin, APIView):
-    """
-    CRUD de clientes/receptores fiscales en el catálogo de Facturapi
-    de la organización subordinada del tenant.
-
-    GET    /billing/facturapi-customers/           → lista clientes
-    POST   /billing/facturapi-customers/           → crea cliente
-    PUT    /billing/facturapi-customers/<pac_id>/  → actualiza cliente
-    DELETE /billing/facturapi-customers/<pac_id>/  → elimina cliente
-    """
+class FacturapiBaseView(BillingTenantMixin, APIView):
     permission_classes = [permissions.IsAuthenticated, HasAddOnPermission]
     addon_slug = 'mexico-invoicing'
 
-    def _get_validated_profile(self, tenant):
+    def get_organization_id_and_tenant(self, request):
+        user = request.user
+        is_system_admin = user.is_staff or getattr(user, 'role', '') == 'ADMIN'
+        tenant_id = request.query_params.get('tenant_id') or request.data.get('tenant_id')
+
+        if is_system_admin and not tenant_id:
+            # Caso global: Néctar Labs principal (raíz)
+            return None, None
+
+        # Caso tenant: buscar tenant y su perfil fiscal
+        tenant = self.get_tenant()
         profile = TaxProfile.objects.filter(tenant=tenant).first()
         if not profile or not profile.facturapi_organization_id:
-            return None, Response(
-                {"error": "El perfil fiscal no está configurado o no tiene organización en Facturapi."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        return profile, None
+            raise PACError("El perfil fiscal no está configurado o no tiene organización en Facturapi.")
+        return profile.facturapi_organization_id, tenant
 
+
+class FacturapiCustomerView(FacturapiBaseView):
+    """
+    CRUD de clientes/receptores fiscales en el catálogo de Facturapi
+    de la organización del tenant o de la cuenta matriz de Néctar Labs.
+    """
     def _validate_customer_data(self, data):
         errors = {}
         rfc = (data.get('rfc') or '').strip().upper()
@@ -870,22 +874,22 @@ class FacturapiCustomerView(BillingTenantMixin, APIView):
         return errors, rfc
 
     def get(self, request):
-        tenant = self.get_tenant()
-        profile, err = self._get_validated_profile(tenant)
-        if err:
-            return err
+        try:
+            org_id, _ = self.get_organization_id_and_tenant(request)
+        except (PACError, PermissionDenied) as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         pac = get_pac_service()
         try:
-            customers = pac.list_customers(profile.facturapi_organization_id)
+            customers = pac.list_customers(org_id)
             return Response({"customers": customers})
         except PACError as e:
             return Response({"error": str(e)}, status=status.HTTP_502_BAD_GATEWAY)
 
     def post(self, request):
-        tenant = self.get_tenant()
-        profile, err = self._get_validated_profile(tenant)
-        if err:
-            return err
+        try:
+            org_id, _ = self.get_organization_id_and_tenant(request)
+        except (PACError, PermissionDenied) as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         data = request.data
         errors, rfc = self._validate_customer_data(data)
@@ -902,7 +906,7 @@ class FacturapiCustomerView(BillingTenantMixin, APIView):
         }
         pac = get_pac_service()
         try:
-            pac_id = pac.create_customer(profile.facturapi_organization_id, customer_data)
+            pac_id = pac.create_customer(org_id, customer_data)
             return Response({
                 "pac_customer_id": pac_id,
                 "message": "Cliente registrado en Facturapi con éxito.",
@@ -914,10 +918,10 @@ class FacturapiCustomerView(BillingTenantMixin, APIView):
     def put(self, request, pac_customer_id=None):
         if not pac_customer_id:
             return Response({"error": "Se requiere el ID del cliente en Facturapi."}, status=400)
-        tenant = self.get_tenant()
-        profile, err = self._get_validated_profile(tenant)
-        if err:
-            return err
+        try:
+            org_id, _ = self.get_organization_id_and_tenant(request)
+        except (PACError, PermissionDenied) as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         data = request.data
         errors, rfc = self._validate_customer_data(data)
@@ -934,7 +938,7 @@ class FacturapiCustomerView(BillingTenantMixin, APIView):
         }
         pac = get_pac_service()
         try:
-            pac.update_customer(profile.facturapi_organization_id, pac_customer_id, customer_data)
+            pac.update_customer(org_id, pac_customer_id, customer_data)
             return Response({
                 "pac_customer_id": pac_customer_id,
                 "message": "Cliente actualizado en Facturapi con éxito.",
@@ -946,14 +950,204 @@ class FacturapiCustomerView(BillingTenantMixin, APIView):
     def delete(self, request, pac_customer_id=None):
         if not pac_customer_id:
             return Response({"error": "Se requiere el ID del cliente en Facturapi."}, status=400)
-        tenant = self.get_tenant()
-        profile, err = self._get_validated_profile(tenant)
-        if err:
-            return err
+        try:
+            org_id, _ = self.get_organization_id_and_tenant(request)
+        except (PACError, PermissionDenied) as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         pac = get_pac_service()
         try:
-            pac.delete_customer(profile.facturapi_organization_id, pac_customer_id)
+            pac.delete_customer(org_id, pac_customer_id)
             return Response({"message": "Cliente eliminado del catálogo de Facturapi."})
+        except PACError as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class FacturapiProductView(FacturapiBaseView):
+    """
+    CRUD de productos/conceptos en el catálogo de Facturapi.
+    """
+    def _validate_product_data(self, data):
+        errors = {}
+        if not data.get('description', '').strip():
+            errors['description'] = 'La descripción es obligatoria.'
+        try:
+            price = float(data.get('price', 0))
+            if price < 0:
+                errors['price'] = 'El precio no puede ser negativo.'
+        except (ValueError, TypeError):
+            errors['price'] = 'El precio debe ser un número válido.'
+        if not data.get('product_key', '').strip():
+            errors['product_key'] = 'La clave del producto SAT es obligatoria.'
+        return errors
+
+    def get(self, request):
+        try:
+            org_id, _ = self.get_organization_id_and_tenant(request)
+        except (PACError, PermissionDenied) as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        pac = get_pac_service()
+        try:
+            products = pac.list_products(org_id)
+            return Response({"products": products})
+        except PACError as e:
+            return Response({"error": str(e)}, status=status.HTTP_502_BAD_GATEWAY)
+
+    def post(self, request):
+        try:
+            org_id, _ = self.get_organization_id_and_tenant(request)
+        except (PACError, PermissionDenied) as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+        data = request.data
+        errors = self._validate_product_data(data)
+        if errors:
+            return Response({"errors": errors}, status=status.HTTP_400_BAD_REQUEST)
+
+        product_data = {
+            "description": data.get('description', '').strip(),
+            "price": float(data.get('price')),
+            "product_key": data.get('product_key', '').strip(),
+            "unit_key": data.get('unit_key', 'E48').strip()
+        }
+        pac = get_pac_service()
+        try:
+            pac_id = pac.create_product(org_id, product_data)
+            return Response({
+                "pac_product_id": pac_id,
+                "message": "Producto registrado en Facturapi con éxito.",
+                "product": {**product_data, "id": pac_id}
+            }, status=status.HTTP_201_CREATED)
+        except PACError as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    def put(self, request, pac_product_id=None):
+        if not pac_product_id:
+            return Response({"error": "Se requiere el ID del producto en Facturapi."}, status=400)
+        try:
+            org_id, _ = self.get_organization_id_and_tenant(request)
+        except (PACError, PermissionDenied) as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+        data = request.data
+        errors = self._validate_product_data(data)
+        if errors:
+            return Response({"errors": errors}, status=status.HTTP_400_BAD_REQUEST)
+
+        product_data = {
+            "description": data.get('description', '').strip(),
+            "price": float(data.get('price')),
+            "product_key": data.get('product_key', '').strip(),
+            "unit_key": data.get('unit_key', 'E48').strip()
+        }
+        pac = get_pac_service()
+        try:
+            pac.update_product(org_id, pac_product_id, product_data)
+            return Response({
+                "pac_product_id": pac_product_id,
+                "message": "Producto actualizado en Facturapi con éxito.",
+                "product": {**product_data, "id": pac_product_id}
+            })
+        except PACError as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pac_product_id=None):
+        if not pac_product_id:
+            return Response({"error": "Se requiere el ID del producto en Facturapi."}, status=400)
+        try:
+            org_id, _ = self.get_organization_id_and_tenant(request)
+        except (PACError, PermissionDenied) as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+        pac = get_pac_service()
+        try:
+            pac.delete_product(org_id, pac_product_id)
+            return Response({"message": "Producto eliminado del catálogo de Facturapi."})
+        except PACError as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class FacturapiReceiptView(FacturapiBaseView):
+    """
+    Listado y emisión de notas de venta/recibos en Facturapi.
+    """
+    def get(self, request):
+        try:
+            org_id, _ = self.get_organization_id_and_tenant(request)
+        except (PACError, PermissionDenied) as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        pac = get_pac_service()
+        try:
+            receipts = pac.list_receipts(org_id)
+            return Response({"receipts": receipts})
+        except PACError as e:
+            return Response({"error": str(e)}, status=status.HTTP_502_BAD_GATEWAY)
+
+    def post(self, request):
+        try:
+            org_id, tenant = self.get_organization_id_and_tenant(request)
+        except (PACError, PermissionDenied) as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Si es un tenant, verificar balance de timbres
+        if tenant and not tenant.has_available_stamps():
+            return Response(
+                {"error": "No tienes timbres suficientes en tu balance. Adquiere un paquete de timbres para continuar."},
+                status=400
+            )
+
+        data = request.data
+        if not data.get("items"):
+            return Response({"error": "El campo 'items' es obligatorio."}, status=400)
+
+        pac = get_pac_service()
+        try:
+            res = pac.create_receipt(org_id, data)
+            if tenant:
+                tenant.consume_stamp()
+            return Response(res, status=status.HTTP_201_CREATED)
+        except PACError as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class FacturapiRetentionView(FacturapiBaseView):
+    """
+    Listado y emisión de retenciones fiscales en Facturapi.
+    """
+    def get(self, request):
+        try:
+            org_id, _ = self.get_organization_id_and_tenant(request)
+        except (PACError, PermissionDenied) as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        pac = get_pac_service()
+        try:
+            retentions = pac.list_retentions(org_id)
+            return Response({"retentions": retentions})
+        except PACError as e:
+            return Response({"error": str(e)}, status=status.HTTP_502_BAD_GATEWAY)
+
+    def post(self, request):
+        try:
+            org_id, tenant = self.get_organization_id_and_tenant(request)
+        except (PACError, PermissionDenied) as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Si es un tenant, verificar balance de timbres
+        if tenant and not tenant.has_available_stamps():
+            return Response(
+                {"error": "No tienes timbres suficientes en tu balance. Adquiere un paquete de timbres para continuar."},
+                status=400
+            )
+
+        data = request.data
+        if not data.get("customer") or not data.get("cve_retenc") or not data.get("periodo") or not data.get("totales"):
+            return Response({"error": "Los campos customer, cve_retenc, periodo y totales son obligatorios."}, status=400)
+
+        pac = get_pac_service()
+        try:
+            res = pac.create_retention(org_id, data)
+            if tenant:
+                tenant.consume_stamp()
+            return Response(res, status=status.HTTP_201_CREATED)
         except PACError as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)

@@ -13,6 +13,7 @@ import DashboardSidebar from '../../components/DashboardSidebar';
 import Toast from '../../components/ui/Toast';
 import ConfirmModal from '../../components/ui/ConfirmModal';
 import ContactSupportModal from '../../components/dashboard/ContactSupportModal';
+import FacturapiManager from '../../components/dashboard/FacturapiManager';
 
 interface Project {
   id: number;
@@ -123,7 +124,7 @@ function DashboardPageOriginal() {
   const [plans, setPlans] = useState<any[]>([]);
   const [isStaff, setIsStaff] = useState(false);
   const [userRole, setUserRole] = useState('');
-  const [activeTab, setActiveTab] = useState<'overview' | 'business' | 'hire-plan'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'business' | 'hire-plan' | 'billing-global'>('overview');
   const [businessStats, setBusinessStats] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [updatingContractId, setUpdatingContractId] = useState<number | null>(null);
@@ -283,6 +284,8 @@ function DashboardPageOriginal() {
       setActiveTab('business');
     } else if (tab === 'hire-plan') {
       setActiveTab('hire-plan');
+    } else if (tab === 'billing-global') {
+      setActiveTab('billing-global');
     } else {
       setActiveTab('overview');
     }
@@ -1043,6 +1046,22 @@ function DashboardPageOriginal() {
                 </table>
               </div>
             </section>
+          </div>
+        ) : activeTab === 'billing-global' && isCEO ? (
+          <div className="space-y-8 animate-in fade-in duration-300">
+            <div className="admin-card border rounded-[2rem] p-8 relative overflow-hidden flex flex-col md:flex-row items-center gap-6 bg-card-bg border-card-border">
+              <div className="absolute -top-32 -right-32 w-64 h-64 bg-nectar-gold/10 blur-[100px] rounded-full pointer-events-none"></div>
+              <div className="w-14 h-14 rounded-2xl bg-foreground/[0.03] flex items-center justify-center text-3xl border border-white/5">
+                👑
+              </div>
+              <div className="flex-1 text-center md:text-left space-y-1">
+                <h2 className="text-xl font-black uppercase tracking-tight text-white">Consola de Facturación Principal (Néctar Labs)</h2>
+                <p className="text-xs text-white/50 leading-relaxed">
+                  Administra de forma global y centralizada el catálogo de clientes, conceptos de productos, emisión de recibos y retenciones para la organización raíz.
+                </p>
+              </div>
+            </div>
+            <FacturapiManager primaryColor="#C68A1E" />
           </div>
         ) : activeTab === 'business' && isCEO ? (
           <BusinessCommander stats={businessStats} installments={installments} setInstallments={setInstallments} />

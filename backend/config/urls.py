@@ -17,7 +17,8 @@ from apps.tenants.views import TenantViewSet, public_config, guest_auth
 from apps.billing.views import (
     TaxProfileView, InvoiceViewSet, BillingInfoView, BuyStampsView,
     BuyEmailCreditsView, SATProductKeySearchView, SATUnitKeySearchView,
-    UploadCSDView, CSDStatusView, FacturapiCustomerView
+    UploadCSDView, CSDStatusView, FacturapiCustomerView,
+    FacturapiProductView, FacturapiReceiptView, FacturapiRetentionView
 )
 
 router = DefaultRouter()
@@ -85,6 +86,10 @@ urlpatterns = [
     path('api/billing/csd-status/', CSDStatusView.as_view(), name='billing_csd_status'),
     path('api/billing/facturapi-customers/', FacturapiCustomerView.as_view(), name='billing_facturapi_customers'),
     path('api/billing/facturapi-customers/<str:pac_customer_id>/', FacturapiCustomerView.as_view(), name='billing_facturapi_customer_detail'),
+    path('api/billing/facturapi-products/', FacturapiProductView.as_view(), name='billing_facturapi_products'),
+    path('api/billing/facturapi-products/<str:pac_product_id>/', FacturapiProductView.as_view(), name='billing_facturapi_product_detail'),
+    path('api/billing/facturapi-receipts/', FacturapiReceiptView.as_view(), name='billing_facturapi_receipts'),
+    path('api/billing/facturapi-retentions/', FacturapiRetentionView.as_view(), name='billing_facturapi_retentions'),
 ]
 
 
