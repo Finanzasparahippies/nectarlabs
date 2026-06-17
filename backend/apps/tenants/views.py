@@ -15,8 +15,20 @@ class TenantViewSet(viewsets.ModelViewSet):
     serializer_class = TenantSerializer
     permission_classes = [permissions.IsAuthenticated]
 
+    def get_permissions(self):
+        if self.action == 'list':
+            return [permissions.AllowAny()]
+        return super().get_permissions()
+
+    def get_serializer_class(self):
+        if self.request.user.is_anonymous:
+            return TenantPublicSerializer
+        return super().get_serializer_class()
+
     def get_queryset(self):
         user = self.request.user
+        if user.is_anonymous:
+            return Tenant.objects.filter(is_active=True).order_by('-created_at')
         if user.is_staff or user.role == 'ADMIN':
             if self.request.query_params.get('all') == 'true':
                 return Tenant.objects.filter(is_active=True).order_by('-created_at')

@@ -666,76 +666,82 @@ export default function TenantPortalPage() {
       `}</style>
 
       {/* 1. Header Navigation */}
-      <header className="border-b backdrop-blur-md sticky top-0 z-50 tenant-header">
-        <div className="max-w-7xl mx-auto px-6 h-18 flex justify-between items-center">
-          <div className="flex items-center gap-3">
+      <header className="sticky top-0 z-50 w-full px-4 sm:px-6 py-4 backdrop-blur-md transition-all duration-300 tenant-header border-b">
+        <div className="max-w-7xl mx-auto flex justify-between items-center">
+          <div className="flex items-center gap-3 group">
             {tenantConfig.logo_url ? (
-              <img src={tenantConfig.logo_url} alt={tenantConfig.name} className="w-8 h-8 rounded-full object-cover" />
+              <img
+                src={tenantConfig.logo_url}
+                alt={tenantConfig.name}
+                className="w-10 h-10 rounded-2xl object-cover border-2 border-white/10 transition-transform duration-500 group-hover:rotate-6 group-hover:scale-105"
+              />
             ) : (
               <span
-                className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-black text-black"
+                className="w-10 h-10 rounded-2xl flex items-center justify-center text-sm font-black text-black shadow-lg transition-all duration-500 group-hover:rotate-6 group-hover:scale-105"
                 style={{ backgroundColor: primaryColor }}
               >
                 {tenantConfig.name.substring(0, 1).toUpperCase()}
               </span>
             )}
-            <div>
-              <h1 className="text-sm font-black uppercase tracking-tight text-white">{tenantConfig.name}</h1>
-              <p className="text-[9px] uppercase tracking-widest font-black opacity-60">{tenantConfig.portal_title || 'Portal de Servicios'}</p>
+            <div className="flex flex-col text-left">
+              <h1 className="text-sm sm:text-base font-black uppercase tracking-tight text-white transition-colors duration-300 group-hover:text-nectar-gold" style={{ color: isDarkMode ? '#FFFFFF' : '#111827' }}>
+                {tenantConfig.name}
+              </h1>
+              <p className="text-[9px] uppercase tracking-widest font-black opacity-60">
+                {tenantConfig.portal_title || 'Portal de Servicios'}
+              </p>
             </div>
           </div>
 
-          {/* Section Selector tabs */}
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setCurrentSection('addons')}
-              className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border cursor-pointer"
-              style={{
-                backgroundColor: currentSection === 'addons' ? `${primaryColor}15` : 'transparent',
-                borderColor: currentSection === 'addons' ? primaryColor : 'transparent',
-                color: currentSection === 'addons' ? primaryColor : (isDarkMode ? 'rgba(255, 255, 255, 0.6)' : 'rgba(17, 24, 39, 0.6)')
-              }}
-            >
-              🚀 Inicio
-            </button>
-            <button
-              onClick={() => setCurrentSection('support')}
-              className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border cursor-pointer"
-              style={{
-                backgroundColor: currentSection === 'support' ? `${primaryColor}15` : 'transparent',
-                borderColor: currentSection === 'support' ? primaryColor : 'transparent',
-                color: currentSection === 'support' ? primaryColor : (isDarkMode ? 'rgba(255, 255, 255, 0.6)' : 'rgba(17, 24, 39, 0.6)')
-              }}
-            >
-              🛠️ Soporte Técnico
-            </button>
+          {/* Section Selector tabs & Settings */}
+          <div className="flex items-center gap-3">
+            <div className="flex items-center bg-white/5 dark:bg-black/20 p-1 rounded-2xl border border-white/5">
+              <button
+                onClick={() => setCurrentSection('addons')}
+                className="px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all duration-300 cursor-pointer flex items-center gap-1.5"
+                style={{
+                  backgroundColor: currentSection === 'addons' ? primaryColor : 'transparent',
+                  color: currentSection === 'addons' ? '#000000' : (isDarkMode ? 'rgba(255, 255, 255, 0.6)' : 'rgba(17, 24, 39, 0.6)'),
+                  boxShadow: currentSection === 'addons' ? `0 4px 14px ${primaryColor}40` : 'none'
+                }}
+              >
+                <span>🚀</span> <span className="hidden sm:inline">Servicios</span>
+              </button>
+              <button
+                onClick={() => setCurrentSection('support')}
+                className="px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all duration-300 cursor-pointer flex items-center gap-1.5"
+                style={{
+                  backgroundColor: currentSection === 'support' ? primaryColor : 'transparent',
+                  color: currentSection === 'support' ? '#000000' : (isDarkMode ? 'rgba(255, 255, 255, 0.6)' : 'rgba(17, 24, 39, 0.6)'),
+                  boxShadow: currentSection === 'support' ? `0 4px 14px ${primaryColor}40` : 'none'
+                }}
+              >
+                <span>🛠️</span> <span className="hidden sm:inline">Soporte</span>
+              </button>
+            </div>
 
             <button
               onClick={() => setIsDarkMode(prev => !prev)}
-              className="w-8 h-8 rounded-xl flex items-center justify-center transition-all cursor-pointer"
-              style={{
-                backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
-                borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
-                borderWidth: '1px',
-                borderStyle: 'solid'
-              }}
+              className="w-10 h-10 rounded-2xl flex items-center justify-center border border-white/10 bg-white/5 dark:bg-black/20 hover:scale-105 hover:bg-white/10 active:scale-95 transition-all duration-300 cursor-pointer"
               title={isDarkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
             >
-              {isDarkMode ? '☀️' : '🌙'}
+              <span className="text-sm transition-transform duration-500 hover:rotate-45">
+                {isDarkMode ? '☀️' : '🌙'}
+              </span>
             </button>
-          </div>
 
-          {isAuthenticated && (
-            <div className="flex items-center gap-4">
-              <span className="text-[10px] text-white/40 font-bold hidden sm:inline">{email}</span>
-              <button
-                onClick={handleLogout}
-                className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/10 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all"
-              >
-                Cerrar Sesión
-              </button>
-            </div>
-          )}
+            {isAuthenticated && (
+              <div className="flex items-center gap-3 ml-1 sm:ml-3">
+                <span className="text-[10px] text-white/40 font-bold hidden lg:inline">{email}</span>
+                <button
+                  onClick={handleLogout}
+                  className="px-4 py-2.5 bg-red-500/10 hover:bg-red-500 hover:text-white border border-red-500/20 hover:border-red-500 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all duration-300"
+                >
+                  Cerrar Sesión
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
@@ -745,33 +751,73 @@ export default function TenantPortalPage() {
           /* Seccion Publica de Add-ons Activos */
           <div className="flex-1 flex flex-col space-y-8 animate-in fade-in duration-300">
             {/* Hero / Welcome Panel */}
-            <div className="border rounded-[2rem] p-8 shadow-lg relative overflow-hidden tenant-card flex flex-col sm:flex-row items-center gap-6">
+            <div className="border rounded-[2.5rem] p-8 md:p-10 shadow-2xl relative overflow-hidden tenant-card flex flex-col md:flex-row items-center gap-8 group transition-all duration-500 hover:shadow-3xl hover:border-white/10">
+              {/* Glowing Background Ambiance */}
               <div
-                className="absolute -top-32 -right-32 w-64 h-64 rounded-full blur-[100px] opacity-10 pointer-events-none"
+                className="absolute -top-40 -right-40 w-96 h-96 rounded-full blur-[120px] opacity-[0.08] dark:opacity-[0.12] transition-all duration-1000 group-hover:scale-110 pointer-events-none"
                 style={{ backgroundColor: primaryColor }}
               ></div>
+              <div
+                className="absolute -bottom-40 -left-40 w-96 h-96 rounded-full blur-[120px] opacity-[0.03] dark:opacity-[0.06] pointer-events-none"
+                style={{ backgroundColor: tenantConfig.accent_color || primaryColor }}
+              ></div>
 
-              {tenantConfig.logo_url && (
-                <img src={tenantConfig.logo_url} alt={tenantConfig.name} className="w-20 h-20 rounded-3xl object-cover border-2 border-white/10" />
+              {tenantConfig.logo_url ? (
+                <div className="relative p-1.5 rounded-[2rem] bg-gradient-to-tr from-white/5 to-white/10 dark:from-white/5 dark:to-white/10 border border-white/10 shadow-2xl shrink-0 group-hover:scale-105 transition-transform duration-500">
+                  <img
+                    src={tenantConfig.logo_url}
+                    alt={tenantConfig.name}
+                    className="w-24 h-24 rounded-[1.75rem] object-cover border border-white/10"
+                  />
+                  <span className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-4 border-[#020403] flex items-center justify-center text-[10px] animate-pulse" title="Portal Activo" style={{ borderColor: isDarkMode ? (tenantConfig.bg_color || '#020403') : (tenantConfig.bg_color_light || '#FAFAFA') }}>
+                    ✓
+                  </span>
+                </div>
+              ) : (
+                <div className="relative p-1.5 rounded-[2rem] bg-gradient-to-tr from-white/5 to-white/10 dark:from-white/5 dark:to-white/10 border border-white/10 shadow-2xl shrink-0 group-hover:scale-105 transition-transform duration-500">
+                  <div
+                    className="w-24 h-24 rounded-[1.75rem] flex items-center justify-center text-3xl font-black text-black shadow-inner"
+                    style={{ backgroundColor: primaryColor }}
+                  >
+                    {tenantConfig.name.substring(0, 1).toUpperCase()}
+                  </div>
+                  <span className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-4 border-[#020403] flex items-center justify-center text-[10px] animate-pulse" title="Portal Activo" style={{ borderColor: isDarkMode ? (tenantConfig.bg_color || '#020403') : (tenantConfig.bg_color_light || '#FAFAFA') }}>
+                    ✓
+                  </span>
+                </div>
               )}
-              <div className="flex-1 text-center sm:text-left space-y-2">
-                <span className="text-[9px] uppercase tracking-widest font-black text-white/40 block">🐝 Colmena de Servicios</span>
-                <h2 className="text-3xl font-black uppercase tracking-tight text-white">{tenantConfig.name}</h2>
-                <p className="text-sm text-white/70 max-w-2xl leading-relaxed">{tenantConfig.welcome_message}</p>
+
+              <div className="flex-1 text-center md:text-left space-y-3">
+                <div className="flex flex-wrap justify-center md:justify-start items-center gap-2">
+                  <span className="px-3.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest bg-white/5 dark:bg-white/5 border border-white/10 text-white/50 flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-nectar-gold animate-ping"></span>
+                    Colmena de Servicios
+                  </span>
+                  <span className="px-3.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest text-emerald-400 bg-emerald-500/10 border border-emerald-500/20">
+                    Verificado por Nectar Labs
+                  </span>
+                </div>
+                <h2 className="text-3xl sm:text-4xl font-black uppercase tracking-tight text-white" style={{ color: isDarkMode ? '#FFFFFF' : '#111827' }}>
+                  {tenantConfig.name}
+                </h2>
+                <p className="text-sm sm:text-base text-white/70 dark:text-white/80 max-w-3xl leading-relaxed font-medium">
+                  {tenantConfig.welcome_message}
+                </p>
               </div>
             </div>
 
             {/* Content layout for Add-ons */}
             {otherActiveAddons.length > 0 ? (
-              <div className="border rounded-[2.5rem] p-8 shadow-lg flex flex-col flex-1 relative overflow-hidden group tenant-card">
+              <div className="border rounded-[2.5rem] p-6 md:p-8 shadow-2xl flex flex-col flex-1 relative overflow-hidden group tenant-card">
+                {/* Visual Glow */}
                 <div
-                  className="absolute -top-32 -right-32 w-64 h-64 rounded-full blur-[100px] opacity-10 transition-all duration-700 pointer-events-none group-hover:opacity-20"
+                  className="absolute -top-48 -right-48 w-80 h-80 rounded-full blur-[120px] opacity-[0.06] transition-all duration-1000 group-hover:scale-110 pointer-events-none"
                   style={{ backgroundColor: primaryColor }}
                 ></div>
 
-                {/* Tabs */}
-                <div className="border-b pb-4 mb-6 tenant-border">
-                  <div className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar">
+                {/* Tabs Dock Container */}
+                <div className="border-b pb-5 mb-8 tenant-border">
+                  <div className="flex gap-2.5 overflow-x-auto pb-2.5 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
                     {[
                       { slug: 'booking-signature', label: 'Reservas', icon: '📅' },
                       { slug: 'logistics-gps', label: 'Logística', icon: '📍' },
@@ -788,14 +834,15 @@ export default function TenantPortalPage() {
                           <button
                             key={tab.slug}
                             onClick={() => setActiveAddonTab(tab.slug)}
-                            className="px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer border"
+                            className="px-5 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 whitespace-nowrap cursor-pointer border flex items-center gap-2 hover:scale-[1.03] active:scale-95 shadow-sm"
                             style={{
-                              backgroundColor: isActive ? `${primaryColor}15` : 'transparent',
+                              backgroundColor: isActive ? primaryColor : 'transparent',
                               borderColor: isActive ? primaryColor : 'rgba(255, 255, 255, 0.05)',
-                              color: isActive ? primaryColor : 'rgba(255, 255, 255, 0.4)'
+                              color: isActive ? '#000000' : (isDarkMode ? 'rgba(255, 255, 255, 0.5)' : 'rgba(17, 24, 39, 0.6)'),
+                              boxShadow: isActive ? `0 4px 15px ${primaryColor}40` : 'none'
                             }}
                           >
-                            <span className="mr-1.5">{tab.icon}</span>
+                            <span className="text-xs">{tab.icon}</span>
                             {tab.label}
                           </button>
                         );
@@ -850,95 +897,124 @@ export default function TenantPortalPage() {
           <div className="flex-1 flex flex-col animate-in fade-in duration-300">
             {!isAuthenticated ? (
               /* Login Screen for Support */
-              <div className="flex-1 flex items-center justify-center py-12">
-                <div className="max-w-md w-full backdrop-blur-md border rounded-[2.5rem] p-8 sm:p-10 shadow-2xl relative overflow-hidden tenant-card">
+              <div className="flex-1 flex items-center justify-center py-12 px-4">
+                <div className="max-w-md w-full backdrop-blur-xl border rounded-[2.5rem] p-8 sm:p-10 shadow-2xl relative overflow-hidden tenant-card group transition-all duration-500 hover:shadow-3xl">
+                  {/* Visual ambient glows */}
                   <div
-                    className="absolute -top-24 -right-24 w-48 h-48 rounded-full blur-3xl opacity-20"
+                    className="absolute -top-32 -right-32 w-64 h-64 rounded-full blur-3xl opacity-20 group-hover:scale-110 transition-transform duration-700 pointer-events-none"
                     style={{ backgroundColor: primaryColor }}
                   ></div>
+                  <div
+                    className="absolute -bottom-32 -left-32 w-64 h-64 rounded-full blur-3xl opacity-10 pointer-events-none"
+                    style={{ backgroundColor: tenantConfig.accent_color || primaryColor }}
+                  ></div>
 
-                  <div className="text-center mb-8">
-                    <h2 className="text-xl font-black uppercase tracking-wider text-white">Acceso a Soporte</h2>
-                    <p className="text-xs text-white/50 mt-1 max-w-xs mx-auto">
-                      Introduce tu correo para ver tu historial de tickets y chatear con soporte técnico de {tenantConfig.name}.
+                  <div className="text-center mb-8 relative z-10">
+                    <div className="w-16 h-16 rounded-[1.25rem] mx-auto flex items-center justify-center text-2xl border mb-4 shadow-md bg-white/5 dark:bg-black/20" style={{ borderColor: `${primaryColor}30` }}>
+                      🛡️
+                    </div>
+                    <h2 className="text-2xl font-black uppercase tracking-widest" style={{ color: isDarkMode ? '#FFFFFF' : '#111827' }}>
+                      Acceso a Soporte
+                    </h2>
+                    <p className="text-xs text-white/50 dark:text-white/60 mt-2.5 max-w-xs mx-auto leading-relaxed font-medium">
+                      Introduce tus datos de cliente para consultar tus tickets de soporte y chatear en tiempo real con {tenantConfig.name}.
                     </p>
                   </div>
 
-                  <form onSubmit={handleAuthSubmit} className="space-y-4">
+                  <form onSubmit={handleAuthSubmit} className="space-y-5 relative z-10">
                     {tenantConfig.require_customer_info && (
-                      <div className="space-y-1">
-                        <label className="text-[9px] font-black uppercase tracking-widest text-white/40">Nombre Completo</label>
+                      <div className="space-y-1.5 text-left">
+                        <label className="text-[9px] font-black uppercase tracking-widest text-white/40 block ml-1">
+                          Nombre Completo
+                        </label>
                         <input
                           type="text"
                           value={name}
                           onChange={(e) => setName(e.target.value)}
                           placeholder="Ej. Carlos Mendoza"
                           required
-                          className="w-full border rounded-2xl px-4.5 py-3.5 text-xs focus:outline-none transition-all tenant-input"
+                          className="w-full border rounded-2xl px-5 py-4 text-xs focus:outline-none transition-all duration-300 tenant-input focus:ring-2 focus:ring-offset-2 focus:ring-offset-transparent focus:border-transparent"
+                          style={{
+                            '--tw-ring-color': primaryColor,
+                          } as React.CSSProperties}
                         />
                       </div>
                     )}
 
-                    <div className="space-y-1">
-                      <label className="text-[9px] font-black uppercase tracking-widest text-white/40">Correo Electrónico</label>
+                    <div className="space-y-1.5 text-left">
+                      <label className="text-[9px] font-black uppercase tracking-widest text-white/40 block ml-1">
+                        Correo Electrónico
+                      </label>
                       <input
                         type="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="correo@ejemplo.com"
                         required
-                        className="w-full border rounded-2xl px-4.5 py-3.5 text-xs focus:outline-none transition-all tenant-input"
+                        className="w-full border rounded-2xl px-5 py-4 text-xs focus:outline-none transition-all duration-300 tenant-input focus:ring-2 focus:ring-offset-2 focus:ring-offset-transparent focus:border-transparent"
+                        style={{
+                          '--tw-ring-color': primaryColor,
+                        } as React.CSSProperties}
                       />
                     </div>
 
                     <button
                       type="submit"
                       disabled={isSubmittingAuth}
-                      className="w-full py-4 text-black font-black uppercase tracking-widest text-[10px] rounded-2xl transition-all hover:scale-[1.01] active:scale-95 disabled:opacity-50 mt-6 cursor-pointer"
-                      style={{ backgroundColor: primaryColor }}
+                      className="w-full py-4.5 text-black font-black uppercase tracking-widest text-[10px] rounded-2xl transition-all duration-300 hover:scale-[1.01] active:scale-95 disabled:opacity-50 mt-8 cursor-pointer shadow-lg hover:shadow-xl"
+                      style={{
+                        backgroundColor: primaryColor,
+                        boxShadow: `0 4px 20px ${primaryColor}30`
+                      }}
                     >
-                      {isSubmittingAuth ? 'Iniciando...' : 'Entrar al Centro de Soporte'}
+                      {isSubmittingAuth ? 'Iniciando Sesión...' : 'Entrar al Centro de Soporte'}
                     </button>
                   </form>
                 </div>
               </div>
             ) : (
               /* Support Dashboard */
-              <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+              <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch animate-in fade-in duration-500">
                 {/* Tickets System (Left side - takes 7 columns) */}
                 <div className="lg:col-span-7 flex flex-col space-y-6">
                   {selectedTicket ? (
                     /* Ticket Detail View */
-                    <div className="rounded-[2rem] p-6 flex flex-col flex-1 shadow-lg tenant-card border">
-                      <div className="flex justify-between items-start border-b pb-4 mb-4 tenant-border">
+                    <div className="rounded-[2.5rem] p-6 md:p-8 flex flex-col flex-1 shadow-2xl tenant-card border relative overflow-hidden group">
+                      <div className="absolute -top-32 -right-32 w-64 h-64 rounded-full blur-[100px] opacity-[0.05] pointer-events-none" style={{ backgroundColor: primaryColor }}></div>
+
+                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b pb-5 mb-5 tenant-border gap-4 relative z-10">
                         <div>
                           <button
                             onClick={() => setSelectedTicket(null)}
-                            className="text-[9px] font-black uppercase tracking-wider text-white/40 hover:text-white mb-2 flex items-center gap-1"
+                            className="text-[9px] font-black uppercase tracking-widest text-white/40 hover:text-white mb-2 flex items-center gap-1.5 transition-colors cursor-pointer group/btn"
                           >
-                            ← Volver a la Lista
+                            <span className="transition-transform group-hover/btn:-translate-x-0.5">←</span> Volver a la Lista
                           </button>
-                          <h3 className="text-base font-black uppercase tracking-tight">{selectedTicket.title}</h3>
+                          <h3 className="text-lg font-black uppercase tracking-tight text-white" style={{ color: isDarkMode ? '#FFFFFF' : '#111827' }}>
+                            {selectedTicket.title}
+                          </h3>
                           <p className="text-[8.5px] uppercase tracking-widest mt-1 text-white/40 font-bold">
                             Ticket #{selectedTicket.id} | Categoría: {selectedTicket.category}
                           </p>
                         </div>
                         <span
-                          className="px-3.5 py-1.5 rounded-full text-[8.5px] font-black uppercase tracking-widest border"
+                          className="px-3.5 py-1.5 rounded-full text-[8.5px] font-black uppercase tracking-widest border shadow-sm"
                           style={{
-                            borderColor: tenantConfig.border_color || 'rgba(255,255,255,0.1)',
-                            backgroundColor:
-                              selectedTicket.status === 'CLOSED'
-                                ? 'rgba(239, 68, 68, 0.1)'
-                                : selectedTicket.status === 'RESOLVED'
-                                  ? 'rgba(16, 185, 129, 0.1)'
-                                  : 'rgba(245, 158, 11, 0.1)',
-                            color:
-                              selectedTicket.status === 'CLOSED'
-                                ? '#ef4444'
-                                : selectedTicket.status === 'RESOLVED'
-                                  ? '#10b981'
-                                  : '#f59e0b',
+                            borderColor: selectedTicket.status === 'CLOSED'
+                              ? 'rgba(239, 68, 68, 0.2)'
+                              : selectedTicket.status === 'RESOLVED'
+                                ? 'rgba(16, 185, 129, 0.2)'
+                                : 'rgba(245, 158, 11, 0.2)',
+                            backgroundColor: selectedTicket.status === 'CLOSED'
+                              ? 'rgba(239, 68, 68, 0.08)'
+                              : selectedTicket.status === 'RESOLVED'
+                                ? 'rgba(16, 185, 129, 0.08)'
+                                : 'rgba(245, 158, 11, 0.08)',
+                            color: selectedTicket.status === 'CLOSED'
+                              ? '#ef4444'
+                              : selectedTicket.status === 'RESOLVED'
+                                ? '#10b981'
+                                : '#f59e0b',
                           }}
                         >
                           {selectedTicket.status}
@@ -946,45 +1022,57 @@ export default function TenantPortalPage() {
                       </div>
 
                       {/* History of messages within the ticket */}
-                      <div className="flex-1 overflow-y-auto space-y-4 max-h-[300px] pr-2 custom-scrollbar">
-                        <div className="bg-white/5 border rounded-2xl p-4 tenant-border">
+                      <div className="flex-1 overflow-y-auto space-y-4 max-h-[320px] pr-2 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent mb-4 relative z-10">
+                        <div className="bg-white/5 dark:bg-black/10 border rounded-[1.5rem] p-4.5 tenant-border">
                           <p className="text-[8.5px] font-black uppercase tracking-widest text-white/40">Descripción Inicial</p>
-                          <p className="text-xs text-white/80 mt-1 leading-relaxed whitespace-pre-wrap">{selectedTicket.description}</p>
-                          <p className="text-[7.5px] text-white/30 mt-2 font-bold">{new Date(selectedTicket.created_at).toLocaleString()}</p>
+                          <p className="text-xs text-white/80 dark:text-white/95 mt-1.5 leading-relaxed whitespace-pre-wrap font-medium">{selectedTicket.description}</p>
+                          <p className="text-[7.5px] text-white/30 dark:text-white/40 mt-3.5 font-black uppercase tracking-wider">{new Date(selectedTicket.created_at).toLocaleString()}</p>
                         </div>
 
-                        {selectedTicket.messages &&
-                          selectedTicket.messages.map((msg) => (
-                            <div
-                              key={msg.id}
-                              className="p-4 border rounded-2xl tenant-border bg-white/[0.02]"
-                            >
-                              <p className="text-[8.5px] font-black uppercase tracking-widest" style={{ color: primaryColor }}>
-                                {msg.sender_email.toLowerCase() === email.toLowerCase() ? 'Yo' : '🛠️ Soporte Técnico'}
-                              </p>
-                              <p className="text-xs text-white/80 mt-1 leading-relaxed whitespace-pre-wrap">{msg.content}</p>
-                              <p className="text-[7.5px] text-white/30 mt-2 font-bold">{new Date(msg.created_at).toLocaleString()}</p>
-                            </div>
-                          ))}
+                        {selectedTicket.messages && selectedTicket.messages.length > 0 &&
+                          selectedTicket.messages.map((msg) => {
+                            const isMe = msg.sender_email.toLowerCase() === email.toLowerCase();
+                            return (
+                              <div
+                                key={msg.id}
+                                className={`p-4.5 border rounded-[1.5rem] tenant-border max-w-[85%] ${isMe
+                                  ? 'bg-white/[0.03] dark:bg-black/25 ml-auto rounded-tr-none'
+                                  : 'bg-white/[0.01] dark:bg-black/10 mr-auto rounded-tl-none'
+                                  }`}
+                              >
+                                <p className="text-[8.5px] font-black uppercase tracking-widest mb-1.5" style={{ color: isMe ? primaryColor : (tenantConfig.accent_color || '#10B981') }}>
+                                  {isMe ? 'Tú (Cliente)' : '🛠️ Soporte Técnico'}
+                                </p>
+                                <p className="text-xs text-white/80 dark:text-white/95 leading-relaxed whitespace-pre-wrap font-medium">{msg.content}</p>
+                                <p className="text-[7.5px] text-white/30 dark:text-white/40 mt-3 font-bold uppercase tracking-wider">{new Date(msg.created_at).toLocaleString()}</p>
+                              </div>
+                            );
+                          })}
                       </div>
 
                       {/* Add response form */}
                       {selectedTicket.status !== 'CLOSED' && (
-                        <form onSubmit={handleSendTicketMessage} className="mt-4 pt-4 border-t flex gap-2 tenant-border">
+                        <form onSubmit={handleSendTicketMessage} className="mt-auto pt-4 border-t flex gap-3.5 tenant-border relative z-10">
                           <input
                             type="text"
                             value={ticketMessageText}
                             onChange={(e) => setTicketMessageText(e.target.value)}
                             placeholder="Escribe tu respuesta técnica aquí..."
-                            className="flex-1 border rounded-xl px-4 py-3 text-xs focus:outline-none transition-all tenant-input"
+                            className="flex-1 border rounded-2xl px-5 py-4 text-xs focus:outline-none transition-all duration-300 tenant-input focus:ring-2 focus:ring-offset-2 focus:ring-offset-transparent focus:border-transparent"
+                            style={{
+                              '--tw-ring-color': primaryColor,
+                            } as React.CSSProperties}
                             disabled={isSendingTicketMsg}
                             required
                           />
                           <button
                             type="submit"
                             disabled={!ticketMessageText.trim() || isSendingTicketMsg}
-                            className="px-5 py-3 text-black font-black uppercase tracking-widest text-[9px] rounded-xl hover:scale-105 transition-all disabled:opacity-50"
-                            style={{ backgroundColor: primaryColor }}
+                            className="px-6 py-4 text-black font-black uppercase tracking-widest text-[9px] rounded-2xl transition-all duration-300 hover:scale-[1.02] active:scale-95 disabled:opacity-50 cursor-pointer shadow-md"
+                            style={{
+                              backgroundColor: primaryColor,
+                              boxShadow: `0 4px 15px ${primaryColor}20`
+                            }}
                           >
                             {isSendingTicketMsg ? 'Enviando...' : 'Responder'}
                           </button>
@@ -995,29 +1083,35 @@ export default function TenantPortalPage() {
                     /* Ticket List & Creation View */
                     <>
                       {/* Ticket creation form */}
-                      <div className="border rounded-[2rem] p-6 shadow-lg tenant-card">
-                        <h3 className="text-sm font-black uppercase tracking-wider mb-4 text-white">Nuevo Ticket de Soporte</h3>
-                        <form onSubmit={handleCreateTicket} className="space-y-4">
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-1">
-                              <label className="text-[8.5px] font-black uppercase tracking-wider text-white/40">Título del Problema</label>
+                      <div className="border rounded-[2.5rem] p-6 md:p-8 shadow-2xl tenant-card relative overflow-hidden group">
+                        <div className="absolute -top-32 -right-32 w-64 h-64 rounded-full blur-[100px] opacity-[0.03] pointer-events-none" style={{ backgroundColor: primaryColor }}></div>
+                        <h3 className="text-sm sm:text-base font-black uppercase tracking-wider mb-6 text-white relative z-10" style={{ color: isDarkMode ? '#FFFFFF' : '#111827' }}>
+                          Nuevo Ticket de Soporte
+                        </h3>
+                        <form onSubmit={handleCreateTicket} className="space-y-5 relative z-10 text-left">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <div className="space-y-1.5">
+                              <label className="text-[8.5px] font-black uppercase tracking-wider text-white/40 ml-1">Título del Problema</label>
                               <input
                                 type="text"
                                 value={newTicketTitle}
                                 onChange={(e) => setNewTicketTitle(e.target.value)}
                                 placeholder="Ej. Error en pasarela de pagos"
                                 required
-                                className="w-full border rounded-xl px-3.5 py-3 text-xs focus:outline-none tenant-input"
+                                className="w-full border rounded-2xl px-5 py-4 text-xs focus:outline-none transition-all duration-300 tenant-input focus:ring-2 focus:ring-offset-2 focus:ring-offset-transparent focus:border-transparent"
+                                style={{
+                                  '--tw-ring-color': primaryColor,
+                                } as React.CSSProperties}
                               />
                             </div>
 
-                            <div className="grid grid-cols-2 gap-2">
-                              <div className="space-y-1">
-                                <label className="text-[8.5px] font-black uppercase tracking-wider text-white/40">Categoría</label>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div className="space-y-1.5">
+                                <label className="text-[8.5px] font-black uppercase tracking-wider text-white/40 ml-1">Categoría</label>
                                 <select
                                   value={newTicketCategory}
                                   onChange={(e) => setNewTicketCategory(e.target.value)}
-                                  className="w-full border rounded-xl px-3.5 py-3 text-xs focus:outline-none tenant-input"
+                                  className="w-full border rounded-2xl px-4 py-4 text-xs focus:outline-none transition-all duration-300 tenant-input cursor-pointer"
                                 >
                                   <option value="QUESTION">Pregunta</option>
                                   <option value="ISSUE">Problema Técnico</option>
@@ -1025,12 +1119,12 @@ export default function TenantPortalPage() {
                                   <option value="IDEA">Nueva Idea</option>
                                 </select>
                               </div>
-                              <div className="space-y-1">
-                                <label className="text-[8.5px] font-black uppercase tracking-wider text-white/40">Prioridad</label>
+                              <div className="space-y-1.5">
+                                <label className="text-[8.5px] font-black uppercase tracking-wider text-white/40 ml-1">Prioridad</label>
                                 <select
                                   value={newTicketPriority}
                                   onChange={(e) => setNewTicketPriority(e.target.value)}
-                                  className="w-full border rounded-xl px-3.5 py-3 text-xs focus:outline-none tenant-input"
+                                  className="w-full border rounded-2xl px-4 py-4 text-xs focus:outline-none transition-all duration-300 tenant-input cursor-pointer"
                                 >
                                   <option value="LOW">Baja</option>
                                   <option value="MEDIUM">Media</option>
@@ -1041,23 +1135,29 @@ export default function TenantPortalPage() {
                             </div>
                           </div>
 
-                          <div className="space-y-1">
-                            <label className="text-[8.5px] font-black uppercase tracking-wider text-white/45">Detalle / Requerimientos</label>
+                          <div className="space-y-1.5">
+                            <label className="text-[8.5px] font-black uppercase tracking-wider text-white/45 ml-1">Detalle / Requerimientos</label>
                             <textarea
                               value={newTicketDesc}
                               onChange={(e) => setNewTicketDesc(e.target.value)}
                               placeholder="Describe con el mayor detalle técnico posible el inconveniente..."
                               required
                               rows={3}
-                              className="w-full border rounded-xl px-3.5 py-3 text-xs focus:outline-none resize-none tenant-input"
+                              className="w-full border rounded-2xl px-5 py-4 text-xs focus:outline-none resize-none transition-all duration-300 tenant-input focus:ring-2 focus:ring-offset-2 focus:ring-offset-transparent focus:border-transparent"
+                              style={{
+                                '--tw-ring-color': primaryColor,
+                              } as React.CSSProperties}
                             ></textarea>
                           </div>
 
                           <button
                             type="submit"
                             disabled={isCreatingTicket}
-                            className="px-6 py-3.5 text-black font-black uppercase tracking-widest text-[9px] rounded-xl hover:scale-102 active:scale-95 transition-all disabled:opacity-50"
-                            style={{ backgroundColor: primaryColor }}
+                            className="px-6 py-4 text-black font-black uppercase tracking-widest text-[9px] rounded-2xl hover:scale-[1.01] active:scale-95 transition-all duration-300 disabled:opacity-50 cursor-pointer shadow-lg hover:shadow-xl"
+                            style={{
+                              backgroundColor: primaryColor,
+                              boxShadow: `0 4px 15px ${primaryColor}20`
+                            }}
                           >
                             {isCreatingTicket ? 'Abriendo Ticket...' : 'Crear Ticket de Soporte'}
                           </button>
@@ -1065,35 +1165,44 @@ export default function TenantPortalPage() {
                       </div>
 
                       {/* List of existing tickets */}
-                      <div className="border rounded-[2rem] p-6 flex-1 shadow-lg overflow-hidden flex flex-col tenant-card">
-                        <h3 className="text-sm font-black uppercase tracking-wider mb-4 text-white">Mis Tickets Abiertos</h3>
-                        <div className="flex-1 overflow-y-auto space-y-3 custom-scrollbar pr-1 max-h-[300px]">
+                      <div className="border rounded-[2.5rem] p-6 md:p-8 flex-1 shadow-2xl overflow-hidden flex flex-col tenant-card relative group">
+                        <div className="absolute -bottom-32 -right-32 w-64 h-64 rounded-full blur-[100px] opacity-[0.02] pointer-events-none" style={{ backgroundColor: primaryColor }}></div>
+                        <h3 className="text-sm sm:text-base font-black uppercase tracking-wider mb-5 text-white relative z-10" style={{ color: isDarkMode ? '#FFFFFF' : '#111827' }}>
+                          Mis Tickets Abiertos
+                        </h3>
+                        <div className="flex-1 overflow-y-auto space-y-3 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent pr-1 max-h-[280px] relative z-10">
                           {tickets.length === 0 ? (
-                            <p className="text-xs text-white/35 py-6 text-center">No has creado ningún ticket de soporte técnico aún.</p>
+                            <p className="text-xs text-white/35 py-10 text-center font-medium">No has creado ningún ticket de soporte técnico aún.</p>
                           ) : (
-                            tickets.map((t) => (
-                              <div
-                                key={t.id}
-                                onClick={() => setSelectedTicket(t)}
-                                className="bg-white/[0.02] hover:bg-white/5 border rounded-2xl p-4.5 flex justify-between items-center transition-all cursor-pointer tenant-border"
-                              >
-                                <div>
-                                  <h4 className="text-xs font-black uppercase text-white tracking-tight">{t.title}</h4>
-                                  <p className="text-[8px] uppercase tracking-widest text-white/40 mt-1 font-bold">
-                                    Ticket #{t.id} | Categoría: {t.category} | Prioridad: {t.priority}
-                                  </p>
-                                </div>
-                                <span
-                                  className="px-2.5 py-1 rounded-full text-[7.5px] font-black uppercase tracking-widest"
-                                  style={{
-                                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                                    color: t.status === 'CLOSED' ? '#ef4444' : t.status === 'RESOLVED' ? '#10b981' : '#f59e0b',
-                                  }}
+                            tickets.map((t) => {
+                              const badgeColor = t.status === 'CLOSED' ? '#ef4444' : t.status === 'RESOLVED' ? '#10b981' : '#f59e0b';
+                              return (
+                                <div
+                                  key={t.id}
+                                  onClick={() => setSelectedTicket(t)}
+                                  className="bg-white/[0.01] dark:bg-black/10 hover:bg-white/[0.04] dark:hover:bg-white/5 border rounded-2xl p-4.5 flex justify-between items-center transition-all duration-300 cursor-pointer tenant-border group/card hover:-translate-y-0.5"
                                 >
-                                  {t.status}
-                                </span>
-                              </div>
-                            ))
+                                  <div className="text-left">
+                                    <h4 className="text-xs font-black uppercase text-white tracking-tight group-hover/card:text-nectar-gold transition-colors duration-300" style={{ color: isDarkMode ? '#FFFFFF' : '#111827' }}>
+                                      {t.title}
+                                    </h4>
+                                    <p className="text-[8px] uppercase tracking-widest text-white/40 mt-1 font-bold">
+                                      Ticket #{t.id} | Categoría: {t.category} | Prioridad: {t.priority}
+                                    </p>
+                                  </div>
+                                  <span
+                                    className="px-3 py-1.5 rounded-full text-[7.5px] font-black uppercase tracking-widest transition-colors duration-300"
+                                    style={{
+                                      border: `1px solid ${badgeColor}30`,
+                                      backgroundColor: `${badgeColor}08`,
+                                      color: badgeColor,
+                                    }}
+                                  >
+                                    {t.status}
+                                  </span>
+                                </div>
+                              );
+                            })
                           )}
                         </div>
                       </div>
@@ -1103,28 +1212,32 @@ export default function TenantPortalPage() {
 
                 {/* Support Sidebar Info Guide (Right side - 5 cols) */}
                 <div className="lg:col-span-5 flex flex-col space-y-6">
-                  <div className="border rounded-[2rem] p-8 shadow-lg flex flex-col justify-between flex-1 relative overflow-hidden group tenant-card">
+                  <div className="border rounded-[2.5rem] p-8 shadow-2xl flex flex-col justify-between flex-1 relative overflow-hidden group tenant-card">
                     <div
                       className="absolute -top-32 -right-32 w-64 h-64 rounded-full blur-[100px] opacity-10 transition-all duration-700 pointer-events-none group-hover:opacity-20"
                       style={{ backgroundColor: primaryColor }}
                     ></div>
 
                     <div>
-                      <h3 className="text-sm font-black uppercase tracking-wider text-white mb-6 border-b pb-4 tenant-border">
+                      <h3 className="text-sm sm:text-base font-black uppercase tracking-wider text-white mb-6 border-b pb-4 tenant-border" style={{ color: isDarkMode ? '#FFFFFF' : '#111827' }}>
                         Centro de Ayuda y Chat
                       </h3>
 
-                      <div className="space-y-6">
-                        <div className="flex gap-4">
+                      <div className="space-y-6 text-left">
+                        <div className="flex gap-4 items-start">
                           <div
-                            className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
-                            style={{ backgroundColor: `${primaryColor}10`, color: primaryColor }}
+                            className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 border"
+                            style={{
+                              backgroundColor: `${primaryColor}08`,
+                              borderColor: `${primaryColor}20`,
+                              color: primaryColor
+                            }}
                           >
                             💬
                           </div>
                           <div>
-                            <h4 className="text-xs font-black uppercase text-white tracking-tight">Chat en Vivo con Operadores</h4>
-                            <p className="text-[11px] text-white/50 mt-1 leading-relaxed">
+                            <h4 className="text-xs font-black uppercase text-white tracking-tight" style={{ color: isDarkMode ? '#FFFFFF' : '#111827' }}>Chat en Vivo con Operadores</h4>
+                            <p className="text-[11px] text-white/50 dark:text-white/60 mt-1 leading-relaxed font-medium">
                               {activeAddonsList.includes('live-chat') ? (
                                 <>
                                   Soporte instantáneo por chat. Haz clic en el widget circular dorado en la esquina inferior derecha para chatear directamente.
@@ -1138,16 +1251,20 @@ export default function TenantPortalPage() {
                           </div>
                         </div>
 
-                        <div className="flex gap-4">
+                        <div className="flex gap-4 items-start">
                           <div
-                            className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
-                            style={{ backgroundColor: `${primaryColor}10`, color: primaryColor }}
+                            className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 border"
+                            style={{
+                              backgroundColor: `${primaryColor}08`,
+                              borderColor: `${primaryColor}20`,
+                              color: primaryColor
+                            }}
                           >
                             🛡️
                           </div>
                           <div>
-                            <h4 className="text-xs font-black uppercase text-white tracking-tight">SLA y Garantía Néctar</h4>
-                            <p className="text-[11px] text-white/50 mt-1 leading-relaxed">
+                            <h4 className="text-xs font-black uppercase text-white tracking-tight" style={{ color: isDarkMode ? '#FFFFFF' : '#111827' }}>SLA y Garantía Néctar</h4>
+                            <p className="text-[11px] text-white/50 dark:text-white/60 mt-1 leading-relaxed font-medium">
                               Nuestros ingenieros operan bajo un acuerdo de nivel de servicio (SLA) de menos de 2 horas para incidencias críticas de producción.
                             </p>
                           </div>
@@ -1158,7 +1275,7 @@ export default function TenantPortalPage() {
                     <div className="mt-8 pt-6 border-t flex flex-col items-stretch gap-4 tenant-border">
                       <div className="flex justify-between items-center text-[9px] uppercase tracking-widest font-black text-white/30">
                         <span>Sesión Activa</span>
-                        <span className="text-green-400">En Línea</span>
+                        <span className="text-green-400 animate-pulse">En Línea</span>
                       </div>
                     </div>
                   </div>
@@ -1802,7 +1919,7 @@ function SATInvoicingForm({ tenantId, subdomain, primaryColor, ownerId, showToas
                           className="w-full border border-white/10 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-nectar-gold bg-transparent text-white font-mono"
                         />
                       </div>
-                      
+
                       <div className="md:col-span-3 space-y-1.5">
                         <label className="text-[8px] font-black uppercase tracking-widest text-white/50">Precio Unitario</label>
                         <input
