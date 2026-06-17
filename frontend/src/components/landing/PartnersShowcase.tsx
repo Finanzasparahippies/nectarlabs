@@ -120,10 +120,8 @@ export default function PartnersShowcase() {
   useEffect(() => {
     const loadRealData = async () => {
       try {
-        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
         const data = await fetcher('/tenants/', {
           isPublic: true,
-          headers: token ? { 'Authorization': `Bearer ${token}` } : {},
         });
 
         if (data && Array.isArray(data) && data.length > 0) {
