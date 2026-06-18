@@ -64,6 +64,38 @@ class TenantSerializer(serializers.ModelSerializer):
     def get_subscriber_count(self, obj):
         return obj.subscribers.filter(is_active=True).count()
 
+    def validate_custom_domain(self, value):
+        if value:
+            # Clean domain: strip protocol, www., and trailing slashes
+            val = value.strip().lower()
+            if val.startswith('http://'):
+                val = val[7:]
+            elif val.startswith('https://'):
+                val = val[8:]
+            if val.startswith('www.'):
+                val = val[4:]
+            if val.endswith('/'):
+                val = val[:-1]
+            val = val.strip()
+
+            if not val:
+                return None
+
+            # Enforce that custom domain must not contain "nectarlabs"
+            if 'nectarlabs' in val:
+                raise serializers.ValidationError(
+                    "El dominio personalizado no puede pertenecer a los subdominios de Nectar Labs."
+                )
+            
+            # Simple domain validation
+            if '.' not in val or ' ' in val:
+                raise serializers.ValidationError(
+                    "Por favor ingresa un dominio válido (ej. mi-dominio.com)."
+                )
+            
+            return val
+        return value
+
     def validate_invoicing_mode(self, value):
         if value == 'AUTOMATIC':
             # Check if tenant has the automatic-invoicing addon active

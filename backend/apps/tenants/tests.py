@@ -59,6 +59,23 @@ class TenantsCoreTests(BaseTenantAddonTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertFalse(response.data['is_valid'])
         self.assertIn("No se pudo resolver el dominio", response.data['message'])
+
+        # 3. Dynamic custom domain passed in POST body
+        response = self.client.post(url, {'custom_domain': 'another-unresolvable-xyz.org'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertFalse(response.data['is_valid'])
+        self.assertIn("No se pudo resolver el dominio", response.data['message'])
+
+        # 4. Custom domain containing "nectarlabs"
+        response = self.client.post(url, {'custom_domain': 'portal.nectarlabs.dev'})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("no puede pertenecer a los subdominios de Nectar Labs", response.data['message'])
+
+        # 5. Custom domain with invalid format (spaces/no dot)
+        response = self.client.post(url, {'custom_domain': 'invalid domain'})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("Por favor ingresa un dominio válido", response.data['message'])
+
         logger.info("Test passed: Domain validation checks returned appropriate status values.")
 
     def test_tenant_branding_logo_upload_and_fallback(self):

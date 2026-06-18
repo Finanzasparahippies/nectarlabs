@@ -51,16 +51,53 @@ class TenantViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'], url_path='validate-domain')
     def validate_domain(self, request, pk=None):
         tenant = self.get_object()
-        domain = tenant.custom_domain
+        domain = request.data.get('custom_domain')
+        if domain is not None:
+            domain = domain.strip()
+        if not domain:
+            domain = tenant.custom_domain
+
         if not domain:
             return Response({
                 'is_valid': False,
                 'message': 'No se ha configurado ningún dominio personalizado para este portal.'
             }, status=status.HTTP_400_BAD_REQUEST)
         
+        # Clean domain: strip protocol, www., and trailing slashes
+        val = domain.strip().lower()
+        if val.startswith('http://'):
+            val = val[7:]
+        elif val.startswith('https://'):
+            val = val[8:]
+        if val.startswith('www.'):
+            val = val[4:]
+        if val.endswith('/'):
+            val = val[:-1]
+        domain = val.strip()
+
+        if not domain:
+            return Response({
+                'is_valid': False,
+                'message': 'No se ha configurado ningún dominio personalizado para este portal.'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # Enforce that custom domain must not contain "nectarlabs"
+        if 'nectarlabs' in domain:
+            return Response({
+                'is_valid': False,
+                'message': 'El dominio personalizado no puede pertenecer a los subdominios de Nectar Labs.'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Simple domain validation
+        if '.' not in domain or ' ' in domain:
+            return Response({
+                'is_valid': False,
+                'message': 'Por favor ingresa un dominio válido (ej. mi-dominio.com).'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
         import socket
         try:
-            resolved_ip = socket.gethostbyname(domain.strip())
+            resolved_ip = socket.gethostbyname(domain)
             return Response({
                 'is_valid': True,
                 'resolved_ip': resolved_ip,

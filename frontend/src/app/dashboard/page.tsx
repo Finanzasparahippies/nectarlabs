@@ -1328,30 +1328,62 @@ function DashboardPageOriginal() {
                                   <p className="text-[7px] font-bold text-foreground/45 uppercase tracking-wider">{contract.tax_id}</p>
                                   {(contract.tenant_custom_domain || contract.tenant_subdomain) && (() => {
                                     const host = typeof window !== 'undefined' ? window.location.hostname : '';
-                                    let domain = contract.tenant_custom_domain
+                                    const hasCustomDomain = !!contract.tenant_custom_domain;
+                                    const hasCustomDomainActive = !!(contract.tenant_use_custom_domain && contract.tenant_custom_domain);
+                                    
+                                    let activeDomain = hasCustomDomainActive
                                       ? `https://${contract.tenant_custom_domain}`
                                       : `https://${contract.tenant_subdomain}.nectarlabs.dev`;
-                                    let urlDisplay = contract.tenant_custom_domain || `${contract.tenant_subdomain}.nectarlabs.dev`;
+                                    let activeDisplay = hasCustomDomainActive
+                                      ? contract.tenant_custom_domain
+                                      : `${contract.tenant_subdomain}.nectarlabs.dev`;
 
-                                    if (!contract.tenant_custom_domain) {
+                                    if (!hasCustomDomainActive) {
                                       if (host.includes('localhost')) {
-                                        domain = `http://nectarlabs.localhost/tenants/${contract.tenant_subdomain}`;
-                                        urlDisplay = `nectarlabs.localhost/tenants/${contract.tenant_subdomain}`;
+                                        activeDomain = `http://nectarlabs.localhost/tenants/${contract.tenant_subdomain}`;
+                                        activeDisplay = `nectarlabs.localhost/tenants/${contract.tenant_subdomain}`;
                                       } else if (host.includes('staging.nectarlabs.dev')) {
-                                        domain = `https://${contract.tenant_subdomain}.staging.nectarlabs.dev`;
-                                        urlDisplay = `${contract.tenant_subdomain}.staging.nectarlabs.dev`;
+                                        activeDomain = `https://${contract.tenant_subdomain}.staging.nectarlabs.dev`;
+                                        activeDisplay = `${contract.tenant_subdomain}.staging.nectarlabs.dev`;
                                       }
                                     }
 
                                     return (
-                                      <a
-                                        href={domain}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        className="text-nectar-gold hover:underline font-extrabold text-[8px] mt-0.5"
-                                      >
-                                        🚀 {urlDisplay} ↗
-                                      </a>
+                                      <div className="flex flex-col gap-1.5 mt-1 text-[8.5px]">
+                                        {hasCustomDomain && (
+                                          <div className="flex flex-col">
+                                            <span className="text-[7px] text-foreground/40 font-black uppercase tracking-wider">Dominio Contratado:</span>
+                                            <a
+                                              href={`https://${contract.tenant_custom_domain}`}
+                                              target="_blank"
+                                              rel="noreferrer"
+                                              className="text-green-400 hover:text-green-300 transition-colors font-extrabold flex items-center gap-0.5"
+                                            >
+                                              <span>🌐 {contract.tenant_custom_domain}</span>
+                                              <svg className="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6m12-2l-11 11m11-11h-6m6 0v6"/></svg>
+                                            </a>
+                                          </div>
+                                        )}
+                                        <div className="flex flex-col">
+                                          <span className="text-[7px] text-foreground/40 font-black uppercase tracking-wider">
+                                            {hasCustomDomain ? 'Enlace Activo:' : 'Subdominio Asignado:'}
+                                          </span>
+                                          <a
+                                            href={activeDomain}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className="text-nectar-gold hover:text-white transition-colors font-extrabold flex items-center gap-0.5"
+                                          >
+                                            <span>🚀 {activeDisplay}</span>
+                                            <svg className="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6m12-2l-11 11m11-11h-6m6 0v6"/></svg>
+                                          </a>
+                                          {hasCustomDomain && !hasCustomDomainActive && (
+                                            <span className="text-[7px] text-yellow-500/80 font-black uppercase tracking-wider mt-0.5">
+                                              ⚠️ Redirección desactivada
+                                            </span>
+                                          )}
+                                        </div>
+                                      </div>
                                     );
                                   })()}
                                 </div>

@@ -47,6 +47,7 @@ class ContractSerializer(serializers.ModelSerializer):
     tenant_subdomain = serializers.SerializerMethodField(read_only=True)
     tenant_name = serializers.SerializerMethodField(read_only=True)
     tenant_custom_domain = serializers.SerializerMethodField(read_only=True)
+    tenant_use_custom_domain = serializers.SerializerMethodField(read_only=True)
     promo_code = serializers.SlugRelatedField(slug_field='code', queryset=PromoCode.objects.all(), required=False, allow_null=True)
     promo_code_details = PromoCodeSerializer(source='promo_code', read_only=True)
 
@@ -72,7 +73,11 @@ class ContractSerializer(serializers.ModelSerializer):
 
     def get_tenant_custom_domain(self, obj):
         tenant = obj.user.owned_tenants.first()
-        return tenant.custom_domain if (tenant and tenant.use_custom_domain and tenant.custom_domain) else None
+        return tenant.custom_domain if (tenant and tenant.custom_domain) else None
+
+    def get_tenant_use_custom_domain(self, obj):
+        tenant = obj.user.owned_tenants.first()
+        return tenant.use_custom_domain if tenant else False
 
 class PaymentInstallmentSerializer(serializers.ModelSerializer):
     client_name = serializers.CharField(source='contract.full_name', read_only=True)

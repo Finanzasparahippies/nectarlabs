@@ -394,12 +394,32 @@ export default function TenantSettingsPage() {
     e.preventDefault();
     if (!selectedTenant) return;
 
+    const cleanedDomain = editCustomDomain.trim()
+      .replace(/^(https?:\/\/)?(www\.)?/, '')
+      .replace(/\/$/, '')
+      .toLowerCase();
+
+    if (editUseCustomDomain) {
+      if (!cleanedDomain) {
+        showToast('Debes ingresar un dominio personalizado si activas esta opción.', 'error');
+        return;
+      }
+      if (cleanedDomain.includes('nectarlabs')) {
+        showToast('El dominio personalizado no puede pertenecer a los subdominios de Nectar Labs.', 'error');
+        return;
+      }
+      if (!cleanedDomain.includes('.') || cleanedDomain.includes(' ')) {
+        showToast('Por favor ingresa un dominio válido (ej. mi-dominio.com).', 'error');
+        return;
+      }
+    }
+
     setIsSubmitting(true);
     try {
       const formData = new FormData();
       formData.append('name', editName.trim());
       formData.append('subdomain', editSubdomain.trim().toLowerCase());
-      formData.append('custom_domain', editCustomDomain.trim() || '');
+      formData.append('custom_domain', cleanedDomain);
       formData.append('use_custom_domain', String(editUseCustomDomain));
       formData.append('theme_color', editThemeColor);
       formData.append('accent_color', editAccentColor);
@@ -452,11 +472,33 @@ export default function TenantSettingsPage() {
   const handleValidateDomain = async () => {
     if (!selectedTenant || !editCustomDomain.trim()) return;
 
+    const cleanedDomain = editCustomDomain.trim()
+      .replace(/^(https?:\/\/)?(www\.)?/, '')
+      .replace(/\/$/, '')
+      .toLowerCase();
+
+    if (cleanedDomain.includes('nectarlabs')) {
+      setDomainValidationResult({
+        is_valid: false,
+        message: 'El dominio personalizado no puede pertenecer a los subdominios de Nectar Labs.',
+      });
+      return;
+    }
+
+    if (!cleanedDomain.includes('.') || cleanedDomain.includes(' ')) {
+      setDomainValidationResult({
+        is_valid: false,
+        message: 'Por favor ingresa un dominio válido (ej. mi-dominio.com).',
+      });
+      return;
+    }
+
     setIsValidatingDomain(true);
     setDomainValidationResult(null);
     try {
       const res = await fetcher(`/tenants/${selectedTenant.id}/validate-domain/`, {
         method: 'POST',
+        body: JSON.stringify({ custom_domain: cleanedDomain }),
       });
       setDomainValidationResult(res);
     } catch (err: any) {
