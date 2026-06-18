@@ -2891,7 +2891,7 @@ function DashboardPageOriginal() {
                             </button>
                             {tenant.is_active && (
                               <button
-                                onClick={() => router.push(`/dashboard/tenant-settings?tenant=${tenant.id}`)}
+                                onClick={() => window.open(`${domain}/portal-admin`, '_blank', 'noopener,noreferrer')}
                                 className="flex-1 min-w-[90px] py-2 bg-foreground hover:bg-foreground/90 text-background text-center rounded-xl text-[8px] font-black uppercase tracking-widest transition-all cursor-pointer font-bold flex items-center justify-center border border-transparent font-bold"
                               >
                                 Consola Admin ⚙️
