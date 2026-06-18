@@ -396,7 +396,7 @@ function DashboardSidebarContent() {
         {ecosystemsExpanded && (
           <div className="space-y-1 animate-fadeIn">
             {activeTenants.map(tenant => {
-              const tenantUrl = tenant.custom_domain
+              const tenantUrl = (tenant.use_custom_domain && tenant.custom_domain)
                 ? `https://${tenant.custom_domain}`
                 : (() => {
                   const host = typeof window !== 'undefined' ? window.location.hostname : '';
@@ -423,7 +423,9 @@ function DashboardSidebarContent() {
 
                     <div className="flex-1 min-w-0">
                       <span className="block truncate font-black text-[9px] uppercase tracking-widest">{tenant.name}</span>
-                      <span className="block text-[6.5px] font-mono text-foreground/35 lowercase tracking-normal truncate">{tenant.custom_domain || `${tenant.subdomain}.nectarlabs.dev`}</span>
+                      <span className="block text-[6.5px] font-mono text-foreground/35 lowercase tracking-normal truncate">
+                        {(tenant.use_custom_domain && tenant.custom_domain) ? tenant.custom_domain : `${tenant.subdomain}.nectarlabs.dev`}
+                      </span>
                     </div>
 
                     <div className="flex items-center gap-2">

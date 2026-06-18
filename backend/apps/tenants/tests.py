@@ -207,6 +207,7 @@ class TenantsCoreTests(BaseTenantAddonTestCase):
 
         # 3. Resolve by host: custom domain
         self.tenant_a.custom_domain = "soporte.mi-cliente.com"
+        self.tenant_a.use_custom_domain = True
         self.tenant_a.save()
         response = self.client.get(reverse('tenant_public_config'), {'host': "soporte.mi-cliente.com"})
         self.assertEqual(response.status_code, status.HTTP_200_OK)

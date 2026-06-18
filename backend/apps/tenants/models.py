@@ -25,6 +25,10 @@ class Tenant(models.Model):
         db_index=True,
         help_text="Custom custom domain mapping (e.g. support.myclient.com)."
     )
+    use_custom_domain = models.BooleanField(
+        default=False,
+        help_text="Whether to use the custom domain instead of the subdomain."
+    )
     
     # Customization & Branding fields
     logo = models.ImageField(upload_to="tenant_logos/", blank=True, null=True)

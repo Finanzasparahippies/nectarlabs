@@ -60,7 +60,7 @@ class BookingContractPDF(FPDF):
         self.set_y(-15)
         self.set_font('helvetica', 'I', 8)
         self.set_text_color(120, 120, 120)
-        domain = self.tenant.custom_domain or f"{self.tenant.subdomain}.nectarlabs.dev"
+        domain = (self.tenant.custom_domain if self.tenant.use_custom_domain else None) or f"{self.tenant.subdomain}.nectarlabs.dev"
         self.cell(0, 10, f'Página {self.page_no()} | Generado digitalmente en {domain}', align='C')
 
 def generate_booking_contract_pdf(contract):
@@ -192,7 +192,7 @@ def send_booking_contract_emails(contract):
             client_subject = f"✨ Propuesta de Contrato de Booking - {tenant.name}"
             # Sign URL on frontend
             sign_url = f"{settings.FRONTEND_URL}/bookings/sign/{contract.id}"
-            if tenant.custom_domain:
+            if tenant.use_custom_domain and tenant.custom_domain:
                 sign_url = f"http://{tenant.custom_domain}/bookings/sign/{contract.id}"
             
             client_context = {

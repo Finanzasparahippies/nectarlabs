@@ -17,6 +17,7 @@ interface Tenant {
   api_key: string;
   allowed_origins: string;
   custom_domain: string | null;
+  use_custom_domain: boolean;
   theme_color: string;
   accent_color: string;
   bg_color: string;
@@ -92,6 +93,7 @@ export default function TenantSettingsPage() {
   const [editName, setEditName] = useState('');
   const [editSubdomain, setEditSubdomain] = useState('');
   const [editCustomDomain, setEditCustomDomain] = useState('');
+  const [editUseCustomDomain, setEditUseCustomDomain] = useState(false);
   const [editThemeColor, setEditThemeColor] = useState('#C68A1E');
   const [editAccentColor, setEditAccentColor] = useState('#10B981');
   const [editBgColor, setEditBgColor] = useState('#020403');
@@ -135,6 +137,7 @@ export default function TenantSettingsPage() {
     editName,
     editSubdomain,
     editCustomDomain,
+    editUseCustomDomain,
     editThemeColor,
     editAccentColor,
     editBgColor,
@@ -164,7 +167,7 @@ export default function TenantSettingsPage() {
   useEffect(() => {
     formStateRef.current = getFormSnapshot();
   }, [
-    editName, editSubdomain, editCustomDomain, editThemeColor, editAccentColor, editBgColor, editCardBgColor, editTextColor, editBorderColor,
+    editName, editSubdomain, editCustomDomain, editUseCustomDomain, editThemeColor, editAccentColor, editBgColor, editCardBgColor, editTextColor, editBorderColor,
     editThemeColorLight, editAccentColorLight, editBgColorLight, editCardBgColorLight, editTextColorLight, editBorderColorLight,
     editPollenActive, editPollenIcon, editPollenColor, editPollenCount, editPollenBlur,
     editLogoUrl, editWelcomeMessage, editPortalTitle, editFooterText, editRequireCustomerInfo, editAllowedOrigins, editInvoicingMode
@@ -189,6 +192,7 @@ export default function TenantSettingsPage() {
       setEditName(previousState.editName);
       setEditSubdomain(previousState.editSubdomain);
       setEditCustomDomain(previousState.editCustomDomain);
+      setEditUseCustomDomain(previousState.editUseCustomDomain);
       setEditThemeColor(previousState.editThemeColor);
       setEditAccentColor(previousState.editAccentColor);
       setEditBgColor(previousState.editBgColor);
@@ -317,6 +321,7 @@ export default function TenantSettingsPage() {
     setEditName(tenant.name);
     setEditSubdomain(tenant.subdomain);
     setEditCustomDomain(tenant.custom_domain || '');
+    setEditUseCustomDomain(tenant.use_custom_domain || false);
     setEditThemeColor(tenant.theme_color || '#C68A1E');
     setEditAccentColor(tenant.accent_color || '#10B981');
     setEditBgColor(tenant.bg_color || '#020403');
@@ -395,6 +400,7 @@ export default function TenantSettingsPage() {
       formData.append('name', editName.trim());
       formData.append('subdomain', editSubdomain.trim().toLowerCase());
       formData.append('custom_domain', editCustomDomain.trim() || '');
+      formData.append('use_custom_domain', String(editUseCustomDomain));
       formData.append('theme_color', editThemeColor);
       formData.append('accent_color', editAccentColor);
       formData.append('bg_color', editBgColor);
@@ -869,61 +875,187 @@ export default function TenantSettingsPage() {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-card-border">
-                      <div className="space-y-1">
-                        <label className="text-[9px] font-black uppercase tracking-widest text-foreground/40">Subdominio del Negocio</label>
-                        <div className="flex items-center bg-background border border-card-border rounded-xl px-4 py-3 focus-within:border-nectar-gold transition-all">
-                          <input
-                            type="text"
-                            value={editSubdomain}
-                            onFocus={pushToHistory}
-                            onChange={(e) => setEditSubdomain(e.target.value)}
-                            required
-                            className="flex-1 bg-transparent text-xs text-foreground focus:outline-none"
-                          />
-                          <span className="text-[10px] font-bold text-nectar-gold pl-2">.nectarlabs.dev</span>
+                    {/* Choice of Domain Type */}
+                    <div className="pt-4 border-t border-card-border space-y-6">
+                      <div className="space-y-2">
+                        <label className="text-[9px] font-black uppercase tracking-widest text-foreground/40">Tipo de Dominio Preferido</label>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          {/* Option 1: Nectarlabs Subdomain */}
+                          <div 
+                            onClick={() => {
+                              pushToHistory();
+                              setEditUseCustomDomain(false);
+                            }}
+                            className={`p-5 rounded-2xl border transition-all duration-300 cursor-pointer flex flex-col gap-2 relative overflow-hidden select-none ${
+                              !editUseCustomDomain 
+                                ? 'bg-nectar-gold/5 border-nectar-gold shadow-md' 
+                                : 'bg-background border-card-border hover:border-foreground/30'
+                            }`}
+                          >
+                            <div className="flex justify-between items-center">
+                              <span className="text-xs font-black uppercase tracking-wider text-foreground">Subdominio Nectar Labs</span>
+                              <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                                !editUseCustomDomain ? 'border-nectar-gold bg-nectar-gold' : 'border-card-border'
+                              }`}>
+                                {!editUseCustomDomain && <div className="w-1.5 h-1.5 rounded-full bg-background"></div>}
+                              </div>
+                            </div>
+                            <p className="text-[9px] text-foreground/50 uppercase leading-relaxed">
+                              Activa un subdominio instantáneo bajo nectarlabs.dev sin configuraciones extras.
+                            </p>
+                          </div>
+
+                          {/* Option 2: Custom Domain */}
+                          <div 
+                            onClick={() => {
+                              pushToHistory();
+                              setEditUseCustomDomain(true);
+                            }}
+                            className={`p-5 rounded-2xl border transition-all duration-300 cursor-pointer flex flex-col gap-2 relative overflow-hidden select-none ${
+                              editUseCustomDomain 
+                                ? 'bg-nectar-gold/5 border-nectar-gold shadow-md' 
+                                : 'bg-background border-card-border hover:border-foreground/30'
+                            }`}
+                          >
+                            <div className="flex justify-between items-center">
+                              <span className="text-xs font-black uppercase tracking-wider text-foreground">Dominio Personalizado</span>
+                              <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                                editUseCustomDomain ? 'border-nectar-gold bg-nectar-gold' : 'border-card-border'
+                              }`}>
+                                {editUseCustomDomain && <div className="w-1.5 h-1.5 rounded-full bg-background"></div>}
+                              </div>
+                            </div>
+                            <p className="text-[9px] text-foreground/50 uppercase leading-relaxed">
+                              Usa tu propio dominio (ej. mi-tienda.com) apuntando tus registros DNS (CNAME).
+                            </p>
+                          </div>
                         </div>
                       </div>
 
-                      <div className="space-y-1">
-                        <label className="text-[9px] font-black uppercase tracking-widest text-foreground/40">Dominio Personalizado (CNAME Mapping)</label>
-                        <input
-                          type="text"
-                          value={editCustomDomain}
-                          onFocus={pushToHistory}
-                          onChange={(e) => setEditCustomDomain(e.target.value)}
-                          placeholder="Ej. tienda.minegocio.com"
-                          className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-foreground focus:outline-none focus:border-nectar-gold transition-all"
-                        />
-                        <p className="text-[8px] text-foreground/30 uppercase mt-1">
-                          Apunta tu CNAME en tu proveedor de DNS hacia <span className="text-nectar-gold">nectarlabs.dev</span>.
-                        </p>
+                      {/* Domain Config Area */}
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 pt-4 border-t border-card-border/50">
+                        {/* Left Column: Input Config */}
+                        <div className="space-y-6">
+                          {/* Subdomain Input */}
+                          <div className={`space-y-1 transition-opacity duration-300 ${editUseCustomDomain ? 'opacity-50' : 'opacity-100'}`}>
+                            <label className="text-[9px] font-black uppercase tracking-widest text-foreground/40">Subdominio del Negocio</label>
+                            <div className="flex items-center bg-background border border-card-border rounded-xl px-4 py-3 focus-within:border-nectar-gold transition-all">
+                              <input
+                                type="text"
+                                value={editSubdomain}
+                                onFocus={pushToHistory}
+                                onChange={(e) => setEditSubdomain(e.target.value)}
+                                required
+                                disabled={editUseCustomDomain}
+                                className="flex-1 bg-transparent text-xs text-foreground focus:outline-none disabled:cursor-not-allowed"
+                              />
+                              <span className="text-[10px] font-bold text-nectar-gold pl-2">.nectarlabs.dev</span>
+                            </div>
+                          </div>
 
-                        {editCustomDomain.trim() && (
-                          <div className="mt-3 space-y-3">
-                            <button
-                              type="button"
-                              onClick={handleValidateDomain}
-                              disabled={isValidatingDomain}
-                              className="px-4 py-2 bg-foreground/5 hover:bg-foreground/10 border border-card-border text-foreground rounded-lg text-[9px] font-black uppercase tracking-wider transition-all disabled:opacity-50"
-                            >
-                              {isValidatingDomain ? 'Validando...' : 'Verificar DNS'}
-                            </button>
-                            {domainValidationResult && (
-                              <div
-                                className={`p-3 rounded-lg border text-[10px] ${domainValidationResult.is_valid
-                                    ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
-                                    : 'bg-red-500/10 border-red-500/30 text-red-400'
-                                  }`}
-                              >
-                                <p className="font-bold">
-                                  {domainValidationResult.is_valid ? '✓ DNS Correcto' : '✗ Configuración DNS incompleta'}
-                                </p>
-                                <p className="mt-1 opacity-90">{domainValidationResult.message}</p>
+                          {/* Custom Domain Input */}
+                          <div className={`space-y-1 transition-all duration-300 ${!editUseCustomDomain ? 'opacity-40 pointer-events-none' : 'opacity-100'}`}>
+                            <label className="text-[9px] font-black uppercase tracking-widest text-foreground/40">Dominio Personalizado (CNAME Mapping)</label>
+                            <input
+                              type="text"
+                              value={editCustomDomain}
+                              onFocus={pushToHistory}
+                              onChange={(e) => setEditCustomDomain(e.target.value)}
+                              disabled={!editUseCustomDomain}
+                              placeholder="Ej. tienda.minegocio.com"
+                              className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-foreground focus:outline-none focus:border-nectar-gold transition-all disabled:cursor-not-allowed"
+                            />
+                            <p className="text-[8px] text-foreground/30 uppercase mt-1">
+                              Ingresa el dominio sin http:// o https://
+                            </p>
+
+                            {editCustomDomain.trim() && editUseCustomDomain && (
+                              <div className="mt-4 space-y-3">
+                                <button
+                                  type="button"
+                                  onClick={handleValidateDomain}
+                                  disabled={isValidatingDomain}
+                                  className="px-4 py-2 bg-foreground/5 hover:bg-foreground/10 border border-card-border text-foreground rounded-lg text-[9px] font-black uppercase tracking-wider transition-all disabled:opacity-50 cursor-pointer"
+                                >
+                                  {isValidatingDomain ? 'Validando...' : 'Verificar DNS'}
+                                </button>
+                                {domainValidationResult && (
+                                  <div
+                                    className={`p-3 rounded-lg border text-[10px] ${domainValidationResult.is_valid
+                                        ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                                        : 'bg-red-500/10 border-red-500/30 text-red-400'
+                                      }`}
+                                  >
+                                    <p className="font-bold">
+                                      {domainValidationResult.is_valid ? '✓ DNS Correcto' : '✗ Configuración DNS incompleta'}
+                                    </p>
+                                    <p className="mt-1 opacity-90">{domainValidationResult.message}</p>
+                                  </div>
+                                )}
                               </div>
                             )}
                           </div>
-                        )}
+                        </div>
+
+                        {/* Right Column: Step-by-Step DNS Guide (Only highlighted when Custom Domain is chosen) */}
+                        <div className={`transition-all duration-500 ${!editUseCustomDomain ? 'opacity-30 pointer-events-none' : 'opacity-100'}`}>
+                          <div className="p-6 rounded-2xl bg-foreground/[0.02] border border-card-border/80 space-y-4">
+                            <h5 className="text-[10px] font-black uppercase tracking-widest text-nectar-gold flex items-center gap-1.5">
+                              <span>📋 Guía de Configuración DNS (Paso a Paso)</span>
+                            </h5>
+                            <div className="space-y-4 text-[10px] text-foreground/75 leading-relaxed">
+                              {/* Step 1 */}
+                              <div className="flex gap-3">
+                                <span className="flex items-center justify-center w-5 h-5 rounded-full bg-nectar-gold/10 text-nectar-gold font-black shrink-0 text-[9px]">1</span>
+                                <div className="space-y-1">
+                                  <p className="font-black uppercase tracking-wider text-foreground">Configurar en tu Proveedor de Dominio (DNS Externo)</p>
+                                  <p className="text-[9px] text-foreground/50 uppercase leading-normal">
+                                    Inicia sesión en tu proveedor de dominio (Cloudflare, GoDaddy, Namecheap, etc.) y agrega un registro de tipo <strong className="text-foreground">CNAME</strong>:
+                                  </p>
+                                  <div className="mt-2 p-3 rounded-xl bg-background border border-card-border/80 font-mono text-[9px] space-y-1 select-all relative group/copy">
+                                    <div><span className="text-foreground/40 font-bold">Tipo:</span> CNAME</div>
+                                    <div><span className="text-foreground/40 font-bold">Nombre / Host:</span> tienda <span className="text-foreground/30 font-normal">(o tu subdominio de preferencia)</span></div>
+                                    <div className="flex justify-between items-center">
+                                      <div><span className="text-foreground/40 font-bold">Valor / Destino:</span> <span className="text-nectar-gold font-bold">nectarlabs.dev</span></div>
+                                      <button 
+                                        type="button"
+                                        onClick={() => {
+                                          navigator.clipboard.writeText("nectarlabs.dev");
+                                          showToast("Destino copiado al portapapeles", "info");
+                                        }}
+                                        className="text-[8px] font-black uppercase tracking-widest text-nectar-gold bg-nectar-gold/10 border border-nectar-gold/25 px-2 py-1 rounded hover:bg-nectar-gold hover:text-background transition-all cursor-pointer"
+                                      >
+                                        Copiar
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Step 2 */}
+                              <div className="flex gap-3">
+                                <span className="flex items-center justify-center w-5 h-5 rounded-full bg-nectar-gold/10 text-nectar-gold font-black shrink-0 text-[9px]">2</span>
+                                <div className="space-y-1">
+                                  <p className="font-black uppercase tracking-wider text-foreground">Registrar en Nectar Labs (Dentro de Nectarlabs)</p>
+                                  <p className="text-[9px] text-foreground/50 uppercase leading-normal">
+                                    Ingresa tu dominio completo en el campo de la izquierda y haz clic en Guardar Configuración al final de la página.
+                                  </p>
+                                </div>
+                              </div>
+
+                              {/* Step 3 */}
+                              <div className="flex gap-3">
+                                <span className="flex items-center justify-center w-5 h-5 rounded-full bg-nectar-gold/10 text-nectar-gold font-black shrink-0 text-[9px]">3</span>
+                                <div className="space-y-1">
+                                  <p className="font-black uppercase tracking-wider text-foreground">Validación de Registros y SSL</p>
+                                  <p className="text-[9px] text-foreground/50 uppercase leading-normal">
+                                    Haz clic en <strong className="text-foreground">Verificar DNS</strong>. Nuestro servidor validará que apunte correctamente y aprovisionará el certificado SSL automático.
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
 

@@ -74,7 +74,7 @@ class SubscribeView(APIView):
         frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:3000')
         if not tenant:
             return frontend_url
-        if tenant.custom_domain:
+        if tenant.use_custom_domain and tenant.custom_domain:
             if tenant.custom_domain.startswith(('http://', 'https://')):
                 return tenant.custom_domain
             return f"https://{tenant.custom_domain}"
@@ -189,7 +189,7 @@ class SendCampaignView(APIView):
         frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:3000')
         tenant_url = frontend_url
         if tenant:
-            if tenant.custom_domain:
+            if tenant.use_custom_domain and tenant.custom_domain:
                 tenant_url = tenant.custom_domain if tenant.custom_domain.startswith(('http://', 'https://')) else f"https://{tenant.custom_domain}"
             else:
                 from urllib.parse import urlparse, urlunparse

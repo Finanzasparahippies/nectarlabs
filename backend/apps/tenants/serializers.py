@@ -21,7 +21,7 @@ class TenantSerializer(serializers.ModelSerializer):
         model = Tenant
         fields = [
             'id', 'name', 'subdomain', 'owner', 'owner_email', 'api_key', 
-            'allowed_origins', 'custom_domain', 'welcome_message', 'require_customer_info',
+            'allowed_origins', 'custom_domain', 'use_custom_domain', 'welcome_message', 'require_customer_info',
             'logo', 'logo_url', 'portal_title', 'footer_text', 'is_active', 'created_at', 'updated_at',
             'active_addons', 'stamp_balance', 'newsletter_plan', 'newsletter_sent_this_month', 'newsletter_extra_credits',
             'invoicing_mode', 'has_active_plan_contract', 'is_addons_only',
@@ -95,7 +95,7 @@ class TenantPublicSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tenant
         fields = [
-            'id', 'name', 'subdomain', 'logo_url', 
+            'id', 'name', 'subdomain', 'custom_domain', 'use_custom_domain', 'logo_url', 
             'welcome_message', 'require_customer_info', 'active_addons',
             'portal_title', 'footer_text', 'has_active_plan_contract', 'is_addons_only',
             'is_active', 'owner',

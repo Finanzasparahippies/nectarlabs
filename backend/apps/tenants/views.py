@@ -107,7 +107,7 @@ def public_config(request):
         tenant = Tenant.objects.filter(subdomain=subdomain.lower()).first()
     elif host:
         # Check custom domain first
-        tenant = Tenant.objects.filter(custom_domain=host.lower()).first()
+        tenant = Tenant.objects.filter(custom_domain=host.lower(), use_custom_domain=True).first()
         
         # If not found and it's a *.nectarlabs.dev or staging.nectarlabs.dev subdomain, parse it
         if not tenant:

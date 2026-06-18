@@ -1952,7 +1952,7 @@ class ShopCheckoutView(APIView):
             )
 
         frontend_url = settings.FRONTEND_URL
-        if tenant.custom_domain:
+        if tenant.use_custom_domain and tenant.custom_domain:
             base_url = tenant.custom_domain if tenant.custom_domain.startswith(('http://', 'https://')) else f"https://{tenant.custom_domain}"
         else:
             from urllib.parse import urlparse, urlunparse

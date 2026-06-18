@@ -8,6 +8,7 @@ interface Tenant {
   name: string;
   subdomain: string;
   custom_domain: string | null;
+  use_custom_domain: boolean;
   logo_url: string | null;
   theme_color?: string;
   accent_color?: string;
@@ -174,7 +175,7 @@ export default function PartnersShowcase() {
                 name: t.name,
                 category: getPremiumCategory(t.name),
                 description: getCustomDesc(t.name),
-                domain: t.custom_domain || `${t.subdomain}.nectarlabs.dev`,
+                domain: (t.use_custom_domain && t.custom_domain) ? t.custom_domain : `${t.subdomain}.nectarlabs.dev`,
                 accentColor: accentColor,
                 logo: logoNode,
               };

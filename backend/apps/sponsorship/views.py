@@ -182,8 +182,8 @@ class SponsorshipViewSet(viewsets.ModelViewSet):
         if not tenant:
             return Response({'error': 'Se requiere especificar un tenant válido.'}, status=400)
 
-        success_url = request.data.get('success_url', f"http://{tenant.custom_domain or f'{tenant.subdomain}.nectarlabs.localhost'}/success")
-        cancel_url = request.data.get('cancel_url', f"http://{tenant.custom_domain or f'{tenant.subdomain}.nectarlabs.localhost'}/cancel")
+        success_url = request.data.get('success_url', f"http://{(tenant.custom_domain if tenant.use_custom_domain else None) or f'{tenant.subdomain}.nectarlabs.localhost'}/success")
+        cancel_url = request.data.get('cancel_url', f"http://{(tenant.custom_domain if tenant.use_custom_domain else None) or f'{tenant.subdomain}.nectarlabs.localhost'}/cancel")
 
         try:
             tier = SponsorshipTier.objects.get(id=tier_id, tenant=tenant)

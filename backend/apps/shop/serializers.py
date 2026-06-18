@@ -72,7 +72,7 @@ class ContractSerializer(serializers.ModelSerializer):
 
     def get_tenant_custom_domain(self, obj):
         tenant = obj.user.owned_tenants.first()
-        return tenant.custom_domain if (tenant and tenant.custom_domain) else None
+        return tenant.custom_domain if (tenant and tenant.use_custom_domain and tenant.custom_domain) else None
 
 class PaymentInstallmentSerializer(serializers.ModelSerializer):
     client_name = serializers.CharField(source='contract.full_name', read_only=True)
