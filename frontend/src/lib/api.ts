@@ -40,9 +40,25 @@ export async function fetcher(endpoint: string, options: FetcherOptions = {}) {
   });
 
 
+export function getMainDomainUrl(path: string): string {
+  if (typeof window === 'undefined') return path;
+  const host = window.location.host;
+  let mainDomain = 'nectarlabs.dev';
+  if (host.includes('staging.nectarlabs.dev')) {
+    mainDomain = 'staging.nectarlabs.dev';
+  } else if (host.includes('nectarlabs.dev')) {
+    mainDomain = 'nectarlabs.dev';
+  } else if (host.includes('localhost')) {
+    mainDomain = host.includes(':3002') ? 'localhost:3002' : 'localhost:3000';
+  } else if (host.includes('127.0.0.1')) {
+    mainDomain = host.includes(':3002') ? '127.0.0.1:3002' : '127.0.0.1:3000';
+  }
+  return `${window.location.protocol}//${mainDomain}${path.startsWith('/') ? path : '/' + path}`;
+}
+
   if (res.status === 401 && !isPublic && typeof window !== 'undefined') {
     localStorage.clear();
-    window.location.href = '/login';
+    window.location.href = getMainDomainUrl('/login');
     throw new Error("Session expired. Please login again.");
   }
 

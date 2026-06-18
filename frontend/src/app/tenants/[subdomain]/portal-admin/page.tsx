@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { fetcher } from '@/lib/api';
+import { fetcher, getMainDomainUrl } from '@/lib/api';
 import Toast from '@/components/ui/Toast';
 import ThemeToggle from '@/components/ThemeToggle';
 import ConfirmModal from '@/components/ui/ConfirmModal';
@@ -1086,7 +1086,7 @@ export default function TenantAdminPage() {
           No tienes permisos para administrar este portal. Debes iniciar sesión como el propietario del Tenant o administrador del sistema.
         </p>
         <button
-          onClick={() => router.push('/login')}
+          onClick={() => window.location.href = getMainDomainUrl('/login')}
           className="mt-8 px-8 py-3.5 bg-nectar-gold text-background rounded-full text-xs font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-lg shadow-nectar-gold/25 font-bold"
         >
           Iniciar Sesión

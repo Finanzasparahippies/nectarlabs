@@ -3,7 +3,7 @@
 import React, { useEffect, useState, Suspense } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { fetcher } from '@/lib/api';
+import { fetcher, getMainDomainUrl } from '@/lib/api';
 import ThemeToggle from './ThemeToggle';
 
 interface Contract {
@@ -128,7 +128,7 @@ function DashboardSidebarContent() {
 
   const handleLogout = () => {
     localStorage.clear();
-    window.location.href = '/login';
+    window.location.href = getMainDomainUrl('/login');
   };
 
   const handleScrollToPayment = (e: React.MouseEvent) => {
