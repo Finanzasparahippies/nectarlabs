@@ -815,6 +815,20 @@ export default function TenantAdminPage() {
     }
   }, [rawSubdomain]);
 
+  // Extract token from query parameter if present (SSO between domains)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const token = urlParams.get('token');
+      if (token) {
+        localStorage.setItem('token', token);
+        // Remove token from URL bar for security and clean appearance
+        const newUrl = window.location.pathname + window.location.search.replace(/[?&]token=[^&]+/, '').replace(/^&/, '?').replace(/\?$/, '');
+        window.history.replaceState({}, document.title, newUrl);
+      }
+    }
+  }, []);
+
   // Load and check credentials
   useEffect(() => {
     if (!subdomain) return;
