@@ -48,7 +48,6 @@ router.register(r'billing/invoices', InvoiceViewSet, basename='billing-invoice')
 from django.conf import settings
 
 from apps.users.views import RegisterView, VerifyEmailView, ConfirmEmailView
-from apps.newsletter.views import SubscribeView, UnsubscribeView, SendCampaignView
 from apps.dashboard.views import BusinessStatsView
 from apps.shop.views import stripe_webhook, facturapi_webhook
 
@@ -64,9 +63,7 @@ urlpatterns = [
     path('api/sponsorship/', include('apps.sponsorship.urls')),
     path('api/performance/', include('apps.performance.urls')),
     path('api/register/', RegisterView.as_view(), name='register'),
-    path('api/newsletter/subscribe/', SubscribeView.as_view(), name='newsletter_subscribe'),
-    path('api/newsletter/unsubscribe/', UnsubscribeView.as_view(), name='newsletter_unsubscribe'),
-    path('api/newsletter/send-campaign/', SendCampaignView.as_view(), name='newsletter_send_campaign'),
+    path('api/newsletter/', include('apps.newsletter.urls')),
     path('api/dashboard/business-stats/', BusinessStatsView.as_view(), name='business_stats'),
     path('api/token/', MyTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),

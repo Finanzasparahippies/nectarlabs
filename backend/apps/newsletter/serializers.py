@@ -1,0 +1,62 @@
+from rest_framework import serializers
+from .models import Subscriber, MarketingList, EmailCampaign, CampaignTemplateImage
+
+class SubscriberSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Subscriber
+        fields = '__all__'
+
+
+class MarketingListSerializer(serializers.ModelSerializer):
+    subscriber_count = serializers.IntegerField(source='subscribers.count', read_only=True)
+
+    class Meta:
+        model = MarketingList
+        fields = '__all__'
+
+
+class EmailCampaignSerializer(serializers.ModelSerializer):
+    marketing_list_name = serializers.ReadOnlyField(source='marketing_list.name')
+
+    class Meta:
+        model = EmailCampaign
+        fields = '__all__'
+
+    def to_internal_value(self, data):
+        """Parse JSON fields that may arrive as stringified JSON (e.g., from FormData).
+        Provide defaults if parsing fails.
+        """
+        import json
+        from django.http import QueryDict
+
+        if isinstance(data, QueryDict):
+            mutable_data = data.dict()
+        else:
+            mutable_data = data.copy() if hasattr(data, "copy") else dict(data)
+
+        json_fields = ["ctas", "image_style", "custom_styles"]
+        for field in json_fields:
+            if field in mutable_data:
+                val = mutable_data[field]
+                if isinstance(val, str):
+                    try:
+                        mutable_data[field] = json.loads(val)
+                    except json.JSONDecodeError:
+                        # Provide sensible defaults when parsing fails
+                        mutable_data[field] = [] if field == "ctas" else {}
+                elif val is None or val == "":
+                    mutable_data[field] = [] if field == "ctas" else {}
+
+        # Handle clearing images
+        if "bg_image" in mutable_data and mutable_data["bg_image"] in ("null", ""):
+            mutable_data["bg_image"] = None
+        if "image" in mutable_data and mutable_data["image"] in ("null", ""):
+            mutable_data["image"] = None
+
+        return super().to_internal_value(mutable_data)
+
+
+class CampaignTemplateImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CampaignTemplateImage
+        fields = '__all__'

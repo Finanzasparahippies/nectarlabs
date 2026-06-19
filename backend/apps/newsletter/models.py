@@ -7,6 +7,9 @@ from django.conf import settings
 class Subscriber(models.Model):
     tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, related_name='subscribers', null=True, blank=True)
     email = models.EmailField()
+    name = models.CharField(max_length=255, blank=True, default='')
+    tags = models.TextField(blank=True, default='')
+    is_premium = models.BooleanField(default=False)
     token = models.UUIDField(default=uuid.uuid4, editable=False)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -16,6 +19,7 @@ class Subscriber(models.Model):
 
     def __str__(self):
         return f"{self.email} ({self.tenant.subdomain if self.tenant else 'No Tenant'})"
+
 
 
 from apps.tenants.utils import get_tenant_email_connection, get_platform_sender
@@ -153,6 +157,83 @@ def send_newsletter_email(subject, template_name, context, recipient_list, tenan
         logger.error(f"All email providers failed to send email to {recipients_log}")
         raise last_error
     return False
+
+
+class MarketingList(models.Model):
+    tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, related_name='marketing_lists', null=True, blank=True)
+    name = models.CharField(max_length=255)
+    description = models.TextField(blank=True, default='')
+    slug = models.SlugField(blank=True)
+    subscribers = models.ManyToManyField(Subscriber, related_name='marketing_lists', blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            from django.utils.text import slugify
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.name} ({self.tenant.subdomain if self.tenant else 'No Tenant'})"
+
+
+class EmailCampaign(models.Model):
+    TEMPLATE_CHOICES = [
+        ('minimalist', 'Minimalist Carbon'),
+        ('moss', 'Moss Green'),
+        ('cosmic', 'Cosmic Night'),
+        ('glow', 'Amber Glow'),
+        ('mist', 'Mystic Mist'),
+    ]
+
+    tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, related_name='campaigns', null=True, blank=True)
+    marketing_list = models.ForeignKey(MarketingList, on_delete=models.SET_NULL, null=True, blank=True, related_name='campaigns')
+    subject = models.CharField(max_length=255)
+    content = models.TextField()
+    template_type = models.CharField(max_length=50, choices=TEMPLATE_CHOICES, default='minimalist')
+    image = models.ImageField(upload_to='campaigns/', null=True, blank=True)
+    
+    # Advanced background settings
+    bg_image = models.ImageField(upload_to='campaign_bg/', null=True, blank=True)
+    bg_opacity = models.FloatField(default=1.0)
+    bg_saturation = models.IntegerField(default=100)
+    bg_position = models.CharField(max_length=50, default='center')
+    
+    # Customizable CTA Button settings
+    cta_text = models.CharField(max_length=100, blank=True, default='')
+    cta_link = models.URLField(blank=True, default='')
+    
+    # JSONFields for customization
+    image_style = models.JSONField(default=dict, blank=True)
+    ctas = models.JSONField(default=list, blank=True)
+    custom_styles = models.JSONField(default=dict, blank=True)
+    
+    # Premium Typography settings
+    font_family = models.CharField(max_length=100, default='serif')
+    title_font_family = models.CharField(max_length=100, default='serif')
+    footer_font_family = models.CharField(max_length=100, default='serif')
+
+    # Custom Email Title and Footer
+    email_title = models.TextField(blank=True, default='')
+    footer_text = models.TextField(blank=True, default='')
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    sent_at = models.DateTimeField(null=True, blank=True)
+    is_sent = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"{self.subject} ({self.get_template_type_display()})"
+
+
+class CampaignTemplateImage(models.Model):
+    tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, related_name='campaign_template_images', null=True, blank=True)
+    image = models.ImageField(upload_to='campaign_templates/')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Template Image {self.id} ({self.created_at})"
+
 
 
 
