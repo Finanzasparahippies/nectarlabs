@@ -126,7 +126,6 @@ function DashboardPageOriginal() {
   const [plans, setPlans] = useState<any[]>([]);
   const [isStaff, setIsStaff] = useState(false);
   const [userRole, setUserRole] = useState('');
-  const [activeTab, setActiveTab] = useState<'overview' | 'business' | 'hire-plan' | 'billing-global' | 'marketing'>('overview');
   const [businessStats, setBusinessStats] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [updatingContractId, setUpdatingContractId] = useState<number | null>(null);
@@ -279,21 +278,13 @@ function DashboardPageOriginal() {
     });
   };
   const searchParams = useSearchParams();
+  const tabParam = searchParams.get('tab');
+  const activeTab: 'overview' | 'business' | 'hire-plan' | 'billing-global' | 'marketing' =
+    tabParam === 'business' || tabParam === 'hire-plan' || tabParam === 'billing-global' || tabParam === 'marketing'
+      ? tabParam
+      : 'overview';
 
   useEffect(() => {
-    const tab = searchParams.get('tab');
-    if (tab === 'business') {
-      setActiveTab('business');
-    } else if (tab === 'hire-plan') {
-      setActiveTab('hire-plan');
-    } else if (tab === 'billing-global') {
-      setActiveTab('billing-global');
-    } else if (tab === 'marketing') {
-      setActiveTab('marketing');
-    } else {
-      setActiveTab('overview');
-    }
-
     const scroll = searchParams.get('scroll');
     if (scroll === 'payment-commitment') {
       const el = document.getElementById('payment-commitment-section');
@@ -566,12 +557,17 @@ function DashboardPageOriginal() {
 
     const loadData = async () => {
       try {
-        const staff = localStorage.getItem('is_staff') === 'true';
-        const role = localStorage.getItem('user_role') || '';
-
         // 1. Fetch user me first, quickly, to establish session details
         const meData = await fetcher('/users/me/').catch(() => null);
         setCurrentUser(meData);
+        if (meData) {
+          localStorage.setItem('user_role', meData.role || '');
+          localStorage.setItem('is_staff', meData.is_staff ? 'true' : 'false');
+          checkAuth();
+        }
+
+        const staff = localStorage.getItem('is_staff') === 'true';
+        const role = localStorage.getItem('user_role') || '';
 
         // 2. Set loading to false immediately to render the Dashboard Shell (Sidebar/Header)
         setLoading(false);
