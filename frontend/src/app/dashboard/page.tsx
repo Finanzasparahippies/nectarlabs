@@ -51,6 +51,7 @@ interface Contract {
   addons?: string[];
   plan?: any;
   tenant_custom_domain?: string | null;
+  tenant_use_custom_domain?: boolean;
 }
 
 interface Ticket {
