@@ -218,6 +218,17 @@ function DashboardSidebarContent() {
       )
     },
     {
+      label: 'Campañas de Marketing',
+      href: '/dashboard?tab=marketing',
+      show: isCEO,
+      active: pathname === '/dashboard' && activeTab === 'marketing',
+      icon: (active: boolean) => (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={`w-4 h-4 transition-all duration-300 group-hover:scale-110 ${active ? 'text-nectar-gold' : 'text-foreground/45 group-hover:text-foreground'}`}>
+          <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"></path>
+        </svg>
+      )
+    },
+    {
       label: 'Rendimiento',
       href: '/dashboard/performance',
       show: isCEO,

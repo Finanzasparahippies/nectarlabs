@@ -398,6 +398,8 @@ class SubscriberViewSet(viewsets.ModelViewSet):
         if user.is_staff or getattr(user, 'role', '') == 'ADMIN':
             tenant_id = self.request.query_params.get('tenant_id')
             if tenant_id:
+                if tenant_id in ['null', 'none']:
+                    return self.queryset.filter(tenant__isnull=True)
                 return self.queryset.filter(tenant_id=tenant_id)
             return self.queryset.all()
             
@@ -612,6 +614,8 @@ class MarketingListViewSet(viewsets.ModelViewSet):
         if user.is_staff or getattr(user, 'role', '') == 'ADMIN':
             tenant_id = self.request.query_params.get('tenant_id')
             if tenant_id:
+                if tenant_id in ['null', 'none']:
+                    return self.queryset.filter(tenant__isnull=True)
                 return self.queryset.filter(tenant_id=tenant_id)
             return self.queryset.all()
             
@@ -649,6 +653,8 @@ class EmailCampaignViewSet(viewsets.ModelViewSet):
         if user.is_staff or getattr(user, 'role', '') == 'ADMIN':
             tenant_id = self.request.query_params.get('tenant_id')
             if tenant_id:
+                if tenant_id in ['null', 'none']:
+                    return self.queryset.filter(tenant__isnull=True)
                 return self.queryset.filter(tenant_id=tenant_id)
             return self.queryset.all()
             
@@ -699,6 +705,8 @@ class CampaignTemplateImageViewSet(viewsets.ModelViewSet):
         if user.is_staff or getattr(user, 'role', '') == 'ADMIN':
             tenant_id = self.request.query_params.get('tenant_id')
             if tenant_id:
+                if tenant_id in ['null', 'none']:
+                    return self.queryset.filter(tenant__isnull=True)
                 return self.queryset.filter(tenant_id=tenant_id)
             return self.queryset.all()
             

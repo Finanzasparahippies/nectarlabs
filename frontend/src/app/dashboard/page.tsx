@@ -14,6 +14,7 @@ import Toast from '../../components/ui/Toast';
 import ConfirmModal from '../../components/ui/ConfirmModal';
 import ContactSupportModal from '../../components/dashboard/ContactSupportModal';
 import FacturapiManager from '../../components/dashboard/FacturapiManager';
+import MarketingManager from '../../components/dashboard/MarketingManager';
 
 interface Project {
   id: number;
@@ -125,7 +126,7 @@ function DashboardPageOriginal() {
   const [plans, setPlans] = useState<any[]>([]);
   const [isStaff, setIsStaff] = useState(false);
   const [userRole, setUserRole] = useState('');
-  const [activeTab, setActiveTab] = useState<'overview' | 'business' | 'hire-plan' | 'billing-global'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'business' | 'hire-plan' | 'billing-global' | 'marketing'>('overview');
   const [businessStats, setBusinessStats] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [updatingContractId, setUpdatingContractId] = useState<number | null>(null);
@@ -287,6 +288,8 @@ function DashboardPageOriginal() {
       setActiveTab('hire-plan');
     } else if (tab === 'billing-global') {
       setActiveTab('billing-global');
+    } else if (tab === 'marketing') {
+      setActiveTab('marketing');
     } else {
       setActiveTab('overview');
     }
@@ -1064,6 +1067,8 @@ function DashboardPageOriginal() {
             </div>
             <FacturapiManager primaryColor="#C68A1E" />
           </div>
+        ) : activeTab === 'marketing' && isCEO ? (
+          <MarketingManager primaryColor="#C68A1E" showToast={showToast} />
         ) : activeTab === 'business' && isCEO ? (
           <BusinessCommander stats={businessStats} installments={installments} setInstallments={setInstallments} />
         ) : activeTab === 'hire-plan' && isClient ? (
