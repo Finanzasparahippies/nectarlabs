@@ -230,6 +230,7 @@ export default function TenantAdminPage() {
   const [bgPosition, setBgPosition] = useState('center');
   const [ctaText, setCtaText] = useState('');
   const [ctaLink, setCtaLink] = useState('');
+  const [extraCtas, setExtraCtas] = useState<any[]>([]);
   const [fontFamily, setFontFamily] = useState('serif');
   const [titleFontFamily, setTitleFontFamily] = useState('serif');
   const [footerFontFamily, setFooterFontFamily] = useState('serif');
@@ -1234,6 +1235,7 @@ export default function TenantAdminPage() {
       bgPosition,
       ctaText,
       ctaLink,
+      extraCtas,
       fontFamily,
       titleFontFamily,
       footerFontFamily,
@@ -1305,6 +1307,7 @@ export default function TenantAdminPage() {
         setBgPosition(draft.bgPosition || 'center');
         setCtaText(draft.ctaText || '');
         setCtaLink(draft.ctaLink || '');
+        setExtraCtas(draft.extraCtas || []);
         setFontFamily(draft.fontFamily || 'serif');
         setTitleFontFamily(draft.titleFontFamily || 'serif');
         setFooterFontFamily(draft.footerFontFamily || 'serif');
@@ -1373,6 +1376,9 @@ export default function TenantAdminPage() {
     try {
       localStorage.removeItem('nectar_labs_campaign_draft');
       setHasDraft(false);
+      setCtaText('');
+      setCtaLink('');
+      setExtraCtas([]);
       showToast('Borrador descartado.', 'info');
     } catch (e) {
       console.error('Failed to discard draft:', e);
@@ -1402,6 +1408,7 @@ export default function TenantAdminPage() {
     bgPosition,
     ctaText,
     ctaLink,
+    extraCtas,
     fontFamily,
     titleFontFamily,
     footerFontFamily,
@@ -1483,6 +1490,32 @@ export default function TenantAdminPage() {
           bg_position: bgPosition,
           cta_text: ctaText.trim() || null,
           cta_link: ctaLink.trim() || null,
+          ctas: (() => {
+            const list = [];
+            if (ctaText.trim()) {
+              list.push({
+                text: ctaText.trim(),
+                link: ctaLink.trim(),
+                bg_color: (tenantConfig && tenantConfig.theme_color) || '#C68A1E',
+                text_color: '#000000',
+                radius: '10px',
+                is_full_width: false
+              });
+            }
+            extraCtas.forEach(btn => {
+              if (btn.text.trim()) {
+                list.push({
+                  text: btn.text.trim(),
+                  link: btn.link.trim(),
+                  bg_color: btn.bg_color || (tenantConfig && tenantConfig.theme_color) || '#C68A1E',
+                  text_color: btn.text_color || '#000000',
+                  radius: btn.radius || '10px',
+                  is_full_width: !!btn.is_full_width
+                });
+              }
+            });
+            return list;
+          })(),
           font_family: fontFamily,
           title_font_family: titleFontFamily,
           footer_font_family: footerFontFamily,
@@ -3993,7 +4026,7 @@ export default function TenantAdminPage() {
 
                 {/* CATEGORY 5: BUTTONS */}
                 {settingsTab === 'ctas' && (
-                  <div className="space-y-6">
+                  <div className="space-y-6 animate-in fade-in duration-300">
                     <div className="bg-white/[0.02] border border-white/5 p-5 rounded-[2rem] space-y-4">
                       <h4 className="text-[8.5px] font-black uppercase tracking-widest text-nectar-gold pb-1 border-b border-white/5">
                         Llamado a la Acción (CTA Principal)
@@ -4043,6 +4076,125 @@ export default function TenantAdminPage() {
                         </div>
                       </div>
                     </div>
+
+                    {/* Extra Buttons */}
+                    {extraCtas.map((btn, idx) => (
+                      <div key={idx} className="bg-white/[0.02] border border-white/5 p-5 rounded-[2rem] space-y-4 relative animate-fadeIn">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setExtraCtas(prev => prev.filter((_, i) => i !== idx));
+                          }}
+                          className="absolute top-4 right-4 text-red-500/60 hover:text-red-500 text-[8px] font-black uppercase tracking-widest cursor-pointer"
+                        >
+                          Eliminar Botón
+                        </button>
+                        <h4 className="text-[8.5px] font-black uppercase tracking-widest text-white/50 pb-1 border-b border-white/5 font-bold">
+                          Botón Adicional #{idx + 1}
+                        </h4>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-1.5">
+                            <label className="text-[7.5px] uppercase tracking-wider font-black text-white/50 block">Texto del Botón</label>
+                            <input
+                              type="text"
+                              required
+                              placeholder="ej: Visitar Catálogo"
+                              value={btn.text}
+                              onChange={(e) => {
+                                const newText = e.target.value;
+                                setExtraCtas(prev => prev.map((b, i) => i === idx ? { ...b, text: newText } : b));
+                              }}
+                              className="w-full border rounded-xl px-3 py-2.5 text-[9px] focus:outline-none focus:border-nectar-gold transition-all admin-input font-bold"
+                            />
+                          </div>
+                          <div className="space-y-1.5">
+                            <label className="text-[7.5px] uppercase tracking-wider font-black text-white/50 block">Enlace de Destino (URL)</label>
+                            <input
+                              type="url"
+                              required
+                              placeholder="https://..."
+                              value={btn.link}
+                              onChange={(e) => {
+                                const newLink = e.target.value;
+                                setExtraCtas(prev => prev.map((b, i) => i === idx ? { ...b, link: newLink } : b));
+                              }}
+                              className="w-full border rounded-xl px-3 py-2.5 text-[9px] focus:outline-none focus:border-nectar-gold transition-all admin-input font-bold"
+                            />
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-4 gap-3 pt-2">
+                          <div className="space-y-1">
+                            <label className="text-[7px] uppercase tracking-wider font-black text-white/40 block">Color de Fondo</label>
+                            <div className="flex gap-2 items-center">
+                              <input
+                                type="color"
+                                value={btn.bg_color || (tenantConfig && tenantConfig.theme_color) || '#C68A1E'}
+                                onChange={(e) => {
+                                  const newBg = e.target.value;
+                                  setExtraCtas(prev => prev.map((b, i) => i === idx ? { ...b, bg_color: newBg } : b));
+                                }}
+                                className="w-8 h-8 bg-transparent rounded cursor-pointer animate-none"
+                              />
+                              <span className="text-[8.5px] font-mono opacity-50">{btn.bg_color || (tenantConfig && tenantConfig.theme_color) || '#C68A1E'}</span>
+                            </div>
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-[7px] uppercase tracking-wider font-black text-white/40 block">Color de Texto</label>
+                            <div className="flex gap-2 items-center">
+                              <input
+                                type="color"
+                                value={btn.text_color || '#000000'}
+                                onChange={(e) => {
+                                  const newColor = e.target.value;
+                                  setExtraCtas(prev => prev.map((b, i) => i === idx ? { ...b, text_color: newColor } : b));
+                                }}
+                                className="w-8 h-8 bg-transparent rounded cursor-pointer animate-none"
+                              />
+                              <span className="text-[8.5px] font-mono opacity-50">{btn.text_color || '#000000'}</span>
+                            </div>
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-[7px] uppercase tracking-wider font-black text-white/40 block">Radio de Borde</label>
+                            <input
+                              type="text"
+                              value={btn.radius || '10px'}
+                              onChange={(e) => {
+                                const newRadius = e.target.value;
+                                setExtraCtas(prev => prev.map((b, i) => i === idx ? { ...b, radius: newRadius } : b));
+                              }}
+                              className="w-full border rounded-xl px-3 py-2.5 text-[9px] focus:outline-none focus:border-nectar-gold transition-all admin-input font-mono"
+                            />
+                          </div>
+                          <div className="space-y-1 flex flex-col justify-end pb-2">
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="checkbox"
+                                id={`btn-full-width-${idx}`}
+                                checked={!!btn.is_full_width}
+                                onChange={(e) => {
+                                  const newFull = e.target.checked;
+                                  setExtraCtas(prev => prev.map((b, i) => i === idx ? { ...b, is_full_width: newFull } : b));
+                                }}
+                                className="w-4 h-4 rounded border-white/10 accent-nectar-gold cursor-pointer"
+                              />
+                              <label htmlFor={`btn-full-width-${idx}`} className="text-[7.5px] uppercase tracking-wider font-black text-white/50 block select-none cursor-pointer">
+                                Ancho Completo
+                              </label>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setExtraCtas(prev => [...prev, { text: '', link: '', bg_color: (tenantConfig && tenantConfig.theme_color) || '#C68A1E', text_color: '#000000', radius: '10px', is_full_width: false }]);
+                      }}
+                      className="w-full py-4 border border-dashed border-white/10 hover:border-nectar-gold/60 text-white/50 hover:text-nectar-gold hover:bg-nectar-gold/[0.02] rounded-[2rem] text-[9px] font-black uppercase tracking-widest transition-all cursor-pointer text-center font-bold flex items-center justify-center gap-2"
+                    >
+                      <span>+ Añadir Otro Botón</span>
+                    </button>
                   </div>
                 )}
 
@@ -4303,27 +4455,55 @@ export default function TenantAdminPage() {
                           />
                         </div>
 
-                        {/* Main CTA Button */}
-                        {ctaText && (
+                        {/* Live CTAs Buttons */}
+                        {(ctaText || extraCtas.length > 0) && (
                           <div style={{ textAlign: (previewViewport === 'mobile' ? campCtaAlignMobile : previewViewport === 'tablet' ? campCtaAlignTablet : campCtaAlignment) as any, marginTop: campCtaMarginTop, marginBottom: campCtaMarginBottom }}>
-                            <a
-                              href={ctaLink || '#'}
-                              style={{
-                                backgroundColor: selectedTheme.accent,
-                                color: '#000000',
-                                padding: '10px 20px',
-                                borderRadius: '10px',
-                                fontSize: '10px',
-                                fontWeight: 'bold',
-                                textTransform: 'uppercase',
-                                letterSpacing: '1px',
-                                display: 'inline-block',
-                                boxShadow: '0 4px 10px rgba(0,0,0,0.3)'
-                              }}
-                              onClick={e => e.preventDefault()}
-                            >
-                              {ctaText}
-                            </a>
+                            {/* Primary CTA */}
+                            {ctaText && (
+                              <a
+                                href={ctaLink || '#'}
+                                style={{
+                                  backgroundColor: selectedTheme.accent,
+                                  color: '#000000',
+                                  padding: '10px 20px',
+                                  borderRadius: '10px',
+                                  fontSize: '10px',
+                                  fontWeight: 'bold',
+                                  textTransform: 'uppercase',
+                                  letterSpacing: '1px',
+                                  display: 'inline-block',
+                                  boxShadow: '0 4px 10px rgba(0,0,0,0.3)',
+                                  margin: '5px 10px'
+                                }}
+                                onClick={e => e.preventDefault()}
+                              >
+                                {ctaText}
+                              </a>
+                            )}
+                            {/* Extra CTAs */}
+                            {extraCtas.map((btn, idx) => (
+                              <a
+                                key={idx}
+                                href={btn.link || '#'}
+                                style={{
+                                  backgroundColor: btn.bg_color || selectedTheme.accent,
+                                  color: btn.text_color || '#000000',
+                                  padding: '10px 20px',
+                                  borderRadius: btn.radius || '10px',
+                                  fontSize: '10px',
+                                  fontWeight: 'bold',
+                                  textTransform: 'uppercase',
+                                  letterSpacing: '1px',
+                                  display: btn.is_full_width ? 'block' : 'inline-block',
+                                  boxShadow: '0 4px 10px rgba(0,0,0,0.3)',
+                                  margin: btn.is_full_width ? '10px auto' : '5px 10px',
+                                  textAlign: 'center'
+                                }}
+                                onClick={e => e.preventDefault()}
+                              >
+                                {btn.text}
+                              </a>
+                            ))}
                           </div>
                         )}
 
