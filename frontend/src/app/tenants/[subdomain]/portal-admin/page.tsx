@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { fetcher, getMainDomainUrl } from '@/lib/api';
 import Toast from '@/components/ui/Toast';
@@ -236,6 +236,73 @@ export default function TenantAdminPage() {
   const [emailTitle, setEmailTitle] = useState('');
   const [footerText, setFooterText] = useState('');
   const [imageUrl, setImageUrl] = useState('');
+
+  // Extra states for parity with ms-ambar:
+  const [templateImages, setTemplateImages] = useState<any[]>([]);
+  const [libraryUploadLoading, setLibraryUploadLoading] = useState(false);
+  const [settingsTab, setSettingsTab] = useState<'content' | 'theme' | 'cover' | 'sections' | 'ctas' | 'library'>('content');
+  const [editorActiveTab, setEditorActiveTab] = useState<'title' | 'body' | 'footer'>('body');
+  const [previewViewport, setPreviewViewport] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
+  const [isPreviewExpanded, setIsPreviewExpanded] = useState(false);
+  const [hasDraft, setHasDraft] = useState(false);
+
+  // Emojis Popovers
+  const [emojiPopoverTarget, setEmojiPopoverTarget] = useState<'subject' | 'editor' | null>(null);
+
+  // Custom alignments & styles (Title, Body, Footer)
+  const [campTitleTextColor, setCampTitleTextColor] = useState('#ffffff');
+  const [campTitleBgColor, setCampTitleBgColor] = useState('transparent');
+  const [campTitleBgImage, setCampTitleBgImage] = useState('');
+  const [campTitlePadding, setCampTitlePadding] = useState('0px');
+  const [campTitleRadius, setCampTitleRadius] = useState('0px');
+
+  const [campBodyTextColor, setCampBodyTextColor] = useState('');
+  const [campBodyBgColor, setCampBodyBgColor] = useState('transparent');
+  const [campBodyBgImage, setCampBodyBgImage] = useState('');
+  const [campBodyPadding, setCampBodyPadding] = useState('0px');
+  const [campBodyRadius, setCampBodyRadius] = useState('0px');
+  const [campBodyAlignment, setCampBodyAlignment] = useState('center');
+
+  const [campFooterTextColor, setCampFooterTextColor] = useState('');
+  const [campFooterBgColor, setCampFooterBgColor] = useState('transparent');
+  const [campFooterBgImage, setCampFooterBgImage] = useState('');
+  const [campFooterPadding, setCampFooterPadding] = useState('0px');
+  const [campFooterRadius, setCampFooterRadius] = useState('0px');
+
+  const [campCardMaxWidthDesktop, setCampCardMaxWidthDesktop] = useState('680px');
+  const [campCardPaddingDesktop, setCampCardPaddingDesktop] = useState('40px');
+  const [campCardPaddingTablet, setCampCardPaddingTablet] = useState('40px');
+  const [campCardPaddingMobile, setCampCardPaddingMobile] = useState('16px');
+
+  const [campTitleFontSizeDesktop, setCampTitleFontSizeDesktop] = useState('26px');
+  const [campTitleFontSizeTablet, setCampTitleFontSizeTablet] = useState('22px');
+  const [campTitleFontSizeMobile, setCampTitleFontSizeMobile] = useState('18px');
+
+  const [campBodyFontSizeDesktop, setCampBodyFontSizeDesktop] = useState('16px');
+  const [campBodyFontSizeTablet, setCampBodyFontSizeTablet] = useState('15px');
+  const [campBodyFontSizeMobile, setCampBodyFontSizeMobile] = useState('14px');
+  const [campBodyAlignmentTablet, setCampBodyAlignmentTablet] = useState('center');
+  const [campBodyAlignmentMobile, setCampBodyAlignmentMobile] = useState('center');
+
+  const [campImageWidth, setCampImageWidth] = useState('100%');
+  const [campImageAlign, setCampImageAlign] = useState('center');
+  const [campImageRadius, setCampImageRadius] = useState('20px');
+  const [campImageWidthTablet, setCampImageWidthTablet] = useState('100%');
+  const [campImageWidthMobile, setCampImageWidthMobile] = useState('100%');
+  const [campImageAlignTablet, setCampImageAlignTablet] = useState('center');
+  const [campImageAlignMobile, setCampImageAlignMobile] = useState('center');
+
+  const [campCtaAlignment, setCampCtaAlignment] = useState('center');
+  const [campCtaAlignTablet, setCampCtaAlignTablet] = useState('center');
+  const [campCtaAlignMobile, setCampCtaAlignMobile] = useState('center');
+  const [campCtaMarginTop, setCampCtaMarginTop] = useState('35px');
+  const [campCtaMarginBottom, setCampCtaMarginBottom] = useState('25px');
+  const [campCtas, setCampCtas] = useState<any[]>([]);
+
+  const [campTextMode, setCampTextMode] = useState<'poem' | 'letter'>('letter');
+
+  const campaignEditorRef = useRef<HTMLDivElement>(null);
+  const isDraftPending = useRef(false);
 
   // Handle URL query parameters for success/cancel redirects
   useEffect(() => {
@@ -890,6 +957,12 @@ export default function TenantAdminPage() {
           } catch (postErr) {
             console.error('Error fetching blog posts for campaigner:', postErr);
           }
+          try {
+            const imagesData = await fetcher('/newsletter/template-images/');
+            setTemplateImages(imagesData.results || imagesData || []);
+          } catch (imgErr) {
+            console.error('Error fetching template images:', imgErr);
+          }
         } else {
           setAuthorized(false);
         }
@@ -929,17 +1002,480 @@ export default function TenantAdminPage() {
     }
   };
 
+  const fetchTemplateImages = async () => {
+    try {
+      const imagesData = await fetcher('/newsletter/template-images/');
+      setTemplateImages(imagesData.results || imagesData || []);
+    } catch (err) {
+      console.error('Error loading template images:', err);
+    }
+  };
+
+  const handleTemplateImageUpload = async (file: File) => {
+    if (!file) return;
+    setLibraryUploadLoading(true);
+    const formData = new FormData();
+    formData.append('image', file);
+    try {
+      await fetcher('/newsletter/template-images/', {
+        method: 'POST',
+        body: formData,
+      });
+      await fetchTemplateImages();
+      showToast('Imagen subida con éxito a la biblioteca.', 'success');
+    } catch (err: any) {
+      console.error('Error uploading template image:', err);
+      showToast(err.message || 'Error al subir la imagen a la biblioteca.', 'error');
+    } finally {
+      setLibraryUploadLoading(false);
+    }
+  };
+
+  const handleTemplateImageDelete = async (id: number) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Eliminar Imagen',
+      message: '¿Estás seguro de que deseas eliminar esta imagen de la biblioteca?',
+      onConfirm: async () => {
+        setConfirmModal(null);
+        try {
+          await fetcher(`/newsletter/template-images/${id}/`, {
+            method: 'DELETE',
+          });
+          await fetchTemplateImages();
+          showToast('Imagen eliminada con éxito.', 'success');
+        } catch (err: any) {
+          console.error('Error deleting template image:', err);
+          showToast(err.message || 'Error al eliminar la imagen.', 'error');
+        }
+      }
+    });
+  };
+
+  const CURATED_EMOJIS = [
+    '😊', '😂', '🤣', '🥰', '😍', '😘', '😜', '🤔', '🙄', '😬', '😭', '😱', '🤫', '😴', '🤯', '🥳', '😇', '🤠', '🤡',
+    '❤️', '💖', '💗', '💓', '💞', '💕', '💘', '💔', '⭐', '🌟', '✨', '⚡', '🔥', '💥', '🌈', '🌊', '❄️', '🌀',
+    '🌹', '🌸', '🍃', '🍂', '🍁', '🍄', '🌵', '🐫', '🐪', '🏜️', '🌴', '🍷', '🕯️', '🎭', '🎨', '🎤', '🎧', '🎸', '🎹',
+    '🔮', '📜', '✍️', '✒️', '📖', '🎟️', '🛎️', '🗝️', '🔒', '🔓', '🖤', '👑', '💎', '🏆', '🎁', '🎈', '🎉', '🎊'
+  ];
+
+  const insertEmojiToSubject = (emoji: string) => {
+    const input = document.getElementById('camp-subject-input') as HTMLInputElement;
+    if (input) {
+      const start = input.selectionStart || 0;
+      const end = input.selectionEnd || 0;
+      const text = campaignSubject;
+      const newValue = text.substring(0, start) + emoji + text.substring(end);
+      setCampaignSubject(newValue);
+      setTimeout(() => {
+        input.focus();
+        input.setSelectionRange(start + emoji.length, start + emoji.length);
+      }, 10);
+    } else {
+      setCampaignSubject(campaignSubject + emoji);
+    }
+  };
+
+  const syncEditorState = () => {
+    if (campaignEditorRef.current) {
+      const html = campaignEditorRef.current.innerHTML;
+      if (editorActiveTab === 'body') setCampaignContent(html);
+      else if (editorActiveTab === 'title') setEmailTitle(html);
+      else if (editorActiveTab === 'footer') setFooterText(html);
+    }
+  };
+
+  const insertEmojiToEditor = (emoji: string) => {
+    if (campaignEditorRef.current) {
+      campaignEditorRef.current.focus();
+      const selection = window.getSelection();
+      if (selection && selection.rangeCount > 0) {
+        const range = selection.getRangeAt(0);
+        range.deleteContents();
+        const textNode = document.createTextNode(emoji);
+        range.insertNode(textNode);
+        range.setStartAfter(textNode);
+        range.setEndAfter(textNode);
+        selection.removeAllRanges();
+        selection.addRange(range);
+      } else {
+        campaignEditorRef.current.innerHTML += emoji;
+      }
+      const html = campaignEditorRef.current.innerHTML;
+      if (editorActiveTab === 'body') setCampaignContent(html);
+      else if (editorActiveTab === 'title') setEmailTitle(html);
+      else if (editorActiveTab === 'footer') setFooterText(html);
+    }
+  };
+
+  const executeCommand = (command: string, value: string = '') => {
+    if (typeof document !== 'undefined') {
+      document.execCommand(command, false, value);
+      campaignEditorRef.current?.focus();
+      if (campaignEditorRef.current) {
+        const html = campaignEditorRef.current.innerHTML;
+        if (editorActiveTab === 'body') setCampaignContent(html);
+        else if (editorActiveTab === 'title') setEmailTitle(html);
+        else if (editorActiveTab === 'footer') setFooterText(html);
+      }
+    }
+  };
+
+  const handleLinkInsert = () => {
+    const url = prompt('Ingresa la URL del enlace:');
+    if (url) {
+      executeCommand('createLink', url);
+    }
+  };
+
+  const handleImageInsert = () => {
+    const url = prompt('Ingresa la URL de la imagen:');
+    if (url) {
+      insertImageAtCursor(url);
+    }
+  };
+
+  const insertImageAtCursor = (imgUrl: string) => {
+    if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+      const imgHtml = `<img src="${imgUrl}" style="max-width:100%; height:auto; border-radius:12px; margin:15px auto; display:block; border:1px solid rgba(255,255,255,0.05);" />`;
+
+      if (settingsTab === 'content' && editorActiveTab === 'body' && campaignEditorRef.current) {
+        campaignEditorRef.current.focus();
+        const selection = window.getSelection();
+        if (selection && selection.rangeCount > 0) {
+          const range = selection.getRangeAt(0);
+          if (campaignEditorRef.current.contains(range.commonAncestorContainer)) {
+            const img = document.createElement('img');
+            img.src = imgUrl;
+            img.style.maxWidth = '100%';
+            img.style.height = 'auto';
+            img.style.borderRadius = '12px';
+            img.style.margin = '15px auto';
+            img.style.display = 'block';
+            img.style.border = '1px solid rgba(255,255,255,0.05)';
+
+            range.deleteContents();
+            range.insertNode(img);
+
+            range.collapse(false);
+            selection.removeAllRanges();
+            selection.addRange(range);
+
+            setCampaignContent(campaignEditorRef.current.innerHTML);
+            return;
+          }
+        }
+        campaignEditorRef.current.innerHTML += imgHtml;
+        setCampaignContent(campaignEditorRef.current.innerHTML);
+      } else {
+        syncEditorState();
+        setSettingsTab('content');
+        setEditorActiveTab('body');
+        setCampaignContent(prev => (prev || '') + imgHtml);
+      }
+    }
+  };
+
+  const handleEditorPaste = (e: React.ClipboardEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const text = e.clipboardData.getData('text/plain');
+    const html = text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/\r?\n/g, '<br/>');
+
+    if (typeof document !== 'undefined') {
+      if (document.queryCommandSupported('insertHTML')) {
+        document.execCommand('insertHTML', false, html);
+      } else {
+        const selection = window.getSelection();
+        if (!selection || !selection.rangeCount) return;
+        selection.deleteFromDocument();
+        const el = document.createElement('div');
+        el.innerHTML = html;
+        const frag = document.createDocumentFragment();
+        let node;
+        while ((node = el.firstChild)) {
+          frag.appendChild(node);
+        }
+        selection.getRangeAt(0).insertNode(frag);
+      }
+
+      if (campaignEditorRef.current) {
+        const newHtml = campaignEditorRef.current.innerHTML;
+        if (editorActiveTab === 'body') setCampaignContent(newHtml);
+        else if (editorActiveTab === 'title') setEmailTitle(newHtml);
+        else if (editorActiveTab === 'footer') setFooterText(newHtml);
+      }
+    }
+  };
+
+  const handleUseTemplateAsCover = (imgUrl: string) => {
+    setImageUrl(imgUrl);
+    showToast('Portada actualizada.', 'info');
+  };
+
+  const handleUseTemplateAsBg = (imgUrl: string) => {
+    setBgImageUrl(imgUrl);
+    showToast('Fondo general actualizado.', 'info');
+  };
+
+  // Draft features
+  const saveCampaignDraft = () => {
+    const draft = {
+      campaignSubject,
+      campaignTitle,
+      campaignContent,
+      templateType,
+      bgImageUrl,
+      bgOpacity,
+      bgSaturation,
+      bgPosition,
+      ctaText,
+      ctaLink,
+      fontFamily,
+      titleFontFamily,
+      footerFontFamily,
+      emailTitle,
+      footerText,
+      imageUrl,
+      campTitleTextColor,
+      campTitleBgColor,
+      campTitleBgImage,
+      campTitlePadding,
+      campTitleRadius,
+      campBodyTextColor,
+      campBodyBgColor,
+      campBodyBgImage,
+      campBodyPadding,
+      campBodyRadius,
+      campBodyAlignment,
+      campFooterTextColor,
+      campFooterBgColor,
+      campFooterBgImage,
+      campFooterPadding,
+      campFooterRadius,
+      campCardMaxWidthDesktop,
+      campCardPaddingDesktop,
+      campCardPaddingTablet,
+      campCardPaddingMobile,
+      campTitleFontSizeDesktop,
+      campTitleFontSizeTablet,
+      campTitleFontSizeMobile,
+      campBodyFontSizeDesktop,
+      campBodyFontSizeTablet,
+      campBodyFontSizeMobile,
+      campBodyAlignmentTablet,
+      campBodyAlignmentMobile,
+      campImageWidth,
+      campImageAlign,
+      campImageRadius,
+      campImageWidthTablet,
+      campImageWidthMobile,
+      campImageAlignTablet,
+      campImageAlignMobile,
+      campCtaAlignment,
+      campCtaAlignTablet,
+      campCtaAlignMobile,
+      campCtaMarginTop,
+      campCtaMarginBottom,
+      campTextMode
+    };
+    try {
+      localStorage.setItem('nectar_labs_campaign_draft', JSON.stringify(draft));
+      setHasDraft(true);
+    } catch (e) {
+      console.warn('Failed to save campaign draft:', e);
+    }
+  };
+
+  const restoreDraft = () => {
+    try {
+      const draftStr = localStorage.getItem('nectar_labs_campaign_draft');
+      if (draftStr) {
+        const draft = JSON.parse(draftStr);
+        setCampaignSubject(draft.campaignSubject || '');
+        setCampaignTitle(draft.campaignTitle || '');
+        setCampaignContent(draft.campaignContent || '');
+        setTemplateType(draft.templateType || 'minimalist');
+        setBgImageUrl(draft.bgImageUrl || '');
+        setBgOpacity(draft.bgOpacity || '1.0');
+        setBgSaturation(draft.bgSaturation || '100');
+        setBgPosition(draft.bgPosition || 'center');
+        setCtaText(draft.ctaText || '');
+        setCtaLink(draft.ctaLink || '');
+        setFontFamily(draft.fontFamily || 'serif');
+        setTitleFontFamily(draft.titleFontFamily || 'serif');
+        setFooterFontFamily(draft.footerFontFamily || 'serif');
+        setEmailTitle(draft.emailTitle || '');
+        setFooterText(draft.footerText || '');
+        setImageUrl(draft.imageUrl || '');
+        setCampTitleTextColor(draft.campTitleTextColor || '#ffffff');
+        setCampTitleBgColor(draft.campTitleBgColor || 'transparent');
+        setCampTitleBgImage(draft.campTitleBgImage || '');
+        setCampTitlePadding(draft.campTitlePadding || '0px');
+        setCampTitleRadius(draft.campTitleRadius || '0px');
+        setCampBodyTextColor(draft.campBodyTextColor || '');
+        setCampBodyBgColor(draft.campBodyBgColor || 'transparent');
+        setCampBodyBgImage(draft.campBodyBgImage || '');
+        setCampBodyPadding(draft.campBodyPadding || '0px');
+        setCampBodyRadius(draft.campBodyRadius || '0px');
+        setCampBodyAlignment(draft.campBodyAlignment || 'center');
+        setCampFooterTextColor(draft.campFooterTextColor || '');
+        setCampFooterBgColor(draft.campFooterBgColor || 'transparent');
+        setCampFooterBgImage(draft.campFooterBgImage || '');
+        setCampFooterPadding(draft.campFooterPadding || '0px');
+        setCampFooterRadius(draft.campFooterRadius || '0px');
+        setCampCardMaxWidthDesktop(draft.campCardMaxWidthDesktop || '680px');
+        setCampCardPaddingDesktop(draft.campCardPaddingDesktop || '40px');
+        setCampCardPaddingTablet(draft.campCardPaddingTablet || '40px');
+        setCampCardPaddingMobile(draft.campCardPaddingMobile || '16px');
+        setCampTitleFontSizeDesktop(draft.campTitleFontSizeDesktop || '26px');
+        setCampTitleFontSizeTablet(draft.campTitleFontSizeTablet || '22px');
+        setCampTitleFontSizeMobile(draft.campTitleFontSizeMobile || '18px');
+        setCampBodyFontSizeDesktop(draft.campBodyFontSizeDesktop || '16px');
+        setCampBodyFontSizeTablet(draft.campBodyFontSizeTablet || '15px');
+        setCampBodyFontSizeMobile(draft.campBodyFontSizeMobile || '14px');
+        setCampBodyAlignmentTablet(draft.campBodyAlignmentTablet || 'center');
+        setCampBodyAlignmentMobile(draft.campBodyAlignmentMobile || 'center');
+        setCampImageWidth(draft.campImageWidth || '100%');
+        setCampImageAlign(draft.campImageAlign || 'center');
+        setCampImageRadius(draft.campImageRadius || '20px');
+        setCampImageWidthTablet(draft.campImageWidthTablet || '100%');
+        setCampImageWidthMobile(draft.campImageWidthMobile || '100%');
+        setCampImageAlignTablet(draft.campImageAlignTablet || 'center');
+        setCampImageAlignMobile(draft.campImageAlignMobile || 'center');
+        setCampCtaAlignment(draft.campCtaAlignment || 'center');
+        setCampCtaAlignTablet(draft.campCtaAlignTablet || 'center');
+        setCampCtaAlignMobile(draft.campCtaAlignMobile || 'center');
+        setCampCtaMarginTop(draft.campCtaMarginTop || '35px');
+        setCampCtaMarginBottom(draft.campCtaMarginBottom || '25px');
+        setCampTextMode(draft.campTextMode || 'letter');
+
+        if (campaignEditorRef.current) {
+          if (editorActiveTab === 'body') {
+            campaignEditorRef.current.innerHTML = draft.campaignContent || '';
+          } else if (editorActiveTab === 'title') {
+            campaignEditorRef.current.innerHTML = draft.emailTitle || '';
+          } else if (editorActiveTab === 'footer') {
+            campaignEditorRef.current.innerHTML = draft.footerText || '';
+          }
+        }
+        showToast('Borrador restaurado con éxito.', 'success');
+      }
+    } catch (e) {
+      console.error('Failed to restore draft:', e);
+    }
+  };
+
+  const discardDraft = () => {
+    try {
+      localStorage.removeItem('nectar_labs_campaign_draft');
+      setHasDraft(false);
+      showToast('Borrador descartado.', 'info');
+    } catch (e) {
+      console.error('Failed to discard draft:', e);
+    }
+  };
+
+  // Draft auto-save side effect
+  useEffect(() => {
+    if (showNewsletterModal && !isDraftPending.current) {
+      isDraftPending.current = true;
+      const timer = setTimeout(() => {
+        syncEditorState();
+        saveCampaignDraft();
+        isDraftPending.current = false;
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [
+    showNewsletterModal,
+    campaignSubject,
+    campaignTitle,
+    campaignContent,
+    templateType,
+    bgImageUrl,
+    bgOpacity,
+    bgSaturation,
+    bgPosition,
+    ctaText,
+    ctaLink,
+    fontFamily,
+    titleFontFamily,
+    footerFontFamily,
+    emailTitle,
+    footerText,
+    imageUrl,
+    campTitleTextColor,
+    campTitleBgColor,
+    campTitleBgImage,
+    campTitlePadding,
+    campTitleRadius,
+    campBodyTextColor,
+    campBodyBgColor,
+    campBodyBgImage,
+    campBodyPadding,
+    campBodyRadius,
+    campBodyAlignment,
+    campFooterTextColor,
+    campFooterBgColor,
+    campFooterBgImage,
+    campFooterPadding,
+    campFooterRadius,
+    campCardMaxWidthDesktop,
+    campCardPaddingDesktop,
+    campCardPaddingTablet,
+    campCardPaddingMobile,
+    campTitleFontSizeDesktop,
+    campTitleFontSizeTablet,
+    campTitleFontSizeMobile,
+    campBodyFontSizeDesktop,
+    campBodyFontSizeTablet,
+    campBodyFontSizeMobile,
+    campBodyAlignmentTablet,
+    campBodyAlignmentMobile,
+    campImageWidth,
+    campImageAlign,
+    campImageRadius,
+    campImageWidthTablet,
+    campImageWidthMobile,
+    campImageAlignTablet,
+    campImageAlignMobile,
+    campCtaAlignment,
+    campCtaAlignTablet,
+    campCtaAlignMobile,
+    campCtaMarginTop,
+    campCtaMarginBottom,
+    campTextMode
+  ]);
+
+  // Load draft check on modal open
+  useEffect(() => {
+    if (showNewsletterModal) {
+      const draft = localStorage.getItem('nectar_labs_campaign_draft');
+      setHasDraft(!!draft);
+      if (campaignEditorRef.current) {
+        if (editorActiveTab === 'body') campaignEditorRef.current.innerHTML = campaignContent || '';
+        else if (editorActiveTab === 'title') campaignEditorRef.current.innerHTML = emailTitle || '';
+        else if (editorActiveTab === 'footer') campaignEditorRef.current.innerHTML = footerText || '';
+      }
+    }
+  }, [showNewsletterModal, editorActiveTab]);
+
   const handleSendCampaign = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!tenantConfig) return;
     setIsSendingCampaign(true);
+    syncEditorState();
     try {
       const response = await fetcher('/newsletter/send-campaign/', {
         method: 'POST',
         body: JSON.stringify({
           subject: campaignSubject.trim(),
           title: campaignTitle.trim() || campaignSubject.trim(),
-          content: campaignContent.trim(),
+          content: campaignContent,
           template_type: templateType,
           bg_image_url: bgImageUrl.trim() || null,
           bg_opacity: parseFloat(bgOpacity),
@@ -952,7 +1488,41 @@ export default function TenantAdminPage() {
           footer_font_family: footerFontFamily,
           email_title: emailTitle.trim() || null,
           footer_text: footerText.trim() || null,
-          image_url: imageUrl.trim() || null
+          image_url: imageUrl.trim() || null,
+          custom_styles: {
+            text_mode: campTextMode,
+            body_alignment: campBodyAlignment,
+            body_alignment_tablet: campBodyAlignmentTablet,
+            body_alignment_mobile: campBodyAlignmentMobile,
+            card_max_width_desktop: campCardMaxWidthDesktop,
+            card_padding_desktop: campCardPaddingDesktop,
+            card_padding_tablet: campCardPaddingTablet,
+            card_padding_mobile: campCardPaddingMobile,
+            title_font_size_desktop: campTitleFontSizeDesktop,
+            title_font_size_tablet: campTitleFontSizeTablet,
+            title_font_size_mobile: campTitleFontSizeMobile,
+            body_font_size_desktop: campBodyFontSizeDesktop,
+            body_font_size_tablet: campBodyFontSizeTablet,
+            body_font_size_mobile: campBodyFontSizeMobile,
+            title_color: campTitleTextColor,
+            title_bg_color: campTitleBgColor,
+            body_color: campBodyTextColor,
+            body_bg_color: campBodyBgColor,
+            footer_color: campFooterTextColor,
+            footer_bg_color: campFooterBgColor,
+            cta_alignment: campCtaAlignment,
+            cta_alignment_tablet: campCtaAlignTablet,
+            cta_alignment_mobile: campCtaAlignMobile,
+            image_width_tablet: campImageWidthTablet,
+            image_align_tablet: campImageAlignTablet,
+            image_width_mobile: campImageWidthMobile,
+            image_align_mobile: campImageAlignMobile,
+          },
+          image_style: {
+            width: campImageWidth,
+            align: campImageAlign,
+            radius: campImageRadius,
+          }
         }),
         headers: {
           'Content-Type': 'application/json'
@@ -960,6 +1530,11 @@ export default function TenantAdminPage() {
       });
       showToast(response.message || 'Campaña enviada con éxito.', 'success');
       setShowNewsletterModal(false);
+
+      // Clear draft on successful send
+      localStorage.removeItem('nectar_labs_campaign_draft');
+      setHasDraft(false);
+
       setCampaignSubject('');
       setCampaignTitle('');
       setCampaignContent('');
@@ -2660,415 +3235,1146 @@ export default function TenantAdminPage() {
 
       {/* 📧 Modal: Redactar Boletín */}
       {showNewsletterModal && (
-        <div className="fixed inset-0 z-55 bg-background/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
-          <div className="admin-card border rounded-[2rem] p-8 max-w-4xl w-full space-y-6 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-55 bg-background/80 backdrop-blur-md flex items-start justify-center p-4 md:p-8 overflow-y-auto">
+          <div className="admin-card border rounded-[2.5rem] p-8 w-full max-w-7xl relative flex flex-col lg:flex-row gap-8 max-h-[90vh] overflow-hidden">
             <button 
+              type="button"
               onClick={() => setShowNewsletterModal(false)}
-              className="absolute top-6 right-6 text-white/40 hover:text-white text-xs font-bold"
+              className="absolute top-6 right-6 text-white/40 hover:text-white text-xs font-bold w-8 h-8 rounded-xl border border-white/10 flex items-center justify-center hover:bg-white/5 transition-all z-50"
             >
               ✕
             </button>
-            <div className="border-b border-white/5 pb-4">
-              <span className="px-2 py-0.5 bg-nectar-gold/10 text-nectar-gold text-[7px] font-black uppercase tracking-widest rounded-full border border-nectar-gold/20">
-                Email Campaigner
-              </span>
-              <h3 className="text-lg font-black uppercase tracking-tight text-white mt-2">Nueva Campaña de Boletín</h3>
-              <p className="text-[7.5px] text-white/40 uppercase tracking-wider mt-0.5">Enviar un correo masivo a todos los suscriptores activos</p>
-            </div>
-            
-            <form onSubmit={handleSendCampaign} className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {/* Left Column: Form inputs */}
-              <div className="space-y-4">
-                <div className="space-y-1">
-                  <label className="text-[7.5px] uppercase tracking-wider font-black text-white/50 block">Importar Post del Blog (Opcional)</label>
-                  <select
-                    value={selectedPostId}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      setSelectedPostId(val);
-                      if (val) {
-                        const post = blogPosts.find(p => String(p.id) === val);
-                        if (post) {
-                          setCampaignSubject(`Nuevo Post: ${post.title}`);
-                          setCampaignTitle(post.title);
-                          setCampaignContent(post.content);
-                        }
-                      } else {
-                        setCampaignSubject('');
-                        setCampaignTitle('');
-                        setCampaignContent('');
-                      }
+
+            {/* Column 1: Editor Form */}
+            <div className={`${isPreviewExpanded ? 'hidden' : 'flex-1'} overflow-y-auto pr-2 custom-scrollbar space-y-6 lg:max-h-[76vh]`}>
+              <div>
+                <span className="px-2 py-0.5 bg-nectar-gold/10 text-nectar-gold text-[7px] font-black uppercase tracking-widest rounded-full border border-nectar-gold/20">
+                  Email Campaigner
+                </span>
+                <h3 className="text-lg font-black uppercase tracking-tight text-white mt-2">Nueva Campaña de Boletín</h3>
+                <p className="text-[7.5px] text-white/40 uppercase tracking-wider mt-0.5">Diseña y personaliza el correo con la estética premium de ms-ambar</p>
+              </div>
+
+              {hasDraft && (
+                <div className="bg-nectar-gold/10 border border-nectar-gold/30 p-4 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                  <div>
+                    <p className="text-xs font-bold text-nectar-gold uppercase tracking-wider">Borrador Detectado</p>
+                    <p className="text-[10px] text-white/70 mt-0.5">Se encontró progreso no guardado de tu última sesión de edición.</p>
+                  </div>
+                  <div className="flex gap-2 shrink-0">
+                    <button
+                      type="button"
+                      onClick={restoreDraft}
+                      className="bg-nectar-gold text-background font-black uppercase tracking-widest text-[9px] px-3.5 py-2 rounded-lg hover:scale-105 transition-all"
+                    >
+                      Restaurar
+                    </button>
+                    <button
+                      type="button"
+                      onClick={discardDraft}
+                      className="border border-white/10 hover:bg-white/5 text-white/65 hover:text-white font-black uppercase tracking-widest text-[9px] px-3.5 py-2 rounded-lg transition-all"
+                    >
+                      Descartar
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Navigation Tab Bar for Editor Settings */}
+              <div className="flex bg-white/5 border border-white/10 rounded-2xl p-1 gap-1 overflow-x-auto custom-scrollbar">
+                {[
+                  { id: 'content', label: 'Contenido' },
+                  { id: 'theme', label: 'Diseño' },
+                  { id: 'cover', label: 'Portada' },
+                  { id: 'sections', label: 'Espaciado' },
+                  { id: 'ctas', label: 'Botones' },
+                  { id: 'library', label: 'Biblioteca' },
+                ].map(tab => (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => {
+                      syncEditorState();
+                      setSettingsTab(tab.id as any);
                     }}
-                    className="w-full border rounded-xl px-3 py-2.5 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input font-bold"
+                    className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all duration-200 whitespace-nowrap ${
+                      settingsTab === tab.id
+                        ? 'bg-nectar-gold text-background shadow-md scale-[1.02]'
+                        : 'text-white/60 hover:text-white hover:bg-white/5'
+                    }`}
                   >
-                    <option value="">-- Redactar en Blanco --</option>
-                    {blogPosts.map((post) => (
-                      <option key={post.id} value={String(post.id)}>
-                        {post.title}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
 
-                <div className="space-y-1">
-                  <label className="text-[7.5px] uppercase tracking-wider font-black text-white/50 block">Asunto del Correo (Subject)</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Ej. ¡Nueva colección disponible en nuestra tienda!"
-                    value={campaignSubject}
-                    onChange={(e) => setCampaignSubject(e.target.value)}
-                    className="w-full border rounded-xl px-3 py-2.5 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-[7.5px] uppercase tracking-wider font-black text-white/50 block">Título de Cabecera (Opcional)</label>
-                  <input
-                    type="text"
-                    placeholder="Ej. ¡Grandes Noticias!"
-                    value={campaignTitle}
-                    onChange={(e) => setCampaignTitle(e.target.value)}
-                    className="w-full border rounded-xl px-3 py-2.5 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-[7.5px] uppercase tracking-wider font-black text-white/50 block">Contenido del Mensaje (HTML/Texto)</label>
-                  <textarea
-                    required
-                    rows={6}
-                    placeholder="Escribe el cuerpo del mensaje. Puedes usar etiquetas HTML básicas..."
-                    value={campaignContent}
-                    onChange={(e) => setCampaignContent(e.target.value)}
-                    className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input resize-none font-mono"
-                  />
-                </div>
-
-                {/* Estilo y Tipografía */}
-                <div className="bg-white/[0.02] border border-white/5 p-4 rounded-2xl space-y-3">
-                  <h4 className="text-[8px] font-black uppercase tracking-widest text-white/40 pb-1.5 border-b border-white/5">
-                    Diseño & Tipografía
-                  </h4>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1">
-                      <label className="text-[7px] uppercase tracking-wider font-black text-white/50 block">Plantilla</label>
-                      <select
-                        value={templateType}
-                        onChange={(e) => setTemplateType(e.target.value)}
-                        className="w-full border rounded-xl px-3 py-2 text-[9px] focus:outline-none focus:border-nectar-gold transition-all admin-input font-bold"
-                      >
-                        <option value="minimalist">Minimalista</option>
-                        <option value="moss">Moss (Verde)</option>
-                        <option value="cosmic">Cosmic (Nebulosa)</option>
-                        <option value="glow">Glow (Cyber)</option>
-                        <option value="mist">Mist (Teal)</option>
-                      </select>
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-[7px] uppercase tracking-wider font-black text-white/50 block">Fuentes Título</label>
-                      <select
-                        value={titleFontFamily}
-                        onChange={(e) => setTitleFontFamily(e.target.value)}
-                        className="w-full border rounded-xl px-3 py-2 text-[9px] focus:outline-none focus:border-nectar-gold transition-all admin-input font-bold"
-                      >
-                        <option value="serif">Serif</option>
-                        <option value="sans-serif">Sans-Serif</option>
-                        <option value="monospace">Monospace</option>
-                      </select>
+              <form onSubmit={handleSendCampaign} className="space-y-6">
+                {/* Viewport switcher */}
+                {['cover', 'sections', 'ctas'].includes(settingsTab) && (
+                  <div className="flex justify-between items-center bg-white/5 border border-white/5 p-3 rounded-2xl">
+                    <span className="text-[9px] text-white/65 uppercase tracking-widest font-black">Vista previa activa:</span>
+                    <div className="flex bg-neutral-950 border border-white/10 rounded-xl p-0.5 gap-0.5">
+                      {[
+                        { id: 'desktop', label: 'Escritorio' },
+                        { id: 'tablet', label: 'Tablet' },
+                        { id: 'mobile', label: 'Móvil' },
+                      ].map(vp => (
+                        <button
+                          key={vp.id}
+                          type="button"
+                          onClick={() => setPreviewViewport(vp.id as any)}
+                          className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all duration-200 ${
+                            previewViewport === vp.id
+                              ? 'bg-nectar-gold text-background shadow-md'
+                              : 'text-white/65 hover:text-white hover:bg-white/5'
+                          }`}
+                        >
+                          {vp.label}
+                        </button>
+                      ))}
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1">
-                      <label className="text-[7px] uppercase tracking-wider font-black text-white/50 block">Fuentes Cuerpo</label>
-                      <select
-                        value={fontFamily}
-                        onChange={(e) => setFontFamily(e.target.value)}
-                        className="w-full border rounded-xl px-3 py-2 text-[9px] focus:outline-none focus:border-nectar-gold transition-all admin-input font-bold"
-                      >
-                        <option value="serif">Serif</option>
-                        <option value="sans-serif">Sans-Serif</option>
-                        <option value="monospace">Monospace</option>
-                      </select>
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-[7px] uppercase tracking-wider font-black text-white/50 block">Fuentes Footer</label>
-                      <select
-                        value={footerFontFamily}
-                        onChange={(e) => setFooterFontFamily(e.target.value)}
-                        className="w-full border rounded-xl px-3 py-2 text-[9px] focus:outline-none focus:border-nectar-gold transition-all admin-input font-bold"
-                      >
-                        <option value="serif">Serif</option>
-                        <option value="sans-serif">Sans-Serif</option>
-                        <option value="monospace">Monospace</option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
+                )}
 
-                {/* Llamado a la Acción (CTA) */}
-                <div className="bg-white/[0.02] border border-white/5 p-4 rounded-2xl space-y-3">
-                  <h4 className="text-[8px] font-black uppercase tracking-widest text-white/40 pb-1.5 border-b border-white/5">
-                    Llamado a la Acción (CTA)
-                  </h4>
-                  <div className="grid grid-cols-2 gap-3">
+                {/* CATEGORY 1: CONTENT */}
+                {settingsTab === 'content' && (
+                  <div className="space-y-4">
                     <div className="space-y-1">
-                      <label className="text-[7px] uppercase tracking-wider font-black text-white/50 block">Texto Botón</label>
+                      <label className="text-[7.5px] uppercase tracking-wider font-black text-white/50 block">Importar Post del Blog (Opcional)</label>
+                      <select
+                        value={selectedPostId}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setSelectedPostId(val);
+                          if (val) {
+                            const post = blogPosts.find(p => String(p.id) === val);
+                            if (post) {
+                              setCampaignSubject(`Nuevo Post: ${post.title}`);
+                              setCampaignTitle(post.title);
+                              setCampaignContent(post.content);
+                              if (campaignEditorRef.current) {
+                                campaignEditorRef.current.innerHTML = post.content;
+                              }
+                            }
+                          } else {
+                            setCampaignSubject('');
+                            setCampaignTitle('');
+                            setCampaignContent('');
+                            if (campaignEditorRef.current) {
+                              campaignEditorRef.current.innerHTML = '';
+                            }
+                          }
+                        }}
+                        className="w-full border rounded-xl px-3 py-2.5 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input font-bold"
+                      >
+                        <option value="">-- Redactar en Blanco --</option>
+                        {blogPosts.map((post) => (
+                          <option key={post.id} value={String(post.id)}>
+                            {post.title}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="space-y-1 relative">
+                      <div className="flex justify-between items-center">
+                        <label className="text-[7.5px] uppercase tracking-wider font-black text-white/50 block">Asunto del Correo (Subject)</label>
+                        <button
+                          type="button"
+                          onClick={() => setEmojiPopoverTarget(emojiPopoverTarget === 'subject' ? null : 'subject')}
+                          className="text-[8px] text-nectar-gold hover:underline flex items-center gap-1 font-black uppercase"
+                        >
+                          😀 Emojis
+                        </button>
+                      </div>
                       <input
+                        id="camp-subject-input"
                         type="text"
-                        placeholder="ej: Registrarme"
-                        value={ctaText}
-                        onChange={(e) => setCtaText(e.target.value)}
-                        className="w-full border rounded-xl px-3 py-2 text-[9px] focus:outline-none focus:border-nectar-gold transition-all admin-input"
+                        required
+                        placeholder="Ej. ¡Nueva colección disponible en nuestra tienda!"
+                        value={campaignSubject}
+                        onChange={(e) => setCampaignSubject(e.target.value)}
+                        className="w-full border rounded-xl px-3 py-2.5 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input"
+                      />
+                      {emojiPopoverTarget === 'subject' && (
+                        <div className="absolute right-0 top-[55px] z-[100] bg-neutral-950 border border-white/10 rounded-2xl p-3 shadow-2xl w-60 grid grid-cols-6 gap-2">
+                          {CURATED_EMOJIS.map(em => (
+                            <button
+                              key={em}
+                              type="button"
+                              onClick={() => {
+                                insertEmojiToSubject(em);
+                                setEmojiPopoverTarget(null);
+                              }}
+                              className="text-lg hover:bg-white/5 p-1 rounded transition-all text-center"
+                            >
+                              {em}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[7.5px] uppercase tracking-wider font-black text-white/50 block">Formato del Texto</label>
+                      <div className="flex bg-white/5 border border-white/10 rounded-2xl p-1 gap-1 w-fit">
+                        {[
+                          { id: 'poem', label: 'Modo Poema (Saltos de Línea)' },
+                          { id: 'letter', label: 'Modo Carta (Texto Continuo)' },
+                        ].map(mode => (
+                          <button
+                            key={mode.id}
+                            type="button"
+                            onClick={() => setCampTextMode(mode.id as any)}
+                            className={`px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all duration-200 ${
+                              campTextMode === mode.id
+                                ? 'bg-nectar-gold text-background shadow-md'
+                                : 'text-white/60 hover:text-white hover:bg-white/5'
+                            }`}
+                          >
+                            {mode.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <label className="text-[7.5px] uppercase tracking-wider font-black text-white/50 block">Contenido del Correo</label>
+                        <span className="text-[8px] bg-nectar-gold/10 text-nectar-gold border border-nectar-gold/20 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
+                          Editando: {editorActiveTab === 'title' ? 'Título' : editorActiveTab === 'footer' ? 'Pie' : 'Cuerpo'}
+                        </span>
+                      </div>
+
+                      {/* Segmented Tab Controls */}
+                      <div className="flex bg-white/5 border border-white/10 rounded-2xl p-1 gap-1">
+                        {[
+                          { id: 'title', label: 'Título / Cabecera' },
+                          { id: 'body', label: 'Cuerpo del Correo' },
+                          { id: 'footer', label: 'Pie de Página (Footer)' }
+                        ].map(tab => (
+                          <button
+                            key={tab.id}
+                            type="button"
+                            onClick={() => {
+                              if (campaignEditorRef.current) {
+                                const html = campaignEditorRef.current.innerHTML;
+                                if (editorActiveTab === 'body') setCampaignContent(html);
+                                else if (editorActiveTab === 'title') setEmailTitle(html);
+                                else if (editorActiveTab === 'footer') setFooterText(html);
+                              }
+                              setEditorActiveTab(tab.id as any);
+                            }}
+                            className={`flex-1 py-2 text-center rounded-xl text-[9px] font-black uppercase tracking-wider transition-all duration-200 ${
+                              editorActiveTab === tab.id
+                                ? 'bg-nectar-gold text-background shadow-md'
+                                : 'text-white/60 hover:text-white hover:bg-white/5'
+                            }`}
+                          >
+                            {tab.label}
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Editor Canvas Toolbar */}
+                      <div className="bg-white/5 border border-white/10 p-2 rounded-2xl flex flex-wrap gap-1 items-center shadow-lg">
+                        <button
+                          type="button"
+                          onClick={() => executeCommand('bold')}
+                          className="w-8 h-8 rounded-lg text-white/70 hover:text-white hover:bg-white/5 flex items-center justify-center font-bold"
+                          title="Negrita"
+                        >
+                          B
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => executeCommand('italic')}
+                          className="w-8 h-8 rounded-lg text-white/70 hover:text-white hover:bg-white/5 flex items-center justify-center italic"
+                          title="Itálica"
+                        >
+                          I
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => executeCommand('underline')}
+                          className="w-8 h-8 rounded-lg text-white/70 hover:text-white hover:bg-white/5 flex items-center justify-center underline"
+                          title="Subrayado"
+                        >
+                          U
+                        </button>
+
+                        <div className="w-px h-6 bg-white/10 mx-1" />
+
+                        <button
+                          type="button"
+                          onClick={() => executeCommand('justifyLeft')}
+                          className="w-8 h-8 rounded-lg text-white/70 hover:text-white hover:bg-white/5 flex items-center justify-center"
+                          title="Alinear Izquierda"
+                        >
+                          ⇐
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => executeCommand('justifyCenter')}
+                          className="w-8 h-8 rounded-lg text-white/70 hover:text-white hover:bg-white/5 flex items-center justify-center"
+                          title="Alinear Centro"
+                        >
+                          ⇔
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => executeCommand('justifyRight')}
+                          className="w-8 h-8 rounded-lg text-white/70 hover:text-white hover:bg-white/5 flex items-center justify-center"
+                          title="Alinear Derecha"
+                        >
+                          ⇒
+                        </button>
+
+                        <div className="w-px h-6 bg-white/10 mx-1" />
+
+                        <button
+                          type="button"
+                          onClick={() => executeCommand('formatBlock', '<h2>')}
+                          className="w-8 h-8 rounded-lg text-white/70 hover:text-white hover:bg-white/5 flex items-center justify-center font-black text-xs"
+                          title="Título H2"
+                        >
+                          H2
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => executeCommand('formatBlock', '<h3>')}
+                          className="w-8 h-8 rounded-lg text-white/70 hover:text-white hover:bg-white/5 flex items-center justify-center font-black text-xs"
+                          title="Título H3"
+                        >
+                          H3
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => executeCommand('formatBlock', '<p>')}
+                          className="w-8 h-8 rounded-lg text-white/70 hover:text-white hover:bg-white/5 flex items-center justify-center text-xs"
+                          title="Párrafo"
+                        >
+                          P
+                        </button>
+
+                        <div className="w-px h-6 bg-white/10 mx-1" />
+
+                        <button
+                          type="button"
+                          onClick={() => executeCommand('insertUnorderedList')}
+                          className="w-8 h-8 rounded-lg text-white/70 hover:text-white hover:bg-white/5 flex items-center justify-center text-xs"
+                          title="Lista Viñetas"
+                        >
+                          • L
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => executeCommand('insertOrderedList')}
+                          className="w-8 h-8 rounded-lg text-white/70 hover:text-white hover:bg-white/5 flex items-center justify-center text-xs"
+                          title="Lista Numérica"
+                        >
+                          1. L
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => executeCommand('formatBlock', '<blockquote>')}
+                          className="w-8 h-8 rounded-lg text-white/70 hover:text-white hover:bg-white/5 flex items-center justify-center italic font-serif text-sm"
+                          title="Cita"
+                        >
+                          “
+                        </button>
+
+                        <div className="w-px h-6 bg-white/10 mx-1" />
+
+                        <button
+                          type="button"
+                          onClick={handleLinkInsert}
+                          className="w-8 h-8 rounded-lg text-white/70 hover:text-white hover:bg-white/5 flex items-center justify-center text-xs"
+                          title="Insertar Enlace"
+                        >
+                          🔗
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleImageInsert}
+                          className="w-8 h-8 rounded-lg text-white/70 hover:text-white hover:bg-white/5 flex items-center justify-center text-xs"
+                          title="Insertar Imagen por URL"
+                        >
+                          🖼️
+                        </button>
+                        <div className="relative">
+                          <button
+                            type="button"
+                            onClick={() => setEmojiPopoverTarget(emojiPopoverTarget === 'editor' ? null : 'editor')}
+                            className="w-8 h-8 rounded-lg text-white/70 hover:text-white hover:bg-white/5 flex items-center justify-center text-xs"
+                            title="Insertar Emoji"
+                          >
+                            😀
+                          </button>
+                          {emojiPopoverTarget === 'editor' && (
+                            <div className="absolute left-0 top-10 z-[100] bg-neutral-950 border border-white/10 rounded-2xl p-3 shadow-2xl w-60 grid grid-cols-6 gap-2">
+                              {CURATED_EMOJIS.map(em => (
+                                <button
+                                  key={em}
+                                  type="button"
+                                  onClick={() => {
+                                    insertEmojiToEditor(em);
+                                    setEmojiPopoverTarget(null);
+                                  }}
+                                  className="text-lg hover:bg-white/5 p-1 rounded transition-all text-center"
+                                >
+                                  {em}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => executeCommand('removeFormat')}
+                          className="w-8 h-8 rounded-lg text-red-400 hover:text-red-300 hover:bg-red-500/10 flex items-center justify-center ml-auto text-xs"
+                          title="Limpiar Formatos"
+                        >
+                          🧹
+                        </button>
+                      </div>
+
+                      {/* Content Editable Area */}
+                      <div
+                        ref={campaignEditorRef}
+                        contentEditable
+                        suppressContentEditableWarning
+                        onInput={e => {
+                          const html = e.currentTarget.innerHTML;
+                          if (editorActiveTab === 'body') setCampaignContent(html);
+                          else if (editorActiveTab === 'title') setEmailTitle(html);
+                          else if (editorActiveTab === 'footer') setFooterText(html);
+                        }}
+                        onPaste={handleEditorPaste}
+                        data-placeholder={
+                          editorActiveTab === 'title'
+                            ? 'Escribe un título personalizado para el correo...'
+                            : editorActiveTab === 'footer'
+                              ? 'Escribe un pie de página personalizado...'
+                              : 'Comienza a redactar el cuerpo del mensaje aquí...'
+                        }
+                        className="w-full min-h-[220px] max-h-[380px] overflow-y-auto bg-white/5 text-white border border-white/10 rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-nectar-gold transition-all"
+                        style={{ outline: 'none' }}
                       />
                     </div>
-                    <div className="space-y-1">
-                      <label className="text-[7px] uppercase tracking-wider font-black text-white/50 block">Enlace Botón (URL)</label>
+                  </div>
+                )}
+
+                {/* CATEGORY 2: THEME & BACKGROUND */}
+                {settingsTab === 'theme' && (
+                  <div className="space-y-6">
+                    <div className="space-y-2">
+                      <label className="text-[8px] text-white/60 uppercase tracking-widest font-black block">Plantilla de Fondo / Diseño Premium</label>
+                      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                        {[
+                          { id: 'minimalist', name: 'Carbon', desc: 'Negro & Ámbar', class: 'bg-[#0c0d13] border-nectar-gold/40 text-nectar-gold' },
+                          { id: 'moss', name: 'Moss', desc: 'Verde Musgo', class: 'bg-[#122017] border-green-800 text-green-300' },
+                          { id: 'cosmic', name: 'Cosmic', desc: 'Índigo Cósmico', class: 'bg-[#0c0a1a] border-purple-800 text-purple-300' },
+                          { id: 'glow', name: 'Glow', desc: 'Cálido Miel', class: 'bg-[#1a130c] border-amber-700 text-amber-500' },
+                          { id: 'mist', name: 'Mist', desc: 'Gris Pizarra', class: 'bg-[#181b22] border-cyan-800 text-cyan-400' },
+                        ].map(t => (
+                          <div
+                            key={t.id}
+                            onClick={() => setTemplateType(t.id)}
+                            className={`p-3 rounded-2xl border cursor-pointer text-center transition-all hover:scale-102 flex flex-col justify-center items-center gap-1 ${t.class} ${templateType === t.id ? 'ring-2 ring-nectar-gold border-transparent' : 'opacity-65 hover:opacity-100'}`}
+                          >
+                            <span className="text-[10px] font-black uppercase tracking-wider">{t.name}</span>
+                            <span className="text-[7px] font-bold uppercase tracking-widest opacity-60">{t.desc}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <label className="text-[8px] text-white/60 uppercase tracking-widest font-black block">Tipografía Global de Sección</label>
+                      <p className="text-[8px] text-white/40 uppercase tracking-widest font-bold">
+                        Sección activa seleccionada: <span className="text-nectar-gold underline italic">{editorActiveTab === 'title' ? 'Título' : editorActiveTab === 'footer' ? 'Pie' : 'Cuerpo'}</span>
+                      </p>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                        {[
+                          { id: 'serif', name: 'Estándar', css: 'font-serif', desc: 'Georgia Elegante' },
+                          { id: 'playfair', name: 'Playfair', css: 'font-serif', desc: 'Clásico & Sofisticado' },
+                          { id: 'cinzel', name: 'Cinzel', css: 'font-serif', desc: 'Romano Imperial' },
+                          { id: 'garamond', name: 'Garamond', css: 'font-serif', desc: 'Elegancia Rústica' },
+                          { id: 'montserrat', name: 'Montserrat', css: 'font-sans', desc: 'Minimalista Moderno' },
+                          { id: 'pinyon', name: 'Pinyon Script', css: 'font-cursive', desc: 'Caligrafía Íntima' },
+                        ].map(f => {
+                          const currentActiveFont =
+                            editorActiveTab === 'title' ? titleFontFamily :
+                              editorActiveTab === 'footer' ? footerFontFamily :
+                                fontFamily;
+
+                          const handleFontSelect = () => {
+                            if (editorActiveTab === 'title') setTitleFontFamily(f.id);
+                            else if (editorActiveTab === 'footer') setFooterFontFamily(f.id);
+                            else setFontFamily(f.id);
+                          };
+
+                          return (
+                            <div
+                              key={f.id}
+                              onClick={handleFontSelect}
+                              className={`p-3 rounded-2xl border cursor-pointer text-center transition-all hover:scale-102 flex flex-col justify-center items-center gap-1 ${currentActiveFont === f.id
+                                ? 'bg-nectar-gold/10 border-nectar-gold text-nectar-gold ring-1 ring-nectar-gold'
+                                : 'bg-white/5 border border-white/10 text-white/60 hover:text-white hover:bg-white/10'
+                              }`}
+                            >
+                              <span className="text-xs font-black">{f.name}</span>
+                              <span className="text-[7px] font-bold uppercase tracking-widest opacity-60">{f.desc}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    <div className="space-y-4 border-t border-white/5 pt-4">
+                      <label className="text-[8px] text-white/60 uppercase tracking-widest font-black block">Fondo del Correo</label>
+                      <div className="space-y-3">
+                        <div className="space-y-1">
+                          <label className="text-[7px] uppercase tracking-wider font-black text-white/50 block">URL de Imagen de Fondo</label>
+                          <input
+                            type="url"
+                            placeholder="https://..."
+                            value={bgImageUrl}
+                            onChange={(e) => setBgImageUrl(e.target.value)}
+                            className="w-full border rounded-xl px-3 py-2 text-[9px] focus:outline-none focus:border-nectar-gold transition-all admin-input"
+                          />
+                        </div>
+                        <div className="grid grid-cols-3 gap-2">
+                          <div className="space-y-1">
+                            <label className="text-[6px] uppercase tracking-wider font-black text-white/40 block">Opacidad</label>
+                            <input
+                              type="number"
+                              min="0.1"
+                              max="1.0"
+                              step="0.1"
+                              value={bgOpacity}
+                              onChange={(e) => setBgOpacity(e.target.value)}
+                              className="w-full border rounded-xl px-2 py-1.5 text-[9px] focus:outline-none focus:border-nectar-gold transition-all admin-input font-mono"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-[6px] uppercase tracking-wider font-black text-white/40 block">Saturación %</label>
+                            <input
+                              type="number"
+                              min="0"
+                              max="200"
+                              value={bgSaturation}
+                              onChange={(e) => setBgSaturation(e.target.value)}
+                              className="w-full border rounded-xl px-2 py-1.5 text-[9px] focus:outline-none focus:border-nectar-gold transition-all admin-input font-mono"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-[6px] uppercase tracking-wider font-black text-white/40 block">Posición</label>
+                            <select
+                              value={bgPosition}
+                              onChange={(e) => setBgPosition(e.target.value)}
+                              className="w-full border rounded-xl px-2 py-1.5 text-[9px] focus:outline-none focus:border-nectar-gold transition-all admin-input font-bold"
+                            >
+                              <option value="center">Centro</option>
+                              <option value="top">Arriba</option>
+                              <option value="bottom">Abajo</option>
+                              <option value="left">Izquierda</option>
+                              <option value="right">Derecha</option>
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* CATEGORY 3: COVER */}
+                {settingsTab === 'cover' && (
+                  <div className="space-y-6">
+                    <div className="space-y-1.5">
+                      <label className="text-[7.5px] uppercase tracking-wider font-black text-white/50 block">Imagen de Portada (Cabecera)</label>
                       <input
                         type="url"
                         placeholder="https://..."
-                        value={ctaLink}
-                        onChange={(e) => setCtaLink(e.target.value)}
+                        value={imageUrl}
+                        onChange={(e) => setImageUrl(e.target.value)}
                         className="w-full border rounded-xl px-3 py-2 text-[9px] focus:outline-none focus:border-nectar-gold transition-all admin-input"
                       />
                     </div>
+                    <div className="grid grid-cols-3 gap-3 pt-3 border-t border-white/5">
+                      <div className="space-y-1">
+                        <label className="text-[7px] uppercase tracking-wider font-black text-white/40 block">Ancho Portada</label>
+                        <input
+                          type="text"
+                          value={campImageWidth}
+                          onChange={(e) => setCampImageWidth(e.target.value)}
+                          placeholder="100% o 300px"
+                          className="w-full border rounded-xl px-3 py-2 text-[9px] focus:outline-none focus:border-nectar-gold transition-all admin-input font-mono"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[7px] uppercase tracking-wider font-black text-white/40 block">Alineación</label>
+                        <select
+                          value={campImageAlign}
+                          onChange={(e) => setCampImageAlign(e.target.value)}
+                          className="w-full border rounded-xl px-3 py-2 text-[9px] focus:outline-none focus:border-nectar-gold transition-all admin-input font-bold"
+                        >
+                          <option value="center">Centro</option>
+                          <option value="left">Izquierda</option>
+                          <option value="right">Derecha</option>
+                        </select>
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[7px] uppercase tracking-wider font-black text-white/40 block">Bordes Redondeados</label>
+                        <input
+                          type="text"
+                          value={campImageRadius}
+                          onChange={(e) => setCampImageRadius(e.target.value)}
+                          placeholder="20px"
+                          className="w-full border rounded-xl px-3 py-2 text-[9px] focus:outline-none focus:border-nectar-gold transition-all admin-input font-mono"
+                        />
+                      </div>
+                    </div>
+                    {/* Viewport specific adjustments */}
+                    <div className="space-y-3 pt-3 border-t border-white/5">
+                      <h4 className="text-[8px] font-black uppercase tracking-widest text-nectar-gold">Ajustes según pantalla:</h4>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <label className="text-[7px] uppercase tracking-wider font-black text-white/40 block">Ancho Tablet</label>
+                          <input
+                            type="text"
+                            value={campImageWidthTablet}
+                            onChange={(e) => setCampImageWidthTablet(e.target.value)}
+                            className="w-full border rounded-xl px-3 py-2 text-[9px] admin-input font-mono"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[7px] uppercase tracking-wider font-black text-white/40 block">Ancho Móvil</label>
+                          <input
+                            type="text"
+                            value={campImageWidthMobile}
+                            onChange={(e) => setCampImageWidthMobile(e.target.value)}
+                            className="w-full border rounded-xl px-3 py-2 text-[9px] admin-input font-mono"
+                          />
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                </div>
+                )}
 
-                {/* Imagen y Fondo */}
-                <div className="bg-white/[0.02] border border-white/5 p-4 rounded-2xl space-y-3">
-                  <h4 className="text-[8px] font-black uppercase tracking-widest text-white/40 pb-1.5 border-b border-white/5">
-                    Imágenes de Portada & Fondo
-                  </h4>
-                  <div className="space-y-1.5">
-                    <label className="text-[7px] uppercase tracking-wider font-black text-white/50 block">Portada URL</label>
-                    <input
-                      type="url"
-                      placeholder="https://..."
-                      value={imageUrl}
-                      onChange={(e) => setImageUrl(e.target.value)}
-                      className="w-full border rounded-xl px-3 py-2 text-[9px] focus:outline-none focus:border-nectar-gold transition-all admin-input"
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-[7px] uppercase tracking-wider font-black text-white/50 block">Fondo URL</label>
-                    <input
-                      type="url"
-                      placeholder="https://..."
-                      value={bgImageUrl}
-                      onChange={(e) => setBgImageUrl(e.target.value)}
-                      className="w-full border rounded-xl px-3 py-2 text-[9px] focus:outline-none focus:border-nectar-gold transition-all admin-input"
-                    />
-                  </div>
-                  <div className="grid grid-cols-3 gap-2">
-                    <div className="space-y-1">
-                      <label className="text-[6px] uppercase tracking-wider font-black text-white/40 block">Opacidad</label>
-                      <input
-                        type="number"
-                        min="0.1"
-                        max="1.0"
-                        step="0.1"
-                        value={bgOpacity}
-                        onChange={(e) => setBgOpacity(e.target.value)}
-                        className="w-full border rounded-xl px-2 py-1.5 text-[9px] focus:outline-none focus:border-nectar-gold transition-all admin-input font-mono"
-                      />
+                {/* CATEGORY 4: SPACING & STYLES */}
+                {settingsTab === 'sections' && (
+                  <div className="space-y-6">
+                    <div className="space-y-4">
+                      <h4 className="text-[8.5px] font-black uppercase tracking-widest text-nectar-gold pb-1.5 border-b border-white/5">Dimensiones de Tarjeta</h4>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <label className="text-[7.5px] uppercase tracking-wider font-black text-white/50 block">Ancho Máximo</label>
+                          <input
+                            type="text"
+                            value={campCardMaxWidthDesktop}
+                            onChange={(e) => setCampCardMaxWidthDesktop(e.target.value)}
+                            className="w-full border rounded-xl px-3 py-2.5 text-[9px] admin-input font-mono"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[7.5px] uppercase tracking-wider font-black text-white/50 block">Padding Escritorio</label>
+                          <input
+                            type="text"
+                            value={campCardPaddingDesktop}
+                            onChange={(e) => setCampCardPaddingDesktop(e.target.value)}
+                            className="w-full border rounded-xl px-3 py-2.5 text-[9px] admin-input font-mono"
+                          />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <label className="text-[7.5px] uppercase tracking-wider font-black text-white/50 block">Padding Tablet</label>
+                          <input
+                            type="text"
+                            value={campCardPaddingTablet}
+                            onChange={(e) => setCampCardPaddingTablet(e.target.value)}
+                            className="w-full border rounded-xl px-3 py-2.5 text-[9px] admin-input font-mono"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[7.5px] uppercase tracking-wider font-black text-white/50 block">Padding Móvil</label>
+                          <input
+                            type="text"
+                            value={campCardPaddingMobile}
+                            onChange={(e) => setCampCardPaddingMobile(e.target.value)}
+                            className="w-full border rounded-xl px-3 py-2.5 text-[9px] admin-input font-mono"
+                          />
+                        </div>
+                      </div>
                     </div>
-                    <div className="space-y-1">
-                      <label className="text-[6px] uppercase tracking-wider font-black text-white/40 block">Saturación %</label>
-                      <input
-                        type="number"
-                        min="0"
-                        max="200"
-                        value={bgSaturation}
-                        onChange={(e) => setBgSaturation(e.target.value)}
-                        className="w-full border rounded-xl px-2 py-1.5 text-[9px] focus:outline-none focus:border-nectar-gold transition-all admin-input font-mono"
-                      />
+
+                    <div className="space-y-4 pt-4 border-t border-white/5">
+                      <h4 className="text-[8.5px] font-black uppercase tracking-widest text-nectar-gold pb-1.5 border-b border-white/5">Personalización de Textos</h4>
+                      <div className="grid grid-cols-3 gap-3">
+                        <div className="space-y-1">
+                          <label className="text-[7px] uppercase tracking-wider font-black text-white/40 block">Tamaño Título (PC)</label>
+                          <input type="text" value={campTitleFontSizeDesktop} onChange={(e) => setCampTitleFontSizeDesktop(e.target.value)} className="w-full border rounded-xl px-2 py-2 text-[9px] admin-input font-mono" />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[7px] uppercase tracking-wider font-black text-white/40 block">Título (Tab)</label>
+                          <input type="text" value={campTitleFontSizeTablet} onChange={(e) => setCampTitleFontSizeTablet(e.target.value)} className="w-full border rounded-xl px-2 py-2 text-[9px] admin-input font-mono" />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[7px] uppercase tracking-wider font-black text-white/40 block">Título (Móvil)</label>
+                          <input type="text" value={campTitleFontSizeMobile} onChange={(e) => setCampTitleFontSizeMobile(e.target.value)} className="w-full border rounded-xl px-2 py-2 text-[9px] admin-input font-mono" />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-3 gap-3">
+                        <div className="space-y-1">
+                          <label className="text-[7px] uppercase tracking-wider font-black text-white/40 block">Tamaño Cuerpo (PC)</label>
+                          <input type="text" value={campBodyFontSizeDesktop} onChange={(e) => setCampBodyFontSizeDesktop(e.target.value)} className="w-full border rounded-xl px-2 py-2 text-[9px] admin-input font-mono" />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[7px] uppercase tracking-wider font-black text-white/40 block">Cuerpo (Tab)</label>
+                          <input type="text" value={campBodyFontSizeTablet} onChange={(e) => setCampBodyFontSizeTablet(e.target.value)} className="w-full border rounded-xl px-2 py-2 text-[9px] admin-input font-mono" />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[7px] uppercase tracking-wider font-black text-white/40 block">Cuerpo (Móvil)</label>
+                          <input type="text" value={campBodyFontSizeMobile} onChange={(e) => setCampBodyFontSizeMobile(e.target.value)} className="w-full border rounded-xl px-2 py-2 text-[9px] admin-input font-mono" />
+                        </div>
+                      </div>
+                      <div className="space-y-1.5 pt-2">
+                        <label className="text-[7.5px] uppercase tracking-wider font-black text-white/50 block">Alineación del Cuerpo</label>
+                        <select
+                          value={campBodyAlignment}
+                          onChange={(e) => setCampBodyAlignment(e.target.value)}
+                          className="w-full border rounded-xl px-3 py-2 text-[9px] admin-input font-bold"
+                        >
+                          <option value="center">Centro</option>
+                          <option value="left">Izquierda</option>
+                          <option value="right">Derecha</option>
+                          <option value="justify">Justificado</option>
+                        </select>
+                      </div>
                     </div>
-                    <div className="space-y-1">
-                      <label className="text-[6px] uppercase tracking-wider font-black text-white/40 block">Posición</label>
-                      <select
-                        value={bgPosition}
-                        onChange={(e) => setBgPosition(e.target.value)}
-                        className="w-full border rounded-xl px-2 py-1.5 text-[9px] focus:outline-none focus:border-nectar-gold transition-all admin-input font-bold"
+
+                    <div className="space-y-4 pt-4 border-t border-white/5">
+                      <h4 className="text-[8.5px] font-black uppercase tracking-widest text-nectar-gold pb-1.5 border-b border-white/5">Paleta de Colores de Secciones</h4>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                          <label className="text-[7.5px] uppercase tracking-wider font-black text-white/50 block">Color de Texto Título</label>
+                          <input type="color" value={campTitleTextColor} onChange={(e) => setCampTitleTextColor(e.target.value)} className="w-full h-8 bg-transparent rounded cursor-pointer" />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-[7.5px] uppercase tracking-wider font-black text-white/50 block">Color de Fondo Título</label>
+                          <input type="color" value={campTitleBgColor} onChange={(e) => setCampTitleBgColor(e.target.value)} className="w-full h-8 bg-transparent rounded cursor-pointer" />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                          <label className="text-[7.5px] uppercase tracking-wider font-black text-white/50 block">Color de Texto Cuerpo</label>
+                          <input type="color" value={campBodyTextColor} onChange={(e) => setCampBodyTextColor(e.target.value)} className="w-full h-8 bg-transparent rounded cursor-pointer" />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-[7.5px] uppercase tracking-wider font-black text-white/50 block">Color de Fondo Cuerpo</label>
+                          <input type="color" value={campBodyBgColor} onChange={(e) => setCampBodyBgColor(e.target.value)} className="w-full h-8 bg-transparent rounded cursor-pointer" />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                          <label className="text-[7.5px] uppercase tracking-wider font-black text-white/50 block">Color de Texto Footer</label>
+                          <input type="color" value={campFooterTextColor} onChange={(e) => setCampFooterTextColor(e.target.value)} className="w-full h-8 bg-transparent rounded cursor-pointer" />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-[7.5px] uppercase tracking-wider font-black text-white/50 block">Color de Fondo Footer</label>
+                          <input type="color" value={campFooterBgColor} onChange={(e) => setCampFooterBgColor(e.target.value)} className="w-full h-8 bg-transparent rounded cursor-pointer" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* CATEGORY 5: BUTTONS */}
+                {settingsTab === 'ctas' && (
+                  <div className="space-y-6">
+                    <div className="bg-white/[0.02] border border-white/5 p-5 rounded-[2rem] space-y-4">
+                      <h4 className="text-[8.5px] font-black uppercase tracking-widest text-nectar-gold pb-1 border-b border-white/5">
+                        Llamado a la Acción (CTA Principal)
+                      </h4>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1.5">
+                          <label className="text-[7.5px] uppercase tracking-wider font-black text-white/50 block">Texto del Botón</label>
+                          <input
+                            type="text"
+                            placeholder="ej: Registrarme"
+                            value={ctaText}
+                            onChange={(e) => setCtaText(e.target.value)}
+                            className="w-full border rounded-xl px-3 py-2.5 text-[9px] focus:outline-none focus:border-nectar-gold transition-all admin-input"
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-[7.5px] uppercase tracking-wider font-black text-white/50 block">Enlace de Destino (URL)</label>
+                          <input
+                            type="url"
+                            placeholder="https://..."
+                            value={ctaLink}
+                            onChange={(e) => setCtaLink(e.target.value)}
+                            className="w-full border rounded-xl px-3 py-2.5 text-[9px] focus:outline-none focus:border-nectar-gold transition-all admin-input"
+                          />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-3 gap-3 pt-2">
+                        <div className="space-y-1">
+                          <label className="text-[7px] uppercase tracking-wider font-black text-white/40 block">Alineación Botón</label>
+                          <select
+                            value={campCtaAlignment}
+                            onChange={(e) => setCampCtaAlignment(e.target.value)}
+                            className="w-full border rounded-xl px-3 py-2.5 text-[9px] admin-input font-bold"
+                          >
+                            <option value="center">Centro</option>
+                            <option value="left">Izquierda</option>
+                            <option value="right">Derecha</option>
+                          </select>
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[7px] uppercase tracking-wider font-black text-white/40 block">Margen Superior</label>
+                          <input type="text" value={campCtaMarginTop} onChange={(e) => setCampCtaMarginTop(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-[9px] admin-input font-mono" />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[7px] uppercase tracking-wider font-black text-white/40 block">Margen Inferior</label>
+                          <input type="text" value={campCtaMarginBottom} onChange={(e) => setCampCtaMarginBottom(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-[9px] admin-input font-mono" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* CATEGORY 6: LIBRARY */}
+                {settingsTab === 'library' && (
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center pb-2 border-b border-white/5">
+                      <span className="text-[10px] text-white/40 uppercase tracking-widest font-black">Biblioteca de Imágenes</span>
+                      <label className="px-3.5 py-2 bg-nectar-gold/10 border border-nectar-gold/20 hover:bg-nectar-gold/20 rounded-xl text-[9px] font-black uppercase tracking-widest text-nectar-gold flex items-center gap-1 cursor-pointer transition-all">
+                        {libraryUploadLoading ? 'Subiendo...' : '+ Subir Imagen'}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          disabled={libraryUploadLoading}
+                          onChange={e => {
+                            const file = e.target.files?.[0];
+                            if (file) handleTemplateImageUpload(file);
+                          }}
+                        />
+                      </label>
+                    </div>
+
+                    {templateImages.length === 0 ? (
+                      <div className="text-center py-12 border border-dashed border-white/10 rounded-[2rem] space-y-2">
+                        <span className="text-2xl opacity-30 block">📁</span>
+                        <p className="text-[10px] text-white/40 uppercase tracking-widest font-black">Tu biblioteca está vacía</p>
+                        <p className="text-[9px] text-white/30 max-w-xs mx-auto leading-normal">Sube imágenes para utilizarlas como portada, fondo o insertarlas directamente en el cuerpo del correo.</p>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 max-h-[46vh] overflow-y-auto pr-1 custom-scrollbar">
+                        {templateImages.map((img: any) => (
+                          <div key={img.id} className="group relative bg-white/5 border border-white/5 rounded-2xl overflow-hidden aspect-square flex flex-col justify-end">
+                            <img src={img.image} className="absolute inset-0 w-full h-full object-cover transition-transform group-hover:scale-105 duration-300" alt="Library" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-2 gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => insertImageAtCursor(img.image)}
+                                className="w-full py-1.5 bg-nectar-gold hover:bg-yellow-500 text-background rounded-lg text-[8px] font-black uppercase tracking-wider flex items-center justify-center gap-1 transition-all"
+                              >
+                                Insertar en Editor
+                              </button>
+                              <div className="grid grid-cols-2 gap-1">
+                                <button
+                                  type="button"
+                                  onClick={() => handleUseTemplateAsCover(img.image)}
+                                  className="py-1 bg-white/10 hover:bg-white/20 text-white rounded-lg text-[7px] font-black uppercase tracking-wider transition-all"
+                                >
+                                  Portada
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleUseTemplateAsBg(img.image)}
+                                  className="py-1 bg-white/10 hover:bg-white/20 text-white rounded-lg text-[7px] font-black uppercase tracking-wider transition-all"
+                                >
+                                  Fondo
+                                </button>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => handleTemplateImageDelete(img.id)}
+                                className="w-full py-1 bg-red-950/80 hover:bg-red-900 border border-red-800/40 text-red-300 rounded-lg text-[7px] font-black uppercase tracking-wider transition-all"
+                              >
+                                Eliminar
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </form>
+            </div>
+
+            {/* Column 2: Live Preview */}
+            <div className={`flex flex-col h-full ${isPreviewExpanded ? 'w-full' : 'w-full lg:w-[480px]'} min-h-[480px] lg:max-h-[76vh] overflow-hidden bg-neutral-900 border border-white/5 rounded-3xl p-5 relative`}>
+              <div className="flex justify-between items-center mb-3">
+                <span className="text-[7.5px] uppercase tracking-wider font-black text-white/50 block">Vista Previa (Estética Premium)</span>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsPreviewExpanded(!isPreviewExpanded)}
+                    className="px-2 py-1 bg-white/5 border border-white/10 text-[7px] text-white/50 hover:text-white rounded-lg font-black uppercase"
+                  >
+                    {isPreviewExpanded ? '⇐ Editar' : 'Expandir 🗖'}
+                  </button>
+                  <div className="flex bg-black/40 border border-white/15 rounded-lg p-0.5 gap-0.5">
+                    {[
+                      { id: 'desktop', label: '💻' },
+                      { id: 'tablet', label: '📱' },
+                      { id: 'mobile', label: '📞' }
+                    ].map(vp => (
+                      <button
+                        key={vp.id}
+                        type="button"
+                        onClick={() => setPreviewViewport(vp.id as any)}
+                        className={`px-2 py-0.5 rounded text-[8px] transition-all ${
+                          previewViewport === vp.id ? 'bg-nectar-gold text-background font-bold' : 'text-white/40'
+                        }`}
                       >
-                        <option value="center">Centro</option>
-                        <option value="top">Arriba</option>
-                        <option value="bottom">Abajo</option>
-                        <option value="left">Izquierda</option>
-                        <option value="right">Derecha</option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Footer Text */}
-                <div className="bg-white/[0.02] border border-white/5 p-4 rounded-2xl space-y-3">
-                  <h4 className="text-[8px] font-black uppercase tracking-widest text-white/40 pb-1.5 border-b border-white/5">
-                    Footer
-                  </h4>
-                  <div className="space-y-1.5">
-                    <label className="text-[7px] uppercase tracking-wider font-black text-white/50 block">Texto Adicional Footer</label>
-                    <input
-                      type="text"
-                      placeholder="ej: Visita nuestra web o redes."
-                      value={footerText}
-                      onChange={(e) => setFooterText(e.target.value)}
-                      className="w-full border rounded-xl px-3 py-2 text-[9px] focus:outline-none focus:border-nectar-gold transition-all admin-input"
-                    />
+                        {vp.label}
+                      </button>
+                    ))}
                   </div>
                 </div>
               </div>
 
-              {/* Right Column: Live Preview */}
-              <div className="flex flex-col h-full min-h-[400px]">
-                <span className="text-[7.5px] uppercase tracking-wider font-black text-white/50 block mb-2">Vista Previa (Branded)</span>
-                
-                {(() => {
-                  const themePreviewStyles = {
-                    minimalist: {
-                      bg: '#ffffff',
-                      text: '#111827',
-                      headerBg: '#f3f4f6',
-                      headerText: '#1f2937',
-                      border: '#e5e7eb',
-                      ctaBg: '#111827',
-                      ctaText: '#ffffff'
-                    },
-                    moss: {
-                      bg: '#f4f6f4',
-                      text: '#1e2d24',
-                      headerBg: '#2d4a36',
-                      headerText: '#ffffff',
-                      border: '#d2dbd3',
-                      ctaBg: '#2d4a36',
-                      ctaText: '#ffffff'
-                    },
-                    cosmic: {
-                      bg: '#0f0c1b',
-                      text: '#f3f0ff',
-                      headerBg: '#1a103c',
-                      headerText: '#a78bfa',
-                      border: '#2e1f5e',
-                      ctaBg: '#7c3aed',
-                      ctaText: '#ffffff'
-                    },
-                    glow: {
-                      bg: '#0d0d0d',
-                      text: '#e5e7eb',
-                      headerBg: '#1a1a1a',
-                      headerText: '#22d3ee',
-                      border: '#262626',
-                      ctaBg: '#22d3ee',
-                      ctaText: '#000000'
-                    },
-                    mist: {
-                      bg: '#f0f4f8',
-                      text: '#243b53',
-                      headerBg: '#d9e2ec',
-                      headerText: '#102a43',
-                      border: '#bcccdc',
-                      ctaBg: '#102a43',
-                      ctaText: '#ffffff'
-                    }
-                  };
+              {(() => {
+                const themePreviewStyles = {
+                  minimalist: {
+                    bg: '#06070b',
+                    cardBg: '#0c0d13',
+                    text: '#F4F6F0',
+                    border: `1px solid ${tenantConfig.theme_color}1a`,
+                    accent: tenantConfig.theme_color
+                  },
+                  moss: {
+                    bg: '#0b130e',
+                    cardBg: '#122017',
+                    text: '#f5fbf7',
+                    border: '1px solid #2e4d38',
+                    accent: '#82c99b'
+                  },
+                  cosmic: {
+                    bg: '#05050f',
+                    cardBg: '#0c0a1a',
+                    text: '#F4F6F0',
+                    border: '1px solid #4a154b',
+                    accent: '#c084fc'
+                  },
+                  glow: {
+                    bg: '#0f0b07',
+                    cardBg: '#1a130c',
+                    text: '#fffdfa',
+                    border: '1px solid #d97706',
+                    accent: '#f59e0b'
+                  },
+                  mist: {
+                    bg: '#0f1115',
+                    cardBg: '#181b22',
+                    text: '#f3f4f6',
+                    border: '1px solid #374151',
+                    accent: '#06b6d4'
+                  }
+                };
 
-                  const selectedTheme = themePreviewStyles[templateType as keyof typeof themePreviewStyles] || themePreviewStyles.minimalist;
-                  
-                  return (
-                    <div
-                      style={{
-                        backgroundColor: selectedTheme.bg,
-                        color: selectedTheme.text,
-                        borderColor: selectedTheme.border,
-                        backgroundImage: bgImageUrl ? `url(${bgImageUrl})` : 'none',
-                        backgroundPosition: bgPosition,
-                        backgroundSize: 'cover',
-                        filter: bgImageUrl ? `saturate(${bgSaturation}%)` : 'none',
-                        opacity: bgImageUrl ? parseFloat(bgOpacity) : 1
-                      }}
-                      className="border rounded-2xl p-5 flex flex-1 flex-col justify-between overflow-y-auto text-black animate-fadeIn"
-                    >
-                      <div>
-                        <div
-                          style={{
-                            backgroundColor: selectedTheme.headerBg,
-                            borderColor: selectedTheme.border,
-                            fontFamily: titleFontFamily === 'serif' ? 'Georgia, serif' : titleFontFamily === 'sans-serif' ? 'sans-serif' : 'monospace'
-                          }}
-                          className="border-b-2 pb-4 mb-4 text-center rounded-xl p-3"
-                        >
-                          {imageUrl && (
-                            <img src={imageUrl} alt="Portada" className="max-h-20 mx-auto mb-2 rounded object-cover" />
+                const selectedTheme = themePreviewStyles[templateType as keyof typeof themePreviewStyles] || themePreviewStyles.minimalist;
+
+                // Responsive viewport mock classes
+                let vpStyle: React.CSSProperties = {
+                  width: '100%',
+                  maxWidth: '100%',
+                  height: '100%',
+                  overflowY: 'auto',
+                };
+                if (previewViewport === 'tablet') {
+                  vpStyle = { ...vpStyle, maxWidth: '380px', margin: '0 auto' };
+                } else if (previewViewport === 'mobile') {
+                  vpStyle = { ...vpStyle, maxWidth: '290px', margin: '0 auto' };
+                }
+
+                const fontStyleMap: Record<string, string> = {
+                  serif: 'Georgia, serif',
+                  playfair: "'Playfair Display', Georgia, serif', serif",
+                  cinzel: "'Cinzel', Georgia, serif",
+                  garamond: "'Cormorant Garamond', 'Times New Roman', serif",
+                  montserrat: "'Montserrat', Helvetica, Arial, sans-serif",
+                  pinyon: "'Pinyon Script', cursive"
+                };
+
+                return (
+                  <div className="flex-1 bg-black/40 border border-white/5 rounded-2xl overflow-hidden p-2 flex items-center justify-center">
+                    <div style={vpStyle} className="custom-scrollbar bg-[#0f0f0f] rounded-xl p-3 border border-white/5 transition-all">
+                      <div
+                        style={{
+                          backgroundColor: selectedTheme.bg,
+                          color: selectedTheme.text,
+                          fontFamily: fontStyleMap[fontFamily] || 'serif',
+                          padding: '24px 12px',
+                          borderRadius: '16px',
+                          backgroundImage: bgImageUrl ? `linear-gradient(rgba(0,0,0,${1 - parseFloat(bgOpacity)}), rgba(0,0,0,${1 - parseFloat(bgOpacity)})), url(${bgImageUrl})` : 'none',
+                          backgroundPosition: bgPosition,
+                          backgroundSize: 'cover',
+                          border: selectedTheme.border
+                        }}
+                        className="space-y-4"
+                      >
+                        {/* Header logo */}
+                        <div className="text-center pb-4 border-b border-white/10">
+                          {tenantConfig.logo_url ? (
+                            <img src={tenantConfig.logo_url} alt="Logo" className="w-10 h-10 rounded-full mx-auto object-contain border border-white/20 bg-neutral-950 p-1" />
+                          ) : (
+                            <span className="text-lg">👑</span>
                           )}
-                          <h1 style={{ color: selectedTheme.headerText }} className="text-base font-extrabold tracking-tight">
-                            {tenantConfig.name}
-                          </h1>
-                          <p className="text-[7px] uppercase tracking-widest opacity-60">Boletín Informativo</p>
+                          <h1 className="text-xs font-black uppercase tracking-widest mt-1 text-white">{tenantConfig.name}</h1>
                         </div>
 
-                        <h2 style={{ fontFamily: titleFontFamily === 'serif' ? 'Georgia, serif' : titleFontFamily === 'sans-serif' ? 'sans-serif' : 'monospace' }} className="text-sm font-bold mb-3">
-                          {campaignTitle || campaignSubject || 'Título del Boletín'}
-                        </h2>
+                        {/* Cover Image */}
+                        {imageUrl && (
+                          <div style={{ textAlign: campImageAlign as any }} className="w-full">
+                            <img
+                              src={imageUrl}
+                              style={{
+                                width: previewViewport === 'mobile' ? campImageWidthMobile : previewViewport === 'tablet' ? campImageWidthTablet : campImageWidth,
+                                borderRadius: campImageRadius,
+                                border: selectedTheme.border,
+                                display: 'inline-block'
+                              }}
+                              alt="Cover"
+                            />
+                          </div>
+                        )}
 
+                        {/* Title Section */}
                         <div
-                          style={{ fontFamily: fontFamily === 'serif' ? 'Georgia, serif' : fontFamily === 'sans-serif' ? 'sans-serif' : 'monospace' }}
-                          className="text-[11px] leading-relaxed space-y-3"
-                          dangerouslySetInnerHTML={{ __html: campaignContent || '<p className="italic opacity-40">Escribe el contenido para previsualizarlo aquí...</p>' }}
-                        />
+                          style={{
+                            color: campTitleTextColor,
+                            backgroundColor: campTitleBgColor,
+                            padding: campTitlePadding,
+                            borderRadius: campTitleRadius,
+                            textAlign: 'center',
+                            fontFamily: fontStyleMap[titleFontFamily] || 'serif'
+                          }}
+                        >
+                          <h2
+                            style={{
+                              fontSize: previewViewport === 'mobile' ? campTitleFontSizeMobile : previewViewport === 'tablet' ? campTitleFontSizeTablet : campTitleFontSizeDesktop,
+                              fontStyle: 'italic',
+                              fontWeight: 'black',
+                              lineHeight: '1.3'
+                            }}
+                          >
+                            {emailTitle || campaignTitle || campaignSubject || 'Título del Boletín'}
+                          </h2>
+                        </div>
 
+                        {/* Body Section */}
+                        <div
+                          style={{
+                            color: campBodyTextColor || selectedTheme.text,
+                            backgroundColor: campBodyBgColor,
+                            padding: campBodyPadding,
+                            borderRadius: campBodyRadius,
+                            textAlign: (previewViewport === 'mobile' ? campBodyAlignmentMobile : previewViewport === 'tablet' ? campBodyAlignmentTablet : campBodyAlignment) as any
+                          }}
+                        >
+                          <div
+                            style={{
+                              fontSize: previewViewport === 'mobile' ? campBodyFontSizeMobile : previewViewport === 'tablet' ? campBodyFontSizeTablet : campBodyFontSizeDesktop,
+                              fontStyle: 'italic',
+                              lineHeight: '1.8',
+                              display: 'inline-block',
+                              maxWidth: '90%',
+                              textAlign: 'left'
+                            }}
+                            dangerouslySetInnerHTML={{ __html: campaignContent || '<p class="opacity-45 italic text-center">Escribe tu contenido para previsualizarlo aquí...</p>' }}
+                          />
+                        </div>
+
+                        {/* Main CTA Button */}
                         {ctaText && (
-                          <div className="mt-4 text-center">
+                          <div style={{ textAlign: (previewViewport === 'mobile' ? campCtaAlignMobile : previewViewport === 'tablet' ? campCtaAlignTablet : campCtaAlignment) as any, marginTop: campCtaMarginTop, marginBottom: campCtaMarginBottom }}>
                             <a
                               href={ctaLink || '#'}
-                              target="_blank"
-                              rel="noreferrer"
                               style={{
-                                backgroundColor: selectedTheme.ctaBg,
-                                color: selectedTheme.ctaText,
-                                fontFamily: fontFamily === 'serif' ? 'Georgia, serif' : fontFamily === 'sans-serif' ? 'sans-serif' : 'monospace'
+                                backgroundColor: selectedTheme.accent,
+                                color: '#000000',
+                                padding: '10px 20px',
+                                borderRadius: '10px',
+                                fontSize: '10px',
+                                fontWeight: 'bold',
+                                textTransform: 'uppercase',
+                                letterSpacing: '1px',
+                                display: 'inline-block',
+                                boxShadow: '0 4px 10px rgba(0,0,0,0.3)'
                               }}
-                              className="inline-block px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-md hover:scale-105 transition-all font-bold"
+                              onClick={e => e.preventDefault()}
                             >
                               {ctaText}
                             </a>
                           </div>
                         )}
-                      </div>
 
-                      <div
-                        style={{
-                          borderColor: selectedTheme.border,
-                          fontFamily: footerFontFamily === 'serif' ? 'Georgia, serif' : footerFontFamily === 'sans-serif' ? 'sans-serif' : 'monospace'
-                        }}
-                        className="border-t pt-4 mt-6 text-center text-[7.5px] opacity-50 space-y-0.5"
-                      >
-                        <p>© {new Date().getFullYear()} {tenantConfig.name}. Todos los derechos reservados.</p>
-                        {footerText && <p>{footerText}</p>}
-                        <p>Recibes este correo porque te suscribiste a nuestro boletín oficial.</p>
-                        <p className="font-semibold cursor-pointer text-amber-500">Desuscribirse</p>
+                        {/* Footer Section */}
+                        <div
+                          style={{
+                            color: campFooterTextColor || 'rgba(255,255,255,0.4)',
+                            backgroundColor: campFooterBgColor,
+                            padding: campFooterPadding,
+                            borderRadius: campFooterRadius,
+                            fontFamily: fontStyleMap[footerFontFamily] || 'serif',
+                            borderTop: '1px solid rgba(255,255,255,0.06)',
+                            paddingTop: '16px',
+                            marginTop: '24px',
+                            textAlign: 'center',
+                            fontSize: '8px',
+                            lineHeight: '1.6'
+                          }}
+                        >
+                          {footerText ? (
+                            <div dangerouslySetInnerHTML={{ __html: footerText }} />
+                          ) : (
+                            <p>© {new Date().getFullYear()} {tenantConfig.name}. Todos los derechos reservados.</p>
+                          )}
+                          <p className="mt-1 font-bold text-nectar-gold hover:underline cursor-pointer">Desuscribirse</p>
+                        </div>
                       </div>
                     </div>
-                  );
-                })()}
+                  </div>
+                );
+              })()}
 
-                <div className="pt-4 flex justify-end gap-2 mt-auto">
-                  <button
-                    type="button"
-                    onClick={() => setShowNewsletterModal(false)}
-                    className="px-4 py-2 border border-white/10 hover:bg-white/5 rounded-xl text-[8px] font-black uppercase tracking-wider transition-all text-white/80 cursor-pointer font-bold"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={isSendingCampaign || !campaignSubject.trim() || !campaignContent.trim()}
-                    className="px-6 py-2 bg-nectar-gold text-background hover:bg-nectar-gold/90 rounded-xl text-[8px] font-black uppercase tracking-wider transition-all font-bold shadow-md cursor-pointer"
-                  >
-                    {isSendingCampaign ? 'Enviando...' : '🚀 Enviar Campaña'}
-                  </button>
-                </div>
+              <div className="pt-4 flex justify-end gap-2 mt-auto">
+                <button
+                  type="button"
+                  onClick={() => setShowNewsletterModal(false)}
+                  className="px-4 py-2 border border-white/10 hover:bg-white/5 rounded-xl text-[8px] font-black uppercase tracking-wider transition-all text-white/80 cursor-pointer font-bold"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSendCampaign}
+                  disabled={isSendingCampaign || !campaignSubject.trim() || !campaignContent.trim()}
+                  className="px-6 py-2 bg-nectar-gold text-background hover:bg-nectar-gold/90 rounded-xl text-[8px] font-black uppercase tracking-wider transition-all font-bold shadow-md cursor-pointer"
+                >
+                  {isSendingCampaign ? 'Enviando...' : '🚀 Enviar Campaña'}
+                </button>
               </div>
-            </form>
+            </div>
+
           </div>
         </div>
       )}
