@@ -48,6 +48,25 @@ class TenantViewSet(viewsets.ModelViewSet):
             'api_key': str(tenant.api_key)
         })
 
+    @action(detail=True, methods=['post'], url_path='start-trial')
+    def start_trial(self, request, pk=None):
+        tenant = self.get_object()
+        if tenant.owner != request.user and not (request.user.is_staff or request.user.role == 'ADMIN'):
+            return Response({'error': 'No tienes permisos para activar la prueba en este portal.'}, status=status.HTTP_403_FORBIDDEN)
+        
+        if tenant.trial_ends_at is not None:
+            return Response({'error': 'La prueba gratuita ya fue solicitada o configurada anteriormente para este portal.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        from django.utils import timezone
+        from datetime import timedelta
+        tenant.trial_ends_at = timezone.now() + timedelta(days=14)
+        tenant.save(update_fields=['trial_ends_at'])
+        
+        return Response({
+            'detail': 'Prueba gratuita de 14 días iniciada con éxito.',
+            'trial_ends_at': tenant.trial_ends_at.isoformat()
+        })
+
     @action(detail=True, methods=['post'], url_path='validate-domain')
     def validate_domain(self, request, pk=None):
         tenant = self.get_object()

@@ -63,7 +63,7 @@ class BillingSystemTests(APITestCase):
 
         # Create the invoicing addon and associate it with the contract
         self.invoicing_addon = AddOn.objects.create(
-            slug="mexico-invoicing",
+            slug="facturacion-cfdi",
             name="Facturación SAT México",
             category_badge="CONTABILIDAD Y FISCAL",
             description="Módulo de facturación fiscal electrónica",
@@ -875,7 +875,7 @@ class BillingSystemTests(APITestCase):
     @patch('stripe.Subscription.retrieve')
     def test_stripe_webhook_addon_payment_succeeded_credits_20_stamps(self, mock_sub_retrieve):
         """
-        Verify that invoice.payment_succeeded webhook for mexico-invoicing credits 20 stamps.
+        Verify that invoice.payment_succeeded webhook for facturacion-cfdi sets the balance to 100 stamps (non-accumulative).
         """
         url = reverse('stripe_webhook')
         payload = {
@@ -914,7 +914,7 @@ class BillingSystemTests(APITestCase):
             self.assertEqual(response.status_code, 200)
             
         self.tenant.refresh_from_db()
-        self.assertEqual(self.tenant.stamp_balance, 30)
+        self.assertEqual(self.tenant.stamp_balance, 100)
 
     @patch('stripe.Subscription.retrieve')
     def test_stripe_webhook_combo_payment_succeeded_credits_20_stamps(self, mock_sub_retrieve):
@@ -1041,9 +1041,9 @@ class BillingSystemTests(APITestCase):
             
         self.tenant.refresh_from_db()
         # Initial stamps = 10
-        # + 20 stamps added from mexico-invoicing addon = 30
-        # - 1 stamp consumed for autofacturacion = 29
-        self.assertEqual(self.tenant.stamp_balance, 29)
+        # set to 100 on facturacion-cfdi payment (max(10, 100) = 100)
+        # - 1 stamp consumed for autofacturacion = 99
+        self.assertEqual(self.tenant.stamp_balance, 99)
         
         # Verify Invoice object is created and marked PAID
         invoice = Invoice.objects.filter(tenant=self.tenant, stripe_invoice_id="in_999").first()

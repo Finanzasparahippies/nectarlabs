@@ -51,7 +51,7 @@ class BillingTenantMixin:
 
 class BillingInfoView(BillingTenantMixin, APIView):
     permission_classes = [permissions.IsAuthenticated, HasAddOnPermission]
-    addon_slug = 'mexico-invoicing'
+    addon_slug = 'facturacion-cfdi'
 
     def get(self, request):
         tenant = self.get_tenant()
@@ -65,7 +65,7 @@ class BillingInfoView(BillingTenantMixin, APIView):
             plan__isnull=False
         ).exists()
         
-        addon_active = 'mexico-invoicing' in tenant.active_addons
+        addon_active = 'facturacion-cfdi' in tenant.active_addons
 
         data = {
             "stamp_balance": tenant.stamp_balance,
@@ -123,7 +123,7 @@ def get_or_create_stamp_package_stripe_price(package_size, package_desc, package
 
 class BuyStampsView(BillingTenantMixin, APIView):
     permission_classes = [permissions.IsAuthenticated, HasAddOnPermission]
-    addon_slug = 'mexico-invoicing'
+    addon_slug = 'facturacion-cfdi'
 
     def post(self, request):
         tenant = self.get_tenant()
@@ -189,7 +189,7 @@ class BuyStampsView(BillingTenantMixin, APIView):
 
 class TaxProfileView(BillingTenantMixin, APIView):
     permission_classes = [permissions.IsAuthenticated, HasAddOnPermission]
-    addon_slug = 'mexico-invoicing'
+    addon_slug = 'facturacion-cfdi'
 
     def get(self, request):
         tenant = self.get_tenant()
@@ -257,7 +257,7 @@ class TaxProfileView(BillingTenantMixin, APIView):
 
 class InvoiceViewSet(BillingTenantMixin, viewsets.ModelViewSet):
     serializer_class = InvoiceSerializer
-    addon_slug = 'mexico-invoicing'
+    addon_slug = 'facturacion-cfdi'
 
     def get_permissions(self):
         if self.action in ['issue_from_installment']:
@@ -735,7 +735,7 @@ class BuyEmailCreditsView(BillingTenantMixin, APIView):
 
 class SATProductKeySearchView(APIView):
     permission_classes = [permissions.AllowAny, HasAddOnPermission]
-    addon_slug = 'mexico-invoicing'
+    addon_slug = 'facturacion-cfdi'
 
     def get(self, request):
         query = request.query_params.get('q', '').strip()
@@ -755,7 +755,7 @@ class SATProductKeySearchView(APIView):
 
 class SATUnitKeySearchView(APIView):
     permission_classes = [permissions.AllowAny, HasAddOnPermission]
-    addon_slug = 'mexico-invoicing'
+    addon_slug = 'facturacion-cfdi'
 
     def get(self, request):
         query = request.query_params.get('q', '').strip()
@@ -779,7 +779,7 @@ class UploadCSDView(BillingTenantMixin, APIView):
     directamente al PAC sin modificar ningún dato fiscal del TaxProfile.
     """
     permission_classes = [permissions.IsAuthenticated, HasAddOnPermission]
-    addon_slug = 'mexico-invoicing'
+    addon_slug = 'facturacion-cfdi'
 
     def post(self, request):
         tenant = self.get_tenant()
@@ -831,7 +831,7 @@ class CSDStatusView(BillingTenantMixin, APIView):
     cargado en Facturapi para la organización del tenant.
     """
     permission_classes = [permissions.IsAuthenticated, HasAddOnPermission]
-    addon_slug = 'mexico-invoicing'
+    addon_slug = 'facturacion-cfdi'
 
     def get(self, request):
         tenant = self.get_tenant()
@@ -860,7 +860,7 @@ class CSDStatusView(BillingTenantMixin, APIView):
 
 class FacturapiBaseView(BillingTenantMixin, APIView):
     permission_classes = [permissions.IsAuthenticated, HasAddOnPermission]
-    addon_slug = 'mexico-invoicing'
+    addon_slug = 'facturacion-cfdi'
 
     def get_organization_id_and_tenant(self, request):
         user = request.user

@@ -20,7 +20,7 @@ interface Addon {
 
 const getAddonIcon = (id: string) => {
   switch (id) {
-    case 'live-chat':
+    case 'bot-chat':
       return (
         <svg className="w-8 h-8 text-nectar-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
@@ -32,29 +32,47 @@ const getAddonIcon = (id: string) => {
           <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
         </svg>
       );
-    case 'logistics-gps':
+    case 'delivery-tracking':
       return (
         <svg className="w-8 h-8 text-nectar-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
           <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
         </svg>
       );
-    case 'patreon-sponsorship':
+    case 'sponsorship':
       return (
         <svg className="w-8 h-8 text-nectar-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
       );
-    case 'analytics-apm':
+    case 'business-analytics':
       return (
         <svg className="w-8 h-8 text-nectar-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h2a2 2 0 002-2z" />
         </svg>
       );
-    case 'newsletter-campaigner':
+    case 'campaigner':
       return (
         <svg className="w-8 h-8 text-nectar-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+        </svg>
+      );
+    case 'facturacion-cfdi':
+      return (
+        <svg className="w-8 h-8 text-nectar-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+      );
+    case 'automatic-invoicing':
+      return (
+        <svg className="w-8 h-8 text-nectar-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
+      );
+    case 'ecommerce-combo':
+      return (
+        <svg className="w-8 h-8 text-nectar-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
         </svg>
       );
     default:
@@ -68,11 +86,11 @@ const getAddonIcon = (id: string) => {
 
 const fallbackAddons: Omit<Addon, 'icon'>[] = [
   {
-    id: 'live-chat',
-    name: 'Néctar Live Chat',
+    id: 'bot-chat',
+    name: 'Néctar AI Chat Bot',
     categoryBadge: 'COMUNICACIÓN EN VIVO',
     description: 'Widget de chat flotante en tiempo real y consola multi-agente con historial persistente.',
-    detailedDescription: 'Un canal de comunicación instantáneo integrado para retención y soporte de usuarios. Los clientes ven un widget interactivo de chat, mientras que los agentes de soporte gestionan las conversaciones desde una consola interna dedicada.',
+    detailedDescription: 'Un canal de comunicación instantáneo integrado para retención y soporte de usuarios. Los clientes ven un widget interactivo de chat, mientras que los agentes de soporte de IA responden y el staff técnico gestiona las conversaciones desde una consola interna dedicada.',
     monthlyPrice: 99,
     yearlyPrice: 990,
     complexity: 'Media',
@@ -86,10 +104,10 @@ const fallbackAddons: Omit<Addon, 'icon'>[] = [
   },
   {
     id: 'booking-signature',
-    name: 'Néctar Booking & Signature',
-    categoryBadge: 'CONTRATOS Y CITAS',
-    description: 'Motor de reserva de citas integrado con firma digital de propuestas y generación de PDFs con firma incrustada.',
-    detailedDescription: 'Ideal para digitalizar acuerdos contractuales. Permite configurar calendarios interactivos, generar propuestas en PDF al vuelo a partir de plantillas y capturar firmas táctiles o con mouse seguras con marcas de tiempo criptográficas.',
+    name: 'Néctar Contratos Digitales',
+    categoryBadge: 'CONTRATOS DIGITALES',
+    description: 'Motor de contratos digitales con firma incrustada y generación de PDFs automático.',
+    detailedDescription: 'Ideal para digitalizar acuerdos contractuales. Permite configurar contratos, generar propuestas en PDF automáticos y capturar firmas táctiles o con mouse seguras con marcas de tiempo criptográficas.',
     monthlyPrice: 149,
     yearlyPrice: 1490,
     complexity: 'Alta',
@@ -102,25 +120,25 @@ const fallbackAddons: Omit<Addon, 'icon'>[] = [
     ]
   },
   {
-    id: 'logistics-gps',
-    name: 'Néctar Logistics & GPS',
+    id: 'delivery-tracking',
+    name: 'Tienda + Envíos con Skydropx',
     categoryBadge: 'LOGÍSTICA Y CONTROL',
-    description: 'Seguimiento en tiempo real de repartidores, trazado de rutas óptimas de paradas y cálculo de ETA en mapa interactivo.',
-    detailedDescription: 'Módulo de geolocalización industrial. Registra rutas y telemetría GPS, ofreciendo una experiencia interactiva tanto al administrador (consola de flotas) como al usuario final (seguimiento del pedido en tiempo real).',
-    monthlyPrice: 449,
-    yearlyPrice: 4490,
+    description: 'Configura tus almacenes de origen, cotiza envíos en tiempo real con margen de ganancia y emite guías automáticamente.',
+    detailedDescription: 'Módulo de logística inteligente integrado. Registra las tarifas reales desde la API de Skydropx y les aplica tu margen (markup) del 15% o personalizado directamente en el checkout, automatizando la generación de etiquetas en pedidos pagados.',
+    monthlyPrice: 249,
+    yearlyPrice: 2490,
     complexity: 'Muy Alta',
-    serverRequirements: 'Acceso a Mapbox API o Google Maps API para cálculo de rutas + Telemetría persistente de alta frecuencia.',
+    serverRequirements: 'Cuenta en Skydropx (API Key de desarrollo o producción) + Configuración de dirección de almacén.',
     technicalDetails: [
-      'WebSockets / Polling optimizado para actualización GPS',
-      'Consola administrativa con mapas interactivos de flotas',
-      'Cálculo inteligente de rutas y paradas ordenadas',
-      'Estimaciones de tiempo de entrega basadas en tráfico'
+      'Cotización dinámica multitarifa (FedEx, DHL, Estafeta)',
+      'Margen (markup) de ganancia sobre tarifas base',
+      'Emisión automatizada de guías tras confirmación de pago',
+      'Seguimiento y URL de rastreo guardados en la orden'
     ]
   },
   {
-    id: 'patreon-sponsorship',
-    name: 'Néctar Patreon/Sponsorship',
+    id: 'sponsorship',
+    name: 'Néctar Sponsors & NSCAP',
     categoryBadge: 'MONETIZACIÓN',
     description: 'Pasarela de suscripciones recurrentes de Stripe con control de acceso a feeds exclusivos y niveles de membresía.',
     detailedDescription: 'Permite monetizar tu contenido, comunidad o SaaS de manera flexible. Automatiza cobros recurrentes de Stripe, gestiona roles y bloquea o desbloquea secciones de contenido multimedia basándose en el nivel del suscriptor.',
@@ -136,37 +154,92 @@ const fallbackAddons: Omit<Addon, 'icon'>[] = [
     ]
   },
   {
-    id: 'analytics-apm',
-    name: 'Néctar Analytics APM',
-    categoryBadge: 'MONITOREO DE DESEMPEÑO',
-    description: 'Monitor de Core Web Vitals en navegador y telemetría de base de datos con conteo de queries e hilos en tiempo real.',
-    detailedDescription: 'Optimiza la infraestructura midiendo el impacto real. Este middleware inyecta telemetría que calcula Web Vitals (LCP, FID, CLS) desde el lado del cliente y registra el tiempo de respuesta y la eficiencia de las consultas SQL en Django.',
+    id: 'business-analytics',
+    name: 'Néctar Administrador de Ventas y Analytics',
+    categoryBadge: 'MONETIZACIÓN',
+    description: 'Administrador de ventas y analytics para Nectar, con dashboard de métricas en tiempo real, gráficos interactivos y exportación de datos.',
+    detailedDescription: 'Administra las ventas y analytics de tu plataforma. Con un dashboard intuitivo, podrás ver métricas en tiempo real, gráficos interactivos y exportar datos en diferentes formatos. Ideal para negocios que buscan optimizar sus ventas y analytics.',
     monthlyPrice: 99,
     yearlyPrice: 990,
     complexity: 'Media',
     serverRequirements: 'Módulo de Middleware Django instalado + Agregación de logs asíncrona para no afectar el flujo principal.',
     technicalDetails: [
-      'Detección automática de consultas duplicadas (N+1)',
-      'Monitoreo del hardware del servidor (CPU/RAM/SSD)',
-      'Alertas configurables por lentitud de base de datos',
-      'Registro detallado de Web Vitals del navegador del cliente'
+      'Dashboard interactivo con métricas en tiempo real',
+      'Exportación de datos en diferentes formatos',
+      'Gráficos interactivos',
+      'Registro detallado de transacciones'
     ]
   },
   {
-    id: 'newsletter-campaigner',
-    name: 'Néctar Newsletter',
+    id: 'campaigner',
+    name: 'Néctar Newsletter y Campañas de Email',
     categoryBadge: 'EMAIL MARKETING',
-    description: 'Gestor de suscripciones, programador de campañas con plantillas HTML y envío masivo optimizado para SMTP/SES.',
-    detailedDescription: 'Envía boletines interactivos a tu base de contactos. Cuenta con un sistema automático de tokens únicos de cancelación de suscripción para cumplir con las normativas internacionales de correo, además de plantillas HTML prediseñadas.',
-    monthlyPrice: 79,
-    yearlyPrice: 790,
+    description: 'Gestor de suscripciones, programador de campañas con plantillas HTML y envío masivo optimizado para SMTP/SES. Incluye 1,000 envíos/mes.',
+    detailedDescription: 'Envía boletines interactivos a tu base de contactos. Cuenta con un sistema automático de tokens únicos de cancelación de suscripción para cumplir con las normativas internacionales de correo, además de plantillas HTML prediseñadas. Incluye 1,000 correos mensuales base.',
+    monthlyPrice: 199,
+    yearlyPrice: 1990,
     complexity: 'Baja',
     serverRequirements: 'Servicio de entrega de correos electrónicos configurado (AWS SES, Resend, Sendgrid o un SMTP privado).',
     technicalDetails: [
       'Tokens únicos de desuscripción seguros (UUID)',
       'Render de templates de correo HTML con Django Template Loader',
-      'Manejo de estados activos / inactivos de la base de datos',
-      'Soporte multi-idioma de plantillas'
+      'Envío de 1,000 correos mensuales base incluidos',
+      'Emails extra con costo variable a $0.10 MXN'
+    ]
+  },
+  {
+    id: 'facturacion-cfdi',
+    name: 'Facturación SAT México',
+    categoryBadge: 'CONTABILIDAD Y FISCAL',
+    description: 'Emite facturas CFDI 4.0 oficiales del SAT a tus clientes de manera automatizada y marca blanca. Incluye 20 timbres base.',
+    detailedDescription: 'Módulo de facturación fiscal electrónica para México. Permite crear organizaciones subordinadas en Facturapi, subir sellos CSD y timbrar facturas CFDI 4.0 directamente desde tu portal. Incluye 20 timbres mensuales base.',
+    monthlyPrice: 499,
+    yearlyPrice: 4990,
+    complexity: 'Alta',
+    serverRequirements: 'Configuración de credenciales de PAC (Facturapi API Key) en variables de entorno + HTTPS para subida segura de sellos.',
+    technicalDetails: [
+      'Creación dinámica de organizaciones subordinadas en el PAC',
+      'Carga directa y segura de sellos CSD (.cer, .key)',
+      'Soporte para 20 timbres mensuales incluidos',
+      'Timbres extra a $1.50 MXN c/u en prepago',
+      'Generación y timbrado automatizado de CFDI 4.0',
+      'Descarga de archivos XML y PDF de facturas',
+      'Manejo inteligente de sincronización LCO del SAT'
+    ]
+  },
+  {
+    id: 'automatic-invoicing',
+    name: 'Facturación Automática SAT',
+    categoryBadge: 'CONTABILIDAD Y FISCAL',
+    description: 'Timbrado automático e inmediato de facturas CFDI 4.0 al recibir pagos de tus clientes finales.',
+    detailedDescription: 'Módulo de facturación automática como agregado del módulo de facturación SAT México. Permite automatizar al 100% el timbrado de facturas al recibir pagos de abonos o mensualidades.',
+    monthlyPrice: 199,
+    yearlyPrice: 1990,
+    complexity: 'Media',
+    serverRequirements: 'Módulo Facturación SAT México activo + Configuración fiscal completa y sellos CSD vigentes.',
+    technicalDetails: [
+      'Timbrado desatendido inmediato post-pago',
+      'Envío automático de XML y PDF a clientes finales',
+      'Notificaciones de estado de timbrado al tenant',
+      'Reintentos automáticos ante caídas del PAC/SAT'
+    ]
+  },
+  {
+    id: 'ecommerce-combo',
+    name: 'Combo E-commerce Automatizado',
+    categoryBadge: 'E-COMMERCE COMBO',
+    description: 'El paquete integral definitivo: Tienda + Envíos con Skydropx, Facturación SAT y Newsletter Masivo en uno.',
+    detailedDescription: 'La solución completa ideal para cualquier comercio digital. Habilita de golpe las funciones de cotización y emisión de guías de envío nacionales de Skydropx, facturación fiscal automatizada CFDI 4.0 con 20 timbres base, y campañas de marketing por correo con 1,000 envíos incluidos.',
+    monthlyPrice: 799,
+    yearlyPrice: 7990,
+    complexity: 'Alta',
+    serverRequirements: 'Configuración completa de llaves de Stripe, Skydropx API Key y Facturapi API Key.',
+    technicalDetails: [
+      'Acceso completo a módulo Tienda + Envíos Skydropx',
+      'Acceso completo a módulo Facturación SAT (20 timbres base)',
+      'Acceso completo a módulo Newsletter Masivo (1,000 correos base)',
+      'Ahorro de $148.00 MXN mensuales sobre la compra individual',
+      'Configuración unificada y automatización de negocio cruzada'
     ]
   }
 ];

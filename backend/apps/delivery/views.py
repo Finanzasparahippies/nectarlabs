@@ -6,7 +6,7 @@ from .models import DeliveryConfig, Vehicle, VehicleLocation, Stop
 from .serializers import DeliveryConfigSerializer, VehicleSerializer, VehicleLocationSerializer, StopSerializer
 
 class BaseDeliveryViewSet(viewsets.ModelViewSet):
-    addon_slug = 'logistics-gps'
+    addon_slug = 'delivery-tracking'
 
     def get_permissions(self):
         if self.action in ['list', 'retrieve']:

@@ -55,7 +55,7 @@ class PerformanceMiddleware:
                 elif subdomain:
                     tenant = Tenant.objects.filter(subdomain=subdomain.lower(), is_active=True).first()
 
-            if tenant and 'analytics-apm' in tenant.active_addons:
+            if tenant and 'business-analytics' in tenant.active_addons:
                 has_apm = True
         except Exception:
             has_apm = False

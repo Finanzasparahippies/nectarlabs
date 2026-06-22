@@ -468,7 +468,7 @@ class LeadAppointmentTests(APITestCase):
             "notes": "Interested in Live Chat addon",
             "date": "2026-06-15",
             "time": "10:00:00",
-            "addon_slug": "live-chat"
+            "addon_slug": "bot-chat"
         }
         
         # Anonymous post to appointments
@@ -575,7 +575,7 @@ class LeadAppointmentTests(APITestCase):
         from apps.shop.models import AddOn
 
         addon1, _ = AddOn.objects.get_or_create(
-            slug="live-chat",
+            slug="bot-chat",
             defaults={
                 "name": "Néctar Live Chat",
                 "category_badge": "Chat",
@@ -610,7 +610,7 @@ class LeadAppointmentTests(APITestCase):
             "notes": "Interested in multiple addons",
             "date": "2026-06-20",
             "time": "12:00:00",
-            "addon_slugs": ["live-chat", "booking-signature"]
+            "addon_slugs": ["bot-chat", "booking-signature"]
         }
 
         response = self.client.post(reverse('appointment-list'), data, format='json')

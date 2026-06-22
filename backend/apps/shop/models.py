@@ -378,9 +378,9 @@ class PaymentInstallment(models.Model):
                     from .models import SalesCommission
                     if not SalesCommission.objects.filter(installment=self).exists():
                         if contract.project_quote:
-                            # Custom project commission: 20% of the entire quote total_price, paid ONLY at installment 1 (anticipo)
+                            # Custom project commission: 15% of the entire quote total_price, paid ONLY at installment 1 (anticipo)
                             if self.installment_number == 1:
-                                pct = Decimal('20.00')
+                                pct = Decimal('15.00')
                                 commission_amount = Decimal(str(contract.project_quote.total_price)) * (pct / Decimal('100'))
                                 SalesCommission.objects.create(
                                     salesperson=referrer,

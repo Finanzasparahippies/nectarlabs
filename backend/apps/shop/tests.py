@@ -495,13 +495,13 @@ class PromoCodeAndCommissionTests(APITestCase):
         first_inst.status = PaymentInstallment.Status.PAID
         first_inst.save()
 
-        # Verify commission generated for Month 1 (20% of 50000.00 = 10000.00)
+        # Verify commission generated for Month 1 (15% of 50000.00 = 7500.00)
         self.assertEqual(SalesCommission.objects.count(), 1)
         comm1 = SalesCommission.objects.first()
         self.assertEqual(comm1.salesperson, self.salesperson)
         self.assertEqual(comm1.installment, first_inst)
-        self.assertEqual(comm1.commission_percentage, 20.00)
-        self.assertEqual(comm1.amount, 10000.00)
+        self.assertEqual(comm1.commission_percentage, 15.00)
+        self.assertEqual(comm1.amount, 7500.00)
 
         # Mark Month 2 (liquidación) installment as PAID
         second_inst = installments[1]

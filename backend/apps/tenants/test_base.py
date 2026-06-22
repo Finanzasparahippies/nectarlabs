@@ -60,8 +60,8 @@ class BaseTenantAddonTestCase(APITestCase):
             description="6 months plan"
         )
         self.live_chat_addon = AddOn.objects.create(
-            slug="live-chat",
-            name="Live Chat",
+            slug="bot-chat",
+            name="Bot Chat",
             category_badge="Support",
             description="Live Chat Widget",
             detailed_description="Detailed Live Chat Widget",
@@ -71,7 +71,7 @@ class BaseTenantAddonTestCase(APITestCase):
             source_reference="Ref"
         )
         self.newsletter_addon = AddOn.objects.create(
-            slug="newsletter-campaigner",
+            slug="campaigner",
             name="Newsletter Campaigner",
             category_badge="Marketing",
             description="Newsletter description",
@@ -93,8 +93,8 @@ class BaseTenantAddonTestCase(APITestCase):
             source_reference="Ref"
         )
         self.delivery_addon = AddOn.objects.create(
-            slug="logistics-gps",
-            name="Logistics & GPS",
+            slug="delivery-tracking",
+            name="Delivery Tracking",
             category_badge="Operations",
             description="Logistics & GPS description",
             detailed_description="Detailed Logistics & GPS",
@@ -104,7 +104,7 @@ class BaseTenantAddonTestCase(APITestCase):
             source_reference="Ref"
         )
         self.sponsorship_addon = AddOn.objects.create(
-            slug="patreon-sponsorship",
+            slug="sponsorship",
             name="Patreon & Sponsorship",
             category_badge="Marketing",
             description="Patreon & Sponsorship description",

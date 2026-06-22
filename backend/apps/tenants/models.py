@@ -93,6 +93,16 @@ class Tenant(models.Model):
         default=0,
         help_text="Balance actual de timbres fiscales (comprados o incluidos en la suscripción)."
     )
+    trial_ends_at = models.DateTimeField(
+        blank=True,
+        null=True,
+        help_text="Fecha y hora de finalización de la prueba gratuita de 14 días."
+    )
+    tenant_context = models.TextField(
+        blank=True,
+        null=True,
+        help_text="Contexto personalizado que se le inyecta al bot de soporte de IA."
+    )
     
     # Skydropx Integration
     skydropx_api_key = models.CharField(max_length=255, blank=True, null=True)
@@ -191,7 +201,9 @@ class Tenant(models.Model):
         from apps.shop.models import AddOn, Contract, AddOnSubscription
         
         addons = set()
-        if self.has_active_plan_contract:
+        if self.trial_ends_at and self.trial_ends_at > timezone.now():
+            addons.update(AddOn.objects.filter(is_active=True).values_list('slug', flat=True).distinct())
+        elif self.has_active_plan_contract:
             addons.update(AddOn.objects.filter(is_active=True).values_list('slug', flat=True).distinct())
         else:
             # Return only the ones explicitly purchased or assigned via active contracts
@@ -210,10 +222,10 @@ class Tenant(models.Model):
             addons.update(active_subs)
             
         if self.newsletter_plan == 'PREMIUM':
-            addons.add('newsletter-campaigner')
+            addons.add('campaigner')
             
         if 'ecommerce-combo' in addons:
-            addons.update(['logistics-gps', 'mexico-invoicing', 'newsletter-campaigner'])
+            addons.update(['delivery-tracking', 'facturacion-cfdi', 'campaigner'])
 
         return list(addons)
 

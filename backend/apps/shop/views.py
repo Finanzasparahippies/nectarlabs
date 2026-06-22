@@ -1412,7 +1412,7 @@ def stripe_webhook(request):
                                 
                         if addon:
                             tenant = Tenant.objects.filter(owner=user).first()
-                            if addon.slug in ['mexico-invoicing', 'ecommerce-combo']:
+                            if addon.slug in ['facturacion-cfdi', 'ecommerce-combo']:
                                 # Encontrar o crear Tenant
                                 if not tenant:
                                     from django.utils.text import slugify
@@ -1431,7 +1431,10 @@ def stripe_webhook(request):
                                         is_active=True
                                     )
                                 if tenant:
-                                    tenant.stamp_balance = (tenant.stamp_balance or 0) + 20
+                                    if addon.slug == 'facturacion-cfdi':
+                                        tenant.stamp_balance = max(tenant.stamp_balance or 0, 100)
+                                    else:
+                                        tenant.stamp_balance = (tenant.stamp_balance or 0) + 20
                                     tenant.save()
 
                         # --- BUCLE INVERTIDO: Autofacturar la suscripción del inquilino ---
@@ -1643,7 +1646,7 @@ def facturapi_webhook(request):
                             inst.cfdi_uuid = str(uuid_sat)
                             inst.save(update_fields=['cfdi_uuid'])
                             try:
-                                from apps.shop.utils import send_payment_receipt_email
+                                from .utils import send_payment_receipt_email
                                 send_payment_receipt_email(inst)
                             except Exception as mail_err:
                                 logger.error(f"[facturapi_webhook] Error sending payment receipt email: {mail_err}")
@@ -1718,6 +1721,14 @@ class PromoCodeViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], url_path='my-referral-code')
     def my_referral_code(self, request):
         user = request.user
+        if user.role == 'SALES' and not getattr(user, 'is_approved_seller', False):
+            return Response({
+                'code': None,
+                'code_type': 'SELLER',
+                'discount_percentage': 10.00,
+                'used_count': 0
+            })
+
         code_str = f"NECTAR-{user.username.upper()}"
         
         # Determine code type based on user role

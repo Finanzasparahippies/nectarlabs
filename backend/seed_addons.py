@@ -12,11 +12,11 @@ def seed_addons():
     
     addons_data = [
         {
-            "slug": "live-chat",
-            "name": "Néctar Live Chat Bot",
+            "slug": "bot-chat",
+            "name": "Néctar AI Chat Bot",
             "category_badge": "COMUNICACIÓN EN VIVO",
             "description": "Widget de chat flotante en tiempo real y consola multi-agente con historial persistente.",
-            "detailed_description": "Un canal de comunicación instantáneo integrado para retención y soporte de usuarios. Los clientes ven un widget interactivo de chat, mientras que los agentes de soporte gestionan las conversaciones desde una consola interna dedicada.",
+            "detailed_description": "Un canal de comunicación instantáneo integrado para retención y soporte de usuarios. Los clientes ven un widget interactivo de chat, mientras que los agentes de soporte de IA responden y el staff técnico gestiona las conversaciones desde una consola interna dedicada.",
             "monthly_price": 99.00,
             "yearly_price": 990.00,
             "origin_project": "nectarlabs-main",
@@ -50,7 +50,7 @@ def seed_addons():
             ]
         },
         {
-            "slug": "logistics-gps",
+            "slug": "delivery-tracking",
             "name": "Tienda + Envíos con Skydropx",
             "category_badge": "LOGÍSTICA Y CONTROL",
             "description": "Configura tus almacenes de origen, cotiza envíos en tiempo real con margen de ganancia y emite guías automáticamente.",
@@ -69,8 +69,8 @@ def seed_addons():
             ]
         },
         {
-            "slug": "patreon-sponsorship",
-            "name": "Néctar Sponsors & Content Access Program (NSCAP)",
+            "slug": "sponsorship",
+            "name": "Néctar Sponsors & NSCAP",
             "category_badge": "MONETIZACIÓN",
             "description": "Pasarela de suscripciones recurrentes de Stripe con control de acceso a feeds exclusivos y niveles de membresía.",
             "detailed_description": "Permite monetizar tu contenido, comunidad o SaaS de manera flexible. Automatiza cobros recurrentes de Stripe, gestiona roles y bloquea o desbloquea secciones de contenido multimedia basándose en el nivel del suscriptor.",
@@ -88,7 +88,7 @@ def seed_addons():
             ]
         },
         {
-            "slug": "analytics-apm",
+            "slug": "business-analytics",
             "name": "Néctar Administrador de Ventas y Analytics",
             "category_badge": "MONETIZACIÓN",
             "description": "Administrador de ventas y analytics para Nectar, con dashboard de métricas en tiempo real, gráficos interactivos y exportación de datos.",
@@ -107,7 +107,7 @@ def seed_addons():
             ]
         },
         {
-            "slug": "newsletter-campaigner",
+            "slug": "campaigner",
             "name": "Néctar Newsletter y Campañas de Email",
             "category_badge": "EMAIL MARKETING",
             "description": "Gestor de suscripciones, programador de campañas con plantillas HTML y envío masivo optimizado para SMTP/SES. Incluye 1,000 envíos/mes.",
@@ -126,7 +126,7 @@ def seed_addons():
             ]
         },
         {
-            "slug": "mexico-invoicing",
+            "slug": "facturacion-cfdi",
             "name": "Facturación SAT México",
             "category_badge": "CONTABILIDAD Y FISCAL",
             "description": "Emite facturas CFDI 4.0 oficiales del SAT a tus clientes de manera automatizada y marca blanca. Incluye 20 timbres base.",

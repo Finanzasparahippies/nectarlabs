@@ -74,7 +74,7 @@ class TicketViewSet(viewsets.ModelViewSet):
 class SupportChatViewSet(viewsets.ModelViewSet):
     serializer_class = SupportChatSerializer
     permission_classes = [permissions.IsAuthenticated, HasAddOnPermission]
-    addon_slug = 'live-chat'
+    addon_slug = 'bot-chat'
 
 
     def get_queryset(self):

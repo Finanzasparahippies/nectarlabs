@@ -156,11 +156,11 @@ export default function TenantPortalPage() {
   const [activeAddonTab, setActiveAddonTab] = useState<string | null>(null);
 
   const activeAddonsList = tenantConfig?.active_addons || [];
-  const otherActiveAddons = activeAddonsList.filter(slug => slug !== 'live-chat');
+  const otherActiveAddons = activeAddonsList.filter(slug => slug !== 'bot-chat');
 
   useEffect(() => {
     if (tenantConfig?.active_addons) {
-      const otherAddons = tenantConfig.active_addons.filter(slug => slug !== 'live-chat');
+      const otherAddons = tenantConfig.active_addons.filter(slug => slug !== 'bot-chat');
       if (otherAddons.length > 0) {
         if (!activeAddonTab || !otherAddons.includes(activeAddonTab)) {
           setActiveAddonTab(otherAddons[0]);
@@ -820,11 +820,11 @@ export default function TenantPortalPage() {
                   <div className="flex gap-2.5 overflow-x-auto pb-2.5 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
                     {[
                       { slug: 'booking-signature', label: 'Reservas', icon: '📅' },
-                      { slug: 'logistics-gps', label: 'Logística', icon: '📍' },
-                      { slug: 'patreon-sponsorship', label: 'Sponsorship', icon: '💎' },
-                      { slug: 'analytics-apm', label: 'Métricas APM', icon: '📊' },
-                      { slug: 'newsletter-campaigner', label: 'Boletín', icon: '✉️' },
-                      { slug: 'mexico-invoicing', label: 'Facturación SAT', icon: '🧾' },
+                      { slug: 'delivery-tracking', label: 'Logística', icon: '📍' },
+                      { slug: 'sponsorship', label: 'Sponsorship', icon: '💎' },
+                      { slug: 'business-analytics', label: 'Métricas APM', icon: '📊' },
+                      { slug: 'campaigner', label: 'Boletín', icon: '✉️' },
+                      { slug: 'facturacion-cfdi', label: 'Facturación SAT', icon: '🧾' },
                       { slug: 'ecommerce-combo', label: 'Tienda Online', icon: '🛍️' },
                     ]
                       .filter(tab => activeAddonsList.includes(tab.slug))
@@ -854,11 +854,11 @@ export default function TenantPortalPage() {
                 <div className="flex-1 min-h-[400px]">
                   {[
                     { slug: 'booking-signature', component: <BookingCanvas tenantId={tenantConfig.id} subdomain={subdomain} primaryColor={primaryColor} /> },
-                    { slug: 'logistics-gps', component: <FleetMap primaryColor={primaryColor} /> },
-                    { slug: 'patreon-sponsorship', component: <SponsorTiers primaryColor={primaryColor} /> },
-                    { slug: 'analytics-apm', component: <TelemetryDashboard primaryColor={primaryColor} /> },
-                    { slug: 'newsletter-campaigner', component: <SubscribeForm tenantId={tenantConfig.id} subdomain={subdomain} primaryColor={primaryColor} /> },
-                    { slug: 'mexico-invoicing', component: <SATInvoicingForm tenantId={tenantConfig.id} subdomain={subdomain} primaryColor={primaryColor} ownerId={tenantConfig.owner} showToast={showToast} /> },
+                    { slug: 'delivery-tracking', component: <FleetMap primaryColor={primaryColor} /> },
+                    { slug: 'sponsorship', component: <SponsorTiers primaryColor={primaryColor} /> },
+                    { slug: 'business-analytics', component: <TelemetryDashboard primaryColor={primaryColor} /> },
+                    { slug: 'campaigner', component: <SubscribeForm tenantId={tenantConfig.id} subdomain={subdomain} primaryColor={primaryColor} /> },
+                    { slug: 'facturacion-cfdi', component: <SATInvoicingForm tenantId={tenantConfig.id} subdomain={subdomain} primaryColor={primaryColor} ownerId={tenantConfig.owner} showToast={showToast} /> },
                     { slug: 'ecommerce-combo', component: <EcommerceStore tenantId={tenantConfig.id} subdomain={subdomain} primaryColor={primaryColor} /> },
                   ].find(tab => tab.slug === activeAddonTab)?.component}
                 </div>
@@ -1238,7 +1238,7 @@ export default function TenantPortalPage() {
                           <div>
                             <h4 className="text-xs font-black uppercase text-white tracking-tight" style={{ color: isDarkMode ? '#FFFFFF' : '#111827' }}>Chat en Vivo con Operadores</h4>
                             <p className="text-[11px] text-white/50 dark:text-white/60 mt-1 leading-relaxed font-medium">
-                              {activeAddonsList.includes('live-chat') ? (
+                              {activeAddonsList.includes('bot-chat') ? (
                                 <>
                                   Soporte instantáneo por chat. Haz clic en el widget circular dorado en la esquina inferior derecha para chatear directamente.
                                 </>
@@ -1287,7 +1287,7 @@ export default function TenantPortalPage() {
       </main>
 
       {/* Floating Live Chat Widget (Visible inside support tab if authenticated) */}
-      {currentSection === 'support' && isAuthenticated && activeAddonsList.includes('live-chat') && (
+      {currentSection === 'support' && isAuthenticated && activeAddonsList.includes('bot-chat') && (
         <ChatWidget
           tenantId={tenantConfig.id}
           tenantName={tenantConfig.name}

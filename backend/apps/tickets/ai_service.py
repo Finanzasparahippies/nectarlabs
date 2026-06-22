@@ -107,12 +107,15 @@ def _build_nectarlabs_services_info() -> str:
         "   - Fase 03 (Desarrollo): 'Ingeniería de Alta Fidelidad'. Codificación nativa a mano con Django (Python) y Next.js (React/TypeScript). Sin plantillas.\n"
         "   - Fase 04 (Evolución): 'Activo Digital Vivo'. Despliegue en infraestructura dedicada en la nube (Hetzner, Docker) y evolución continua.\n\n"
         "3. CATÁLOGO DE MÓDULOS NÉCTAR (ADD-ONS A LA CARTA):\n"
-        "   - Néctar Live Chat (live-chat): Widget de chat en tiempo real incrustable en cualquier web + consola de administración. $79 MXN/mes o $790 MXN/año (ahorro de 2 meses). Requiere Django Channels + Redis.\n"
-        "   - Néctar Booking & Signature (booking-signature): Motor de reserva de citas y firma de propuestas táctil/mouse con marcas de tiempo criptográficas y generación automática de PDFs en ReportLab. $149 MXN/mes o $1490 MXN/año. Almacenamiento en Cloudflare R2 / AWS S3.\n"
-        "   - Néctar Logistics & GPS (logistics-gps): Seguimiento en vivo de repartidores, estimación de ETA y rutas optimizadas mediante Mapbox / Google Maps. $249 MXN/mes o $2490 MXN/año.\n"
-        "   - Néctar Patreon/Sponsorship (patreon-sponsorship): Membresías y feeds de contenido exclusivo con cobros recurrentes vía Stripe Billing API. $129 MXN/mes o $1290 MXN/año.\n"
-        "   - Néctar Analytics APM (analytics-apm): Middleware de telemetría para base de datos y Core Web Vitals (LCP, FID, CLS) en navegador del cliente. Detecta consultas redundantes (N+1). $59 MXN/mes o $590 MXN/año.\n"
-        "   - Néctar Newsletter (newsletter-campaigner): Campañas de correo masivo optimizadas con Amazon SES o SMTP privado y tokens UUID de desuscripción de cumplimiento legal. $39 MXN/mes o $390 MXN/año.\n\n"
+        "   - Néctar AI Chat Bot (bot-chat): Widget de chat en tiempo real incrustable en cualquier web + consola de administración y soporte de IA. $99 MXN/mes o $990 MXN/año (ahorro de 2 meses). Requiere Django Channels + Redis.\n"
+        "   - Néctar Contratos Digitales (booking-signature): Motor de reserva de citas y firma de propuestas táctil/mouse con marcas de tiempo criptográficas y generación automática de PDFs en ReportLab. $149 MXN/mes o $1490 MXN/año. Almacenamiento en Cloudflare R2 / AWS S3.\n"
+        "   - Tienda + Envíos con Skydropx (delivery-tracking): Cotización de envíos en tiempo real con margen de ganancia y emisión automatizada de guías. $249 MXN/mes o $2490 MXN/año.\n"
+        "   - Néctar Sponsors & NSCAP (sponsorship): Membresías y feeds de contenido exclusivo con cobros recurrentes vía Stripe Billing API. $169 MXN/mes o $1690 MXN/año.\n"
+        "   - Néctar Administrador de Ventas y Analytics (business-analytics): Dashboard de métricas financieras, gráficos interactivos y exportación de transacciones. $99 MXN/mes o $990 MXN/año.\n"
+        "   - Néctar Newsletter y Campañas (campaigner): Campañas de correo masivo optimizadas con Amazon SES o SMTP privado y tokens UUID de desuscripción de cumplimiento legal. $199 MXN/mes o $1990 MXN/año.\n"
+        "   - Facturación SAT México (facturacion-cfdi): Emisión de facturas CFDI 4.0 oficiales del SAT automatizadas y marca blanca. $499 MXN/mes o $4990 MXN/año.\n"
+        "   - Facturación Automática SAT (automatic-invoicing): Timbrado automático e inmediato de facturas CFDI 4.0 al recibir pagos. $199 MXN/mes o $1990 MXN/año.\n"
+        "   - Combo E-commerce Automatizado (ecommerce-combo): El paquete integral definitivo: Tienda + Envíos con Skydropx, Facturación SAT y Newsletter Masivo en uno. $799 MXN/mes o $7990 MXN/año.\n\n"
         "4. PLANES DE SOPORTE Y DESARROLLO ACTIVO (COMPROMISO DE 6 MESES):\n"
         "   - Ofrecemos planes de suscripción para desarrollo activo (semanal, quincenal o mensual) basados en las horas de desarrollo y diseño contratadas.\n"
         "   - Cada plan ofrece un canal dedicado de soporte y alianza estratégica a 6 meses para forjar plataformas completas a medida.\n\n"
@@ -200,7 +203,7 @@ def _build_system_prompt(chat) -> str:
         db_context = _build_tenant_support_context(chat)
         welcome_msg = tenant.welcome_message or "¡Hola! ¿En qué podemos ayudarte hoy?"
         
-        return (
+        system_prompt = (
             f"Eres el Asistente Virtual de Soporte Técnico de '{tenant.name}'.\n"
             f"Mensaje de bienvenida oficial: '{welcome_msg}'.\n"
             "Ayudas a los clientes a resolver dudas sobre la plataforma y el estado de sus tickets de soporte.\n"
@@ -211,8 +214,11 @@ def _build_system_prompt(chat) -> str:
             "Nunca menciones a NectarLabs a menos que te pregunten qué es (es la colmena matriz proveedora de software).\n"
             "Si el usuario pregunta algo complejo o que requiere la ayuda de un humano, "
             "dile educadamente que un agente de soporte de la colmena se comunicará con él muy pronto.\n\n"
-            f"{db_context}"
         )
+        if tenant.tenant_context:
+            system_prompt += f"Contexto y reglas adicionales de '{tenant.name}':\n{tenant.tenant_context}\n\n"
+        system_prompt += f"{db_context}"
+        return system_prompt
     else:
         # Chat en el dashboard principal de NectarLabs (chat de un BUSINESS/dueño con NectarLabs)
         db_context = _build_nectarlabs_support_context(client)

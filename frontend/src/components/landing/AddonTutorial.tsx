@@ -26,7 +26,7 @@ const tutorialSteps: TutorialStep[] = [
   },
 ];
 
-type AddonId = 'live-chat' | 'booking-signature' | 'logistics-gps' | 'patreon-sponsorship' | 'analytics-apm' | 'newsletter';
+type AddonId = 'bot-chat' | 'booking-signature' | 'delivery-tracking' | 'sponsorship' | 'business-analytics' | 'campaigner';
 
 interface AddonConfig {
   id: AddonId;
@@ -36,16 +36,16 @@ interface AddonConfig {
 }
 
 const addonsConfig: AddonConfig[] = [
-  { id: 'live-chat', name: 'Néctar Live Chat', badge: 'COMUNICACIÓN', teaser: 'Burbuja de chat instantánea con tus clientes' },
-  { id: 'booking-signature', name: 'Néctar Booking & Signature', badge: 'FIRMA DIGITAL', teaser: 'Reserva de citas con firma digital certificada' },
-  { id: 'logistics-gps', name: 'Néctar Logistics & GPS', badge: 'GEOLOCALIZACIÓN', teaser: 'Tracking de ruta y ETA en tiempo real' },
-  { id: 'patreon-sponsorship', name: 'Néctar Patreon/Sponsorship', badge: 'MEMBRESÍAS', teaser: 'Feeds exclusivos y muros de pago de Stripe' },
-  { id: 'analytics-apm', name: 'Néctar Analytics APM', badge: 'RENDIMIENTO', teaser: 'Métricas Core Web Vitals en tiempo real' },
-  { id: 'newsletter', name: 'Néctar Newsletter', badge: 'BOLETINES', teaser: 'Gestor de correos masivos con SMTP/SES' },
+  { id: 'bot-chat', name: 'Néctar AI Chat Bot', badge: 'COMUNICACIÓN', teaser: 'Burbuja de chat con IA y agentes en tiempo real' },
+  { id: 'booking-signature', name: 'Néctar Contratos Digitales', badge: 'FIRMA DIGITAL', teaser: 'Contratos digitales con firma biométrica y PDFs' },
+  { id: 'delivery-tracking', name: 'Tienda + Envíos Skydropx', badge: 'LOGÍSTICA Y CONTROL', teaser: 'Toma pedidos, cotiza envíos y emite guías SAT' },
+  { id: 'sponsorship', name: 'Néctar Sponsors & NSCAP', badge: 'MEMBRESÍAS', teaser: 'Feeds exclusivos y muros de pago de Stripe' },
+  { id: 'business-analytics', name: 'Néctar Ventas y Analytics', badge: 'RENDIMIENTO', teaser: 'Métricas de ventas y APM en tiempo real' },
+  { id: 'campaigner', name: 'Néctar Newsletter', badge: 'BOLETINES', teaser: 'Gestor de campañas de correo HTML masivas' },
 ];
 
 export default function AddonTutorial() {
-  const [activeAddon, setActiveAddon] = useState<AddonId>('live-chat');
+  const [activeAddon, setActiveAddon] = useState<AddonId>('bot-chat');
   
   // Custom states for each mock animation
   const [chatMessages, setChatMessages] = useState<{ sender: 'client' | 'agent'; text: string }[]>([]);
@@ -57,7 +57,7 @@ export default function AddonTutorial() {
 
   // Live Chat simulation loop
   useEffect(() => {
-    if (activeAddon !== 'live-chat') return;
+    if (activeAddon !== 'bot-chat') return;
     
     setChatMessages([
       { sender: 'client', text: '¡Hola! Quisiera agendar soporte.' }
@@ -96,7 +96,7 @@ export default function AddonTutorial() {
 
   // GPS simulation loop
   useEffect(() => {
-    if (activeAddon !== 'logistics-gps') return;
+    if (activeAddon !== 'delivery-tracking') return;
     setGpsProgress(0);
 
     const interval = setInterval(() => {
@@ -111,7 +111,7 @@ export default function AddonTutorial() {
 
   // APM pulse
   useEffect(() => {
-    if (activeAddon !== 'analytics-apm') return;
+    if (activeAddon !== 'business-analytics') return;
 
     const interval = setInterval(() => {
       setApmPulse(prev => prev + 1);
@@ -257,7 +257,7 @@ export default function AddonTutorial() {
             <div className="flex-1 my-4 overflow-hidden flex flex-col justify-center items-center z-10 relative">
               
               {/* MOCK 1: Live Chat */}
-              {activeAddon === 'live-chat' && (
+              {activeAddon === 'bot-chat' && (
                 <div className="w-full h-full flex flex-col justify-end p-3 rounded-2xl bg-neutral-900/50 border border-white/5 relative overflow-hidden">
                   <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent -z-10"></div>
                   
@@ -384,7 +384,7 @@ export default function AddonTutorial() {
               )}
 
               {/* MOCK 3: Logistics & GPS */}
-              {activeAddon === 'logistics-gps' && (
+              {activeAddon === 'delivery-tracking' && (
                 <div className="w-full h-full bg-neutral-900/40 border border-white/5 rounded-2xl p-3 flex flex-col justify-between relative overflow-hidden text-left">
                   
                   {/* Grid visual background for map mock */}
@@ -476,7 +476,7 @@ export default function AddonTutorial() {
               )}
 
               {/* MOCK 4: Patreon / Sponsorship */}
-              {activeAddon === 'patreon-sponsorship' && (
+              {activeAddon === 'sponsorship' && (
                 <div className="w-full h-full bg-neutral-900/30 border border-white/5 rounded-2xl p-4 flex flex-col justify-between text-left overflow-y-auto">
                   <div>
                     <div className="flex justify-between items-center mb-2">
@@ -533,7 +533,7 @@ export default function AddonTutorial() {
               )}
 
               {/* MOCK 5: Analytics APM */}
-              {activeAddon === 'analytics-apm' && (
+              {activeAddon === 'business-analytics' && (
                 <div className="w-full h-full bg-neutral-900/30 border border-white/5 rounded-2xl p-4 flex flex-col justify-between text-left overflow-y-auto">
                   <div>
                     <div className="flex justify-between items-center mb-1">
@@ -591,7 +591,7 @@ export default function AddonTutorial() {
               )}
 
               {/* MOCK 6: Newsletter */}
-              {activeAddon === 'newsletter' && (
+              {activeAddon === 'campaigner' && (
                 <div className="w-full h-full bg-neutral-900/30 border border-white/5 rounded-2xl p-5 flex flex-col justify-between relative overflow-hidden text-center">
                   <div className="my-auto space-y-4">
                     <div className="w-10 h-10 rounded-full bg-nectar-gold/10 border border-nectar-gold/30 flex items-center justify-center mx-auto shadow-lg">

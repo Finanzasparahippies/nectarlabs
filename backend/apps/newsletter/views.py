@@ -11,7 +11,7 @@ from urllib.parse import urlparse, urlunparse
 
 class SubscribeView(APIView):
     permission_classes = [HasAddOnPermission]
-    addon_slug = 'newsletter-campaigner'
+    addon_slug = 'campaigner'
 
     def post(self, request, *args, **kwargs):
         import logging
@@ -388,7 +388,7 @@ class SubscriberViewSet(viewsets.ModelViewSet):
     queryset = Subscriber.objects.all().order_by('-created_at')
     serializer_class = SubscriberSerializer
     permission_classes = [permissions.IsAuthenticated, HasAddOnPermission]
-    addon_slug = 'newsletter-campaigner'
+    addon_slug = 'campaigner'
 
     def get_queryset(self):
         user = self.request.user
@@ -604,7 +604,7 @@ class MarketingListViewSet(viewsets.ModelViewSet):
     queryset = MarketingList.objects.all().order_by('-created_at')
     serializer_class = MarketingListSerializer
     permission_classes = [permissions.IsAuthenticated, HasAddOnPermission]
-    addon_slug = 'newsletter-campaigner'
+    addon_slug = 'campaigner'
 
     def get_queryset(self):
         user = self.request.user
@@ -643,7 +643,7 @@ class EmailCampaignViewSet(viewsets.ModelViewSet):
     queryset = EmailCampaign.objects.all().order_by('-created_at')
     serializer_class = EmailCampaignSerializer
     permission_classes = [permissions.IsAuthenticated, HasAddOnPermission]
-    addon_slug = 'newsletter-campaigner'
+    addon_slug = 'campaigner'
 
     def get_queryset(self):
         user = self.request.user
@@ -695,7 +695,7 @@ class CampaignTemplateImageViewSet(viewsets.ModelViewSet):
     queryset = CampaignTemplateImage.objects.all().order_by('-created_at')
     serializer_class = CampaignTemplateImageSerializer
     permission_classes = [permissions.IsAuthenticated, HasAddOnPermission]
-    addon_slug = 'newsletter-campaigner'
+    addon_slug = 'campaigner'
 
     def get_queryset(self):
         user = self.request.user

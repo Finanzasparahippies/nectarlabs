@@ -56,6 +56,9 @@ interface TenantConfig {
   shipping_origin_city?: string | null;
   shipping_origin_state?: string | null;
   shipping_origin_zip_code?: string | null;
+
+  trial_ends_at?: string | null;
+  tenant_context?: string | null;
 }
 
 export default function TenantAdminPage() {
@@ -82,6 +85,8 @@ export default function TenantAdminPage() {
   const [editWelcomeMessage, setEditWelcomeMessage] = useState('');
   const [editFooterText, setEditFooterText] = useState('');
   const [editRequireCustomerInfo, setEditRequireCustomerInfo] = useState(true);
+  const [editTenantContext, setEditTenantContext] = useState('');
+  const [isStartingTrial, setIsStartingTrial] = useState(false);
   
   const [editThemeColor, setEditThemeColor] = useState('#C68A1E');
   const [editAccentColor, setEditAccentColor] = useState('#10B981');
@@ -922,6 +927,7 @@ export default function TenantAdminPage() {
         setEditTextColor(config.text_color);
         setEditBorderColor(config.border_color);
         setEditLogoUrl(config.logo_url || '');
+        setEditTenantContext(config.tenant_context || '');
 
         // Fetch current user me to validate ownership
         const me = await fetcher('/users/me/');
@@ -935,6 +941,7 @@ export default function TenantAdminPage() {
           try {
             const fullConfig = await fetcher(`/tenants/${config.id}/`);
             setTenantConfig(fullConfig);
+            setEditTenantContext(fullConfig.tenant_context || '');
             setInvoicingMode(fullConfig.invoicing_mode || 'AUTOMATIC');
             setSmtpHost(fullConfig.custom_smtp_host || '');
             setSmtpPort(fullConfig.custom_smtp_port ? String(fullConfig.custom_smtp_port) : '587');
@@ -1641,6 +1648,35 @@ export default function TenantAdminPage() {
     }
   };
 
+  const getTrialStatus = () => {
+    if (!tenantConfig?.trial_ends_at) return 'NOT_STARTED';
+    const endsAt = new Date(tenantConfig.trial_ends_at);
+    const now = new Date();
+    if (endsAt > now) {
+      const diffTime = Math.abs(endsAt.getTime() - now.getTime());
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      return { status: 'ACTIVE', daysLeft: diffDays };
+    }
+    return 'EXPIRED';
+  };
+
+  const handleStartTrial = async () => {
+    if (!tenantConfig) return;
+    setIsStartingTrial(true);
+    try {
+      await fetcher(`/tenants/${tenantConfig.id}/start-trial/`, {
+        method: 'POST'
+      });
+      const updated = await fetcher(`/tenants/${tenantConfig.id}/`);
+      setTenantConfig(updated);
+      showToast('¡Prueba gratuita de 14 días iniciada con éxito! Todos los add-ons están activos.', 'success');
+    } catch (err: any) {
+      showToast(err.message || 'Error al iniciar la prueba gratuita', 'error');
+    } finally {
+      setIsStartingTrial(false);
+    }
+  };
+
   const handleSaveConfig = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!tenantConfig) return;
@@ -1659,6 +1695,7 @@ export default function TenantAdminPage() {
       formData.append('card_bg_color', editCardBgColor);
       formData.append('text_color', editTextColor);
       formData.append('border_color', editBorderColor);
+      formData.append('tenant_context', editTenantContext.trim());
 
       if (editLogoFile) {
         formData.append('logo', editLogoFile);
@@ -1873,9 +1910,11 @@ export default function TenantAdminPage() {
               </div>
               <div className="px-4 py-2 bg-foreground/5 rounded-2xl border border-white/5 flex flex-col items-center shrink-0">
                 <span className="text-[7px] uppercase font-black tracking-widest text-white/40">Add-ons Contratados</span>
-                <span className="text-xl font-black text-nectar-gold mt-1">{activeAddonsList.length} / 6</span>
+                <span className="text-xl font-black text-nectar-gold mt-1">{activeAddonsList.length} / 9</span>
               </div>
             </div>
+
+            <TrialBanner />
 
             {/* Grid layout for addons */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -2195,6 +2234,20 @@ export default function TenantAdminPage() {
                       />
                       <span className="text-[10px] font-bold uppercase tracking-wide text-white/70">Requerir Nombre antes de Chatear</span>
                     </label>
+
+                    <div className="space-y-1.5 pt-2">
+                      <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Contexto Personalizado para la IA</label>
+                      <textarea
+                        rows={4}
+                        placeholder="Ej. Eres el bot de una pizzería llamada 'Sushilo'. Ofrece nuestro menú que incluye pizzas y sushi. Nuestro horario es de 12:00 a 22:00."
+                        value={editTenantContext}
+                        onChange={(e) => setEditTenantContext(e.target.value)}
+                        className="w-full border rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-nectar-gold transition-all admin-input resize-none"
+                      />
+                      <p className="text-[8px] opacity-40 leading-normal">
+                        Proporciona reglas, contexto e información específica que utilizará el bot de asistencia de Inteligencia Artificial para responder a tus clientes.
+                      </p>
+                    </div>
                   </div>
 
                   {/* Visual Style Configuration */}
@@ -5360,7 +5413,27 @@ interface AddonCardProps {
 }
 
 function AddonMetricCard({ slug, title, icon, activeList, primaryColor, metrics, children }: AddonCardProps) {
-  const isActive = activeList.includes(slug);
+  const checkActive = (s: string) => {
+    if (activeList.includes(s)) return true;
+    const mapping: Record<string, string> = {
+      'bot-chat': 'live-chat',
+      'live-chat': 'bot-chat',
+      'delivery-tracking': 'logistics-gps',
+      'logistics-gps': 'delivery-tracking',
+      'sponsorship': 'patreon-sponsorship',
+      'patreon-sponsorship': 'sponsorship',
+      'business-analytics': 'analytics-apm',
+      'analytics-apm': 'business-analytics',
+      'campaigner': 'newsletter-campaigner',
+      'newsletter-campaigner': 'campaigner',
+      'facturacion-cfdi': 'mexico-invoicing',
+      'mexico-invoicing': 'facturacion-cfdi',
+    };
+    const alternative = mapping[s];
+    if (alternative && activeList.includes(alternative)) return true;
+    return false;
+  };
+  const isActive = checkActive(slug);
 
   return (
     <div className="admin-card border rounded-[2rem] p-6 shadow-lg flex flex-col justify-between relative overflow-hidden group">

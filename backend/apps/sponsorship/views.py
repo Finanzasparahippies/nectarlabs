@@ -11,7 +11,7 @@ from .serializers import (
 from .utils import get_checkout_session
 
 class BaseSponsorshipViewSet(viewsets.ModelViewSet):
-    addon_slug = 'patreon-sponsorship'
+    addon_slug = 'sponsorship'
 
     def get_permissions(self):
         if self.action in ['list', 'retrieve']:
@@ -153,7 +153,7 @@ class SponsorshipUpdateViewSet(BaseSponsorshipViewSet):
 
 class SponsorshipViewSet(viewsets.ModelViewSet):
     serializer_class = SponsorshipSerializer
-    addon_slug = 'patreon-sponsorship'
+    addon_slug = 'sponsorship'
 
     def get_permissions(self):
         if self.action in ['create_checkout_session']:

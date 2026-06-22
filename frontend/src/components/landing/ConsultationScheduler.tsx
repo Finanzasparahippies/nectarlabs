@@ -11,12 +11,15 @@ interface ConsultationSchedulerProps {
 
 const ADDONS = [
   { id: 'general', name: 'Consultoría General', slug: '', desc: 'Diseño de arquitectura de software a medida, plan de digitalización y optimización de infraestructura.' },
-  { id: 'live-chat', name: 'Néctar Live Chat', slug: 'live-chat', desc: 'Widget en tiempo real y consola de soporte multi-agente.' },
-  { id: 'booking-signature', name: 'Néctar Booking & Signature', slug: 'booking-signature', desc: 'Calendario de reservas y firma digital de contratos en PDF.' },
-  { id: 'logistics-gps', name: 'Néctar Logistics & GPS', slug: 'logistics-gps', desc: 'Rastreo satelital GPS en tiempo real y optimización de rutas.' },
-  { id: 'patreon-sponsorship', name: 'Néctar Patreon/Sponsorship', slug: 'patreon-sponsorship', desc: 'Monetización recurrente, tiers y pasarela de Stripe.' },
-  { id: 'analytics-apm', name: 'Néctar Analytics APM', slug: 'analytics-apm', desc: 'Middleware de telemetría APM y Core Web Vitals.' },
-  { id: 'newsletter-campaigner', name: 'Néctar Newsletter', slug: 'newsletter-campaigner', desc: 'Programador de campañas masivas y plantillas de correo HTML.' },
+  { id: 'bot-chat', name: 'Néctar AI Chat Bot', slug: 'bot-chat', desc: 'Widget de chat flotante en tiempo real y consola multi-agente con IA.' },
+  { id: 'booking-signature', name: 'Néctar Contratos Digitales', slug: 'booking-signature', desc: 'Motor de contratos digitales con firma incrustada y PDFs.' },
+  { id: 'delivery-tracking', name: 'Tienda + Envíos con Skydropx', slug: 'delivery-tracking', desc: 'Cotiza envíos en tiempo real y emite guías automáticamente.' },
+  { id: 'sponsorship', name: 'Néctar Sponsors & NSCAP', slug: 'sponsorship', desc: 'Suscripciones de Stripe y feeds exclusivos para miembros.' },
+  { id: 'business-analytics', name: 'Néctar Analytics y Ventas', slug: 'business-analytics', desc: 'Dashboard de métricas de ventas y analytics en tiempo real.' },
+  { id: 'campaigner', name: 'Néctar Newsletter', slug: 'campaigner', desc: 'Campañas masivas de correo HTML con 1,000 envíos incluidos.' },
+  { id: 'facturacion-cfdi', name: 'Facturación SAT México', slug: 'facturacion-cfdi', desc: 'Emisión de facturas CFDI 4.0 oficiales con 20 timbres incluidos.' },
+  { id: 'automatic-invoicing', name: 'Facturación Automática SAT', slug: 'automatic-invoicing', desc: 'Timbrado automático de facturas al recibir pagos de clientes.' },
+  { id: 'ecommerce-combo', name: 'Combo E-commerce Automatizado', slug: 'ecommerce-combo', desc: 'Tienda + Envíos Skydropx, Facturación SAT y Newsletter Masivo.' },
 ];
 
 const TIME_SLOTS = [

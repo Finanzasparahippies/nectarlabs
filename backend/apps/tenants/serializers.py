@@ -24,7 +24,7 @@ class TenantSerializer(serializers.ModelSerializer):
             'allowed_origins', 'custom_domain', 'use_custom_domain', 'welcome_message', 'require_customer_info',
             'logo', 'logo_url', 'portal_title', 'footer_text', 'is_active', 'created_at', 'updated_at',
             'active_addons', 'stamp_balance', 'newsletter_plan', 'newsletter_sent_this_month', 'newsletter_extra_credits',
-            'invoicing_mode', 'has_active_plan_contract', 'is_addons_only',
+            'invoicing_mode', 'has_active_plan_contract', 'is_addons_only', 'trial_ends_at', 'tenant_context',
             # 6-Color Palette (Dark & Light)
             'theme_color', 'accent_color', 'bg_color', 'card_bg_color', 'text_color', 'border_color',
             'theme_color_light', 'accent_color_light', 'bg_color_light', 'card_bg_color_light', 'text_color_light', 'border_color_light',
@@ -49,7 +49,7 @@ class TenantSerializer(serializers.ModelSerializer):
         read_only_fields = [
             'id', 'owner', 'api_key', 'created_at', 'updated_at', 
             'is_ambassador', 'free_stamps_left', 'stamps_used_this_month', 'stamps_last_reset',
-            'subscriber_count', 'has_active_plan_contract', 'is_addons_only'
+            'subscriber_count', 'has_active_plan_contract', 'is_addons_only', 'trial_ends_at'
         ]
 
     def get_owner_email(self, obj):
@@ -98,12 +98,12 @@ class TenantSerializer(serializers.ModelSerializer):
 
     def validate_invoicing_mode(self, value):
         if value == 'AUTOMATIC':
-            # Check if tenant has the automatic-invoicing addon active
+            # Check if tenant has the facturacion-cfdi or automatic-invoicing addon active
             # self.instance represents the tenant being updated
             if self.instance:
-                if 'automatic-invoicing' not in self.instance.active_addons:
+                if 'facturacion-cfdi' not in self.instance.active_addons and 'automatic-invoicing' not in self.instance.active_addons:
                     raise serializers.ValidationError(
-                        "Para activar la facturación automática, debes tener contratado el agregado de facturación automática (automatic-invoicing)."
+                        "Para activar la facturación automática, debes tener contratado el agregado de facturación (facturacion-cfdi)."
                     )
         return value
 
@@ -130,7 +130,7 @@ class TenantPublicSerializer(serializers.ModelSerializer):
             'id', 'name', 'subdomain', 'custom_domain', 'use_custom_domain', 'logo_url', 
             'welcome_message', 'require_customer_info', 'active_addons',
             'portal_title', 'footer_text', 'has_active_plan_contract', 'is_addons_only',
-            'is_active', 'owner',
+            'is_active', 'owner', 'trial_ends_at', 'tenant_context',
             # 6-Color Palette (Dark & Light)
             'theme_color', 'accent_color', 'bg_color', 'card_bg_color', 'text_color', 'border_color',
             'theme_color_light', 'accent_color_light', 'bg_color_light', 'card_bg_color_light', 'text_color_light', 'border_color_light',

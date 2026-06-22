@@ -3,12 +3,15 @@
 import React, { useState } from 'react';
 
 const CALCULATOR_ADDONS = [
-  { id: 'live-chat', name: 'Néctar Live Chat', monthlyPrice: 99, yearlyPrice: 990, desc: 'Widget en tiempo real y consola de soporte multi-agente.' },
-  { id: 'booking-signature', name: 'Néctar Booking & Signature', monthlyPrice: 149, yearlyPrice: 1490, desc: 'Calendario de reservas y firma digital de contratos en PDF.' },
-  { id: 'logistics-gps', name: 'Néctar Logistics & GPS', monthlyPrice: 449, yearlyPrice: 4490, desc: 'Rastreo satelital GPS en tiempo real y optimización de rutas.' },
-  { id: 'patreon-sponsorship', name: 'Néctar Patreon/Sponsorship', monthlyPrice: 169, yearlyPrice: 1690, desc: 'Monetización recurrente, tiers y pasarela de Stripe.' },
-  { id: 'analytics-apm', name: 'Néctar Analytics APM', monthlyPrice: 99, yearlyPrice: 990, desc: 'Middleware de telemetría APM y Core Web Vitals.' },
-  { id: 'newsletter-campaigner', name: 'Néctar Newsletter', monthlyPrice: 79, yearlyPrice: 790, desc: 'Programador de campañas masivas y plantillas de correo HTML.' },
+  { id: 'bot-chat', name: 'Néctar AI Chat Bot', monthlyPrice: 99, yearlyPrice: 990, desc: 'Widget en tiempo real y consola de soporte multi-agente con IA.' },
+  { id: 'booking-signature', name: 'Néctar Contratos Digitales', monthlyPrice: 149, yearlyPrice: 1490, desc: 'Calendario de reservas y firma digital de contratos en PDF.' },
+  { id: 'delivery-tracking', name: 'Tienda + Envíos con Skydropx', monthlyPrice: 249, yearlyPrice: 2490, desc: 'Cotización en tiempo real y emisión automatizada de guías de envío.' },
+  { id: 'sponsorship', name: 'Néctar Sponsors & NSCAP', monthlyPrice: 169, yearlyPrice: 1690, desc: 'Monetización recurrente, tiers y pasarela de Stripe.' },
+  { id: 'business-analytics', name: 'Néctar Analytics y Ventas', monthlyPrice: 99, yearlyPrice: 990, desc: 'Dashboard de métricas de ventas y analytics en tiempo real.' },
+  { id: 'campaigner', name: 'Néctar Newsletter', monthlyPrice: 199, yearlyPrice: 1990, desc: 'Programador de campañas masivas con 1,000 envíos incluidos.' },
+  { id: 'facturacion-cfdi', name: 'Facturación SAT México', monthlyPrice: 499, yearlyPrice: 4990, desc: 'Emisión de facturas CFDI 4.0 oficiales con 20 timbres base.' },
+  { id: 'automatic-invoicing', name: 'Facturación Automática SAT', monthlyPrice: 199, yearlyPrice: 1990, desc: 'Timbrado automático desatendido al recibir pagos.' },
+  { id: 'ecommerce-combo', name: 'Combo E-commerce Automatizado', monthlyPrice: 799, yearlyPrice: 7990, desc: 'El paquete definitivo: Envíos, Facturación y Newsletter.' },
 ];
 
 const PARTNER_PLANS = [

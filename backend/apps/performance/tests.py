@@ -92,9 +92,9 @@ class PerformanceAPITestCase(BaseTenantAddonTestCase):
 class PerformanceMiddlewareTestCase(BaseTenantAddonTestCase):
     def setUp(self):
         super().setUp()
-        # Create analytics-apm Addon
+        # Create business-analytics Addon
         self.apm_addon = AddOn.objects.create(
-            slug="analytics-apm",
+            slug="business-analytics",
             name="Néctar Analytics APM",
             category_badge="Operations",
             description="APM description",
@@ -129,8 +129,8 @@ class PerformanceMiddlewareTestCase(BaseTenantAddonTestCase):
         )
         contract.addons.add(self.apm_addon)
 
-        # Confirm owner_a has analytics-apm active
-        self.assertIn("analytics-apm", self.tenant_a.active_addons)
+        # Confirm owner_a has business-analytics active
+        self.assertIn("business-analytics", self.tenant_a.active_addons)
 
         url = reverse("addon-list")
         response = self.client.get(url)
