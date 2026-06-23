@@ -33,6 +33,10 @@ export async function fetcher(endpoint: string, options: FetcherOptions = {}) {
   const { isPublic, ...fetchOptions } = options;
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
 
+  if (typeof window !== 'undefined') {
+    console.log(`[API/fetcher] endpoint: ${endpoint}, isPublic: ${!!isPublic}, token: ${token ? `${token.substring(0, 15)}...` : 'none'}`);
+  }
+
   const headers: Record<string, string> = {};
   if (!(fetchOptions?.body instanceof FormData)) {
     headers["Content-Type"] = "application/json";

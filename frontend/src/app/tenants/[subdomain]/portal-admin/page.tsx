@@ -895,8 +895,10 @@ export default function TenantAdminPage() {
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search);
       const token = urlParams.get('token');
+      console.log(`[SSO] useEffect[]: token in URL = ${token ? `${token.substring(0, 15)}...` : 'none'}`);
       if (token) {
         localStorage.setItem('token', token);
+        console.log(`[SSO] useEffect[]: saved token to localStorage. Current localStorage token = ${localStorage.getItem('token') ? `${localStorage.getItem('token')?.substring(0, 15)}...` : 'none'}`);
         // Remove token from URL bar for security and clean appearance
         const newUrl = window.location.pathname + window.location.search.replace(/[?&]token=[^&]+/, '').replace(/^&/, '?').replace(/\?$/, '');
         window.history.replaceState({}, document.title, newUrl);
@@ -906,19 +908,27 @@ export default function TenantAdminPage() {
 
   // Load and check credentials
   useEffect(() => {
-    if (!subdomain) return;
+    if (!subdomain) {
+      console.log(`[SSO] useEffect[subdomain]: subdomain is empty, returning`);
+      return;
+    }
+
+    console.log(`[SSO] useEffect[subdomain]: subdomain = ${subdomain}`);
 
     // Retrieve token from query params if present and store it in local storage (cross-subdomain session transfer)
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search);
       const tokenParam = urlParams.get('token');
+      console.log(`[SSO] useEffect[subdomain]: token in URL = ${tokenParam ? `${tokenParam.substring(0, 15)}...` : 'none'}`);
       if (tokenParam) {
         localStorage.setItem('token', tokenParam);
+        console.log(`[SSO] useEffect[subdomain]: saved token from URL to localStorage`);
         urlParams.delete('token');
         const queryStr = urlParams.toString();
         const newUrl = window.location.pathname + (queryStr ? `?${queryStr}` : '');
         window.history.replaceState({}, '', newUrl);
       }
+      console.log(`[SSO] useEffect[subdomain]: current token in localStorage = ${localStorage.getItem('token') ? `${localStorage.getItem('token')?.substring(0, 15)}...` : 'none'}`);
     }
 
     const loadAdminData = async () => {
@@ -945,6 +955,7 @@ export default function TenantAdminPage() {
         setEditTenantContext(config.tenant_context || '');
 
         // Fetch current user me to validate ownership
+        console.log(`[SSO] loadAdminData: calling fetcher('/users/me/') with localStorage token = ${localStorage.getItem('token') ? `${localStorage.getItem('token')?.substring(0, 15)}...` : 'none'}`);
         const me = await fetcher('/users/me/');
         setUserMe(me);
 
