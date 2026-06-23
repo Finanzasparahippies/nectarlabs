@@ -890,23 +890,7 @@ export default function TenantAdminPage() {
     }
   }, [rawSubdomain]);
 
-  // Extract token from query parameter if present (SSO between domains)
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const urlParams = new URLSearchParams(window.location.search);
-      const token = urlParams.get('token');
-      console.log(`[SSO] useEffect[]: token in URL = ${token ? `${token.substring(0, 15)}...` : 'none'}`);
-      if (token) {
-        localStorage.setItem('token', token);
-        console.log(`[SSO] useEffect[]: saved token to localStorage. Current localStorage token = ${localStorage.getItem('token') ? `${localStorage.getItem('token')?.substring(0, 15)}...` : 'none'}`);
-        // Remove token from URL bar for security and clean appearance
-        const newUrl = window.location.pathname + window.location.search.replace(/[?&]token=[^&]+/, '').replace(/^&/, '?').replace(/\?$/, '');
-        window.history.replaceState({}, document.title, newUrl);
-      }
-    }
-  }, []);
-
-  // Load and check credentials
+  // Load and check credentials, extracting token for cross-subdomain SSO first
   useEffect(() => {
     if (!subdomain) {
       console.log(`[SSO] useEffect[subdomain]: subdomain is empty, returning`);
