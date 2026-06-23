@@ -137,7 +137,7 @@ const fallbackAddons: Omit<Addon, 'icon'>[] = [
   },
   {
     id: 'delivery-tracking',
-    name: 'Tienda + Envíos con Skydropx',
+    name: 'Tienda + Envíos',
     categoryBadge: 'LOGÍSTICA Y CONTROL',
     description: 'Configura tus almacenes de origen, cotiza envíos en tiempo real con margen de ganancia y emite guías automáticamente.',
     detailedDescription: 'Módulo de logística inteligente integrado. Registra las tarifas reales desde la API de Skydropx y les aplica tu margen (markup) del 15% o personalizado directamente en el checkout, automatizando la generación de etiquetas en pedidos pagados.',
