@@ -948,9 +948,13 @@ export default function TenantAdminPage() {
 
         if (isOwner || isSystemAdmin) {
           setAuthorized(true);
+          let activeAddons = config.active_addons || [];
           try {
             const fullConfig = await fetcher(`/tenants/${config.id}/`);
             setTenantConfig(fullConfig);
+            if (fullConfig.active_addons) {
+              activeAddons = fullConfig.active_addons;
+            }
             setEditTenantContext(fullConfig.tenant_context || '');
             setInvoicingMode(fullConfig.invoicing_mode || 'AUTOMATIC');
             setSmtpHost(fullConfig.custom_smtp_host || '');
@@ -969,17 +973,19 @@ export default function TenantAdminPage() {
           } catch (err) {
             console.error('Error loading full tenant config:', err);
           }
-          try {
-            const postsData = await fetcher('/posts/', { isPublic: true });
-            setBlogPosts(postsData.results || postsData || []);
-          } catch (postErr) {
-            console.error('Error fetching blog posts for campaigner:', postErr);
-          }
-          try {
-            const imagesData = await fetcher('/newsletter/template-images/');
-            setTemplateImages(imagesData.results || imagesData || []);
-          } catch (imgErr) {
-            console.error('Error fetching template images:', imgErr);
+          if (activeAddons.includes('newsletter-campaigner')) {
+            try {
+              const postsData = await fetcher('/posts/', { isPublic: true });
+              setBlogPosts(postsData.results || postsData || []);
+            } catch (postErr) {
+              console.error('Error fetching blog posts for campaigner:', postErr);
+            }
+            try {
+              const imagesData = await fetcher('/newsletter/template-images/');
+              setTemplateImages(imagesData.results || imagesData || []);
+            } catch (imgErr) {
+              console.error('Error fetching template images:', imgErr);
+            }
           }
         } else {
           setAuthorized(false);
