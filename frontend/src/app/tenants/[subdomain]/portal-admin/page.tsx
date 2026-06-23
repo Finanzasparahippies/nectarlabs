@@ -908,6 +908,19 @@ export default function TenantAdminPage() {
   useEffect(() => {
     if (!subdomain) return;
 
+    // Retrieve token from query params if present and store it in local storage (cross-subdomain session transfer)
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const tokenParam = urlParams.get('token');
+      if (tokenParam) {
+        localStorage.setItem('token', tokenParam);
+        urlParams.delete('token');
+        const queryStr = urlParams.toString();
+        const newUrl = window.location.pathname + (queryStr ? `?${queryStr}` : '');
+        window.history.replaceState({}, '', newUrl);
+      }
+    }
+
     const loadAdminData = async () => {
       try {
         // Fetch public tenant info to resolve owner ID and name
