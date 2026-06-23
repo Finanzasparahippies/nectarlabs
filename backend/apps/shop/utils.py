@@ -800,6 +800,50 @@ def send_autofactura_email(user, invoice):
         return False
 
 
+def send_payment_reminder_email(installment):
+    """
+    Sends a billing reminder email to the client when a payment installment is pending/due.
+    Sent from settings.EMAIL_BILLING (facturacion@nectarlabs.dev).
+    """
+    try:
+        user = installment.contract.user
+        recipient_email = user.email
+        name = installment.contract.full_name
+        
+        subject = f"Recordatorio de Pago: Mensualidad {installment.installment_number} - Néctar Labs"
+        description = f"Mensualidad {installment.installment_number} para el contrato #{installment.contract.id}"
+        amount = f"{installment.amount:,.2f}"
+        due_date_str = installment.due_date.strftime('%d/%m/%Y')
+        
+        payment_method = installment.get_payment_method_display() if hasattr(installment, 'get_payment_method_display') else (installment.payment_method or "SPEI")
+        
+        html_content = render_to_string('shop/emails/payment_reminder.html', {
+            'subject': subject,
+            'name': name,
+            'description': description,
+            'amount': amount,
+            'due_date': due_date_str,
+            'payment_method': payment_method,
+            'frontend_url': settings.FRONTEND_URL,
+        })
+        text_content = strip_tags(html_content)
+        
+        email = EmailMultiAlternatives(
+            subject=subject,
+            body=text_content,
+            from_email=get_platform_sender("Néctar Labs Facturación"),
+            to=[recipient_email],
+            reply_to=[settings.EMAIL_BILLING],
+            bcc=[settings.EMAIL_BILLING]
+        )
+        email.attach_alternative(html_content, "text/html")
+        email.send()
+        return True
+    except Exception as e:
+        logging.getLogger("apps").error(f"Error sending payment reminder email for installment {installment.id}: {e}", exc_info=True)
+        return False
+
+
 def send_addon_contracted_email(user, addon, subdomain, is_activated=True):
     """
     Sends a confirmation email to the client when they successfully subscribe/contract an Add-on.

@@ -3,8 +3,16 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 from apps.tenants.models import Tenant
-from apps.shop.models import Plan, Contract
+from apps.shop.models import Plan, Contract, Order
 from apps.tenants.test_base import BaseTenantAddonTestCase, logger, User
+
+from apps.newsletter.models import Subscriber
+from apps.tickets.models import SupportChat, SupportChatMessage
+from apps.bookings.models import BookingInquiry
+from apps.sponsorship.models import SponsorshipTier, SponsorTarget, SponsorshipUpdate
+from decimal import Decimal
+from django.utils import timezone
+from datetime import timedelta
 
 class TenantsCoreTests(BaseTenantAddonTestCase):
     def test_tenant_branding_customization(self):
@@ -437,6 +445,108 @@ class TenantsCoreTests(BaseTenantAddonTestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
         logger.info("Test passed: Non-owner was blocked from editing tenant (returned 404).")
 
+    def test_start_trial_flow_success(self):
+        """
+        Verify that a tenant owner can successfully activate the 14-day free trial,
+        updating the trial_ends_at field and activating all add-ons.
+        """
+        logger.info("Executing test_start_trial_flow_success...")
+        from django.utils import timezone
+        from datetime import timedelta
+        
+        self.client.force_authenticate(user=self.owner_a)
+        
+        # Ensure trial is not started
+        self.tenant_a.trial_ends_at = None
+        self.tenant_a.save()
+        
+        url = reverse('tenant-start-trial', kwargs={'pk': str(self.tenant_a.id)})
+        response = self.client.post(url)
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('trial_ends_at', response.data)
+        
+        # Refresh and verify db
+        self.tenant_a.refresh_from_db()
+        self.assertIsNotNone(self.tenant_a.trial_ends_at)
+        
+        expected_ends_at = timezone.now() + timedelta(days=14)
+        # Check that trial_ends_at is set to roughly 14 days in future (allowing 5s window)
+        time_diff = abs((self.tenant_a.trial_ends_at - expected_ends_at).total_seconds())
+        self.assertTrue(time_diff < 5.0)
+        
+        # Verify that all active add-ons are now available in trial
+        active_addons = self.tenant_a.active_addons
+        from apps.shop.models import AddOn
+        all_active_addons_slugs = list(AddOn.objects.filter(is_active=True).values_list('slug', flat=True).distinct())
+        for slug in all_active_addons_slugs:
+            self.assertIn(slug, active_addons)
+            
+        logger.info("Test passed: Trial activation flow success verified.")
+
+    def test_start_trial_already_started(self):
+        """
+        Verify that requesting to start a trial on a tenant that already had one is rejected.
+        """
+        logger.info("Executing test_start_trial_already_started...")
+        from django.utils import timezone
+        from datetime import timedelta
+        
+        self.client.force_authenticate(user=self.owner_a)
+        
+        # Simulating trial already started
+        self.tenant_a.trial_ends_at = timezone.now() + timedelta(days=10)
+        self.tenant_a.save()
+        
+        url = reverse('tenant-start-trial', kwargs={'pk': str(self.tenant_a.id)})
+        response = self.client.post(url)
+        
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("La prueba gratuita ya fue solicitada", response.data['error'])
+        logger.info("Test passed: Duplicate trial activation request correctly rejected.")
+
+    def test_start_trial_non_owner_forbidden(self):
+        """
+        Verify that a non-owner user cannot start a trial for another user's tenant (returns 404).
+        """
+        logger.info("Executing test_start_trial_non_owner_forbidden...")
+        self.client.force_authenticate(user=self.owner_b)
+        
+        # Attempt to activate trial for tenant_a owned by owner_a
+        url = reverse('tenant-start-trial', kwargs={'pk': str(self.tenant_a.id)})
+        response = self.client.post(url)
+        
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        logger.info("Test passed: Non-owner is forbidden from activating trial (returned 404).")
+
+    def test_tenant_serializer_includes_server_time(self):
+        """
+        Verify that the Tenant configuration response contains the server's timezone.now()
+        time under 'server_time' in ISO format, preventing client side time bypasses.
+        """
+        logger.info("Executing test_tenant_serializer_includes_server_time...")
+        self.client.force_authenticate(user=self.owner_a)
+        
+        # Test private config detail endpoint
+        url = reverse('tenant-detail', kwargs={'pk': str(self.tenant_a.id)})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('server_time', response.data)
+        
+        from django.utils.dateparse import parse_datetime
+        server_dt = parse_datetime(response.data['server_time'])
+        self.assertIsNotNone(server_dt)
+        
+        # Test public config lookup endpoint
+        url_public = reverse('tenant_public_config')
+        response_public = self.client.get(f"{url_public}?tenant_id={self.tenant_a.id}")
+        self.assertEqual(response_public.status_code, status.HTTP_200_OK)
+        self.assertIn('server_time', response_public.data)
+        
+        server_dt_pub = parse_datetime(response_public.data['server_time'])
+        self.assertIsNotNone(server_dt_pub)
+        logger.info("Test passed: Tenant serializers successfully include valid server_time.")
+
 
 class TenantActivationTests(APITestCase):
     def setUp(self):
@@ -518,3 +628,209 @@ class TenantActivationTests(APITestCase):
         tenant.refresh_from_db()
         self.assertTrue(tenant.is_active)
         logger.info("Verified: Tenant automatically transitions to Active (is_active=True) after installment payment.")
+
+
+class TenantTrialLimitsTests(BaseTenantAddonTestCase):
+    def setUp(self):
+        super().setUp()
+        # Set tenant_a to trial mode
+        self.tenant_a.trial_ends_at = timezone.now() + timedelta(days=14)
+        self.tenant_a.save()
+
+    def test_billing_trial_stamps(self):
+        """1. Trial tenants have 0 free stamps and must purchase them."""
+        self.assertTrue(self.tenant_a.is_in_trial)
+        self.assertEqual(self.tenant_a.free_stamps_left, 0)
+        self.assertFalse(self.tenant_a.has_available_stamps())
+        
+        # Adding balance allows stamps
+        self.tenant_a.stamp_balance = 10
+        self.tenant_a.save()
+        self.assertTrue(self.tenant_a.has_available_stamps())
+
+    def test_user_seat_limit(self):
+        """2. Trial restricts user seats to max 2 (owner + 1 collaborator)."""
+        self.client.force_authenticate(user=self.owner_a)
+        
+        # First collaborator -> success
+        url = reverse('user-list')
+        response = self.client.post(url, {
+            'username': 'collab_1',
+            'email': 'collab_1@example.com',
+            'password': 'password123',
+            'role': 'STAFF'
+        })
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        
+        # Second collaborator (total users = owner + collab_1 + collab_2 = 3) -> should fail
+        response_fail = self.client.post(url, {
+            'username': 'collab_2',
+            'email': 'collab_2@example.com',
+            'password': 'password123',
+            'role': 'STAFF'
+        })
+        self.assertEqual(response_fail.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("prueba está limitado a un máximo de 2 usuarios", response_fail.data['detail'])
+
+    def test_newsletter_daily_limit(self):
+        """3. Newsletter limits campaign sending to max 300 emails/day."""
+        self.client.force_authenticate(user=self.owner_a)
+        
+        # Create 301 subscribers
+        subscribers = []
+        for i in range(301):
+            subscribers.append(Subscriber(email=f"sub_{i}@example.com", tenant=self.tenant_a, is_active=True))
+        Subscriber.objects.bulk_create(subscribers)
+        
+        # 3.1 SendCampaignView pre-check daily limit
+        send_url = reverse('newsletter_send_campaign')
+        response = self.client.post(send_url, {
+            'subject': 'Test Subject',
+            'content': 'Test Content'
+        })
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("Límite diario excedido", response.data['error'])
+
+    def test_shipping_balance_requirement(self):
+        """4. Trial requires shipping guide payment (custom key or shipping_wallet_balance)."""
+        from apps.shop.shipping import generate_shipping_label
+        
+        # Create a mock order
+        order = Order.objects.create(
+            tenant=self.tenant_a,
+            user=self.customer_a,
+            total=Decimal('500.00'),
+            shipping_cost_base=Decimal('150.00'),
+            skydropx_rate_id='rate_mock_123',
+            status=Order.Status.PENDING
+        )
+        
+        # With 0 balance and no custom key -> label generation fails
+        success = generate_shipping_label(order)
+        self.assertFalse(success)
+        
+        # Adding balance to shipping wallet -> success
+        self.tenant_a.shipping_wallet_balance = Decimal('200.00')
+        self.tenant_a.save()
+        success = generate_shipping_label(order)
+        self.assertTrue(success)
+        self.tenant_a.refresh_from_db()
+        self.assertEqual(self.tenant_a.shipping_wallet_balance, Decimal('50.00'))
+
+    def test_live_chat_limits(self):
+        """5. Live Chat limit to 5 chats and AI assistant to 50 messages."""
+        self.client.force_authenticate(user=self.customer_a)
+        
+        # Create 5 support chats -> success
+        chat_url = reverse('support-chat-list')
+        for i in range(5):
+            response = self.client.post(chat_url, {'status': 'OPEN'})
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+            
+        # 6th chat -> fails
+        response_fail = self.client.post(chat_url, {'status': 'OPEN'})
+        self.assertEqual(response_fail.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("prueba está limitado a un máximo de 5 chats", response_fail.data['detail'])
+
+        # AI replies limit test
+        from apps.tickets.models import SupportChatMessage
+        chat_instance = SupportChat.objects.filter(tenant=self.tenant_a).first()
+        
+        # Create 50 AI messages
+        ai_messages = []
+        for i in range(50):
+            ai_messages.append(SupportChatMessage(chat=chat_instance, sender=self.customer_a, message="AI reply", is_ai_message=True))
+        SupportChatMessage.objects.bulk_create(ai_messages)
+        
+        # 51st message triggers limit message
+        from apps.tickets.ai_service import generate_ai_reply
+        reply = generate_ai_reply(chat_instance, "hello assistance")
+        self.assertIn("límite de mensajes", reply)
+
+    def test_bookings_limit(self):
+        """6. Limit of 10 booking inquiries/contracts."""
+        # BookingInquiryViewSet: url = '/api/bookings/inquiries/'
+        inquiry_url = '/api/bookings/inquiries/'
+        self.client.force_authenticate(user=self.owner_a)
+        
+        for i in range(10):
+            response = self.client.post(inquiry_url, {
+                'name': f'Inquiry {i}',
+                'email': f'inq_{i}@example.com',
+                'phone': '1234567890',
+                'venue_type': 'festival',
+                'message': 'Test booking'
+            })
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+            
+        # 11th inquiry -> fails
+        response_fail = self.client.post(inquiry_url, {
+            'name': 'Inquiry Fail',
+            'email': 'fail@example.com',
+            'phone': '1234567890',
+            'venue_type': 'festival',
+            'message': 'Test booking fail'
+        })
+        self.assertEqual(response_fail.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("prueba está limitado a un máximo de 10 consultas de reserva", response_fail.data['detail'])
+
+    def test_sponsorship_limits(self):
+        """7. Sponsorship limits (3 tiers, 2 targets, 5 updates)."""
+        self.client.force_authenticate(user=self.owner_a)
+        
+        # 7.1 Sponsorship Tiers (max 3)
+        tier_url = reverse('sponsorship-tiers-list')
+        for i in range(3):
+            response = self.client.post(tier_url, {
+                'name': f'Tier {i}',
+                'description': f'Desc {i}',
+                'price': 100 + i * 50,
+                'level': i + 1
+            })
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        # 4th tier -> fails
+        response_fail = self.client.post(tier_url, {
+            'name': 'Tier Fail',
+            'description': 'Desc Fail',
+            'price': 500,
+            'level': 4
+        })
+        self.assertEqual(response_fail.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("prueba está limitado a un máximo de 3 niveles", response_fail.data['detail'])
+
+        # 7.2 Sponsor Targets (max 2)
+        target_url = reverse('sponsorship-targets-list')
+        for i in range(2):
+            response = self.client.post(target_url, {
+                'name': f'Target {i}',
+                'description': f'Desc {i}',
+                'target_amount': 1000 + i * 500
+            })
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        # 3rd target -> fails
+        response_fail = self.client.post(target_url, {
+            'name': 'Target Fail',
+            'description': 'Desc Fail',
+            'target_amount': 5000
+        })
+        self.assertEqual(response_fail.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("prueba está limitado a un máximo de 2 metas", response_fail.data['detail'])
+
+        # 7.3 Sponsorship Updates (max 5)
+        update_url = reverse('sponsorship-updates-list')
+        for i in range(5):
+            response = self.client.post(update_url, {
+                'title': f'Update {i}',
+                'content': f'Content {i}',
+                'min_tier_level': 0
+            })
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        # 6th update -> fails
+        response_fail = self.client.post(update_url, {
+            'title': 'Update Fail',
+            'content': 'Content Fail',
+            'min_tier_level': 0
+        })
+        self.assertEqual(response_fail.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("prueba está limitado a un máximo de 5 publicaciones de actualización", response_fail.data['detail'])
+

@@ -183,6 +183,13 @@ class UserViewSet(viewsets.ModelViewSet):
         else:
             tenant_to_assign = serializer.validated_data.get('tenant', None)
             
+        if tenant_to_assign and tenant_to_assign.is_in_trial and role_to_assign == User.Role.STAFF:
+            active_staff_count = User.objects.filter(tenant=tenant_to_assign, role=User.Role.STAFF).count()
+            if active_staff_count >= 1:
+                raise serializers.ValidationError({
+                    "detail": "El período de prueba está limitado a un máximo de 2 usuarios (el propietario y 1 colaborador). Por favor, actualiza tu plan para agregar más usuarios."
+                })
+            
         serializer.save(
             role=role_to_assign,
             is_staff=is_staff_to_assign,

@@ -285,6 +285,14 @@ def generate_ai_reply(chat, new_message_text: str) -> str | None:
         return None
 
     try:
+        tenant = chat.tenant
+        if tenant and tenant.is_in_trial:
+            from apps.tickets.models import SupportChatMessage
+            total_ai_messages = SupportChatMessage.objects.filter(chat__tenant=tenant, is_ai_message=True).count()
+            if total_ai_messages >= 50:
+                logger.warning(f"[AI/Limit] Límite de 50 respuestas de IA alcanzado para el tenant {tenant} en periodo de prueba.")
+                return "Lo siento, el asistente virtual ha alcanzado su límite de mensajes en este periodo de prueba. Por favor, contacta a un administrador o actualiza tu suscripción."
+
         from groq import Groq
 
         client = Groq(api_key=api_key)

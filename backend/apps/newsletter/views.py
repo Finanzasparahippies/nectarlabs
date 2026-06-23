@@ -185,6 +185,20 @@ class SendCampaignView(APIView):
         if not subscribers.exists():
             return Response({"message": "No tienes suscriptores activos para enviar esta campaña."}, status=status.HTTP_200_OK)
 
+        if tenant and tenant.is_in_trial:
+            from django.utils import timezone
+            today = timezone.now().date()
+            if not getattr(tenant, 'newsletter_last_reset_day', None) or tenant.newsletter_last_reset_day != today:
+                tenant.newsletter_sent_today = 0
+                tenant.newsletter_last_reset_day = today
+                tenant.save(update_fields=['newsletter_sent_today', 'newsletter_last_reset_day'])
+            
+            subscribers_count = subscribers.count()
+            if tenant.newsletter_sent_today + subscribers_count > 300:
+                return Response({
+                    "error": f"Límite diario excedido. Solo puedes enviar un máximo de 300 correos al día durante el periodo de prueba. Hoy has enviado {tenant.newsletter_sent_today} correos e intentas enviar a {subscribers_count} suscriptores."
+                }, status=status.HTTP_400_BAD_REQUEST)
+
         sent_count = 0
         frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:3000')
         tenant_url = frontend_url
@@ -683,6 +697,26 @@ class EmailCampaignViewSet(viewsets.ModelViewSet):
         if campaign.is_sent:
             return Response({"error": "Esta campaña ya ha sido enviada anteriormente."}, status=status.HTTP_400_BAD_REQUEST)
         
+        tenant = campaign.tenant
+        if tenant and tenant.is_in_trial:
+            from django.utils import timezone
+            today = timezone.now().date()
+            if not getattr(tenant, 'newsletter_last_reset_day', None) or tenant.newsletter_last_reset_day != today:
+                tenant.newsletter_sent_today = 0
+                tenant.newsletter_last_reset_day = today
+                tenant.save(update_fields=['newsletter_sent_today', 'newsletter_last_reset_day'])
+
+            # Count potential recipients
+            if campaign.marketing_list:
+                subscribers_count = campaign.marketing_list.subscribers.filter(is_active=True).count()
+            else:
+                subscribers_count = Subscriber.objects.filter(tenant=tenant, is_active=True).count()
+
+            if tenant.newsletter_sent_today + subscribers_count > 300:
+                return Response({
+                    "error": f"Límite diario excedido. Solo puedes enviar un máximo de 300 correos al día durante el periodo de prueba. Hoy has enviado {tenant.newsletter_sent_today} correos e intentas enviar a {subscribers_count} suscriptores."
+                }, status=status.HTTP_400_BAD_REQUEST)
+
         base_url = request.build_absolute_uri('/')
         if getattr(settings, 'TESTING', False):
             send_campaign_emails(campaign, base_url)

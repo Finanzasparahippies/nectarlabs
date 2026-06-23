@@ -1470,4 +1470,111 @@ class AddOnSubscriptionViewSetTests(APITestCase):
         self.assertNotIn(self.addon, contract.addons.all())
 
 
+class PaymentReminderCommandTests(APITestCase):
+    def setUp(self):
+        from django.contrib.auth import get_user_model
+        self.client_user = get_user_model().objects.create_user(
+            username="client_reminder",
+            email="reminder_client@example.com",
+            password="clientpassword",
+            role="BUSINESS"
+        )
+        self.contract = Contract.objects.create(
+            user=self.client_user,
+            full_name="Reminder Client Company",
+            tax_id="RFC123456789",
+            address="Av. Juarez 123",
+            project_idea="CRM platform",
+            signed_at=timezone.now()
+        )
+        
+    def test_payment_reminder_command_sends_reminders(self):
+        """
+        Verify that the send_payment_reminders command:
+        1. Identifies PENDING installments due in <= 3 days.
+        2. Sends email reminders (using django.core.mail outbox).
+        3. Sets reminder_sent to True.
+        4. Excludes already notified or future installments.
+        """
+        from datetime import date, timedelta
+        from django.core import mail
+        from django.core.management import call_command
+        
+        today = timezone.now().date()
+        
+        # 1. Installment due today (should trigger reminder)
+        inst_due_today = PaymentInstallment.objects.create(
+            contract=self.contract,
+            installment_number=1,
+            amount=5000.00,
+            due_date=today,
+            status=PaymentInstallment.Status.PENDING,
+            reminder_sent=False
+        )
+        
+        # 2. Installment due in 3 days (should trigger reminder)
+        inst_due_in_3_days = PaymentInstallment.objects.create(
+            contract=self.contract,
+            installment_number=2,
+            amount=5000.00,
+            due_date=today + timedelta(days=3),
+            status=PaymentInstallment.Status.PENDING,
+            reminder_sent=False
+        )
+        
+        # 3. Installment due in 4 days (should NOT trigger reminder yet)
+        inst_due_in_4_days = PaymentInstallment.objects.create(
+            contract=self.contract,
+            installment_number=3,
+            amount=5000.00,
+            due_date=today + timedelta(days=4),
+            status=PaymentInstallment.Status.PENDING,
+            reminder_sent=False
+        )
+        
+        # 4. Installment already notified (should NOT trigger reminder again)
+        inst_already_notified = PaymentInstallment.objects.create(
+            contract=self.contract,
+            installment_number=4,
+            amount=5000.00,
+            due_date=today,
+            status=PaymentInstallment.Status.PENDING,
+            reminder_sent=True
+        )
+        
+        # 5. Paid installment (should NOT trigger reminder)
+        inst_paid = PaymentInstallment.objects.create(
+            contract=self.contract,
+            installment_number=5,
+            amount=5000.00,
+            due_date=today,
+            status=PaymentInstallment.Status.PAID,
+            reminder_sent=False
+        )
+        
+        # Reset outbox
+        mail.outbox = []
+        
+        # Call command
+        call_command('send_payment_reminders')
+        
+        # Verify 2 emails sent
+        self.assertEqual(len(mail.outbox), 2)
+        recipients = [msg.to[0] for msg in mail.outbox]
+        self.assertEqual(recipients, ["reminder_client@example.com", "reminder_client@example.com"])
+        
+        # Refresh from db
+        inst_due_today.refresh_from_db()
+        inst_due_in_3_days.refresh_from_db()
+        inst_due_in_4_days.refresh_from_db()
+        inst_already_notified.refresh_from_db()
+        
+        # Verify flags
+        self.assertTrue(inst_due_today.reminder_sent)
+        self.assertTrue(inst_due_in_3_days.reminder_sent)
+        self.assertFalse(inst_due_in_4_days.reminder_sent)
+        self.assertTrue(inst_already_notified.reminder_sent)
+
+
+
 

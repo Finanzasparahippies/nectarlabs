@@ -1173,3 +1173,52 @@ class FacturapiRetentionView(FacturapiBaseView):
             return Response(res, status=status.HTTP_201_CREATED)
         except PACError as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class BuyShippingFundsView(BillingTenantMixin, APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        tenant = self.get_tenant()
+        amount_val = request.data.get('amount')
+        try:
+            amount = float(amount_val)
+            if amount <= 0:
+                raise ValueError()
+        except (ValueError, TypeError):
+            return Response({"error": "El monto a agregar debe ser un número positivo."}, status=400)
+            
+        stripe.api_key = settings.STRIPE_SECRET_KEY
+        
+        from apps.shop.views import get_frontend_origin
+        frontend_url = get_frontend_origin(request)
+        
+        try:
+            line_items = [{
+                'price_data': {
+                    'currency': 'mxn',
+                    'product_data': {
+                        'name': f"[Néctar Labs] Fondos para guías de envío: ${amount:.2f} MXN",
+                        'description': f"Fondos de envío adicionales para {tenant.name}",
+                    },
+                    'unit_amount': int(amount * 100),
+                },
+                'quantity': 1,
+            }]
+
+            session = stripe.checkout.Session.create(
+                payment_method_types=['card'],
+                line_items=line_items,
+                mode='payment',
+                allow_promotion_codes=True,
+                success_url=f"{frontend_url}/tenants/{tenant.subdomain}/admin?tab=shipping&payment=success&amount={amount}",
+                cancel_url=f"{frontend_url}/tenants/{tenant.subdomain}/admin?tab=shipping&payment=cancel",
+                metadata={
+                    'tenant_id': str(tenant.id),
+                    'amount': amount,
+                    'type': 'shipping_funds_package'
+                }
+            )
+            return Response({'url': session.url}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

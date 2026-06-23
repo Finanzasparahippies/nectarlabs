@@ -335,6 +335,7 @@ class PaymentInstallment(models.Model):
     cfdi_uuid = models.CharField(max_length=100, blank=True, null=True, help_text="Folio Fiscal / UUID CFDI del SAT")
     paid_at = models.DateTimeField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    reminder_sent = models.BooleanField(default=False, help_text="Indica si se ha enviado el recordatorio de pago.")
 
     def apply_discount(self, pct, promo=None):
         self.discount_percentage = pct

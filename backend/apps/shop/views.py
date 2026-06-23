@@ -1299,6 +1299,21 @@ def stripe_webhook(request):
                     import logging
                     logging.getLogger("apps").error(f"Error updating newsletter email credits in webhook: {e}", exc_info=True)
 
+        # Caso 7: Compra de fondos para guías de envío (Shipping Wallet Funds)
+        elif session.get('metadata', {}).get('type') == 'shipping_funds_package':
+            tenant_id = session.get('metadata', {}).get('tenant_id')
+            amount = session.get('metadata', {}).get('amount')
+            if tenant_id and amount:
+                try:
+                    from apps.tenants.models import Tenant
+                    from decimal import Decimal
+                    tenant = Tenant.objects.get(id=tenant_id)
+                    tenant.shipping_wallet_balance = (tenant.shipping_wallet_balance or Decimal('0.00')) + Decimal(str(amount))
+                    tenant.save()
+                except Exception as e:
+                    import logging
+                    logging.getLogger("apps").error(f"Error updating shipping wallet balance in webhook: {e}", exc_info=True)
+
     # Procesar cancelación de suscripción
     elif event['type'] == 'customer.subscription.deleted':
         subscription = event['data']['object']

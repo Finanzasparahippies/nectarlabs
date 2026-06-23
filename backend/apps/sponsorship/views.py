@@ -67,6 +67,14 @@ class SponsorTargetViewSet(BaseSponsorshipViewSet):
         if not tenant:
             from rest_framework.exceptions import ValidationError
             raise ValidationError({"tenant_id": "Se requiere especificar un tenant válido."})
+            
+        if tenant.is_in_trial:
+            existing_targets = SponsorTarget.objects.filter(tenant=tenant).count()
+            if existing_targets >= 2:
+                from rest_framework import serializers as api_serializers
+                raise api_serializers.ValidationError({
+                    "detail": "El período de prueba está limitado a un máximo de 2 metas de patrocinio. Por favor, actualiza tu plan para agregar más."
+                })
         serializer.save(tenant=tenant)
 
 class SponsorshipTierViewSet(BaseSponsorshipViewSet):
@@ -83,6 +91,14 @@ class SponsorshipTierViewSet(BaseSponsorshipViewSet):
         if not tenant:
             from rest_framework.exceptions import ValidationError
             raise ValidationError({"tenant_id": "Se requiere especificar un tenant válido."})
+            
+        if tenant.is_in_trial:
+            existing_tiers = SponsorshipTier.objects.filter(tenant=tenant).count()
+            if existing_tiers >= 3:
+                from rest_framework import serializers as api_serializers
+                raise api_serializers.ValidationError({
+                    "detail": "El período de prueba está limitado a un máximo de 3 niveles (tiers) de patrocinio. Por favor, actualiza tu plan para agregar más."
+                })
         serializer.save(tenant=tenant)
 
 class SponsorshipUpdateTagViewSet(BaseSponsorshipViewSet):
@@ -149,6 +165,14 @@ class SponsorshipUpdateViewSet(BaseSponsorshipViewSet):
         if not tenant:
             from rest_framework.exceptions import ValidationError
             raise ValidationError({"tenant_id": "Se requiere especificar un tenant válido."})
+            
+        if tenant.is_in_trial:
+            existing_updates = SponsorshipUpdate.objects.filter(tenant=tenant).count()
+            if existing_updates >= 5:
+                from rest_framework import serializers as api_serializers
+                raise api_serializers.ValidationError({
+                    "detail": "El período de prueba está limitado a un máximo de 5 publicaciones de actualización. Por favor, actualiza tu plan para agregar más."
+                })
         serializer.save(tenant=tenant, author=self.request.user)
 
 class SponsorshipViewSet(viewsets.ModelViewSet):

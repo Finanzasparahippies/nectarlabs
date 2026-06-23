@@ -55,6 +55,14 @@ class BookingInquiryViewSet(viewsets.ModelViewSet):
             from rest_framework.exceptions import ValidationError
             raise ValidationError({"tenant_id": "Se requiere especificar un tenant válido para esta consulta."})
 
+        if tenant.is_in_trial:
+            existing_inquiries = BookingInquiry.objects.filter(tenant=tenant).count()
+            if existing_inquiries >= 10:
+                from rest_framework import serializers as api_serializers
+                raise api_serializers.ValidationError({
+                    "detail": "El período de prueba está limitado a un máximo de 10 consultas de reserva. Por favor, actualiza tu plan para recibir más reservas."
+                })
+
         inquiry = serializer.save(tenant=tenant)
         
         # Fetch dynamic configuration or fallback

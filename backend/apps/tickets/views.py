@@ -94,6 +94,14 @@ class SupportChatViewSet(viewsets.ModelViewSet):
             tenant = user.tenant
         elif user.role == 'BUSINESS':
             tenant = user.owned_tenants.first()
+            
+        if tenant and tenant.is_in_trial:
+            existing_chats = SupportChat.objects.filter(tenant=tenant).count()
+            if existing_chats >= 5:
+                from rest_framework import serializers as api_serializers
+                raise api_serializers.ValidationError({
+                    "detail": "El período de prueba está limitado a un máximo de 5 chats de soporte. Por favor, actualiza tu plan para recibir más consultas."
+                })
         serializer.save(client=user, tenant=tenant)
 
     @action(detail=False, methods=['get'])

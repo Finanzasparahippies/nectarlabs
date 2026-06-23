@@ -129,6 +129,7 @@ def generate_shipping_label(order):
     Genera la guía de envío en Skydropx utilizando la tarifa (rate_id) guardada en la orden.
     Determina si se usa la llave propia del tenant o la llave corporativa de Néctar Labs.
     """
+    from decimal import Decimal
     tenant = order.tenant
     if not tenant:
         logger.error(f"[Logística/Fulfillment] Orden #{order.id} no posee tenant asociado.")
@@ -138,9 +139,22 @@ def generate_shipping_label(order):
     nectar_key = os.environ.get("NECTAR_LABS_SKYDROPX_KEY", "")
     api_key = custom_key if custom_key else nectar_key
 
+    # Si es trial y no usa custom key, requiere saldo suficiente para cubrir el costo base de la guía
+    using_corporate_key = not custom_key and api_key == nectar_key
+    cost_base = order.shipping_cost_base or Decimal('0.00')
+
     # Fallback Simulado en Local, Testing o sin API Key
     if not api_key or api_key == "mock_key" or getattr(settings, "TESTING", False) or not order.skydropx_rate_id or order.skydropx_rate_id.startswith("rate_mock_"):
         logger.warning(f"[Logística/Mock] Emisión de guía simulada exitosamente para la orden #{order.id}.")
+        
+        # Validar y descontar saldo simulado en trial
+        if tenant.is_in_trial and using_corporate_key:
+            if tenant.shipping_wallet_balance < cost_base:
+                logger.error(f"[Logística/Mock] Saldo insuficiente en billetera de envío (Mock) para Tenant #{tenant.id}.")
+                return False
+            tenant.shipping_wallet_balance -= cost_base
+            tenant.save(update_fields=['shipping_wallet_balance'])
+
         order.tracking_number = f"TRACK-{tenant.subdomain.upper()}-{order.id:05d}"
         order.tracking_url = f"https://track.skydropx.com/?q={order.tracking_number}"
         order.shipping_label_pdf = "https://labels.skydropx.com/sample.pdf"
@@ -148,6 +162,15 @@ def generate_shipping_label(order):
         order.status = 'SHIPPED'
         order.save()
         return True
+
+    # Validar saldo real en producción en trial
+    if tenant.is_in_trial and using_corporate_key:
+        if tenant.shipping_wallet_balance < cost_base:
+            logger.error(
+                f"[Logística/Fulfillment] Saldo insuficiente en billetera de envío para Tenant #{tenant.id}. "
+                f"Requerido: ${cost_base} MXN, Disponible: ${tenant.shipping_wallet_balance} MXN."
+            )
+            return False
 
     try:
         headers = {
@@ -172,9 +195,13 @@ def generate_shipping_label(order):
         order.tracking_number = attributes.get('tracking_number')
         order.tracking_url = attributes.get('tracking_url')
         order.shipping_label_pdf = attributes.get('label_url')
-        # Buscamos actualizar el provider si viene
         order.status = 'SHIPPED'
         order.save()
+        
+        # Descontar saldo real en trial
+        if tenant.is_in_trial and using_corporate_key:
+            tenant.shipping_wallet_balance -= cost_base
+            tenant.save(update_fields=['shipping_wallet_balance'])
         
         logger.info(f"[Logística] Guía generada exitosamente para la orden #{order.id}: {order.tracking_number}")
         return True

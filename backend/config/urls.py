@@ -18,7 +18,8 @@ from apps.billing.views import (
     TaxProfileView, InvoiceViewSet, BillingInfoView, BuyStampsView,
     BuyEmailCreditsView, SATProductKeySearchView, SATUnitKeySearchView,
     UploadCSDView, CSDStatusView, FacturapiCustomerView,
-    FacturapiProductView, FacturapiReceiptView, FacturapiRetentionView
+    FacturapiProductView, FacturapiReceiptView, FacturapiRetentionView,
+    BuyShippingFundsView
 )
 
 router = DefaultRouter()
@@ -77,6 +78,7 @@ urlpatterns = [
     path('api/billing/info/', BillingInfoView.as_view(), name='billing_info'),
     path('api/billing/buy-stamps/', BuyStampsView.as_view(), name='billing_buy_stamps'),
     path('api/billing/buy-email-credits/', BuyEmailCreditsView.as_view(), name='billing_buy_email_credits'),
+    path('api/billing/buy-shipping-funds/', BuyShippingFundsView.as_view(), name='billing_buy_shipping_funds'),
     path('api/billing/sat/products/', SATProductKeySearchView.as_view(), name='billing_sat_products'),
     path('api/billing/sat/units/', SATUnitKeySearchView.as_view(), name='billing_sat_units'),
     path('api/billing/upload-csd/', UploadCSDView.as_view(), name='billing_upload_csd'),

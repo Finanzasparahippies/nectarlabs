@@ -33,14 +33,28 @@ def send_newsletter_email(subject, template_name, context, recipient_list, tenan
     import logging
     logger = logging.getLogger(__name__)
     
-    # 0. Enforce limits if tenant is provided and not using BYO SMTP
+    # 0. Enforce limits if tenant is provided
     has_byo_smtp = False
     if tenant:
+        from django.utils import timezone
+        today = timezone.now().date()
+        
+        # Enforce daily 300 emails limit if in trial
+        if tenant.is_in_trial:
+            if not getattr(tenant, 'newsletter_last_reset_day', None) or tenant.newsletter_last_reset_day != today:
+                tenant.newsletter_sent_today = 0
+                tenant.newsletter_last_reset_day = today
+                tenant.save(update_fields=['newsletter_sent_today', 'newsletter_last_reset_day'])
+            
+            if tenant.newsletter_sent_today + len(recipient_list) > 300:
+                raise ValueError(
+                    f"Límite diario de correos excedido para el periodo de prueba. "
+                    f"Has enviado {tenant.newsletter_sent_today} de 300 correos permitidos hoy."
+                )
+
         has_byo_smtp = bool(tenant.custom_smtp_host and tenant.custom_smtp_username and tenant.custom_smtp_password)
         if not has_byo_smtp:
-            from django.utils import timezone
             # Reset monthly count if the month has changed
-            today = timezone.now().date()
             if not tenant.newsletter_last_reset or (tenant.newsletter_last_reset.month != today.month or tenant.newsletter_last_reset.year != today.year):
                 tenant.newsletter_sent_this_month = 0
                 tenant.newsletter_last_reset = today
@@ -141,10 +155,17 @@ def send_newsletter_email(subject, template_name, context, recipient_list, tenan
             
             logger.info(f"Successfully sent newsletter email via {name} to {recipients_log}")
             
-            # Increment monthly counter for non-BYO SMTP tenants
-            if tenant and not has_byo_smtp:
-                tenant.newsletter_sent_this_month += len(recipient_list)
-                tenant.save(update_fields=['newsletter_sent_this_month'])
+            # Increment monthly and daily counters
+            if tenant:
+                update_fields = []
+                if not has_byo_smtp:
+                    tenant.newsletter_sent_this_month += len(recipient_list)
+                    update_fields.append('newsletter_sent_this_month')
+                if tenant.is_in_trial:
+                    tenant.newsletter_sent_today += len(recipient_list)
+                    update_fields.append('newsletter_sent_today')
+                if update_fields:
+                    tenant.save(update_fields=update_fields)
 
             return True
             

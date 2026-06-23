@@ -1,4 +1,5 @@
 import uuid
+from decimal import Decimal
 from django.db import models
 from django.conf import settings
 from django.utils import timezone
@@ -80,6 +81,8 @@ class Tenant(models.Model):
     )
     newsletter_sent_this_month = models.PositiveIntegerField(default=0)
     newsletter_last_reset = models.DateField(default=timezone.localdate)
+    newsletter_sent_today = models.PositiveIntegerField(default=0, help_text="Correos masivos enviados el día de hoy.")
+    newsletter_last_reset_day = models.DateField(default=timezone.localdate, help_text="Último día en el que se reinició el contador diario de correos.")
 
     # Bring Your Own SMTP (BYO SMTP)
     custom_smtp_host = models.CharField(max_length=255, blank=True, null=True)
@@ -92,6 +95,12 @@ class Tenant(models.Model):
     stamp_balance = models.PositiveIntegerField(
         default=0,
         help_text="Balance actual de timbres fiscales (comprados o incluidos en la suscripción)."
+    )
+    shipping_wallet_balance = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=Decimal('0.00'),
+        help_text="Saldo disponible para pagar guías de envío de Skydropx en Néctar Labs."
     )
     trial_ends_at = models.DateTimeField(
         blank=True,
@@ -139,6 +148,10 @@ class Tenant(models.Model):
         return f"{self.name} ({self.subdomain})"
 
     @property
+    def is_in_trial(self):
+        return bool(self.trial_ends_at and self.trial_ends_at > timezone.now() and not self.has_active_plan_contract)
+
+    @property
     def is_ambassador(self):
         from apps.shop.models import Contract
         return Contract.objects.filter(
@@ -150,6 +163,8 @@ class Tenant(models.Model):
 
     @property
     def free_stamps_left(self):
+        if self.is_in_trial:
+            return 0
         today = timezone.now().date()
         if not self.stamps_last_reset or (self.stamps_last_reset.month != today.month or self.stamps_last_reset.year != today.year):
             return 20
@@ -164,13 +179,15 @@ class Tenant(models.Model):
 
     def has_available_stamps(self):
         self.reset_stamps_if_new_month()
+        if self.is_in_trial:
+            return self.stamp_balance > 0
         if self.is_ambassador and self.stamps_used_this_month < 20:
             return True
         return self.stamp_balance > 0
 
     def consume_stamp(self):
         self.reset_stamps_if_new_month()
-        if self.is_ambassador and self.stamps_used_this_month < 20:
+        if not self.is_in_trial and self.is_ambassador and self.stamps_used_this_month < 20:
             self.stamps_used_this_month += 1
             self.save(update_fields=['stamps_used_this_month'])
             return True

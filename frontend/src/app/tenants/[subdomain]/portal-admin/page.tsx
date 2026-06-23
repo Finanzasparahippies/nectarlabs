@@ -59,6 +59,8 @@ interface TenantConfig {
 
   trial_ends_at?: string | null;
   tenant_context?: string | null;
+  server_time?: string;
+  shipping_wallet_balance?: string | number;
 }
 
 export default function TenantAdminPage() {
@@ -1651,7 +1653,8 @@ export default function TenantAdminPage() {
   const getTrialStatus = () => {
     if (!tenantConfig?.trial_ends_at) return 'NOT_STARTED';
     const endsAt = new Date(tenantConfig.trial_ends_at);
-    const now = new Date();
+    // Shield against client changing their system clock by utilizing the server's time
+    const now = tenantConfig.server_time ? new Date(tenantConfig.server_time) : new Date();
     if (endsAt > now) {
       const diffTime = Math.abs(endsAt.getTime() - now.getTime());
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -1756,6 +1759,89 @@ export default function TenantAdminPage() {
 
   const activeAddonsList = tenantConfig.active_addons || [];
   const primaryColor = tenantConfig.theme_color || '#C68A1E';
+
+  const TrialBanner = () => {
+    const trialStatus = getTrialStatus();
+    if (!tenantConfig) return null;
+
+    if (trialStatus === 'NOT_STARTED') {
+      return (
+        <div className="admin-card border rounded-[2rem] p-6 relative overflow-hidden flex flex-col md:flex-row items-center gap-6 border-amber-500/30 bg-amber-500/5 animate-in fade-in duration-300">
+          <div className="absolute -top-24 -right-24 w-48 h-48 rounded-full blur-[80px] opacity-15 bg-amber-500 pointer-events-none"></div>
+          <div className="w-12 h-12 rounded-xl bg-amber-500/10 flex items-center justify-center text-2xl border border-amber-500/20 shrink-0">
+            🚀
+          </div>
+          <div className="flex-1 text-center md:text-left space-y-1">
+            <h3 className="text-sm font-black uppercase tracking-wider text-amber-400">Prueba Gratuita de 14 Días Disponible</h3>
+            <p className="text-xs text-white/70 max-w-2xl leading-relaxed">
+              Obtén acceso inmediato a todos los módulos premium (Chat en Vivo, Agendas, GPS, Patrocinios, Facturación y más). Explora todo el potencial de Néctar Labs sin compromiso.
+            </p>
+          </div>
+          <button
+            type="button"
+            disabled={isStartingTrial}
+            onClick={handleStartTrial}
+            className="px-6 py-3 bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-background rounded-xl text-xs font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-lg shadow-amber-500/20 shrink-0 cursor-pointer text-[#020403]"
+          >
+            {isStartingTrial ? (
+              <span className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full border-2 border-t-transparent border-black animate-spin"></span>
+                Iniciando...
+              </span>
+            ) : (
+              'Activar Prueba Gratis'
+            )}
+          </button>
+        </div>
+      );
+    }
+
+    if (trialStatus === 'EXPIRED') {
+      return (
+        <div className="admin-card border rounded-[2rem] p-6 relative overflow-hidden flex flex-col md:flex-row items-center gap-6 border-red-500/30 bg-red-500/5 animate-in fade-in duration-300">
+          <div className="absolute -top-24 -right-24 w-48 h-48 rounded-full blur-[80px] opacity-15 bg-red-500 pointer-events-none"></div>
+          <div className="w-12 h-12 rounded-xl bg-red-500/10 flex items-center justify-center text-2xl border border-red-500/20 shrink-0">
+            ⚠️
+          </div>
+          <div className="flex-1 text-center md:text-left space-y-1">
+            <h3 className="text-sm font-black uppercase tracking-wider text-red-400">Tu período de prueba ha expirado</h3>
+            <p className="text-xs text-white/70 max-w-2xl leading-relaxed">
+              Tu prueba gratuita de 14 días ha finalizado. Para seguir utilizando los add-ons y funciones premium de tu portal, por favor actualiza tu suscripción.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setActiveTab('branding')}
+            className="px-6 py-3 bg-red-500 hover:bg-red-400 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-lg shadow-red-500/20 shrink-0 cursor-pointer"
+          >
+            Ver Planes / Configuración
+          </button>
+        </div>
+      );
+    }
+
+    if (typeof trialStatus === 'object' && trialStatus.status === 'ACTIVE') {
+      return (
+        <div className="admin-card border rounded-[2rem] p-6 relative overflow-hidden flex flex-col md:flex-row items-center gap-6 border-emerald-500/30 bg-emerald-500/5 animate-in fade-in duration-300">
+          <div className="absolute -top-24 -right-24 w-48 h-48 rounded-full blur-[80px] opacity-15 bg-emerald-500 pointer-events-none"></div>
+          <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center text-2xl border border-emerald-500/20 shrink-0">
+            ⚡
+          </div>
+          <div className="flex-1 text-center md:text-left space-y-1">
+            <h3 className="text-sm font-black uppercase tracking-wider text-emerald-400">Período de Prueba Activo</h3>
+            <p className="text-xs text-white/70 max-w-2xl leading-relaxed">
+              Estás disfrutando de todos los add-ons activos gracias a tu prueba gratuita. Te quedan <strong className="text-emerald-400 font-mono text-sm">{trialStatus.daysLeft}</strong> días para seguir probando la plataforma.
+            </p>
+          </div>
+          <div className="px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-[10px] font-black uppercase tracking-wider text-emerald-400 shrink-0">
+            Días Restantes: {trialStatus.daysLeft}
+          </div>
+        </div>
+      );
+    }
+
+    return null;
+  };
 
   return (
     <div id="tenant-admin-root" className="min-h-screen flex flex-col font-sans">

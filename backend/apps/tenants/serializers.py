@@ -16,6 +16,7 @@ class TenantSerializer(serializers.ModelSerializer):
     subscriber_count = serializers.SerializerMethodField()
     has_active_plan_contract = serializers.ReadOnlyField()
     is_addons_only = serializers.ReadOnlyField()
+    server_time = serializers.SerializerMethodField()
 
     class Meta:
         model = Tenant
@@ -25,6 +26,7 @@ class TenantSerializer(serializers.ModelSerializer):
             'logo', 'logo_url', 'portal_title', 'footer_text', 'is_active', 'created_at', 'updated_at',
             'active_addons', 'stamp_balance', 'newsletter_plan', 'newsletter_sent_this_month', 'newsletter_extra_credits',
             'invoicing_mode', 'has_active_plan_contract', 'is_addons_only', 'trial_ends_at', 'tenant_context',
+            'server_time', 'shipping_wallet_balance',
             # 6-Color Palette (Dark & Light)
             'theme_color', 'accent_color', 'bg_color', 'card_bg_color', 'text_color', 'border_color',
             'theme_color_light', 'accent_color_light', 'bg_color_light', 'card_bg_color_light', 'text_color_light', 'border_color_light',
@@ -49,7 +51,8 @@ class TenantSerializer(serializers.ModelSerializer):
         read_only_fields = [
             'id', 'owner', 'api_key', 'created_at', 'updated_at', 
             'is_ambassador', 'free_stamps_left', 'stamps_used_this_month', 'stamps_last_reset',
-            'subscriber_count', 'has_active_plan_contract', 'is_addons_only', 'trial_ends_at'
+            'subscriber_count', 'has_active_plan_contract', 'is_addons_only', 'trial_ends_at', 'server_time',
+            'shipping_wallet_balance'
         ]
 
     def get_owner_email(self, obj):
@@ -63,6 +66,10 @@ class TenantSerializer(serializers.ModelSerializer):
 
     def get_subscriber_count(self, obj):
         return obj.subscribers.filter(is_active=True).count()
+
+    def get_server_time(self, obj):
+        from django.utils import timezone
+        return timezone.now().isoformat()
 
     def validate_custom_domain(self, value):
         if value:
@@ -123,6 +130,7 @@ class TenantPublicSerializer(serializers.ModelSerializer):
     logo_url = serializers.SerializerMethodField()
     has_active_plan_contract = serializers.ReadOnlyField()
     is_addons_only = serializers.ReadOnlyField()
+    server_time = serializers.SerializerMethodField()
 
     class Meta:
         model = Tenant
@@ -130,7 +138,7 @@ class TenantPublicSerializer(serializers.ModelSerializer):
             'id', 'name', 'subdomain', 'custom_domain', 'use_custom_domain', 'logo_url', 
             'welcome_message', 'require_customer_info', 'active_addons',
             'portal_title', 'footer_text', 'has_active_plan_contract', 'is_addons_only',
-            'is_active', 'owner', 'trial_ends_at', 'tenant_context',
+            'is_active', 'owner', 'trial_ends_at', 'tenant_context', 'server_time',
             # 6-Color Palette (Dark & Light)
             'theme_color', 'accent_color', 'bg_color', 'card_bg_color', 'text_color', 'border_color',
             'theme_color_light', 'accent_color_light', 'bg_color_light', 'card_bg_color_light', 'text_color_light', 'border_color_light',
@@ -145,4 +153,8 @@ class TenantPublicSerializer(serializers.ModelSerializer):
                 return request.build_absolute_uri(obj.logo.url)
             return obj.logo.url
         return obj.logo_url
+
+    def get_server_time(self, obj):
+        from django.utils import timezone
+        return timezone.now().isoformat()
 
