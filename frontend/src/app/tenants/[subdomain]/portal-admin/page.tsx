@@ -3475,6 +3475,7 @@ export default function TenantAdminPage() {
               );
             })()}
           </div>
+        )}
         {activeTab === 'pos' && tenantConfig && (
           <POSTab
             tenantConfig={tenantConfig}
