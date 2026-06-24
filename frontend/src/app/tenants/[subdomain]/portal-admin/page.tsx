@@ -3203,214 +3203,266 @@ export default function TenantAdminPage() {
 
         {activeTab === 'integrations' && (
           <div className="max-w-4xl mx-auto animate-in fade-in duration-300">
-            <form onSubmit={handleSaveIntegrations} className="space-y-8">
-              <div className="admin-card border rounded-[2.5rem] p-8 md:p-10 shadow-2xl relative overflow-hidden text-left space-y-6">
-                
-                <div>
-                  <span className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold text-[8px] font-black uppercase tracking-widest rounded-full border border-nectar-gold/20">
-                    🔌 Conectividad & Canales Externos
-                  </span>
-                  <h2 className="text-2xl font-black tracking-tighter mt-4 leading-none text-white">Configuración de Integraciones</h2>
-                  <p className="text-[10px] opacity-40 uppercase tracking-widest mt-1">Conecta tus propias APIs de mensajería, paquetería y logística</p>
-                </div>
+            {(() => {
+              const hasNewsletterAddon = 
+                tenantConfig?.active_addons?.includes('campaigner') || 
+                tenantConfig?.active_addons?.includes('newsletter-campaigner');
+              const hasLogisticsAddon = 
+                tenantConfig?.active_addons?.includes('delivery-tracking') || 
+                tenantConfig?.active_addons?.includes('logistics-gps');
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  {/* SMTP/Amazon SES Configuration */}
-                  <div className="space-y-4">
-                    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-nectar-gold border-b border-white/5 pb-2">Amazon SES / SMTP Personalizado</h3>
-                    
-                    <div className="space-y-1.5">
-                      <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Host SMTP</label>
-                      <input
-                        type="text"
-                        placeholder="Ej. email-smtp.us-east-1.amazonaws.com"
-                        value={smtpHost}
-                        onChange={(e) => setSmtpHost(e.target.value)}
-                        className="w-full border rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-nectar-gold transition-all admin-input"
-                      />
+              if (!hasNewsletterAddon && !hasLogisticsAddon) {
+                return (
+                  <div className="admin-card border rounded-[2rem] p-12 text-center flex flex-col items-center justify-center min-h-[450px] relative overflow-hidden group">
+                    <div className="absolute -top-32 -right-32 w-64 h-64 bg-[#C68A1E]/5 blur-[80px] rounded-full group-hover:bg-[#C68A1E]/10 transition-all duration-700 pointer-events-none"></div>
+                    <div className="w-16 h-16 rounded-2xl bg-[#C68A1E]/10 border border-[#C68A1E]/20 text-[#C68A1E] flex items-center justify-center text-3xl shadow-lg shadow-[#C68A1E]/10 mb-6 animate-[bounce_3s_infinite]">
+                      🔌
                     </div>
-
-                    <div className="grid grid-cols-3 gap-3">
-                      <div className="col-span-2 space-y-1.5">
-                        <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Puerto SMTP</label>
-                        <input
-                          type="text"
-                          placeholder="587"
-                          value={smtpPort}
-                          onChange={(e) => setSmtpPort(e.target.value.replace(/\D/g, ''))}
-                          className="w-full border rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-nectar-gold transition-all admin-input font-mono"
-                        />
-                      </div>
-                      <div className="flex flex-col justify-end pb-3">
-                        <label className="flex items-center gap-2 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={smtpUseTls}
-                            onChange={(e) => setSmtpUseTls(e.target.checked)}
-                            className="w-3.5 h-3.5 accent-nectar-gold"
-                          />
-                          <span className="text-[9px] font-bold uppercase tracking-wide text-white/75">TLS</span>
-                        </label>
-                      </div>
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Usuario SMTP (SMTP Username)</label>
-                      <input
-                        type="text"
-                        placeholder="Ej. AKIAIOSFODNN7EXAMPLE"
-                        value={smtpUsername}
-                        onChange={(e) => setSmtpUsername(e.target.value)}
-                        className="w-full border rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-nectar-gold transition-all admin-input"
-                      />
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Contraseña SMTP (SMTP Password)</label>
-                      <input
-                        type="password"
-                        placeholder={tenantConfig?.has_custom_smtp_password ? '••••••••••••' : 'Nueva contraseña SMTP'}
-                        value={smtpPassword}
-                        onChange={(e) => setSmtpPassword(e.target.value)}
-                        className="w-full border rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-nectar-gold transition-all admin-input"
-                      />
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Remitente Autorizado (From Email)</label>
-                      <input
-                        type="email"
-                        placeholder="Ej. boletin@minegocio.com"
-                        value={smtpFromEmail}
-                        onChange={(e) => setSmtpFromEmail(e.target.value)}
-                        className="w-full border rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-nectar-gold transition-all admin-input font-mono"
-                      />
-                      <p className="text-[7px] text-white/45 leading-relaxed">
-                        ⚠️ Asegúrate de que esta dirección de correo esté previamente verificada y autorizada en tu consola de Amazon SES u otro proveedor SMTP.
-                      </p>
-                    </div>
+                    <h3 className="text-xl font-black uppercase tracking-wider text-white">Integraciones Desactivadas</h3>
+                    <p className="text-sm text-white/50 max-w-md leading-relaxed mt-2 mb-8">
+                      No tienes módulos de integración activos para este portal. Para configurar SMTP/Amazon SES o la API de Skydropx, necesitas contratar los Add-ons correspondientes en la plataforma de Néctar Labs.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (typeof window !== 'undefined') {
+                          window.open('/dashboard/addons', '_blank');
+                        }
+                      }}
+                      className="px-8 py-3.5 bg-[#C68A1E] hover:bg-[#C68A1E]/90 text-background text-xs font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 transition-all shadow-lg shadow-[#C68A1E]/25 font-bold flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      Ver Catálogo de Add-ons
+                    </button>
                   </div>
+                );
+              }
 
-                  {/* Skydropx & Logistics Configuration */}
-                  <div className="space-y-4">
-                    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-nectar-gold border-b border-white/5 pb-2">Configuración Skydropx</h3>
+              return (
+                <form onSubmit={handleSaveIntegrations} className="space-y-8">
+                  <div className="admin-card border rounded-[2rem] p-8 md:p-10 shadow-2xl relative overflow-hidden text-left space-y-6">
                     
-                    <div className="space-y-1.5">
-                      <label className="text-[8px] font-black uppercase tracking-widest opacity-40">API Key de Skydropx</label>
-                      <input
-                        type="password"
-                        placeholder={tenantConfig?.has_skydropx_api_key ? '••••••••••••' : 'Introduce tu API Key de Skydropx'}
-                        value={skydropxApiKey}
-                        onChange={(e) => setSkydropxApiKey(e.target.value)}
-                        className="w-full border rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-nectar-gold transition-all admin-input"
-                      />
+                    <div>
+                      <span className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold text-[8px] font-black uppercase tracking-widest rounded-full border border-nectar-gold/20">
+                        🔌 Conectividad & Canales Externos
+                      </span>
+                      <h2 className="text-2xl font-black tracking-tighter mt-4 leading-none text-white">Configuración de Integraciones</h2>
+                      <p className="text-[10px] opacity-40 uppercase tracking-widest mt-1">Conecta tus propias APIs de mensajería, paquetería y logística</p>
                     </div>
 
-                    <div className="space-y-1.5">
-                      <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Margen de Ganancia de Envío (%)</label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        max="100"
-                        placeholder="15.00"
-                        value={shippingMarkupPercentage}
-                        onChange={(e) => setShippingMarkupPercentage(e.target.value)}
-                        className="w-full border rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-nectar-gold transition-all admin-input font-mono"
-                      />
-                      <p className="text-[7px] text-white/45 leading-relaxed">
-                        Porcentaje adicional cargado al cliente final sobre la cotización base de Skydropx.
-                      </p>
+                    <div className={`grid grid-cols-1 ${hasNewsletterAddon && hasLogisticsAddon ? 'md:grid-cols-2' : ''} gap-8`}>
+                      {/* SMTP/Amazon SES Configuration */}
+                      {hasNewsletterAddon && (
+                        <div className="space-y-4">
+                          <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-nectar-gold border-b border-white/5 pb-2">Amazon SES / SMTP Personalizado</h3>
+                          
+                          <div className="space-y-1.5">
+                            <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Host SMTP</label>
+                            <input
+                              type="text"
+                              placeholder="Ej. email-smtp.us-east-1.amazonaws.com"
+                              value={smtpHost}
+                              onChange={(e) => setSmtpHost(e.target.value)}
+                              className="w-full border rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-nectar-gold transition-all admin-input"
+                            />
+                          </div>
+
+                          <div className="grid grid-cols-3 gap-3">
+                            <div className="col-span-2 space-y-1.5">
+                              <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Puerto SMTP</label>
+                              <input
+                                type="text"
+                                placeholder="587"
+                                value={smtpPort}
+                                onChange={(e) => setSmtpPort(e.target.value.replace(/\D/g, ''))}
+                                className="w-full border rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-nectar-gold transition-all admin-input font-mono"
+                              />
+                            </div>
+                            <div className="flex flex-col justify-end pb-3">
+                              <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={smtpUseTls}
+                                  onChange={(e) => setSmtpUseTls(e.target.checked)}
+                                  className="w-3.5 h-3.5 accent-nectar-gold"
+                                />
+                                <span className="text-[9px] font-bold uppercase tracking-wide text-white/75">TLS</span>
+                              </label>
+                            </div>
+                          </div>
+
+                          <div className="space-y-1.5">
+                            <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Usuario SMTP (SMTP Username)</label>
+                            <input
+                              type="text"
+                              placeholder="Ej. AKIAIOSFODNN7EXAMPLE"
+                              value={smtpUsername}
+                              onChange={(e) => setSmtpUsername(e.target.value)}
+                              className="w-full border rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-nectar-gold transition-all admin-input"
+                            />
+                          </div>
+
+                          <div className="space-y-1.5">
+                            <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Contraseña SMTP (SMTP Password)</label>
+                            <input
+                              type="password"
+                              placeholder={tenantConfig?.has_custom_smtp_password ? '••••••••••••' : 'Nueva contraseña SMTP'}
+                              value={smtpPassword}
+                              onChange={(e) => setSmtpPassword(e.target.value)}
+                              className="w-full border rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-nectar-gold transition-all admin-input"
+                            />
+                          </div>
+
+                          <div className="space-y-1.5">
+                            <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Remitente Autorizado (From Email)</label>
+                            <input
+                              type="email"
+                              placeholder="Ej. boletin@minegocio.com"
+                              value={smtpFromEmail}
+                              onChange={(e) => setSmtpFromEmail(e.target.value)}
+                              className="w-full border rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-nectar-gold transition-all admin-input font-mono"
+                            />
+                            <p className="text-[7px] text-white/45 leading-relaxed">
+                              ⚠️ Asegúrate de que esta dirección de correo esté previamente verificada y autorizada en tu consola de Amazon SES u otro proveedor SMTP.
+                            </p>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Skydropx & Logistics Configuration */}
+                      {hasLogisticsAddon && (
+                        <div className="space-y-4">
+                          <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-nectar-gold border-b border-white/5 pb-2">Configuración Skydropx</h3>
+                          
+                          <div className="space-y-1.5">
+                            <label className="text-[8px] font-black uppercase tracking-widest opacity-40">API Key de Skydropx</label>
+                            <input
+                              type="password"
+                              placeholder={tenantConfig?.has_skydropx_api_key ? '••••••••••••' : 'Introduce tu API Key de Skydropx'}
+                              value={skydropxApiKey}
+                              onChange={(e) => setSkydropxApiKey(e.target.value)}
+                              className="w-full border rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-nectar-gold transition-all admin-input"
+                            />
+                          </div>
+
+                          <div className="space-y-1.5">
+                            <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Margen de Ganancia de Envío (%)</label>
+                            <input
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              max="100"
+                              placeholder="15.00"
+                              value={shippingMarkupPercentage}
+                              onChange={(e) => setShippingMarkupPercentage(e.target.value)}
+                              className="w-full border rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-nectar-gold transition-all admin-input font-mono"
+                            />
+                            <p className="text-[7px] text-white/45 leading-relaxed">
+                              Porcentaje adicional cargado al cliente final sobre la cotización base de Skydropx.
+                            </p>
+                          </div>
+
+                          <div className="border-t border-white/5 pt-4 mt-2 space-y-3">
+                            <h4 className="text-[9px] font-black uppercase tracking-wide text-white font-bold">Dirección de Origen para Envíos</h4>
+                            
+                            <div className="space-y-1.5">
+                              <label className="text-[8px] font-black uppercase tracking-widest opacity-45">Nombre del Remitente</label>
+                              <input
+                                type="text"
+                                placeholder="Ej. Almacén Central"
+                                value={originName}
+                                onChange={(e) => setOriginName(e.target.value)}
+                                className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input"
+                              />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-3">
+                              <div className="space-y-1.5">
+                                <label className="text-[8px] font-black uppercase tracking-widest opacity-45">Teléfono</label>
+                                <input
+                                  type="text"
+                                  placeholder="Ej. 5512345678"
+                                  value={originPhone}
+                                  onChange={(e) => setOriginPhone(e.target.value)}
+                                  className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input font-mono"
+                                />
+                              </div>
+                              <div className="space-y-1.5">
+                                <label className="text-[8px] font-black uppercase tracking-widest opacity-45">Código Postal</label>
+                                <input
+                                  type="text"
+                                  maxLength={5}
+                                  placeholder="Ej. 06000"
+                                  value={originZipCode}
+                                  onChange={(e) => setOriginZipCode(e.target.value.replace(/\D/g, ''))}
+                                  className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input font-mono"
+                                />
+                              </div>
+                            </div>
+
+                            <div className="space-y-1.5">
+                              <label className="text-[8px] font-black uppercase tracking-widest opacity-45">Calle y Número</label>
+                              <input
+                                type="text"
+                                placeholder="Ej. Av. Paseo de la Reforma 123"
+                                value={originStreet}
+                                onChange={(e) => setOriginStreet(e.target.value)}
+                                className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input"
+                              />
+                            </div>
+
+                            <div className="grid grid-cols-3 gap-2">
+                              <div className="space-y-1.5">
+                                <label className="text-[8px] font-black uppercase tracking-widest opacity-45">Colonia</label>
+                                <input
+                                  type="text"
+                                  placeholder="Juárez"
+                                  value={originSuburb}
+                                  onChange={(e) => setOriginSuburb(e.target.value)}
+                                  className="w-full border rounded-xl px-2.5 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input"
+                                />
+                              </div>
+                              <div className="space-y-1.5">
+                                <label className="text-[8px] font-black uppercase tracking-widest opacity-45">Ciudad</label>
+                                <input
+                                  type="text"
+                                  placeholder="CDMX"
+                                  value={originCity}
+                                  onChange={(e) => setOriginCity(e.target.value)}
+                                  className="w-full border rounded-xl px-2.5 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input"
+                                />
+                              </div>
+                              <div className="space-y-1.5">
+                                <label className="text-[8px] font-black uppercase tracking-widest opacity-45">Estado</label>
+                                <input
+                                  type="text"
+                                  placeholder="CDMX"
+                                  value={originState}
+                                  onChange={(e) => setOriginState(e.target.value)}
+                                  className="w-full border rounded-xl px-2.5 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
 
-                    <div className="border-t border-white/5 pt-4 mt-2 space-y-3">
-                      <h4 className="text-[9px] font-black uppercase tracking-wide text-white font-bold">Dirección de Origen para Envíos</h4>
-                      
-                      <div className="space-y-1.5">
-                        <label className="text-[8px] font-black uppercase tracking-widest opacity-45">Nombre del Remitente</label>
-                        <input
-                          type="text"
-                          placeholder="Ej. Almacén Central"
-                          value={originName}
-                          onChange={(e) => setOriginName(e.target.value)}
-                          className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input"
-                        />
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="space-y-1.5">
-                          <label className="text-[8px] font-black uppercase tracking-widest opacity-45">Teléfono</label>
-                          <input
-                            type="text"
-                            placeholder="Ej. 5512345678"
-                            value={originPhone}
-                            onChange={(e) => setOriginPhone(e.target.value)}
-                            className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input font-mono"
-                          />
-                        </div>
-                        <div className="space-y-1.5">
-                          <label className="text-[8px] font-black uppercase tracking-widest opacity-45">Código Postal</label>
-                          <input
-                            type="text"
-                            maxLength={5}
-                            placeholder="Ej. 06000"
-                            value={originZipCode}
-                            onChange={(e) => setOriginZipCode(e.target.value.replace(/\D/g, ''))}
-                            className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input font-mono"
-                          />
-                        </div>
-                      </div>
-
-                      <div className="space-y-1.5">
-                        <label className="text-[8px] font-black uppercase tracking-widest opacity-45">Calle y Número</label>
-                        <input
-                          type="text"
-                          placeholder="Ej. Av. Paseo de la Reforma 123"
-                          value={originStreet}
-                          onChange={(e) => setOriginStreet(e.target.value)}
-                          className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input"
-                        />
-                      </div>
-
-                      <div className="grid grid-cols-3 gap-2">
-                        <div className="space-y-1.5">
-                          <label className="text-[8px] font-black uppercase tracking-widest opacity-45">Colonia</label>
-                          <input
-                            type="text"
-                            placeholder="Juárez"
-                            value={originSuburb}
-                            onChange={(e) => setOriginSuburb(e.target.value)}
-                            className="w-full border rounded-xl px-2.5 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input"
-                          />
-                        </div>
-                        <div className="space-y-1.5">
-                          <label className="text-[8px] font-black uppercase tracking-widest opacity-45">Ciudad</label>
-                          <input
-                            type="text"
-                            placeholder="CDMX"
-                            value={originCity}
-                            onChange={(e) => setOriginCity(e.target.value)}
-                            className="w-full border rounded-xl px-2.5 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input"
-                          />
-                        </div>
-                        <div className="space-y-1.5">
-                          <label className="text-[8px] font-black uppercase tracking-widest opacity-45">Estado</label>
-                          <input
-                            type="text"
-                            placeholder="CDMX"
-                            value={originState}
-                            onChange={(e) => setOriginState(e.target.value)}
-                            className="w-full border rounded-xl px-2.5 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input"
-                          />
-                        </div>
-                      </div>
+                    <div className="pt-6 border-t border-white/5 flex justify-end">
+                      <button
+                        type="submit"
+                        disabled={isSavingIntegrations}
+                        className="px-8 py-3.5 bg-nectar-gold text-background text-[10px] font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 disabled:opacity-40 disabled:scale-100 transition-all font-bold shadow-lg shadow-nectar-gold/25 cursor-pointer"
+                      >
+                        {isSavingIntegrations ? 'Guardando Integraciones...' : 'Guardar Integraciones'}
+                      </button>
                     </div>
+
                   </div>
-                </div>
-
-                <div className="pt-6 border-t border-white/5 flex justify-end">
-                  <button
-                    type="submit"
+                </form>
+              );
+            })()}
+          </div>
+        )}               type="submit"
                     disabled={isSavingIntegrations}
                     className="px-8 py-3.5 bg-nectar-gold text-background text-[10px] font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 disabled:opacity-40 disabled:scale-100 transition-all font-bold shadow-lg shadow-nectar-gold/25 cursor-pointer"
                   >
