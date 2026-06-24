@@ -3462,17 +3462,6 @@ export default function TenantAdminPage() {
               );
             })()}
           </div>
-        )}               type="submit"
-                    disabled={isSavingIntegrations}
-                    className="px-8 py-3.5 bg-nectar-gold text-background text-[10px] font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 disabled:opacity-40 disabled:scale-100 transition-all font-bold shadow-lg shadow-nectar-gold/25 cursor-pointer"
-                  >
-                    {isSavingIntegrations ? 'Guardando Integraciones...' : 'Guardar Integraciones'}
-                  </button>
-                </div>
-
-              </div>
-            </form>
-          </div>
         )}
       </main>
 
