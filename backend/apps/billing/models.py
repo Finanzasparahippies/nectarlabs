@@ -135,3 +135,63 @@ class SATUnitKey(models.Model):
 
     def __str__(self):
         return f"{self.code} - {self.name}"
+
+
+class SalesNote(models.Model):
+    class Status(models.TextChoices):
+        PAID = 'PAID', 'Pagada'
+        INVOICED = 'INVOICED', 'Facturada'
+        CANCELLED = 'CANCELLED', 'Cancelada'
+
+    tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name='sales_notes')
+    folio = models.CharField(max_length=50, unique=True, verbose_name="Folio de Nota")
+    total = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Total (MXN)")
+    payment_method = models.CharField(
+        max_length=50,
+        default="01",
+        verbose_name="Forma de Pago SAT"
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=Status.choices,
+        default=Status.PAID,
+        verbose_name="Estado de la Nota"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def save(self, *args, **kwargs):
+        if not self.folio:
+            import uuid
+            from django.utils import timezone
+            date_str = timezone.now().strftime("%Y%m%d")
+            unique_suffix = uuid.uuid4().hex[:6].upper()
+            self.folio = f"NV-{date_str}-{unique_suffix}"
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"Nota {self.folio} - {self.tenant.name} (${self.total})"
+
+
+class SalesNoteItem(models.Model):
+    sales_note = models.ForeignKey(SalesNote, on_delete=models.CASCADE, related_name='items')
+    description = models.CharField(max_length=255, verbose_name="Concepto")
+    quantity = models.PositiveIntegerField(default=1, verbose_name="Cantidad")
+    unit_price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Precio Unitario")
+    product_key = models.CharField(
+        max_length=20,
+        default="01010101",
+        verbose_name="Clave SAT de Producto"
+    )
+    unit_key = models.CharField(
+        max_length=20,
+        default="E48",
+        verbose_name="Clave SAT de Unidad"
+    )
+
+    def __str__(self):
+        return f"{self.quantity} x {self.description} (${self.unit_price})"
+

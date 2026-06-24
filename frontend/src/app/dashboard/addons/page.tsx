@@ -250,6 +250,25 @@ const fallbackAddons: Omit<Addon, 'icon'>[] = [
     ]
   },
   {
+    id: 'pos-system',
+    name: 'Punto de Venta POS & Nota de Venta',
+    categoryBadge: 'VENTAS Y POS',
+    description: 'Sistema POS interactivo para registrar ventas presenciales, generar notas de venta y permitir autofacturación a clientes.',
+    detailedDescription: 'Registra tus ventas de forma rápida desde tu portal administrativo. Genera folios de notas de venta (recibos) con un diseño optimizado para impresión térmica, y permite a tus clientes facturar sus compras de forma autónoma ingresando su folio.',
+    monthlyPrice: 299,
+    yearlyPrice: 2990,
+    originProject: 'nectarlabs-main',
+    sourceReference: 'backend/apps/billing (SalesNote, SalesNoteItem)',
+    complexity: 'Media',
+    serverRequirements: 'Base de datos para persistencia de folios + Activación de sellos CSD en Facturapi.',
+    technicalDetails: [
+      'Registro rápido de conceptos, precios y cantidades',
+      'Generación de notas de venta (recibos) térmicas imprimibles',
+      'Autofacturación segura para clientes finales vía folio público',
+      'Validación de folios e integración directa con Facturapi'
+    ]
+  },
+  {
     id: 'ecommerce-combo',
     name: 'Combo E-commerce Automatizado',
     categoryBadge: 'E-COMMERCE COMBO',

@@ -1,6 +1,6 @@
 from rest_framework import serializers
-from .models import TaxProfile, Invoice, SATProductKey, SATUnitKey
-
+from .models import TaxProfile, Invoice, SATProductKey, SATUnitKey, SalesNote, SalesNoteItem
+    
 class TaxProfileSerializer(serializers.ModelSerializer):
     # Transient fields for uploading certificates directly to the PAC
     cer_file = serializers.FileField(write_only=True, required=False, help_text="Archivo de certificado CSD (.cer)")
@@ -68,3 +68,30 @@ class SATUnitKeySerializer(serializers.ModelSerializer):
     class Meta:
         model = SATUnitKey
         fields = ['id', 'code', 'name', 'description', 'is_active']
+
+
+class SalesNoteItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SalesNoteItem
+        fields = ['id', 'sales_note', 'description', 'quantity', 'unit_price', 'product_key', 'unit_key']
+        read_only_fields = ['id', 'sales_note']
+
+
+class SalesNoteSerializer(serializers.ModelSerializer):
+    items = SalesNoteItemSerializer(many=True, required=False)
+
+    class Meta:
+        model = SalesNote
+        fields = [
+            'id', 'tenant', 'folio', 'total', 'payment_method', 
+            'status', 'created_at', 'updated_at', 'items'
+        ]
+        read_only_fields = ['id', 'folio', 'created_at', 'updated_at']
+
+    def create(self, validated_data):
+        items_data = validated_data.pop('items', [])
+        sales_note = SalesNote.objects.create(**validated_data)
+        for item_data in items_data:
+            SalesNoteItem.objects.create(sales_note=sales_note, **item_data)
+        return sales_note
+

@@ -78,7 +78,7 @@ export default function TenantAdminPage() {
   const [loading, setLoading] = useState(true);
   const [authorized, setAuthorized] = useState(false);
   const [userMe, setUserMe] = useState<any | null>(null);
-  const [activeTab, setActiveTab] = useState<'metrics' | 'branding' | 'billing' | 'integrations'>('metrics');
+  const [activeTab, setActiveTab] = useState<'metrics' | 'branding' | 'billing' | 'integrations' | 'pos'>('metrics');
   const [billingSubTab, setBillingSubTab] = useState<'catalog' | 'history' | 'config'>('catalog');
 
   // Customization Form State
@@ -1990,6 +1990,19 @@ export default function TenantAdminPage() {
             >
               🔌 Integraciones
             </button>
+            {tenantConfig?.active_addons?.some((a: string) => ['pos-system', 'pos-sales'].includes(a)) && (
+              <button
+                onClick={() => setActiveTab('pos')}
+                className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border cursor-pointer"
+                style={{
+                  backgroundColor: activeTab === 'pos' ? `${primaryColor}15` : 'transparent',
+                  borderColor: activeTab === 'pos' ? primaryColor : 'transparent',
+                  color: activeTab === 'pos' ? primaryColor : 'rgba(255, 255, 255, 0.6)'
+                }}
+              >
+                🏪 Punto de Venta (POS)
+              </button>
+            )}
           </div>
 
           <div className="flex items-center gap-4">
@@ -3462,6 +3475,12 @@ export default function TenantAdminPage() {
               );
             })()}
           </div>
+        {activeTab === 'pos' && tenantConfig && (
+          <POSTab
+            tenantConfig={tenantConfig}
+            primaryColor={primaryColor}
+            textColor={textColor}
+          />
         )}
       </main>
 
@@ -5652,6 +5671,659 @@ function AddonMetricCard({ slug, title, icon, activeList, primaryColor, metrics,
         </div>
       )}
 
+    </div>
+  );
+}
+
+interface POSTabProps {
+  tenantConfig: any;
+  primaryColor: string;
+  textColor: string;
+}
+
+function POSTab({ tenantConfig, primaryColor, textColor }: POSTabProps) {
+  const [activeSubTab, setActiveSubTab] = useState<'create' | 'list'>('create');
+  const [notes, setNotes] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
+
+  // New Note Form State
+  const [paymentMethod, setPaymentMethod] = useState('01'); // 01 = Efectivo
+  const [items, setItems] = useState<any[]>([
+    { description: '', quantity: 1, unit_price: '', product_key: '01010101', unit_key: 'E48' }
+  ]);
+  const [submitting, setSubmitting] = useState(false);
+  const [createdNote, setCreatedNote] = useState<any | null>(null);
+
+  // Selected Note for Details
+  const [selectedNote, setSelectedNote] = useState<any | null>(null);
+
+  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 4000);
+  };
+
+  const fetchNotes = async () => {
+    setLoading(true);
+    try {
+      const data = await fetcher(`/billing/sales-notes/?tenant_id=${tenantConfig.id}`);
+      setNotes(data || []);
+    } catch (err: any) {
+      showToast(err?.message || 'Error al cargar notas de venta', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchNotes();
+  }, [tenantConfig.id]);
+
+  const handleAddItem = () => {
+    setItems([...items, { description: '', quantity: 1, unit_price: '', product_key: '01010101', unit_key: 'E48' }]);
+  };
+
+  const handleRemoveItem = (index: number) => {
+    if (items.length === 1) {
+      showToast('Debe haber al menos un concepto en la nota', 'error');
+      return;
+    }
+    setItems(items.filter((_, i) => i !== index));
+  };
+
+  const handleUpdateItem = (index: number, field: string, value: any) => {
+    const updated = [...items];
+    updated[index][field] = value;
+    setItems(updated);
+  };
+
+  const calculateTotal = () => {
+    return items.reduce((acc, item) => {
+      const price = parseFloat(item.unit_price) || 0;
+      return acc + price * item.quantity;
+    }, 0);
+  };
+
+  const handleCreateNote = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Validations
+    if (items.some(item => !item.description.trim() || !item.unit_price || parseFloat(item.unit_price) <= 0)) {
+      showToast('Por favor completa todos los conceptos con un precio mayor a 0', 'error');
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const total = calculateTotal();
+      const payload = {
+        tenant: tenantConfig.id,
+        total: total.toFixed(2),
+        payment_method: paymentMethod,
+        status: 'PAID',
+        items: items.map(item => ({
+          description: item.description.trim(),
+          quantity: parseInt(item.quantity, 10) || 1,
+          unit_price: parseFloat(item.unit_price).toFixed(2),
+          product_key: item.product_key || '01010101',
+          unit_key: item.unit_key || 'E48'
+        }))
+      };
+
+      const response = await fetcher('/billing/sales-notes/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      showToast(`Nota de venta ${response.folio} creada exitosamente`, 'success');
+      setCreatedNote(response);
+      
+      // Reset form
+      setItems([{ description: '', quantity: 1, unit_price: '', product_key: '01010101', unit_key: 'E48' }]);
+      setPaymentMethod('01');
+      
+      // Refresh list
+      fetchNotes();
+    } catch (err: any) {
+      showToast(err?.message || 'Error al crear la nota de venta', 'error');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleCancelNote = async (noteId: number, folio: string) => {
+    if (!confirm(`¿Estás seguro de que deseas cancelar la nota ${folio}? Esta acción no se puede deshacer.`)) {
+      return;
+    }
+
+    try {
+      await fetcher(`/billing/sales-notes/${noteId}/`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'CANCELLED' })
+      });
+      showToast(`Nota ${folio} cancelada exitosamente`, 'success');
+      fetchNotes();
+      if (selectedNote?.id === noteId) {
+        setSelectedNote((prev: any) => prev ? { ...prev, status: 'CANCELLED' } : null);
+      }
+    } catch (err: any) {
+      showToast(err?.message || 'Error al cancelar la nota', 'error');
+    }
+  };
+
+  const [autofacturaUrl, setAutofacturaUrl] = useState('');
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setAutofacturaUrl(`${window.location.origin}/tenants/${tenantConfig.subdomain}/autofactura`);
+    }
+  }, [tenantConfig.subdomain]);
+
+  const copyAutofacturaLink = () => {
+    if (typeof window !== 'undefined') {
+      navigator.clipboard.writeText(autofacturaUrl);
+      showToast('Enlace de autofacturación copiado', 'success');
+    }
+  };
+
+  const activeNotes = notes.filter(n => n.status !== 'CANCELLED');
+  const totalRevenue = activeNotes.reduce((acc, n) => acc + parseFloat(n.total), 0);
+  const invoicedNotesCount = activeNotes.filter(n => n.status === 'INVOICED').length;
+
+  const filteredNotes = notes.filter(n => 
+    n.folio.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'PAID':
+        return <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[8px] font-black uppercase tracking-wider font-mono">Pagada</span>;
+      case 'INVOICED':
+        return <span className="px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20 text-[8px] font-black uppercase tracking-wider font-mono">Facturada</span>;
+      case 'CANCELLED':
+        return <span className="px-2 py-0.5 rounded-full bg-red-500/10 text-red-400 border border-red-500/20 text-[8px] font-black uppercase tracking-wider font-mono">Cancelada</span>;
+      default:
+        return <span className="px-2 py-0.5 rounded-full bg-white/10 text-white/50 border border-white/20 text-[8px] font-black uppercase tracking-wider font-mono">{status}</span>;
+    }
+  };
+
+  const getPaymentMethodName = (code: string) => {
+    const methods: Record<string, string> = {
+      '01': 'Efectivo',
+      '02': 'Cheque',
+      '03': 'Transferencia',
+      '04': 'T. Crédito',
+      '28': 'T. Débito',
+      '99': 'Por Definir'
+    };
+    return methods[code] || code;
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Toast Alert */}
+      {toast && (
+        <div className="fixed bottom-6 right-6 z-55 max-w-sm animate-in fade-in slide-in-from-bottom-5">
+          <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />
+        </div>
+      )}
+
+      {/* Metrics Row */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="admin-card border rounded-2xl p-5 relative overflow-hidden flex flex-col justify-between min-h-[110px]">
+          <span className="text-[7.5px] uppercase font-black tracking-widest text-white/35 block">Total Ventas POS</span>
+          <span className="text-xl font-black text-white font-mono mt-1 block" style={{ color: primaryColor }}>
+            ${totalRevenue.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MXN
+          </span>
+          <span className="text-[7px] text-white/40 uppercase mt-2 tracking-wider">Monto acumulado en notas vigentes</span>
+        </div>
+
+        <div className="admin-card border rounded-2xl p-5 relative overflow-hidden flex flex-col justify-between min-h-[110px]">
+          <span className="text-[7.5px] uppercase font-black tracking-widest text-white/35 block">Notas Emitidas</span>
+          <span className="text-xl font-black text-white font-mono mt-1 block">
+            {activeNotes.length}
+          </span>
+          <span className="text-[7px] text-white/40 uppercase mt-2 tracking-wider">Notas de venta pagadas</span>
+        </div>
+
+        <div className="admin-card border rounded-2xl p-5 relative overflow-hidden flex flex-col justify-between min-h-[110px]">
+          <span className="text-[7.5px] uppercase font-black tracking-widest text-white/35 block">Notas Facturadas</span>
+          <span className="text-xl font-black text-white font-mono mt-1 block text-blue-400">
+            {invoicedNotesCount}
+          </span>
+          <span className="text-[7px] text-white/40 uppercase mt-2 tracking-wider">Autofacturadas por el cliente</span>
+        </div>
+
+        <div className="admin-card border rounded-2xl p-5 relative overflow-hidden flex flex-col justify-between min-h-[110px]">
+          <span className="text-[7.5px] uppercase font-black tracking-widest text-white/35 block">Timbres Disponibles</span>
+          <span className="text-xl font-black text-white font-mono mt-1 block" style={{ color: (tenantConfig.stamp_balance || 0) < 5 ? '#EF4444' : '#10B981' }}>
+            {tenantConfig.stamp_balance ?? 0}
+          </span>
+          <span className="text-[7px] text-white/40 uppercase mt-2 tracking-wider">Saldo de timbrado para CFDI 4.0</span>
+        </div>
+      </div>
+
+      {/* URL de Autofactura Card */}
+      <div className="admin-card border rounded-2xl p-6 bg-white/[0.01]">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h4 className="text-xs font-black uppercase tracking-wider text-white">Enlace de Autofactura para Clientes</h4>
+            <p className="text-[8px] text-white/50 uppercase tracking-widest mt-1">Comparte este enlace para que tus clientes facturen sus notas de venta solos</p>
+          </div>
+          <div className="flex w-full sm:w-auto items-center gap-2">
+            <input
+              type="text"
+              readOnly
+              value={autofacturaUrl}
+              className="bg-background border border-white/10 rounded-xl px-3 py-2 text-[9px] text-white/60 font-mono focus:outline-none w-full sm:w-[320px]"
+            />
+            <button
+              onClick={copyAutofacturaLink}
+              className="px-4 py-2 bg-white/5 border border-white/10 hover:bg-white/10 text-white text-[9px] font-black uppercase tracking-wider rounded-xl transition-all active:scale-95 cursor-pointer"
+            >
+              Copiar
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Work Area */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        {/* Navigation / Actions column */}
+        <div className="lg:col-span-3 space-y-3">
+          <button
+            onClick={() => setActiveSubTab('create')}
+            className={`w-full text-left px-5 py-4 rounded-2xl border text-[9px] font-black uppercase tracking-widest transition-all flex justify-between items-center cursor-pointer ${
+              activeSubTab === 'create'
+                ? 'bg-white/5 text-white border-white/20'
+                : 'bg-transparent text-white/40 border-transparent hover:text-white/70'
+            }`}
+            style={activeSubTab === 'create' ? { borderColor: primaryColor } : {}}
+          >
+            <span>Nueva Nota de Venta</span>
+            <span>✍️</span>
+          </button>
+          <button
+            onClick={() => {
+              setActiveSubTab('list');
+              fetchNotes();
+            }}
+            className={`w-full text-left px-5 py-4 rounded-2xl border text-[9px] font-black uppercase tracking-widest transition-all flex justify-between items-center cursor-pointer ${
+              activeSubTab === 'list'
+                ? 'bg-white/5 text-white border-white/20'
+                : 'bg-transparent text-white/40 border-transparent hover:text-white/70'
+            }`}
+            style={activeSubTab === 'list' ? { borderColor: primaryColor } : {}}
+          >
+            <span>Historial de Notas</span>
+            <span>📋</span>
+          </button>
+        </div>
+
+        {/* Content area */}
+        <div className="lg:col-span-9">
+          {activeSubTab === 'create' ? (
+            <div className="admin-card border rounded-2xl p-6 space-y-6">
+              <div>
+                <h3 className="text-sm font-black uppercase tracking-wider text-white">Registrar Nota de Venta</h3>
+                <p className="text-[8px] text-white/40 uppercase tracking-widest mt-0.5">Crea una nota de venta para público general. El cliente podrá facturarla después.</p>
+              </div>
+
+              <form onSubmit={handleCreateNote} className="space-y-6">
+                {/* General Note Meta */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-[7.5px] uppercase font-black tracking-wider text-white/55 block mb-1.5">Forma de Pago SAT</label>
+                    <select
+                      value={paymentMethod}
+                      onChange={(e) => setPaymentMethod(e.target.value)}
+                      className="w-full bg-background border border-white/10 rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold text-foreground admin-input font-bold uppercase"
+                    >
+                      <option value="01">01 - Efectivo</option>
+                      <option value="02">02 - Cheque nominativo</option>
+                      <option value="03">03 - Transferencia electrónica de fondos</option>
+                      <option value="04">04 - Tarjeta de crédito</option>
+                      <option value="28">28 - Tarjeta de débito</option>
+                      <option value="99">99 - Por definir</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Items Block */}
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center border-b border-white/10 pb-2">
+                    <span className="text-[8px] uppercase font-black tracking-widest text-white/60">Conceptos de Venta</span>
+                    <button
+                      type="button"
+                      onClick={handleAddItem}
+                      className="px-3 py-1 bg-white/5 border border-white/10 hover:bg-white/10 text-[8px] font-black uppercase tracking-wider rounded-lg transition-all text-white cursor-pointer"
+                    >
+                      + Agregar Línea
+                    </button>
+                  </div>
+
+                  <div className="space-y-3">
+                    {items.map((item, idx) => (
+                      <div key={idx} className="bg-white/[0.01] border border-white/5 rounded-2xl p-4 space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
+                        <div className="flex justify-between items-center">
+                          <span className="text-[8px] font-mono text-white/30 font-black">LÍNEA {idx + 1}</span>
+                          {items.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveItem(idx)}
+                              className="text-red-400 hover:text-red-300 text-[8px] uppercase font-black tracking-wider cursor-pointer"
+                            >
+                              Eliminar
+                            </button>
+                          )}
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
+                          {/* Concepto */}
+                          <div className="sm:col-span-5">
+                            <label className="text-[7px] uppercase font-bold text-white/50 block mb-1">Descripción / Concepto</label>
+                            <input
+                              type="text"
+                              required
+                              placeholder="Ej. Consumo de alimentos, Servicio de asesoría"
+                              value={item.description}
+                              onChange={(e) => handleUpdateItem(idx, 'description', e.target.value)}
+                              className="w-full bg-background border border-white/10 rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold text-foreground admin-input"
+                            />
+                          </div>
+
+                          {/* Cantidad */}
+                          <div className="sm:col-span-2">
+                            <label className="text-[7px] uppercase font-bold text-white/50 block mb-1">Cantidad</label>
+                            <input
+                              type="number"
+                              required
+                              min="1"
+                              value={item.quantity}
+                              onChange={(e) => handleUpdateItem(idx, 'quantity', parseInt(e.target.value, 10) || 1)}
+                              className="w-full bg-background border border-white/10 rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold text-foreground admin-input font-bold font-mono"
+                            />
+                          </div>
+
+                          {/* Precio Unitario */}
+                          <div className="sm:col-span-5">
+                            <label className="text-[7px] uppercase font-bold text-white/50 block mb-1">Precio Unitario (IVA Incl.)</label>
+                            <div className="relative">
+                              <span className="absolute left-3 top-2.5 text-[10px] text-white/30">$</span>
+                              <input
+                                type="number"
+                                required
+                                step="0.01"
+                                min="0.01"
+                                placeholder="0.00"
+                                value={item.unit_price}
+                                onChange={(e) => handleUpdateItem(idx, 'unit_price', e.target.value)}
+                                className="w-full bg-background border border-white/10 rounded-xl pl-6 pr-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold text-foreground admin-input font-bold font-mono"
+                              />
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* SAT Catalog Keys */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-white/[0.03] pt-3">
+                          <div>
+                            <label className="text-[7px] uppercase font-bold text-white/50 block mb-1">Clave de Producto SAT</label>
+                            <SATAutocomplete
+                              mode="product"
+                              value={item.product_key}
+                              onChange={(code) => handleUpdateItem(idx, 'product_key', code)}
+                              primaryColor={primaryColor}
+                              subdomain={tenantConfig.subdomain}
+                              tenantId={tenantConfig.id}
+                            />
+                          </div>
+                          <div>
+                            <label className="text-[7px] uppercase font-bold text-white/50 block mb-1">Clave de Unidad SAT</label>
+                            <SATAutocomplete
+                              mode="unit"
+                              value={item.unit_key}
+                              onChange={(code) => handleUpdateItem(idx, 'unit_key', code)}
+                              primaryColor={primaryColor}
+                              subdomain={tenantConfig.subdomain}
+                              tenantId={tenantConfig.id}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Subtotal & Total display */}
+                <div className="border-t border-white/10 pt-4 flex flex-col items-end">
+                  <div className="w-full sm:w-64 space-y-1.5 text-right font-mono text-[10px]">
+                    <div className="flex justify-between text-white/55">
+                      <span>Subtotal (Neto estimado):</span>
+                      <span>${(calculateTotal() / 1.16).toFixed(2)} MXN</span>
+                    </div>
+                    <div className="flex justify-between text-white/55">
+                      <span>IVA (16% estimado):</span>
+                      <span>${(calculateTotal() - (calculateTotal() / 1.16)).toFixed(2)} MXN</span>
+                    </div>
+                    <div className="flex justify-between text-sm font-black border-t border-white/10 pt-1.5 text-white">
+                      <span>Total:</span>
+                      <span style={{ color: primaryColor }}>${calculateTotal().toFixed(2)} MXN</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex justify-end gap-3 pt-2">
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="px-8 py-3.5 bg-nectar-gold text-background text-[10px] font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 disabled:opacity-40 disabled:scale-100 transition-all font-bold shadow-lg shadow-nectar-gold/25 cursor-pointer"
+                    style={{ backgroundColor: primaryColor }}
+                  >
+                    {submitting ? 'Generando Nota...' : 'Crear Nota de Venta'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          ) : (
+            <div className="admin-card border rounded-2xl p-6 space-y-6 animate-in fade-in duration-200">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                  <h3 className="text-sm font-black uppercase tracking-wider text-white">Historial de Notas de Venta</h3>
+                  <p className="text-[8px] text-white/40 uppercase tracking-widest mt-0.5">Consulta y gestiona las notas de venta expedidas.</p>
+                </div>
+                <div className="w-full sm:w-64">
+                  <input
+                    type="text"
+                    placeholder="Buscar por folio (NV-...)"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full bg-background border border-white/10 rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold text-white admin-input font-mono"
+                  />
+                </div>
+              </div>
+
+              {loading ? (
+                <div className="py-20 flex flex-col items-center justify-center gap-3">
+                  <div className="w-6 h-6 rounded-full border-2 border-t-white border-white/10 animate-spin" style={{ borderTopColor: primaryColor }}></div>
+                  <span className="text-[8px] font-black uppercase tracking-widest text-white/40">Cargando historial...</span>
+                </div>
+              ) : filteredNotes.length === 0 ? (
+                <div className="py-20 text-center border border-dashed border-white/10 rounded-2xl">
+                  <span className="text-2xl block mb-2">📋</span>
+                  <span className="text-[8px] font-black uppercase tracking-widest text-white/35">No se encontraron notas de venta</span>
+                </div>
+              ) : (
+                <div className="overflow-x-auto custom-scrollbar">
+                  <table className="w-full text-left border-collapse min-w-[600px]">
+                    <thead>
+                      <tr className="border-b border-white/10 text-[7.5px] uppercase font-black tracking-widest text-white/45 font-mono">
+                        <th className="pb-3 pl-4">Folio</th>
+                        <th className="pb-3">Fecha</th>
+                        <th className="pb-3">Método Pago</th>
+                        <th className="pb-3">Total</th>
+                        <th className="pb-3">Estado</th>
+                        <th className="pb-3 pr-4 text-right">Acciones</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/[0.04]">
+                      {filteredNotes.map((note) => (
+                        <tr key={note.id} className="text-[10px] hover:bg-white/[0.01] transition-colors">
+                          <td className="py-3.5 pl-4 font-mono font-bold text-white">{note.folio}</td>
+                          <td className="py-3.5 text-white/60 font-mono">{new Date(note.created_at).toLocaleDateString()}</td>
+                          <td className="py-3.5 text-white/60 font-medium">{getPaymentMethodName(note.payment_method)}</td>
+                          <td className="py-3.5 font-bold font-mono text-white">${parseFloat(note.total).toFixed(2)}</td>
+                          <td className="py-3.5">{getStatusBadge(note.status)}</td>
+                          <td className="py-3.5 pr-4 text-right space-x-2">
+                            <button
+                              onClick={() => setSelectedNote(note)}
+                              className="text-white/60 hover:text-white border border-white/10 hover:bg-white/5 px-2.5 py-1 rounded-lg text-[8px] uppercase font-black tracking-wider transition-all cursor-pointer font-mono"
+                            >
+                              Detalles
+                            </button>
+                            {note.status === 'PAID' && (
+                              <button
+                                onClick={() => handleCancelNote(note.id, note.folio)}
+                                className="text-red-400 hover:text-red-300 border border-red-500/10 hover:bg-red-500/5 px-2.5 py-1 rounded-lg text-[8px] uppercase font-black tracking-wider transition-all cursor-pointer font-mono"
+                              >
+                                Cancelar
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Note Detail Modal */}
+      {selectedNote && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-neutral-900 border border-white/10 rounded-3xl p-6 max-w-md w-full relative font-mono text-white max-h-[85vh] flex flex-col">
+            <button 
+              onClick={() => setSelectedNote(null)}
+              className="absolute top-4 right-4 text-white/40 hover:text-white cursor-pointer"
+            >
+              ✕
+            </button>
+            <div className="text-center pb-4">
+              <span className="text-2xl">🧾</span>
+              <h4 className="text-sm font-black uppercase mt-1 tracking-widest" style={{ color: primaryColor }}>Detalles de Nota</h4>
+              <span className="text-[10px] font-bold text-white/50">{selectedNote.folio}</span>
+            </div>
+
+            <div className="flex-1 overflow-y-auto custom-scrollbar border-t border-dashed border-white/20 py-4 space-y-3 text-xs">
+              <p className="flex justify-between"><span>Estado:</span><span>{getStatusBadge(selectedNote.status)}</span></p>
+              <p className="flex justify-between"><span>Creado el:</span><span>{new Date(selectedNote.created_at).toLocaleString()}</span></p>
+              <p className="flex justify-between"><span>Último Cambio:</span><span>{new Date(selectedNote.updated_at).toLocaleString()}</span></p>
+              <p className="flex justify-between"><span>Forma de Pago SAT:</span><span>{selectedNote.payment_method} - {getPaymentMethodName(selectedNote.payment_method)}</span></p>
+              
+              <div className="border-t border-dashed border-white/10 pt-3 mt-3">
+                <p className="text-[10px] uppercase font-bold text-white/50 mb-1.5">Conceptos:</p>
+                <div className="space-y-2">
+                  {selectedNote.items?.map((item: any, idx: number) => (
+                    <div key={idx} className="bg-white/[0.02] border border-white/5 p-2.5 rounded-xl space-y-1">
+                      <div className="flex justify-between font-bold text-[11px]">
+                        <span>{item.quantity}x {item.description}</span>
+                        <span>${(item.unit_price * item.quantity).toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between text-[8px] text-white/40">
+                        <span>SAT Prod: {item.product_key}</span>
+                        <span>SAT Unidad: {item.unit_key}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="border-t border-dashed border-white/10 pt-3 mt-3 flex justify-between font-bold text-sm">
+                <span>Total:</span>
+                <span style={{ color: primaryColor }}>${parseFloat(selectedNote.total).toFixed(2)} MXN</span>
+              </div>
+            </div>
+
+            <div className="border-t border-white/10 pt-4 flex gap-2">
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(selectedNote.folio);
+                  showToast('Folio copiado', 'success');
+                }}
+                className="flex-1 py-2 rounded-xl bg-white/5 border border-white/10 text-white font-bold text-[10px] uppercase hover:bg-white/10 active:scale-95 transition-all cursor-pointer font-mono"
+              >
+                Copiar Folio
+              </button>
+              <button
+                onClick={() => setSelectedNote(null)}
+                className="flex-1 py-2 rounded-xl text-background font-bold text-[10px] uppercase hover:scale-105 active:scale-95 transition-all cursor-pointer font-mono"
+                style={{ backgroundColor: primaryColor }}
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Ticket Dialog for Created Note */}
+      {createdNote && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-neutral-900 border border-white/10 rounded-3xl p-8 max-w-sm w-full text-center relative font-mono text-white animate-in zoom-in-95 duration-200">
+            <button 
+              onClick={() => setCreatedNote(null)}
+              className="absolute top-4 right-4 text-white/40 hover:text-white cursor-pointer"
+            >
+              ✕
+            </button>
+            <span className="text-2xl">🧾</span>
+            <h4 className="text-sm font-black uppercase mt-2 tracking-widest" style={{ color: primaryColor }}>Nota de Venta Creada</h4>
+            <div className="border-t border-b border-dashed border-white/20 py-4 my-4 text-left text-xs space-y-2">
+              <p className="flex justify-between"><span>Folio:</span><span className="font-bold text-white">{createdNote.folio}</span></p>
+              <p className="flex justify-between"><span>Fecha:</span><span>{new Date(createdNote.created_at).toLocaleString()}</span></p>
+              <p className="flex justify-between"><span>Método Pago:</span><span>{getPaymentMethodName(createdNote.payment_method)}</span></p>
+              <div className="border-t border-dashed border-white/10 pt-2 mt-2">
+                <p className="text-[10px] uppercase font-bold text-white/50 mb-1">Conceptos:</p>
+                {createdNote.items?.map((item: any, idx: number) => (
+                  <p key={idx} className="flex justify-between text-[11px]" key={idx}>
+                    <span>{item.quantity}x {item.description}</span>
+                    <span>${(item.unit_price * item.quantity).toFixed(2)}</span>
+                  </p>
+                ))}
+              </div>
+              <div className="border-t border-dashed border-white/10 pt-2 mt-2 flex justify-between font-bold text-sm">
+                <span>Total:</span>
+                <span style={{ color: primaryColor }}>${parseFloat(createdNote.total).toFixed(2)} MXN</span>
+              </div>
+            </div>
+            <p className="text-[9px] text-white/40 mb-4 leading-relaxed uppercase">
+              Proporciona este folio al cliente para que se autofacture desde el portal público.
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(createdNote.folio);
+                  showToast('Folio copiado', 'success');
+                }}
+                className="flex-1 py-2 rounded-xl bg-white/5 border border-white/10 text-white font-bold text-[10px] uppercase hover:bg-white/10 active:scale-95 transition-all cursor-pointer"
+              >
+                Copiar Folio
+              </button>
+              <button
+                onClick={() => setCreatedNote(null)}
+                className="flex-1 py-2 rounded-xl text-background font-bold text-[10px] uppercase hover:scale-105 active:scale-95 transition-all cursor-pointer font-mono"
+                style={{ backgroundColor: primaryColor }}
+              >
+                Aceptar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

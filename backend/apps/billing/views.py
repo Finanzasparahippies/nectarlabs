@@ -1222,3 +1222,162 @@ class BuyShippingFundsView(BillingTenantMixin, APIView):
             return Response({'url': session.url}, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+from .models import SalesNote, SalesNoteItem
+from .serializers import SalesNoteSerializer
+
+class SalesNoteViewSet(viewsets.ModelViewSet):
+    serializer_class = SalesNoteSerializer
+    queryset = SalesNote.objects.all()
+
+    def get_permissions(self):
+        if self.action in ['retrieve_by_folio', 'self_invoice']:
+            return [permissions.AllowAny()]
+        return [permissions.IsAuthenticated()]
+
+    def get_queryset(self):
+        user = self.request.user
+        if not user or not user.is_authenticated:
+            return SalesNote.objects.none()
+        if user.is_staff or user.role == 'ADMIN':
+            return SalesNote.objects.all().order_by('-created_at')
+        return SalesNote.objects.filter(tenant__owner=user).order_by('-created_at')
+
+    def perform_create(self, serializer):
+        tenant = serializer.validated_data.get('tenant')
+        user = self.request.user
+        if not (user.is_staff or user.role == 'ADMIN') and tenant.owner != user:
+            raise PermissionDenied("No tienes permisos para este inquilino.")
+        serializer.save()
+
+    @action(detail=False, methods=['get'], url_path='retrieve-by-folio')
+    def retrieve_by_folio(self, request):
+        folio = request.query_params.get('folio')
+        subdomain = request.query_params.get('subdomain')
+        
+        if not folio or not subdomain:
+            return Response({"error": "Faltan parámetros 'folio' o 'subdomain'."}, status=400)
+            
+        sales_note = SalesNote.objects.filter(
+            folio=folio.strip().upper(),
+            tenant__subdomain=subdomain.strip().lower()
+        ).first()
+        
+        if not sales_note:
+            return Response({"error": "Nota de venta no encontrada con ese folio o inquilino."}, status=404)
+            
+        serializer = self.get_serializer(sales_note)
+        data = serializer.data
+        
+        if sales_note.status == SalesNote.Status.INVOICED:
+            from .models import Invoice
+            inv = Invoice.objects.filter(stripe_invoice_id=f"pos-{sales_note.folio}").first()
+            if inv:
+                data['pdf_url'] = inv.pdf_file.url if inv.pdf_file else None
+                data['xml_url'] = inv.xml_file.url if inv.xml_file else None
+                data['uuid_sat'] = str(inv.uuid_sat) if inv.uuid_sat else None
+                
+        return Response(data)
+
+    @action(detail=False, methods=['post'], url_path='self-invoice')
+    def self_invoice(self, request):
+        folio = request.data.get('folio')
+        subdomain = request.data.get('subdomain')
+        rfc = request.data.get('rfc')
+        razon_social = request.data.get('razon_social')
+        regimen_fiscal = request.data.get('regimen_fiscal')
+        codigo_postal = request.data.get('codigo_postal')
+        email = request.data.get('email')
+        uso_cfdi = request.data.get('uso_cfdi', 'G03')
+        
+        if not all([folio, subdomain, rfc, razon_social, regimen_fiscal, codigo_postal, email]):
+            return Response({"error": "Todos los datos fiscales son requeridos para la autofacturación."}, status=400)
+            
+        sales_note = SalesNote.objects.filter(
+            folio=folio.strip().upper(),
+            tenant__subdomain=subdomain.strip().lower()
+        ).first()
+        
+        if not sales_note:
+            return Response({"error": "Nota de venta no encontrada."}, status=404)
+            
+        if sales_note.status == SalesNote.Status.INVOICED:
+            return Response({"error": "Esta nota de venta ya ha sido facturada anteriormente."}, status=400)
+            
+        if sales_note.status == SalesNote.Status.CANCELLED:
+            return Response({"error": "Esta nota de venta está cancelada y no se puede facturar."}, status=400)
+            
+        tenant = sales_note.tenant
+        
+        if not tenant.has_available_stamps():
+            return Response({"error": "El negocio emisor no cuenta con timbres suficientes. Comunícate con ellos."}, status=400)
+            
+        profile = getattr(tenant, 'tax_profile', None)
+        if not profile or not profile.facturapi_organization_id:
+            return Response({"error": "El negocio emisor no tiene configurada su cuenta de facturación."}, status=400)
+            
+        from decimal import Decimal
+        
+        items_payload = []
+        for item in sales_note.items.all():
+            base_price = (Decimal(str(item.unit_price)) / Decimal('1.16')).quantize(Decimal('0.01'))
+            items_payload.append({
+                "quantity": item.quantity,
+                "unit_price": float(base_price),
+                "description": item.description,
+                "product_key": item.product_key,
+                "unit_key": item.unit_key
+            })
+            
+        local_invoice = Invoice.objects.create(
+            tenant=tenant,
+            stripe_invoice_id=f"pos-{sales_note.folio}",
+            total=sales_note.total,
+            is_tenant_to_customer=True,
+            status=Invoice.Status.PENDING
+        )
+        
+        pac = get_pac_service()
+        try:
+            res = pac.create_invoice(
+                invoice=local_invoice,
+                tax_profile=profile,
+                customer_info={
+                    "rfc": rfc.strip().upper(),
+                    "razon_social": razon_social.strip().upper(),
+                    "regimen_fiscal": regimen_fiscal.strip(),
+                    "codigo_postal": codigo_postal.strip(),
+                    "email": email.strip(),
+                    "use": uso_cfdi,
+                    "payment_form": sales_note.payment_method
+                },
+                items=items_payload,
+                is_parent_to_tenant=False
+            )
+            local_invoice.facturapi_invoice_id = res["facturapi_invoice_id"]
+            local_invoice.uuid_sat = res["uuid_sat"]
+            local_invoice.xml_file.save(res["xml_file"].name, res["xml_file"], save=False)
+            local_invoice.pdf_file.save(res["pdf_file"].name, res["pdf_file"], save=False)
+            local_invoice.status = Invoice.Status.PAID
+            local_invoice.save()
+            
+            sales_note.status = SalesNote.Status.INVOICED
+            sales_note.save(update_fields=['status'])
+            
+            tenant.consume_stamp()
+            
+            return Response({
+                "status": "success",
+                "invoice_id": local_invoice.id,
+                "uuid_sat": str(local_invoice.uuid_sat),
+                "pdf_url": local_invoice.pdf_file.url if local_invoice.pdf_file else None,
+                "xml_url": local_invoice.xml_file.url if local_invoice.xml_file else None
+            }, status=200)
+            
+        except Exception as e:
+            local_invoice.status = Invoice.Status.FAILED
+            local_invoice.error_message = str(e)
+            local_invoice.save()
+            return Response({"error": f"Fallo al timbrar factura ante el SAT: {str(e)}"}, status=400)
+

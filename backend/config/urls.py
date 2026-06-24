@@ -19,7 +19,7 @@ from apps.billing.views import (
     BuyEmailCreditsView, SATProductKeySearchView, SATUnitKeySearchView,
     UploadCSDView, CSDStatusView, FacturapiCustomerView,
     FacturapiProductView, FacturapiReceiptView, FacturapiRetentionView,
-    BuyShippingFundsView
+    BuyShippingFundsView, SalesNoteViewSet
 )
 
 router = DefaultRouter()
@@ -44,6 +44,7 @@ router.register(r'tenants', TenantViewSet, basename='tenant')
 router.register(r'promo-codes', PromoCodeViewSet, basename='promocode')
 router.register(r'sales-commissions', SalesCommissionViewSet, basename='salescommission')
 router.register(r'billing/invoices', InvoiceViewSet, basename='billing-invoice')
+router.register(r'billing/sales-notes', SalesNoteViewSet, basename='billing-salesnote')
 
 
 from django.conf import settings
