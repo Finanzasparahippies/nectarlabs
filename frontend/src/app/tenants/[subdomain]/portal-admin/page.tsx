@@ -3480,7 +3480,6 @@ export default function TenantAdminPage() {
           <POSTab
             tenantConfig={tenantConfig}
             primaryColor={primaryColor}
-            textColor={textColor}
           />
         )}
       </main>
@@ -5679,10 +5678,9 @@ function AddonMetricCard({ slug, title, icon, activeList, primaryColor, metrics,
 interface POSTabProps {
   tenantConfig: any;
   primaryColor: string;
-  textColor: string;
 }
 
-function POSTab({ tenantConfig, primaryColor, textColor }: POSTabProps) {
+function POSTab({ tenantConfig, primaryColor }: POSTabProps) {
   const [activeSubTab, setActiveSubTab] = useState<'create' | 'list'>('create');
   const [notes, setNotes] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -6290,7 +6288,7 @@ function POSTab({ tenantConfig, primaryColor, textColor }: POSTabProps) {
               <div className="border-t border-dashed border-white/10 pt-2 mt-2">
                 <p className="text-[10px] uppercase font-bold text-white/50 mb-1">Conceptos:</p>
                 {createdNote.items?.map((item: any, idx: number) => (
-                  <p key={idx} className="flex justify-between text-[11px]" key={idx}>
+                  <p key={idx} className="flex justify-between text-[11px]">
                     <span>{item.quantity}x {item.description}</span>
                     <span>${(item.unit_price * item.quantity).toFixed(2)}</span>
                   </p>
