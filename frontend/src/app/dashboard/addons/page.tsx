@@ -777,11 +777,28 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
             const currentActiveTenant = tenants.find(t => t.id === selectedTenantId) || tenants[0];
 
             // SOLUCIÓN RAÍZ: Validamos usando addon.id (que tiene el string del slug según tu mapeo de API)
+            const aliases: { [key: string]: string } = {
+              'bot-chat': 'live-chat',
+              'live-chat': 'bot-chat',
+              'delivery-tracking': 'logistics-gps',
+              'logistics-gps': 'delivery-tracking',
+              'sponsorship': 'patreon-sponsorship',
+              'patreon-sponsorship': 'sponsorship',
+              'business-analytics': 'analytics-apm',
+              'analytics-apm': 'business-analytics',
+              'campaigner': 'newsletter-campaigner',
+              'newsletter-campaigner': 'campaigner',
+              'facturacion-cfdi': 'mexico-invoicing',
+              'mexico-invoicing': 'facturacion-cfdi',
+            };
+            const addonAlias = aliases[addon.id] || addon.id;
+
             const isAddonActive =
-              tenants.some(t => t.active_addons?.includes(addon.id)) ||
+              tenants.some(t => t.active_addons?.includes(addon.id) || t.active_addons?.includes(addonAlias)) ||
               (currentActiveTenant?.active_addons || []).includes(addon.id) ||
-              subscriptions.some(s => s.addon_details?.slug === addon.id && ['active', 'trialing'].includes(s.status)) ||
-              contracts.some(c => (c.addons || []).includes(addon.id));
+              (currentActiveTenant?.active_addons || []).includes(addonAlias) ||
+              subscriptions.some(s => (s.addon_details?.slug === addon.id || s.addon_details?.slug === addonAlias) && ['active', 'trialing'].includes(s.status)) ||
+              contracts.some(c => (c.addons || []).includes(addon.id) || (c.addons || []).includes(addonAlias));
 
             return (
               <div
@@ -1263,7 +1280,22 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
                   }
 
                   return filtered.map(tenant => {
-                    const isActive = (tenant.active_addons || []).includes(manageAddon.id);
+                    const aliases: { [key: string]: string } = {
+                      'bot-chat': 'live-chat',
+                      'live-chat': 'bot-chat',
+                      'delivery-tracking': 'logistics-gps',
+                      'logistics-gps': 'delivery-tracking',
+                      'sponsorship': 'patreon-sponsorship',
+                      'patreon-sponsorship': 'sponsorship',
+                      'business-analytics': 'analytics-apm',
+                      'analytics-apm': 'business-analytics',
+                      'campaigner': 'newsletter-campaigner',
+                      'newsletter-campaigner': 'campaigner',
+                      'facturacion-cfdi': 'mexico-invoicing',
+                      'mexico-invoicing': 'facturacion-cfdi',
+                    };
+                    const manageAddonAlias = aliases[manageAddon.id] || manageAddon.id;
+                    const isActive = (tenant.active_addons || []).includes(manageAddon.id) || (tenant.active_addons || []).includes(manageAddonAlias);
                     const isUpdating = updatingTenantId === tenant.id;
 
                     return (
