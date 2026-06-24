@@ -77,7 +77,7 @@ services:
       - PORT=4000
       - INTERNAL_PORT=4001
       - INTERNAL_SECRET=nectar-internal-secret
-      - DJANGO_SECRET_KEY=${SECRET_KEY}
+      - DJANGO_SECRET_KEY=${SECRET_KEY:-}
     depends_on:
       - redis
     networks:

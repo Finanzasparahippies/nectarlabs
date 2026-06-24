@@ -244,5 +244,24 @@ class Tenant(models.Model):
         if 'ecommerce-combo' in addons:
             addons.update(['delivery-tracking', 'facturacion-cfdi', 'campaigner'])
 
+        # Normalize/Expand active addons with aliases for full backend/frontend compatibility
+        addon_aliases = {
+            'bot-chat': 'live-chat',
+            'live-chat': 'bot-chat',
+            'delivery-tracking': 'logistics-gps',
+            'logistics-gps': 'delivery-tracking',
+            'sponsorship': 'patreon-sponsorship',
+            'patreon-sponsorship': 'sponsorship',
+            'business-analytics': 'analytics-apm',
+            'analytics-apm': 'business-analytics',
+            'campaigner': 'newsletter-campaigner',
+            'newsletter-campaigner': 'campaigner',
+            'facturacion-cfdi': 'mexico-invoicing',
+            'mexico-invoicing': 'facturacion-cfdi',
+        }
+        for slug in list(addons):
+            if slug in addon_aliases:
+                addons.add(addon_aliases[slug])
+
         return list(addons)
 

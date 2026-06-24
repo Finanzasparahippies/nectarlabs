@@ -346,25 +346,35 @@ export default function TenantAdminPage() {
     if (!tenantConfig) return;
     setLoadingBilling(true);
     try {
-      try {
-        const info = await fetcher(`/billing/info/?tenant_id=${tenantConfig.id}`);
-        setBillingInfo(info);
-        if (info.tax_profile) {
-          setTaxProfile(info.tax_profile);
-          setRfc(info.tax_profile.rfc || '');
-          setRazonSocial(info.tax_profile.razon_social || '');
-          setRegimenFiscal(info.tax_profile.regimen_fiscal || '601');
-          setCodigoPostal(info.tax_profile.codigo_postal || '');
-          setDefaultProductKey(info.tax_profile.default_product_key || '43231500');
-          setDefaultUnitKey(info.tax_profile.default_unit_key || 'E48');
-          setDefaultUnitName(info.tax_profile.default_unit_name || 'Unidad de servicio');
-        }
-      } catch (err: any) {
-        console.error('Error fetching billing info:', err);
-      }
+      const hasBillingAddon = 
+        tenantConfig.active_addons?.includes('mexico-invoicing') || 
+        tenantConfig.active_addons?.includes('facturacion-cfdi');
 
-      const invs = await fetcher(`/billing/invoices/?tenant_id=${tenantConfig.id}`);
-      setInvoices(invs.results || invs || []);
+      if (hasBillingAddon) {
+        try {
+          const info = await fetcher(`/billing/info/?tenant_id=${tenantConfig.id}`);
+          setBillingInfo(info);
+          if (info.tax_profile) {
+            setTaxProfile(info.tax_profile);
+            setRfc(info.tax_profile.rfc || '');
+            setRazonSocial(info.tax_profile.razon_social || '');
+            setRegimenFiscal(info.tax_profile.regimen_fiscal || '601');
+            setCodigoPostal(info.tax_profile.codigo_postal || '');
+            setDefaultProductKey(info.tax_profile.default_product_key || '43231500');
+            setDefaultUnitKey(info.tax_profile.default_unit_key || 'E48');
+            setDefaultUnitName(info.tax_profile.default_unit_name || 'Unidad de servicio');
+          }
+        } catch (err: any) {
+          console.error('Error fetching billing info:', err);
+        }
+
+        try {
+          const invs = await fetcher(`/billing/invoices/?tenant_id=${tenantConfig.id}`);
+          setInvoices(invs.results || invs || []);
+        } catch (err: any) {
+          console.error('Error fetching invoices:', err);
+        }
+      }
 
       try {
         const usersRes = await fetcher('/users/');
@@ -389,7 +399,10 @@ export default function TenantAdminPage() {
   useEffect(() => {
     if (activeTab === 'billing' && tenantConfig) {
       loadBillingData();
-      if (tenantConfig.active_addons?.includes('mexico-invoicing')) {
+      const hasBillingAddon = 
+        tenantConfig.active_addons?.includes('mexico-invoicing') || 
+        tenantConfig.active_addons?.includes('facturacion-cfdi');
+      if (hasBillingAddon) {
         fetchCsdStatus();
         fetchFacCustomers();
       }
@@ -2462,7 +2475,7 @@ export default function TenantAdminPage() {
         )}
 
         {activeTab === 'billing' && (
-          !tenantConfig?.active_addons?.includes('mexico-invoicing') ? (
+          (!tenantConfig?.active_addons?.includes('mexico-invoicing') && !tenantConfig?.active_addons?.includes('facturacion-cfdi')) ? (
             <div className="admin-card border rounded-[2rem] p-12 text-center flex flex-col items-center justify-center min-h-[450px] relative overflow-hidden group">
               <div className="absolute -top-32 -right-32 w-64 h-64 bg-[#C68A1E]/5 blur-[80px] rounded-full group-hover:bg-[#C68A1E]/10 transition-all duration-700 pointer-events-none"></div>
               <div className="w-16 h-16 rounded-2xl bg-[#C68A1E]/10 border border-[#C68A1E]/20 text-[#C68A1E] flex items-center justify-center text-3xl shadow-lg shadow-[#C68A1E]/10 mb-6 animate-[bounce_3s_infinite]">
