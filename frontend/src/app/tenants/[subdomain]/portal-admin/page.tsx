@@ -2043,7 +2043,7 @@ export default function TenantAdminPage() {
             <TrialBanner />
 
             {/* Grid layout for addons */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in duration-300">
               
               {/* 1. Live Chat */}
               <AddonMetricCard
@@ -5609,67 +5609,70 @@ function AddonMetricCard({ slug, title, icon, activeList, primaryColor, metrics,
   const isActive = checkActive(slug);
 
   return (
-    <div className="admin-card border rounded-[2rem] p-6 shadow-lg flex flex-col justify-between relative overflow-hidden group">
-      
+    <div className="admin-card border rounded-[2rem] p-6 flex flex-col justify-between min-h-[300px] relative overflow-hidden backdrop-blur-md hover:scale-[1.02] transition-all duration-300 group">
+      {/* Subtle Background Glow */}
+      <div className="absolute -top-24 -right-24 w-40 h-40 bg-white/[0.02] blur-[40px] rounded-full group-hover:bg-white/[0.04] transition-all duration-500 pointer-events-none"></div>
+
       {/* 1. Header (Icon + Title) */}
-      <div className="flex justify-between items-start">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-foreground/[0.03] border border-white/5 flex items-center justify-center text-lg shrink-0">
-            {icon}
-          </div>
-          <div>
-            <h4 className="text-[11px] font-black uppercase tracking-wide text-white leading-tight">{title}</h4>
-            <span className="text-[6.5px] uppercase tracking-widest font-black opacity-45">Slug: {slug}</span>
-          </div>
+      <div className="space-y-4">
+        <div className="flex justify-between items-start">
+          <span className="text-3xl">{icon}</span>
+          <span className={`px-2.5 py-0.5 border text-[7px] font-black uppercase tracking-widest rounded-full font-mono ${
+            isActive 
+              ? 'bg-green-500/10 text-green-400 border-green-500/20' 
+              : 'bg-red-500/10 text-red-400 border-red-500/20'
+          }`}>
+            {isActive ? 'Activo' : 'Bloqueado'}
+          </span>
         </div>
-        <span className={`px-2.5 py-0.5 border text-[7px] font-black uppercase tracking-widest rounded-full ${
-          isActive 
-            ? 'bg-green-500/10 text-green-400 border-green-500/20' 
-            : 'bg-red-500/10 text-red-400 border-red-500/20'
-        }`}>
-          {isActive ? 'Activo' : 'Bloqueado'}
-        </span>
+        <div>
+          <h3 className="text-sm font-black uppercase text-white tracking-wide mt-2">{title}</h3>
+          <span className="text-[6.5px] uppercase tracking-widest font-black opacity-45 block mt-0.5">Slug: {slug}</span>
+        </div>
       </div>
 
-      {/* 2. Visual Content Area */}
-      <div className={`relative flex-1 ${!isActive ? 'blur-sm select-none pointer-events-none' : ''}`}>
-        {children ? children : (
-          <div className="h-28 flex items-center justify-center text-[10px] text-white/20 uppercase font-black tracking-widest">
-            Sin Vista Previa de Datos
+      {/* Container for content and footer, which is blurred/locked if inactive */}
+      <div className="relative flex-1 flex flex-col justify-between mt-4 min-h-[160px]">
+        {/* 2. Visual Content Area */}
+        <div className={`relative flex-1 ${!isActive ? 'blur-sm select-none pointer-events-none' : ''}`}>
+          {children ? children : (
+            <div className="h-28 flex items-center justify-center text-[10px] text-white/20 uppercase font-black tracking-widest">
+              Sin Vista Previa de Datos
+            </div>
+          )}
+        </div>
+
+        {/* 3. Highlight numbers footer */}
+        <div className={`grid grid-cols-2 gap-4 border-t border-white/5 pt-4 mt-6 ${!isActive ? 'blur-sm select-none pointer-events-none' : ''}`}>
+          <div className="text-left">
+            <span className="text-[7.5px] uppercase font-black text-white/35 block">{metrics.leftLabel}</span>
+            <span className="text-base font-black text-white font-mono mt-0.5 block">{metrics.leftVal}</span>
+          </div>
+          <div className="text-right">
+            <span className="text-[7.5px] uppercase font-black text-white/35 block">{metrics.rightLabel}</span>
+            <span className="text-base font-black text-white font-mono mt-0.5 block" style={{ color: isActive ? primaryColor : '#C68A1E' }}>{metrics.rightVal}</span>
+          </div>
+        </div>
+
+        {/* 4. Active Addon Gating Overlay (Visual Guard) - confined to this bottom container */}
+        {!isActive && (
+          <div className="absolute inset-0 z-10 bg-background/40 backdrop-blur-[2px] flex flex-col items-center justify-center p-4 text-center animate-in fade-in duration-300 rounded-[1.5rem]">
+            <div className="w-8 h-8 rounded-xl bg-nectar-gold/10 border border-nectar-gold/20 text-nectar-gold flex items-center justify-center text-md shadow-lg shadow-nectar-gold/10 mb-2 animate-[bounce_3s_infinite]">
+              🔒
+            </div>
+            <h5 className="text-[9px] font-black uppercase tracking-wider text-white">Módulo No Contratado</h5>
+            <p className="text-[7.5px] text-white/50 max-w-[170px] leading-relaxed mt-0.5 mb-2">
+              Habilita este Add-on para ver sus analíticas.
+            </p>
+            <a
+              href="/dashboard/addons"
+              className="px-3.5 py-1.5 bg-nectar-gold text-background text-[7.5px] font-black uppercase tracking-widest rounded-lg hover:scale-105 active:scale-95 transition-all shadow-md font-bold"
+            >
+              Adquirir
+            </a>
           </div>
         )}
       </div>
-
-      {/* 3. Highlight numbers footer */}
-      <div className={`grid grid-cols-2 gap-4 border-t border-white/5 pt-4 mt-4 ${!isActive ? 'blur-sm select-none pointer-events-none' : ''}`}>
-        <div className="text-left">
-          <span className="text-[7px] uppercase font-black tracking-widest text-white/35 block">{metrics.leftLabel}</span>
-          <span className="text-base font-black text-white font-mono mt-0.5 block">{metrics.leftVal}</span>
-        </div>
-        <div className="text-right">
-          <span className="text-[7px] uppercase font-black tracking-widest text-white/35 block">{metrics.rightLabel}</span>
-          <span className="text-base font-black text-white font-mono mt-0.5 block" style={{ color: isActive ? primaryColor : '#C68A1E' }}>{metrics.rightVal}</span>
-        </div>
-      </div>
-
-      {/* 4. Active Addon Gating Overlay (Visual Guard) */}
-      {!isActive && (
-        <div className="absolute inset-0 z-10 bg-background/50 backdrop-blur-[3px] flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-300">
-          <div className="w-10 h-10 rounded-xl bg-nectar-gold/10 border border-nectar-gold/20 text-nectar-gold flex items-center justify-center text-lg shadow-lg shadow-nectar-gold/10 mb-3 animate-[bounce_3s_infinite]">
-            🔒
-          </div>
-          <h5 className="text-[10px] font-black uppercase tracking-wider text-white">Módulo No Contratado</h5>
-          <p className="text-[8px] text-white/50 max-w-[180px] leading-relaxed mt-1 mb-4">
-            Adquiere este Add-on en el Catálogo de Néctar Labs para habilitar sus analíticas en tiempo real.
-          </p>
-          <a
-            href="/dashboard/addons"
-            className="px-4 py-2 bg-nectar-gold text-background text-[8px] font-black uppercase tracking-widest rounded-lg hover:scale-105 active:scale-95 transition-all shadow-md font-bold"
-          >
-            Adquirir Add-on
-          </a>
-        </div>
-      )}
 
     </div>
   );

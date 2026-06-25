@@ -53,7 +53,7 @@ export default function ProcessFlow({ onOpenScheduler }: { onOpenScheduler?: () 
 
       <div className="text-center mb-16 sm:mb-32 relative">
         <h2 className="text-3xl sm:text-5xl md:text-8xl font-black mb-4 sm:mb-8 tracking-tighter text-nectar-forest dark:text-nectar-cream leading-tight">
-          Del Caos al <span className="text-nectar-gold italic">Sistema</span>
+          <span className="text-foreground">Del Caos al </span><span className="text-nectar-gold italic">Sistema</span>
         </h2>
         <p className="max-w-3xl mx-auto text-base sm:text-xl opacity-60 font-bold leading-relaxed">
           Un negocio sin software personalizado es un organigrama en desorden. En Néctar Labs, transformamos tu visión en una ventaja competitiva blindada por tecnología.
@@ -70,7 +70,7 @@ export default function ProcessFlow({ onOpenScheduler }: { onOpenScheduler?: () 
           <div key={index} className="group relative flex flex-col items-center text-center">
             {/* Phase Bubble */}
             <div className="w-28 h-28 sm:w-36 sm:h-36 rounded-[2rem] sm:rounded-[2.5rem] bg-card-bg border-2 border-card-border flex items-center justify-center mb-6 sm:mb-10 group-hover:border-nectar-gold group-hover:-translate-y-4 transition-all duration-700 shadow-2xl relative overflow-hidden">
-               {/* Bubble Glow */}
+              {/* Bubble Glow */}
               <div className="absolute inset-0 bg-nectar-gold/0 group-hover:bg-nectar-gold/5 transition-colors duration-700"></div>
               <div className="text-nectar-forest group-hover:text-nectar-gold transition-colors duration-500 relative z-10 scale-110 sm:scale-125">
                 {step.icon}
@@ -99,13 +99,13 @@ export default function ProcessFlow({ onOpenScheduler }: { onOpenScheduler?: () 
 
       <div className="mt-16 sm:mt-32 p-6 sm:p-12 rounded-[2rem] sm:rounded-[4rem] bg-nectar-forest text-white flex flex-col md:flex-row items-center justify-between gap-8 sm:gap-12 shadow-2xl relative overflow-hidden group">
         <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 blur-[80px] -translate-y-1/2 translate-x-1/2 rounded-full group-hover:bg-nectar-gold/10 transition-colors duration-1000"></div>
-        
+
         <div className="max-w-2xl relative z-10 text-center md:text-left">
           <h4 className="text-xl sm:text-3xl md:text-4xl font-black mb-3 sm:mb-4 tracking-tighter leading-tight sm:leading-none">Organiza hasta el más extenso organigrama.</h4>
           <p className="text-white/60 text-sm sm:text-lg font-bold">Tu negocio merece una arquitectura a medida, no parches tecnológicos.</p>
         </div>
 
-        <button 
+        <button
           onClick={() => onOpenScheduler?.()}
           className="w-full md:w-auto px-8 py-4 sm:px-12 sm:py-6 bg-nectar-gold text-white font-black uppercase tracking-widest rounded-2xl hover:bg-white hover:text-nectar-forest transition-all scale-100 hover:scale-105 active:scale-95 shadow-xl relative z-10 text-xs sm:text-sm cursor-pointer"
         >

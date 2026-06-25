@@ -57,13 +57,27 @@ body {
 
 /* Premium Animations */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes glow {
-  0%, 100% { opacity: 0.5; }
-  50% { opacity: 1; }
+
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+
+  50% {
+    opacity: 1;
+  }
 }
 
 @keyframes dash {
@@ -71,6 +85,7 @@ body {
     stroke-dasharray: 120;
     stroke-dashoffset: 120;
   }
+
   to {
     stroke-dasharray: 120;
     stroke-dashoffset: 0;
@@ -103,12 +118,12 @@ body {
   letter-spacing: 0.02em;
   line-height: 1;
   /* Técnica de Outlining Limpio con sombras (evita solapamientos internos) */
-  text-shadow: 
-    -0.5px -0.5px 0 rgba(198, 138, 30, 0.5),  
-     0.5px -0.5px 0 rgba(198, 138, 30, 0.5),
-    -0.5px  0.5px 0 rgba(198, 138, 30, 0.5),
-     0.5px  0.5px 0 rgba(198, 138, 30, 0.5);
-  
+  text-shadow:
+    -0.5px -0.5px 0 rgba(198, 138, 30, 0.5),
+    0.5px -0.5px 0 rgba(198, 138, 30, 0.5),
+    -0.5px 0.5px 0 rgba(198, 138, 30, 0.5),
+    0.5px 0.5px 0 rgba(198, 138, 30, 0.5);
+
   mask-image: linear-gradient(to bottom, black 0%, transparent 90%);
   -webkit-mask-image: linear-gradient(to bottom, black 0%, transparent 90%);
 }
@@ -118,6 +133,7 @@ body {
   0% {
     transform: translateX(0);
   }
+
   100% {
     transform: translateX(-50%);
   }
@@ -127,6 +143,7 @@ body {
   0% {
     transform: translateX(-50%);
   }
+
   100% {
     transform: translateX(0);
   }
@@ -135,13 +152,13 @@ body {
 .animate-marquee-left {
   display: flex;
   width: max-content;
-  animation: marquee-left 60s linear infinite;
+  animation: marquee-left 10s linear infinite;
 }
 
 .animate-marquee-right {
   display: flex;
   width: max-content;
-  animation: marquee-right 60s linear infinite;
+  animation: marquee-right 10s linear infinite;
 }
 
 .pause-on-hover:hover .animate-marquee-left,
@@ -153,4 +170,4 @@ body {
 select option {
   background-color: #121815 !important;
   color: #F9FAFB !important;
-}
+}

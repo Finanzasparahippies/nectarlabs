@@ -27,6 +27,7 @@ interface AddonCatalogItem {
   categoryBadge: string;
   description: string;
   monthlyPrice: number;
+  yearlyPrice: number;
   icon: string;
 }
 
@@ -37,6 +38,7 @@ const allAddons: AddonCatalogItem[] = [
     categoryBadge: 'COMUNICACIÓN EN VIVO',
     description: 'Widget de chat flotante en tiempo real y consola multi-agente con soporte de IA.',
     monthlyPrice: 99,
+    yearlyPrice: 990,
     icon: '💬'
   },
   {
@@ -45,6 +47,7 @@ const allAddons: AddonCatalogItem[] = [
     categoryBadge: 'CONTRATOS Y CITAS',
     description: 'Motor de reserva de citas integrado con firma digital de propuestas y generación de PDFs con firma incrustada.',
     monthlyPrice: 149,
+    yearlyPrice: 1490,
     icon: '✍️'
   },
   {
@@ -53,6 +56,7 @@ const allAddons: AddonCatalogItem[] = [
     categoryBadge: 'LOGÍSTICA Y CONTROL',
     description: 'Configura tus almacenes de origen, cotiza envíos en tiempo real con margen de ganancia y emite guías automáticamente.',
     monthlyPrice: 249,
+    yearlyPrice: 2490,
     icon: '📦'
   },
   {
@@ -61,6 +65,7 @@ const allAddons: AddonCatalogItem[] = [
     categoryBadge: 'MONETIZACIÓN',
     description: 'Pasarela de suscripciones recurrentes de Stripe con control de acceso a feeds exclusivos y niveles de membresía.',
     monthlyPrice: 169,
+    yearlyPrice: 1690,
     icon: '💰'
   },
   {
@@ -69,6 +74,7 @@ const allAddons: AddonCatalogItem[] = [
     categoryBadge: 'MONITOREO DE DESEMPEÑO',
     description: 'Dashboard de métricas en tiempo real, gráficos interactivos y exportación de transacciones.',
     monthlyPrice: 99,
+    yearlyPrice: 990,
     icon: '📊'
   },
   {
@@ -77,6 +83,7 @@ const allAddons: AddonCatalogItem[] = [
     categoryBadge: 'EMAIL MARKETING',
     description: 'Gestor de suscripciones, programador de campañas con plantillas HTML y envío masivo optimizado.',
     monthlyPrice: 199,
+    yearlyPrice: 1990,
     icon: '📧'
   },
   {
@@ -85,6 +92,7 @@ const allAddons: AddonCatalogItem[] = [
     categoryBadge: 'CONTABILIDAD Y FISCAL',
     description: 'Emite facturas CFDI 4.0 oficiales del SAT a tus clientes de manera automatizada y marca blanca.',
     monthlyPrice: 499,
+    yearlyPrice: 4990,
     icon: '🧾'
   },
   {
@@ -93,6 +101,7 @@ const allAddons: AddonCatalogItem[] = [
     categoryBadge: 'CONTABILIDAD Y FISCAL',
     description: 'Timbrado automático e inmediato de facturas CFDI 4.0 al recibir pagos de tus clientes finales.',
     monthlyPrice: 199,
+    yearlyPrice: 1990,
     icon: '⚡'
   },
   {
@@ -101,6 +110,7 @@ const allAddons: AddonCatalogItem[] = [
     categoryBadge: 'VENTAS Y POS',
     description: 'Sistema POS interactivo para registrar ventas presenciales, generar notas de venta y permitir autofacturación a clientes.',
     monthlyPrice: 299,
+    yearlyPrice: 2990,
     icon: '🏪'
   },
   {
@@ -109,6 +119,7 @@ const allAddons: AddonCatalogItem[] = [
     categoryBadge: 'E-COMMERCE COMBO',
     description: 'El paquete integral definitivo: Tienda + Envíos con Skydropx, Facturación SAT y Newsletter Masivo en uno.',
     monthlyPrice: 799,
+    yearlyPrice: 7990,
     icon: '🚀'
   }
 ];
@@ -123,6 +134,7 @@ export default function TenantDashboardAddonsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'pending' | 'active'>('pending');
+  const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
 
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
 
@@ -299,30 +311,58 @@ export default function TenantDashboardAddonsPage() {
           </button>
         </div>
 
-        {/* Tab Selector */}
-        <div className="flex border-b border-white/5 pb-4 mb-8 gap-4">
-          <button
-            onClick={() => setActiveTab('pending')}
-            className={`px-5 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border cursor-pointer ${
-              activeTab === 'pending'
-                ? 'bg-white/5 text-white border-white/20'
-                : 'bg-transparent text-white/40 border-transparent hover:text-white/70'
-            }`}
-            style={activeTab === 'pending' ? { borderColor: primaryColor } : {}}
-          >
-            Pendientes de Activar ({pendingAddons.length})
-          </button>
-          <button
-            onClick={() => setActiveTab('active')}
-            className={`px-5 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border cursor-pointer ${
-              activeTab === 'active'
-                ? 'bg-white/5 text-white border-white/20'
-                : 'bg-transparent text-white/40 border-transparent hover:text-white/70'
-            }`}
-            style={activeTab === 'active' ? { borderColor: primaryColor } : {}}
-          >
-            Activos en tu Plan ({activeAddons.length})
-          </button>
+        {/* Tab Selector & Billing Cycle */}
+        <div className="flex flex-col sm:flex-row sm:justify-between items-start sm:items-center border-b border-white/5 pb-4 mb-8 gap-4">
+          <div className="flex gap-4">
+            <button
+              onClick={() => setActiveTab('pending')}
+              className={`px-5 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border cursor-pointer ${
+                activeTab === 'pending'
+                  ? 'bg-white/5 text-white border-white/20'
+                  : 'bg-transparent text-white/40 border-transparent hover:text-white/70'
+              }`}
+              style={activeTab === 'pending' ? { borderColor: primaryColor } : {}}
+            >
+              Pendientes de Activar ({pendingAddons.length})
+            </button>
+            <button
+              onClick={() => setActiveTab('active')}
+              className={`px-5 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border cursor-pointer ${
+                activeTab === 'active'
+                  ? 'bg-white/5 text-white border-white/20'
+                  : 'bg-transparent text-white/40 border-transparent hover:text-white/70'
+              }`}
+              style={activeTab === 'active' ? { borderColor: primaryColor } : {}}
+            >
+              Activos en tu Plan ({activeAddons.length})
+            </button>
+          </div>
+
+          {/* Dynamic Billing Cycle Switcher */}
+          <div className="inline-flex bg-white/5 border border-white/10 p-1 rounded-xl shadow-sm self-end sm:self-auto">
+            <button
+              onClick={() => setBillingCycle('monthly')}
+              className={`px-4 py-2 rounded-lg font-black uppercase tracking-widest text-[8px] transition-all duration-300 ${
+                billingCycle === 'monthly'
+                  ? 'bg-[#C68A1E] text-[#020403] shadow-md'
+                  : 'text-white/60 hover:text-white hover:bg-white/5'
+              }`}
+              style={billingCycle === 'monthly' ? { backgroundColor: primaryColor, color: '#020403' } : {}}
+            >
+              Mensual
+            </button>
+            <button
+              onClick={() => setBillingCycle('yearly')}
+              className={`px-4 py-2 rounded-lg font-black uppercase tracking-widest text-[8px] transition-all duration-300 ${
+                billingCycle === 'yearly'
+                  ? 'bg-[#C68A1E] text-[#020403] shadow-md'
+                  : 'text-white/60 hover:text-white hover:bg-white/5'
+              }`}
+              style={billingCycle === 'yearly' ? { backgroundColor: primaryColor, color: '#020403' } : {}}
+            >
+              Anual <span className="text-[6.5px] text-white bg-white/20 px-1 py-0.5 rounded ml-1 font-bold">2 meses gratis</span>
+            </button>
+          </div>
         </div>
 
         {/* Catalog Grid */}
@@ -337,50 +377,61 @@ export default function TenantDashboardAddonsPage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in duration-300">
-              {pendingAddons.map((addon) => (
-                <div 
-                  key={addon.id}
-                  className="border rounded-[2rem] p-6 flex flex-col justify-between min-h-[300px] relative overflow-hidden backdrop-blur-md hover:scale-[1.02] transition-all duration-300 group"
-                  style={{ 
-                    backgroundColor: tenantConfig.card_bg_color || '#050a06', 
-                    borderColor: tenantConfig.border_color || '#151F18' 
-                  }}
-                >
-                  {/* Subtle Background Glow */}
-                  <div className="absolute -top-24 -right-24 w-40 h-40 bg-white/[0.02] blur-[40px] rounded-full group-hover:bg-white/[0.04] transition-all duration-500 pointer-events-none"></div>
+              {pendingAddons.map((addon) => {
+                const price = billingCycle === 'monthly' ? addon.monthlyPrice : addon.yearlyPrice;
+                const savings = billingCycle === 'yearly' ? addon.monthlyPrice * 2 : 0;
+                return (
+                  <div 
+                    key={addon.id}
+                    className="border rounded-[2rem] p-6 flex flex-col justify-between min-h-[300px] relative overflow-hidden backdrop-blur-md hover:scale-[1.02] transition-all duration-300 group"
+                    style={{ 
+                      backgroundColor: tenantConfig.card_bg_color || '#050a06', 
+                      borderColor: tenantConfig.border_color || '#151F18' 
+                    }}
+                  >
+                    {/* Subtle Background Glow */}
+                    <div className="absolute -top-24 -right-24 w-40 h-40 bg-white/[0.02] blur-[40px] rounded-full group-hover:bg-white/[0.04] transition-all duration-500 pointer-events-none"></div>
 
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-start">
-                      <span className="text-3xl">{addon.icon}</span>
-                      <span className="px-2.5 py-0.5 bg-nectar-gold/10 text-nectar-gold border border-nectar-gold/25 text-[7px] font-black rounded-full uppercase tracking-wider font-mono">
-                        {addon.categoryBadge}
-                      </span>
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-start">
+                        <span className="text-3xl">{addon.icon}</span>
+                        <span className="px-2.5 py-0.5 bg-nectar-gold/10 text-nectar-gold border border-nectar-gold/25 text-[7px] font-black rounded-full uppercase tracking-wider font-mono">
+                          {addon.categoryBadge}
+                        </span>
+                      </div>
+
+                      <div>
+                        <h3 className="text-sm font-black uppercase text-white tracking-wide mt-2">{addon.name}</h3>
+                        <p className="text-[10px] text-white/50 leading-relaxed mt-2 line-clamp-4">{addon.description}</p>
+                      </div>
                     </div>
 
-                    <div>
-                      <h3 className="text-sm font-black uppercase text-white tracking-wide mt-2">{addon.name}</h3>
-                      <p className="text-[10px] text-white/50 leading-relaxed mt-2 line-clamp-4">{addon.description}</p>
+                    <div className="border-t border-white/5 pt-4 mt-6 flex justify-between items-center">
+                      <div>
+                        <span className="text-[7.5px] uppercase font-black text-white/35 block">
+                          Precio {billingCycle === 'monthly' ? 'mensual' : 'anual'}
+                        </span>
+                        <span className="text-base font-black text-white font-mono" style={{ color: primaryColor }}>
+                          ${(price || 0).toLocaleString('es-MX')} MXN
+                        </span>
+                        {billingCycle === 'yearly' && savings > 0 && (
+                          <p className="text-[7px] text-emerald-400 font-bold uppercase tracking-wider mt-0.5">
+                            Ahorro de ${savings.toLocaleString('es-MX')} MXN
+                          </p>
+                        )}
+                      </div>
+                      
+                      <button
+                        onClick={handleRedirectToMain}
+                        className="px-4 py-2 text-background text-[8px] font-black uppercase tracking-widest rounded-lg hover:scale-105 active:scale-95 transition-all shadow-md cursor-pointer"
+                        style={{ backgroundColor: primaryColor }}
+                      >
+                        Activar Add-on
+                      </button>
                     </div>
                   </div>
-
-                  <div className="border-t border-white/5 pt-4 mt-6 flex justify-between items-center">
-                    <div>
-                      <span className="text-[7.5px] uppercase font-black text-white/35 block">Precio mensual</span>
-                      <span className="text-base font-black text-white font-mono" style={{ color: primaryColor }}>
-                        ${addon.monthlyPrice} USD
-                      </span>
-                    </div>
-                    
-                    <button
-                      onClick={handleRedirectToMain}
-                      className="px-4 py-2 text-background text-[8px] font-black uppercase tracking-widest rounded-lg hover:scale-105 active:scale-95 transition-all shadow-md cursor-pointer"
-                      style={{ backgroundColor: primaryColor }}
-                    >
-                      Activar Add-on
-                    </button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )
         ) : (

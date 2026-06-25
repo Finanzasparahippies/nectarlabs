@@ -322,56 +322,52 @@ export default function AddonShowcase() {
       </div>
 
       {/* Add-ons Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-12 relative z-10">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 relative z-10 animate-in fade-in duration-300">
         {addonsList.map((addon) => {
           const price = billingCycle === 'monthly' ? addon.monthlyPrice : addon.yearlyPrice;
           const savings = billingCycle === 'yearly' ? addon.monthlyPrice * 2 : 0;
           return (
             <div
               key={addon.id}
-              className="p-6 sm:p-10 rounded-[2.5rem] sm:rounded-[3.5rem] border-2 border-card-border bg-card-bg flex flex-col justify-between hover:shadow-[var(--shadow-premium)] hover:-translate-y-3 hover:border-nectar-gold/45 transition-all duration-700 group relative overflow-hidden min-h-[auto] md:min-h-[440px]"
+              className="bg-card-bg border border-card-border p-6 rounded-[2rem] flex flex-col justify-between min-h-[300px] relative overflow-hidden backdrop-blur-md hover:scale-[1.02] transition-all duration-300 group"
             >
-              {/* Gold Ambient Glow on Hover */}
-              <div className="absolute -top-32 -right-32 w-64 h-64 bg-nectar-gold/5 blur-[80px] rounded-full group-hover:bg-nectar-gold/10 transition-all duration-700 pointer-events-none -z-10"></div>
+              {/* Subtle Background Glow */}
+              <div className="absolute -top-24 -right-24 w-40 h-40 bg-white/[0.02] blur-[40px] rounded-full group-hover:bg-white/[0.04] transition-all duration-500 pointer-events-none"></div>
 
-              <div>
+              <div className="space-y-4">
                 {/* Category Badge & Icon */}
-                <div className="flex justify-between items-start mb-6 sm:mb-8">
-                  <span className="text-[8px] font-black uppercase tracking-widest text-nectar-gold bg-nectar-gold/5 border border-nectar-gold/15 px-3 py-1.5 rounded-full">
+                <div className="flex justify-between items-start">
+                  <span className="text-3xl">{addon.icon}</span>
+                  <span className="px-2.5 py-0.5 bg-nectar-gold/10 text-nectar-gold border border-nectar-gold/25 text-[7px] font-black rounded-full uppercase tracking-wider font-mono">
                     {addon.categoryBadge}
                   </span>
-                  <div className="p-3 bg-foreground/5 rounded-2xl group-hover:bg-nectar-gold/10 group-hover:scale-110 transition-all duration-500">
-                    {addon.icon}
-                  </div>
                 </div>
 
                 {/* Title & Description */}
-                <h3 className="text-xl sm:text-2xl font-black tracking-tight mb-4 group-hover:text-nectar-gold transition-colors duration-300">
-                  {addon.name}
-                </h3>
-                <p className="text-xs text-muted leading-relaxed mb-6">
-                  {addon.description}
-                </p>
+                <div>
+                  <h3 className="text-sm font-black uppercase text-white tracking-wide mt-2">{addon.name}</h3>
+                  <p className="text-[10px] text-white/50 leading-relaxed mt-2 line-clamp-4">{addon.description}</p>
+                </div>
               </div>
 
               {/* Pricing & Call to Action */}
-              <div>
-                <div className="border-t border-card-border/80 pt-6 mb-6 flex items-baseline justify-between">
+              <div className="border-t border-white/5 pt-4 mt-6">
+                <div className="flex justify-between items-center mb-4">
                   <div>
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-3xl sm:text-4xl font-black tracking-tighter text-foreground">${price.toLocaleString('es-MX')}</span>
-                      <span className="text-[9px] font-bold opacity-50 uppercase tracking-wider text-muted">
-                        MXN / {billingCycle === 'monthly' ? 'mes' : 'año'}
-                      </span>
-                    </div>
-                    {billingCycle === 'yearly' && (
-                      <p className="text-[8px] text-emerald-500 font-bold uppercase tracking-wider mt-1.5">
+                    <span className="text-[7.5px] uppercase font-black text-white/35 block">
+                      Precio {billingCycle === 'monthly' ? 'mensual' : 'anual'}
+                    </span>
+                    <span className="text-base font-black text-[#C68A1E] font-mono">
+                      ${price.toLocaleString('es-MX')} MXN
+                    </span>
+                    {billingCycle === 'yearly' && savings > 0 && (
+                      <p className="text-[7px] text-emerald-500 font-bold uppercase tracking-wider mt-0.5">
                         Ahorro de ${savings.toLocaleString('es-MX')} MXN
                       </p>
                     )}
                   </div>
 
-                  <span className={`text-[8px] font-black uppercase tracking-wider px-2.5 py-1 rounded border ${
+                  <span className={`text-[7px] font-black uppercase tracking-wider px-2 py-0.5 rounded border ${
                     addon.complexity === 'Muy Alta' ? 'text-red-400 bg-red-400/5 border-red-400/20' :
                     addon.complexity === 'Alta' ? 'text-orange-400 bg-orange-400/5 border-orange-400/20' :
                     addon.complexity === 'Media' ? 'text-yellow-500 bg-yellow-500/5 border-yellow-500/20' :
@@ -381,16 +377,17 @@ export default function AddonShowcase() {
                   </span>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                <div className="grid grid-cols-2 gap-3">
                   <button
                     onClick={() => setSelectedAddon(addon)}
-                    className="w-full py-4 text-[9px] font-black uppercase tracking-widest text-nectar-gold hover:text-foreground hover:bg-foreground/5 rounded-2xl border border-nectar-gold/20 hover:border-transparent transition-all duration-300 text-center"
+                    className="px-4 py-2 bg-white/5 border border-white/10 hover:bg-white/10 text-white text-[8px] font-black uppercase tracking-widest rounded-lg hover:scale-105 active:scale-95 transition-all cursor-pointer text-center"
                   >
-                    Ver Ficha
+                    Ficha
                   </button>
                   <Link href={`/dashboard/addons?request=${addon.id}`} className="w-full">
                     <button
-                      className="w-full py-4 text-[9px] font-black uppercase tracking-widest bg-nectar-forest text-nectar-cream hover:bg-nectar-gold hover:scale-[1.03] active:scale-95 transition-all rounded-2xl shadow-lg shadow-nectar-forest/10 hover:shadow-nectar-gold/25"
+                      className="w-full px-4 py-2 text-background text-[8px] font-black uppercase tracking-widest rounded-lg hover:scale-105 active:scale-95 transition-all shadow-md cursor-pointer text-center"
+                      style={{ backgroundColor: '#C68A1E' }}
                     >
                       Integrar
                     </button>

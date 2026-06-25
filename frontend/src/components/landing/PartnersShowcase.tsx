@@ -127,18 +127,18 @@ export default function PartnersShowcase() {
 
         if (data && Array.isArray(data) && data.length > 0) {
           const activeTenants = data.filter((t: Tenant) => t.is_active);
-          
+
           if (activeTenants.length > 0) {
             const transformed = activeTenants.map((t: Tenant) => {
               const accentColor = t.accent_color || '#C68A1E';
               const logoNode = t.logo_url ? (
-                <img 
-                  src={t.logo_url} 
-                  alt={t.name} 
-                  className="w-8 h-8 rounded-lg object-contain" 
+                <img
+                  src={t.logo_url}
+                  alt={t.name}
+                  className="w-8 h-8 rounded-lg object-contain"
                 />
               ) : (
-                <div 
+                <div
                   className="w-10 h-10 rounded-lg flex items-center justify-center font-black text-xs border"
                   style={{
                     backgroundColor: `${accentColor}12`,
@@ -163,7 +163,7 @@ export default function PartnersShowcase() {
 
               const getCustomDesc = (name: string) => {
                 const lower = name.toLowerCase();
-                if (lower.includes('apex') || lower.includes('logistics')) return 'Logística y distribución inteligente con geolocalización y asignación automática.';
+                if (lower.includes('msambar') || lower.includes('artists')) return 'Adquiere boletos, merch y muchoas mas eventos oficiales de tu artista favorito.';
                 if (lower.includes('aura') || lower.includes('wellness')) return 'Plataforma de reservas y consultas virtuales de salud integral.';
                 if (lower.includes('stellar') || lower.includes('cms')) return 'Sistema headless de gestión de contenidos de alta fidelidad.';
                 if (lower.includes('skyline') || lower.includes('saas')) return 'Ecosistema multi-inquilino de alto rendimiento para control de complejos.';
@@ -224,29 +224,29 @@ export default function PartnersShowcase() {
   const marqueeItemsRow2 = [...secondRow, ...secondRow];
 
   const PartnerCardComponent = ({ partner }: { partner: PartnerCard }) => (
-    <a 
+    <a
       href={`https://${partner.domain}`}
       target="_blank"
       rel="noreferrer"
       className="w-[290px] sm:w-[330px] shrink-0 p-8 rounded-[2.25rem] bg-gradient-to-b from-card-bg to-card-bg/95 border border-card-border hover:border-[var(--accent-border)] hover:shadow-2xl hover:shadow-[var(--accent-glow)] hover:-translate-y-1.5 transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] flex flex-col gap-6 text-left mx-4 relative overflow-hidden group cursor-pointer"
-      style={{ 
+      style={{
         '--accent-color': partner.accentColor,
         '--accent-glow': `${partner.accentColor}12`,
         '--accent-border': `${partner.accentColor}30`,
       } as React.CSSProperties}
     >
       {/* Subtle ambient light dot inside the card on hover */}
-      <div 
+      <div
         className="absolute -bottom-12 -right-12 w-40 h-40 opacity-0 group-hover:opacity-100 transition-opacity duration-700 blur-[40px] rounded-full pointer-events-none"
         style={{ backgroundColor: 'var(--accent-glow)' }}
       ></div>
 
       <div className="flex justify-between items-center gap-4">
         {/* Logo Container */}
-        <div 
+        <div
           className="w-12 h-12 rounded-2xl flex items-center justify-center border shrink-0 transition-transform duration-500 group-hover:scale-105 shadow-sm"
-          style={{ 
-            backgroundColor: `${partner.accentColor}08`, 
+          style={{
+            backgroundColor: `${partner.accentColor}08`,
             borderColor: `${partner.accentColor}20`
           }}
         >
@@ -255,8 +255,8 @@ export default function PartnersShowcase() {
 
         {/* Minimalist pulsed state indicator */}
         <div className="flex items-center gap-2">
-          <span 
-            className="w-1.5 h-1.5 rounded-full animate-pulse" 
+          <span
+            className="w-1.5 h-1.5 rounded-full animate-pulse"
             style={{ backgroundColor: partner.accentColor }}
           ></span>
           <span className="text-[8px] font-bold uppercase tracking-[0.2em] opacity-40">
@@ -273,13 +273,13 @@ export default function PartnersShowcase() {
               {partner.name}
             </h4>
             {/* Elegant sliding/scaling diagonal link arrow symbol */}
-            <svg 
-              className="w-4 h-4 opacity-0 transform translate-x-[-6px] translate-y-[6px] scale-75 group-hover:opacity-100 group-hover:translate-x-0 group-hover:translate-y-0 group-hover:scale-100 transition-all duration-300 ease-out text-nectar-gold" 
-              viewBox="0 0 24 24" 
-              fill="none" 
-              stroke="currentColor" 
-              strokeWidth="2.5" 
-              strokeLinecap="round" 
+            <svg
+              className="w-4 h-4 opacity-0 transform translate-x-[-6px] translate-y-[6px] scale-75 group-hover:opacity-100 group-hover:translate-x-0 group-hover:translate-y-0 group-hover:scale-100 transition-all duration-300 ease-out text-nectar-gold"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
               strokeLinejoin="round"
             >
               <line x1="7" y1="17" x2="17" y2="7"></line>
