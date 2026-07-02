@@ -876,16 +876,28 @@ function DashboardPageOriginal() {
                     </div>
 
                     <div className="space-y-4">
-                      <div className="flex items-center gap-3 bg-background/50 border border-card-border/80 rounded-2xl p-4 justify-between">
-                        <span className="font-mono text-lg font-black tracking-widest text-foreground select-all">{myReferralCode.code}</span>
+                      <div className="flex flex-col sm:flex-row gap-3">
+                        <div className="flex-1 flex items-center gap-3 bg-background/50 border border-card-border/80 rounded-2xl p-4 justify-between font-mono text-sm">
+                          <span className="font-black select-all">{myReferralCode.code}</span>
+                          <button
+                            onClick={() => {
+                              navigator.clipboard.writeText(myReferralCode.code);
+                              showToast("¡Código copiado!", "success");
+                            }}
+                            className="text-nectar-gold hover:underline font-bold text-xs uppercase"
+                          >
+                            Copiar Código
+                          </button>
+                        </div>
                         <button
                           onClick={() => {
-                            navigator.clipboard.writeText(myReferralCode.code);
-                            showToast("¡Código de vendedor copiado al portapapeles!", "success");
+                            const link = `${window.location.origin}/login?ref=${myReferralCode.code}`;
+                            navigator.clipboard.writeText(link);
+                            showToast("¡Enlace de referido copiado!", "success");
                           }}
-                          className="px-6 py-3 bg-nectar-gold hover:bg-nectar-gold/90 text-background text-[10px] font-black uppercase tracking-widest rounded-xl transition-all hover:scale-[1.02] active:scale-95"
+                          className="px-6 py-4 bg-nectar-gold hover:bg-nectar-gold/90 text-background text-[10px] font-black uppercase tracking-widest rounded-2xl transition-all hover:scale-[1.02] active:scale-95 whitespace-nowrap"
                         >
-                          Copiar Código
+                          Copiar Enlace Directo
                         </button>
                       </div>
                     </div>

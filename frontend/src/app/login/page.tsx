@@ -1,15 +1,23 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { fetcher } from '../../lib/api';
 
-export default function LoginPage() {
+function LoginContent() {
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const refCode = searchParams.get('ref');
+
+  useEffect(() => {
+    if (refCode) {
+      sessionStorage.setItem('referral_code', refCode);
+    }
+  }, [refCode]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,8 +47,8 @@ export default function LoginPage() {
     }
   };
 
-
   const [showPassword, setShowPassword] = useState(false);
+  const registerLink = refCode ? `/register?ref=${refCode}` : '/register';
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden">
@@ -75,7 +83,6 @@ export default function LoginPage() {
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
             />
           </div>
-
 
           <div className="space-y-2">
             <div className="flex justify-between ml-4 mr-1">
@@ -122,12 +129,25 @@ export default function LoginPage() {
         <div className="mt-10 text-center">
           <p className="text-xs font-bold opacity-40">
             ¿No tienes una cuenta?{' '}
-            <Link href="/register" className="text-nectar-gold hover:underline">
+            <Link href={registerLink} className="text-nectar-gold hover:underline">
               Crea una aquí
             </Link>
           </p>
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background">
+        <div className="w-12 h-12 border-4 border-nectar-gold border-t-transparent rounded-full animate-spin mb-4"></div>
+        <div className="font-black uppercase tracking-[0.4em] opacity-20 text-[10px]">Syncing Ecosystem...</div>
+      </div>
+    }>
+      <LoginContent />
+    </Suspense>
   );
 }

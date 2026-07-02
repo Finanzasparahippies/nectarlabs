@@ -6,7 +6,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('id', 'email', 'username', 'password', 'role', 'is_approved_seller', 'tenant', 'is_email_verified')
+        fields = ('id', 'email', 'username', 'password', 'role', 'is_approved_seller', 'tenant', 'is_email_verified', 'referral_code')
 
     def create(self, validated_data):
         # Extract fields to pass to create_user or save after
@@ -102,18 +102,31 @@ class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True)
     password_confirm = serializers.CharField(write_only=True, required=True)
     role = serializers.ChoiceField(choices=User.Role.choices, default=User.Role.CUSTOMER, required=False)
+    referral_code = serializers.CharField(write_only=True, required=False, allow_blank=True, allow_null=True)
 
     class Meta:
         model = User
-        fields = ('email', 'username', 'password', 'password_confirm', 'role')
+        fields = ('email', 'username', 'password', 'password_confirm', 'role', 'referral_code')
 
     def validate(self, attrs):
         if attrs['password'] != attrs['password_confirm']:
             raise serializers.ValidationError({"password_confirm": "Las contraseñas no coinciden."})
+            
+        referral_code = attrs.get('referral_code')
+        if referral_code:
+            from apps.shop.models import PromoCode
+            try:
+                promo = PromoCode.objects.get(code=referral_code.strip().upper())
+                if not promo.is_valid():
+                    raise serializers.ValidationError({"referral_code": "El código de referido ha expirado o no es válido."})
+            except PromoCode.DoesNotExist:
+                raise serializers.ValidationError({"referral_code": "El código de referido no existe."})
+                
         return attrs
 
     def create(self, validated_data):
         validated_data.pop('password_confirm')
+        referral_code = validated_data.pop('referral_code', None)
         
         email = validated_data['email']
         username = validated_data.get('username')
@@ -140,5 +153,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         
         # Public registrations start as email unverified
         user.is_email_verified = False
+        if referral_code:
+            user.referral_code = referral_code.strip().upper()
         user.save()
         return user

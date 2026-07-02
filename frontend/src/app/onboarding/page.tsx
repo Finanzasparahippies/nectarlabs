@@ -99,32 +99,12 @@ function OnboardingContent() {
     }
   }, [searchParams]);
 
-  useEffect(() => {
-    if (!isMounted) return;
-
-    const token = localStorage.getItem('token');
-    if (!token) {
-      router.push('/login?redirect=/onboarding');
-      return;
-    }
-
-    fetcher('/plans/')
-      .then(data => {
-        setPlans(data);
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error("Error fetching plans:", err);
-        setLoading(false);
-      });
-  }, [isMounted, router]);
-
-  const handleValidatePromo = async () => {
-    if (!promoCodeInput.trim()) return;
+  const validatePromoCode = async (code: string) => {
+    if (!code.trim()) return;
     setValidatingPromo(true);
     setPromoError('');
     try {
-      const res = await fetcher(`/promo-codes/validate/?code=${promoCodeInput}`);
+      const res = await fetcher(`/promo-codes/validate/?code=${code}`);
       if (res.is_valid) {
         setAppliedPromo(res);
         setPromoError('');
@@ -139,6 +119,35 @@ function OnboardingContent() {
       setValidatingPromo(false);
     }
   };
+
+  const handleValidatePromo = async () => {
+    await validatePromoCode(promoCodeInput);
+  };
+
+  useEffect(() => {
+    if (!isMounted) return;
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+      router.push('/login?redirect=/onboarding');
+      return;
+    }
+
+    Promise.all([
+      fetcher('/users/me/').catch(() => null),
+      fetcher('/plans/').catch(() => [])
+    ]).then(([userData, plansData]) => {
+      setPlans(plansData);
+      if (userData && userData.referral_code) {
+        setPromoCodeInput(userData.referral_code);
+        validatePromoCode(userData.referral_code);
+      }
+      setLoading(false);
+    }).catch(err => {
+      console.error("Error during onboarding initialization:", err);
+      setLoading(false);
+    });
+  }, [isMounted, router]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));

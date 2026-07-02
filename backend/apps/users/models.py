@@ -35,6 +35,12 @@ class User(AbstractUser):
         default=False,
         help_text="Indica si el correo electrónico ha sido verificado."
     )
+    referral_code = models.CharField(
+        max_length=50,
+        blank=True,
+        null=True,
+        help_text="Código de referido/vendedor utilizado en el registro."
+    )
     
     # Use email as the primary identifier
     USERNAME_FIELD = 'email'
