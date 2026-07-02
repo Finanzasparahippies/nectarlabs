@@ -167,6 +167,26 @@ def seed_addons():
             ]
         },
         {
+            "slug": "pos-manager",
+            "name": "Néctar Punto de Venta (POS Pro)",
+            "category_badge": "OPERACIÓN Y CAJA",
+            "description": "Consola de cobro rápido en mostrador compatible con lectores de código de barras e impresoras térmicas USB.",
+            "detailed_description": "Digitaliza tu mostrador de cobro. Next.js captura los escaneos del lector USB instantáneamente en caliente, emite tickets de compra mediante comandos de impresión optimizados y envía un pulso eléctrico para la apertura automática de cajones de dinero RJ11.",
+            "monthly_price": 299.00,
+            "yearly_price": 2990.00,
+            "origin_project": "nectarlabs-main",
+            "source_reference": "frontend/src/app/tenants/[subdomain]/pos",
+            "complexity": AddOn.Complexity.MEDIUM,
+            "server_requirements": "Base de datos PostgreSQL con soporte para transacciones ACID de alta concurrencia en inventarios.",
+            "technical_details": [
+                "Captura ultra-rápida de lector de códigos (Emulación de teclado)",
+                "Diseño de ticket térmico responsivo (58mm / 80mm)",
+                "Apertura automática de cajón de dinero vía pulso RJ11 de la ticketera",
+                "Operación total mediante atajos de teclado para agilidad en mostrador",
+                "Usuarios y cajas registradoras ilimitadas por Colmena"
+              ]
+        },
+        {
             "slug": "ecommerce-combo",
             "name": "Combo E-commerce Automatizado",
             "category_badge": "E-COMMERCE COMBO",
