@@ -2,6 +2,7 @@ from django.utils import timezone
 from rest_framework import viewsets, status, permissions
 from rest_framework.response import Response
 from rest_framework.decorators import action
+from rest_framework.views import APIView
 from apps.tenants.permissions import HasAddOnPermission
 from .models import (
     DeliveryConfig, Vehicle, VehicleLocation, Stop,
@@ -393,9 +394,9 @@ class DeliveryOrderViewSet(viewsets.ModelViewSet):
 
 
 # ──────────────────────────────────────────────
-# Store Config ViewSet (admin only)
+# Store Config View (admin only singleton)
 # ──────────────────────────────────────────────
-class StoreConfigViewSet(viewsets.ViewSet):
+class StoreConfigView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def _get_tenant_or_403(self, request):
@@ -406,17 +407,14 @@ class StoreConfigViewSet(viewsets.ViewSet):
             return None, Response({"detail": "Acceso denegado."}, status=status.HTTP_403_FORBIDDEN)
         return tenant, None
 
-    def list(self, request):
+    def get(self, request):
         tenant, err = self._get_tenant_or_403(request)
         if err:
             return err
         config, _ = StoreConfig.objects.get_or_create(tenant=tenant)
         return Response(StoreConfigSerializer(config).data)
 
-    def create(self, request):
-        return self.update(request)
-
-    def update(self, request, pk=None):
+    def put(self, request):
         tenant, err = self._get_tenant_or_403(request)
         if err:
             return err
@@ -426,5 +424,6 @@ class StoreConfigViewSet(viewsets.ViewSet):
         ser.save()
         return Response(StoreConfigSerializer(config).data)
 
-    def partial_update(self, request, pk=None):
-        return self.update(request, pk)
+    def patch(self, request):
+        return self.put(request)
+
