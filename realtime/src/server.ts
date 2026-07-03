@@ -8,25 +8,41 @@ import http from 'http';
 
 dotenv.config();
 
+// ==============================================================================
+// CONFIGURACIÓN DE PUERTOS Y LLAVES DE AUTENTICACIÓN
+// ==============================================================================
+// PORT: Puerto en el que corre el servidor WebSocket de cara a los clientes (vía proxy inverso en Nginx).
+// SECRET_KEY: Llave simétrica para verificar la firma de los tokens JWT de Django (mismo SECRET_KEY de Django).
 const PORT = parseInt(process.env.PORT || '4000', 10);
 const SECRET_KEY = process.env.DJANGO_SECRET_KEY || process.env.SECRET_KEY || 'django-insecure-default-key';
 
-// Keep track of connected clients and their active chat subscriptions
+// ------------------------------------------------------------------------------
+// ESTRUCTURA DE CLIENTES CONECTADOS (IN-MEMORY STATE)
+// ------------------------------------------------------------------------------
 interface ClientConnection {
-  ws: WebSocket;
-  userId: number;
-  email: string;
-  role: string;
-  subscribedChatId: number | null;
+  ws: WebSocket;                // Instancia de conexión activa
+  userId: number;               // ID de usuario (mapeado de Django auth_user)
+  email: string;                // Correo electrónico del usuario
+  role: string;                 // Rol (ADMIN, BUSINESS, CUSTOMER, etc.)
+  subscribedChatId: number | null; // ID del chat al que está suscrito actualmente (room pattern)
 }
 
+// conexiones WebSocket en memoria
 const connections = new Set<ClientConnection>();
 
+// Servidor WebSocket principal
 const wss = new WebSocketServer({ port: PORT });
 
 console.log(`[Realtime] Servidor de WebSockets iniciado en el puerto ${PORT}`);
 
-// Helper to broadcast JSON data to all clients subscribed to a specific chat room
+// ------------------------------------------------------------------------------
+// MÉTODOS AUXILIARES DE DIFUSIÓN (BROADCAST HELPERS)
+// ------------------------------------------------------------------------------
+
+/**
+ * Difunde un mensaje en formato JSON a todos los clientes que estén suscritos
+ * activamente a una sala de chat específica (chatId).
+ */
 const broadcastToRoom = (chatId: number, data: any) => {
   const payload = JSON.stringify(data);
   for (const client of connections) {
@@ -36,7 +52,10 @@ const broadcastToRoom = (chatId: number, data: any) => {
   }
 };
 
-// Helper to broadcast JSON data to ALL connected ADMIN users regardless of chat subscription
+/**
+ * Envía un mensaje a TODOS los administradores conectados a la plataforma.
+ * Se utiliza para reportar nuevos tickets, alertas del sistema o asignación de chats.
+ */
 const broadcastToAdmins = (data: any) => {
   const payload = JSON.stringify(data);
   let count = 0;
@@ -54,6 +73,10 @@ wss.on('connection', async (ws, req) => {
   let isReady = false;
   const queue: any[] = [];
 
+  // ----------------------------------------------------------------------------
+  // MANEJADOR DE MENSAJES RECIBIDOS (SWIFT ROUTER DE EVENTOS)
+  // Procesa las solicitudes del cliente de acuerdo al tipo de evento recibido.
+  // ----------------------------------------------------------------------------
   const handleMessage = async (messageData: any) => {
     if (!clientConn) return;
     try {
@@ -61,6 +84,7 @@ wss.on('connection', async (ws, req) => {
       console.log(`[Realtime] Mensaje recibido de ${clientConn.email}:`, data);
       
       switch (data.type) {
+        // Evento 1: Suscribirse a una sala de chat específica
         case 'subscribe': {
           const chatId = parseInt(data.chatId, 10);
           console.log(`[Realtime] Intento de suscripción al chat #${chatId} por el usuario ${clientConn.email} (ID: ${clientConn.userId}, Rol: ${clientConn.role})`);
@@ -69,7 +93,7 @@ wss.on('connection', async (ws, req) => {
             return;
           }
 
-          // Verify authorization
+          // Verificar autorización en la base de datos (PostgreSQL)
           const chatRes = await pool.query('SELECT * FROM tickets_supportchat WHERE id = $1', [chatId]);
           console.log(`[Realtime] Búsqueda de chat en DB para #${chatId}. Encontrado: ${chatRes.rows.length > 0}`);
           if (chatRes.rows.length === 0) {
@@ -81,6 +105,7 @@ wss.on('connection', async (ws, req) => {
           const chat = chatRes.rows[0];
           console.log(`[Realtime] Datos del Chat: ID cliente en DB: ${chat.client_id} (Tipo: ${typeof chat.client_id}), ID usuario: ${clientConn.userId} (Tipo: ${typeof clientConn.userId})`);
           
+          // Regla de Acceso: Agentes de soporte (ADMIN, BUSINESS, DEVELOPER) o el cliente dueño del chat.
           const isAgent = clientConn.role === 'ADMIN' || clientConn.role === 'BUSINESS' || clientConn.role === 'DEVELOPER';
           if (!isAgent && chat.client_id !== clientConn.userId) {
             console.warn(`[Realtime] Suscripción fallida: Usuario ${clientConn.email} (ID ${clientConn.userId}) no autorizado para chat #${chatId} (Propietario: ${chat.client_id}).`);
@@ -88,14 +113,16 @@ wss.on('connection', async (ws, req) => {
             return;
           }
 
+          // Registrar la suscripción del cliente
           clientConn.subscribedChatId = chatId;
           console.log(`[Realtime] Cliente ${clientConn.email} se suscribió con éxito al chat #${chatId}`);
           
-          // Send connection confirmation
+          // Confirmar suscripción exitosa al cliente
           ws.send(JSON.stringify({ type: 'subscribed', chatId }));
           break;
         }
 
+        // Evento 2: Envío de un mensaje de texto
         case 'message': {
           const chatId = clientConn.subscribedChatId;
           console.log(`[Realtime] Mensaje recibido de ${clientConn.email} para chat #${chatId}: "${data.message}"`);
@@ -108,7 +135,7 @@ wss.on('connection', async (ws, req) => {
           const text = data.message?.trim();
           if (!text) return;
 
-          // Double check authorization and status
+          // Doble verificación del estado del chat en la DB
           const chatRes = await pool.query('SELECT * FROM tickets_supportchat WHERE id = $1', [chatId]);
           if (chatRes.rows.length === 0) return;
           const chat = chatRes.rows[0];
@@ -118,7 +145,7 @@ wss.on('connection', async (ws, req) => {
             return;
           }
 
-          // Save user message to PostgreSQL
+          // Guardar el mensaje del usuario en la base de datos PostgreSQL
           const insertRes = await pool.query(
             `INSERT INTO tickets_supportchatmessage (chat_id, sender_id, message, is_ai_message, created_at)
              VALUES ($1, $2, $3, false, NOW())
@@ -128,7 +155,7 @@ wss.on('connection', async (ws, req) => {
           
           const savedMsg = insertRes.rows[0];
           
-          // Format and broadcast the message immediately to all room subscribers
+          // Difundir el mensaje del usuario a todos los miembros de la sala (clientes o agentes en tiempo real)
           const broadcastPayload = {
             id: savedMsg.id,
             sender_email: clientConn.email,
@@ -144,10 +171,10 @@ wss.on('connection', async (ws, req) => {
             message: broadcastPayload,
           });
 
-          // Update chat updated_at
+          // Actualizar marca de tiempo de actividad en la tabla del Chat
           await pool.query('UPDATE tickets_supportchat SET updated_at = NOW() WHERE id = $1', [chatId]);
 
-          // If a human agent replies and the chat was 'OPEN', update status to 'IN_PROGRESS'
+          // Si un agente de soporte responde a un chat "OPEN", cambia el estado automáticamente a "IN_PROGRESS"
           const isAgent = clientConn.role === 'ADMIN' || clientConn.role === 'BUSINESS' || clientConn.role === 'DEVELOPER';
           if (isAgent && chat.status === 'OPEN') {
             await pool.query("UPDATE tickets_supportchat SET status = 'IN_PROGRESS' WHERE id = $1", [chatId]);
@@ -158,16 +185,18 @@ wss.on('connection', async (ws, req) => {
             });
           }
 
-          // Trigger AI assistant if status is still 'OPEN' (no agent claimed it)
+          // Si el chat sigue "OPEN" y es el cliente quien escribe, se activa el chatbot de asistencia asíncrona de IA
           if (chat.status === 'OPEN' && !isAgent) {
             console.log(`[Realtime] Generando respuesta de IA para Chat #${chatId}...`);
             
             let aiResponseText = '';
             let streamStarted = false;
 
+            // Iniciar flujo de streaming con Groq API
             await generateAiReplyStream(
               chatId,
               text,
+              // Callback de cada token recibido de la IA en tiempo real (streaming a los clientes)
               (token) => {
                 if (!streamStarted) {
                   broadcastToRoom(chatId, {
@@ -183,8 +212,8 @@ wss.on('connection', async (ws, req) => {
                   token,
                 });
               },
+              // Callback al completarse el stream: se guarda la respuesta en la base de datos
               async (fullText) => {
-                // AI complete! Save bot message to DB
                 try {
                   const aiInsertRes = await pool.query(
                     `INSERT INTO tickets_supportchatmessage (chat_id, sender_id, message, is_ai_message, created_at)
@@ -209,12 +238,13 @@ wss.on('connection', async (ws, req) => {
                     message: aiPayload,
                   });
 
-                  // Update chat updated_at
+                  // Actualiza updated_at del chat
                   await pool.query('UPDATE tickets_supportchat SET updated_at = NOW() WHERE id = $1', [chatId]);
                 } catch (dbErr) {
                   console.error('[Realtime] Error saving AI message to DB:', dbErr);
                 }
               },
+              // Callback en caso de error de streaming
               (err) => {
                 console.error('[Realtime] AI stream error:', err);
                 broadcastToRoom(chatId, {
@@ -255,6 +285,10 @@ wss.on('connection', async (ws, req) => {
     }
   });
 
+  // ----------------------------------------------------------------------------
+  // HANDSHAKE INICIAL Y AUTENTICACIÓN DEL CLIENTE (JWT)
+  // Extrae y valida el JWT provisto en los query parameters del WebSocket
+  // ----------------------------------------------------------------------------
   try {
     const parameters = parse(req.url || '', true).query;
     const token = parameters.token as string;
@@ -265,6 +299,7 @@ wss.on('connection', async (ws, req) => {
       return;
     }
 
+    // Verificar la firma del JWT usando el SECRET_KEY compartido
     let decoded: any;
     try {
       decoded = jwt.verify(token, SECRET_KEY, { algorithms: ['HS256'] });
@@ -281,7 +316,7 @@ wss.on('connection', async (ws, req) => {
       return;
     }
 
-    // Query user details from DB
+    // Consultar detalles finales del usuario (email, rol) en la base de datos de Django
     const userRes = await pool.query('SELECT id, email, role FROM users_user WHERE id = $1', [userId]);
     if (userRes.rows.length === 0) {
       console.warn(`[Realtime] Usuario con ID ${userId} no encontrado en la DB.`);
@@ -298,9 +333,11 @@ wss.on('connection', async (ws, req) => {
       subscribedChatId: null,
     };
 
+    // Añadir conexión activa al listado in-memory
     connections.add(clientConn);
     console.log(`[Realtime] Cliente conectado: ${user.email} (Rol: ${user.role}). Total conexiones: ${connections.size}`);
 
+    // Procesar cualquier mensaje recibido de forma prematura durante la autenticación
     isReady = true;
     for (const msg of queue) {
       handleMessage(msg);
@@ -312,20 +349,21 @@ wss.on('connection', async (ws, req) => {
   }
 });
 
-// ─── Internal HTTP Server for backend-to-realtime broadcasts ─────────────────
-// Only accepts connections from localhost/127.0.0.1
+// ─── SERVIDOR HTTP INTERNO PARA COMUNICACIÓN DJANGO -> REALTIME ───────────────
+// Este servidor HTTP acepta peticiones POST exclusivas desde la red de Docker (localhost/django)
+// para realizar difusiones del backend a los administradores en tiempo real (por ejemplo, notificar tickets nuevos).
 const INTERNAL_PORT = parseInt(process.env.INTERNAL_PORT || '4001', 10);
 const INTERNAL_SECRET = process.env.INTERNAL_SECRET || 'nectar-internal-secret';
 
 const internalServer = http.createServer((req, res) => {
-  // Only POST to /internal/broadcast-admin
+  // Limitar enrutamiento solo a POST /internal/broadcast-admin
   if (req.method !== 'POST' || req.url !== '/internal/broadcast-admin') {
     res.writeHead(404);
     res.end('Not found');
     return;
   }
 
-  // Validate internal secret header
+  // Validar cabecera de secreto interno para prevenir inyecciones externas
   const secret = req.headers['x-internal-secret'];
   if (secret !== INTERNAL_SECRET) {
     res.writeHead(401);
@@ -338,6 +376,7 @@ const internalServer = http.createServer((req, res) => {
   req.on('end', () => {
     try {
       const payload = JSON.parse(body);
+      // Difundir información a todos los administradores en línea
       broadcastToAdmins(payload);
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ ok: true, admins_online: [...connections].filter(c => c.role === 'ADMIN').length }));

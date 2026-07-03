@@ -88,13 +88,18 @@ Néctar Labs es un estudio digital premium que desarrolla 'Software Artesanal': 
 `;
 };
 
-// Build context for NectarLabs main platform (BUSINESS dashboard chat)
+// ------------------------------------------------------------------------------
+// CONTEXTO DE SOCIO DE NEGOCIO (MAIN DASHBOARD ASSISTANT)
+// Compila información de Tenants, Contratos y Estatus Financiero del Cliente
+// para alimentar el prompt de la IA en Nectar Labs.
+// ------------------------------------------------------------------------------
 const buildNectarLabsSupportContext = async (client: any): Promise<string> => {
   try {
     const clientId = client.id;
     const clientName = `${client.first_name || ''} ${client.last_name || ''}`.trim() || client.username;
 
-    // Concurrently fetch tenants, contracts, tickets, AND ALL installments to solve N+1 Query bug
+    // Ejecuta múltiples consultas SQL concurrentes utilizando Promise.all para prevenir
+    // problemas de rendimiento (N+1 Query) y latencia hacia PostgreSQL/Supabase.
     const [tenantsRes, contractsRes, ticketsRes, allInstallmentsRes] = await Promise.all([
       pool.query('SELECT * FROM tenants_tenant WHERE owner_id = $1', [clientId]),
       pool.query('SELECT c.*, p.name as plan_name FROM shop_contract c LEFT JOIN shop_plan p ON c.plan_id = p.id WHERE c.user_id = $1', [clientId]),
@@ -106,6 +111,7 @@ const buildNectarLabsSupportContext = async (client: any): Promise<string> => {
     context.push('--- CONTEXTO EN TIEMPO REAL DE LA BASE DE DATOS ---');
     context.push(`Usuario: ${clientName} (${client.email})`);
 
+    // 1. Mapeo de Colmenas (Tenants) activas
     if (tenantsRes.rows.length > 0) {
       context.push('\n[Colmenas / Portales del Socio:]');
       for (const tenant of tenantsRes.rows) {
@@ -129,11 +135,11 @@ const buildNectarLabsSupportContext = async (client: any): Promise<string> => {
       context.push('\n[Colmenas / Portales:] El socio aún no tiene ninguna Colmena creada.');
     }
 
+    // 2. Mapeo de Contratos y mensualidades pendientes
     if (contractsRes.rows.length > 0) {
       context.push('\n[Contratos de Desarrollo:]');
       for (const contract of contractsRes.rows) {
         const planName = contract.plan_name || 'Sin Plan (Solo Adquisición de Add-ons)';
-        // Safe date formatter check
         const formattedNextPayment = contract.next_payment_date instanceof Date
           ? contract.next_payment_date.toISOString().split('T')[0]
           : 'No programado';
@@ -149,7 +155,7 @@ const buildNectarLabsSupportContext = async (client: any): Promise<string> => {
           `  Estado del Contrato: ${contract.is_active ? 'Activo' : 'Inactivo'}`
         );
 
-        // Filter installments in memory to avoid crushing Postgres database
+        // Mapeo e inyección de mensualidades pendientes del contrato en curso
         const contractInstallments = allInstallmentsRes.rows.filter(i => i.contract_id === contract.id);
         if (contractInstallments.length > 0) {
           context.push('  Mensualidades Pendientes:');
@@ -165,7 +171,7 @@ const buildNectarLabsSupportContext = async (client: any): Promise<string> => {
       context.push('\n[Contratos:] No hay contratos de desarrollo registrados.');
     }
 
-    // ... Conserva el mapeo de tickets igual ...
+    // Conserva el mapeo de tickets y la información estática del catálogo de servicios
     context.push(buildNectarLabsServicesInfo());
     return context.join('\n');
   } catch (err) {
@@ -261,7 +267,10 @@ const buildSystemPrompt = async (chat: any, client: any, tenant: any): Promise<s
   }
 };
 
-// Generate AI Streaming Reply
+// ------------------------------------------------------------------------------
+// GENERADOR DE RESPUESTA EN TIEMPO REAL DE IA (GROQ CLOUD API STREAMING)
+// Realiza la llamada asíncrona a Groq, procesa el historial y envía tokens en streaming.
+// ------------------------------------------------------------------------------
 export const generateAiReplyStream = async (
   chatId: number,
   newMsgText: string,
@@ -278,13 +287,14 @@ export const generateAiReplyStream = async (
   try {
     const groq = new Groq({ apiKey });
 
-    // Fetch support chat details, client user details, and tenant details
+    // 1. Obtener los metadatos del chat y participantes
     const chatRes = await pool.query('SELECT * FROM tickets_supportchat WHERE id = $1', [chatId]);
     if (chatRes.rows.length === 0) {
       return onError(new Error('Chat no encontrado'));
     }
     const chat = chatRes.rows[0];
 
+    // Consultar detalles de cliente y tenant en paralelo
     const [clientRes, tenantRes] = await Promise.all([
       pool.query('SELECT * FROM users_user WHERE id = $1', [chat.client_id]),
       chat.tenant_id
@@ -299,10 +309,10 @@ export const generateAiReplyStream = async (
       return onError(new Error('Cliente de chat no encontrado'));
     }
 
-    // Build dynamic system prompt
+    // 2. Compilar el prompt del sistema dinámico con el contexto recolectado
     const systemPrompt = await buildSystemPrompt(chat, client, tenant);
 
-    // Fetch last 15 messages for context history
+    // 3. Reconstruir los últimos 15 mensajes para proporcionar historial de chat coherente
     const historyRes = await pool.query(
       `SELECT m.*, u.email as sender_email, u.role as sender_role 
        FROM tickets_supportchatmessage m 
@@ -312,46 +322,49 @@ export const generateAiReplyStream = async (
       [chatId]
     );
 
-    // Reverse history to keep chronological order
+    // El query obtiene los mensajes de más nuevo a más viejo (DESC).
+    // Invertimos el array para mantener el orden cronológico requerido por el LLM.
     const historyRows = [...historyRes.rows].reverse();
 
     const messages: any[] = [{ role: 'system', content: systemPrompt }];
 
+    // Mapear cada registro del historial al formato que comprende la API de Groq
     for (const msg of historyRows) {
       if (msg.is_ai_message) {
         messages.push({ role: 'assistant', content: msg.message });
       } else if (msg.sender_email.toLowerCase() === client.email.toLowerCase()) {
         messages.push({ role: 'user', content: msg.message });
       } else {
-        // Agent messages
+        // Respuestas manuales de agentes humanos (se le presentan al bot como assistant)
         messages.push({ role: 'assistant', content: msg.message });
       }
     }
 
-    // Ensure the last message is a user message
+    // Asegurarse de que el último mensaje ingresado sea el del usuario actual
     if (messages.length === 0 || messages[messages.length - 1].role !== 'user') {
       messages.push({ role: 'user', content: newMsgText });
     }
 
-    // Stream Chat Completion from Groq Cloud
+    // 4. Invocar la API de Groq utilizando Llama 3.1 8B en modo Streaming
     const stream = await groq.chat.completions.create({
       messages,
       model: 'llama-3.1-8b-instant',
-      temperature: 0.4,
-      max_tokens: 400,
-      stream: true,
+      temperature: 0.4,             // Temperatura baja para mantener respuestas deterministas y precisas
+      max_tokens: 400,              // Límite de tokens para evitar loops infinitos y reducir costos
+      stream: true,                 // Habilitar streaming
     });
 
     let fullText = '';
+    // Iterar sobre los chunks del streaming a medida que llegan del servidor de Groq
     for await (const chunk of stream) {
       const token = chunk.choices[0]?.delta?.content || '';
       if (token) {
         fullText += token;
-        onToken(token);
+        onToken(token);             // Propagar token de forma asíncrona hacia los WebSockets
       }
     }
 
-    onComplete(fullText);
+    onComplete(fullText);           // Guardar y consolidar la respuesta completa en la base de datos
   } catch (err) {
     console.error('[AI] Error generating AI streaming reply:', err);
     onError(err);

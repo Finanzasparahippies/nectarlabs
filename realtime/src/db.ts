@@ -5,7 +5,17 @@ dotenv.config();
 
 const { Pool } = pg;
 
-// Construct connection URL if not provided directly
+// ------------------------------------------------------------------------------
+// CONEXIÓN DIRECTA A POSTGRESQL (POOL DE CONEXIONES)
+// Este módulo inicializa y exporta un pool de conexiones reutilizables hacia la DB.
+// Evita abrir y cerrar conexiones TCP por cada mensaje recibido en WebSockets.
+// ------------------------------------------------------------------------------
+
+/**
+ * Resuelve la cadena de conexión de base de datos PostgreSQL.
+ * Prioriza DATABASE_URL (provista en producción/staging por Supabase),
+ * y si no existe, la construye a partir de credenciales individuales del entorno local.
+ */
 const getConnectionString = (): string => {
   if (process.env.DATABASE_URL) {
     return process.env.DATABASE_URL;
@@ -22,17 +32,23 @@ const getConnectionString = (): string => {
 
 const connectionString = getConnectionString();
 
-// Supabase poolers and direct connections often require SSL
+// Detectar si estamos conectándonos a Supabase (requiere SSL obligatorio para poolers de transacciones)
 const isSupabase = connectionString.includes('supabase.co') || connectionString.includes('supabase.com');
 
+// Inicialización de la piscina de conexiones (pg.Pool)
 const pool = new Pool({
   connectionString,
+  // Para conexiones a Supabase externas, deshabilitamos la verificación de certificado firmado por CA
+  // para permitir la comunicación segura sin necesidad de instalar certificados locales.
   ssl: isSupabase ? { rejectUnauthorized: false } : undefined,
-  max: 10, // Keep pool size small to avoid exhausting Supabase limits
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 2000,
+
+  // Matriz de Edge Cases: límites de conexiones para planes gratuitos (Supabase free-tier límite ~20-60)
+  max: 10,                          // Límite máximo de clientes en el pool local
+  idleTimeoutMillis: 30000,         // Cerrar automáticamente conexiones inactivas tras 30 segundos
+  connectionTimeoutMillis: 2000,    // Cancelar el intento si tarda más de 2 segundos (timeout rápido)
 });
 
+// Manejador de errores inesperados en conexiones inactivas (evita caídas del proceso Node)
 pool.on('error', (err) => {
   console.error('Unexpected error on idle database client', err);
 });

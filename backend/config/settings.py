@@ -3,24 +3,34 @@ import environ
 import os
 from datetime import timedelta
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
+# ==============================================================================
+# CONFIGURACIÓN DEL ENTORNO Y DIRECTORIOS BASE
+# ==============================================================================
+# BASE_DIR apunta a la raíz de la carpeta 'backend/'
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# django-environ se encarga de leer variables de entorno desde archivos .env
 env = environ.Env()
-# Look for the correct env file based on environment
+
+# Determina qué archivo .env cargar basándose en la variable de entorno ENVIRONMENT del sistema.
+# Prioridad: .env.prod (Producción) -> .env.staging (Staging) -> .env.local (Desarrollo local fallback)
 env_name = ".env.prod" if os.environ.get("ENVIRONMENT") == "production" else ".env.staging"
 env_path = os.path.join(BASE_DIR.parent, env_name)
 if not os.path.exists(env_path):
     env_path = os.path.join(BASE_DIR.parent, ".env.local")
 environ.Env.read_env(env_path)
 
-# Quick-start development settings - unsuitable for production
+# ------------------------------------------------------------------------------
+# MÁSTIL DE SEGURIDAD BÁSICA Y VARIABLES GLOBALES
+# ------------------------------------------------------------------------------
 ENVIRONMENT = env("ENVIRONMENT", default="local")
 DEBUG = env.bool("DEBUG", default=(ENVIRONMENT == "local"))
 SECRET_KEY = env("SECRET_KEY", default="django-insecure-default-key")
 
+# Hosts autorizados para procesar peticiones HTTP.
 ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["*", "localhost", "127.0.0.1", "backend"])
-# Automatically allow all customer subdomains in local, staging, and production environments
+
+# Permite dinámicamente las peticiones en subdominios para soportar la arquitectura multi-tenant:
 if ".nectarlabs.dev" not in ALLOWED_HOSTS:
     ALLOWED_HOSTS.append(".nectarlabs.dev")
 if ".staging.nectarlabs.dev" not in ALLOWED_HOSTS:
@@ -110,8 +120,12 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
-# Database
-# Use Supabase/Postgres by default if configured, fallback to sqlite
+# ==============================================================================
+# CONFIGURACIÓN DE BASE DE DATOS (POSTGRESQL / SQLITE FALLBACK)
+# ==============================================================================
+# Se conecta a PostgreSQL (usualmente Supabase o DB local en Docker) a través de
+# DATABASE_URL. Si no está presente, construye la configuración con parámetros individuales.
+# En caso extremo, realiza un fallback automático a SQLite local.
 DATABASES = {
     "default": env.db("DATABASE_URL", default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}")
 }
@@ -125,7 +139,11 @@ if not env("DATABASE_URL", default=None):
         "PORT": env("DB_PORT", default="5432"),
     }
 
-# Force using SQLite when running tests to avoid Supabase connection pooler conflicts
+# ------------------------------------------------------------------------------
+# SOBREESCRITURA PARA ENTORNOS DE PRUEBA (TESTS)
+# Previene la saturación de conexiones y conflictos con poolers en Supabase
+# forzando el uso de SQLite en memoria/disco local durante la ejecución de tests.
+# ------------------------------------------------------------------------------
 import sys
 TESTING = False
 if 'test' in sys.argv:
@@ -136,7 +154,7 @@ if 'test' in sys.argv:
             "NAME": BASE_DIR / "db.sqlite3",
         }
     }
-    # Override storage during tests to avoid Cloudinary HTTP requests
+    # Deshabilita Cloudinary en pruebas para evitar llamadas de red lentas e innecesarias
     STORAGES = {
         "default": {
             "BACKEND": "django.core.files.storage.FileSystemStorage",
@@ -231,12 +249,19 @@ EMAIL_NEWSLETTER = env("EMAIL_NEWSLETTER", default="Nectar Labs <hola@nectarlabs
 EMAIL_CONTACT = env("EMAIL_CONTACT", default="Nectar Labs <contacto@nectarlabs.dev>")
 EMAIL_BILLING = env("EMAIL_BILLING", default="Nectar Labs Facturación <facturacion@nectarlabs.dev>")
 
-# Realtime service internal HTTP endpoint (Node.js, internal network)
+# ------------------------------------------------------------------------------
+# SERVICIO DE TIEMPO REAL (REALTIME SOCKETS CONNECTOR)
+# Configura el puente interno para que Django notifique eventos al microservicio Node.js.
+# ------------------------------------------------------------------------------
 REALTIME_INTERNAL_URL = env("REALTIME_INTERNAL_URL", default="http://realtime:4001")
 REALTIME_INTERNAL_SECRET = env("REALTIME_INTERNAL_SECRET", default="nectar-internal-secret")
 
 
-# SMTP Brevo (Plan Gratuito)
+# ------------------------------------------------------------------------------
+# PROVEEDORES DE CORREO SMTP (ESTRATEGIA MULTI-GATEWAY)
+# ------------------------------------------------------------------------------
+# Gateway A: Zoho Mail (Por defecto para correos transaccionales y soporte técnico)
+# Gateway B: SMTP Brevo (Plan Gratuito) - Utilizado para campañas de email marketing iniciales
 BREVO_EMAIL_HOST = env("BREVO_EMAIL_HOST", default="smtp-relay.brevo.com")
 BREVO_EMAIL_PORT = env.int("BREVO_EMAIL_PORT", default=587)
 BREVO_EMAIL_USE_TLS = env.bool("BREVO_EMAIL_USE_TLS", default=True)
@@ -244,7 +269,7 @@ BREVO_EMAIL_HOST_USER = env("BREVO_EMAIL_HOST_USER", default="")
 BREVO_EMAIL_HOST_PASSWORD = env("BREVO_EMAIL_HOST_PASSWORD", default="")
 BREVO_DEFAULT_FROM_EMAIL = env("BREVO_DEFAULT_FROM_EMAIL", default="Nectar Labs <no-reply@nectarlabs.dev>")
 
-# SMTP Amazon SES (Plan de Pago)
+# Gateway C: SMTP Amazon SES (Plan de Pago) - Para envíos masivos y de alta fiabilidad
 SES_EMAIL_HOST = env("SES_EMAIL_HOST", default="email-smtp.us-east-1.amazonaws.com")
 SES_EMAIL_PORT = env.int("SES_EMAIL_PORT", default=587)
 SES_EMAIL_USE_TLS = env.bool("SES_EMAIL_USE_TLS", default=True)
@@ -253,17 +278,27 @@ SES_EMAIL_HOST_PASSWORD = env("SES_EMAIL_HOST_PASSWORD", default="")
 SES_DEFAULT_FROM_EMAIL = env("SES_DEFAULT_FROM_EMAIL", default="Nectar Labs <no-reply@nectarlabs.dev>")
 
 
-# Stripe
+# ------------------------------------------------------------------------------
+# INTEGRACIÓN DE PASARELA DE PAGOS (STRIPE)
+# Utilizado para el auto-aprovisionamiento de add-ons y liquidación de cuotas de contratos.
+# ------------------------------------------------------------------------------
 STRIPE_PUBLISHABLE_KEY = env("STRIPE_PUBLISHABLE_KEY", default="")
 STRIPE_SECRET_KEY = env("STRIPE_SECRET_KEY", default="")
 STRIPE_WEBHOOK_SECRET = env("STRIPE_WEBHOOK_SECRET", default="")
 
-# PAC Facturación (Facturapi)
+# ------------------------------------------------------------------------------
+# PAC FACTURACIÓN (FACTURAPI)
+# Emisión automática de comprobantes fiscales digitales por Internet (CFDI 4.0 SAT México).
+# ------------------------------------------------------------------------------
 PAC_PROVIDER = env("PAC_PROVIDER", default="mock")
 PAC_API_KEY = env("PAC_API_KEY", default=env("FACTURAPI_SECRET_KEY", default=""))
 FACTURAPI_WEBHOOK_SECRET = env("FACTURAPI_WEBHOOK_SECRET", default="")
 
-# Groq AI (Support Chat Assistant)
+# ------------------------------------------------------------------------------
+# INTELIGENCIA ARTIFICIAL (GROQ CLOUD API)
+# API Key del asistente virtual de soporte. Se comparte y consume tanto en Django
+# (para respuestas asíncronas tradicionales) como en Node.js (para streaming de WebSockets).
+# ------------------------------------------------------------------------------
 GROQ_API_KEY = env("GROQ_API_KEY", default="")
 
 
@@ -316,6 +351,10 @@ CKEDITOR_5_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Cloudflare R2 / S3 Storage Options
+# ------------------------------------------------------------------------------
+# OPCIONES DE ALMACENAMIENTO CLOUDFLARE R2 / S3
+# Utilizado para guardar archivos sensibles como firmas digitales e imágenes de contratos.
+# ------------------------------------------------------------------------------
 R2_STORAGE_OPTIONS = {
     'access_key': env('R2_ACCESS_KEY_ID', default=''),
     'secret_key': env('R2_SECRET_ACCESS_KEY', default=''),
@@ -323,7 +362,11 @@ R2_STORAGE_OPTIONS = {
     'endpoint_url': env('R2_S3_ENDPOINT_URL', default=''),
 }
 
-# Cache Configuration
+# ------------------------------------------------------------------------------
+# CONFIGURACIÓN DE SISTEMA DE CACHÉ (REDIS / MEMORIA EN TESTS)
+# Optimiza el tiempo de respuesta del dashboard cacheando consultas pesadas.
+# Las señales de Django ('signals.py') se encargan de invalidar este caché.
+# ------------------------------------------------------------------------------
 if 'test' in sys.argv:
     CACHES = {
         "default": {
@@ -340,7 +383,10 @@ else:
         }
     }
 
-# Logging configuration to display logs in console during test/run
+# ------------------------------------------------------------------------------
+# MONITOREO Y LOGS (LOGGING SYSTEM)
+# Formatea y canaliza los logs del servidor Django para visibilidad en consola.
+# ------------------------------------------------------------------------------
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
