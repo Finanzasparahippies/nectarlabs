@@ -57,13 +57,13 @@ class DriverProfileAdmin(admin.ModelAdmin):
 
 @admin.register(DeliveryOrder)
 class DeliveryOrderAdmin(admin.ModelAdmin):
-    list_display = ('id', 'tenant', 'driver', 'recipient_name', 'status', 'shipping_cost', 'created_at')
+    list_display = ('id', 'tenant', 'driver', 'recipient_name', 'status', 'created_at')
     list_filter = ('status', 'tenant')
     search_fields = ('recipient_name', 'delivery_address', 'recipient_phone')
 
 
 @admin.register(StoreConfig)
 class StoreConfigAdmin(admin.ModelAdmin):
-    list_display = ('tenant', 'business_name', 'is_delivery_active')
-    search_fields = ('tenant__name', 'business_name')
+    list_display = ('tenant', 'origin_name', 'offers_local_delivery', 'offers_national_shipping')
+    search_fields = ('tenant__name', 'origin_name')
 
