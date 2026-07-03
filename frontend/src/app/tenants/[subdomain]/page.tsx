@@ -161,6 +161,18 @@ export default function TenantPortalPage() {
   useEffect(() => {
     if (tenantConfig?.active_addons) {
       const otherAddons = tenantConfig.active_addons.filter(slug => slug !== 'bot-chat');
+      
+      // Auto-healer: Primero revisar si viene especificado por query param de la URL
+      if (typeof window !== 'undefined') {
+        const params = new URLSearchParams(window.location.search);
+        const urlAddon = params.get('addon');
+        const slugResolved = urlAddon === 'logistics-gps' ? 'delivery-tracking' : urlAddon; // resolve alias mapping
+        if (slugResolved && otherAddons.includes(slugResolved)) {
+          setActiveAddonTab(slugResolved);
+          return;
+        }
+      }
+
       if (otherAddons.length > 0) {
         if (!activeAddonTab || !otherAddons.includes(activeAddonTab)) {
           setActiveAddonTab(otherAddons[0]);
@@ -854,7 +866,7 @@ export default function TenantPortalPage() {
                 <div className="flex-1 min-h-[400px]">
                   {[
                     { slug: 'booking-signature', component: <BookingCanvas tenantId={tenantConfig.id} subdomain={subdomain} primaryColor={primaryColor} /> },
-                    { slug: 'delivery-tracking', component: <FleetMap primaryColor={primaryColor} /> },
+                    { slug: 'delivery-tracking', component: <FleetMap primaryColor={primaryColor} subdomain={subdomain} /> },
                     { slug: 'sponsorship', component: <SponsorTiers primaryColor={primaryColor} /> },
                     { slug: 'business-analytics', component: <TelemetryDashboard primaryColor={primaryColor} /> },
                     { slug: 'campaigner', component: <SubscribeForm tenantId={tenantConfig.id} subdomain={subdomain} primaryColor={primaryColor} /> },
@@ -2212,6 +2224,26 @@ function EcommerceStore({ tenantId, subdomain, primaryColor }: EcommerceStorePro
   const [state, setState] = useState('');
   const [postalCode, setPostalCode] = useState('');
   const [country, setCountry] = useState('MX');
+  const [latitude, setLatitude] = useState('19.432608');
+  const [longitude, setLongitude] = useState('-99.133209');
+  const [locatingUser, setLocatingUser] = useState(false);
+
+  const handleGetLocation = () => {
+    if (typeof window !== 'undefined' && navigator.geolocation) {
+      setLocatingUser(true);
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          setLatitude(String(pos.coords.latitude));
+          setLongitude(String(pos.coords.longitude));
+          setLocatingUser(false);
+        },
+        (err) => {
+          console.error('Error al obtener ubicación:', err);
+          setLocatingUser(false);
+        }
+      );
+    }
+  };
 
   const [fetchingRates, setFetchingRates] = useState(false);
   const [shippingRates, setShippingRates] = useState<any[]>([]);
@@ -2256,7 +2288,9 @@ function EcommerceStore({ tenantId, subdomain, primaryColor }: EcommerceStorePro
             suburb: suburb.trim(),
             city: city.trim(),
             state: state.trim(),
-            country: country.trim()
+            country: country.trim(),
+            latitude: parseFloat(latitude),
+            longitude: parseFloat(longitude)
           }
         })
       });
@@ -2300,13 +2334,15 @@ function EcommerceStore({ tenantId, subdomain, primaryColor }: EcommerceStorePro
           state: state.trim(),
           postal_code: postalCode.trim(),
           country: country.trim(),
+          latitude: parseFloat(latitude),
+          longitude: parseFloat(longitude),
           items: [
             {
               product_id: selectedProduct.id,
               quantity: 1
             }
           ],
-          skydropx_rate_id: selectedRate.rate_id,
+          skydropx_rate_id: selectedRate.rate_id || selectedRate.id,
           shipping_cost: parseFloat(selectedRate.amount),
           shipping_cost_base: parseFloat(selectedRate.amount),
           shipping_provider: selectedRate.provider
@@ -2473,6 +2509,34 @@ function EcommerceStore({ tenantId, subdomain, primaryColor }: EcommerceStorePro
                       type="text" required placeholder="CDMX" value={state} onChange={(e) => setState(e.target.value)}
                       className="w-full border border-white/10 rounded-xl px-2 py-2 text-xs focus:outline-none focus:border-nectar-gold bg-transparent text-white"
                     />
+                  </div>
+                </div>
+
+                {/* Coordenadas GPS para entregas locales / restaurantes de Nectar Delivery */}
+                <div className="grid grid-cols-3 gap-3 items-end bg-white/[0.01] border border-white/5 p-3 rounded-xl">
+                  <div className="space-y-1">
+                    <label className="text-[7px] uppercase tracking-wider font-black text-white/45">Latitud GPS</label>
+                    <input
+                      type="text" required placeholder="19.4326" value={latitude} onChange={(e) => setLatitude(e.target.value)}
+                      className="w-full border border-white/10 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-nectar-gold bg-transparent text-white font-mono"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[7px] uppercase tracking-wider font-black text-white/45">Longitud GPS</label>
+                    <input
+                      type="text" required placeholder="-99.1332" value={longitude} onChange={(e) => setLongitude(e.target.value)}
+                      className="w-full border border-white/10 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-nectar-gold bg-transparent text-white font-mono"
+                    />
+                  </div>
+                  <div>
+                    <button
+                      type="button"
+                      onClick={handleGetLocation}
+                      disabled={locatingUser}
+                      className="w-full py-2 border border-white/10 bg-white/5 hover:bg-white/10 text-white rounded-xl text-[8px] font-black uppercase tracking-wider transition-all disabled:opacity-50 h-[32px] flex items-center justify-center cursor-pointer"
+                    >
+                      {locatingUser ? 'Ubicando...' : '📍 GPS en Vivo'}
+                    </button>
                   </div>
                 </div>
 

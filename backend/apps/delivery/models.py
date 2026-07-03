@@ -11,14 +11,24 @@ class DeliveryConfig(models.Model):
         return f"Configuración Logística para {self.tenant.subdomain}"
 
 class Vehicle(models.Model):
+    class VehicleType(models.TextChoices):
+        BICYCLE = 'BICYCLE', 'Bicicleta'
+        MOTORCYCLE = 'MOTORCYCLE', 'Motocicleta'
+        CAR = 'CAR', 'Automóvil'
+
     tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, related_name='vehicles')
     name = models.CharField(max_length=200)
     plate_number = models.CharField(max_length=50, null=True, blank=True)
     driver_name = models.CharField(max_length=200, null=True, blank=True)
     is_active = models.BooleanField(default=True)
+    vehicle_type = models.CharField(
+        max_length=20, 
+        choices=VehicleType.choices, 
+        default=VehicleType.MOTORCYCLE
+    )
 
     def __str__(self):
-        return f"{self.name} ({self.plate_number or 'Sin Placas'}) - {self.tenant.subdomain}"
+        return f"{self.name} ({self.get_vehicle_type_display()}) - {self.tenant.subdomain}"
 
 class VehicleLocation(models.Model):
     vehicle = models.OneToOneField(Vehicle, on_delete=models.CASCADE, related_name='location')

@@ -137,21 +137,21 @@ const fallbackAddons: Omit<Addon, 'icon'>[] = [
   },
   {
     id: 'delivery-tracking',
-    name: 'Tienda + Envíos',
+    name: 'Tienda + Nectar Delivery',
     categoryBadge: 'LOGÍSTICA Y CONTROL',
-    description: 'Configura tus almacenes de origen, cotiza envíos en tiempo real con margen de ganancia y emite guías automáticamente.',
-    detailedDescription: 'Módulo de logística inteligente integrado. Registra las tarifas reales desde la API de Skydropx y les aplica tu margen (markup) del 15% o personalizado directamente en el checkout, automatizando la generación de etiquetas en pedidos pagados.',
+    description: 'Gestiona envíos nacionales (Skydropx) o locales (Nectar Delivery) con tu propia flota y tarifas por vehículo/distancia.',
+    detailedDescription: 'Módulo de logística inteligente integrado. Registra tarifas nacionales de Skydropx o activa Nectar Delivery para entregas locales de restaurante/delivery con tu propia flota (Bicicleta, Moto, Auto). Modelo de comisiones: El 100% de la tarifa del reparto va para el repartidor y el 100% de la venta para tu negocio; tú solo pagas una mensualidad fija a Néctar Labs sin comisiones por pedido.',
     monthlyPrice: 249,
     yearlyPrice: 2490,
     originProject: 'losplacosones',
     sourceReference: 'losplacosones/backend/apps/delivery',
     complexity: 'Muy Alta',
-    serverRequirements: 'Cuenta en Skydropx (API Key de desarrollo o producción) + Configuración de dirección de almacén.',
+    serverRequirements: 'Cuenta en Skydropx (opcional) + Flota local registrada + Configuración de dirección origen.',
     technicalDetails: [
-      'Cotización dinámica multitarifa (FedEx, DHL, Estafeta)',
-      'Margen (markup) de ganancia sobre tarifas base',
-      'Emisión automatizada de guías tras confirmación de pago',
-      'Seguimiento y URL de rastreo guardados en la orden'
+      'Entrega local dinámica en Bici, Moto y Automóvil',
+      'Cálculo de tarifas por distancia (Fórmula Haversine)',
+      'Modelo 100% libre de comisiones por reparto',
+      'Creación de paradas y seguimiento GPS en tiempo real'
     ]
   },
   {

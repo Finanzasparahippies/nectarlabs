@@ -127,6 +127,13 @@ class SupportChatViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def add_message(self, request, pk=None):
+        """
+        FALLBACK DE API REST: Agrega un mensaje a una sesión de chat activa vía HTTP POST.
+        Nota de Arquitectura: Mientras que el microservicio de Realtime (Node.js) maneja
+        la comunicación y el streaming WebSocket en producción, este endpoint sirve como
+        puente HTTP estándar. Si el chat está 'OPEN' (sin agentes humanos) y el mensaje
+        proviene del cliente, se dispara de forma síncrona la respuesta del chatbot de IA.
+        """
         chat = self.get_object()
         if chat.status == SupportChat.Status.CLOSED:
             return Response({'error': 'Chat is closed'}, status=status.HTTP_400_BAD_REQUEST)
@@ -134,23 +141,26 @@ class SupportChatViewSet(viewsets.ModelViewSet):
         serializer = SupportChatMessageSerializer(data=request.data)
         if serializer.is_valid():
             msg = serializer.save(chat=chat, sender=request.user)
-            chat.save()  # update updated_at timestamp
-
-            # === IA Auto-reply ===
-            # Only trigger if no human agent has joined yet (status == OPEN)
+            chat.save()  # Actualiza la marca de tiempo de actividad en la tabla del chat
+ 
+            # === FALLBACK AUTO-REPLY DE IA SÍNCRONO ===
+            # Solo se dispara si ningún agente humano se ha unido (estatus OPEN)
             if chat.status == SupportChat.Status.OPEN:
                 try:
                     from .ai_service import generate_ai_reply
+                    # Obtener respuesta síncrona completa desde la API de Groq
                     ai_text = generate_ai_reply(chat, msg.message)
                     if ai_text:
+                        # Guardar el mensaje del bot en la base de datos
                         ai_msg = SupportChatMessage.objects.create(
                             chat=chat,
-                            sender=request.user,   # sender field required; flag distinguishes it
+                            sender=request.user,   # Requerido por la sintaxis; se filtra por flag is_ai_message
                             message=ai_text,
                             is_ai_message=True,
                         )
                         chat.save()
-                        # Return both user message and AI reply in response
+                        
+                        # Retornar tanto el mensaje original del usuario como el del bot en un solo payload
                         ai_serializer = SupportChatMessageSerializer(ai_msg)
                         return Response({
                             'message': serializer.data,

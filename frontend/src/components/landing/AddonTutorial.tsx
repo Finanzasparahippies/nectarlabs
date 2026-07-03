@@ -38,7 +38,7 @@ interface AddonConfig {
 const addonsConfig: AddonConfig[] = [
   { id: 'bot-chat', name: 'Néctar AI Chat Bot', badge: 'COMUNICACIÓN', teaser: 'Burbuja de chat con IA y agentes en tiempo real' },
   { id: 'booking-signature', name: 'Néctar Contratos Digitales', badge: 'FIRMA DIGITAL', teaser: 'Contratos digitales con firma biométrica y PDFs' },
-  { id: 'delivery-tracking', name: 'Tienda + Envíos Skydropx', badge: 'LOGÍSTICA Y CONTROL', teaser: 'Toma pedidos, cotiza envíos y emite guías SAT' },
+  { id: 'delivery-tracking', name: 'Tienda + Nectar Delivery', badge: 'LOGÍSTICA Y CONTROL', teaser: 'Logística local sin comisiones: 100% de la entrega es del chofer' },
   { id: 'sponsorship', name: 'Néctar Sponsors & NSCAP', badge: 'MEMBRESÍAS', teaser: 'Feeds exclusivos y muros de pago de Stripe' },
   { id: 'business-analytics', name: 'Néctar Ventas y Analytics', badge: 'RENDIMIENTO', teaser: 'Métricas de ventas y APM en tiempo real' },
   { id: 'campaigner', name: 'Néctar Newsletter', badge: 'BOLETINES', teaser: 'Gestor de campañas de correo HTML masivas' },

@@ -121,19 +121,19 @@ const fallbackAddons: Omit<Addon, 'icon'>[] = [
   },
   {
     id: 'delivery-tracking',
-    name: 'Tienda + Envíos con Skydropx',
+    name: 'Tienda + Envíos con Skydropx y Nectar Delivery',
     categoryBadge: 'LOGÍSTICA Y CONTROL',
-    description: 'Configura tus almacenes de origen, cotiza envíos en tiempo real con margen de ganancia y emite guías automáticamente.',
-    detailedDescription: 'Módulo de logística inteligente integrado. Registra las tarifas reales desde la API de Skydropx y les aplica tu margen (markup) del 15% o personalizado directamente en el checkout, automatizando la generación de etiquetas en pedidos pagados.',
+    description: 'Configura entregas nacionales vía Skydropx o locales con tu propia flota (Nectar Delivery) con tarifas dinámicas por distancia y vehículo.',
+    detailedDescription: 'Módulo de logística inteligente integrado. Registra tarifas nacionales de Skydropx o activa Nectar Delivery para entregas locales inmediatas con tu propia flota (Bicicleta, Moto, Auto). Modelo comercial de Néctar Labs: El 100% del costo de reparto va al chofer/repartidor, el 100% de la venta va a tu negocio, y tú sólo pagas una mensualidad fija sin comisiones por pedido.',
     monthlyPrice: 249,
     yearlyPrice: 2490,
     complexity: 'Muy Alta',
-    serverRequirements: 'Cuenta en Skydropx (API Key de desarrollo o producción) + Configuración de dirección de almacén.',
+    serverRequirements: 'Cuenta en Skydropx (opcional) + Flota local registrada + Configuración de dirección origen.',
     technicalDetails: [
-      'Cotización dinámica multitarifa (FedEx, DHL, Estafeta)',
-      'Margen (markup) de ganancia sobre tarifas base',
-      'Emisión automatizada de guías tras confirmación de pago',
-      'Seguimiento y URL de rastreo guardados en la orden'
+      'Entrega local dinámica en Bici, Moto y Automóvil',
+      'Cálculo de tarifas por distancia (Fórmula Haversine)',
+      'Modelo 100% libre de comisiones por reparto',
+      'Creación de paradas y seguimiento GPS en tiempo real'
     ]
   },
   {

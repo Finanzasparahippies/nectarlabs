@@ -10,7 +10,7 @@ class DeliveryConfigSerializer(serializers.ModelSerializer):
 class VehicleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Vehicle
-        fields = ['id', 'tenant', 'name', 'plate_number', 'driver_name', 'is_active']
+        fields = ['id', 'tenant', 'name', 'plate_number', 'driver_name', 'is_active', 'vehicle_type']
         read_only_fields = ['id', 'tenant']
 
 class VehicleLocationSerializer(serializers.ModelSerializer):

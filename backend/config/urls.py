@@ -19,7 +19,7 @@ from rest_framework_simplejwt.views import (
 )
 
 
-from apps.shop.views import PlanViewSet, ProductViewSet, ContractViewSet, PaymentInstallmentViewSet, AddOnViewSet, PromoCodeViewSet, SalesCommissionViewSet, ShopCheckoutView, GetShippingRatesView, AddOnSubscriptionViewSet
+from apps.shop.views import PlanViewSet, ProductViewSet, ContractViewSet, PaymentInstallmentViewSet, AddOnViewSet, PromoCodeViewSet, SalesCommissionViewSet, ShopCheckoutView, GetShippingRatesView, AddOnSubscriptionViewSet, OrderStatusView
 from apps.dashboard.views import ProjectViewSet, FAQViewSet, TimeLogViewSet, ProjectQuoteViewSet, LeadViewSet, LeadAppointmentViewSet
 from apps.blog.views import PostViewSet
 from apps.tickets.views import TicketViewSet, SupportChatViewSet
@@ -129,6 +129,7 @@ urlpatterns = [
     # Checkout y Cotización de tarifas de envío Skydropx
     path('api/shop/checkout/', ShopCheckoutView.as_view(), name='shop_checkout'),
     path('api/shop/shipping-rates/', GetShippingRatesView.as_view(), name='shop_shipping_rates'),
+    path('api/shop/order-status/', OrderStatusView.as_view(), name='shop_order_status'),
     
     # endpoints de facturación del SAT México (Facturapi)
     path('api/billing/tax-profile/', TaxProfileView.as_view(), name='billing_tax_profile'),

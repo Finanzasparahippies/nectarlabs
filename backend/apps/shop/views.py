@@ -1295,7 +1295,54 @@ def stripe_webhook(request):
                             from .utils import send_order_confirmation_email
                             
                             def process_fulfillment(order_obj):
-                                generate_shipping_label(order_obj)
+                                is_local = order_obj.shipping_provider and "Nectar Delivery" in order_obj.shipping_provider
+                                if is_local:
+                                    try:
+                                        from apps.delivery.models import Vehicle, Stop
+                                        rate_id = order_obj.skydropx_rate_id
+                                        v_type = 'MOTORCYCLE'
+                                        if rate_id == 'rate_nectar_BICYCLE':
+                                            v_type = 'BICYCLE'
+                                        elif rate_id == 'rate_nectar_CAR':
+                                            v_type = 'CAR'
+                                        
+                                        # Find first active vehicle of the requested type
+                                        vehicle = Vehicle.objects.filter(tenant=order_obj.tenant, vehicle_type=v_type, is_active=True).first()
+                                        if not vehicle:
+                                            # Fallback to any active vehicle
+                                            vehicle = Vehicle.objects.filter(tenant=order_obj.tenant, is_active=True).first()
+
+                                        # Extract client coordinates from Stripe session metadata
+                                        lat_str = session.get('metadata', {}).get('latitude', '')
+                                        lon_str = session.get('metadata', {}).get('longitude', '')
+                                        lat = float(lat_str) if lat_str else 19.432608
+                                        lon = float(lon_str) if lon_str else -99.133209
+
+                                        # Create delivery stop in database
+                                        Stop.objects.create(
+                                            tenant=order_obj.tenant,
+                                            vehicle=vehicle,
+                                            name=f"Entrega: {order_obj.full_name or order_obj.user_email}",
+                                            address=f"{order_obj.street_and_number or ''}, {order_obj.suburb or ''}, {order_obj.city or ''}, {order_obj.state or ''}",
+                                            latitude=lat,
+                                            longitude=lon,
+                                            scheduled_time=timezone.now() + timedelta(hours=1), # Delivery in 1 hour
+                                            status=Stop.Status.PENDING,
+                                            order=Stop.objects.filter(tenant=order_obj.tenant, vehicle=vehicle).count() + 1 if vehicle else 1
+                                        )
+
+                                        # Update order info with local tracking details
+                                        order_obj.tracking_number = f"DELIV-{order_obj.id:05d}"
+                                        order_obj.tracking_url = f"/tenants/{order_obj.tenant.subdomain}/?addon=delivery-tracking"
+                                        order_obj.status = Order.Status.SHIPPED
+                                        order_obj.save()
+                                    except Exception as local_err:
+                                        import logging
+                                        logging.getLogger("apps").error(f"Error creating local Nectar Delivery stop in webhook: {local_err}", exc_info=True)
+                                else:
+                                    # Fallback to standard Skydropx courier label generation
+                                    generate_shipping_label(order_obj)
+                                
                                 send_order_confirmation_email(order_obj)
                                 
                             transaction.on_commit(lambda: process_fulfillment(order))
@@ -1874,6 +1921,67 @@ class GetShippingRatesView(APIView):
 
         parcel = request.data.get('parcel')
         rates = get_shipping_rates(destination, parcel=parcel, tenant=tenant)
+
+        # Si el tenant tiene activo el add-on de Nectar Delivery / GPS, ofrecer tarifas dinámicas
+        if 'delivery-tracking' in tenant.active_addons or 'logistics-gps' in tenant.active_addons:
+            from apps.delivery.models import DeliveryConfig
+            config = DeliveryConfig.objects.filter(tenant=tenant).first()
+            origin_lat = float(config.map_center_latitude) if config else 19.432608
+            origin_lon = float(config.map_center_longitude) if config else -99.133209
+
+            # Obtener coordenadas de destino del cliente
+            dest_lat = destination.get('latitude') or request.data.get('latitude')
+            dest_lon = destination.get('longitude') or request.data.get('longitude')
+
+            distance_km = 0.0
+            if dest_lat is not None and dest_lon is not None:
+                try:
+                    import math
+                    lat1, lon1 = math.radians(float(origin_lat)), math.radians(float(origin_lon))
+                    lat2, lon2 = math.radians(float(dest_lat)), math.radians(float(dest_lon))
+                    dlat = lat2 - lat1
+                    dlon = lon2 - lon1
+                    a = math.sin(dlat / 2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon / 2)**2
+                    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+                    distance_km = 6371.0 * c
+                    # Control de edge cases: distancias negativas
+                    if distance_km < 0:
+                        distance_km = 0.0
+                except Exception:
+                    distance_km = 3.0  # fallback
+            else:
+                distance_km = 3.0  # fallback if no coords are specified
+
+            # Calcular costos dinámicos de envío local por tipo de vehículo
+            # Bicicleta (Eco-friendly): Costo base $15 + $5 por km (tarifa más conveniente para promover esfuerzo)
+            bici_amount = max(15.0, 15.0 + 5.0 * distance_km)
+            # Motocicleta: Costo base $25 + $8 por km
+            moto_amount = max(25.0, 25.0 + 8.0 * distance_km)
+            # Automóvil: Costo base $40 + $12 por km
+            car_amount = max(40.0, 40.0 + 12.0 * distance_km)
+
+            rates.append({
+                "id": "rate_nectar_BICYCLE",
+                "provider": "Nectar Delivery (Bici Eco)",
+                "service_level_name": f"Entrega Ecológica en Bicicleta ({distance_km:.1f} km)",
+                "days": "Hoy (Express)",
+                "amount": str(round(bici_amount, 2))
+            })
+            rates.append({
+                "id": "rate_nectar_MOTORCYCLE",
+                "provider": "Nectar Delivery (Moto)",
+                "service_level_name": f"Entrega Rápida en Motocicleta ({distance_km:.1f} km)",
+                "days": "Hoy (Express)",
+                "amount": str(round(moto_amount, 2))
+            })
+            rates.append({
+                "id": "rate_nectar_CAR",
+                "provider": "Nectar Delivery (Auto)",
+                "service_level_name": f"Entrega Segura en Automóvil ({distance_km:.1f} km)",
+                "days": "Hoy (Express)",
+                "amount": str(round(car_amount, 2))
+            })
+
         return Response({"rates": rates}, status=status.HTTP_200_OK)
 
 
@@ -2010,6 +2118,9 @@ class ShopCheckoutView(APIView):
         success_url = f"{base_url}/shop/success?session_id={{CHECKOUT_SESSION_ID}}"
         cancel_url = f"{base_url}/shop/cart"
 
+        latitude = data.get('latitude')
+        longitude = data.get('longitude')
+
         try:
             checkout_session = stripe.checkout.Session.create(
                 payment_method_types=['card'],
@@ -2020,7 +2131,9 @@ class ShopCheckoutView(APIView):
                 customer_email=email,
                 metadata={
                     'order_id': str(order.id),
-                    'type': 'shop_purchase'
+                    'type': 'shop_purchase',
+                    'latitude': str(latitude) if latitude is not None else '',
+                    'longitude': str(longitude) if longitude is not None else ''
                 }
             )
             
@@ -2033,3 +2146,27 @@ class ShopCheckoutView(APIView):
             import logging
             logging.getLogger("apps").error(f"Error creating Stripe Session for shop checkout: {e}", exc_info=True)
             return Response({"error": "No se pudo procesar la pasarela de pago."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class OrderStatusView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request, *args, **kwargs):
+        session_id = request.query_params.get('session_id')
+        if not session_id:
+            return Response({"error": "Falta el parámetro session_id."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        from .models import Order
+        order = Order.objects.filter(stripe_session_id=session_id).first()
+        if not order:
+            return Response({"error": "Pedido no encontrado."}, status=status.HTTP_404_NOT_FOUND)
+            
+        return Response({
+            "id": order.id,
+            "status": order.status,
+            "total": str(order.total),
+            "full_name": order.full_name,
+            "shipping_provider": order.shipping_provider,
+            "tracking_number": order.tracking_number,
+            "tracking_url": order.tracking_url
+        }, status=status.HTTP_200_OK)

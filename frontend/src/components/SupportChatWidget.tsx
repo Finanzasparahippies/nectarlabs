@@ -67,7 +67,7 @@ export default function SupportChatWidget() {
       localStorage.setItem('user_email', data.email);
       localStorage.setItem('user_role', data.user_role);
       localStorage.setItem('is_staff', String(data.is_staff));
-      
+
       setToken(data.token);
       setIsStaff(data.is_staff);
 
@@ -103,7 +103,7 @@ export default function SupportChatWidget() {
       const storedToken = localStorage.getItem('token');
       const storedIsStaff = localStorage.getItem('is_staff') === 'true';
       const storedRole = localStorage.getItem('user_role') || '';
-      
+
       setToken(storedToken);
       setIsStaff(storedIsStaff || storedRole === 'ADMIN' || storedRole === 'BUSINESS');
     };
@@ -141,25 +141,34 @@ export default function SupportChatWidget() {
     checkActiveChat();
   }, [token, isStaff]);
 
-  // WebSocket Connection Logic
+  // ----------------------------------------------------------------------------
+  // INICIALIZACIÓN DE CONEXIÓN WEBSOCKET Y FLUJO DE EVENTOS
+  // Establece el socket con el servidor Realtime e implementa el mapeo de
+  // eventos de streaming de la IA token-por-token.
+  // ----------------------------------------------------------------------------
   useEffect(() => {
     if (!token || isStaff || !activeChat) return;
 
+    // Determina el protocolo adecuado para asegurar la conexión (ws:// o wss://)
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsUrl = `${protocol}//${window.location.host}/ws/?token=${encodeURIComponent(token)}`;
-    
+
     console.log('[WebSocket] Conectando a:', wsUrl);
     const ws = new WebSocket(wsUrl);
     wsRef.current = ws;
 
+    // Evento: Conexión establecida -> se suscribe a la sala de chat
     ws.onopen = () => {
       console.log('[WebSocket] Conexión abierta con éxito.');
       ws.send(JSON.stringify({ type: 'subscribe', chatId: activeChat.id }));
     };
 
+    // Evento: Recepción de datos desde el WebSocket (Realtime backend)
     ws.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
+
+        // 1. Mensaje estándar recibido (de cliente o agente humano)
         if (data.type === 'message' && data.chatId === activeChat.id) {
           const newMsg = data.message;
           setMessages((prev) => {
@@ -167,12 +176,14 @@ export default function SupportChatWidget() {
             const updated = [...prev, newMsg];
             prevMessagesCountRef.current = updated.length;
             if (!isOpen) {
-              setHasNewMessages(true);
+              setHasNewMessages(true); // Encender alerta visual si el widget está colapsado
             }
             return updated;
           });
-        } else if (data.type === 'ai_stream_start') {
-          // Add temporary streaming message
+        }
+
+        // 2. Comienzo de streaming de la IA (se inserta un mensaje temporal con ID -999)
+        else if (data.type === 'ai_stream_start') {
           setMessages((prev) => [
             ...prev,
             {
@@ -184,8 +195,10 @@ export default function SupportChatWidget() {
               is_ai_message: true,
             } as any,
           ]);
-        } else if (data.type === 'ai_stream_token') {
-          // Append token to temporary message
+        }
+
+        // 3. Recepción de tokens individuales de la IA -> se concatenan al mensaje temporal -999
+        else if (data.type === 'ai_stream_token') {
           setMessages((prev) =>
             prev.map((m) => {
               if (m.id === -999) {
@@ -194,8 +207,10 @@ export default function SupportChatWidget() {
               return m;
             })
           );
-        } else if (data.type === 'ai_stream_complete') {
-          // Replace temporary message with final message from DB
+        }
+
+        // 4. Fin de streaming de la IA -> se reemplaza el mensaje -999 con el registro guardado en DB
+        else if (data.type === 'ai_stream_complete') {
           setMessages((prev) => {
             const filtered = prev.filter((m) => m.id !== -999);
             if (filtered.some((m) => m.id === data.message.id)) return filtered;
@@ -203,9 +218,15 @@ export default function SupportChatWidget() {
             prevMessagesCountRef.current = updated.length;
             return updated;
           });
-        } else if (data.type === 'status_change') {
+        }
+
+        // 5. Cambio de estatus del chat (ej: agente tomó el chat)
+        else if (data.type === 'status_change') {
           setActiveChat((prev) => prev ? { ...prev, status: data.status } : null);
-        } else if (data.type === 'error') {
+        }
+
+        // 6. Alertas de error enviadas por el socket
+        else if (data.type === 'error') {
           showError(data.message);
         }
       } catch (err) {
@@ -213,14 +234,17 @@ export default function SupportChatWidget() {
       }
     };
 
+    // Evento: Conexión cerrada
     ws.onclose = (event) => {
       console.log('[WebSocket] Conexión cerrada.', event.code, event.reason);
     };
 
+    // Evento: Error de conexión
     ws.onerror = (err) => {
       console.error('[WebSocket] Error en conexión:', err);
     };
 
+    // Cleanup: Cierra el socket al desmontar el componente o cambiar dependencias
     return () => {
       if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
         ws.close();
@@ -330,10 +354,10 @@ export default function SupportChatWidget() {
                 {activeChat ? `Sesión #${activeChat.id} - ${activeChat.status}` : 'Ingeniería Néctar'}
               </p>
             </div>
-            
+
             <div className="flex items-center gap-3">
               {activeChat && activeChat.status !== 'CLOSED' && (
-                <button 
+                <button
                   onClick={handleCloseChat}
                   title="Cerrar sesión de chat"
                   className="text-[9px] font-black uppercase tracking-wider text-red-500 hover:bg-red-500/10 px-2.5 py-1.5 rounded-xl transition-all"
@@ -341,7 +365,7 @@ export default function SupportChatWidget() {
                   Finalizar
                 </button>
               )}
-              <button 
+              <button
                 onClick={() => setIsOpen(false)}
                 className="text-foreground/40 hover:text-foreground hover:bg-foreground/5 w-8 h-8 rounded-full flex items-center justify-center transition-all text-xl font-bold"
               >
@@ -445,18 +469,17 @@ export default function SupportChatWidget() {
                     Sesión de Chat Iniciada
                   </span>
                 </div>
-                
+
                 {messages.map((msg) => {
                   const isAI = (msg as any).is_ai_message === true;
                   const isMine = !isAI && msg.sender_email === localStorage.getItem('user_email');
                   const isAgent = msg.sender_role === 'ADMIN' || msg.sender_role === 'BUSINESS';
                   return (
                     <div key={String(msg.id)} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
-                      <div className={`max-w-[85%] rounded-3xl p-4 shadow-sm ${
-                        isMine 
-                          ? 'bg-nectar-gold text-background rounded-tr-none' 
-                          : 'bg-card-border/30 dark:bg-card-border/50 text-foreground rounded-tl-none border border-card-border'
-                      }`}>
+                      <div className={`max-w-[85%] rounded-3xl p-4 shadow-sm ${isMine
+                        ? 'bg-nectar-gold text-background rounded-tr-none'
+                        : 'bg-card-border/30 dark:bg-card-border/50 text-foreground rounded-tl-none border border-card-border'
+                        }`}>
                         {!isMine && (
                           <div className="flex items-center gap-1.5 mb-1">
                             <span className="text-[8px] font-black uppercase tracking-wider text-nectar-gold">
@@ -515,7 +538,7 @@ export default function SupportChatWidget() {
             <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
           </svg>
         )}
-        
+
         {/* Unread notification dot */}
         {hasNewMessages && !isOpen && (
           <span className="absolute top-0 right-0 w-4.5 h-4.5 bg-red-500 rounded-full border-2 border-background flex items-center justify-center text-[7px] font-black text-white">

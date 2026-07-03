@@ -5,23 +5,35 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+# ------------------------------------------------------------------------------
+# SEÑAL DE SOCIO Y PROYECTO (AUTOMATED PROVISIONING)
+# Escucha el evento post_save del modelo Contract para crear el Proyecto (MVP)
+# en el dashboard del cliente una vez que el contrato ha sido firmado por ambas partes.
+# ------------------------------------------------------------------------------
+
 @receiver(post_save, sender=Contract)
 def create_project_on_fully_signed_contract(sender, instance, created, **kwargs):
-    # Only generate the project if the contract is fully signed
+    """
+    Callback disparado después de guardar un contrato.
+    Valida si el contrato se encuentra firmado tanto por el cliente como por el desarrollador
+    (is_fully_signed = True) para provisionar el ecosistema digital del cliente.
+    """
     if instance.is_fully_signed:
         from apps.dashboard.models import Project
         
-        # Determine name of the project
+        # Determinar el nombre del proyecto de desarrollo modular
         plan_name = instance.plan.name if instance.plan else 'Ecosistema'
         project_name = f"Ecosistema {plan_name} - {instance.full_name}"
         
-        # Check if project already exists for this contract client and plan to prevent duplication
+        # Matriz de Edge Cases - Idempotencia:
+        # Busca si ya existe un proyecto asignado a este contrato/plan/usuario para evitar duplicados
+        # si se vuelve a guardar el contrato en el panel de administración.
         project, project_created = Project.objects.get_or_create(
             client=instance.user,
             plan=instance.plan,
             defaults={
                 'name': project_name,
-                'status': Project.Status.MVP,
+                'status': Project.Status.MVP,       # Estatus inicial: MVP
                 'is_active': True,
                 'progress_percentage': 0,
             }
