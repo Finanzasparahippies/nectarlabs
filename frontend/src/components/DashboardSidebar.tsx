@@ -137,8 +137,8 @@ function DashboardSidebarContent() {
     setIsMobileMenuOpen(false);
   };
 
-  // Definición de enlaces con iconos premium y micro-animaciones
-  const navLinks = [
+  // Definición de enlaces con iconos premium y micro-animaciones (let para permitir override por rol)
+  let navLinks = [
     {
       label: 'Dashboard',
       href: '/dashboard?tab=overview',

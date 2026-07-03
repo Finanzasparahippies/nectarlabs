@@ -283,8 +283,8 @@ function DashboardPageOriginal() {
   };
   const searchParams = useSearchParams();
   const tabParam = searchParams.get('tab');
-  const activeTab: 'overview' | 'business' | 'hire-plan' | 'billing-global' | 'marketing' =
-    tabParam === 'business' || tabParam === 'hire-plan' || tabParam === 'billing-global' || tabParam === 'marketing'
+  const activeTab: 'overview' | 'business' | 'hire-plan' | 'billing-global' | 'marketing' | 'driver-stats' =
+    tabParam === 'business' || tabParam === 'hire-plan' || tabParam === 'billing-global' || tabParam === 'marketing' || tabParam === 'driver-stats'
       ? tabParam
       : 'overview';
 
