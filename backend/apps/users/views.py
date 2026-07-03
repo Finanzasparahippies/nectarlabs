@@ -196,3 +196,50 @@ class UserViewSet(viewsets.ModelViewSet):
             is_superuser=False,
             tenant=tenant_to_assign
         )
+
+
+class BecomeDriverView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        user = request.user
+        
+        # Ensure 'DRIVER' is in additional_roles
+        if not isinstance(user.additional_roles, list):
+            user.additional_roles = []
+        if 'DRIVER' not in user.additional_roles:
+            user.additional_roles.append('DRIVER')
+            user.save(update_fields=['additional_roles'])
+
+        from apps.delivery.models import DriverProfile
+        driver_profile, created = DriverProfile.objects.get_or_create(
+            user=user,
+            defaults={
+                'name': user.get_full_name() or user.username,
+                'phone': user.phone or '',
+                'email': user.email,
+                'is_available': False,
+                'is_verified': False
+            }
+        )
+
+        vehicle_type = request.data.get('vehicle_type')
+        plate_number = request.data.get('plate_number')
+        license_photo = request.FILES.get('license_photo')
+        vehicle_photo = request.FILES.get('vehicle_photo')
+
+        if vehicle_type:
+            driver_profile.vehicle_type = vehicle_type
+        if plate_number:
+            driver_profile.plate_number = plate_number
+        if license_photo:
+            driver_profile.license_photo = license_photo
+        if vehicle_photo:
+            driver_profile.vehicle_photo = vehicle_photo
+
+        driver_profile.save()
+
+        return Response({
+            'success': True,
+            'message': 'Te has registrado exitosamente como conductor. Tu vehículo y documentos están pendientes de aprobación por el administrador.'
+        })

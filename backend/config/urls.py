@@ -76,7 +76,7 @@ router.register(r'billing/sales-notes', SalesNoteViewSet, basename='billing-sale
 
 from django.conf import settings
 
-from apps.users.views import RegisterView, VerifyEmailView, ConfirmEmailView
+from apps.users.views import RegisterView, VerifyEmailView, ConfirmEmailView, BecomeDriverView
 from apps.dashboard.views import BusinessStatsView
 from apps.shop.views import stripe_webhook, facturapi_webhook
 
@@ -108,6 +108,7 @@ urlpatterns = [
     
     # Registro de Usuarios
     path('api/register/', RegisterView.as_view(), name='register'),
+    path('api/users/become-driver/', BecomeDriverView.as_view(), name='become_driver'),
     
     # Estadísticas Consolidadas de Negocio para el Dashboard
     path('api/dashboard/business-stats/', BusinessStatsView.as_view(), name='business_stats'),

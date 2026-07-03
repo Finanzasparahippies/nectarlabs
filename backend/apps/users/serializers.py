@@ -139,7 +139,7 @@ class RegisterSerializer(serializers.ModelSerializer):
                 counter += 1
         
         requested_role = validated_data.get('role', User.Role.CUSTOMER)
-        if requested_role not in [User.Role.CUSTOMER, User.Role.SALES]:
+        if requested_role not in [User.Role.CUSTOMER, User.Role.SALES, User.Role.DRIVER]:
             role_to_assign = User.Role.CUSTOMER
         else:
             role_to_assign = requested_role

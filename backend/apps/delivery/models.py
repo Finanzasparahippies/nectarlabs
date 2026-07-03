@@ -131,15 +131,17 @@ class DriverProfile(models.Model):
         default=Vehicle.VehicleType.MOTORCYCLE
     )
     plate_number = models.CharField(max_length=50, null=True, blank=True)
+    license_photo = models.ImageField(upload_to='driver_licenses/', null=True, blank=True, help_text="Fotografía de la licencia de conducir.")
+    vehicle_photo = models.ImageField(upload_to='driver_vehicles/', null=True, blank=True, help_text="Fotografía del vehículo.")
 
     # Availability & location
-    is_available = models.BooleanField(default=True)
+    is_available = models.BooleanField(default=False)
     current_latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     current_longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     location_updated_at = models.DateTimeField(null=True, blank=True)
 
     max_concurrent_orders = models.PositiveSmallIntegerField(default=1)
-    is_verified = models.BooleanField(default=False)
+    is_verified = models.BooleanField(default=False, help_text="Indica si el conductor ha sido verificado y aprobado por el administrador.")
     created_at = models.DateTimeField(auto_now_add=True)
 
     objects = DriverProfileManager()
@@ -297,3 +299,23 @@ class StoreConfig(models.Model):
 
     def get_available_box_sizes_list(self):
         return [s.strip() for s in self.available_box_sizes.split(',') if s.strip()]
+
+
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
+
+@receiver(post_save, sender=User)
+def create_driver_profile_for_driver_role(sender, instance, created, **kwargs):
+    if 'DRIVER' in instance.all_roles:
+        DriverProfile.objects.get_or_create(
+            user=instance,
+            defaults={
+                'name': instance.get_full_name() or instance.username,
+                'phone': instance.phone,
+                'email': instance.email,
+                'is_available': False,
+            }
+        )

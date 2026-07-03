@@ -72,6 +72,26 @@ def seed_addons():
             ]
         },
         {
+            "slug": "driver-unlimited",
+            "name": "Módulo de Repartidor Ilimitado",
+            "category_badge": "LOGÍSTICA",
+            "description": "Herramienta especializada para operar como repartidor con entregas y rutas ilimitadas en tiempo real.",
+            "detailed_description": "Habilita la interfaz exclusiva para repartidores. Permite ponerse disponible, recibir pedidos asignados de comercios, seguir rutas dinámicas y actualizar estados de entrega.",
+            "monthly_price": 399.00,
+            "yearly_price": 3990.00,
+            "origin_project": "nectarlabs-main",
+            "source_reference": "backend/apps/delivery (DriverProfile, driver-unlimited)",
+            "complexity": AddOn.Complexity.MEDIUM,
+            "server_requirements": "Cuenta activa del repartidor para entregas locales y geolocalización.",
+            "technical_details": [
+                "Acceso al Portal de Repartidor dedicado",
+                "Switch de disponibilidad en tiempo real",
+                "Visualización de rutas y mapas de entregas",
+                "Historial de entregas y control de estado",
+                "Soporte de cobros en Stripe, Efectivo o CoDi"
+            ]
+        },
+        {
             "slug": "campaigner",
             "name": "Campaigner Masivo",
             "category_badge": "EMAIL MARKETING",

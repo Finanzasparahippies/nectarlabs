@@ -12,6 +12,7 @@ class User(AbstractUser):
         DEVELOPER = 'DEVELOPER', _('Developer')
         SALES = 'SALES', _('Salesperson')
         STAFF = 'STAFF', _('Staff')
+        DRIVER = 'DRIVER', _('Driver / Repartidor')
 
     email = models.EmailField(_('email address'), unique=True)
     role = models.CharField(
@@ -19,6 +20,7 @@ class User(AbstractUser):
         choices=Role.choices,
         default=Role.CUSTOMER
     )
+    additional_roles = models.JSONField(default=list, blank=True, help_text="Roles secundarios asignados al usuario.")
     phone = models.CharField(max_length=15, blank=True, null=True)
     tenant = models.ForeignKey(
         'tenants.Tenant', 
@@ -56,3 +58,12 @@ class User(AbstractUser):
     @property
     def is_data_analyst(self):
         return self.role in [self.Role.ADMIN, self.Role.ANALYST]
+
+    @property
+    def all_roles(self):
+        roles = [self.role]
+        if isinstance(self.additional_roles, list):
+            for r in self.additional_roles:
+                if r not in roles:
+                    roles.append(r)
+        return roles

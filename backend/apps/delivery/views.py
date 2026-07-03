@@ -257,6 +257,73 @@ class DriverProfileViewSet(viewsets.ModelViewSet):
 
         return Response(DriverProfileSerializer(driver).data)
 
+    @action(detail=True, methods=['post'], url_path='verify')
+    def verify(self, request, pk=None):
+        if not (request.user.is_staff or getattr(request.user, 'role', None) == 'ADMIN'):
+            return Response({"detail": "Permiso denegado. Solo administradores pueden verificar repartidores."}, status=status.HTTP_403_FORBIDDEN)
+        driver = self.get_object()
+        is_verified = request.data.get('is_verified', True)
+        driver.is_verified = bool(is_verified)
+        driver.save(update_fields=['is_verified'])
+        return Response({
+            'success': True,
+            'is_verified': driver.is_verified,
+            'message': 'Estado de verificación de vehículo actualizado con éxito.'
+        })
+
+    @action(detail=True, methods=['post'], url_path='toggle-availability')
+    def toggle_availability(self, request, pk=None):
+        driver = self.get_object()
+        
+        # Only the driver themselves or admins can toggle availability
+        if not (
+            request.user.is_staff
+            or getattr(request.user, 'role', None) == 'ADMIN'
+            or (driver.user == request.user)
+        ):
+            return Response({"detail": "Permiso denegado."}, status=status.HTTP_403_FORBIDDEN)
+            
+        if not driver.is_verified:
+            return Response({
+                "detail": "No puedes cambiar tu disponibilidad hasta que tu cuenta y vehículo sean verificados por un administrador."
+            }, status=status.HTTP_400_BAD_REQUEST)
+            
+        # Validate subscription
+        # Si es admin o staff, omitimos validación de suscripción para facilitar testeo local y de staging
+        is_admin = request.user.is_staff or getattr(request.user, 'role', None) == 'ADMIN'
+        if not is_admin:
+            from apps.shop.models import AddOnSubscription, Contract
+            has_sub = AddOnSubscription.objects.filter(
+                user=driver.user,
+                addon__slug='driver-unlimited',
+                status__in=['active', 'trialing'],
+                is_activated=True
+            ).exists()
+            has_contract = Contract.objects.filter(
+                user=driver.user,
+                is_active=True,
+                is_fully_signed=True,
+                addons__slug='driver-unlimited'
+            ).exists()
+            
+            if not (has_sub or has_contract):
+                return Response({
+                    "detail": "Para poder activarte como repartidor disponible, debes contratar la suscripción del Módulo de Repartidor Ilimitado ($399 MXN/mes)."
+                }, status=status.HTTP_402_PAYMENT_REQUIRED)
+
+        is_available = request.data.get('is_available')
+        if is_available is None:
+            driver.is_available = not driver.is_available
+        else:
+            driver.is_available = bool(is_available)
+            
+        driver.save(update_fields=['is_available'])
+        return Response({
+            'success': True,
+            'is_available': driver.is_available,
+            'message': f"Estado de disponibilidad cambiado a {'Disponible' if driver.is_available else 'No disponible'}."
+        })
+
 
 # ──────────────────────────────────────────────
 # Delivery Order + Driver Assignment
@@ -271,15 +338,59 @@ class DeliveryOrderViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
+        if user.is_authenticated and hasattr(user, 'driver_profile'):
+            return DeliveryOrder.objects.filter(driver=user.driver_profile).select_related('driver')
+            
         tenant = _resolve_tenant(self.request)
         if not tenant:
             return DeliveryOrder.objects.none()
         qs = DeliveryOrder.objects.filter(tenant=tenant)
-        # Filter by ecommerce_order_id if provided
         oc_id = self.request.query_params.get('ecommerce_order_id')
         if oc_id:
             qs = qs.filter(ecommerce_order_id=oc_id)
         return qs.select_related('driver')
+
+    @action(detail=False, methods=['get'], url_path='driver-orders')
+    def driver_orders(self, request):
+        user = request.user
+        try:
+            driver = user.driver_profile
+        except DriverProfile.DoesNotExist:
+            return Response({"detail": "El usuario actual no tiene un perfil de repartidor registrado."}, status=status.HTTP_400_BAD_REQUEST)
+            
+        orders = DeliveryOrder.objects.filter(driver=driver).exclude(status__in=['DELIVERED', 'FAILED', 'CANCELLED']).order_by('-id')
+        include_completed = request.query_params.get('include_completed') == 'true'
+        if include_completed:
+            orders = DeliveryOrder.objects.filter(driver=driver).order_by('-id')
+            
+        serializer = DeliveryOrderSerializer(orders, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['post'], url_path='update-status')
+    def update_status(self, request, pk=None):
+        order = self.get_object()
+        user = request.user
+        
+        is_admin = user.is_staff or getattr(user, 'role', None) == 'ADMIN'
+        if not is_admin and (not hasattr(user, 'driver_profile') or order.driver != user.driver_profile):
+            return Response({"detail": "No tienes permisos para modificar el estado de esta entrega."}, status=status.HTTP_403_FORBIDDEN)
+            
+        new_status = request.data.get('status')
+        if new_status not in [choice[0] for choice in DeliveryOrder.Status.choices]:
+            return Response({"detail": f"Estado '{new_status}' no válido."}, status=status.HTTP_400_BAD_REQUEST)
+            
+        order.status = new_status
+        order.save(update_fields=['status'])
+        
+        if new_status in [DeliveryOrder.Status.DELIVERED, DeliveryOrder.Status.FAILED, DeliveryOrder.Status.CANCELLED]:
+            driver = order.driver
+            if driver:
+                # Al terminar una orden, si tiene menos órdenes que su límite, liberarlo a disponible
+                if driver.active_order_count < driver.max_concurrent_orders:
+                    driver.is_available = True
+                    driver.save(update_fields=['is_available'])
+                
+        return Response(DeliveryOrderSerializer(order).data)
 
     def perform_create(self, serializer):
         tenant = _resolve_tenant(self.request)
