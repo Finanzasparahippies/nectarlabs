@@ -11,7 +11,7 @@ import { fetcher } from '@/lib/api';
 
 const ChatWidget = dynamic(() => import('@/components/addons/live-chat/ChatWidget'), { ssr: false });
 const BookingCanvas = dynamic(() => import('@/components/addons/booking-signature/BookingCanvas'), { ssr: false });
-const FleetMap = dynamic(() => import('@/components/addons/logistics-gps/FleetMap'), { ssr: false });
+const CombinedShopDelivery = dynamic(() => import('@/components/addons/logistics-gps/CombinedShopDelivery'), { ssr: false });
 const SponsorTiers = dynamic(() => import('@/components/addons/patreon-sponsorship/SponsorTiers'), { ssr: false });
 const TelemetryDashboard = dynamic(() => import('@/components/addons/analytics-apm/TelemetryDashboard'), { ssr: false });
 const SubscribeForm = dynamic(() => import('@/components/addons/newsletter-campaigner/SubscribeForm'), { ssr: false });
@@ -830,17 +830,20 @@ export default function TenantPortalPage() {
                 {/* Tabs Dock Container */}
                 <div className="border-b pb-5 mb-8 tenant-border">
                   <div className="flex gap-2.5 overflow-x-auto pb-2.5 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
-                    {[
-                      { slug: 'booking-signature', label: 'Reservas', icon: '📅' },
-                      { slug: 'delivery-tracking', label: 'Logística', icon: '📍' },
-                      { slug: 'sponsorship', label: 'Sponsorship', icon: '💎' },
-                      { slug: 'business-analytics', label: 'Métricas APM', icon: '📊' },
-                      { slug: 'campaigner', label: 'Boletín', icon: '✉️' },
-                      { slug: 'facturacion-cfdi', label: 'Facturación SAT', icon: '🧾' },
-                      { slug: 'ecommerce', label: 'Tienda Online', icon: '🛍️' },
-                    ]
-                      .filter(tab => activeAddonsList.includes(tab.slug))
-                      .map(tab => {
+                    {(() => {
+                      // Build tab list — merge delivery-tracking + ecommerce into one immersive tab
+                      const hasShopDelivery = activeAddonsList.includes('delivery-tracking') || activeAddonsList.includes('ecommerce');
+                      const baseTabs = [
+                        { slug: 'booking-signature', label: 'Reservas', icon: '📅' },
+                        { slug: 'shop-delivery', label: 'Tienda + Entrega', icon: '🛍️', virtual: true, show: hasShopDelivery },
+                        { slug: 'sponsorship', label: 'Sponsorship', icon: '💎' },
+                        { slug: 'business-analytics', label: 'Métricas APM', icon: '📊' },
+                        { slug: 'campaigner', label: 'Boletín', icon: '✉️' },
+                        { slug: 'facturacion-cfdi', label: 'Facturación SAT', icon: '🧾' },
+                      ];
+                      return baseTabs.filter(tab =>
+                        (tab as any).virtual ? (tab as any).show : activeAddonsList.includes(tab.slug)
+                      ).map(tab => {
                         const isActive = activeAddonTab === tab.slug;
                         return (
                           <button
@@ -858,21 +861,28 @@ export default function TenantPortalPage() {
                             {tab.label}
                           </button>
                         );
-                      })}
+                      });
+                    })()}
                   </div>
                 </div>
 
                 {/* Tab Component Render */}
                 <div className="flex-1 min-h-[400px]">
-                  {[
-                    { slug: 'booking-signature', component: <BookingCanvas tenantId={tenantConfig.id} subdomain={subdomain} primaryColor={primaryColor} /> },
-                    { slug: 'delivery-tracking', component: <FleetMap primaryColor={primaryColor} subdomain={subdomain} /> },
-                    { slug: 'sponsorship', component: <SponsorTiers primaryColor={primaryColor} /> },
-                    { slug: 'business-analytics', component: <TelemetryDashboard primaryColor={primaryColor} /> },
-                    { slug: 'campaigner', component: <SubscribeForm tenantId={tenantConfig.id} subdomain={subdomain} primaryColor={primaryColor} /> },
-                    { slug: 'facturacion-cfdi', component: <SATInvoicingForm tenantId={tenantConfig.id} subdomain={subdomain} primaryColor={primaryColor} ownerId={tenantConfig.owner} showToast={showToast} /> },
-                    { slug: 'ecommerce', component: <EcommerceStore tenantId={tenantConfig.id} subdomain={subdomain} primaryColor={primaryColor} /> },
-                  ].find(tab => tab.slug === activeAddonTab)?.component}
+                  {activeAddonTab === 'booking-signature' && <BookingCanvas tenantId={tenantConfig.id} subdomain={subdomain} primaryColor={primaryColor} />}
+                  {activeAddonTab === 'shop-delivery' && (
+                    <CombinedShopDelivery
+                      tenantConfig={tenantConfig}
+                      token={token}
+                      isDarkMode={isDarkMode}
+                      onToast={showToast}
+                    />
+                  )}
+                  {activeAddonTab === 'sponsorship' && <SponsorTiers primaryColor={primaryColor} />}
+                  {activeAddonTab === 'business-analytics' && <TelemetryDashboard primaryColor={primaryColor} />}
+                  {activeAddonTab === 'campaigner' && <SubscribeForm tenantId={tenantConfig.id} subdomain={subdomain} primaryColor={primaryColor} />}
+                  {activeAddonTab === 'facturacion-cfdi' && <SATInvoicingForm tenantId={tenantConfig.id} subdomain={subdomain} primaryColor={primaryColor} ownerId={tenantConfig.owner} showToast={showToast} />}
+                  {/* Legacy fallback */}
+                  {!['booking-signature','shop-delivery','sponsorship','business-analytics','campaigner','facturacion-cfdi'].includes(activeAddonTab || '') && null}
                 </div>
               </div>
             ) : (

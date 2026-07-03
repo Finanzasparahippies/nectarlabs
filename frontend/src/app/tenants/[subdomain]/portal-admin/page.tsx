@@ -9,6 +9,17 @@ import ConfirmModal from '@/components/ui/ConfirmModal';
 import SATAutocomplete from '@/components/ui/SATAutocomplete';
 import CreateCustomerModal from '@/components/ui/CreateCustomerModal';
 import FacturapiManager from '@/components/dashboard/FacturapiManager';
+import dynamic from 'next/dynamic';
+
+const StoreConfigTabInline = dynamic(
+  () => import('@/components/addons/logistics-gps/StoreConfigTab'),
+  { ssr: false, loading: () => <div className="flex items-center justify-center py-16"><span className="w-6 h-6 rounded-full border-4 border-t-white border-white/10 animate-spin" /></div> }
+);
+const DeliveryConfigTabInline = dynamic(
+  () => import('@/components/addons/logistics-gps/DeliveryConfigTab'),
+  { ssr: false, loading: () => <div className="flex items-center justify-center py-16"><span className="w-6 h-6 rounded-full border-4 border-t-white border-white/10 animate-spin" /></div> }
+);
+
 
 interface TenantConfig {
   id: string;
@@ -78,7 +89,7 @@ export default function TenantAdminPage() {
   const [loading, setLoading] = useState(true);
   const [authorized, setAuthorized] = useState(false);
   const [userMe, setUserMe] = useState<any | null>(null);
-  const [activeTab, setActiveTab] = useState<'metrics' | 'branding' | 'billing' | 'integrations' | 'pos'>('metrics');
+  const [activeTab, setActiveTab] = useState<'metrics' | 'branding' | 'billing' | 'integrations' | 'pos' | 'store-config' | 'delivery-config'>('metrics');
   const [billingSubTab, setBillingSubTab] = useState<'catalog' | 'history' | 'config' | 'cartera'>('catalog');
 
   // Customization Form State
@@ -2038,6 +2049,32 @@ export default function TenantAdminPage() {
               >
                 🏪 Punto de Venta (POS)
               </button>
+            )}
+            {tenantConfig?.active_addons?.some((a: string) => ['delivery-tracking', 'ecommerce'].includes(a)) && (
+              <>
+                <button
+                  onClick={() => setActiveTab('store-config')}
+                  className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border cursor-pointer"
+                  style={{
+                    backgroundColor: activeTab === 'store-config' ? `${primaryColor}15` : 'transparent',
+                    borderColor: activeTab === 'store-config' ? primaryColor : 'transparent',
+                    color: activeTab === 'store-config' ? primaryColor : 'rgba(255, 255, 255, 0.6)'
+                  }}
+                >
+                  🏪 Config. Tienda
+                </button>
+                <button
+                  onClick={() => setActiveTab('delivery-config')}
+                  className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border cursor-pointer"
+                  style={{
+                    backgroundColor: activeTab === 'delivery-config' ? `${primaryColor}15` : 'transparent',
+                    borderColor: activeTab === 'delivery-config' ? primaryColor : 'transparent',
+                    color: activeTab === 'delivery-config' ? primaryColor : 'rgba(255, 255, 255, 0.6)'
+                  }}
+                >
+                  🛵 NectarDelivery
+                </button>
+              </>
             )}
           </div>
 
@@ -6364,6 +6401,20 @@ function POSTab({ tenantConfig, primaryColor }: POSTabProps) {
             </div>
           )}
         </div>
+
+        {/* Store Config Tab */}
+        {activeTab === 'store-config' && tenantConfig && (
+          <div className="space-y-8 animate-in fade-in duration-300">
+            <StoreConfigTabInline subdomain={subdomain} primaryColor={primaryColor} onToast={showToast} />
+          </div>
+        )}
+
+        {/* Delivery Config Tab */}
+        {activeTab === 'delivery-config' && tenantConfig && (
+          <div className="space-y-8 animate-in fade-in duration-300">
+            <DeliveryConfigTabInline subdomain={subdomain} primaryColor={primaryColor} onToast={showToast} />
+          </div>
+        )}
       </div>
 
       {/* Note Detail Modal */}
