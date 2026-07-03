@@ -7,6 +7,16 @@ from apps.shop.models import Contract
 from apps.newsletter.models import Subscriber
 
 class NewsletterAddonTests(BaseTenantAddonTestCase):
+    def setUp(self):
+        super().setUp()
+        from django.utils import timezone
+        future = timezone.now() + timezone.timedelta(days=14)
+        self.tenant_a.trial_ends_at = future
+        self.tenant_a.shipping_wallet_balance = 100.00
+        self.tenant_a.save()
+        self.tenant_b.trial_ends_at = future
+        self.tenant_b.shipping_wallet_balance = 100.00
+        self.tenant_b.save()
     def test_newsletter_subscribe_permission_and_isolation(self):
         """
         Verify subscription permissions and subscriber isolation per tenant.
@@ -119,7 +129,8 @@ class NewsletterAddonTests(BaseTenantAddonTestCase):
         contract_a.addons.add(self.newsletter_addon)
         
         # Scenario A: Tenant is in trial
-        self.tenant_a.is_in_trial = True
+        from django.utils import timezone
+        self.tenant_a.trial_ends_at = timezone.now() + timezone.timedelta(days=14)
         self.tenant_a.shipping_wallet_balance = 0.00
         self.tenant_a.save()
         
@@ -135,7 +146,7 @@ class NewsletterAddonTests(BaseTenantAddonTestCase):
         self.assertEqual(self.tenant_a.newsletter_sent_today, 2)
         
         # Scenario B: Tenant is NOT in trial
-        self.tenant_a.is_in_trial = False
+        self.tenant_a.trial_ends_at = timezone.now() - timezone.timedelta(days=1)
         self.tenant_a.shipping_wallet_balance = 0.00
         self.tenant_a.save()
         
