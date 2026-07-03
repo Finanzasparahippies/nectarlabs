@@ -1760,24 +1760,29 @@ function DashboardPageOriginal() {
                               { value: 'DEPOSIT', label: 'Depósito BBVA', desc: 'Practicaja o sucursal bancaria', icon: '💵' },
                               { value: 'STRIPE', label: 'Stripe', desc: 'Pago seguro en línea con tarjeta', icon: '💳' }
                             ].map((method) => {
-                              const isSelected = chosenMethod === method.value;
+                              const isSelected = nextPendingMethod === method.value;
                               return (
                                 <button
                                   key={method.value}
                                   type="button"
-                                  onClick={() => handleUpdatePaymentMethod(activeContract.id, method.value)}
+                                  onClick={() => {
+                                    handleUpdatePaymentMethod(activeContract.id, method.value);
+                                    if (nextPending) {
+                                      setSelectedPaymentMethods(prev => ({ ...prev, [nextPending.id]: method.value }));
+                                    }
+                                  }}
                                   className={`flex flex-col items-start p-4 rounded-2xl border text-left transition-all relative cursor-pointer group hover:scale-[1.02] active:scale-95 ${
                                     isSelected 
                                       ? 'bg-nectar-gold/10 border-nectar-gold shadow-lg shadow-nectar-gold/5' 
-                                      : 'bg-background/40 border-card-border hover:border-white/20'
+                                      : 'bg-background/40 border-card-border hover:border-foreground/20'
                                   }`}
                                 >
                                   {isSelected && (
                                     <span className="absolute top-3 right-3 text-nectar-gold text-[10px]">●</span>
                                   )}
                                   <span className="text-lg mb-2">{method.icon}</span>
-                                  <span className="text-[10px] font-black uppercase tracking-wider text-white leading-tight block">{method.label}</span>
-                                  <span className="text-[8px] text-white/45 leading-relaxed mt-1 block">{method.desc}</span>
+                                  <span className="text-[10px] font-black uppercase tracking-wider text-foreground leading-tight block">{method.label}</span>
+                                  <span className="text-[8px] text-foreground/60 leading-relaxed mt-1 block">{method.desc}</span>
                                 </button>
                               );
                             })}

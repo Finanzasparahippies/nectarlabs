@@ -175,7 +175,9 @@ class Tenant(models.Model):
         if not self.stamps_last_reset or (self.stamps_last_reset.month != today.month or self.stamps_last_reset.year != today.year):
             self.stamps_used_this_month = 0
             self.stamps_last_reset = today
-            self.save(update_fields=['stamps_used_this_month', 'stamps_last_reset'])
+            if self.has_active_plan_contract or 'facturacion-cfdi' in self.active_addons:
+                self.stamp_balance = 100
+            self.save(update_fields=['stamps_used_this_month', 'stamps_last_reset', 'stamp_balance'])
 
     def has_available_stamps(self):
         self.reset_stamps_if_new_month()

@@ -501,12 +501,12 @@ def generate_installments_for_contract(contract):
     if contract.payment_day == 'WEEKLY_MONDAY':
         base_inst_amount = plan_price / 4
         days_ahead = 0 - start_date.weekday()
-        if days_ahead < 0:
+        if days_ahead <= 0:
             days_ahead += 7
-        first_monday = start_date + timedelta(days=days_ahead)
+        next_monday = start_date + timedelta(days=days_ahead)
         
         for i in range(1, 25):
-            due_date = first_monday + timedelta(weeks=i - 1)
+            due_date = start_date if i == 1 else (next_monday + timedelta(weeks=i - 2))
             is_promo = (i == 1 and promo is not None)
             discount = promo.discount_percentage if is_promo else plan_discount
             promo_obj = promo if is_promo else None
@@ -529,16 +529,16 @@ def generate_installments_for_contract(contract):
             )
     elif contract.payment_day == 'FORTNIGHTLY_1ST_15TH':
         base_inst_amount = plan_price / 2
-        due_dates = []
+        due_dates = [start_date]
         candidate_m = start_date.month
         candidate_y = start_date.year
         
         while len(due_dates) < 12:
             d1 = date(candidate_y, candidate_m, 1)
             d15 = date(candidate_y, candidate_m, 15)
-            if d1 >= start_date:
+            if d1 > start_date and d1 not in due_dates:
                 due_dates.append(d1)
-            if len(due_dates) < 12 and d15 >= start_date:
+            if len(due_dates) < 12 and d15 > start_date and d15 not in due_dates:
                 due_dates.append(d15)
             
             candidate_m += 1
@@ -570,15 +570,15 @@ def generate_installments_for_contract(contract):
     else:
         # Monthly
         base_inst_amount = plan_price
-        due_dates = []
-        candidate_m = start_date.month
+        due_dates = [start_date]
+        candidate_m = start_date.month + 1
         candidate_y = start_date.year
+        if candidate_m > 12:
+            candidate_m = 1
+            candidate_y += 1
         
         while len(due_dates) < 6:
-            d1 = date(candidate_y, candidate_m, 1)
-            if d1 >= start_date:
-                due_dates.append(d1)
-            
+            due_dates.append(date(candidate_y, candidate_m, 1))
             candidate_m += 1
             if candidate_m > 12:
                 candidate_m = 1
@@ -611,12 +611,12 @@ def generate_installments_for_contract(contract):
         if contract.brand_design_tier == 'WEEKLY':
             design_amount = 500
             days_ahead = 0 - start_date.weekday()
-            if days_ahead < 0:
+            if days_ahead <= 0:
                 days_ahead += 7
-            first_monday = start_date + timedelta(days=days_ahead)
+            next_monday = start_date + timedelta(days=days_ahead)
             
             for i in range(1, 25):
-                due_date = first_monday + timedelta(weeks=i - 1)
+                due_date = start_date if i == 1 else (next_monday + timedelta(weeks=i - 2))
                 installments_to_create.append(
                     PaymentInstallment(
                         contract=contract,
@@ -631,16 +631,16 @@ def generate_installments_for_contract(contract):
                 )
         elif contract.brand_design_tier == 'BIWEEKLY':
             design_amount = 900
-            due_dates = []
+            due_dates = [start_date]
             candidate_m = start_date.month
             candidate_y = start_date.year
             
             while len(due_dates) < 12:
                 d1 = date(candidate_y, candidate_m, 1)
                 d15 = date(candidate_y, candidate_m, 15)
-                if d1 >= start_date:
+                if d1 > start_date and d1 not in due_dates:
                     due_dates.append(d1)
-                if len(due_dates) < 12 and d15 >= start_date:
+                if len(due_dates) < 12 and d15 > start_date and d15 not in due_dates:
                     due_dates.append(d15)
                 
                 candidate_m += 1
@@ -663,15 +663,15 @@ def generate_installments_for_contract(contract):
                 )
         elif contract.brand_design_tier == 'MONTHLY':
             design_amount = 1600
-            due_dates = []
-            candidate_m = start_date.month
+            due_dates = [start_date]
+            candidate_m = start_date.month + 1
             candidate_y = start_date.year
+            if candidate_m > 12:
+                candidate_m = 1
+                candidate_y += 1
             
             while len(due_dates) < 6:
-                d1 = date(candidate_y, candidate_m, 1)
-                if d1 >= start_date:
-                    due_dates.append(d1)
-                
+                due_dates.append(date(candidate_y, candidate_m, 1))
                 candidate_m += 1
                 if candidate_m > 12:
                     candidate_m = 1

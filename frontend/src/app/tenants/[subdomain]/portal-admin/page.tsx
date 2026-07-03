@@ -1785,11 +1785,13 @@ export default function TenantAdminPage() {
   }
 
   const activeAddonsList = tenantConfig.active_addons || [];
+  const uniqueActiveAddons = activeAddonsList.filter((slug: string) => !['live-chat', 'logistics-gps', 'patreon-sponsorship', 'analytics-apm', 'newsletter-campaigner', 'mexico-invoicing'].includes(slug));
   const primaryColor = tenantConfig.theme_color || '#C68A1E';
 
   const TrialBanner = () => {
     const trialStatus = getTrialStatus();
     if (!tenantConfig) return null;
+    if (tenantConfig.has_active_plan_contract) return null;
 
     if (trialStatus === 'NOT_STARTED') {
       return (
@@ -2036,7 +2038,7 @@ export default function TenantAdminPage() {
               </div>
               <div className="px-4 py-2 bg-foreground/5 rounded-2xl border border-white/5 flex flex-col items-center shrink-0">
                 <span className="text-[7px] uppercase font-black tracking-widest text-white/40">Add-ons Contratados</span>
-                <span className="text-xl font-black text-nectar-gold mt-1">{activeAddonsList.length} / 9</span>
+                <span className="text-xl font-black text-nectar-gold mt-1">{uniqueActiveAddons.length} / 9</span>
               </div>
             </div>
 

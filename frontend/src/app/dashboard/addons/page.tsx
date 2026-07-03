@@ -825,7 +825,7 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
                 className="bg-card-bg border border-card-border p-6 rounded-[2rem] flex flex-col justify-between min-h-[300px] relative overflow-hidden backdrop-blur-md hover:scale-[1.02] transition-all duration-300 group"
               >
                 {/* Subtle Background Glow */}
-                <div className="absolute -top-24 -right-24 w-40 h-40 bg-white/[0.02] blur-[40px] rounded-full group-hover:bg-white/[0.04] transition-all duration-500 pointer-events-none"></div>
+                <div className="absolute -top-24 -right-24 w-40 h-40 bg-foreground/[0.02] blur-[40px] rounded-full group-hover:bg-foreground/[0.04] transition-all duration-500 pointer-events-none"></div>
 
                 <div className="space-y-4">
                   {/* Category Badge & Icon */}
@@ -845,28 +845,28 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
 
                   {/* Title & Description */}
                   <div>
-                    <h3 className="text-sm font-black uppercase text-white tracking-wide mt-2">{addon.name}</h3>
-                    <p className="text-[10px] text-white/50 leading-relaxed mt-2 line-clamp-4">{addon.description}</p>
+                    <h3 className="text-sm font-black uppercase text-foreground tracking-wide mt-2">{addon.name}</h3>
+                    <p className="text-[10px] text-foreground/60 leading-relaxed mt-2 line-clamp-4">{addon.description}</p>
                   </div>
                 </div>
 
                 {/* Pricing & Call to Action */}
-                <div className="border-t border-white/5 pt-4 mt-6">
+                <div className="border-t border-card-border pt-4 mt-6">
                   <div className="flex justify-between items-center mb-4">
                     <div>
                       {hasPlanContract ? (
                         <div>
-                          <span className="text-[7.5px] uppercase font-black text-white/35 block">Esquema Comercial</span>
+                          <span className="text-[7.5px] uppercase font-black text-foreground/40 block">Esquema Comercial</span>
                           <span className="text-base font-black text-[#C68A1E] font-mono">
                             Gratuito
                           </span>
-                          <p className="text-[7px] text-white/30 uppercase tracking-widest mt-0.5">
+                          <p className="text-[7px] text-foreground/35 uppercase tracking-widest mt-0.5">
                             Incluido en tu Plan
                           </p>
                         </div>
                       ) : (
                         <div>
-                          <span className="text-[7.5px] uppercase font-black text-white/35 block">
+                          <span className="text-[7.5px] uppercase font-black text-foreground/40 block">
                             Precio {billingCycle === 'monthly' ? 'mensual' : 'anual'}
                           </span>
                           <span className="text-base font-black text-[#C68A1E] font-mono">
@@ -874,7 +874,7 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
                           </span>
                           {billingCycle === 'yearly' && savings > 0 && (
                             <p className="text-[7px] text-emerald-400 font-bold uppercase tracking-wider mt-0.5">
-                              Ahorro de ${savings.toLocaleString('es-MX')} MXN
+                              Ahorro de ${(savings || 0).toLocaleString('es-MX')} MXN
                             </p>
                           )}
                         </div>
@@ -883,8 +883,8 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
                     
                     <span className={`text-[7px] font-black uppercase tracking-wider px-2 py-0.5 rounded border ${addon.complexity === 'Muy Alta' ? 'text-red-400 bg-red-400/5 border-red-400/20' :
                       addon.complexity === 'Alta' ? 'text-orange-400 bg-orange-400/5 border-orange-400/20' :
-                        addon.complexity === 'Media' ? 'text-yellow-400 bg-yellow-400/5 border-yellow-400/20' :
-                          'text-emerald-400 bg-emerald-400/5 border-emerald-400/20'
+                      addon.complexity === 'Media' ? 'text-yellow-400 bg-yellow-400/5 border-yellow-400/20' :
+                      'text-emerald-400 bg-emerald-400/5 border-emerald-400/20'
                       }`}>
                       {addon.complexity}
                     </span>
@@ -894,7 +894,7 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
                     <button
                       type="button"
                       onClick={() => setSelectedAddon(addon)}
-                      className="px-4 py-2 bg-white/5 border border-white/10 hover:bg-white/10 text-white text-[8px] font-black uppercase tracking-widest rounded-lg hover:scale-105 active:scale-95 transition-all cursor-pointer text-center"
+                      className="px-4 py-2 bg-foreground/[0.04] border border-card-border hover:bg-foreground/[0.08] text-foreground text-[8px] font-black uppercase tracking-widest rounded-lg hover:scale-105 active:scale-95 transition-all cursor-pointer text-center"
                     >
                       Ficha
                     </button>

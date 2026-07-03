@@ -307,7 +307,7 @@ function DashboardSidebarContent() {
     {
       label: isStaff ? 'Proyectos Activos' : 'Mis Proyectos',
       href: '/projects',
-      show: true,
+      show: isStaff,
       active: pathname.startsWith('/projects'),
       icon: (active: boolean) => (
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={`w-4 h-4 transition-all duration-300 group-hover:scale-110 ${active ? 'text-nectar-gold' : 'text-foreground/45 group-hover:text-foreground'}`}>
@@ -629,7 +629,7 @@ function DashboardSidebarContent() {
 
         <div className="space-y-4 pt-6 border-t border-card-border/60">
           {currentUser && (
-            <div className="p-4 rounded-3xl bg-foreground/[0.02] border border-white/5 flex items-center gap-3.5 w-full hover:bg-foreground/[0.04] transition-all duration-300 relative overflow-hidden group">
+            <div className="p-4 rounded-3xl bg-foreground/[0.02] border border-card-border/40 flex items-center gap-3.5 w-full hover:bg-foreground/[0.04] transition-all duration-300 relative overflow-hidden group">
               <div className="absolute -right-8 -bottom-8 w-16 h-16 bg-nectar-gold/5 blur-xl rounded-full pointer-events-none"></div>
               
               <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-nectar-gold to-yellow-600/30 flex items-center justify-center border border-nectar-gold/20 relative shrink-0 shadow-lg shadow-nectar-gold/5">
@@ -640,10 +640,10 @@ function DashboardSidebarContent() {
               </div>
 
               <div className="flex-1 min-w-0 text-left">
-                <span className="block font-black text-[10px] text-white uppercase tracking-wider truncate">
+                <span className="block font-black text-[10px] text-foreground uppercase tracking-wider truncate">
                   {currentUser.username || 'Usuario'}
                 </span>
-                <span className="block text-[8px] text-white/40 truncate font-mono mt-0.5">
+                <span className="block text-[8px] text-foreground/45 truncate font-mono mt-0.5">
                   {currentUser.email}
                 </span>
                 <span className="inline-block px-2 py-0.5 bg-nectar-gold/10 text-nectar-gold border border-nectar-gold/20 text-[6.5px] font-black rounded-full uppercase tracking-wider mt-1.5 font-bold">
@@ -721,7 +721,7 @@ function DashboardSidebarContent() {
                   </div>
                 </div>
               ) : (
-                <div className="p-4 rounded-3xl bg-foreground/[0.02] border border-white/5 flex items-center gap-3.5 w-full hover:bg-foreground/[0.04] transition-all duration-300 relative overflow-hidden group">
+                <div className="p-4 rounded-3xl bg-foreground/[0.02] border border-card-border/40 flex items-center gap-3.5 w-full hover:bg-foreground/[0.04] transition-all duration-300 relative overflow-hidden group">
                   <div className="absolute -right-8 -bottom-8 w-16 h-16 bg-nectar-gold/5 blur-xl rounded-full pointer-events-none group-hover:bg-nectar-gold/10 transition-all duration-500"></div>
                   
                   <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-nectar-gold to-yellow-600/30 flex items-center justify-center border border-nectar-gold/20 relative shrink-0 shadow-lg shadow-nectar-gold/5">
@@ -732,10 +732,10 @@ function DashboardSidebarContent() {
                   </div>
 
                   <div className="flex-1 min-w-0 text-left">
-                    <span className="block font-black text-[10px] text-white uppercase tracking-wider truncate">
+                    <span className="block font-black text-[10px] text-foreground uppercase tracking-wider truncate">
                       {currentUser.username || 'Usuario'}
                     </span>
-                    <span className="block text-[8px] text-white/40 truncate font-mono mt-0.5">
+                    <span className="block text-[8px] text-foreground/45 truncate font-mono mt-0.5">
                       {currentUser.email}
                     </span>
                     <span className="inline-block px-2 py-0.5 bg-nectar-gold/10 text-nectar-gold border border-nectar-gold/20 text-[6.5px] font-black rounded-full uppercase tracking-wider mt-1.5 font-bold">

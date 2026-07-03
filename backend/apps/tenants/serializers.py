@@ -115,6 +115,7 @@ class TenantSerializer(serializers.ModelSerializer):
         return value
 
     def to_representation(self, instance):
+        instance.reset_stamps_if_new_month()
         ret = super().to_representation(instance)
         if instance.logo:
             request = self.context.get('request')

@@ -288,6 +288,10 @@ class AddOnViewSet(viewsets.ModelViewSet):
                 if not tenant.is_active:
                     tenant.is_active = True
                     tenant.save()
+            
+            if tenant and (addon.slug == 'facturacion-cfdi' or addon.slug == 'mexico-invoicing'):
+                tenant.stamp_balance = max(tenant.stamp_balance, 100)
+                tenant.save(update_fields=['stamp_balance'])
                     
             return Response({
                 'status': 'success',
@@ -461,6 +465,9 @@ class ContractViewSet(viewsets.ModelViewSet):
                     'is_activated': True
                 }
             )
+            if addon.slug == 'facturacion-cfdi' or addon.slug == 'mexico-invoicing':
+                tenant.stamp_balance = max(tenant.stamp_balance, 100)
+                tenant.save(update_fields=['stamp_balance'])
         else:
             contract.addons.remove(addon)
             AddOnSubscription.objects.filter(user=user, addon=addon).update(is_activated=False)
@@ -573,6 +580,17 @@ class ContractViewSet(viewsets.ModelViewSet):
         except Exception as tenant_err:
             import logging
             logging.error(f"Error creating tenant automatically: {tenant_err}", exc_info=True)
+
+        # Initialize stamp balance to 100 for plan contracts
+        try:
+            from apps.tenants.models import Tenant
+            tenant = Tenant.objects.filter(owner=contract.user).first()
+            if tenant and contract.plan:
+                tenant.stamp_balance = max(tenant.stamp_balance, 100)
+                tenant.save(update_fields=['stamp_balance'])
+        except Exception as stamp_err:
+            import logging
+            logging.error(f"Error initializing stamp balance for contract owner: {stamp_err}", exc_info=True)
 
         # --- AUTO-CREATE PROJECT ---
         try:
