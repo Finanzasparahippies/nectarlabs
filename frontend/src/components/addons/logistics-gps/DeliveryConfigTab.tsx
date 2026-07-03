@@ -114,6 +114,18 @@ export default function DeliveryConfigTab({ subdomain, primaryColor, onToast }: 
     }
   };
 
+  const handleVerifyDriver = async (driverId: number) => {
+    try {
+      await fetcher(`/delivery/drivers/${driverId}/verify/`, {
+        method: 'POST',
+      });
+      setDrivers(prev => prev.map(d => d.id === driverId ? { ...d, is_verified: true } : d));
+      onToast('Repartidor autorizado con éxito', 'success');
+    } catch (err: any) {
+      onToast(err.message || 'Error al verificar repartidor', 'error');
+    }
+  };
+
   const toggleDriverAvailable = async (driver: Driver) => {
     try {
       await fetcher(`/delivery/drivers/${driver.id}/`, {
@@ -297,8 +309,16 @@ export default function DeliveryConfigTab({ subdomain, primaryColor, onToast }: 
                   )}
                 </div>
                 <div className="flex items-center gap-3 shrink-0">
-                  {driver.is_verified && (
+                  {driver.is_verified ? (
                     <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-green-500/10 text-green-400 border border-green-500/20 font-black">✓ Verificado</span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => handleVerifyDriver(driver.id)}
+                      className="px-3 py-1.5 bg-green-600 hover:bg-green-500 text-white text-[9px] font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-md"
+                    >
+                      ✓ Autorizar
+                    </button>
                   )}
                   <div
                     onClick={() => toggleDriverAvailable(driver)}
@@ -307,7 +327,7 @@ export default function DeliveryConfigTab({ subdomain, primaryColor, onToast }: 
                     title={driver.is_available ? 'Disponible — click para marcar ocupado' : 'Ocupado — click para liberar'}
                   >
                     <span
-                      className="absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-all duration-300"
+                      className="absolute top-1.5 w-3.5 h-3.5 rounded-full bg-white shadow transition-all duration-300"
                       style={{ left: driver.is_available ? '22px' : '2px' }}
                     />
                   </div>
