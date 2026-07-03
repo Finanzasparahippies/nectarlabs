@@ -15,6 +15,10 @@ import ConfirmModal from '../../components/ui/ConfirmModal';
 import ContactSupportModal from '../../components/dashboard/ContactSupportModal';
 import FacturapiManager from '../../components/dashboard/FacturapiManager';
 import MarketingManager from '../../components/dashboard/MarketingManager';
+import dynamic from 'next/dynamic';
+
+const DriverPortal = dynamic(() => import('../../components/addons/logistics-gps/DriverPortal'), { ssr: false });
+const DriverStatsDashboard = dynamic(() => import('../../components/addons/logistics-gps/DriverStatsDashboard'), { ssr: false });
 
 interface Project {
   id: number;
@@ -313,7 +317,8 @@ function DashboardPageOriginal() {
   const isDeveloper = userRole === 'DEVELOPER';
   const isDesigner = userRole === 'DESIGNER';
   const isSales = userRole === 'SALES';
-  const isClient = !isCEO && !isDeveloper && !isDesigner && !isSales;
+  const isDriver = userRole === 'DRIVER' || currentUser?.role === 'DRIVER' || currentUser?.additional_roles?.includes('DRIVER');
+  const isClient = !isCEO && !isDeveloper && !isDesigner && !isSales && !isDriver;
 
   // Active contracts and contract at component scope for reference in handlers
   const activeContracts = contracts.filter(c => c.is_fully_signed);
@@ -817,14 +822,16 @@ function DashboardPageOriginal() {
       <main className="flex-1 p-8 md:p-12 lg:p-16 overflow-y-auto">
         <header className="mb-16">
           <h1 className="text-4xl md:text-6xl font-black tracking-tighter mb-2">
-            {isCEO ? (activeTab === 'business' ? 'Control de Negocio' : 'Consola del CEO') :
+            {isDriver ? (activeTab === 'driver-stats' ? 'Resumen de Entregas' : 'Panel de Repartidor') :
+              isCEO ? (activeTab === 'business' ? 'Control de Negocio' : 'Consola del CEO') :
               isDeveloper ? 'Consola de Ingeniería' :
                 isDesigner ? 'Centro de Diseño' :
                   isSales ? 'Consola de Ventas' :
                     activeTab === 'hire-plan' ? 'Escala tu Ecosistema' : 'Centro de Control'}
           </h1>
           <p className="text-[10px] font-black uppercase tracking-[0.5em] text-nectar-gold opacity-80">
-            {isCEO ? (activeTab === 'business' ? 'Consola Financiera y de Infraestructura' : 'Panel de Operaciones Néctar Labs') :
+            {isDriver ? (activeTab === 'driver-stats' ? 'Ganancias, Historial de Viajes e Indicadores' : 'Consola de Entregas y GPS en Vivo') :
+              isCEO ? (activeTab === 'business' ? 'Consola Financiera y de Infraestructura' : 'Panel de Operaciones Néctar Labs') :
               isDeveloper ? 'Workspace de Desarrollo y Soporte' :
                 isDesigner ? 'Activos y Proyectos Creativos' :
                   isSales ? 'Comisiones, Referidos y Métricas de Rendimiento' :
@@ -832,7 +839,15 @@ function DashboardPageOriginal() {
           </p>
         </header>
 
-        {isSales ? (
+        {isDriver ? (
+          <div className="space-y-12 animate-fadeIn">
+            {activeTab === 'driver-stats' ? (
+              <DriverStatsDashboard />
+            ) : (
+              <DriverPortal />
+            )}
+          </div>
+        ) : isSales ? (
           <div className="space-y-12 animate-fadeIn">
             {/* Warning Banner for Unapproved Sellers */}
             {currentUser && !currentUser.is_approved_seller && (

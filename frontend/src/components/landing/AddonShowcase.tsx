@@ -333,16 +333,16 @@ export default function AddonShowcase() {
 
                 {/* Title & Description */}
                 <div>
-                  <h3 className="text-sm font-black uppercase text-white tracking-wide mt-2">{addon.name}</h3>
-                  <p className="text-[10px] text-white/50 leading-relaxed mt-2 line-clamp-4">{addon.description}</p>
+                  <h3 className="text-sm font-black uppercase text-nectar-forest dark:text-white tracking-wide mt-2">{addon.name}</h3>
+                  <p className="text-[10px] text-nectar-forest/70 dark:text-white/50 leading-relaxed mt-2 line-clamp-4">{addon.description}</p>
                 </div>
               </div>
 
               {/* Pricing & Call to Action */}
-              <div className="border-t border-white/5 pt-4 mt-6">
+              <div className="border-t border-card-border pt-4 mt-6">
                 <div className="flex justify-between items-center mb-4">
                   <div>
-                    <span className="text-[7.5px] uppercase font-black text-white/35 block">
+                    <span className="text-[7.5px] uppercase font-black text-nectar-forest/50 dark:text-white/35 block">
                       Precio {billingCycle === 'monthly' ? 'mensual' : 'anual'}
                     </span>
                     <span className="text-base font-black text-[#C68A1E] font-mono">
@@ -367,7 +367,7 @@ export default function AddonShowcase() {
                 <div className="grid grid-cols-2 gap-3">
                   <button
                     onClick={() => setSelectedAddon(addon)}
-                    className="px-4 py-2 bg-white/5 border border-white/10 hover:bg-white/10 text-white text-[8px] font-black uppercase tracking-widest rounded-lg hover:scale-105 active:scale-95 transition-all cursor-pointer text-center"
+                    className="px-4 py-2 bg-foreground/5 border border-foreground/10 hover:bg-foreground/10 text-foreground text-[8px] font-black uppercase tracking-widest rounded-lg hover:scale-105 active:scale-95 transition-all cursor-pointer text-center"
                   >
                     Ficha
                   </button>

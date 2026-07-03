@@ -357,7 +357,65 @@ function DashboardSidebarContent() {
     }
   ];
 
+  const isDriver = currentUser?.role === 'DRIVER' || currentUser?.additional_roles?.includes('DRIVER');
+
+  if (isDriver) {
+    navLinks = [
+      {
+        label: 'Panel Repartidor',
+        href: '/dashboard?tab=driver-console',
+        show: true,
+        active: activeTab === 'driver-console',
+        icon: (active: boolean) => (
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={`w-4 h-4 transition-all duration-300 group-hover:scale-110 ${active ? 'text-nectar-gold' : 'text-foreground/45 group-hover:text-foreground'}`}>
+            <rect x="1" y="3" width="15" height="13" rx="2" ry="2"></rect>
+            <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
+            <circle cx="5.5" cy="18.5" r="2.5"></circle>
+            <circle cx="18.5" cy="18.5" r="2.5"></circle>
+          </svg>
+        )
+      },
+      {
+        label: 'Resumen Entregas',
+        href: '/dashboard?tab=driver-stats',
+        show: true,
+        active: activeTab === 'driver-stats',
+        icon: (active: boolean) => (
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={`w-4 h-4 transition-all duration-300 group-hover:scale-110 ${active ? 'text-nectar-gold' : 'text-foreground/45 group-hover:text-foreground'}`}>
+            <line x1="18" y1="20" x2="18" y2="10"></line>
+            <line x1="12" y1="20" x2="12" y2="4"></line>
+            <line x1="6" y1="20" x2="6" y2="14"></line>
+          </svg>
+        )
+      },
+      {
+        label: 'Perfil',
+        href: '/dashboard/profile',
+        show: true,
+        active: pathname === '/dashboard/profile',
+        icon: (active: boolean) => (
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={`w-4 h-4 transition-all duration-300 group-hover:scale-110 ${active ? 'text-nectar-gold' : 'text-foreground/45 group-hover:text-foreground'}`}>
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+        )
+      },
+      {
+        label: 'Soporte',
+        href: '/tickets',
+        show: true,
+        active: pathname.startsWith('/tickets'),
+        icon: (active: boolean) => (
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={`w-4 h-4 transition-all duration-300 group-hover:scale-110 ${active ? 'text-nectar-gold' : 'text-foreground/45 group-hover:text-foreground'}`}>
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+          </svg>
+        )
+      }
+    ];
+  }
+
   const renderTenantAccordion = () => {
+    if (isDriver) return null;
     const activeTenants = tenants.filter(t => t.is_active);
     if (activeTenants.length === 0) return null;
 

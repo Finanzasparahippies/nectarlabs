@@ -124,6 +124,12 @@ export default function InteractiveTutorial({
     };
   }, [isVisible, currentStepIdx, steps]);
 
+  const handleBack = () => {
+    if (currentStepIdx > 0) {
+      setCurrentStepIdx(prev => prev - 1);
+    }
+  };
+
   const handleNext = () => {
     if (currentStepIdx < steps.length - 1) {
       setCurrentStepIdx(prev => prev + 1);
@@ -158,10 +164,10 @@ export default function InteractiveTutorial({
       {/* Interactive Tooltip Card */}
       <div 
         style={tooltipStyle} 
-        className="bg-card-bg border border-card-border rounded-[2rem] p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-300"
+        className="bg-[#0b0e0c] border border-[#C68A1E]/40 rounded-[2rem] p-6 shadow-[0_10px_50px_rgba(0,0,0,0.8)] animate-in fade-in zoom-in-95 duration-300"
       >
         <div className="flex items-center justify-between mb-3 border-b border-card-border/40 pb-2.5">
-          <span className="text-[10px] font-black uppercase tracking-widest text-nectar-gold">
+          <span className="text-[10px] font-black uppercase tracking-widest text-[#C68A1E]">
             Guía Interactiva ({currentStepIdx + 1}/{steps.length})
           </span>
           <button 
@@ -184,17 +190,29 @@ export default function InteractiveTutorial({
             {steps.map((_, idx) => (
               <div 
                 key={idx} 
-                className={`w-1.5 h-1.5 rounded-full transition-all ${idx === currentStepIdx ? 'bg-nectar-gold w-3' : 'bg-white/20'}`}
+                className={`w-1.5 h-1.5 rounded-full transition-all ${idx === currentStepIdx ? 'bg-[#C68A1E] w-3' : 'bg-white/20'}`}
               />
             ))}
           </div>
 
-          <button
-            onClick={handleNext}
-            className="px-4 py-2 bg-nectar-gold text-background text-[9px] font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 transition-all cursor-pointer"
-          >
-            {currentStepIdx === steps.length - 1 ? 'Terminar' : 'Siguiente'}
-          </button>
+          <div className="flex items-center space-x-2">
+            {currentStepIdx > 0 && (
+              <button
+                type="button"
+                onClick={handleBack}
+                className="px-3 py-2 bg-white/5 hover:bg-white/10 text-white text-[9px] font-black uppercase tracking-widest rounded-xl transition-all cursor-pointer border border-white/10"
+              >
+                Anterior
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={handleNext}
+              className="px-4 py-2 bg-[#C68A1E] text-black text-[9px] font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 transition-all cursor-pointer"
+            >
+              {currentStepIdx === steps.length - 1 ? 'Terminar' : 'Siguiente'}
+            </button>
+          </div>
         </div>
       </div>
     </>
