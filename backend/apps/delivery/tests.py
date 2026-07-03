@@ -62,3 +62,175 @@ class DeliveryAddonTests(BaseTenantAddonTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
         logger.info("Test passed: Delivery fleet and GPS operations completed successfully.")
+
+    def test_driver_profile_nearest_available(self):
+        """
+        Verify DriverProfileManager.nearest_available correctly sorts and filters by distance.
+        """
+        logger.info("Executing test_driver_profile_nearest_available...")
+        from .models import DriverProfile
+
+        # Point of origin (lat, lon) = CDMX center: 19.4326, -99.1332
+        origin_lat = 19.4326
+        origin_lon = -99.1332
+
+        # 1. Driver close (approx 5km)
+        d_close = DriverProfile.objects.create(
+            name="Repartidor Cercano",
+            is_available=True,
+            current_latitude=19.4500,
+            current_longitude=-99.1000
+        )
+        # 2. Driver far (approx 50km)
+        d_far = DriverProfile.objects.create(
+            name="Repartidor Lejano",
+            is_available=True,
+            current_latitude=19.8000,
+            current_longitude=-99.2000
+        )
+        # 3. Driver close but unavailable
+        d_unavailable = DriverProfile.objects.create(
+            name="Repartidor Ocupado",
+            is_available=False,
+            current_latitude=19.4300,
+            current_longitude=-99.1300
+        )
+
+        # Query with 30km radius
+        candidates_30km = DriverProfile.objects.nearest_available(origin_lat, origin_lon, radius_km=30)
+        self.assertEqual(len(candidates_30km), 1)
+        self.assertEqual(candidates_30km[0][1].pk, d_close.pk)
+
+        # Query with 100km radius (should include far one, but exclude unavailable)
+        candidates_100km = DriverProfile.objects.nearest_available(origin_lat, origin_lon, radius_km=100)
+        self.assertEqual(len(candidates_100km), 2)
+        # Verify ordering: closest first
+        self.assertEqual(candidates_100km[0][1].pk, d_close.pk)
+        self.assertEqual(candidates_100km[1][1].pk, d_far.pk)
+        logger.info("Test passed: nearest_available correctly sorts and filters geographically.")
+
+    def test_driver_assignment_idempotency_and_fallback(self):
+        """
+        Verify idempotent behavior of /api/delivery/orders/assign-driver/ and fallback logic.
+        """
+        logger.info("Executing test_driver_assignment_idempotency_and_fallback...")
+        from .models import DriverProfile, DeliveryOrder
+
+        contract = Contract.objects.create(
+            user=self.owner_a,
+            full_name="Owner A Contract",
+            tax_id="TAXA123",
+            address="Address A",
+            is_fully_signed=True,
+            is_active=True
+        )
+        contract.addons.add(self.delivery_addon)
+
+        self.client.force_authenticate(user=self.owner_a)
+
+        # Create delivery order
+        order = DeliveryOrder.objects.create(
+            tenant=self.tenant_a,
+            recipient_name="Juan Perez",
+            delivery_address="Reforma 100, CDMX",
+            delivery_latitude=19.4326,
+            delivery_longitude=-99.1332
+        )
+
+        # Try assigning when no drivers are available (should return 503 Service Unavailable)
+        response = self.client.post(
+            '/api/delivery/orders/assign-driver/',
+            data={
+                'delivery_order_id': order.id,
+                'origin_latitude': 19.4326,
+                'origin_longitude': -99.1332,
+                'idempotency_key': 'key-test-123',
+                'tenant_id': str(self.tenant_a.id)
+            },
+            format='json'
+        )
+        self.assertEqual(response.status_code, status.HTTP_503_SERVICE_UNAVAILABLE)
+
+        # Register an available driver
+        driver = DriverProfile.objects.create(
+            name="Driver Test",
+            is_available=True,
+            current_latitude=19.4350,
+            current_longitude=-99.1350
+        )
+
+        # Try assigning again (should succeed)
+        response = self.client.post(
+            '/api/delivery/orders/assign-driver/',
+            data={
+                'delivery_order_id': order.id,
+                'origin_latitude': 19.4326,
+                'origin_longitude': -99.1332,
+                'idempotency_key': 'key-test-123',
+                'tenant_id': str(self.tenant_a.id)
+            },
+            format='json'
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['driver'], driver.id)
+        self.assertEqual(response.data['status'], 'ASSIGNED')
+
+        # Test Idempotency (repeating exact request must yield same assignment response)
+        response_dup = self.client.post(
+            '/api/delivery/orders/assign-driver/',
+            data={
+                'delivery_order_id': order.id,
+                'origin_latitude': 19.4326,
+                'origin_longitude': -99.1332,
+                'idempotency_key': 'key-test-123',
+                'tenant_id': str(self.tenant_a.id)
+            },
+            format='json'
+        )
+        self.assertEqual(response_dup.status_code, status.HTTP_200_OK)
+        self.assertEqual(response_dup.data['id'], response.data['id'])
+        self.assertEqual(response_dup.data['driver'], driver.id)
+        logger.info("Test passed: assign-driver endpoint respects idempotency and handles fallback.")
+
+    def test_store_config_retrieve_and_update(self):
+        """
+        Verify StoreConfig CRUD endpoints for admin configuration management.
+        """
+        logger.info("Executing test_store_config_retrieve_and_update...")
+        contract = Contract.objects.create(
+            user=self.owner_a,
+            full_name="Owner A Contract",
+            tax_id="TAXA123",
+            address="Address A",
+            is_fully_signed=True,
+            is_active=True
+        )
+        contract.addons.add(self.delivery_addon)
+
+        self.client.force_authenticate(user=self.owner_a)
+
+        # GET store config (should auto-create default)
+        response = self.client.get('/api/delivery/store-config/', {'tenant_id': str(self.tenant_a.id)})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertFalse(response.data['has_skydropx_api_key'])
+
+        # UPDATE store config (with masked write-only Skydropx key)
+        response = self.client.put(
+            '/api/delivery/store-config/',
+            data={
+                'available_box_sizes': 'S,M',
+                'offers_national_shipping': True,
+                'skydropx_api_key': 'sk_test_mock_secret_key',
+                'origin_name': 'Almacen Norte',
+                'tenant_id': str(self.tenant_a.id)
+            },
+            format='json'
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['available_box_sizes'], 'S,M')
+        self.assertTrue(response.data['offers_national_shipping'])
+        self.assertTrue(response.data['has_skydropx_api_key'])
+        # Verify key itself is write-only / not leaked back to client
+        self.assertNotIn('skydropx_api_key', response.data)
+        logger.info("Test passed: StoreConfig CRUD tested successfully.")
+
