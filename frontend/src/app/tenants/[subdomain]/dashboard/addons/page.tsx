@@ -33,6 +33,60 @@ interface AddonCatalogItem {
 
 const allAddons: AddonCatalogItem[] = [
   {
+    id: 'pack-ecommerce-lite',
+    name: 'Paquete E-commerce Lite',
+    categoryBadge: 'PAQUETE PRINCIPAL',
+    description: 'Envíos nacionales Skydropx, Facturación SAT (100 timbres), Tienda Online y Campaigner Lite.',
+    monthlyPrice: 799,
+    yearlyPrice: 7990,
+    icon: '🛍️'
+  },
+  {
+    id: 'pack-pos-ecommerce',
+    name: 'Paquete POS & E-commerce Pro',
+    categoryBadge: 'PAQUETE PRINCIPAL',
+    description: 'Punto de venta físico, Tienda, Envíos Skydropx, Facturación SAT y Campaigner Lite.',
+    monthlyPrice: 799,
+    yearlyPrice: 7990,
+    icon: '🏪'
+  },
+  {
+    id: 'pack-blog-sponsors',
+    name: 'Paquete Blog & Sponsors',
+    categoryBadge: 'PAQUETE PRINCIPAL',
+    description: 'Monetiza tu contenido: Blog, Sponsors recurrentes (Stripe), Tienda, Facturación y Campaigner.',
+    monthlyPrice: 499,
+    yearlyPrice: 4990,
+    icon: '📚'
+  },
+  {
+    id: 'campaigner',
+    name: 'Campaigner Masivo',
+    categoryBadge: 'EMAIL MARKETING',
+    description: 'Boletines masivos sin costo fijo. Cobro dinámico a $0.01 MXN por correo enviado.',
+    monthlyPrice: 0,
+    yearlyPrice: 0,
+    icon: '📧'
+  },
+  {
+    id: 'booking-signature',
+    name: 'Néctar Contratos Digitales',
+    categoryBadge: 'CONTRATOS DIGITALES',
+    description: 'Firma de contratos digitales ilimitados sin costo por firmante y PDFs automáticos.',
+    monthlyPrice: 99,
+    yearlyPrice: 990,
+    icon: '✍️'
+  },
+  {
+    id: 'booking',
+    name: 'Agendador de Citas & Kanban',
+    categoryBadge: 'GESTIÓN Y CITAS',
+    description: 'Gestión de citas y reservas con tablero Kanban integrado para seguimiento.',
+    monthlyPrice: 49,
+    yearlyPrice: 490,
+    icon: '📅'
+  },
+  {
     id: 'bot-chat',
     name: 'Néctar AI Chat Bot',
     categoryBadge: 'COMUNICACIÓN EN VIVO',
@@ -40,15 +94,6 @@ const allAddons: AddonCatalogItem[] = [
     monthlyPrice: 99,
     yearlyPrice: 990,
     icon: '💬'
-  },
-  {
-    id: 'booking-signature',
-    name: 'Néctar Contratos Digitales',
-    categoryBadge: 'CONTRATOS Y CITAS',
-    description: 'Motor de reserva de citas integrado con firma digital de propuestas y generación de PDFs con firma incrustada.',
-    monthlyPrice: 149,
-    yearlyPrice: 1490,
-    icon: '✍️'
   },
   {
     id: 'delivery-tracking',
@@ -78,15 +123,6 @@ const allAddons: AddonCatalogItem[] = [
     icon: '📊'
   },
   {
-    id: 'campaigner',
-    name: 'Néctar Newsletter y Campañas de Email',
-    categoryBadge: 'EMAIL MARKETING',
-    description: 'Gestor de suscripciones, programador de campañas con plantillas HTML y envío masivo optimizado.',
-    monthlyPrice: 199,
-    yearlyPrice: 1990,
-    icon: '📧'
-  },
-  {
     id: 'facturacion-cfdi',
     name: 'Facturación SAT México',
     categoryBadge: 'CONTABILIDAD Y FISCAL',
@@ -112,15 +148,6 @@ const allAddons: AddonCatalogItem[] = [
     monthlyPrice: 299,
     yearlyPrice: 2990,
     icon: '🏪'
-  },
-  {
-    id: 'ecommerce-combo',
-    name: 'Combo E-commerce Automatizado',
-    categoryBadge: 'E-COMMERCE COMBO',
-    description: 'El paquete integral definitivo: Tienda + Envíos con Skydropx, Facturación SAT y Newsletter Masivo en uno.',
-    monthlyPrice: 799,
-    yearlyPrice: 7990,
-    icon: '🚀'
   }
 ];
 

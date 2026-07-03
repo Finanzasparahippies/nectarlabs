@@ -35,8 +35,10 @@ def send_newsletter_email(subject, template_name, context, recipient_list, tenan
     
     # 0. Enforce limits if tenant is provided
     has_byo_smtp = False
+    cost = 0
     if tenant:
         from django.utils import timezone
+        from decimal import Decimal
         today = timezone.now().date()
         
         # Enforce daily 300 emails limit if in trial
@@ -52,7 +54,7 @@ def send_newsletter_email(subject, template_name, context, recipient_list, tenan
                     f"Has enviado {tenant.newsletter_sent_today} de 300 correos permitidos hoy."
                 )
 
-        has_byo_smtp = bool(tenant.custom_smtp_host and tenant.custom_smtp_username and tenant.custom_smtp_password)
+        has_byo_smtp = bool(tenant.custom_smtp_host)
         if not has_byo_smtp:
             # Reset monthly count if the month has changed
             if not tenant.newsletter_last_reset or (tenant.newsletter_last_reset.month != today.month or tenant.newsletter_last_reset.year != today.year):
@@ -60,15 +62,18 @@ def send_newsletter_email(subject, template_name, context, recipient_list, tenan
                 tenant.newsletter_last_reset = today
                 tenant.save(update_fields=['newsletter_sent_this_month', 'newsletter_last_reset'])
 
-            # Determine limit: 1,000 emails base for all plans and active technological partner contracts
-            base_limit = 1000
-            total_limit = base_limit + tenant.newsletter_extra_credits
-
-            if tenant.newsletter_sent_this_month + len(recipient_list) > total_limit:
-                raise ValueError(
-                    f"Límite mensual de correos alcanzado. Has enviado {tenant.newsletter_sent_this_month} de {total_limit} correos. "
-                    "Puedes contratar un paquete adicional de 1,000 correos por $100 MXN en tu panel de control."
-                )
+            # Multiplicar destinatarios por $0.01 MXN
+            cost = Decimal(len(recipient_list)) * Decimal('0.01')
+            
+            # Verificar si el saldo es suficiente (solo si NO está en periodo de prueba)
+            if not tenant.is_in_trial:
+                if tenant.shipping_wallet_balance < cost:
+                    raise ValueError(
+                        f"Saldo insuficiente en tu Cartera Digital para realizar este envío. "
+                        f"El costo de enviar a {len(recipient_list)} destinatarios es de ${cost:.2f} MXN "
+                        f"y tu saldo actual es de ${tenant.shipping_wallet_balance:.2f} MXN. "
+                        f"Por favor recarga saldo en la sección de Facturación."
+                    )
 
     if not html_content:
         html_content = render_to_string(f"newsletter/{template_name}.html", context)
@@ -155,10 +160,14 @@ def send_newsletter_email(subject, template_name, context, recipient_list, tenan
             
             logger.info(f"Successfully sent newsletter email via {name} to {recipients_log}")
             
-            # Increment monthly and daily counters
+            # Increment monthly and daily counters, and deduct balance
             if tenant:
                 update_fields = []
                 if not has_byo_smtp:
+                    if not tenant.is_in_trial:
+                        tenant.shipping_wallet_balance -= cost
+                        update_fields.append('shipping_wallet_balance')
+                    
                     tenant.newsletter_sent_this_month += len(recipient_list)
                     update_fields.append('newsletter_sent_this_month')
                 if tenant.is_in_trial:

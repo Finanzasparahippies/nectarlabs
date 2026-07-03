@@ -98,10 +98,127 @@ const getAddonIcon = (id: string) => {
 
 const fallbackAddons: Omit<Addon, 'icon'>[] = [
   {
+    id: 'pack-ecommerce-lite',
+    name: 'Paquete E-commerce Lite',
+    categoryBadge: 'PAQUETE PRINCIPAL',
+    description: 'Envíos nacionales Skydropx, Facturación SAT (100 timbres), Tienda y Campaigner Lite.',
+    detailedDescription: 'El paquete integral ideal para comenzar a vender en línea. Habilita de golpe las funciones de cotización y emisión de guías de envío nacionales de Skydropx, facturación fiscal automatizada CFDI 4.0 con 100 timbres base gratis al mes, y campaigner lite sin costo.',
+    monthlyPrice: 799,
+    yearlyPrice: 7990,
+    originProject: 'nectarlabs-main',
+    sourceReference: 'backend/apps/tenants/models.py (pack-ecommerce-lite)',
+    complexity: 'Alta',
+    serverRequirements: 'Configuración completa de llaves de Stripe, Skydropx API Key y Facturapi API Key.',
+    technicalDetails: [
+      'Acceso completo a módulo Tienda + Envíos Skydropx',
+      'Acceso completo a módulo Facturación SAT (100 timbres base)',
+      'Acceso completo a módulo Newsletter Masivo (Campaigner Lite)',
+      'Ahorro de $148.00 MXN mensuales sobre la compra individual',
+      'Configuración unificada y automatización de negocio cruzada'
+    ]
+  },
+  {
+    id: 'pack-pos-ecommerce',
+    name: 'Paquete POS & E-commerce Pro',
+    categoryBadge: 'PAQUETE PRINCIPAL',
+    description: 'Punto de venta físico, Tienda, Envíos Skydropx, Facturación SAT y Campaigner Lite.',
+    detailedDescription: 'La solución comercial definitiva para negocios omnicanal. Integra tu tienda en línea y tu mostrador físico (POS) con inventario unificado. Incluye 100 timbres fiscales al mes, Campaigner Lite y es compatible con hardware POS comercial (pago único de hardware de $1,799.00 MXN).',
+    monthlyPrice: 799,
+    yearlyPrice: 7990,
+    originProject: 'nectarlabs-main',
+    sourceReference: 'backend/apps/tenants/models.py (pack-pos-ecommerce)',
+    complexity: 'Muy Alta',
+    serverRequirements: 'Lector de código de barras USB + Impresora térmica + Cajón de dinero RJ11 (Hardware adicional).',
+    technicalDetails: [
+      'Consola POS rápida con lector de barras',
+      'Sincronización de inventario en tiempo real',
+      'Acceso completo a Tienda + Envíos Skydropx',
+      'Facturación SAT con 100 timbres incluidos',
+      'Campaigner Lite sin costo'
+    ]
+  },
+  {
+    id: 'pack-blog-sponsors',
+    name: 'Paquete Blog & Sponsors',
+    categoryBadge: 'PAQUETE PRINCIPAL',
+    description: 'Monetiza tu contenido: Blog, Sponsors recurrentes (Stripe), Tienda, Facturación y Campaigner.',
+    detailedDescription: 'El paquete ideal para creadores de contenido y marcas personales. Permite monetizar mediante suscripciones recurrentes de Stripe (Sponsors), vender productos físicos o digitales en tu tienda y emitir facturas del SAT de forma integrada, con boletines de Campaigner Lite.',
+    monthlyPrice: 499,
+    yearlyPrice: 4990,
+    originProject: 'nectarlabs-main',
+    sourceReference: 'backend/apps/tenants/models.py (pack-blog-sponsors)',
+    complexity: 'Media',
+    serverRequirements: 'Cuenta de Stripe para suscripciones + Configuración de Tienda.',
+    technicalDetails: [
+      'Suscripciones recurrentes de Stripe con tiers',
+      'Gestión de roles y feeds exclusivos para sponsors',
+      'Acceso completo a Tienda Online',
+      'Facturación SAT integrada',
+      'Campaigner Lite sin costo'
+    ]
+  },
+  {
+    id: 'campaigner',
+    name: 'Campaigner Masivo',
+    categoryBadge: 'EMAIL MARKETING',
+    description: 'Envío de boletines y campañas de email masivo sin renta fija. Cobro dinámico a $0.01 MXN por correo enviado.',
+    detailedDescription: 'Envía boletines interactivos a tu base de contactos usando nuestro servicio integrado. Sin renta fija mensual ni anual; solo pagas 1 centavo ($0.01 MXN) por cada correo enviado, descontado de tu Cartera Digital prepago.',
+    monthlyPrice: 0,
+    yearlyPrice: 0,
+    originProject: 'nectarlabs-main',
+    sourceReference: 'backend/apps/newsletter (Subscriber, send_newsletter_email)',
+    complexity: 'Baja',
+    serverRequirements: 'Cartera Digital con saldo positivo ($0.01 MXN por correo).',
+    technicalDetails: [
+      'Tokens únicos de desuscripción seguros (UUID)',
+      'Render de templates de correo HTML interactivos',
+      'Cobro automático por destinatario a $0.01 MXN',
+      'Sin renta fija mensual o anual'
+    ]
+  },
+  {
+    id: 'booking-signature',
+    name: 'Néctar Contratos Digitales',
+    categoryBadge: 'CONTRATOS DIGITALES',
+    description: 'Motor de contratos digitales con firma incrustada en lienzo y generación automática de PDFs. Sin límites de documentos ni de firmantes.',
+    detailedDescription: 'Ideal para digitalizar acuerdos contractuales. Permite configurar contratos, generar propuestas en PDF automáticas y capturar firmas táctiles seguras con marcas de tiempo, sin límites en la cantidad de documentos o firmantes.',
+    monthlyPrice: 99,
+    yearlyPrice: 990,
+    originProject: 'nectarlabs-main',
+    sourceReference: 'backend/apps/contracts/models/contract.py',
+    complexity: 'Alta',
+    serverRequirements: 'Almacenamiento seguro en la nube para PDFs.',
+    technicalDetails: [
+      'Lienzo de firma en React (HTML5 Canvas)',
+      'Generación de documentos PDF vía backend',
+      'Notificaciones de propuesta por correo electrónico',
+      'Sin límite de documentos o firmantes'
+    ]
+  },
+  {
+    id: 'booking',
+    name: 'Agendador de Citas & Kanban',
+    categoryBadge: 'GESTIÓN Y CITAS',
+    description: 'Gestor de reservas y agendador de citas interactivo integrado con un tablero Kanban para seguimiento de estados.',
+    detailedDescription: 'Permite a tus clientes agendar citas directamente desde tu portal. Gestiona la disponibilidad, envía recordatorios y organiza las reservas en un tablero Kanban interactivo para optimizar el flujo de trabajo.',
+    monthlyPrice: 49,
+    yearlyPrice: 490,
+    originProject: 'nectarlabs-main',
+    sourceReference: 'backend/apps/bookings',
+    complexity: 'Media',
+    serverRequirements: 'Base de datos relacional para control de solapamiento de horarios.',
+    technicalDetails: [
+      'Calendario de reservas interactivo para clientes',
+      'Tablero Kanban integrado para gestión interna',
+      'Configuración de horarios de atención',
+      'Notificaciones y recordatorios automáticos'
+    ]
+  },
+  {
     id: 'bot-chat',
     name: 'Néctar AI Chat Bot',
     categoryBadge: 'COMUNICACIÓN EN VIVO',
-    description: 'Widget de chat flotante en tiempo real y consola multi-agente con soporte de IA.',
+    description: 'Widget de chat flotante en tiempo real y consola multi-agente con historial persistente.',
     detailedDescription: 'Un canal de comunicación instantáneo integrado para retención y soporte de usuarios. Los clientes ven un widget interactivo de chat, mientras que los agentes de soporte de IA responden y el staff técnico gestiona las conversaciones desde una consola interna dedicada.',
     monthlyPrice: 99,
     yearlyPrice: 990,
@@ -117,41 +234,22 @@ const fallbackAddons: Omit<Addon, 'icon'>[] = [
     ]
   },
   {
-    id: 'booking-signature',
-    name: 'Néctar Contratos Digitales',
-    categoryBadge: 'CONTRATOS Y CITAS',
-    description: 'Motor de reserva de citas integrado con firma digital de propuestas y generación de PDFs con firma incrustada.',
-    detailedDescription: 'Ideal para digitalizar acuerdos contractuales. Permite configurar calendarios interactivos, generar propuestas en PDF al vuelo a partir de plantillas y capturar firmas táctiles o con mouse seguras con marcas de tiempo criptográficas.',
-    monthlyPrice: 149,
-    yearlyPrice: 1490,
-    originProject: 'ms-ambar',
-    sourceReference: 'ms-ambar/backend/apps/bookings & templates/emails',
-    complexity: 'Alta',
-    serverRequirements: 'Almacenamiento seguro en la nube (AWS S3, Azure Blob o similar) para resguardar PDFs + Biblioteca ReportLab.',
-    technicalDetails: [
-      'Lienzo de firma en React (Canvas HTML5)',
-      'Generación de documentos PDF vía backend',
-      'Notificaciones de propuesta por correo electrónico con templates HTML',
-      'Control de flujos y estados de aprobación'
-    ]
-  },
-  {
     id: 'delivery-tracking',
-    name: 'Tienda + Nectar Delivery',
+    name: 'Tienda + Envíos con Skydropx',
     categoryBadge: 'LOGÍSTICA Y CONTROL',
-    description: 'Gestiona envíos nacionales (Skydropx) o locales (Nectar Delivery) con tu propia flota y tarifas por vehículo/distancia.',
-    detailedDescription: 'Módulo de logística inteligente integrado. Registra tarifas nacionales de Skydropx o activa Nectar Delivery para entregas locales de restaurante/delivery con tu propia flota (Bicicleta, Moto, Auto). Modelo de comisiones: El 100% de la tarifa del reparto va para el repartidor y el 100% de la venta para tu negocio; tú solo pagas una mensualidad fija a Néctar Labs sin comisiones por pedido.',
+    description: 'Configura tus almacenes de origen, cotiza envíos en tiempo real con margen de ganancia y emite guías automáticamente.',
+    detailedDescription: 'Módulo de logística inteligente integrado. Registra las tarifas reales desde la API de Skydropx y les aplica tu margen (markup) del 15% o personalizado directamente en el checkout, automatizando la generación de etiquetas en pedidos pagados.',
     monthlyPrice: 249,
     yearlyPrice: 2490,
     originProject: 'losplacosones',
     sourceReference: 'losplacosones/backend/apps/delivery',
     complexity: 'Muy Alta',
-    serverRequirements: 'Cuenta en Skydropx (opcional) + Flota local registrada + Configuración de dirección origen.',
+    serverRequirements: 'Cuenta en Skydropx (API Key de desarrollo o producción) + Configuración de dirección de almacén.',
     technicalDetails: [
-      'Entrega local dinámica en Bici, Moto y Automóvil',
-      'Cálculo de tarifas por distancia (Fórmula Haversine)',
-      'Modelo 100% libre de comisiones por reparto',
-      'Creación de paradas y seguimiento GPS en tiempo real'
+      'Cotización dinámica multitarifa (FedEx, DHL, Estafeta)',
+      'Margen (markup) de ganancia sobre tarifas base',
+      'Emisión automatizada de guías tras confirmación de pago',
+      'Seguimiento y URL de rastreo guardados en la orden'
     ]
   },
   {
@@ -162,12 +260,12 @@ const fallbackAddons: Omit<Addon, 'icon'>[] = [
     detailedDescription: 'Permite monetizar tu contenido, comunidad o SaaS de manera flexible. Automatiza cobros recurrentes de Stripe, gestiona roles y bloquea o desbloquea secciones de contenido multimedia basándose en el nivel del suscriptor.',
     monthlyPrice: 169,
     yearlyPrice: 1690,
-    originProject: 'tierraviva',
-    sourceReference: 'tierraviva/tierraViva-backend-main/sponsorship',
+    originProject: 'nectarlabs-main',
+    sourceReference: 'backend/apps/sponsorship/models/sponsorship.py',
     complexity: 'Media',
     serverRequirements: 'Cuenta comercial de Stripe + Configuración de endpoint para Webhooks HTTPS del backend.',
     technicalDetails: [
-      'Integración con Stripe Billing API y Webhooks',
+      'Integración con Stripe Billing API and Webhooks',
       'Definición de tiers o niveles dinámicos desde Django Admin',
       'Validación automatizada de estatus de membresías en backend',
       'Portal de auto-gestión del suscriptor'
@@ -176,13 +274,13 @@ const fallbackAddons: Omit<Addon, 'icon'>[] = [
   {
     id: 'business-analytics',
     name: 'Néctar Administrador de Ventas y Analytics',
-    categoryBadge: 'MONITOREO DE DESEMPEÑO',
+    categoryBadge: 'MONETIZACIÓN',
     description: 'Administrador de ventas y analytics para Nectar, con dashboard de métricas en tiempo real, gráficos interactivos y exportación de datos.',
     detailedDescription: 'Administra las ventas y analytics de tu plataforma. Con un dashboard intuitivo, podrás ver métricas en tiempo real, gráficos interactivos y exportar datos en diferentes formatos. Ideal para negocios que buscan optimizar sus ventas y analytics.',
     monthlyPrice: 99,
     yearlyPrice: 990,
     originProject: 'nectarlabs-main',
-    sourceReference: 'backend/apps/performance (PerformanceMiddleware, models.py)',
+    sourceReference: 'backend/apps/sales (SalesMiddleware, models.py)',
     complexity: 'Media',
     serverRequirements: 'Módulo de Middleware Django instalado + Agregación de logs asíncrona para no afectar el flujo principal.',
     technicalDetails: [
@@ -190,25 +288,6 @@ const fallbackAddons: Omit<Addon, 'icon'>[] = [
       'Exportación de datos en diferentes formatos',
       'Gráficos interactivos',
       'Registro detallado de transacciones'
-    ]
-  },
-  {
-    id: 'campaigner',
-    name: 'Néctar Newsletter y Campañas de Email',
-    categoryBadge: 'EMAIL MARKETING',
-    description: 'Gestor de suscripciones, programador de campañas con plantillas HTML y envío masivo optimizado para SMTP/SES. Incluye 1,000 envíos/mes.',
-    detailedDescription: 'Envía boletines interactivos a tu base de contactos. Cuenta con un sistema automático de tokens únicos de cancelación de suscripción para cumplir con las normativas internacionales de correo, además de plantillas HTML prediseñadas. Incluye 1,000 correos mensuales base.',
-    monthlyPrice: 199,
-    yearlyPrice: 1990,
-    originProject: 'nectarlabs-main',
-    sourceReference: 'backend/apps/newsletter (Subscriber, send_newsletter_email)',
-    complexity: 'Baja',
-    serverRequirements: 'Servicio de entrega de correos electrónicos configurado (AWS SES, Resend, Sendgrid o un SMTP privado).',
-    technicalDetails: [
-      'Tokens únicos de desuscripción seguros (UUID)',
-      'Render de templates de correo HTML con Django Template Loader',
-      'Envío de 1,000 correos mensuales base incluidos',
-      'Emails extra con costo variable a $0.10 MXN'
     ]
   },
   {
@@ -227,7 +306,10 @@ const fallbackAddons: Omit<Addon, 'icon'>[] = [
       'Creación dinámica de organizaciones subordinadas en el PAC',
       'Carga directa y segura de sellos CSD (.cer, .key)',
       'Soporte para 20 timbres mensuales incluidos',
-      'Timbres extra a $1.50 MXN c/u en prepago'
+      'Timbres extra a $1.50 MXN c/u en prepago',
+      'Generación y timbrado automatizado de CFDI 4.0',
+      'Descarga de archivos XML y PDF de facturas',
+      'Manejo inteligente de sincronización LCO del SAT'
     ]
   },
   {
@@ -247,45 +329,6 @@ const fallbackAddons: Omit<Addon, 'icon'>[] = [
       'Envío automático de XML y PDF a clientes finales',
       'Notificaciones de estado de timbrado al tenant',
       'Reintentos automáticos ante caídas del PAC/SAT'
-    ]
-  },
-  {
-    id: 'pos-system',
-    name: 'Punto de Venta POS & Nota de Venta',
-    categoryBadge: 'VENTAS Y POS',
-    description: 'Sistema POS interactivo para registrar ventas presenciales, generar notas de venta y permitir autofacturación a clientes.',
-    detailedDescription: 'Registra tus ventas de forma rápida desde tu portal administrativo. Genera folios de notas de venta (recibos) con un diseño optimizado para impresión térmica, y permite a tus clientes facturar sus compras de forma autónoma ingresando su folio.',
-    monthlyPrice: 299,
-    yearlyPrice: 2990,
-    originProject: 'nectarlabs-main',
-    sourceReference: 'backend/apps/billing (SalesNote, SalesNoteItem)',
-    complexity: 'Media',
-    serverRequirements: 'Base de datos para persistencia de folios + Activación de sellos CSD en Facturapi.',
-    technicalDetails: [
-      'Registro rápido de conceptos, precios y cantidades',
-      'Generación de notas de venta (recibos) térmicas imprimibles',
-      'Autofacturación segura para clientes finales vía folio público',
-      'Validación de folios e integración directa con Facturapi'
-    ]
-  },
-  {
-    id: 'ecommerce-combo',
-    name: 'Combo E-commerce Automatizado',
-    categoryBadge: 'E-COMMERCE COMBO',
-    description: 'El paquete integral definitivo: Tienda + Envíos con Skydropx, Facturación SAT y Newsletter Masivo en uno.',
-    detailedDescription: 'La solución completa ideal para cualquier comercio digital. Habilita de golpe las funciones de cotización y emisión de guías de envío nacionales de Skydropx, facturación fiscal automatizada CFDI 4.0 con 20 timbres base, y campañas de marketing por correo con 1,000 envíos incluidos.',
-    monthlyPrice: 799,
-    yearlyPrice: 7990,
-    originProject: 'nectarlabs-main',
-    sourceReference: 'backend/config/urls.py (E-commerce Integration Suite)',
-    complexity: 'Alta',
-    serverRequirements: 'Configuración completa de llaves de Stripe, Skydropx API Key y Facturapi API Key.',
-    technicalDetails: [
-      'Acceso completo a módulo Tienda + Envíos Skydropx',
-      'Acceso completo a módulo Facturación SAT (20 timbres base)',
-      'Acceso completo a módulo Newsletter Masivo (1,000 correos base)',
-      'Ahorro de $148.00 MXN mensuales sobre la compra individual',
-      'Configuración unificada y automatización de negocio cruzada'
     ]
   }
 ];

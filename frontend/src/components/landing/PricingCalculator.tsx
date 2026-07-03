@@ -3,15 +3,12 @@
 import React, { useState } from 'react';
 
 const CALCULATOR_ADDONS = [
-  { id: 'bot-chat', name: 'Néctar AI Chat Bot', monthlyPrice: 99, yearlyPrice: 990, desc: 'Widget en tiempo real y consola de soporte multi-agente con IA.' },
-  { id: 'booking-signature', name: 'Néctar Contratos Digitales', monthlyPrice: 149, yearlyPrice: 1490, desc: 'Calendario de reservas y firma digital de contratos en PDF.' },
-  { id: 'delivery-tracking', name: 'Tienda + Envíos con Skydropx', monthlyPrice: 249, yearlyPrice: 2490, desc: 'Cotización en tiempo real y emisión automatizada de guías de envío.' },
-  { id: 'sponsorship', name: 'Néctar Sponsors & NSCAP', monthlyPrice: 169, yearlyPrice: 1690, desc: 'Monetización recurrente, tiers y pasarela de Stripe.' },
-  { id: 'business-analytics', name: 'Néctar Analytics y Ventas', monthlyPrice: 99, yearlyPrice: 990, desc: 'Dashboard de métricas de ventas y analytics en tiempo real.' },
-  { id: 'campaigner', name: 'Néctar Newsletter', monthlyPrice: 199, yearlyPrice: 1990, desc: 'Programador de campañas masivas con 1,000 envíos incluidos.' },
-  { id: 'facturacion-cfdi', name: 'Facturación SAT México', monthlyPrice: 499, yearlyPrice: 4990, desc: 'Emisión de facturas CFDI 4.0 oficiales con 20 timbres base.' },
-  { id: 'automatic-invoicing', name: 'Facturación Automática SAT', monthlyPrice: 199, yearlyPrice: 1990, desc: 'Timbrado automático desatendido al recibir pagos.' },
-  { id: 'ecommerce-combo', name: 'Combo E-commerce Automatizado', monthlyPrice: 799, yearlyPrice: 7990, desc: 'El paquete definitivo: Envíos, Facturación y Newsletter.' },
+  { id: 'pack-ecommerce-lite', name: 'Paquete E-commerce Lite', monthlyPrice: 799, yearlyPrice: 7990, desc: 'Envíos nacionales Skydropx, Facturación SAT (100 timbres), Tienda y Campaigner.' },
+  { id: 'pack-pos-ecommerce', name: 'Paquete POS & E-commerce Pro', monthlyPrice: 799, yearlyPrice: 7990, desc: 'Punto de venta físico, Tienda, Envíos, Facturación y Campaigner.' },
+  { id: 'pack-blog-sponsors', name: 'Paquete Blog & Sponsors', monthlyPrice: 499, yearlyPrice: 4990, desc: 'Blog, Sponsors recurrentes (Stripe), Tienda, Facturación y Campaigner.' },
+  { id: 'campaigner', name: 'Campaigner Masivo', monthlyPrice: 0, yearlyPrice: 0, desc: 'Boletines masivos sin costo fijo. Cobro dinámico a $0.01 MXN por correo.' },
+  { id: 'booking-signature', name: 'Néctar Contratos Digitales', monthlyPrice: 99, yearlyPrice: 990, desc: 'Firma de contratos digitales ilimitados sin costo por firmante.' },
+  { id: 'booking', name: 'Agendador de Citas & Kanban', monthlyPrice: 49, yearlyPrice: 490, desc: 'Gestión de citas y reservas con tablero Kanban integrado.' },
 ];
 
 const PARTNER_PLANS = [

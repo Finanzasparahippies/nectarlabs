@@ -79,7 +79,7 @@ export default function TenantAdminPage() {
   const [authorized, setAuthorized] = useState(false);
   const [userMe, setUserMe] = useState<any | null>(null);
   const [activeTab, setActiveTab] = useState<'metrics' | 'branding' | 'billing' | 'integrations' | 'pos'>('metrics');
-  const [billingSubTab, setBillingSubTab] = useState<'catalog' | 'history' | 'config'>('catalog');
+  const [billingSubTab, setBillingSubTab] = useState<'catalog' | 'history' | 'config' | 'cartera'>('catalog');
 
   // Customization Form State
   const [editName, setEditName] = useState('');
@@ -119,6 +119,8 @@ export default function TenantAdminPage() {
   const [taxProfileError, setTaxProfileError] = useState<string | null>(null);
   const [invoicingMode, setInvoicingMode] = useState('AUTOMATIC');
   const [buyingPackage, setBuyingPackage] = useState<number | null>(null);
+  const [rechargeAmount, setRechargeAmount] = useState<number | ''>('');
+  const [rechargeLoading, setRechargeLoading] = useState(false);
 
   // Manual Invoices Custom Modal states
   const [showManualInvoiceModal, setShowManualInvoiceModal] = useState(false);
@@ -319,12 +321,21 @@ export default function TenantAdminPage() {
       const paymentStatus = urlParams.get('payment');
       if (paymentStatus === 'success') {
         const pkg = urlParams.get('package');
-        showToast(`¡Pago exitoso! Se han acreditado ${pkg || ''} timbres a tu balance.`, 'success');
+        const amount = urlParams.get('amount');
+        if (amount) {
+          showToast(`¡Pago exitoso! Se han acreditado $${amount} MXN a tu Cartera Digital.`, 'success');
+          setActiveTab('billing');
+          setBillingSubTab('cartera');
+        } else {
+          showToast(`¡Pago exitoso! Se han acreditado ${pkg || ''} timbres a tu balance.`, 'success');
+          setActiveTab('billing');
+          setBillingSubTab('history');
+        }
         // Clean URL parameters
         const newUrl = window.location.pathname + '?tab=billing';
         window.history.replaceState({}, '', newUrl);
       } else if (paymentStatus === 'cancel') {
-        showToast('La compra de timbres fue cancelada.', 'info');
+        showToast('El pago fue cancelado.', 'info');
         const newUrl = window.location.pathname + '?tab=billing';
         window.history.replaceState({}, '', newUrl);
       }
@@ -1036,6 +1047,29 @@ export default function TenantAdminPage() {
       }
     } catch (err: any) {
       showToast(err.message || 'Error al iniciar la compra de créditos de correo.', 'error');
+    }
+  };
+
+  const handleBuyShippingFunds = async (amount: number) => {
+    if (!tenantConfig) return;
+    setRechargeLoading(true);
+    try {
+      const response = await fetcher(`/billing/buy-shipping-funds/?tenant_id=${tenantConfig.id}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ amount })
+      });
+      if (response.url) {
+        window.location.href = response.url;
+      } else {
+        showToast('No se recibió la URL de pago de Stripe.', 'error');
+      }
+    } catch (err: any) {
+      showToast(err.message || 'Error al iniciar la recarga de la Cartera Digital.', 'error');
+    } finally {
+      setRechargeLoading(false);
     }
   };
 
@@ -2241,8 +2275,8 @@ export default function TenantAdminPage() {
                 metrics={{
                   leftLabel: "Suscriptores",
                   leftVal: String(tenantConfig?.subscriber_count ?? 0),
-                  rightLabel: tenantConfig?.custom_smtp_host ? "Canal Email" : "Uso de Límite",
-                  rightVal: tenantConfig?.custom_smtp_host ? "Propio (SMTP)" : `${Math.min(100, Math.round(((tenantConfig?.newsletter_sent_this_month ?? 0) / getNewsletterLimit()) * 100))}%`
+                  rightLabel: "Cartera Digital",
+                  rightVal: tenantConfig?.custom_smtp_host ? "Ilimitado (SMTP)" : `$${parseFloat(String(tenantConfig?.shipping_wallet_balance ?? '0.00')).toFixed(2)}`
                 }}
               >
                 <div className="h-28 flex flex-col justify-between px-2 pt-2 pb-1 text-left">
@@ -2250,19 +2284,19 @@ export default function TenantAdminPage() {
                     <div className="relative w-12 h-12 flex items-center justify-center shrink-0">
                       <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
                         <path className="text-white/5" strokeWidth="3" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                        <path className="text-nectar-gold" strokeDasharray={`${tenantConfig?.custom_smtp_host ? 0 : Math.min(100, Math.round(((tenantConfig?.newsletter_sent_this_month ?? 0) / getNewsletterLimit()) * 100))}, 100`} strokeWidth="3.2" strokeLinecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                        <path className="text-nectar-gold" strokeDasharray={`${tenantConfig?.custom_smtp_host ? 100 : (parseFloat(String(tenantConfig?.shipping_wallet_balance ?? '0')) > 0 ? 100 : 0)}, 100`} strokeWidth="3.2" strokeLinecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
                       </svg>
                       <span className="absolute text-[7px] font-black text-nectar-gold font-mono">
-                        {tenantConfig?.custom_smtp_host ? '∞' : `${Math.min(100, Math.round(((tenantConfig?.newsletter_sent_this_month ?? 0) / getNewsletterLimit()) * 100))}%`}
+                        {tenantConfig?.custom_smtp_host ? '∞' : (parseFloat(String(tenantConfig?.shipping_wallet_balance ?? '0')) > 0 ? 'OK' : 'S/S')}
                       </span>
                     </div>
                     <div className="text-left space-y-0.5">
-                      <span className="text-[6px] uppercase font-black tracking-widest text-white/30 block">Consumo Mensual</span>
+                      <span className="text-[6px] uppercase font-black tracking-widest text-white/30 block">Envíos del Mes</span>
                       <h4 className="text-[10px] font-black text-white font-mono leading-none">
-                        {tenantConfig?.custom_smtp_host ? 'Ilimitado (BYO SMTP)' : `${tenantConfig?.newsletter_sent_this_month ?? 0} / ${getNewsletterLimit()}`}
+                        {tenantConfig?.newsletter_sent_this_month ?? 0} enviados
                       </h4>
-                      <p className="text-[6.5px] text-white/40 font-bold">
-                        {tenantConfig?.is_ambassador ? 'Límite Partner Embajador' : 'Límite Plan Regular'}
+                      <p className="text-[6.5px] text-white/40 font-bold font-bold">
+                        {tenantConfig?.custom_smtp_host ? 'SMTP Propio Activo' : `Saldo: $${parseFloat(String(tenantConfig?.shipping_wallet_balance ?? '0.00')).toFixed(2)} MXN`}
                       </p>
                     </div>
                   </div>
@@ -2270,10 +2304,9 @@ export default function TenantAdminPage() {
                   <button
                     type="button"
                     onClick={() => {
-                      const sent = tenantConfig?.newsletter_sent_this_month ?? 0;
-                      const limit = getNewsletterLimit();
                       const hasSmtp = Boolean(tenantConfig?.custom_smtp_host);
-                      if (!hasSmtp && sent >= limit) {
+                      const balance = parseFloat(String(tenantConfig?.shipping_wallet_balance ?? '0'));
+                      if (!hasSmtp && balance <= 0) {
                         setShowOverLimitModal(true);
                       } else {
                         setShowNewsletterModal(true);
@@ -2537,7 +2570,8 @@ export default function TenantAdminPage() {
               {[
                 { id: 'catalog', label: '🗂️ Catálogos y Facturación' },
                 { id: 'history', label: '📊 Timbres e Historial' },
-                { id: 'config', label: '⚙️ Configuración SAT y CSD' }
+                { id: 'config', label: '⚙️ Configuración SAT y CSD' },
+                { id: 'cartera', label: '💼 Cartera Digital' }
               ].map((sub) => (
                 <button
                   key={sub.id}
@@ -3211,6 +3245,131 @@ export default function TenantAdminPage() {
               </div>
 
             </div>
+            )}
+
+            {/* Subtab 4: Cartera Digital */}
+            {billingSubTab === 'cartera' && (
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 animate-in fade-in duration-300">
+                {/* Left: Balance y Recarga */}
+                <div className="lg:col-span-7">
+                  <div className="admin-card border rounded-[2rem] p-6 shadow-lg space-y-6 text-left relative overflow-hidden">
+                    <div className="absolute -bottom-16 -right-16 w-40 h-40 rounded-full blur-[80px] opacity-5 pointer-events-none" style={{ backgroundColor: primaryColor }}></div>
+                    
+                    <div className="border-b border-white/5 pb-4">
+                      <h3 className="text-xs font-black uppercase tracking-widest text-white">Cartera Digital Unificada</h3>
+                      <p className="text-[8px] text-white/40 uppercase tracking-wider mt-1">Saldo prepago para Guías de Envío y Email Marketing</p>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-5 rounded-2xl bg-white/[0.02] border border-white/5">
+                      <div className="space-y-1">
+                        <span className="text-[8px] font-black text-white/40 uppercase tracking-wider block font-bold">Saldo Disponible</span>
+                        <h2 className="text-3xl font-black text-white font-mono leading-none font-bold">
+                          ${parseFloat(String(tenantConfig?.shipping_wallet_balance ?? '0.00')).toFixed(2)} MXN
+                        </h2>
+                      </div>
+                      <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[9px] uppercase tracking-wider font-bold rounded-xl flex items-center gap-1.5 shrink-0 font-bold">
+                        <span>●</span> Cartera Activa
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div className="border-b border-white/5 pb-2">
+                        <h4 className="text-[9px] font-black text-white/70 uppercase tracking-wider">Recargar Saldo</h4>
+                        <p className="text-[8px] text-white/40 leading-relaxed mt-0.5">
+                          Selecciona un monto rápido o ingresa un monto personalizado para recargar saldo mediante Stripe.
+                        </p>
+                      </div>
+
+                      {/* Botones de montos rápidos */}
+                      <div className="grid grid-cols-3 gap-3">
+                        {[100, 200, 500].map((amt) => (
+                          <button
+                            key={amt}
+                            type="button"
+                            onClick={() => handleBuyShippingFunds(amt)}
+                            disabled={rechargeLoading}
+                            className="py-3 border border-white/10 hover:border-nectar-gold rounded-xl text-[10px] font-bold text-white hover:text-nectar-gold bg-white/[0.01] hover:bg-white/[0.04] transition-all cursor-pointer disabled:opacity-40 disabled:pointer-events-none font-bold"
+                          >
+                            + ${amt} MXN
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Recarga personalizada */}
+                      <div className="space-y-2">
+                        <label className="text-[8px] uppercase tracking-wider font-black text-white/50 block">Monto Personalizado (MXN)</label>
+                        <div className="flex gap-2">
+                          <div className="relative flex-1">
+                            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40 text-[10px] font-bold">$</span>
+                            <input
+                              type="number"
+                              min="10"
+                              placeholder="Monto a recargar (Mín. $10)"
+                              value={rechargeAmount}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                setRechargeAmount(val === '' ? '' : Math.max(0, parseInt(val)));
+                              }}
+                              className="w-full border rounded-xl pl-8 pr-3 py-2.5 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input font-bold"
+                            />
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (rechargeAmount && rechargeAmount >= 10) {
+                                handleBuyShippingFunds(rechargeAmount);
+                              } else {
+                                showToast('El monto mínimo para recargar es $10 MXN.', 'warning');
+                              }
+                            }}
+                            disabled={rechargeLoading || !rechargeAmount || rechargeAmount < 10}
+                            className="px-6 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:scale-[1.02] active:scale-95 flex items-center justify-center font-bold shadow-lg shrink-0 cursor-pointer"
+                            style={{ backgroundColor: primaryColor, color: '#000000' }}
+                          >
+                            {rechargeLoading ? 'Procesando...' : 'Recargar'}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right: Explicación de tarifas */}
+                <div className="lg:col-span-5">
+                  <div className="admin-card border rounded-[2rem] p-6 shadow-lg space-y-5 text-left relative overflow-hidden h-full">
+                    <div className="border-b border-white/5 pb-4">
+                      <h3 className="text-xs font-black uppercase tracking-widest text-white font-bold">Distribución de Costos</h3>
+                      <p className="text-[8px] text-white/40 uppercase tracking-wider mt-1">Cómo se utiliza tu saldo unificado</p>
+                    </div>
+
+                    <div className="space-y-4 text-[10px] text-white/70 leading-relaxed font-medium">
+                      <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5 space-y-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-lg">📦</span>
+                          <span className="font-black text-white text-[9px] uppercase tracking-wider font-bold">Guías de Envío (Skydropx)</span>
+                        </div>
+                        <p className="text-white/50 text-[9px] leading-relaxed">
+                          El costo exacto de cada guía cotizada en FedEx, DHL, Estafeta u otras paqueterías se descuenta directamente de tu cartera al generar la etiqueta.
+                        </p>
+                      </div>
+
+                      <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5 space-y-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-lg">📧</span>
+                          <span className="font-black text-white text-[9px] uppercase tracking-wider font-bold">Campaigner Masivo</span>
+                        </div>
+                        <p className="text-white/50 text-[9px] leading-relaxed">
+                          Cada correo masivo enviado a través de nuestra plataforma (sin SMTP personalizado) tiene un costo fijo de <strong className="text-nectar-gold">$0.01 MXN</strong> (1 centavo). El total de destinatarios se descuenta de tu saldo al enviar.
+                        </p>
+                      </div>
+
+                      <div className="p-3 bg-white/[0.01] rounded-xl text-[8px] text-white/40 uppercase tracking-wider text-center border border-white/5 font-bold">
+                        💡 CONSEJO: Conecta tu propio servidor SMTP bajo Integraciones para envíos de correo masivos sin costo por email.
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             )}
             </div>
           )
@@ -4804,19 +4963,20 @@ export default function TenantAdminPage() {
             <div className="space-y-2">
               <h3 className="text-sm font-black uppercase tracking-tight text-white">Límite de Envíos Superado</h3>
               <p className="text-[10px] text-white/70 leading-relaxed font-medium">
-                Has superado el límite de Partner. Boton para comprar mas Correos Masivos en modulos de 1000 correos, o Conecta tus propias llaves API de Amazon SES en tu configuración para envíos ilimitados
+                El Campaigner Masivo requiere saldo en tu Cartera Digital ($0.01 MXN por correo) o que conectes tu propio servidor SMTP para envíos ilimitados sin costo fijo.
               </p>
             </div>
             
             <div className="pt-3 border-t border-white/5 flex flex-col gap-2">
               <button
-                onClick={async () => {
+                onClick={() => {
                   setShowOverLimitModal(false);
-                  await handleBuyEmailCredits();
+                  setActiveTab('billing');
+                  setBillingSubTab('cartera');
                 }}
                 className="w-full py-3 bg-nectar-gold text-background hover:bg-nectar-gold/90 rounded-xl text-[8px] font-black uppercase tracking-wider transition-all font-bold shadow-md shadow-nectar-gold/10 cursor-pointer"
               >
-                💳 Comprar 1,000 Correos Masivos ($15.00 MXN)
+                💳 Recargar Cartera Digital
               </button>
               
               <button

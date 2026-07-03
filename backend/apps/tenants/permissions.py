@@ -51,8 +51,15 @@ class HasAddOnPermission(permissions.BasePermission):
         if not addon_slug:
             return True  # Vista no requiere add-on específico
 
+        # Si requiere booking-signature, permitir acceso si booking-signature o booking están activos
+        if addon_slug == 'booking-signature':
+            if 'booking-signature' not in tenant.active_addons and 'booking' not in tenant.active_addons:
+                raise PermissionDenied(
+                    "El módulo/add-on 'booking-signature' o 'booking' no está habilitado para tu portal. "
+                    "Por favor solicítalo en la sección de Catálogo de Add-ons."
+                )
         # Verificar si el add-on está activo en el contrato del tenant
-        if addon_slug not in tenant.active_addons:
+        elif addon_slug not in tenant.active_addons:
             raise PermissionDenied(
                 f"El módulo/add-on '{addon_slug}' no está habilitado para tu portal. "
                 "Por favor solicítalo en la sección de Catálogo de Add-ons."

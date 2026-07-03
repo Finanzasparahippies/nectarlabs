@@ -20,6 +20,31 @@ interface Addon {
 
 const getAddonIcon = (id: string) => {
   switch (id) {
+    case 'pack-ecommerce-lite':
+      return (
+        <svg className="w-8 h-8 text-nectar-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
+      );
+    case 'pack-pos-ecommerce':
+      return (
+        <svg className="w-8 h-8 text-nectar-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v3H9V9z" />
+        </svg>
+      );
+    case 'pack-blog-sponsors':
+      return (
+        <svg className="w-8 h-8 text-nectar-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+        </svg>
+      );
+    case 'booking':
+      return (
+        <svg className="w-8 h-8 text-nectar-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+      );
     case 'bot-chat':
       return (
         <svg className="w-8 h-8 text-nectar-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -86,6 +111,111 @@ const getAddonIcon = (id: string) => {
 
 const fallbackAddons: Omit<Addon, 'icon'>[] = [
   {
+    id: 'pack-ecommerce-lite',
+    name: 'Paquete E-commerce Lite',
+    categoryBadge: 'PAQUETE PRINCIPAL',
+    description: 'Todo para tu tienda en línea: Envíos Nacionales por tus paqueterias favoritas, Facturación SAT, Tienda Online y Campaigner Lite.',
+    detailedDescription: 'El paquete integral ideal para comenzar a vender en línea. Habilita de golpe las funciones de cotización y emisión de guías de envío nacionales de Skydropx, facturación fiscal automatizada CFDI 4.0 con 100 timbres base gratis al mes, y campaigner lite sin costo.',
+    monthlyPrice: 799,
+    yearlyPrice: 7990,
+    complexity: 'Alta',
+    serverRequirements: 'Configuración completa de llaves de Stripe, Skydropx API Key y Facturapi API Key.',
+    technicalDetails: [
+      'Acceso completo a módulo Tienda + Envíos Skydropx',
+      'Acceso completo a módulo Facturación SAT (100 timbres base)',
+      'Acceso completo a módulo Newsletter Masivo (Campaigner Lite)',
+      'Ahorro de $148.00 MXN mensuales sobre la compra individual',
+      'Configuración unificada y automatización de negocio cruzada'
+    ]
+  },
+  {
+    id: 'pack-pos-ecommerce',
+    name: 'Paquete POS & E-commerce Pro',
+    categoryBadge: 'PAQUETE PRINCIPAL',
+    description: 'Punto de venta físico, Tienda en línea, Envíos con Skydropx, Facturación SAT y Campaigner Lite.',
+    detailedDescription: 'La solución comercial definitiva para negocios omnicanal. Integra tu tienda en línea y tu mostrador físico (POS) con inventario unificado. Incluye 100 timbres fiscales al mes, Campaigner Lite y es compatible con hardware POS comercial (pago único de hardware de $1,799.00 MXN).',
+    monthlyPrice: 799,
+    yearlyPrice: 7990,
+    complexity: 'Muy Alta',
+    serverRequirements: 'Lector de código de barras USB + Impresora térmica + Cajón de dinero RJ11 (Hardware adicional).',
+    technicalDetails: [
+      'Consola POS rápida con lector de barras',
+      'Sincronización de inventario en tiempo real',
+      'Acceso completo a Tienda + Envíos Skydropx',
+      'Facturación SAT con 100 timbres incluidos',
+      'Campaigner Lite sin costo'
+    ]
+  },
+  {
+    id: 'pack-blog-sponsors',
+    name: 'Paquete Blog & Sponsors',
+    categoryBadge: 'PAQUETE PRINCIPAL',
+    description: 'Monetiza tu contenido: Blog, Sponsorship (Patreon), Tienda Online, Facturación SAT y Campaigner Lite.',
+    detailedDescription: 'El paquete ideal para creadores de contenido y marcas personales. Permite monetizar mediante suscripciones recurrentes de Stripe (Sponsors), vender productos físicos o digitales en tu tienda y emitir facturas del SAT de forma integrada, con boletines de Campaigner Lite.',
+    monthlyPrice: 499,
+    yearlyPrice: 4990,
+    complexity: 'Media',
+    serverRequirements: 'Cuenta de Stripe para suscripciones + Configuración de Tienda.',
+    technicalDetails: [
+      'Suscripciones recurrentes de Stripe con tiers',
+      'Gestión de roles y feeds exclusivos para sponsors',
+      'Acceso completo a Tienda Online',
+      'Facturación SAT integrada',
+      'Campaigner Lite sin costo'
+    ]
+  },
+  {
+    id: 'campaigner',
+    name: 'Campaigner Masivo',
+    categoryBadge: 'EMAIL MARKETING',
+    description: 'Envío de boletines y campañas de email masivo sin renta fija. Cobro dinámico a $0.01 MXN por correo enviado.',
+    detailedDescription: 'Envía boletines interactivos a tu base de contactos usando nuestro servicio integrado. Sin renta fija mensual ni anual; solo pagas 1 centavo ($0.01 MXN) por cada correo enviado, descontado de tu Cartera Digital prepago.',
+    monthlyPrice: 0,
+    yearlyPrice: 0,
+    complexity: 'Baja',
+    serverRequirements: 'Cartera Digital con saldo positivo ($0.01 MXN por correo).',
+    technicalDetails: [
+      'Tokens únicos de desuscripción seguros (UUID)',
+      'Render de templates de correo HTML interactivos',
+      'Cobro automático por destinatario a $0.01 MXN',
+      'Sin renta fija mensual o anual'
+    ]
+  },
+  {
+    id: 'booking-signature',
+    name: 'Néctar Contratos Digitales',
+    categoryBadge: 'CONTRATOS DIGITALES',
+    description: 'Motor de contratos digitales con firma incrustada en lienzo y generación automática de PDFs. Sin límites de documentos ni de firmantes.',
+    detailedDescription: 'Ideal para digitalizar acuerdos contractuales. Permite configurar contratos, generar propuestas en PDF automáticas y capturar firmas táctiles seguras con marcas de tiempo, sin límites en la cantidad de documentos o firmantes.',
+    monthlyPrice: 99,
+    yearlyPrice: 990,
+    complexity: 'Alta',
+    serverRequirements: 'Almacenamiento seguro en la nube para PDFs.',
+    technicalDetails: [
+      'Lienzo de firma en React (HTML5 Canvas)',
+      'Generación de documentos PDF vía backend',
+      'Notificaciones de propuesta por correo electrónico',
+      'Sin límite de documentos o firmantes'
+    ]
+  },
+  {
+    id: 'booking',
+    name: 'Agendador de Citas & Kanban',
+    categoryBadge: 'GESTIÓN Y CITAS',
+    description: 'Gestor de reservas y agendador de citas interactivo integrado con un tablero Kanban para seguimiento de estados.',
+    detailedDescription: 'Permite a tus clientes agendar citas directamente desde tu portal. Gestiona la disponibilidad, envía recordatorios y organiza las reservas en un tablero Kanban interactivo para optimizar el flujo de trabajo.',
+    monthlyPrice: 49,
+    yearlyPrice: 490,
+    complexity: 'Media',
+    serverRequirements: 'Base de datos relacional para control de solapamiento de horarios.',
+    technicalDetails: [
+      'Calendario de reservas interactivo para clientes',
+      'Tablero Kanban integrado para gestión interna',
+      'Configuración de horarios de atención',
+      'Notificaciones y recordatorios automáticos'
+    ]
+  },
+  {
     id: 'bot-chat',
     name: 'Néctar AI Chat Bot',
     categoryBadge: 'COMUNICACIÓN EN VIVO',
@@ -100,146 +230,6 @@ const fallbackAddons: Omit<Addon, 'icon'>[] = [
       'Polling persistente o WebSocket fallback',
       'Asignación dinámica de chats a staff técnico',
       'Marcado de estado abierto/resuelto/cerrado'
-    ]
-  },
-  {
-    id: 'booking-signature',
-    name: 'Néctar Contratos Digitales',
-    categoryBadge: 'CONTRATOS DIGITALES',
-    description: 'Motor de contratos digitales con firma incrustada y generación de PDFs automático.',
-    detailedDescription: 'Ideal para digitalizar acuerdos contractuales. Permite configurar contratos, generar propuestas en PDF automáticos y capturar firmas táctiles o con mouse seguras con marcas de tiempo criptográficas.',
-    monthlyPrice: 149,
-    yearlyPrice: 1490,
-    complexity: 'Alta',
-    serverRequirements: 'Almacenamiento seguro en la nube (AWS S3, Azure Blob o similar) para resguardar PDFs + Biblioteca ReportLab.',
-    technicalDetails: [
-      'Lienzo de firma en React (Canvas HTML5)',
-      'Generación de documentos PDF vía backend',
-      'Notificaciones de propuesta por correo electrónico con templates HTML',
-      'Control de flujos y estados de aprobación'
-    ]
-  },
-  {
-    id: 'delivery-tracking',
-    name: 'Tienda + Envíos con Skydropx y Nectar Delivery',
-    categoryBadge: 'LOGÍSTICA Y CONTROL',
-    description: 'Configura entregas nacionales vía Skydropx o locales con tu propia flota (Nectar Delivery) con tarifas dinámicas por distancia y vehículo.',
-    detailedDescription: 'Módulo de logística inteligente integrado. Registra tarifas nacionales de Skydropx o activa Nectar Delivery para entregas locales inmediatas con tu propia flota (Bicicleta, Moto, Auto). Modelo comercial de Néctar Labs: El 100% del costo de reparto va al chofer/repartidor, el 100% de la venta va a tu negocio, y tú sólo pagas una mensualidad fija sin comisiones por pedido.',
-    monthlyPrice: 249,
-    yearlyPrice: 2490,
-    complexity: 'Muy Alta',
-    serverRequirements: 'Cuenta en Skydropx (opcional) + Flota local registrada + Configuración de dirección origen.',
-    technicalDetails: [
-      'Entrega local dinámica en Bici, Moto y Automóvil',
-      'Cálculo de tarifas por distancia (Fórmula Haversine)',
-      'Modelo 100% libre de comisiones por reparto',
-      'Creación de paradas y seguimiento GPS en tiempo real'
-    ]
-  },
-  {
-    id: 'sponsorship',
-    name: 'Néctar Sponsors & NSCAP',
-    categoryBadge: 'MONETIZACIÓN',
-    description: 'Pasarela de suscripciones recurrentes de Stripe con control de acceso a feeds exclusivos y niveles de membresía.',
-    detailedDescription: 'Permite monetizar tu contenido, comunidad o SaaS de manera flexible. Automatiza cobros recurrentes de Stripe, gestiona roles y bloquea o desbloquea secciones de contenido multimedia basándose en el nivel del suscriptor.',
-    monthlyPrice: 169,
-    yearlyPrice: 1690,
-    complexity: 'Media',
-    serverRequirements: 'Cuenta comercial de Stripe + Configuración de endpoint para Webhooks HTTPS del backend.',
-    technicalDetails: [
-      'Integración con Stripe Billing API y Webhooks',
-      'Definición de tiers o niveles dinámicos desde Django Admin',
-      'Validación automatizada de estatus de membresías en backend',
-      'Portal de auto-gestión del suscriptor'
-    ]
-  },
-  {
-    id: 'business-analytics',
-    name: 'Néctar Administrador de Ventas y Analytics',
-    categoryBadge: 'MONETIZACIÓN',
-    description: 'Administrador de ventas y analytics para Nectar, con dashboard de métricas en tiempo real, gráficos interactivos y exportación de datos.',
-    detailedDescription: 'Administra las ventas y analytics de tu plataforma. Con un dashboard intuitivo, podrás ver métricas en tiempo real, gráficos interactivos y exportar datos en diferentes formatos. Ideal para negocios que buscan optimizar sus ventas y analytics.',
-    monthlyPrice: 99,
-    yearlyPrice: 990,
-    complexity: 'Media',
-    serverRequirements: 'Módulo de Middleware Django instalado + Agregación de logs asíncrona para no afectar el flujo principal.',
-    technicalDetails: [
-      'Dashboard interactivo con métricas en tiempo real',
-      'Exportación de datos en diferentes formatos',
-      'Gráficos interactivos',
-      'Registro detallado de transacciones'
-    ]
-  },
-  {
-    id: 'campaigner',
-    name: 'Néctar Newsletter y Campañas de Email',
-    categoryBadge: 'EMAIL MARKETING',
-    description: 'Gestor de suscripciones, programador de campañas con plantillas HTML y envío masivo optimizado para SMTP/SES. Incluye 1,000 envíos/mes.',
-    detailedDescription: 'Envía boletines interactivos a tu base de contactos. Cuenta con un sistema automático de tokens únicos de cancelación de suscripción para cumplir con las normativas internacionales de correo, además de plantillas HTML prediseñadas. Incluye 1,000 correos mensuales base.',
-    monthlyPrice: 199,
-    yearlyPrice: 1990,
-    complexity: 'Baja',
-    serverRequirements: 'Servicio de entrega de correos electrónicos configurado (AWS SES, Resend, Sendgrid o un SMTP privado).',
-    technicalDetails: [
-      'Tokens únicos de desuscripción seguros (UUID)',
-      'Render de templates de correo HTML con Django Template Loader',
-      'Envío de 1,000 correos mensuales base incluidos',
-      'Emails extra con costo variable a $0.10 MXN'
-    ]
-  },
-  {
-    id: 'facturacion-cfdi',
-    name: 'Facturación SAT México',
-    categoryBadge: 'CONTABILIDAD Y FISCAL',
-    description: 'Emite facturas CFDI 4.0 oficiales del SAT a tus clientes de manera automatizada y marca blanca. Incluye 20 timbres base.',
-    detailedDescription: 'Módulo de facturación fiscal electrónica para México. Permite crear organizaciones subordinadas en Facturapi, subir sellos CSD y timbrar facturas CFDI 4.0 directamente desde tu portal. Incluye 20 timbres mensuales base.',
-    monthlyPrice: 499,
-    yearlyPrice: 4990,
-    complexity: 'Alta',
-    serverRequirements: 'Configuración de credenciales de PAC (Facturapi API Key) en variables de entorno + HTTPS para subida segura de sellos.',
-    technicalDetails: [
-      'Creación dinámica de organizaciones subordinadas en el PAC',
-      'Carga directa y segura de sellos CSD (.cer, .key)',
-      'Soporte para 20 timbres mensuales incluidos',
-      'Timbres extra a $1.50 MXN c/u en prepago',
-      'Generación y timbrado automatizado de CFDI 4.0',
-      'Descarga de archivos XML y PDF de facturas',
-      'Manejo inteligente de sincronización LCO del SAT'
-    ]
-  },
-  {
-    id: 'automatic-invoicing',
-    name: 'Facturación Automática SAT',
-    categoryBadge: 'CONTABILIDAD Y FISCAL',
-    description: 'Timbrado automático e inmediato de facturas CFDI 4.0 al recibir pagos de tus clientes finales.',
-    detailedDescription: 'Módulo de facturación automática como agregado del módulo de facturación SAT México. Permite automatizar al 100% el timbrado de facturas al recibir pagos de abonos o mensualidades.',
-    monthlyPrice: 199,
-    yearlyPrice: 1990,
-    complexity: 'Media',
-    serverRequirements: 'Módulo Facturación SAT México activo + Configuración fiscal completa y sellos CSD vigentes.',
-    technicalDetails: [
-      'Timbrado desatendido inmediato post-pago',
-      'Envío automático de XML y PDF a clientes finales',
-      'Notificaciones de estado de timbrado al tenant',
-      'Reintentos automáticos ante caídas del PAC/SAT'
-    ]
-  },
-  {
-    id: 'ecommerce-combo',
-    name: 'Combo E-commerce Automatizado',
-    categoryBadge: 'E-COMMERCE COMBO',
-    description: 'El paquete integral definitivo: Tienda + Envíos con Skydropx, Facturación SAT y Newsletter Masivo en uno.',
-    detailedDescription: 'La solución completa ideal para cualquier comercio digital. Habilita de golpe las funciones de cotización y emisión de guías de envío nacionales de Skydropx, facturación fiscal automatizada CFDI 4.0 con 20 timbres base, y campañas de marketing por correo con 1,000 envíos incluidos.',
-    monthlyPrice: 799,
-    yearlyPrice: 7990,
-    complexity: 'Alta',
-    serverRequirements: 'Configuración completa de llaves de Stripe, Skydropx API Key y Facturapi API Key.',
-    technicalDetails: [
-      'Acceso completo a módulo Tienda + Envíos Skydropx',
-      'Acceso completo a módulo Facturación SAT (20 timbres base)',
-      'Acceso completo a módulo Newsletter Masivo (1,000 correos base)',
-      'Ahorro de $148.00 MXN mensuales sobre la compra individual',
-      'Configuración unificada y automatización de negocio cruzada'
     ]
   }
 ];
@@ -300,21 +290,19 @@ export default function AddonShowcase() {
         <div className="inline-flex bg-card-bg border border-card-border p-1.5 rounded-2xl relative z-10 shadow-sm mx-auto">
           <button
             onClick={() => setBillingCycle('monthly')}
-            className={`px-6 py-2.5 rounded-xl font-black uppercase tracking-widest text-[9px] transition-all duration-300 ${
-              billingCycle === 'monthly'
-                ? 'bg-nectar-gold text-background shadow-md'
-                : 'text-foreground/60 hover:text-foreground hover:bg-foreground/5'
-            }`}
+            className={`px-6 py-2.5 rounded-xl font-black uppercase tracking-widest text-[9px] transition-all duration-300 ${billingCycle === 'monthly'
+              ? 'bg-nectar-gold text-background shadow-md'
+              : 'text-foreground/60 hover:text-foreground hover:bg-foreground/5'
+              }`}
           >
             Mensual
           </button>
           <button
             onClick={() => setBillingCycle('yearly')}
-            className={`px-6 py-2.5 rounded-xl font-black uppercase tracking-widest text-[9px] transition-all duration-300 ${
-              billingCycle === 'yearly'
-                ? 'bg-nectar-gold text-background shadow-md'
-                : 'text-foreground/60 hover:text-foreground hover:bg-foreground/5'
-            }`}
+            className={`px-6 py-2.5 rounded-xl font-black uppercase tracking-widest text-[9px] transition-all duration-300 ${billingCycle === 'yearly'
+              ? 'bg-nectar-gold text-background shadow-md'
+              : 'text-foreground/60 hover:text-foreground hover:bg-foreground/5'
+              }`}
           >
             Anual <span className="text-[7px] text-nectar-cream bg-white/20 px-1 py-0.5 rounded ml-1 font-bold">2 meses gratis</span>
           </button>
@@ -367,12 +355,11 @@ export default function AddonShowcase() {
                     )}
                   </div>
 
-                  <span className={`text-[7px] font-black uppercase tracking-wider px-2 py-0.5 rounded border ${
-                    addon.complexity === 'Muy Alta' ? 'text-red-400 bg-red-400/5 border-red-400/20' :
+                  <span className={`text-[7px] font-black uppercase tracking-wider px-2 py-0.5 rounded border ${addon.complexity === 'Muy Alta' ? 'text-red-400 bg-red-400/5 border-red-400/20' :
                     addon.complexity === 'Alta' ? 'text-orange-400 bg-orange-400/5 border-orange-400/20' :
-                    addon.complexity === 'Media' ? 'text-yellow-500 bg-yellow-500/5 border-yellow-500/20' :
-                    'text-emerald-500 bg-emerald-500/5 border-emerald-500/20'
-                  }`}>
+                      addon.complexity === 'Media' ? 'text-yellow-500 bg-yellow-500/5 border-yellow-500/20' :
+                        'text-emerald-500 bg-emerald-500/5 border-emerald-500/20'
+                    }`}>
                     {addon.complexity}
                   </span>
                 </div>
@@ -401,11 +388,11 @@ export default function AddonShowcase() {
 
       {/* Modal: View Details / Ficha Técnica */}
       {selectedAddon && (
-        <div 
+        <div
           onClick={() => setSelectedAddon(null)}
           className="fixed inset-0 bg-background/80 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-premium cursor-pointer"
         >
-          <div 
+          <div
             onClick={(e) => e.stopPropagation()}
             className="bg-card-bg border border-card-border w-full max-w-2xl rounded-[2rem] sm:rounded-[3rem] p-6 sm:p-12 shadow-2xl relative max-h-[90vh] overflow-y-auto cursor-default"
           >

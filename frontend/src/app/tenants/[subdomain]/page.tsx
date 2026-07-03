@@ -837,7 +837,7 @@ export default function TenantPortalPage() {
                       { slug: 'business-analytics', label: 'Métricas APM', icon: '📊' },
                       { slug: 'campaigner', label: 'Boletín', icon: '✉️' },
                       { slug: 'facturacion-cfdi', label: 'Facturación SAT', icon: '🧾' },
-                      { slug: 'ecommerce-combo', label: 'Tienda Online', icon: '🛍️' },
+                      { slug: 'ecommerce', label: 'Tienda Online', icon: '🛍️' },
                     ]
                       .filter(tab => activeAddonsList.includes(tab.slug))
                       .map(tab => {
@@ -871,7 +871,7 @@ export default function TenantPortalPage() {
                     { slug: 'business-analytics', component: <TelemetryDashboard primaryColor={primaryColor} /> },
                     { slug: 'campaigner', component: <SubscribeForm tenantId={tenantConfig.id} subdomain={subdomain} primaryColor={primaryColor} /> },
                     { slug: 'facturacion-cfdi', component: <SATInvoicingForm tenantId={tenantConfig.id} subdomain={subdomain} primaryColor={primaryColor} ownerId={tenantConfig.owner} showToast={showToast} /> },
-                    { slug: 'ecommerce-combo', component: <EcommerceStore tenantId={tenantConfig.id} subdomain={subdomain} primaryColor={primaryColor} /> },
+                    { slug: 'ecommerce', component: <EcommerceStore tenantId={tenantConfig.id} subdomain={subdomain} primaryColor={primaryColor} /> },
                   ].find(tab => tab.slug === activeAddonTab)?.component}
                 </div>
               </div>

@@ -243,8 +243,18 @@ class Tenant(models.Model):
         if self.newsletter_plan == 'PREMIUM':
             addons.add('campaigner')
             
+        # Si tiene el viejo ecommerce-combo, mapear a ecommerce y sus constituyentes para compatibilidad
         if 'ecommerce-combo' in addons:
-            addons.update(['delivery-tracking', 'facturacion-cfdi', 'campaigner'])
+            addons.update(['delivery-tracking', 'facturacion-cfdi', 'ecommerce', 'campaigner'])
+
+        if 'pack-ecommerce-lite' in addons:
+            addons.update(['delivery-tracking', 'facturacion-cfdi', 'ecommerce', 'campaigner'])
+
+        if 'pack-pos-ecommerce' in addons:
+            addons.update(['delivery-tracking', 'facturacion-cfdi', 'ecommerce', 'pos-manager', 'campaigner'])
+
+        if 'pack-blog-sponsors' in addons:
+            addons.update(['sponsorship', 'ecommerce', 'facturacion-cfdi', 'campaigner'])
 
         # Normalize/Expand active addons with aliases for full backend/frontend compatibility
         addon_aliases = {
