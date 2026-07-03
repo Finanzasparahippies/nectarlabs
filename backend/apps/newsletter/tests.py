@@ -9,13 +9,10 @@ from apps.newsletter.models import Subscriber
 class NewsletterAddonTests(BaseTenantAddonTestCase):
     def setUp(self):
         super().setUp()
-        from django.utils import timezone
-        future = timezone.now() + timezone.timedelta(days=14)
-        self.tenant_a.trial_ends_at = future
-        self.tenant_a.shipping_wallet_balance = 100.00
+        from decimal import Decimal
+        self.tenant_a.shipping_wallet_balance = Decimal('100.00')
         self.tenant_a.save()
-        self.tenant_b.trial_ends_at = future
-        self.tenant_b.shipping_wallet_balance = 100.00
+        self.tenant_b.shipping_wallet_balance = Decimal('100.00')
         self.tenant_b.save()
     def test_newsletter_subscribe_permission_and_isolation(self):
         """
@@ -130,8 +127,9 @@ class NewsletterAddonTests(BaseTenantAddonTestCase):
         
         # Scenario A: Tenant is in trial
         from django.utils import timezone
+        from decimal import Decimal
         self.tenant_a.trial_ends_at = timezone.now() + timezone.timedelta(days=14)
-        self.tenant_a.shipping_wallet_balance = 0.00
+        self.tenant_a.shipping_wallet_balance = Decimal('0.00')
         self.tenant_a.save()
         
         from apps.newsletter.models import send_newsletter_email
@@ -142,12 +140,12 @@ class NewsletterAddonTests(BaseTenantAddonTestCase):
         send_newsletter_email("Test Subject", "welcome", {}, recipients, tenant=self.tenant_a)
         self.assertEqual(len(mail.outbox), 1)
         self.tenant_a.refresh_from_db()
-        self.assertEqual(self.tenant_a.shipping_wallet_balance, 0.00) # No deduction
+        self.assertEqual(self.tenant_a.shipping_wallet_balance, Decimal('0.00')) # No deduction
         self.assertEqual(self.tenant_a.newsletter_sent_today, 2)
         
         # Scenario B: Tenant is NOT in trial
         self.tenant_a.trial_ends_at = timezone.now() - timezone.timedelta(days=1)
-        self.tenant_a.shipping_wallet_balance = 0.00
+        self.tenant_a.shipping_wallet_balance = Decimal('0.00')
         self.tenant_a.save()
         
         logger.info("Verifying that non-trial tenants with 0 balance raise ValueError...")
@@ -156,7 +154,7 @@ class NewsletterAddonTests(BaseTenantAddonTestCase):
         self.assertIn("Saldo insuficiente", str(ctx.exception))
         
         # Set sufficient balance and test sending
-        self.tenant_a.shipping_wallet_balance = 100.00
+        self.tenant_a.shipping_wallet_balance = Decimal('100.00')
         self.tenant_a.save()
         
         mail.outbox = []
@@ -166,7 +164,7 @@ class NewsletterAddonTests(BaseTenantAddonTestCase):
         
         # Verify that balance was deducted by $0.02 (2 recipients * $0.01)
         self.tenant_a.refresh_from_db()
-        self.assertEqual(self.tenant_a.shipping_wallet_balance, 99.98) # 100.00 - 0.02
+        self.assertEqual(self.tenant_a.shipping_wallet_balance, Decimal('99.98')) # 100.00 - 0.02
         self.assertEqual(self.tenant_a.newsletter_sent_this_month, 4)
 
     def test_system_admin_send_campaign(self):

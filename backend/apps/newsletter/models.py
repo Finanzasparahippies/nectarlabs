@@ -165,7 +165,8 @@ def send_newsletter_email(subject, template_name, context, recipient_list, tenan
                 update_fields = []
                 if not has_byo_smtp:
                     if not tenant.is_in_trial:
-                        tenant.shipping_wallet_balance -= cost
+                        from decimal import Decimal
+                        tenant.shipping_wallet_balance = Decimal(str(tenant.shipping_wallet_balance)) - cost
                         update_fields.append('shipping_wallet_balance')
                     
                     tenant.newsletter_sent_this_month += len(recipient_list)
