@@ -182,14 +182,14 @@ function RegisterContent() {
 
           <div className="space-y-2">
             <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-4">Tipo de Cuenta</label>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-2">
               <div className="relative group">
                 <button
                   type="button"
                   onClick={() => setFormData({ ...formData, role: 'CUSTOMER' })}
-                  className={`w-full py-3.5 rounded-2xl border font-black text-[10px] uppercase tracking-wider transition-all ${
+                  className={`w-full py-3 rounded-2xl border font-black text-[9px] uppercase tracking-wider transition-all ${
                     formData.role === 'CUSTOMER' 
-                      ? 'border-nectar-gold bg-nectar-gold/10 text-nectar-gold animate-in fade-in zoom-in-95 duration-200' 
+                      ? 'border-nectar-gold bg-nectar-gold/10 text-nectar-gold' 
                       : 'border-card-border text-foreground/50 hover:border-card-border/80 bg-background/50'
                   }`}
                 >
@@ -208,9 +208,9 @@ function RegisterContent() {
                 <button
                   type="button"
                   onClick={() => setFormData({ ...formData, role: 'SALES' })}
-                  className={`w-full py-3.5 rounded-2xl border font-black text-[10px] uppercase tracking-wider transition-all ${
+                  className={`w-full py-3 rounded-2xl border font-black text-[9px] uppercase tracking-wider transition-all ${
                     formData.role === 'SALES' 
-                      ? 'border-nectar-gold bg-nectar-gold/10 text-nectar-gold animate-in fade-in zoom-in-95 duration-200' 
+                      ? 'border-nectar-gold bg-nectar-gold/10 text-nectar-gold' 
                       : 'border-card-border text-foreground/50 hover:border-card-border/80 bg-background/50'
                   }`}
                 >
@@ -224,8 +224,35 @@ function RegisterContent() {
                   <div className="absolute top-full left-1/2 -translate-x-1/2 border-[6px] border-transparent border-t-card-bg"></div>
                 </div>
               </div>
+
+              <div className="relative group">
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, role: 'DRIVER' })}
+                  className={`w-full py-3 rounded-2xl border font-black text-[9px] uppercase tracking-wider transition-all ${
+                    formData.role === 'DRIVER' 
+                      ? 'border-nectar-gold bg-nectar-gold/10 text-nectar-gold animate-in fade-in duration-200' 
+                      : 'border-card-border text-foreground/50 hover:border-card-border/80 bg-background/50'
+                  }`}
+                >
+                  Repartidor
+                </button>
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-64 p-4 rounded-2xl bg-card-bg border border-card-border shadow-2xl opacity-0 scale-95 pointer-events-none group-hover:opacity-100 group-hover:scale-100 transition-all duration-300 z-50 text-left">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-nectar-gold mb-1">Rol: Repartidor</p>
+                  <p className="text-[11px] leading-relaxed text-foreground/80 font-medium">
+                    Para repartidores independientes. Recibe entregas de comercios locales, gestiona tus rutas en tiempo real y contrata tu módulo ilimitado por $399.00 MXN mensuales.
+                  </p>
+                  <div className="absolute top-full left-1/2 -translate-x-1/2 border-[6px] border-transparent border-t-card-bg"></div>
+                </div>
+              </div>
             </div>
           </div>
+
+          {formData.role === 'DRIVER' && (
+            <div className="p-4 bg-yellow-500/10 border border-yellow-500/20 text-[10px] leading-relaxed text-yellow-500/90 font-bold rounded-2xl text-center">
+              ⚠️ Néctar Labs no se hace responsable en caso de cualquier desperfecto ya que el dinero de las ventas y repartos no pasa a través de la plataforma. Cada negocio/restaurante se conecta y procesa transacciones de forma independiente a través de su propia cuenta de Stripe, pagos directos en Efectivo o CoDi.
+            </div>
+          )}
 
           <button
             type="submit"

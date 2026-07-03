@@ -15,6 +15,9 @@ const CombinedShopDelivery = dynamic(() => import('@/components/addons/logistics
 const SponsorTiers = dynamic(() => import('@/components/addons/patreon-sponsorship/SponsorTiers'), { ssr: false });
 const TelemetryDashboard = dynamic(() => import('@/components/addons/analytics-apm/TelemetryDashboard'), { ssr: false });
 const SubscribeForm = dynamic(() => import('@/components/addons/newsletter-campaigner/SubscribeForm'), { ssr: false });
+const RoleSwitcher = dynamic(() => import('@/components/ui/RoleSwitcher'), { ssr: false });
+const DriverPortal = dynamic(() => import('@/components/addons/logistics-gps/DriverPortal'), { ssr: false });
+const InteractiveTutorial = dynamic(() => import('@/components/ui/InteractiveTutorial'), { ssr: false });
 
 interface TenantConfig {
   id: string;
@@ -145,12 +148,34 @@ export default function TenantPortalPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // User Profile & Multi-Role Active Mode
+  const [userProfile, setUserProfile] = useState<any>(null);
+  const [activeRoleMode, setActiveRoleMode] = useState<string>('CUSTOMER');
+
   // Auth & Session
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
   const [token, setToken] = useState<string | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isSubmittingAuth, setIsSubmittingAuth] = useState(false);
+
+  useEffect(() => {
+    const loadUserProfile = async () => {
+      const globToken = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+      if (globToken && globToken !== 'null') {
+        try {
+          const profileData = await fetcher('/users/me/');
+          setUserProfile(profileData);
+          if (profileData.role === 'DRIVER') {
+            setActiveRoleMode('DRIVER');
+          }
+        } catch (err) {
+          console.warn('Failed to load user profile details:', err);
+        }
+      }
+    };
+    loadUserProfile();
+  }, [isAuthenticated, token]);
 
   // Active addon state for non-chat modules
   const [activeAddonTab, setActiveAddonTab] = useState<string | null>(null);
@@ -707,6 +732,14 @@ export default function TenantPortalPage() {
 
           {/* Section Selector tabs & Settings */}
           <div className="flex items-center gap-3">
+            {userProfile && (
+              <RoleSwitcher
+                currentRole={userProfile.role}
+                additionalRoles={userProfile.additional_roles || []}
+                activeMode={activeRoleMode}
+                onModeChange={(mode) => setActiveRoleMode(mode)}
+              />
+            )}
             <div className="flex items-center bg-white/5 dark:bg-black/20 p-1 rounded-2xl border border-white/5">
               <button
                 onClick={() => setCurrentSection('addons')}
@@ -759,9 +792,53 @@ export default function TenantPortalPage() {
 
       {/* 2. Main Portal Area */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-6 py-8 flex flex-col">
-        {currentSection === 'addons' ? (
+        {activeRoleMode === 'DRIVER' ? (
+          <div className="space-y-6">
+            <DriverPortal />
+            <InteractiveTutorial
+              tutorialKey="driver_portal_tutorial"
+              steps={[
+                {
+                  selector: '#driver-availability-toggle',
+                  title: 'Tu Disponibilidad',
+                  content: 'Indica a la colmena si estás disponible para repartir o si quieres desconectarte.'
+                },
+                {
+                  selector: '#driver-orders-sidebar',
+                  title: 'Tus Pedidos Asignados',
+                  content: 'Aquí verás todos los pedidos que tienes que entregar, junto con sus métodos de cobro.'
+                },
+                {
+                  selector: '#driver-map-container',
+                  title: 'Ruta y Destino',
+                  content: 'Utiliza el mapa interactivo para localizar el destino del cliente y planificar tu recorrido.'
+                },
+                {
+                  selector: '#active-order-card',
+                  title: 'Estado del Viaje',
+                  content: 'Actualiza el estado de tu pedido en tiempo real conforme recolectas, inicias el viaje y entregas el paquete.'
+                }
+              ]}
+            />
+          </div>
+        ) : currentSection === 'addons' ? (
           /* Seccion Publica de Add-ons Activos */
           <div className="flex-1 flex flex-col space-y-8 animate-in fade-in duration-300">
+            <InteractiveTutorial
+              tutorialKey="public_shop_tutorial"
+              steps={[
+                {
+                  selector: '.tenant-header',
+                  title: 'Navegación del Portal',
+                  content: 'Cambia rápidamente entre los servicios comerciales activos y el área de soporte al cliente.'
+                },
+                {
+                  selector: '.tenant-card',
+                  title: 'Catálogo y Herramientas',
+                  content: 'Bienvenido. Aquí puedes acceder al catálogo de productos, solicitar facturas SAT o interactuar con las herramientas de la colmena.'
+                }
+              ]}
+            />
             {/* Hero / Welcome Panel */}
             <div className="border rounded-[2.5rem] p-8 md:p-10 shadow-2xl relative overflow-hidden tenant-card flex flex-col md:flex-row items-center gap-8 group transition-all duration-500 hover:shadow-3xl hover:border-white/10">
               {/* Glowing Background Ambiance */}

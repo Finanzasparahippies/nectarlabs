@@ -19,6 +19,9 @@ const DeliveryConfigTabInline = dynamic(
   () => import('@/components/addons/logistics-gps/DeliveryConfigTab'),
   { ssr: false, loading: () => <div className="flex items-center justify-center py-16"><span className="w-6 h-6 rounded-full border-4 border-t-white border-white/10 animate-spin" /></div> }
 );
+const RoleSwitcher = dynamic(() => import('@/components/ui/RoleSwitcher'), { ssr: false });
+const DriverPortal = dynamic(() => import('@/components/addons/logistics-gps/DriverPortal'), { ssr: false });
+const InteractiveTutorial = dynamic(() => import('@/components/ui/InteractiveTutorial'), { ssr: false });
 
 
 interface TenantConfig {
@@ -90,6 +93,7 @@ export default function TenantAdminPage() {
   const [loading, setLoading] = useState(true);
   const [authorized, setAuthorized] = useState(false);
   const [userMe, setUserMe] = useState<any | null>(null);
+  const [activeRoleMode, setActiveRoleMode] = useState<string>('ADMIN');
   const [activeTab, setActiveTab] = useState<'metrics' | 'branding' | 'billing' | 'integrations' | 'pos' | 'store-config' | 'delivery-config'>('metrics');
   const [billingSubTab, setBillingSubTab] = useState<'catalog' | 'history' | 'config' | 'cartera'>('catalog');
 
@@ -1994,6 +1998,14 @@ export default function TenantAdminPage() {
 
           {/* Navigation Tab selectors */}
           <div className="flex items-center gap-2">
+            {userMe && (
+              <RoleSwitcher
+                currentRole={userMe.role}
+                additionalRoles={userMe.additional_roles || []}
+                activeMode={activeRoleMode}
+                onModeChange={(mode) => setActiveRoleMode(mode)}
+              />
+            )}
             <button
               onClick={() => setActiveTab('metrics')}
               className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border cursor-pointer"
@@ -2093,10 +2105,46 @@ export default function TenantAdminPage() {
 
       {/* Main Container */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-6 py-8 flex flex-col">
-        {activeTab === 'metrics' && (
-          /* Metrics Dashboard */
-          <div className="space-y-8 animate-in fade-in duration-300">
-            {/* Header info */}
+        {activeRoleMode === 'DRIVER' ? (
+          <div className="space-y-6">
+            <DriverPortal />
+            <InteractiveTutorial
+              tutorialKey="admin_driver_tutorial"
+              steps={[
+                {
+                  selector: '#driver-availability-toggle',
+                  title: 'Disponibilidad del Repartidor',
+                  content: 'Indica si estás activo para recibir pedidos de restaurantes y tiendas.'
+                },
+                {
+                  selector: '#driver-orders-sidebar',
+                  title: 'Pedidos Asignados',
+                  content: 'Administra tus entregas, direcciones y modos de cobro.'
+                }
+              ]}
+            />
+          </div>
+        ) : (
+          <>
+            <InteractiveTutorial
+              tutorialKey="admin_portal_tutorial"
+              steps={[
+                {
+                  selector: '.admin-header',
+                  title: 'Panel de Administración',
+                  content: 'Bienvenido al centro de mandos de tu comercio local. Desde aquí controlas todo el negocio.'
+                },
+                {
+                  selector: '.admin-card',
+                  title: 'Métricas de Módulos',
+                  content: 'Monitorea las cotizaciones de envíos, timbres fiscales CFDI 4.0 consumidos y suscriptores de newsletters.'
+                }
+              ]}
+            />
+            {activeTab === 'metrics' && (
+              /* Metrics Dashboard */
+              <div className="space-y-8 animate-in fade-in duration-300">
+                {/* Header info */}
             <div className="admin-card border rounded-[2rem] p-8 relative overflow-hidden flex flex-col md:flex-row items-center gap-6">
               <div className="absolute -top-32 -right-32 w-64 h-64 rounded-full blur-[100px] opacity-10 pointer-events-none" style={{ backgroundColor: primaryColor }}></div>
               <div className="w-14 h-14 rounded-2xl bg-foreground/[0.03] flex items-center justify-center text-3xl border border-white/5">
@@ -3690,6 +3738,8 @@ export default function TenantAdminPage() {
           <div className="space-y-8 animate-in fade-in duration-300">
             <DeliveryConfigTabInline subdomain={subdomain} primaryColor={primaryColor} onToast={showToast} />
           </div>
+        )}
+        </>
         )}
       </main>
 
