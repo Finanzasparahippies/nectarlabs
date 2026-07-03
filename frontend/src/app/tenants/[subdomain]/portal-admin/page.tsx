@@ -72,6 +72,7 @@ interface TenantConfig {
   tenant_context?: string | null;
   server_time?: string;
   shipping_wallet_balance?: string | number;
+  has_active_plan_contract?: boolean;
 }
 
 export default function TenantAdminPage() {
@@ -3680,6 +3681,16 @@ export default function TenantAdminPage() {
             primaryColor={primaryColor}
           />
         )}
+        {activeTab === 'store-config' && tenantConfig && (
+          <div className="space-y-8 animate-in fade-in duration-300">
+            <StoreConfigTabInline subdomain={subdomain} primaryColor={primaryColor} onToast={showToast} />
+          </div>
+        )}
+        {activeTab === 'delivery-config' && tenantConfig && (
+          <div className="space-y-8 animate-in fade-in duration-300">
+            <DeliveryConfigTabInline subdomain={subdomain} primaryColor={primaryColor} onToast={showToast} />
+          </div>
+        )}
       </main>
 
       {/* Footer copyright */}
@@ -6401,20 +6412,6 @@ function POSTab({ tenantConfig, primaryColor }: POSTabProps) {
             </div>
           )}
         </div>
-
-        {/* Store Config Tab */}
-        {activeTab === 'store-config' && tenantConfig && (
-          <div className="space-y-8 animate-in fade-in duration-300">
-            <StoreConfigTabInline subdomain={subdomain} primaryColor={primaryColor} onToast={showToast} />
-          </div>
-        )}
-
-        {/* Delivery Config Tab */}
-        {activeTab === 'delivery-config' && tenantConfig && (
-          <div className="space-y-8 animate-in fade-in duration-300">
-            <DeliveryConfigTabInline subdomain={subdomain} primaryColor={primaryColor} onToast={showToast} />
-          </div>
-        )}
       </div>
 
       {/* Note Detail Modal */}
