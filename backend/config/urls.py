@@ -19,7 +19,7 @@ from rest_framework_simplejwt.views import (
 )
 
 
-from apps.shop.views import PlanViewSet, ProductViewSet, ContractViewSet, PaymentInstallmentViewSet, AddOnViewSet, PromoCodeViewSet, SalesCommissionViewSet, ShopCheckoutView, GetShippingRatesView, AddOnSubscriptionViewSet, OrderStatusView
+from apps.shop.views import PlanViewSet, ProductViewSet, ContractViewSet, PaymentInstallmentViewSet, AddOnViewSet, PromoCodeViewSet, SalesCommissionViewSet, ShopCheckoutView, GetShippingRatesView, AddOnSubscriptionViewSet, OrderStatusView, OrderViewSet
 from apps.dashboard.views import ProjectViewSet, FAQViewSet, TimeLogViewSet, ProjectQuoteViewSet, LeadViewSet, LeadAppointmentViewSet
 from apps.blog.views import PostViewSet
 from apps.tickets.views import TicketViewSet, SupportChatViewSet
@@ -49,6 +49,7 @@ router.register(r'contracts', ContractViewSet, basename='contract')
 router.register(r'installments', PaymentInstallmentViewSet, basename='installment')
 router.register(r'promo-codes', PromoCodeViewSet, basename='promocode')
 router.register(r'sales-commissions', SalesCommissionViewSet, basename='salescommission')
+router.register(r'shop/orders', OrderViewSet, basename='shop-order')
 
 # Control de Negocio y Prospectos (Proyectos, Cotizaciones, Leads, Horarios)
 router.register(r'projects', ProjectViewSet, basename='project')

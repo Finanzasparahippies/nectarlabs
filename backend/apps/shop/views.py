@@ -7,8 +7,8 @@ from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse
 import stripe
-from .models import Plan, Product, Contract, PaymentInstallment, AddOn, PromoCode, SalesCommission, AddOnSubscription
-from .serializers import PlanSerializer, ProductSerializer, ContractSerializer, PaymentInstallmentSerializer, AddOnSerializer, PromoCodeSerializer, SalesCommissionSerializer, AddOnSubscriptionSerializer
+from .models import Plan, Product, Contract, PaymentInstallment, AddOn, PromoCode, SalesCommission, AddOnSubscription, Order, OrderItem
+from .serializers import PlanSerializer, ProductSerializer, ContractSerializer, PaymentInstallmentSerializer, AddOnSerializer, PromoCodeSerializer, SalesCommissionSerializer, AddOnSubscriptionSerializer, OrderSerializer
 from .utils import generate_contract_pdf, send_contract_emails, send_payment_receipt_email, send_addon_payment_receipt_email, notify_support_addon_subscription
 
 
@@ -2170,3 +2170,87 @@ class OrderStatusView(APIView):
             "tracking_number": order.tracking_number,
             "tracking_url": order.tracking_url
         }, status=status.HTTP_200_OK)
+
+
+from django.db import transaction
+from decimal import Decimal
+import uuid
+from apps.tenants.models import Tenant
+
+class OrderViewSet(viewsets.ModelViewSet):
+    queryset = Order.objects.all()
+    serializer_class = OrderSerializer
+    permission_classes = [permissions.AllowAny]
+
+    def get_queryset(self):
+        queryset = Order.objects.all()
+        tenant_id = self.request.query_params.get('tenant_id')
+        if tenant_id:
+            try:
+                queryset = queryset.filter(tenant_id=uuid.UUID(str(tenant_id)))
+            except (ValueError, TypeError):
+                queryset = queryset.none()
+        return queryset
+
+    @transaction.atomic
+    def create(self, request, *args, **kwargs):
+        data = request.data
+        tenant_id = data.get('tenant_id')
+        if not tenant_id:
+            return Response({"detail": "Se requiere tenant_id."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            tenant = Tenant.objects.select_for_update().get(id=tenant_id)
+        except (Tenant.DoesNotExist, ValueError, TypeError):
+            return Response({"detail": "Tenant no encontrado."}, status=status.HTTP_404_NOT_FOUND)
+            
+        items_data = data.get('items', [])
+        if not items_data:
+            return Response({"detail": "La orden debe contener al menos un producto."}, status=status.HTTP_400_BAD_REQUEST)
+
+        total_amount = Decimal('0.00')
+        order_items_to_create = []
+        
+        # Validar stocks
+        for item in items_data:
+            prod_id = item.get('product_id')
+            qty = int(item.get('quantity', 1))
+            try:
+                product = Product.objects.select_for_update().get(id=prod_id, tenant=tenant)
+            except Product.DoesNotExist:
+                return Response({"detail": f"Producto con ID {prod_id} no encontrado en este catálogo."}, status=status.HTTP_404_NOT_FOUND)
+                
+            if product.stock < qty:
+                return Response({"detail": f"Stock insuficiente para {product.name} (Disponible: {product.stock})."}, status=status.HTTP_400_BAD_REQUEST)
+                
+            # Restar del stock
+            product.stock -= qty
+            product.save(update_fields=['stock'])
+            
+            unit_price = Decimal(str(item.get('unit_price', product.price)))
+            total_amount += unit_price * qty
+            order_items_to_create.append((product, qty, unit_price))
+
+        user = request.user if request.user.is_authenticated else None
+        order = Order.objects.create(
+            tenant=tenant,
+            user=user,
+            user_email=data.get('recipient_email') or (user.email if user else None),
+            total=total_amount,
+            status=Order.Status.PENDING,
+            full_name=data.get('recipient_name', ''),
+            phone=data.get('recipient_phone', ''),
+            street_and_number=data.get('delivery_address', '')
+        )
+
+        for product, qty, price in order_items_to_create:
+            OrderItem.objects.create(
+                order=order,
+                product=product,
+                quantity=qty,
+                price=price
+            )
+
+        serializer = self.get_serializer(order)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
