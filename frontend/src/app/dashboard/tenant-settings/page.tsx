@@ -124,6 +124,7 @@ export default function TenantSettingsPage() {
   const [editRequireCustomerInfo, setEditRequireCustomerInfo] = useState(true);
   const [editAllowedOrigins, setEditAllowedOrigins] = useState('');
   const [editInvoicingMode, setEditInvoicingMode] = useState('MANUAL_CLIENT');
+  const [editStoreCategory, setEditStoreCategory] = useState('General');
 
   // Undo History & Custom Particle settings
   const [historyLength, setHistoryLength] = useState(0);
@@ -162,6 +163,7 @@ export default function TenantSettingsPage() {
     editRequireCustomerInfo,
     editAllowedOrigins,
     editInvoicingMode,
+    editStoreCategory,
   });
 
   useEffect(() => {
@@ -170,7 +172,7 @@ export default function TenantSettingsPage() {
     editName, editSubdomain, editCustomDomain, editUseCustomDomain, editThemeColor, editAccentColor, editBgColor, editCardBgColor, editTextColor, editBorderColor,
     editThemeColorLight, editAccentColorLight, editBgColorLight, editCardBgColorLight, editTextColorLight, editBorderColorLight,
     editPollenActive, editPollenIcon, editPollenColor, editPollenCount, editPollenBlur,
-    editLogoUrl, editWelcomeMessage, editPortalTitle, editFooterText, editRequireCustomerInfo, editAllowedOrigins, editInvoicingMode
+    editLogoUrl, editWelcomeMessage, editPortalTitle, editFooterText, editRequireCustomerInfo, editAllowedOrigins, editInvoicingMode, editStoreCategory
   ]);
 
   const pushToHistory = () => {
@@ -219,6 +221,7 @@ export default function TenantSettingsPage() {
       setEditFooterText(previousState.editFooterText);
       setEditRequireCustomerInfo(previousState.editRequireCustomerInfo);
       setEditAllowedOrigins(previousState.editAllowedOrigins);
+      setEditStoreCategory(previousState.editStoreCategory);
     }
   };
 
@@ -358,6 +361,7 @@ export default function TenantSettingsPage() {
     setEditRequireCustomerInfo(tenant.require_customer_info);
     setEditAllowedOrigins(tenant.allowed_origins || '');
     setEditInvoicingMode(tenant.invoicing_mode || 'MANUAL_CLIENT');
+    setEditStoreCategory(tenant.store_category || 'General');
     setDomainValidationResult(null);
 
     undoStackRef.current = [];
@@ -446,6 +450,7 @@ export default function TenantSettingsPage() {
       formData.append('require_customer_info', String(editRequireCustomerInfo));
       formData.append('allowed_origins', editAllowedOrigins.trim());
       formData.append('invoicing_mode', editInvoicingMode);
+      formData.append('store_category', editStoreCategory);
 
       if (editLogoFile) {
         formData.append('logo', editLogoFile);
@@ -548,6 +553,10 @@ export default function TenantSettingsPage() {
 
       if (productImageFile) {
         formData.append('image', productImageFile);
+      }
+
+      if (selectedTenant) {
+        formData.append('tenant', selectedTenant.id);
       }
 
       if (editingProduct) {
@@ -854,6 +863,25 @@ export default function TenantSettingsPage() {
                           placeholder="Ej. Mi Tienda Néctar"
                           className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-foreground focus:outline-none focus:border-nectar-gold transition-all"
                         />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-1">
+                        <label className="text-[9px] font-black uppercase tracking-widest text-foreground/40">Categoría del Negocio / Tienda</label>
+                        <select
+                          value={editStoreCategory}
+                          onFocus={pushToHistory}
+                          onChange={(e) => setEditStoreCategory(e.target.value)}
+                          className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-foreground focus:outline-none focus:border-nectar-gold transition-all"
+                        >
+                          <option value="General">General</option>
+                          <option value="Consumibles">Consumibles (Alimentos, Bebidas, Comida)</option>
+                          <option value="Ropa">Ropa, Calzado y Accesorios</option>
+                          <option value="Tecnología">Tecnología y Electrónica</option>
+                          <option value="Salud">Salud y Belleza</option>
+                          <option value="Servicios">Servicios Profesionales</option>
+                        </select>
                       </div>
                     </div>
 

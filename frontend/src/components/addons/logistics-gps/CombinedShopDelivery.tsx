@@ -72,6 +72,7 @@ interface CombinedShopDeliveryProps {
 // ─────────────────────────────────────────────
 const STATUS_LABELS: Record<string, { label: string; emoji: string; color: string }> = {
   PENDING:    { label: 'Buscando repartidor…', emoji: '🔍', color: '#F59E0B' },
+  WAITING_ACCEPTANCE: { label: 'Esperando confirmación del repartidor…', emoji: '⏳', color: '#F59E0B' },
   ASSIGNED:   { label: 'Repartidor asignado',  emoji: '🛵', color: '#3B82F6' },
   PICKED_UP:  { label: 'Pedido recogido',       emoji: '📦', color: '#8B5CF6' },
   IN_TRANSIT: { label: 'En camino',             emoji: '🚀', color: '#06B6D4' },
@@ -124,6 +125,7 @@ export default function CombinedShopDelivery({
   const [products, setProducts] = useState<Product[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
+  const [productsError, setProductsError] = useState<string | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [showCart, setShowCart] = useState(false);
@@ -136,6 +138,7 @@ export default function CombinedShopDelivery({
   const [deliveryLat, setDeliveryLat] = useState<number | null>(null);
   const [deliveryLon, setDeliveryLon] = useState<number | null>(null);
   const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<'CASH' | 'STRIPE'>('CASH');
 
   // ── Active Delivery Order ──
   const [activeOrder, setActiveOrder] = useState<DeliveryOrder | null>(null);
@@ -144,25 +147,117 @@ export default function CombinedShopDelivery({
   const wsRef = useRef<WebSocket | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // ── 0. Handle Stripe Redirect Callback ──
+  useEffect(() => {
+    if (typeof window === 'undefined' || !tenantConfig?.id) return;
+    const urlParams = new URLSearchParams(window.location.search);
+    const paymentSuccess = urlParams.get('payment_success') === 'true';
+    const shopOrderId = urlParams.get('shop_order_id');
+    const sessionId = urlParams.get('session_id');
+
+    if (paymentSuccess && shopOrderId && sessionId) {
+      const verifyAndRegisterDelivery = async () => {
+        setIsSubmittingOrder(true);
+        try {
+          // 1. Verify payment status on backend
+          const verifyRes = await fetch(`/api/shop/orders/${shopOrderId}/verify-stripe-payment/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ session_id: sessionId })
+          });
+          if (!verifyRes.ok) throw new Error('No se pudo verificar el pago en Stripe');
+          const verifyData = await verifyRes.json();
+          if (!verifyData.success) {
+            onToast(verifyData.message || 'El pago no ha sido completado.', 'warning');
+            return;
+          }
+
+          // 2. Fetch the shop order address info to register logistics
+          const orderRes = await fetch(`/api/shop/orders/${shopOrderId}/`);
+          if (!orderRes.ok) throw new Error('No se pudo cargar la orden');
+          const shopOrder = await orderRes.json();
+
+          const idempotencyKey = `delivery-${shopOrderId}-${sessionId}`;
+
+          // 3. Create delivery order
+          const deliveryRes = await fetch('/api/delivery/orders/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              tenant_id: tenantConfig.id,
+              ecommerce_order_id: shopOrder.id,
+              idempotency_key: idempotencyKey,
+              shipment_type: 'LOCAL',
+              recipient_name: shopOrder.full_name || '',
+              recipient_phone: shopOrder.phone || '',
+              delivery_address: shopOrder.street_and_number || '',
+              delivery_latitude: 19.432608,
+              delivery_longitude: -99.133209,
+            }),
+          });
+          if (!deliveryRes.ok) throw new Error('Error al registrar la entrega');
+          const deliveryOrder = await deliveryRes.json();
+
+          // 4. Assign driver
+          try {
+            const assignRes = await fetch('/api/delivery/orders/assign-driver/', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                delivery_order_id: deliveryOrder.id,
+                idempotency_key: idempotencyKey,
+                origin_latitude: 19.432608,
+                origin_longitude: -99.133209,
+              }),
+            });
+            if (assignRes.ok) {
+              const assigned = await assignRes.json();
+              setActiveOrder(assigned);
+            } else {
+              setActiveOrder(deliveryOrder);
+            }
+          } catch (_) {
+            setActiveOrder(deliveryOrder);
+          }
+
+          // Clear cart
+          setCart([]);
+          setCheckoutStep('tracking');
+          onToast('¡Pago de Stripe verificado exitosamente y entrega asignada!', 'success');
+        } catch (err: any) {
+          onToast(err.message || 'Error al verificar pago / registrar entrega', 'error');
+        } finally {
+          setIsSubmittingOrder(false);
+          // Remove query params from address bar
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
+      };
+      verifyAndRegisterDelivery();
+    }
+  }, [tenantConfig?.id]);
+
   // ─────────────────────────────────────────────
   // 1. Load Products
   // ─────────────────────────────────────────────
-  useEffect(() => {
-    const fetchProducts = async () => {
-      setLoadingProducts(true);
-      try {
-        const res = await fetch(`/api/shop/products/?subdomain=${subdomain}&page_size=50`);
-        if (!res.ok) throw new Error('Error cargando productos');
-        const data = await res.json();
-        setProducts(Array.isArray(data) ? data : (data.results || []));
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoadingProducts(false);
-      }
-    };
-    fetchProducts();
+  const fetchProducts = useCallback(async () => {
+    setLoadingProducts(true);
+    setProductsError(null);
+    try {
+      const res = await fetch(`/api/products/?subdomain=${subdomain}&page_size=50`);
+      if (!res.ok) throw new Error('No se pudieron cargar los productos de la tienda');
+      const data = await res.json();
+      setProducts(Array.isArray(data) ? data : (data.results || []));
+    } catch (err: any) {
+      console.error(err);
+      setProductsError(err.message || 'Error cargando productos');
+    } finally {
+      setLoadingProducts(false);
+    }
   }, [subdomain]);
+
+  useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
 
   // ─────────────────────────────────────────────
   // 2. WebSocket for real-time driver location
@@ -288,6 +383,7 @@ export default function CombinedShopDelivery({
           recipient_name: recipientName.trim(),
           recipient_phone: recipientPhone.trim(),
           delivery_address: deliveryAddress.trim(),
+          payment_method: paymentMethod,
         }),
       });
 
@@ -297,6 +393,13 @@ export default function CombinedShopDelivery({
       }
 
       const shopOrder = await orderRes.json();
+
+      // Si hay URL de sesión de Stripe devuelta por el backend del inquilino, redirigir
+      if (shopOrder.stripe_session_url) {
+        onToast('Redirigiendo a pasarela de Stripe…', 'info');
+        window.location.href = shopOrder.stripe_session_url;
+        return;
+      }
 
       // 2. Create delivery order + assign driver
       const deliveryRes = await fetch('/api/delivery/orders/', {
@@ -530,6 +633,17 @@ export default function CombinedShopDelivery({
                   <div key={i} className="rounded-2xl border border-white/5 bg-white/5 animate-pulse h-44" />
                 ))}
               </div>
+            ) : productsError ? (
+              <div className="text-center py-12 space-y-3 bg-white/5 rounded-2xl border border-white/5 p-6">
+                <span className="text-3xl">⚠️</span>
+                <p className="text-xs font-black uppercase tracking-wider text-red-400">{productsError}</p>
+                <button
+                  onClick={() => fetchProducts()}
+                  className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider bg-white/10 hover:bg-white/20 transition-all border border-white/10 cursor-pointer"
+                >
+                  🔄 Reintentar
+                </button>
+              </div>
             ) : filteredProducts.length === 0 ? (
               <div className="text-center py-16 space-y-2 opacity-50">
                 <span className="text-4xl">🍯</span>
@@ -623,6 +737,36 @@ export default function CombinedShopDelivery({
                     className="w-full px-4 py-2.5 rounded-2xl border border-white/10 bg-white/5 text-sm placeholder-white/30 focus:outline-none focus:border-white/30"
                   />
                 </div>
+
+                {tenantConfig?.stripe_publishable_key && (
+                  <div className="space-y-2 pt-2">
+                    <span className="text-[9px] font-black uppercase tracking-wider opacity-45">Método de Pago</span>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setPaymentMethod('CASH')}
+                        className={`px-4 py-2.5 rounded-2xl border text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                          paymentMethod === 'CASH'
+                            ? 'border-white/40 bg-white/10 text-white'
+                            : 'border-white/10 bg-transparent text-white/50 hover:border-white/20'
+                        }`}
+                      >
+                        💵 Efectivo
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPaymentMethod('STRIPE')}
+                        className={`px-4 py-2.5 rounded-2xl border text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                          paymentMethod === 'STRIPE'
+                            ? 'border-white/40 bg-white/10 text-white'
+                            : 'border-white/10 bg-transparent text-white/50 hover:border-white/20'
+                        }`}
+                      >
+                        💳 Tarjeta
+                      </button>
+                    </div>
+                  </div>
+                )}
 
                 <button
                   disabled={isSubmittingOrder || !recipientName.trim() || !deliveryAddress.trim()}

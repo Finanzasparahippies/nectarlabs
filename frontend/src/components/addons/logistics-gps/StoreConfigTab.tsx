@@ -56,9 +56,10 @@ interface Props {
   subdomain: string;
   primaryColor: string;
   onToast: (msg: string, type: 'success' | 'error' | 'warning' | 'info') => void;
+  isStaff?: boolean;
 }
 
-export default function StoreConfigTab({ subdomain, primaryColor, onToast }: Props) {
+export default function StoreConfigTab({ subdomain, primaryColor, onToast, isStaff }: Props) {
   const [config, setConfig] = useState<StoreConfigData>({
     available_box_sizes: 'S,M,L',
     shipment_category: 'GENERAL',
@@ -182,14 +183,17 @@ export default function StoreConfigTab({ subdomain, primaryColor, onToast }: Pro
           <p className="text-xs text-white/50 mt-0.5">Origen de envíos, tamaños de caja y paquetería</p>
         </div>
         <div className="flex items-center gap-2">
-          {(['origin', 'boxes', 'shipping'] as const).map((key, i) => {
-            const opts = [
-              ['origin',   'Origen',    '📍'],
-              ['boxes',    'Cajas',     '📦'],
-              ['shipping', 'Paquetería','🚚'],
-            ] as const;
-            return sectionBtn(key, opts[i][1], opts[i][2]);
-          })}
+          {(['origin', 'boxes', 'shipping'] as const)
+            .filter(key => key !== 'shipping' || isStaff)
+            .map((key) => {
+              const optsMap = {
+                origin: ['Origen', '📍'],
+                boxes: ['Cajas', '📦'],
+                shipping: ['Paquetería', '🚚'],
+              } as const;
+              const [label, icon] = optsMap[key];
+              return sectionBtn(key, label, icon);
+            })}
         </div>
       </div>
 
@@ -375,7 +379,7 @@ export default function StoreConfigTab({ subdomain, primaryColor, onToast }: Pro
       )}
 
       {/* ── Section: Shipping / Skydropx ── */}
-      {activeSection === 'shipping' && (
+      {activeSection === 'shipping' && isStaff && (
         <div className="space-y-5">
           <div className="p-5 rounded-3xl border border-white/10 bg-white/5 space-y-4">
             <div className="flex items-start gap-3">
@@ -390,16 +394,26 @@ export default function StoreConfigTab({ subdomain, primaryColor, onToast }: Pro
                 </span>
               )}
             </div>
-            <div className="space-y-1">
-              <label className="text-[9px] font-black uppercase tracking-wider opacity-50">API Key de Skydropx</label>
-              <input
-                type="password"
-                placeholder={config.has_skydropx_api_key ? '••••••••••••• (dejar vacío para no cambiar)' : 'sk_live_...'}
-                value={skydropxKey}
-                onChange={e => setSkydropxKey(e.target.value)}
-                className={inputCls}
-              />
-            </div>
+            {isStaff ? (
+              <div className="space-y-1">
+                <label className="text-[9px] font-black uppercase tracking-wider opacity-50">API Key de Skydropx</label>
+                <input
+                  type="password"
+                  placeholder={config.has_skydropx_api_key ? '••••••••••••• (dejar vacío para no cambiar)' : 'sk_live_...'}
+                  value={skydropxKey}
+                  onChange={e => setSkydropxKey(e.target.value)}
+                  className={inputCls}
+                />
+              </div>
+            ) : (
+              <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl flex items-center gap-3 text-left">
+                <span className="text-xl">🚀</span>
+                <div>
+                  <p className="text-xs font-black text-white">Logística Administrada Activa</p>
+                  <p className="text-[9.5px] text-white/50">Tu portal utiliza la red de envíos global de Néctar Labs. No necesitas configurar claves API propias.</p>
+                </div>
+              </div>
+            )}
             <div className="space-y-1">
               <label className="text-[9px] font-black uppercase tracking-wider opacity-50">Markup sobre tarifa de courier (%)</label>
               <input
@@ -407,11 +421,17 @@ export default function StoreConfigTab({ subdomain, primaryColor, onToast }: Pro
                 min="0"
                 max="100"
                 step="0.5"
+                disabled={!isStaff}
                 value={config.shipping_markup_percentage || '15.00'}
                 onChange={e => setConfig(p => ({ ...p, shipping_markup_percentage: e.target.value }))}
-                className={inputCls}
+                className={`${inputCls} disabled:opacity-50 disabled:cursor-not-allowed`}
               />
               <p className="text-[9px] opacity-40">Porcentaje que se suma al costo real de la guía antes de mostrar al cliente.</p>
+              {!isStaff && (
+                <p className="text-[9px] text-amber-500/80 font-bold">
+                  * Solo el CEO o administradores de Nectar Labs pueden modificar esta tasa.
+                </p>
+              )}
             </div>
           </div>
         </div>

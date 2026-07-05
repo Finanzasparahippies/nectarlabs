@@ -170,6 +170,7 @@ class DriverProfile(models.Model):
 class DeliveryOrder(models.Model):
     class Status(models.TextChoices):
         PENDING = 'PENDING', 'Pendiente de asignación'
+        WAITING_ACCEPTANCE = 'WAITING_ACCEPTANCE', 'Esperando aceptación del repartidor'
         ASSIGNED = 'ASSIGNED', 'Repartidor asignado'
         PICKED_UP = 'PICKED_UP', 'Recogido'
         IN_TRANSIT = 'IN_TRANSIT', 'En camino'
@@ -190,6 +191,10 @@ class DeliveryOrder(models.Model):
     driver = models.ForeignKey(
         DriverProfile, on_delete=models.SET_NULL,
         null=True, blank=True, related_name='delivery_orders'
+    )
+    rejected_by_drivers = models.ManyToManyField(
+        DriverProfile, blank=True, related_name='rejected_orders',
+        help_text="Repartidores que han rechazado esta orden en el ciclo de búsqueda."
     )
     shipment_type = models.CharField(
         max_length=20, choices=ShipmentType.choices, default=ShipmentType.LOCAL

@@ -161,10 +161,10 @@ const fallbackAddons: Omit<Addon, 'icon'>[] = [
     id: 'campaigner',
     name: 'Campaigner Masivo',
     categoryBadge: 'EMAIL MARKETING',
-    description: 'Envío de boletines y campañas de email masivo sin renta fija. Cobro dinámico a $0.01 MXN por correo enviado.',
-    detailedDescription: 'Envía boletines interactivos a tu base de contactos usando nuestro servicio integrado. Sin renta fija mensual ni anual; solo pagas 1 centavo ($0.01 MXN) por cada correo enviado, descontado de tu Cartera Digital prepago.',
-    monthlyPrice: 0,
-    yearlyPrice: 0,
+    description: 'Envío de boletines y campañas de email masivo. Costo de $99 MXN/mes para contratación individual (incluido en planes/paquetes) + cobro dinámico a $0.01 MXN por correo enviado.',
+    detailedDescription: 'Envía boletines interactivos a tu base de contactos usando nuestro servicio integrado. Licencia individual por $99 MXN/mes o $990 MXN/año (incluida sin costo en cualquier plan o paquete de Néctar). Solo pagas 1 centavo ($0.01 MXN) por cada correo enviado, descontado de tu Cartera Digital prepago.',
+    monthlyPrice: 99,
+    yearlyPrice: 990,
     originProject: 'nectarlabs-main',
     sourceReference: 'backend/apps/newsletter (Subscriber, send_newsletter_email)',
     complexity: 'Baja',
@@ -173,7 +173,7 @@ const fallbackAddons: Omit<Addon, 'icon'>[] = [
       'Tokens únicos de desuscripción seguros (UUID)',
       'Render de templates de correo HTML interactivos',
       'Cobro automático por destinatario a $0.01 MXN',
-      'Sin renta fija mensual o anual'
+      'Licencia individual por $99 MXN/mes'
     ]
   },
   {
@@ -526,6 +526,156 @@ export default function AddonsPage() {
     loadAddons();
   }, []);
 
+  const renderAddonCard = (addon: Addon) => {
+    const price = billingCycle === 'monthly' ? addon.monthlyPrice : addon.yearlyPrice;
+    const savings = billingCycle === 'yearly' ? addon.monthlyPrice * 2 : 0;
+
+    const currentActiveTenant = tenants.find(t => t.id === selectedTenantId) || tenants[0];
+
+    const aliases: { [key: string]: string } = {
+      'bot-chat': 'live-chat',
+      'live-chat': 'bot-chat',
+      'delivery-tracking': 'logistics-gps',
+      'logistics-gps': 'delivery-tracking',
+      'sponsorship': 'patreon-sponsorship',
+      'patreon-sponsorship': 'sponsorship',
+      'business-analytics': 'analytics-apm',
+      'analytics-apm': 'business-analytics',
+      'campaigner': 'newsletter-campaigner',
+      'newsletter-campaigner': 'campaigner',
+      'facturacion-cfdi': 'mexico-invoicing',
+      'mexico-invoicing': 'facturacion-cfdi',
+    };
+    const addonAlias = aliases[addon.id] || addon.id;
+
+    const isAddonActive =
+      tenants.some(t => t.active_addons?.includes(addon.id) || t.active_addons?.includes(addonAlias)) ||
+      (currentActiveTenant?.active_addons || []).includes(addon.id) ||
+      (currentActiveTenant?.active_addons || []).includes(addonAlias) ||
+      subscriptions.some(s => (s.addon_details?.slug === addon.id || s.addon_details?.slug === addonAlias) && ['active', 'trialing'].includes(s.status)) ||
+      contracts.some(c => (c.addons || []).includes(addon.id) || (c.addons || []).includes(addonAlias));
+
+    const hasActivePackage = currentActiveTenant?.active_addons?.some((id: string) => id.startsWith('pack-')) || false;
+    const isFree = hasPlanContract || hasActivePackage;
+
+    return (
+      <div
+        key={addon.id}
+        className="bg-card-bg border border-card-border p-6 rounded-[2rem] flex flex-col justify-between min-h-[300px] relative overflow-hidden backdrop-blur-md hover:scale-[1.02] transition-all duration-300 group"
+      >
+        <div className="absolute -top-24 -right-24 w-40 h-40 bg-foreground/[0.02] blur-[40px] rounded-full group-hover:bg-foreground/[0.04] transition-all duration-500 pointer-events-none"></div>
+
+        <div className="space-y-4">
+          <div className="flex justify-between items-start">
+            <span className="text-3xl">{addon.icon}</span>
+            <div className="flex flex-col gap-1.5 items-end">
+              <span className="px-2.5 py-0.5 bg-nectar-gold/10 text-nectar-gold border border-nectar-gold/25 text-[7px] font-black rounded-full uppercase tracking-wider font-mono">
+                {addon.categoryBadge}
+              </span>
+              {isAddonActive && (
+                <span className="px-2.5 py-0.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 text-[7px] font-black rounded-full uppercase tracking-wider font-mono">
+                  ✔️ Activo
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div>
+            <h3 className="text-sm font-black uppercase text-foreground tracking-wide mt-2">{addon.name}</h3>
+            <p className="text-[10px] text-foreground/60 leading-relaxed mt-2 line-clamp-4">{addon.description}</p>
+          </div>
+        </div>
+
+        <div className="border-t border-card-border pt-4 mt-6">
+          <div className="flex justify-between items-center mb-4">
+            <div>
+              {isFree ? (
+                <div>
+                  <span className="text-[7.5px] uppercase font-black text-foreground/40 block">Esquema Comercial</span>
+                  <span className="text-base font-black text-[#C68A1E] font-mono">
+                    Gratuito
+                  </span>
+                  <p className="text-[7px] text-foreground/35 uppercase tracking-widest mt-0.5">
+                    Incluido en tu {hasPlanContract ? 'Plan' : 'Paquete'}
+                  </p>
+                </div>
+              ) : (
+                <div>
+                  <span className="text-[7.5px] uppercase font-black text-foreground/40 block">
+                    Precio {billingCycle === 'monthly' ? 'mensual' : 'anual'}
+                  </span>
+                  <span className="text-base font-black text-[#C68A1E] font-mono">
+                    ${(price || 0).toLocaleString('es-MX')} MXN
+                  </span>
+                  {billingCycle === 'yearly' && savings > 0 && (
+                    <p className="text-[7px] text-emerald-400 font-bold uppercase tracking-wider mt-0.5">
+                      Ahorro de ${(savings || 0).toLocaleString('es-MX')} MXN
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+            
+            <span className={`text-[7px] font-black uppercase tracking-wider px-2 py-0.5 rounded border ${addon.complexity === 'Muy Alta' ? 'text-red-400 bg-red-400/5 border-red-400/20' :
+              addon.complexity === 'Alta' ? 'text-orange-400 bg-orange-400/5 border-orange-400/20' :
+              addon.complexity === 'Media' ? 'text-yellow-400 bg-yellow-400/5 border-yellow-400/20' :
+              'text-emerald-400 bg-emerald-400/5 border-emerald-400/20'
+              }`}>
+              {addon.complexity}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              onClick={() => setSelectedAddon(addon)}
+              className="px-4 py-2 bg-foreground/[0.04] border border-card-border hover:bg-foreground/[0.08] text-foreground text-[8px] font-black uppercase tracking-widest rounded-lg hover:scale-105 active:scale-95 transition-all cursor-pointer text-center"
+            >
+              Ficha
+            </button>
+            {isStaff ? (
+              <button
+                type="button"
+                onClick={() => setManageAddon(addon)}
+                className="px-4 py-2 text-background text-[8px] font-black uppercase tracking-widest rounded-lg hover:scale-105 active:scale-95 transition-all shadow-md cursor-pointer text-center"
+                style={{ backgroundColor: '#C68A1E' }}
+              >
+                Asignar
+              </button>
+            ) : isAddonActive ? (
+              hasPlanContract ? (
+                <button
+                  disabled
+                  className="px-4 py-2 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[8px] font-black uppercase tracking-widest rounded-lg cursor-default text-center"
+                >
+                  Activo
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleOpenBillingPortal}
+                  disabled={isSubmitting}
+                  className="px-4 py-2 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 text-[8px] font-black uppercase tracking-widest rounded-lg hover:scale-105 active:scale-95 transition-all shadow-md cursor-pointer text-center"
+                >
+                  {isSubmitting ? '...' : 'Gestionar'}
+                </button>
+              )
+            ) : (
+              <button
+                type="button"
+                onClick={() => setRequestAddon(addon)}
+                className="px-4 py-2 text-background text-[8px] font-black uppercase tracking-widest rounded-lg hover:scale-105 active:scale-95 transition-all shadow-md cursor-pointer text-center"
+                style={{ backgroundColor: '#C68A1E' }}
+              >
+                {hasPlanContract ? 'Solicitar' : 'Adquirir'}
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   const handleOpenBillingPortal = async () => {
     try {
       setIsSubmitting(true);
@@ -733,6 +883,9 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
     );
   }
 
+  const packages = addonsList.filter(addon => addon.id.startsWith('pack-') && addon.id !== 'automatic-invoicing');
+  const modules = addonsList.filter(addon => !addon.id.startsWith('pack-') && addon.id !== 'automatic-invoicing');
+
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col lg:flex-row">
       <DashboardSidebar />
@@ -809,181 +962,72 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
         )}
 
         {/* Add-ons Grid */}
-        <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in duration-300">
-          {fetching ? (
-            <>
-              {[1, 2, 3].map(i => (
-                <div key={i} className="bg-card-bg border border-card-border p-6 rounded-[2rem] animate-pulse flex flex-col justify-between min-h-[300px]">
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-start">
-                      <div className="h-6 bg-foreground/10 rounded w-1/3"></div>
-                      <div className="w-8 h-8 bg-foreground/10 rounded-xl"></div>
-                    </div>
-                    <div className="space-y-2">
-                      <div className="h-4 bg-foreground/10 rounded w-3/4"></div>
-                      <div className="h-3 bg-foreground/10 rounded w-5/6"></div>
-                      <div className="h-3 bg-foreground/10 rounded w-full"></div>
-                    </div>
-                  </div>
-                  <div className="h-8 bg-foreground/10 rounded-lg w-full mt-6"></div>
-                </div>
-              ))}
-            </>
-          ) : addonsList.filter(addon => addon.id !== 'automatic-invoicing').map((addon) => {
-            // Desacoplado: Todos los addons que vienen del backend están disponibles para contratarse de forma independiente
-            const isEnabled = true;
-            const price = billingCycle === 'monthly' ? addon.monthlyPrice : addon.yearlyPrice;
-            const savings = billingCycle === 'yearly' ? addon.monthlyPrice * 2 : 0;
-
-            // Buscamos el inquilino activo del usuario para mapear si ya lo tiene comprado
-            const currentActiveTenant = tenants.find(t => t.id === selectedTenantId) || tenants[0];
-
-            // SOLUCIÓN RAÍZ: Validamos usando addon.id (que tiene el string del slug según tu mapeo de API)
-            const aliases: { [key: string]: string } = {
-              'bot-chat': 'live-chat',
-              'live-chat': 'bot-chat',
-              'delivery-tracking': 'logistics-gps',
-              'logistics-gps': 'delivery-tracking',
-              'sponsorship': 'patreon-sponsorship',
-              'patreon-sponsorship': 'sponsorship',
-              'business-analytics': 'analytics-apm',
-              'analytics-apm': 'business-analytics',
-              'campaigner': 'newsletter-campaigner',
-              'newsletter-campaigner': 'campaigner',
-              'facturacion-cfdi': 'mexico-invoicing',
-              'mexico-invoicing': 'facturacion-cfdi',
-            };
-            const addonAlias = aliases[addon.id] || addon.id;
-
-            const isAddonActive =
-              tenants.some(t => t.active_addons?.includes(addon.id) || t.active_addons?.includes(addonAlias)) ||
-              (currentActiveTenant?.active_addons || []).includes(addon.id) ||
-              (currentActiveTenant?.active_addons || []).includes(addonAlias) ||
-              subscriptions.some(s => (s.addon_details?.slug === addon.id || s.addon_details?.slug === addonAlias) && ['active', 'trialing'].includes(s.status)) ||
-              contracts.some(c => (c.addons || []).includes(addon.id) || (c.addons || []).includes(addonAlias));
-
-            return (
-              <div
-                key={addon.id}
-                className="bg-card-bg border border-card-border p-6 rounded-[2rem] flex flex-col justify-between min-h-[300px] relative overflow-hidden backdrop-blur-md hover:scale-[1.02] transition-all duration-300 group"
-              >
-                {/* Subtle Background Glow */}
-                <div className="absolute -top-24 -right-24 w-40 h-40 bg-foreground/[0.02] blur-[40px] rounded-full group-hover:bg-foreground/[0.04] transition-all duration-500 pointer-events-none"></div>
-
+        {fetching ? (
+          <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in duration-300">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="bg-card-bg border border-card-border p-6 rounded-[2rem] animate-pulse flex flex-col justify-between min-h-[300px]">
                 <div className="space-y-4">
-                  {/* Category Badge & Icon */}
                   <div className="flex justify-between items-start">
-                    <span className="text-3xl">{addon.icon}</span>
-                    <div className="flex flex-col gap-1.5 items-end">
-                      <span className="px-2.5 py-0.5 bg-nectar-gold/10 text-nectar-gold border border-nectar-gold/25 text-[7px] font-black rounded-full uppercase tracking-wider font-mono">
-                        {addon.categoryBadge}
-                      </span>
-                      {isAddonActive && (
-                        <span className="px-2.5 py-0.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 text-[7px] font-black rounded-full uppercase tracking-wider font-mono">
-                          ✔️ Activo
-                        </span>
-                      )}
-                    </div>
+                    <div className="h-6 bg-foreground/10 rounded w-1/3"></div>
+                    <div className="w-8 h-8 bg-foreground/10 rounded-xl"></div>
                   </div>
-
-                  {/* Title & Description */}
-                  <div>
-                    <h3 className="text-sm font-black uppercase text-foreground tracking-wide mt-2">{addon.name}</h3>
-                    <p className="text-[10px] text-foreground/60 leading-relaxed mt-2 line-clamp-4">{addon.description}</p>
+                  <div className="space-y-2">
+                    <div className="h-4 bg-foreground/10 rounded w-3/4"></div>
+                    <div className="h-3 bg-foreground/10 rounded w-5/6"></div>
+                    <div className="h-3 bg-foreground/10 rounded w-full"></div>
                   </div>
                 </div>
-
-                {/* Pricing & Call to Action */}
-                <div className="border-t border-card-border pt-4 mt-6">
-                  <div className="flex justify-between items-center mb-4">
-                    <div>
-                      {hasPlanContract ? (
-                        <div>
-                          <span className="text-[7.5px] uppercase font-black text-foreground/40 block">Esquema Comercial</span>
-                          <span className="text-base font-black text-[#C68A1E] font-mono">
-                            Gratuito
-                          </span>
-                          <p className="text-[7px] text-foreground/35 uppercase tracking-widest mt-0.5">
-                            Incluido en tu Plan
-                          </p>
-                        </div>
-                      ) : (
-                        <div>
-                          <span className="text-[7.5px] uppercase font-black text-foreground/40 block">
-                            Precio {billingCycle === 'monthly' ? 'mensual' : 'anual'}
-                          </span>
-                          <span className="text-base font-black text-[#C68A1E] font-mono">
-                            ${(price || 0).toLocaleString('es-MX')} MXN
-                          </span>
-                          {billingCycle === 'yearly' && savings > 0 && (
-                            <p className="text-[7px] text-emerald-400 font-bold uppercase tracking-wider mt-0.5">
-                              Ahorro de ${(savings || 0).toLocaleString('es-MX')} MXN
-                            </p>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                    
-                    <span className={`text-[7px] font-black uppercase tracking-wider px-2 py-0.5 rounded border ${addon.complexity === 'Muy Alta' ? 'text-red-400 bg-red-400/5 border-red-400/20' :
-                      addon.complexity === 'Alta' ? 'text-orange-400 bg-orange-400/5 border-orange-400/20' :
-                      addon.complexity === 'Media' ? 'text-yellow-400 bg-yellow-400/5 border-yellow-400/20' :
-                      'text-emerald-400 bg-emerald-400/5 border-emerald-400/20'
-                      }`}>
-                      {addon.complexity}
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setSelectedAddon(addon)}
-                      className="px-4 py-2 bg-foreground/[0.04] border border-card-border hover:bg-foreground/[0.08] text-foreground text-[8px] font-black uppercase tracking-widest rounded-lg hover:scale-105 active:scale-95 transition-all cursor-pointer text-center"
-                    >
-                      Ficha
-                    </button>
-                    {isStaff ? (
-                      <button
-                        type="button"
-                        onClick={() => setManageAddon(addon)}
-                        className="px-4 py-2 text-background text-[8px] font-black uppercase tracking-widest rounded-lg hover:scale-105 active:scale-95 transition-all shadow-md cursor-pointer text-center"
-                        style={{ backgroundColor: '#C68A1E' }}
-                      >
-                        Asignar
-                      </button>
-                    ) : isAddonActive ? (
-                      hasPlanContract ? (
-                        <button
-                          disabled
-                          className="px-4 py-2 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[8px] font-black uppercase tracking-widest rounded-lg cursor-default text-center"
-                        >
-                          Activo
-                        </button>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={handleOpenBillingPortal}
-                          disabled={isSubmitting}
-                          className="px-4 py-2 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 text-[8px] font-black uppercase tracking-widest rounded-lg hover:scale-105 active:scale-95 transition-all shadow-md cursor-pointer text-center"
-                        >
-                          {isSubmitting ? '...' : 'Gestionar'}
-                        </button>
-                      )
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => setRequestAddon(addon)}
-                        className="px-4 py-2 text-background text-[8px] font-black uppercase tracking-widest rounded-lg hover:scale-105 active:scale-95 transition-all shadow-md cursor-pointer text-center"
-                        style={{ backgroundColor: '#C68A1E' }}
-                      >
-                        {hasPlanContract ? 'Solicitar' : 'Adquirir'}
-                      </button>
-                    )}
-                  </div>
-                </div>
+                <div className="h-8 bg-foreground/10 rounded-lg w-full mt-6"></div>
               </div>
-            );
-          })}
-        </section>
+            ))}
+          </section>
+        ) : (
+          <div className="space-y-16 animate-in fade-in duration-300">
+            {/* Packages Section */}
+            {packages.length > 0 && (
+              <div>
+                <div className="mb-6 border-b border-card-border pb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                  <div>
+                    <h2 className="text-xl md:text-2xl font-black uppercase tracking-wider text-foreground flex items-center gap-2">
+                      📦 Paquetes de Software Completos
+                    </h2>
+                    <p className="text-[10px] font-black uppercase tracking-[0.3em] text-nectar-gold opacity-80 mt-1">
+                      Soluciones integrales llave en mano para tu negocio
+                    </p>
+                  </div>
+                  <span className="px-2.5 py-0.5 bg-nectar-gold/10 text-nectar-gold border border-nectar-gold/25 text-[8px] font-mono rounded font-bold uppercase tracking-wider">
+                    {packages.length} {packages.length === 1 ? 'Paquete' : 'Paquetes'}
+                  </span>
+                </div>
+                <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {packages.map(renderAddonCard)}
+                </section>
+              </div>
+            )}
+
+            {/* Individual Modules Section */}
+            {modules.length > 0 && (
+              <div>
+                <div className="mb-6 border-b border-card-border pb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                  <div>
+                    <h2 className="text-xl md:text-2xl font-black uppercase tracking-wider text-foreground flex items-center gap-2">
+                      🧩 Módulos & Funcionalidades Individuales
+                    </h2>
+                    <p className="text-[10px] font-black uppercase tracking-[0.3em] text-nectar-gold opacity-80 mt-1">
+                      Equipamiento tecnológico específico a la carta
+                    </p>
+                  </div>
+                  <span className="px-2.5 py-0.5 bg-nectar-gold/10 text-nectar-gold border border-nectar-gold/25 text-[8px] font-mono rounded font-bold uppercase tracking-wider">
+                    {modules.length} {modules.length === 1 ? 'Módulo' : 'Módulos'}
+                  </span>
+                </div>
+                <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {modules.map(renderAddonCard)}
+                </section>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Modal: View Details / Ficha Técnica */}
         {selectedAddon && (

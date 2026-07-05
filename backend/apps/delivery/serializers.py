@@ -82,25 +82,52 @@ class DeliveryOrderSerializer(serializers.ModelSerializer):
         max_digits=9, decimal_places=6,
         source='driver.current_longitude', read_only=True
     )
+    restaurant_name = serializers.ReadOnlyField(source='tenant.name')
+    payment_method = serializers.SerializerMethodField(read_only=True)
+    total_amount = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = DeliveryOrder
         fields = [
-            'id', 'tenant', 'ecommerce_order_id', 'idempotency_key',
+            'id', 'tenant', 'restaurant_name', 'ecommerce_order_id', 'idempotency_key',
             'driver', 'driver_name', 'driver_phone',
             'driver_latitude', 'driver_longitude',
             'shipment_type', 'status',
             'recipient_name', 'recipient_phone',
             'delivery_address', 'delivery_latitude', 'delivery_longitude',
             'skydropx_shipment_id', 'tracking_number', 'tracking_url', 'courier',
-            'notes', 'created_at', 'updated_at'
+            'notes', 'payment_method', 'total_amount', 'created_at', 'updated_at'
         ]
         read_only_fields = [
-            'id', 'tenant', 'driver', 'driver_name', 'driver_phone',
+            'id', 'tenant', 'restaurant_name', 'driver', 'driver_name', 'driver_phone',
             'driver_latitude', 'driver_longitude',
             'skydropx_shipment_id', 'tracking_number', 'tracking_url', 'courier',
-            'created_at', 'updated_at'
+            'payment_method', 'total_amount', 'created_at', 'updated_at'
         ]
+
+    def get_payment_method(self, obj):
+        if obj.ecommerce_order_id:
+            from apps.shop.models import Order
+            try:
+                order = Order.objects.filter(id=obj.ecommerce_order_id).first()
+                if order:
+                    if order.stripe_session_id or order.stripe_payment_intent:
+                        return 'STRIPE'
+                    return 'CASH'
+            except Exception:
+                pass
+        return 'STRIPE'
+
+    def get_total_amount(self, obj):
+        if obj.ecommerce_order_id:
+            from apps.shop.models import Order
+            try:
+                order = Order.objects.filter(id=obj.ecommerce_order_id).first()
+                if order:
+                    return float(order.total)
+            except Exception:
+                pass
+        return 0.00
 
 
 class AssignDriverRequestSerializer(serializers.Serializer):
@@ -148,3 +175,11 @@ class StoreConfigSerializer(serializers.ModelSerializer):
         # Indicate whether a key is stored without exposing it
         data['has_skydropx_api_key'] = bool(instance.skydropx_api_key)
         return data
+
+    def validate_skydropx_api_key(self, value):
+        user = self.context.get('request').user if self.context.get('request') else None
+        if user and not (user.is_staff or user.role == 'ADMIN'):
+            current_val = getattr(self.instance, 'skydropx_api_key', None) if self.instance else None
+            if current_val != value:
+                raise serializers.ValidationError("Solo el CEO o administradores de Nectar Labs pueden modificar la clave API de Skydropx.")
+        return value

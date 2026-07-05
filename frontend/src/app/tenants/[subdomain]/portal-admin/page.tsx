@@ -227,6 +227,11 @@ export default function TenantAdminPage() {
   const [skydropxApiKey, setSkydropxApiKey] = useState('');
   const [shippingMarkupPercentage, setShippingMarkupPercentage] = useState('15.00');
   
+  // Stripe integration keys
+  const [stripePublishableKey, setStripePublishableKey] = useState('');
+  const [stripeSecretKey, setStripeSecretKey] = useState('');
+  const [hasStripeSecretKey, setHasStripeSecretKey] = useState(false);
+  
   const [originName, setOriginName] = useState('');
   const [originPhone, setOriginPhone] = useState('');
   const [originStreet, setOriginStreet] = useState('');
@@ -246,6 +251,19 @@ export default function TenantAdminPage() {
   const [isSendingCampaign, setIsSendingCampaign] = useState(false);
   const [blogPosts, setBlogPosts] = useState<any[]>([]);
   const [selectedPostId, setSelectedPostId] = useState<string>('');
+
+  // Products management states
+  const [products, setProducts] = useState<any[]>([]);
+  const [loadingProducts, setLoadingProducts] = useState(false);
+  const [showProductModal, setShowProductModal] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<any>(null);
+  const [productName, setProductName] = useState('');
+  const [productPrice, setProductPrice] = useState('');
+  const [productStock, setProductStock] = useState('');
+  const [productDesc, setProductDesc] = useState('');
+  const [productImageFile, setProductImageFile] = useState<File | null>(null);
+  const [productImagePreview, setProductImagePreview] = useState<string | null>(null);
+  const [isSavingProduct, setIsSavingProduct] = useState(false);
 
   // Advanced Marketing customizations state
   const [templateType, setTemplateType] = useState('minimalist');
@@ -436,6 +454,96 @@ export default function TenantAdminPage() {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, tenantConfig?.id]);
+
+  // Load products when products tab is active
+  useEffect(() => {
+    if (activeTab === 'products' && tenantConfig?.id) {
+      const loadProducts = async () => {
+        setLoadingProducts(true);
+        try {
+          const data = await fetcher(`/products/?tenant_id=${tenantConfig.id}`);
+          setProducts(data);
+        } catch (err: any) {
+          showToast(err.message || 'Error al cargar catálogo.', 'error');
+        } finally {
+          setLoadingProducts(false);
+        }
+      };
+      loadProducts();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, tenantConfig?.id]);
+
+  const openAddProduct = () => {
+    setEditingProduct(null);
+    setProductName('');
+    setProductPrice('');
+    setProductStock('');
+    setProductDesc('');
+    setProductImageFile(null);
+    setProductImagePreview(null);
+    setShowProductModal(true);
+  };
+
+  const openEditProduct = (prod: any) => {
+    setEditingProduct(prod);
+    setProductName(prod.name);
+    setProductPrice(String(prod.price));
+    setProductStock(String(prod.stock));
+    setProductDesc(prod.description || '');
+    setProductImageFile(null);
+    setProductImagePreview(prod.image || null);
+    setShowProductModal(true);
+  };
+
+  const handleDeleteProduct = async (id: number) => {
+    if (!confirm('¿Estás seguro de eliminar este producto?')) return;
+    try {
+      await fetcher(`/products/${id}/`, { method: 'DELETE' });
+      showToast('Producto eliminado exitosamente.', 'success');
+      setProducts(prev => prev.filter(p => p.id !== id));
+    } catch (err: any) {
+      showToast(err.message || 'Error al eliminar el producto.', 'error');
+    }
+  };
+
+  const handleSaveProduct = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!tenantConfig) return;
+    setIsSavingProduct(true);
+    try {
+      const formData = new FormData();
+      formData.append('name', productName);
+      formData.append('price', productPrice);
+      formData.append('stock', productStock);
+      formData.append('description', productDesc);
+      formData.append('tenant', String(tenantConfig.id));
+      if (productImageFile) {
+        formData.append('image', productImageFile);
+      }
+
+      if (editingProduct) {
+        const updated = await fetcher(`/products/${editingProduct.id}/`, {
+          method: 'PATCH',
+          body: formData,
+        });
+        setProducts(prev => prev.map(p => p.id === editingProduct.id ? updated : p));
+        showToast('Producto actualizado exitosamente.', 'success');
+      } else {
+        const created = await fetcher('/products/', {
+          method: 'POST',
+          body: formData,
+        });
+        setProducts(prev => [created, ...prev]);
+        showToast('Producto creado exitosamente.', 'success');
+      }
+      setShowProductModal(false);
+    } catch (err: any) {
+      showToast(err.message || 'Error al guardar el producto.', 'error');
+    } finally {
+      setIsSavingProduct(false);
+    }
+  };
 
   const handleBuyStamps = async (size: number) => {
     if (!tenantConfig) return;
@@ -1010,6 +1118,9 @@ export default function TenantAdminPage() {
             setOriginCity(fullConfig.shipping_origin_city || '');
             setOriginState(fullConfig.shipping_origin_state || '');
             setOriginZipCode(fullConfig.shipping_origin_zip_code || '');
+            setStripePublishableKey(fullConfig.stripe_publishable_key || '');
+            setHasStripeSecretKey(fullConfig.has_stripe_secret_key ?? false);
+            setStripeSecretKey('');
           } catch (err) {
             console.error('Error loading full tenant config:', err);
           }
@@ -1699,6 +1810,7 @@ export default function TenantAdminPage() {
         shipping_origin_city: originCity.trim() || null,
         shipping_origin_state: originState.trim() || null,
         shipping_origin_zip_code: originZipCode.trim() || null,
+        stripe_publishable_key: stripePublishableKey.trim() || null,
       };
 
       if (smtpPassword) {
@@ -1706,6 +1818,9 @@ export default function TenantAdminPage() {
       }
       if (skydropxApiKey) {
         payload.skydropx_api_key = skydropxApiKey;
+      }
+      if (stripeSecretKey) {
+        payload.stripe_secret_key = stripeSecretKey;
       }
 
       const updated = await fetcher(`/tenants/${tenantConfig.id}/`, {
@@ -1719,6 +1834,8 @@ export default function TenantAdminPage() {
       setTenantConfig(updated);
       setSmtpPassword('');
       setSkydropxApiKey('');
+      setStripeSecretKey('');
+      setHasStripeSecretKey(updated.has_stripe_secret_key ?? false);
       showToast('Integraciones actualizadas con éxito.', 'success');
     } catch (err: any) {
       showToast(err.message || 'Error al guardar integraciones.', 'error');
@@ -2065,6 +2182,17 @@ export default function TenantAdminPage() {
             )}
             {tenantConfig?.active_addons?.some((a: string) => ['delivery-tracking', 'ecommerce'].includes(a)) && (
               <>
+                <button
+                  onClick={() => setActiveTab('products')}
+                  className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border cursor-pointer"
+                  style={{
+                    backgroundColor: activeTab === 'products' ? `${primaryColor}15` : 'transparent',
+                    borderColor: activeTab === 'products' ? primaryColor : 'transparent',
+                    color: activeTab === 'products' ? primaryColor : 'rgba(255, 255, 255, 0.6)'
+                  }}
+                >
+                  📦 Catálogo Productos
+                </button>
                 <button
                   onClick={() => setActiveTab('store-config')}
                   className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border cursor-pointer"
@@ -3470,8 +3598,10 @@ export default function TenantAdminPage() {
               const hasLogisticsAddon = 
                 tenantConfig?.active_addons?.includes('delivery-tracking') || 
                 tenantConfig?.active_addons?.includes('logistics-gps');
+              const isStaff = userMe?.is_staff || userMe?.role === 'ADMIN';
+              const hasEcommerce = tenantConfig?.active_addons?.includes('ecommerce');
 
-              if (!hasNewsletterAddon && !hasLogisticsAddon) {
+              if (!hasNewsletterAddon && !hasLogisticsAddon && !hasEcommerce && !isStaff) {
                 return (
                   <div className="admin-card border rounded-[2rem] p-12 text-center flex flex-col items-center justify-center min-h-[450px] relative overflow-hidden group">
                     <div className="absolute -top-32 -right-32 w-64 h-64 bg-[#C68A1E]/5 blur-[80px] rounded-full group-hover:bg-[#C68A1E]/10 transition-all duration-700 pointer-events-none"></div>
@@ -3480,7 +3610,7 @@ export default function TenantAdminPage() {
                     </div>
                     <h3 className="text-xl font-black uppercase tracking-wider text-white">Integraciones Desactivadas</h3>
                     <p className="text-sm text-white/50 max-w-md leading-relaxed mt-2 mb-8">
-                      No tienes módulos de integración activos para este portal. Para configurar SMTP/Amazon SES o la API de Skydropx, necesitas contratar los Add-ons correspondientes en la plataforma de Néctar Labs.
+                      No tienes módulos de integración activos para este portal. Para configurar SMTP/Amazon SES, la API de Skydropx o Stripe Checkout, necesitas contratar los Add-ons correspondientes en la plataforma de Néctar Labs.
                     </p>
                     <button
                       type="button"
@@ -3502,16 +3632,16 @@ export default function TenantAdminPage() {
                   <div className="admin-card border rounded-[2rem] p-8 md:p-10 shadow-2xl relative overflow-hidden text-left space-y-6">
                     
                     <div>
-                      <span className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold text-[8px] font-black uppercase tracking-widest rounded-full border border-nectar-gold/20">
-                        🔌 Conectividad & Canales Externos
+                      <span className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold text-[8px] font-black uppercase tracking-widest rounded-full border border-nectar-gold/20" style={{ color: primaryColor, borderColor: `${primaryColor}30`, backgroundColor: `${primaryColor}10` }}>
+                        🔌 Conectividad & Pasarelas
                       </span>
                       <h2 className="text-2xl font-black tracking-tighter mt-4 leading-none text-white">Configuración de Integraciones</h2>
-                      <p className="text-[10px] opacity-40 uppercase tracking-widest mt-1">Conecta tus propias APIs de mensajería, paquetería y logística</p>
+                      <p className="text-[10px] opacity-40 uppercase tracking-widest mt-1">Conecta tus propias claves de pago, paquetería y mensajería</p>
                     </div>
 
-                    <div className={`grid grid-cols-1 ${hasNewsletterAddon && hasLogisticsAddon ? 'md:grid-cols-2' : ''} gap-8`}>
-                      {/* SMTP/Amazon SES Configuration */}
-                      {hasNewsletterAddon && (
+                    <div className={`grid grid-cols-1 ${(isStaff && (hasNewsletterAddon || hasLogisticsAddon)) ? 'md:grid-cols-2' : ''} gap-8`}>
+                      {/* SMTP/Amazon SES Configuration (Staff only) */}
+                      {hasNewsletterAddon && isStaff && (
                         <div className="space-y-4">
                           <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-nectar-gold border-b border-white/5 pb-2">Amazon SES / SMTP Personalizado</h3>
                           
@@ -3544,6 +3674,7 @@ export default function TenantAdminPage() {
                                   checked={smtpUseTls}
                                   onChange={(e) => setSmtpUseTls(e.target.checked)}
                                   className="w-3.5 h-3.5 accent-nectar-gold"
+                                  style={{ accentColor: primaryColor }}
                                 />
                                 <span className="text-[9px] font-bold uppercase tracking-wide text-white/75">TLS</span>
                               </label>
@@ -3581,15 +3712,12 @@ export default function TenantAdminPage() {
                               onChange={(e) => setSmtpFromEmail(e.target.value)}
                               className="w-full border rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-nectar-gold transition-all admin-input font-mono"
                             />
-                            <p className="text-[7px] text-white/45 leading-relaxed">
-                              ⚠️ Asegúrate de que esta dirección de correo esté previamente verificada y autorizada en tu consola de Amazon SES u otro proveedor SMTP.
-                            </p>
                           </div>
                         </div>
                       )}
 
-                      {/* Skydropx & Logistics Configuration */}
-                      {hasLogisticsAddon && (
+                      {/* Skydropx & Logistics Configuration (Staff only) */}
+                      {hasLogisticsAddon && isStaff && (
                         <div className="space-y-4">
                           <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-nectar-gold border-b border-white/5 pb-2">Configuración Skydropx</h3>
                           
@@ -3616,9 +3744,6 @@ export default function TenantAdminPage() {
                               onChange={(e) => setShippingMarkupPercentage(e.target.value)}
                               className="w-full border rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-nectar-gold transition-all admin-input font-mono"
                             />
-                            <p className="text-[7px] text-white/45 leading-relaxed">
-                              Porcentaje adicional cargado al cliente final sobre la cotización base de Skydropx.
-                            </p>
                           </div>
 
                           <div className="border-t border-white/5 pt-4 mt-2 space-y-3">
@@ -3705,6 +3830,41 @@ export default function TenantAdminPage() {
                           </div>
                         </div>
                       )}
+
+                      {/* 💳 Pasarela de Pagos Stripe (Cualquier Tenant con e-commerce) */}
+                      {hasEcommerce && (
+                        <div className="space-y-4">
+                          <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-nectar-gold border-b border-white/5 pb-2" style={{ color: primaryColor }}>
+                            Pasarela de Pagos (Stripe)
+                          </h3>
+                          
+                          <div className="space-y-1.5">
+                            <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Stripe Publishable Key (Clave Pública)</label>
+                            <input
+                              type="text"
+                              placeholder="pk_live_..."
+                              value={stripePublishableKey}
+                              onChange={(e) => setStripePublishableKey(e.target.value)}
+                              className="w-full border rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-nectar-gold transition-all admin-input font-mono"
+                            />
+                          </div>
+
+                          <div className="space-y-1.5">
+                            <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Stripe Secret Key (Clave Secreta)</label>
+                            <input
+                              type="password"
+                              placeholder={hasStripeSecretKey ? '•••••••••••• (dejar vacío para conservar)' : 'sk_live_...'}
+                              value={stripeSecretKey}
+                              onChange={(e) => setStripeSecretKey(e.target.value)}
+                              className="w-full border rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-nectar-gold transition-all admin-input font-mono"
+                            />
+                          </div>
+
+                          <p className="text-[7.5px] text-white/40 leading-relaxed">
+                            Permite a tus clientes pagar sus pedidos mediante tarjeta de crédito y débito de forma directa y 100% segura. Encuentra estas llaves en tu panel de Stripe bajo Desarrolladores &gt; Claves API.
+                          </p>
+                        </div>
+                      )}
                     </div>
 
                     <div className="pt-6 border-t border-white/5 flex justify-end">
@@ -3712,6 +3872,7 @@ export default function TenantAdminPage() {
                         type="submit"
                         disabled={isSavingIntegrations}
                         className="px-8 py-3.5 bg-nectar-gold text-background text-[10px] font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 disabled:opacity-40 disabled:scale-100 transition-all font-bold shadow-lg shadow-nectar-gold/25 cursor-pointer"
+                        style={{ backgroundColor: primaryColor }}
                       >
                         {isSavingIntegrations ? 'Guardando Integraciones...' : 'Guardar Integraciones'}
                       </button>
@@ -3731,7 +3892,99 @@ export default function TenantAdminPage() {
         )}
         {activeTab === 'store-config' && tenantConfig && (
           <div className="space-y-8 animate-in fade-in duration-300">
-            <StoreConfigTabInline subdomain={subdomain} primaryColor={primaryColor} onToast={showToast} />
+            <StoreConfigTabInline 
+              subdomain={subdomain} 
+              primaryColor={primaryColor} 
+              onToast={showToast} 
+              isStaff={userMe?.is_staff || userMe?.role === 'ADMIN'}
+            />
+          </div>
+        )}
+        {activeTab === 'products' && tenantConfig && (
+          <div className="space-y-8 animate-in fade-in duration-300">
+            <div className="admin-card border rounded-[2.5rem] p-8 md:p-10 shadow-2xl relative overflow-hidden text-left space-y-6">
+              <div className="flex justify-between items-center">
+                <div>
+                  <span className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold text-[8px] font-black uppercase tracking-widest rounded-full border border-nectar-gold/20" style={{ color: primaryColor, borderColor: `${primaryColor}30`, backgroundColor: `${primaryColor}10` }}>
+                    E-Commerce
+                  </span>
+                  <h2 className="text-2xl font-black tracking-tighter mt-4 leading-none text-white">Catálogo de Productos</h2>
+                  <p className="text-[10px] opacity-40 uppercase tracking-widest mt-1">Gestiona el inventario, fotos y precios expuestos en tu tienda pública</p>
+                </div>
+                <button
+                  onClick={openAddProduct}
+                  className="px-6 py-3.5 bg-nectar-gold text-background rounded-xl text-xs font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-lg shadow-nectar-gold/20 font-bold cursor-pointer"
+                  style={{ backgroundColor: primaryColor }}
+                >
+                  + Agregar Producto
+                </button>
+              </div>
+
+              {loadingProducts ? (
+                <div className="py-24 text-center">
+                  <div className="w-8 h-8 border-4 border-t-white border-white/10 rounded-full animate-spin mx-auto mb-4" style={{ borderTopColor: primaryColor }}></div>
+                  <p className="text-[9px] font-black uppercase tracking-widest opacity-30">Cargando catálogo...</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {products.map((prod) => (
+                    <div 
+                      key={prod.id} 
+                      className="group bg-[#080d09] border border-white/5 hover:border-white/15 rounded-3xl p-5 flex flex-col justify-between transition-all duration-300"
+                    >
+                      <div className="space-y-4">
+                        <div className="aspect-square w-full rounded-2xl bg-black/40 border border-white/5 overflow-hidden flex items-center justify-center relative shadow-inner">
+                          {prod.image ? (
+                            <img src={prod.image} alt={prod.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <span className="text-3xl filter grayscale opacity-25">📦</span>
+                          )}
+                          <span className="absolute top-3 right-3 px-2.5 py-1 text-[7px] font-black uppercase tracking-wider text-white border border-white/10 bg-[#020403]/90 backdrop-blur-md rounded-full">
+                            Stock: {prod.stock}
+                          </span>
+                        </div>
+
+                        <div className="space-y-1">
+                          <h3 className="font-bold text-sm text-white truncate">{prod.name}</h3>
+                          <p className="text-[10px] text-white/40 line-clamp-2 leading-relaxed min-h-[2.5rem]">
+                            {prod.description || 'Sin descripción disponible.'}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="pt-4 border-t border-white/5 mt-4 flex items-center justify-between">
+                        <div className="flex flex-col">
+                          <span className="text-[7px] font-black uppercase tracking-widest text-white/30">Precio</span>
+                          <span className="text-xs font-black text-white">${prod.price} MXN</span>
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => openEditProduct(prod)}
+                            className="p-2.5 bg-white/5 hover:bg-white/10 text-white rounded-xl border border-white/5 cursor-pointer text-xs"
+                            title="Editar"
+                          >
+                            ✏️
+                          </button>
+                          <button
+                            onClick={() => handleDeleteProduct(prod.id)}
+                            className="p-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-xl border border-red-500/10 cursor-pointer text-xs"
+                            title="Eliminar"
+                          >
+                            🗑️
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+
+                  {products.length === 0 && (
+                    <div className="col-span-full py-20 text-center border-2 border-dashed border-white/5 rounded-3xl opacity-35 text-[9px] font-black uppercase tracking-wider">
+                      No hay productos registrados en tu catálogo de e-commerce.
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         )}
         {activeTab === 'delivery-config' && tenantConfig && (
@@ -3750,6 +4003,121 @@ export default function TenantAdminPage() {
           <span>Desarrollado bajo licencia de Néctar Labs</span>
         </div>
       </footer>
+
+      {/* 📦 Modal: Agregar/Editar Producto */}
+      {showProductModal && (
+        <div className="fixed inset-0 z-55 bg-background/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="admin-card border rounded-[2rem] p-8 w-full max-w-lg relative overflow-hidden animate-in fade-in zoom-in-95 duration-200 text-left">
+            <button 
+              type="button"
+              onClick={() => setShowProductModal(false)}
+              className="absolute top-6 right-6 text-white/40 hover:text-white text-xs font-bold w-8 h-8 rounded-xl border border-white/10 flex items-center justify-center hover:bg-white/5 transition-all cursor-pointer"
+            >
+              ✕
+            </button>
+
+            <h3 className="text-lg font-black tracking-tight text-white mb-6">
+              {editingProduct ? 'Editar Producto' : 'Agregar Producto'}
+            </h3>
+
+            <form onSubmit={handleSaveProduct} className="space-y-4">
+              <div className="space-y-1">
+                <label className="text-[8px] font-black uppercase tracking-widest text-white/40">Nombre del Producto</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Ej. Hamburguesa Doble Queso"
+                  value={productName}
+                  onChange={(e) => setProductName(e.target.value)}
+                  className="w-full admin-input border rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-nectar-gold transition-all"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-[8px] font-black uppercase tracking-widest text-white/40">Precio (MXN)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    required
+                    placeholder="129.00"
+                    value={productPrice}
+                    onChange={(e) => setProductPrice(e.target.value)}
+                    className="w-full admin-input border rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-nectar-gold transition-all"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[8px] font-black uppercase tracking-widest text-white/40">Inventario (Stock)</label>
+                  <input
+                    type="number"
+                    required
+                    placeholder="99"
+                    value={productStock}
+                    onChange={(e) => setProductStock(e.target.value)}
+                    className="w-full admin-input border rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-nectar-gold transition-all"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[8px] font-black uppercase tracking-widest text-white/40">Descripción</label>
+                <textarea
+                  rows={3}
+                  placeholder="Ingresa los ingredientes, detalles o especificaciones..."
+                  value={productDesc}
+                  onChange={(e) => setProductDesc(e.target.value)}
+                  className="w-full admin-input border rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-nectar-gold transition-all resize-none"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[8px] font-black uppercase tracking-widest text-white/40">Imagen del Producto</label>
+                <div className="flex gap-4 items-center bg-foreground/[0.02] border border-white/5 rounded-xl p-4">
+                  <div className="w-14 h-14 rounded-lg bg-black/40 border border-white/10 overflow-hidden flex items-center justify-center shrink-0">
+                    {productImagePreview ? (
+                      <img src={productImagePreview} alt="Preview" className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-xl">📦</span>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files[0]) {
+                          const file = e.target.files[0];
+                          setProductImageFile(file);
+                          setProductImagePreview(URL.createObjectURL(file));
+                        }
+                      }}
+                      className="text-xs text-white/40 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-[9px] file:font-black file:uppercase file:tracking-widest file:bg-white/10 file:text-white hover:file:bg-white/20 file:cursor-pointer"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-4 flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowProductModal(false)}
+                  className="px-6 py-3.5 border border-white/10 hover:bg-white/5 text-white/70 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSavingProduct}
+                  className="px-8 py-3.5 bg-nectar-gold text-background rounded-xl text-[10px] font-black uppercase tracking-widest hover:scale-105 active:scale-95 disabled:opacity-40 transition-all font-bold cursor-pointer"
+                  style={{ backgroundColor: primaryColor }}
+                >
+                  {isSavingProduct ? 'Guardando...' : (editingProduct ? 'Guardar Cambios' : 'Crear Producto')}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* 📧 Modal: Redactar Boletín */}
       {showNewsletterModal && (

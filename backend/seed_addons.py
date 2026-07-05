@@ -14,49 +14,50 @@ def seed_addons():
         {
             "slug": "pack-ecommerce-lite",
             "name": "Paquete E-commerce Lite",
-            "category_badge": "PAQUETE PRINCIPAL",
-            "description": "Todo para tu tienda en línea: Envíos con Skydropx, Facturación SAT, Tienda Online y Campaigner Lite.",
+            "category_badge": "TIENDA EN LINEA",
+            "description": "Todo para tu tienda en línea: Envíos con Locales y Nacionales, Facturación SAT, Tienda Online y Campaigner Lite.",
             "detailed_description": "El paquete integral ideal para comenzar a vender en línea. Habilita de golpe las funciones de cotización y emisión de guías de envío nacionales de Skydropx, facturación fiscal automatizada CFDI 4.0 con 100 timbres base gratis al mes, y campañas de marketing por correo con campaigner lite sin costo.",
             "monthly_price": 799.00,
             "yearly_price": 7990.00,
             "origin_project": "nectarlabs-main",
             "source_reference": "backend/apps/tenants/models.py (pack-ecommerce-lite)",
             "complexity": AddOn.Complexity.HIGH,
-            "server_requirements": "Configuración completa de llaves de Stripe, Skydropx API Key y Facturapi API Key.",
+            "server_requirements": "Cuenta de Stripe para recibir pagos, APIs de Envíos y Facturación activas.",
             "technical_details": [
-                "Acceso completo a módulo Tienda + Envíos Skydropx",
+                "Acceso completo a módulo Tienda + Envíos Locales y Nacionales",
                 "Acceso completo a módulo Facturación SAT (100 timbres base)",
-                "Acceso completo a módulo Newsletter Masivo (Campaigner Lite)",
+                "Envio de tickets y facturas automaticamente",
                 "Ahorro de $148.00 MXN mensuales sobre la compra individual",
                 "Configuración unificada y automatización de negocio cruzada"
             ]
         },
         {
             "slug": "pack-pos-ecommerce",
-            "name": "Paquete POS & E-commerce Pro",
-            "category_badge": "PAQUETE PRINCIPAL",
-            "description": "Punto de venta físico, Tienda en línea, Envíos con Skydropx, Facturación SAT y Campaigner Lite.",
+            "name": "Punto de venta",
+            "category_badge": "TIENDA EN LINEA Y POS",
+            "description": "Punto de venta físico, Tienda en línea, Envíos Locales y Nacionales, Facturación SAT y Campaigner Lite.",
             "detailed_description": "La solución comercial definitiva para negocios omnicanal. Integra tu tienda en línea y tu mostrador físico (POS) con inventario unificado. Incluye 100 timbres fiscales al mes, Campaigner Lite y es compatible con hardware POS comercial (pago único de hardware de $1,799.00 MXN).",
             "monthly_price": 799.00,
             "yearly_price": 7990.00,
             "origin_project": "nectarlabs-main",
             "source_reference": "backend/apps/tenants/models.py (pack-pos-ecommerce)",
             "complexity": AddOn.Complexity.VERY_HIGH,
-            "server_requirements": "Lector de código de barras USB + Impresora térmica + Cajón de dinero RJ11 (Hardware adicional).",
+            "server_requirements": "Lector de código de barras USB + Impresora térmica + Cajón de dinero compatible RJ11 (Hardware físico).",
             "technical_details": [
                 "Consola POS rápida con lector de barras",
                 "Sincronización de inventario en tiempo real",
                 "Acceso completo a Tienda + Envíos Skydropx",
                 "Facturación SAT con 100 timbres incluidos",
-                "Campaigner Lite sin costo"
+                "Envio de tickets y facturas automaticamente",
+                "Pago adicional unico de $1600 MXN para el lector de codigos, caja registradora e impresora de tickets"
             ]
         },
         {
             "slug": "pack-blog-sponsors",
             "name": "Paquete Blog & Sponsors",
-            "category_badge": "PAQUETE PRINCIPAL",
-            "description": "Monetiza tu contenido: Blog, Sponsorship (Patreon), Tienda Online, Facturación SAT y Campaigner Lite.",
-            "detailed_description": "El paquete ideal para creadores de contenido y marcas personales. Permite monetizar mediante suscripciones recurrentes de Stripe (Sponsors), vender productos físicos o digitales en tu tienda y emitir facturas del SAT de forma integrada, con boletines de Campaigner Lite.",
+            "category_badge": "CONTENIDO Y COMUNIDAD",
+            "description": "Monetiza tu contenido: Blog, Suscripciones, Tienda Online y Campaigner Masivo.",
+            "detailed_description": "El paquete ideal para creadores de contenido y marcas personales. Permite monetizar mediante suscripciones recurrentes de Stripe (Sponsors), vender productos físicos o digitales en tu tienda, y enviar boletines con Campaigner Masivo.",
             "monthly_price": 499.00,
             "yearly_price": 4990.00,
             "origin_project": "nectarlabs-main",
@@ -67,14 +68,13 @@ def seed_addons():
                 "Suscripciones recurrentes de Stripe con tiers",
                 "Gestión de roles y feeds exclusivos para sponsors",
                 "Acceso completo a Tienda Online",
-                "Facturación SAT integrada",
-                "Campaigner Lite sin costo"
+                "Campaigner Masivo de correos electronicos"
             ]
         },
         {
             "slug": "driver-unlimited",
-            "name": "Módulo de Repartidor Ilimitado",
-            "category_badge": "LOGÍSTICA",
+            "name": "Módulo de Repartidor",
+            "category_badge": "LOGÍSTICA Y ENVÍOS",
             "description": "Herramienta especializada para operar como repartidor con entregas y rutas ilimitadas en tiempo real.",
             "detailed_description": "Habilita la interfaz exclusiva para repartidores. Permite ponerse disponible, recibir pedidos asignados de comercios, seguir rutas dinámicas y actualizar estados de entrega.",
             "monthly_price": 399.00,
@@ -82,7 +82,7 @@ def seed_addons():
             "origin_project": "nectarlabs-main",
             "source_reference": "backend/apps/delivery (DriverProfile, driver-unlimited)",
             "complexity": AddOn.Complexity.MEDIUM,
-            "server_requirements": "Cuenta activa del repartidor para entregas locales y geolocalización.",
+            "server_requirements": "Uso de smartphone con internet móvil y GPS activo para repartidores.",
             "technical_details": [
                 "Acceso al Portal de Repartidor dedicado",
                 "Switch de disponibilidad en tiempo real",
@@ -95,19 +95,19 @@ def seed_addons():
             "slug": "campaigner",
             "name": "Campaigner Masivo",
             "category_badge": "EMAIL MARKETING",
-            "description": "Envío de boletines y campañas de email masivo sin renta fija. Cobro dinámico a $0.01 MXN por correo enviado.",
-            "detailed_description": "Envía boletines interactivos a tu base de contactos usando nuestro servicio integrado. Sin renta fija mensual ni anual; solo pagas 1 centavo ($0.01 MXN) por cada correo enviado, descontado de tu Cartera Digital prepago.",
-            "monthly_price": 0.00,
-            "yearly_price": 0.00,
+            "description": "Envío de boletines y campañas de email masivo. Costo de $99 MXN/mes para contratación individual (incluido en planes/paquetes) + cobro dinámico a $0.01 MXN por correo enviado.",
+            "detailed_description": "Envía boletines interactivos a tu base de contactos usando nuestro servicio integrado. Licencia individual por $99 MXN/mes o $990 MXN/año (incluida sin costo en cualquier plan o paquete de Néctar). Solo pagas 1 centavo ($0.01 MXN) por cada correo enviado, descontado de tu Cartera Digital prepago.",
+            "monthly_price": 99.00,
+            "yearly_price": 990.00,
             "origin_project": "nectarlabs-main",
             "source_reference": "backend/apps/newsletter (Subscriber, send_newsletter_email)",
             "complexity": AddOn.Complexity.LOW,
-            "server_requirements": "Cartera Digital con saldo positivo ($0.01 MXN por correo).",
+            "server_requirements": "Cartera Digital con saldo prepago ($0.01 MXN por correo).",
             "technical_details": [
                 "Tokens únicos de desuscripción seguros (UUID)",
                 "Render de templates de correo HTML interactivos",
                 "Cobro automático por destinatario a $0.01 MXN",
-                "Sin renta fija mensual o anual"
+                "Licencia individual por $99 MXN/mes"
             ]
         },
         {
@@ -121,7 +121,7 @@ def seed_addons():
             "origin_project": "nectarlabs-main",
             "source_reference": "backend/apps/contracts/models/contract.py",
             "complexity": AddOn.Complexity.HIGH,
-            "server_requirements": "Almacenamiento seguro en la nube para PDFs.",
+            "server_requirements": "Almacenamiento en la nube de Néctar (incluido) para resguardo de PDFs.",
             "technical_details": [
                 "Lienzo de firma en React (HTML5 Canvas)",
                 "Generación de documentos PDF vía backend",
@@ -140,7 +140,7 @@ def seed_addons():
             "origin_project": "nectarlabs-main",
             "source_reference": "backend/apps/bookings",
             "complexity": AddOn.Complexity.MEDIUM,
-            "server_requirements": "Base de datos relacional para control de solapamiento de horarios.",
+            "server_requirements": "Ninguno, listo para usar desde tu panel.",
             "technical_details": [
                 "Calendario de reservas interactivo para clientes",
                 "Tablero Kanban integrado para gestión interna",
@@ -159,7 +159,7 @@ def seed_addons():
             "origin_project": "nectarlabs-main",
             "source_reference": "backend/apps/tickets (SupportChat, SupportChatMessage)",
             "complexity": AddOn.Complexity.MEDIUM,
-            "server_requirements": "Django Channels (ASGI) con servidor de caché Redis + Base de Datos relacional.",
+            "server_requirements": "Widget ligero instalado en tu portal (incluido).",
             "technical_details": [
                 "Widget JS reactivo y ligero incrustable",
                 "Polling persistente o WebSocket fallback",
@@ -178,7 +178,7 @@ def seed_addons():
             "origin_project": "losplacosones",
             "source_reference": "losplacosones/backend/apps/delivery",
             "complexity": AddOn.Complexity.VERY_HIGH,
-            "server_requirements": "Cuenta en Skydropx (API Key de desarrollo o producción) + Configuración de dirección de almacén.",
+            "server_requirements": "Cuenta activa con saldo para la cotización de guías.",
             "technical_details": [
                 "Cotización dinámica multitarifa (FedEx, DHL, Estafeta)",
                 "Margen (markup) de ganancia sobre tarifas base",
@@ -187,28 +187,9 @@ def seed_addons():
             ]
         },
         {
-            "slug": "sponsorship",
-            "name": "Néctar Sponsors & NSCAP",
-            "category_badge": "MONETIZACIÓN",
-            "description": "Pasarela de suscripciones recurrentes de Stripe con control de acceso a feeds exclusivos y niveles de membresía.",
-            "detailed_description": "Permite monetizar tu contenido, comunidad o SaaS de manera flexible. Automatiza cobros recurrentes de Stripe, gestiona roles y bloquea o desbloquea secciones de contenido multimedia basándose en el nivel del suscriptor.",
-            "monthly_price": 169.00,
-            "yearly_price": 1690.00,
-            "origin_project": "nectarlabs-main",
-            "source_reference": "backend/apps/sponsorship/models/sponsorship.py",
-            "complexity": AddOn.Complexity.MEDIUM,
-            "server_requirements": "Cuenta comercial de Stripe + Configuración de endpoint para Webhooks HTTPS del backend.",
-            "technical_details": [
-                "Integración con Stripe Billing API y Webhooks",
-                "Definición de tiers o niveles dinámicos desde Django Admin",
-                "Validación automatizada de estatus de membresías en backend",
-                "Portal de auto-gestión del suscriptor"
-            ]
-        },
-        {
             "slug": "business-analytics",
             "name": "Néctar Administrador de Ventas y Analytics",
-            "category_badge": "MONETIZACIÓN",
+            "category_badge": "ANÁLISIS Y CONTROL",
             "description": "Administrador de ventas y analytics para Nectar, con dashboard de métricas en tiempo real, gráficos interactivos y exportación de datos.",
             "detailed_description": "Administra las ventas y analytics de tu plataforma. Con un dashboard intuitivo, podrás ver métricas en tiempo real, gráficos interactivos y exportar datos en diferentes formatos. Ideal para negocios que buscan optimizar sus ventas y analytics.",
             "monthly_price": 99.00,
@@ -216,7 +197,8 @@ def seed_addons():
             "origin_project": "nectarlabs-main",
             "source_reference": "backend/apps/sales (SalesMiddleware, models.py)",
             "complexity": AddOn.Complexity.MEDIUM,
-            "server_requirements": "Módulo de Middleware Django instalado + Agregación de logs asíncrona para no afectar el flujo principal.",
+            "server_requirements": "Ninguno, reportes de métricas generados automáticamente.",
+            "is_active": False,
             "technical_details": [
                 "Dashboard interactivo con métricas en tiempo real",
                 "Exportación de datos en diferentes formatos",
@@ -235,7 +217,7 @@ def seed_addons():
             "origin_project": "nectarlabs-main",
             "source_reference": "backend/apps/billing (models.py, services.py, views.py)",
             "complexity": AddOn.Complexity.HIGH,
-            "server_requirements": "Configuración de credenciales de PAC (Facturapi API Key) en variables de entorno + HTTPS para subida segura de sellos.",
+            "server_requirements": "Configuración fiscal con tu RFC y sello CSD del SAT vigente en México.",
             "technical_details": [
                 "Creación dinámica de organizaciones subordinadas en el PAC",
                 "Carga directa y segura de sellos CSD (.cer, .key)",
@@ -257,12 +239,32 @@ def seed_addons():
             "origin_project": "nectarlabs-main",
             "source_reference": "backend/apps/shop/views.py",
             "complexity": AddOn.Complexity.MEDIUM,
-            "server_requirements": "Módulo Facturación SAT México activo + Configuración fiscal completa y sellos CSD vigentes.",
+            "server_requirements": "Módulo de Facturación SAT activo con sellos vigentes configurados.",
+            "is_active": False,
             "technical_details": [
                 "Timbrado desatendido inmediato post-pago",
                 "Envío automático de XML y PDF a clientes finales",
                 "Notificaciones de estado de timbrado al tenant",
                 "Reintentos automáticos ante caídas del PAC/SAT"
+            ]
+        },
+        {
+            "slug": "sponsorship",
+            "name": "Néctar Sponsors & NSCAP",
+            "category_badge": "MONETIZACIÓN",
+            "description": "Pasarela de suscripciones recurrentes de Stripe con control de acceso a feeds exclusivos y niveles de membresía.",
+            "detailed_description": "Permite monetizar tu contenido, comunidad o SaaS de manera flexible. Automatiza cobros recurrentes de Stripe, gestiona roles y bloquea o desbloquea secciones de contenido multimedia basándose en el nivel del suscriptor.",
+            "monthly_price": 169.00,
+            "yearly_price": 1690.00,
+            "origin_project": "nectarlabs-main",
+            "source_reference": "backend/apps/sponsorship/models/sponsorship.py",
+            "complexity": AddOn.Complexity.MEDIUM,
+            "server_requirements": "Cuenta activa.",
+            "technical_details": [
+                "Integración con Stripe Billing API and Webhooks",
+                "Definición de tiers o niveles dinámicos desde Django Admin",
+                "Validación automatizada de estatus de membresías en backend",
+                "Portal de auto-gestión del suscriptor"
             ]
         },
         {
@@ -276,7 +278,7 @@ def seed_addons():
             "origin_project": "nectarlabs-main",
             "source_reference": "frontend/src/app/tenants/[subdomain]/pos",
             "complexity": AddOn.Complexity.MEDIUM,
-            "server_requirements": "Base de datos PostgreSQL con soporte para transacciones ACID de alta concurrencia en inventarios.",
+            "server_requirements": "Hardware POS físico en sucursal (Lector de barras, ticketera USB).",
             "technical_details": [
                 "Captura ultra-rápida de lector de códigos (Emulación de teclado)",
                 "Diseño de ticket térmico responsivo (58mm / 80mm)",
@@ -296,7 +298,8 @@ def seed_addons():
             "origin_project": "nectarlabs-main",
             "source_reference": "backend/apps/tenants/models.py (ecommerce)",
             "complexity": AddOn.Complexity.HIGH,
-            "server_requirements": "Configuración completa de Stripe API Keys.",
+            "server_requirements": "Configuración de pasarela Stripe para cobros.",
+            "is_active": False,
             "technical_details": [
                 "Creación y edición del catálogo de productos y categorías",
                 "Integración con checkout e intenciones de pago en Stripe",
@@ -342,7 +345,7 @@ def seed_plans():
             "price": 2800.00,
             "hours": 10,
             "description": "Ideal para proyectos en producción que requieren mantenimiento continuo y mejoras constantes.",
-            "is_recommended": True,
+            "is_recommended": False,
             "is_active": True
         },
         {
@@ -351,7 +354,7 @@ def seed_plans():
             "price": 2500.00,
             "hours": 12,
             "description": "Ideal para empresas que buscan escalabilidad y desarrollo continuo con soporte prioritario.",
-            "is_recommended": False,
+            "is_recommended": True,
             "is_active": True
         }
     ]

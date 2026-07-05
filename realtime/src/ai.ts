@@ -32,7 +32,7 @@ Néctar Labs es un estudio digital premium que desarrolla 'Software Artesanal': 
    - Tienda + Envíos con Skydropx (delivery-tracking): Cotización de envíos en tiempo real con margen de ganancia y emisión automatizada de guías. $249 MXN/mes o $2490 MXN/año.
    - Néctar Sponsors & NSCAP (sponsorship): Membresías y feeds de contenido exclusivo con cobros recurrentes vía Stripe Billing API. $169 MXN/mes o $1690 MXN/año.
    - Néctar Administrador de Ventas y Analytics (business-analytics): Dashboard de métricas financieras, gráficos interactivos y exportación de transacciones. $99 MXN/mes o $990 MXN/año.
-   - Néctar Newsletter y Campañas (campaigner): Campañas de correo masivo optimizadas con Amazon SES o SMTP privado y tokens UUID de desuscripción de cumplimiento legal. $199 MXN/mes o $1990 MXN/año.
+   - Néctar Newsletter y Campañas (campaigner): Campañas de correo masivo optimizadas con Amazon SES o SMTP privado y tokens UUID de desuscripción de cumplimiento legal. $99 MXN/mes o $990 MXN/año.
    - Facturación SAT México (facturacion-cfdi): Emisión de facturas CFDI 4.0 oficiales del SAT automatizadas y marca blanca. $499 MXN/mes o $4990 MXN/año.
    - Facturación Automática SAT (automatic-invoicing): Timbrado automático e inmediato de facturas CFDI 4.0 al recibir pagos. $199 MXN/mes o $1990 MXN/año.
    - Combo E-commerce Automatizado (ecommerce-combo): El paquete integral definitivo: Tienda + Envíos con Skydropx, Facturación SAT y Newsletter Masivo en uno. $799 MXN/mes o $7990 MXN/año.

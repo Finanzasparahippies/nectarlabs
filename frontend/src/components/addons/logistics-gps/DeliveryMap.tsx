@@ -49,6 +49,11 @@ export default function DeliveryMap({
 
       if (!mapRef.current) return;
 
+      // Evitar el crash de "Map container is already initialized" en Hot Reload
+      if ((mapRef.current as any)._leaflet_id) {
+        return;
+      }
+
       const defaultCenter: [number, number] = center || [19.432608, -99.133209];
       const map = L.map(mapRef.current, {
         center: defaultCenter,

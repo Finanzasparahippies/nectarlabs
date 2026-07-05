@@ -22,6 +22,8 @@ interface DeliveryOrder {
   status: string;
   shipment_type: string;
   payment_method?: string; // Stripe, Cash, CoDi
+  total_amount?: number;
+  restaurant_name?: string;
   customer_latitude?: string;
   customer_longitude?: string;
   created_at: string;
@@ -232,6 +234,36 @@ export default function DriverPortal() {
     }
   };
 
+  const handleAcceptOrder = async (orderId: number) => {
+    setErrorMsg('');
+    setSuccessMsg('');
+    try {
+      await fetcher(`/delivery/orders/${orderId}/accept/`, {
+        method: 'POST',
+        body: JSON.stringify({})
+      });
+      setSuccessMsg('Pedido aceptado.');
+      loadDriverData();
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Error al aceptar el pedido.');
+    }
+  };
+
+  const handleRejectOrder = async (orderId: number) => {
+    setErrorMsg('');
+    setSuccessMsg('');
+    try {
+      await fetcher(`/delivery/orders/${orderId}/reject/`, {
+        method: 'POST',
+        body: JSON.stringify({})
+      });
+      setSuccessMsg('Pedido rechazado.');
+      loadDriverData();
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Error al rechazar el pedido.');
+    }
+  };
+
   // Convert English status to friendly Spanish Badge
   const getStatusBadge = (status: string) => {
     const badges: Record<string, { label: string; class: string }> = {
@@ -253,8 +285,76 @@ export default function DriverPortal() {
     );
   }
 
+  const pendingAcceptanceOrder = orders.find(o => o.status === 'WAITING_ACCEPTANCE');
+
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 bg-background p-4 min-h-screen">
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 bg-background p-4 min-h-screen relative">
+      {/* Fullscreen Aceptación Modal Alert */}
+      {pendingAcceptanceOrder && (
+        <div className="fixed inset-0 bg-background/95 backdrop-blur-xl z-50 flex flex-col items-center justify-center p-6 text-center animate-pulse-slow">
+          <div className="w-full max-w-md bg-card-bg border-2 border-nectar-gold/50 rounded-[3rem] p-8 md:p-12 shadow-2xl flex flex-col items-center gap-6 relative overflow-hidden animate-premium">
+            
+            {/* Visual alert animation */}
+            <div className="relative w-24 h-24 flex items-center justify-center bg-nectar-gold/15 rounded-full mb-2 animate-bounce">
+              <span className="text-5xl">🔔</span>
+              <div className="absolute inset-0 rounded-full border-4 border-nectar-gold animate-ping opacity-75"></div>
+            </div>
+
+            <div className="space-y-1">
+              <span className="text-[9px] font-black uppercase tracking-[0.4em] text-nectar-gold animate-pulse">
+                Nuevo Pedido Entrante
+              </span>
+              <h2 className="text-2xl font-black text-white uppercase tracking-tight">
+                ¿Aceptar Entrega?
+              </h2>
+              <p className="text-[10px] text-white/40 font-mono mt-1">Pedido ID: #{pendingAcceptanceOrder.id}</p>
+            </div>
+
+            <div className="w-full bg-background border border-card-border rounded-2xl p-5 text-left space-y-4">
+              <div>
+                <span className="text-[8px] font-black uppercase tracking-widest text-nectar-gold/70 block">Origen / Restaurant</span>
+                <span className="text-xs font-black text-white">{pendingAcceptanceOrder.restaurant_name || 'Restaurante Néctar'}</span>
+              </div>
+              <div className="border-t border-card-border/40 pt-3">
+                <span className="text-[8px] font-black uppercase tracking-widest text-nectar-gold/70 block">Destino</span>
+                <span className="text-xs font-black text-white">{pendingAcceptanceOrder.recipient_name}</span>
+                <p className="text-[10px] text-white/60 leading-normal mt-0.5">{pendingAcceptanceOrder.delivery_address}</p>
+              </div>
+              <div className="grid grid-cols-2 gap-4 border-t border-card-border/40 pt-3">
+                <div>
+                  <span className="text-[8px] font-black uppercase tracking-widest text-nectar-gold/70 block">Método de Pago</span>
+                  <span className="text-[10px] font-black text-emerald-400 mt-1 inline-block bg-emerald-400/10 px-2 py-0.5 rounded border border-emerald-400/25">
+                    {pendingAcceptanceOrder.payment_method === 'CASH' ? '💵 Efectivo' : pendingAcceptanceOrder.payment_method === 'CODI' ? '📲 CoDi' : '💳 Tarjeta (Stripe)'}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[8px] font-black uppercase tracking-widest text-nectar-gold/70 block">Monto a Cobrar</span>
+                  <span className="text-sm font-mono font-black text-[#C68A1E]">${(pendingAcceptanceOrder.total_amount || 0).toLocaleString('es-MX')} MXN</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="w-full grid grid-cols-2 gap-4 mt-4">
+              <button
+                type="button"
+                onClick={() => handleRejectOrder(pendingAcceptanceOrder.id)}
+                className="py-4 bg-red-500/10 border border-red-500/35 hover:bg-red-500/25 text-red-400 text-xs font-black uppercase tracking-widest rounded-2xl hover:scale-105 active:scale-95 transition-all cursor-pointer text-center"
+              >
+                Rechazar
+              </button>
+              <button
+                type="button"
+                onClick={() => handleAcceptOrder(pendingAcceptanceOrder.id)}
+                className="py-4 text-background text-xs font-black uppercase tracking-widest rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-lg shadow-green-500/20 cursor-pointer text-center flex items-center justify-center gap-2"
+                style={{ backgroundColor: '#10B981' }}
+              >
+                Aceptar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Sidebar Panel - Driver Stats and Orders */}
       <div className="lg:col-span-4 flex flex-col space-y-6">
         {/* Driver Header */}

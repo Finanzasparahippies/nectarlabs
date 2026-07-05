@@ -16,6 +16,15 @@ class AddOnSerializer(serializers.ModelSerializer):
         model = AddOn
         fields = '__all__'
 
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        request = self.context.get('request')
+        is_staff = request and request.user and request.user.is_authenticated and (request.user.is_staff or getattr(request.user, 'role', None) == 'ADMIN')
+        if not is_staff:
+            ret.pop('origin_project', None)
+            ret.pop('source_reference', None)
+        return ret
+
 class PromoCodeSerializer(serializers.ModelSerializer):
     referrer_email = serializers.CharField(source='referrer.email', read_only=True)
 

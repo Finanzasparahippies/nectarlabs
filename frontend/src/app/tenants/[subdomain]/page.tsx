@@ -914,7 +914,6 @@ export default function TenantPortalPage() {
                         { slug: 'booking-signature', label: 'Reservas', icon: '📅' },
                         { slug: 'shop-delivery', label: 'Tienda + Entrega', icon: '🛍️', virtual: true, show: hasShopDelivery },
                         { slug: 'sponsorship', label: 'Sponsorship', icon: '💎' },
-                        { slug: 'business-analytics', label: 'Métricas APM', icon: '📊' },
                         { slug: 'campaigner', label: 'Boletín', icon: '✉️' },
                         { slug: 'facturacion-cfdi', label: 'Facturación SAT', icon: '🧾' },
                       ];
@@ -955,11 +954,10 @@ export default function TenantPortalPage() {
                     />
                   )}
                   {activeAddonTab === 'sponsorship' && <SponsorTiers primaryColor={primaryColor} />}
-                  {activeAddonTab === 'business-analytics' && <TelemetryDashboard primaryColor={primaryColor} />}
                   {activeAddonTab === 'campaigner' && <SubscribeForm tenantId={tenantConfig.id} subdomain={subdomain} primaryColor={primaryColor} />}
                   {activeAddonTab === 'facturacion-cfdi' && <SATInvoicingForm tenantId={tenantConfig.id} subdomain={subdomain} primaryColor={primaryColor} ownerId={tenantConfig.owner} showToast={showToast} />}
                   {/* Legacy fallback */}
-                  {!['booking-signature','shop-delivery','sponsorship','business-analytics','campaigner','facturacion-cfdi'].includes(activeAddonTab || '') && null}
+                  {!['booking-signature','shop-delivery','sponsorship','campaigner','facturacion-cfdi'].includes(activeAddonTab || '') && null}
                 </div>
               </div>
             ) : (

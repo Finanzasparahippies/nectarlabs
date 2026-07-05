@@ -267,6 +267,12 @@ class Order(models.Model):
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
     stripe_payment_intent = models.CharField(max_length=200, blank=True, null=True)
     stripe_session_id = models.CharField(max_length=255, null=True, blank=True)
+    payment_method = models.CharField(
+        max_length=20,
+        choices=[('CASH', 'Cash on Delivery'), ('STRIPE', 'Stripe')],
+        default='CASH',
+        help_text="Método de pago seleccionado por el cliente"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     # Address Info

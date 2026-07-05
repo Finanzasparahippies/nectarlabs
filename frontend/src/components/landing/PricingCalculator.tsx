@@ -6,7 +6,7 @@ const CALCULATOR_ADDONS = [
   { id: 'pack-ecommerce-lite', name: 'Paquete E-commerce Lite', monthlyPrice: 799, yearlyPrice: 7990, desc: 'Envíos nacionales Skydropx, Facturación SAT (100 timbres), Tienda y Campaigner.' },
   { id: 'pack-pos-ecommerce', name: 'Paquete POS & E-commerce Pro', monthlyPrice: 799, yearlyPrice: 7990, desc: 'Punto de venta físico, Tienda, Envíos, Facturación y Campaigner.' },
   { id: 'pack-blog-sponsors', name: 'Paquete Blog & Sponsors', monthlyPrice: 499, yearlyPrice: 4990, desc: 'Blog, Sponsors recurrentes (Stripe), Tienda, Facturación y Campaigner.' },
-  { id: 'campaigner', name: 'Campaigner Masivo', monthlyPrice: 0, yearlyPrice: 0, desc: 'Boletines masivos sin costo fijo. Cobro dinámico a $0.01 MXN por correo.' },
+  { id: 'campaigner', name: 'Campaigner Masivo', monthlyPrice: 99, yearlyPrice: 990, desc: 'Boletines masivos. $99 MXN/mes + $0.01 MXN por correo.' },
   { id: 'booking-signature', name: 'Néctar Contratos Digitales', monthlyPrice: 99, yearlyPrice: 990, desc: 'Firma de contratos digitales ilimitados sin costo por firmante.' },
   { id: 'booking', name: 'Agendador de Citas & Kanban', monthlyPrice: 49, yearlyPrice: 490, desc: 'Gestión de citas y reservas con tablero Kanban integrado.' },
 ];

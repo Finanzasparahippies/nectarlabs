@@ -8,9 +8,11 @@ class TenantSerializer(serializers.ModelSerializer):
     
     custom_smtp_password = serializers.CharField(write_only=True, required=False, allow_blank=True, allow_null=True)
     skydropx_api_key = serializers.CharField(write_only=True, required=False, allow_blank=True, allow_null=True)
+    stripe_secret_key = serializers.CharField(write_only=True, required=False, allow_blank=True, allow_null=True)
     
     has_custom_smtp_password = serializers.SerializerMethodField()
     has_skydropx_api_key = serializers.SerializerMethodField()
+    has_stripe_secret_key = serializers.SerializerMethodField()
     is_ambassador = serializers.ReadOnlyField()
     free_stamps_left = serializers.ReadOnlyField()
     subscriber_count = serializers.SerializerMethodField()
@@ -21,7 +23,7 @@ class TenantSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tenant
         fields = [
-            'id', 'name', 'subdomain', 'owner', 'owner_email', 'api_key', 
+            'id', 'name', 'store_category', 'subdomain', 'owner', 'owner_email', 'api_key', 
             'allowed_origins', 'custom_domain', 'use_custom_domain', 'welcome_message', 'require_customer_info',
             'logo', 'logo_url', 'portal_title', 'footer_text', 'is_active', 'created_at', 'updated_at',
             'active_addons', 'stamp_balance', 'newsletter_plan', 'newsletter_sent_this_month', 'newsletter_extra_credits',
@@ -32,6 +34,8 @@ class TenantSerializer(serializers.ModelSerializer):
             'theme_color_light', 'accent_color_light', 'bg_color_light', 'card_bg_color_light', 'text_color_light', 'border_color_light',
             # Pollen/Nectar Falling settings
             'pollen_active', 'pollen_icon', 'pollen_color', 'pollen_count', 'pollen_blur',
+            # Stripe keys config per tenant
+            'stripe_publishable_key', 'stripe_secret_key', 'has_stripe_secret_key',
             
             # SMTP custom
             'custom_smtp_host', 'custom_smtp_port', 'custom_smtp_username', 'custom_smtp_password',
@@ -63,6 +67,9 @@ class TenantSerializer(serializers.ModelSerializer):
 
     def get_has_skydropx_api_key(self, obj):
         return bool(obj.skydropx_api_key)
+
+    def get_has_stripe_secret_key(self, obj):
+        return bool(obj.stripe_secret_key)
 
     def get_subscriber_count(self, obj):
         return obj.subscribers.filter(is_active=True).count()
@@ -114,6 +121,61 @@ class TenantSerializer(serializers.ModelSerializer):
                     )
         return value
 
+    def validate_shipping_markup_percentage(self, value):
+        user = self.context.get('request').user if self.context.get('request') else None
+        if user and not (user.is_staff or user.role == 'ADMIN'):
+            if self.instance and self.instance.shipping_markup_percentage != value:
+                raise serializers.ValidationError("Solo el CEO o administradores de Nectar Labs pueden modificar el margen de ganancia de envíos.")
+        return value
+
+    def validate_skydropx_api_key(self, value):
+        user = self.context.get('request').user if self.context.get('request') else None
+        if user and not (user.is_staff or user.role == 'ADMIN'):
+            current_val = getattr(self.instance, 'skydropx_api_key', None) if self.instance else None
+            if current_val != value:
+                raise serializers.ValidationError("Solo el CEO o administradores de Nectar Labs pueden modificar la clave API de Skydropx.")
+        return value
+
+    def validate_custom_smtp_host(self, value):
+        user = self.context.get('request').user if self.context.get('request') else None
+        if user and not (user.is_staff or user.role == 'ADMIN'):
+            current_val = getattr(self.instance, 'custom_smtp_host', None) if self.instance else None
+            if current_val != value:
+                raise serializers.ValidationError("Solo el CEO o administradores de Nectar Labs pueden configurar servidores SMTP personalizados.")
+        return value
+
+    def validate_custom_smtp_port(self, value):
+        user = self.context.get('request').user if self.context.get('request') else None
+        if user and not (user.is_staff or user.role == 'ADMIN'):
+            current_val = getattr(self.instance, 'custom_smtp_port', None) if self.instance else None
+            if current_val != value:
+                raise serializers.ValidationError("Solo el CEO o administradores de Nectar Labs pueden configurar servidores SMTP personalizados.")
+        return value
+
+    def validate_custom_smtp_username(self, value):
+        user = self.context.get('request').user if self.context.get('request') else None
+        if user and not (user.is_staff or user.role == 'ADMIN'):
+            current_val = getattr(self.instance, 'custom_smtp_username', None) if self.instance else None
+            if current_val != value:
+                raise serializers.ValidationError("Solo el CEO o administradores de Nectar Labs pueden configurar servidores SMTP personalizados.")
+        return value
+
+    def validate_custom_smtp_password(self, value):
+        user = self.context.get('request').user if self.context.get('request') else None
+        if user and not (user.is_staff or user.role == 'ADMIN'):
+            current_val = getattr(self.instance, 'custom_smtp_password', None) if self.instance else None
+            if current_val != value:
+                raise serializers.ValidationError("Solo el CEO o administradores de Nectar Labs pueden configurar servidores SMTP personalizados.")
+        return value
+
+    def validate_custom_smtp_from_email(self, value):
+        user = self.context.get('request').user if self.context.get('request') else None
+        if user and not (user.is_staff or user.role == 'ADMIN'):
+            current_val = getattr(self.instance, 'custom_smtp_from_email', None) if self.instance else None
+            if current_val != value:
+                raise serializers.ValidationError("Solo el CEO o administradores de Nectar Labs pueden configurar servidores SMTP personalizados.")
+        return value
+
     def to_representation(self, instance):
         instance.reset_stamps_if_new_month()
         ret = super().to_representation(instance)
@@ -136,10 +198,11 @@ class TenantPublicSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tenant
         fields = [
-            'id', 'name', 'subdomain', 'custom_domain', 'use_custom_domain', 'logo_url', 
+            'id', 'name', 'store_category', 'subdomain', 'custom_domain', 'use_custom_domain', 'logo_url', 
             'welcome_message', 'require_customer_info', 'active_addons',
             'portal_title', 'footer_text', 'has_active_plan_contract', 'is_addons_only',
             'is_active', 'owner', 'trial_ends_at', 'tenant_context', 'server_time',
+            'stripe_publishable_key',
             # 6-Color Palette (Dark & Light)
             'theme_color', 'accent_color', 'bg_color', 'card_bg_color', 'text_color', 'border_color',
             'theme_color_light', 'accent_color_light', 'bg_color_light', 'card_bg_color_light', 'text_color_light', 'border_color_light',

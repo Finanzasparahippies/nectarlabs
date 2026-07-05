@@ -6,6 +6,7 @@ from datetime import timedelta
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse
+from django.db import transaction
 import stripe
 from .models import Plan, Product, Contract, PaymentInstallment, AddOn, PromoCode, SalesCommission, AddOnSubscription, Order, OrderItem
 from .serializers import PlanSerializer, ProductSerializer, ContractSerializer, PaymentInstallmentSerializer, AddOnSerializer, PromoCodeSerializer, SalesCommissionSerializer, AddOnSubscriptionSerializer, OrderSerializer
@@ -42,6 +43,7 @@ class ProductViewSet(viewsets.ModelViewSet):
         # Filter by tenant parameter if present
         tenant_id = self.request.query_params.get('tenant_id')
         subdomain = self.request.query_params.get('subdomain')
+        is_global = self.request.query_params.get('global') == 'true'
         
         from apps.tenants.models import Tenant
         import uuid
@@ -54,6 +56,9 @@ class ProductViewSet(viewsets.ModelViewSet):
                 queryset = queryset.none()
         elif subdomain:
             queryset = queryset.filter(tenant__subdomain=subdomain.lower())
+        elif is_global:
+            # Global listing for store directory
+            queryset = queryset.filter(tenant__is_active=True)
         else:
             # Fallback to user context if authenticated
             user = self.request.user
@@ -74,19 +79,121 @@ class ProductViewSet(viewsets.ModelViewSet):
                 
         return queryset
 
+    @transaction.atomic
+    def create(self, request, *args, **kwargs):
+        # Resolve tenant
+        tenant_id = request.data.get('tenant')
+        from apps.tenants.models import Tenant
+        tenant = None
+        if tenant_id:
+            try:
+                tenant = Tenant.objects.get(id=tenant_id)
+            except Exception:
+                pass
+        
+        if not tenant:
+            user = request.user
+            if user and user.is_authenticated and hasattr(user, 'owned_tenants'):
+                tenant = user.owned_tenants.first()
+        
+        # Idempotency check: check if product with same name already exists for this tenant
+        name = request.data.get('name')
+        if tenant and name:
+            existing = Product.objects.filter(tenant=tenant, name__iexact=name.strip()).first()
+            if existing:
+                # Return existing product instead of duplicating
+                serializer = self.get_serializer(existing)
+                return Response(serializer.data, status=status.HTTP_200_OK)
+                
+        return super().create(request, *args, **kwargs)
+
     def perform_create(self, serializer):
         user = self.request.user
         from apps.users.models import User as UserModel
-        if user and user.is_authenticated and user.role == UserModel.Role.BUSINESS:
+        
+        # Prioritize tenant explicitly provided in serializer validated data
+        if 'tenant' in serializer.validated_data:
+            product = serializer.save()
+        elif user and user.is_authenticated and user.role == UserModel.Role.BUSINESS:
             tenant = user.owned_tenants.first()
-            serializer.save(tenant=tenant)
+            product = serializer.save(tenant=tenant)
         else:
-            serializer.save()
+            product = serializer.save()
+            
+        self.sync_with_stripe(product)
+
+    def perform_update(self, serializer):
+        product = serializer.save()
+        self.sync_with_stripe(product)
+
+    def sync_with_stripe(self, product):
+        """
+        Sincroniza el producto y su precio con la cuenta de Stripe del inquilino (si está configurada).
+        Si el precio cambia, genera un nuevo Price ID en Stripe.
+        """
+        tenant = product.tenant
+        if not tenant or not tenant.stripe_secret_key:
+            return
+
+        import stripe
+        
+        # 1. Resolver o Crear Producto en Stripe
+        stripe_product_id = None
+        try:
+            for p in stripe.Product.list(limit=100, api_key=tenant.stripe_secret_key).auto_paging_iter():
+                if p.metadata.get('local_product_id') == str(product.id):
+                    stripe_product_id = p.id
+                    break
+        except Exception:
+            pass
+
+        if not stripe_product_id:
+            try:
+                sp = stripe.Product.create(
+                    name=product.name,
+                    description=product.description or '',
+                    metadata={'local_product_id': str(product.id)},
+                    api_key=tenant.stripe_secret_key
+                )
+                stripe_product_id = sp.id
+            except Exception as e:
+                print(f"Error creating Stripe product: {str(e)}")
+                return
+
+        # 2. Resolver o Crear Precio en Stripe
+        price_changed = True
+        if product.stripe_price_id:
+            try:
+                sp_price = stripe.Price.retrieve(product.stripe_price_id, api_key=tenant.stripe_secret_key)
+                current_amount = sp_price.unit_amount  # en centavos
+                target_amount = int(product.price * 100)
+                if current_amount == target_amount:
+                    price_changed = False
+            except Exception:
+                pass
+
+        if price_changed and stripe_product_id:
+            try:
+                sp_price = stripe.Price.create(
+                    product=stripe_product_id,
+                    unit_amount=int(product.price * 100),
+                    currency='mxn',
+                    api_key=tenant.stripe_secret_key
+                )
+                product.stripe_price_id = sp_price.id
+                product.save(update_fields=['stripe_price_id'])
+            except Exception as e:
+                print(f"Error creating Stripe price: {str(e)}")
 
 class AddOnViewSet(viewsets.ModelViewSet):
-    queryset = AddOn.objects.all()
     serializer_class = AddOnSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+    def get_queryset(self):
+        user = self.request.user
+        if user and user.is_authenticated and (user.is_staff or getattr(user, 'role', None) == 'ADMIN'):
+            return AddOn.objects.all()
+        return AddOn.objects.filter(is_active=True)
 
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
     def subscribe(self, request, pk=None):
@@ -1912,6 +2019,12 @@ class GetShippingRatesView(APIView):
         if not tenant:
             return Response({"error": "No se pudo identificar un inquilino (tenant) válido."}, status=status.HTTP_400_BAD_REQUEST)
 
+        # Enforce minimum balance of $250 MXN for quotations and labels
+        if tenant.shipping_wallet_balance < 250.00:
+            return Response({
+                "error": "Saldo insuficiente en tu Cartera de Envíos. Se requiere un saldo mínimo de $250.00 MXN para cotizar y generar guías."
+            }, status=status.HTTP_400_BAD_REQUEST)
+
         destination = request.data.get('destination')
         if not destination or not (destination.get('zip_code') or destination.get('postal_code')):
             return Response({"error": "La dirección de destino con código postal es obligatoria."}, status=status.HTTP_400_BAD_REQUEST)
@@ -2232,12 +2345,15 @@ class OrderViewSet(viewsets.ModelViewSet):
             order_items_to_create.append((product, qty, unit_price))
 
         user = request.user if request.user.is_authenticated else None
+        payment_method = data.get('payment_method', 'CASH')
+        
         order = Order.objects.create(
             tenant=tenant,
             user=user,
             user_email=data.get('recipient_email') or (user.email if user else None),
             total=total_amount,
             status=Order.Status.PENDING,
+            payment_method=payment_method,
             full_name=data.get('recipient_name', ''),
             phone=data.get('recipient_phone', ''),
             street_and_number=data.get('delivery_address', '')
@@ -2251,6 +2367,108 @@ class OrderViewSet(viewsets.ModelViewSet):
                 price=price
             )
 
+        stripe_session_url = None
+        if payment_method == 'STRIPE':
+            if not tenant.stripe_secret_key:
+                # Si se selecciona tarjeta pero el tenant no cargó credenciales, lanzar error explicativo
+                return Response(
+                    {"detail": "Esta tienda no tiene configurada su pasarela de pagos Stripe para recibir tarjetas bancarias."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Formatear productos para Stripe Checkout
+            line_items = []
+            for product, qty, price in order_items_to_create:
+                line_items.append({
+                    'price_data': {
+                        'currency': 'mxn',
+                        'product_data': {
+                            'name': product.name,
+                            'description': product.description or '',
+                        },
+                        'unit_amount': int(price * 100),  # Stripe recibe centavos
+                    },
+                    'quantity': qty,
+                })
+                
+            import stripe
+            try:
+                # Construir URLs de redirección dinámicas basadas en el origen HTTP del request (el portal público del tenant)
+                referrer = request.META.get('HTTP_REFERER') or ''
+                if '?' in referrer:
+                    referrer = referrer.split('?')[0]
+                
+                success_url = f"{referrer}?payment_success=true&shop_order_id={order.id}&session_id={{CHECKOUT_SESSION_ID}}"
+                cancel_url = f"{referrer}?payment_cancel=true"
+                
+                # Crear sesión de pago en Stripe utilizando el API Key secreto configurado por el tenant
+                session = stripe.checkout.Session.create(
+                    api_key=tenant.stripe_secret_key,
+                    payment_method_types=['card'],
+                    line_items=line_items,
+                    mode='payment',
+                    success_url=success_url,
+                    cancel_url=cancel_url,
+                    metadata={
+                        'order_id': str(order.id),
+                        'tenant_id': str(tenant.id)
+                    }
+                )
+                stripe_session_url = session.url
+                order.stripe_session_id = session.id
+                order.save(update_fields=['stripe_session_id'])
+            except Exception as e:
+                return Response(
+                    {"detail": f"Error al inicializar sesión de Stripe con la llave del inquilino: {str(e)}"},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+
         serializer = self.get_serializer(order)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        res_data = serializer.data
+        res_data['stripe_session_url'] = stripe_session_url
+        return Response(res_data, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=['post'], url_path='verify-stripe-payment')
+    def verify_stripe_payment(self, request, pk=None):
+        """
+        Endpoint auto-healer para verificar el estado de un pago en Stripe
+        y actualizar el estado local del pedido de forma segura.
+        """
+        order = self.get_object()
+        tenant = order.tenant
+        if not tenant or not tenant.stripe_secret_key:
+            return Response(
+                {"detail": "Llave secreta de Stripe no configurada por este inquilino."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+            
+        session_id = request.data.get('session_id') or order.stripe_session_id
+        if not session_id:
+            return Response(
+                {"detail": "No se encontró un ID de sesión Stripe válido para esta orden."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+            
+        import stripe
+        try:
+            session = stripe.checkout.Session.retrieve(session_id, api_key=tenant.stripe_secret_key)
+            if session.get('payment_status') == 'paid':
+                order.status = Order.Status.PAID
+                order.save(update_fields=['status'])
+                return Response({
+                    "success": True,
+                    "status": order.status,
+                    "message": "Pago verificado y registrado de manera exitosa."
+                })
+            else:
+                return Response({
+                    "success": False,
+                    "status": order.status,
+                    "message": f"El pago no se ha completado en Stripe. Estado actual: {session.get('payment_status')}"
+                })
+        except Exception as e:
+            return Response(
+                {"detail": f"Error al consultar la API de Stripe del inquilino: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 

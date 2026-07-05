@@ -63,9 +63,9 @@ const allAddons: AddonCatalogItem[] = [
     id: 'campaigner',
     name: 'Campaigner Masivo',
     categoryBadge: 'EMAIL MARKETING',
-    description: 'Boletines masivos sin costo fijo. Cobro dinámico a $0.01 MXN por correo enviado.',
-    monthlyPrice: 0,
-    yearlyPrice: 0,
+    description: 'Boletines masivos. Renta de $99 MXN/mes para contratación individual (incluido en planes/paquetes) + cobro dinámico a $0.01 MXN por correo enviado.',
+    monthlyPrice: 99,
+    yearlyPrice: 990,
     icon: '📧'
   },
   {
@@ -284,8 +284,24 @@ export default function TenantDashboardAddonsPage() {
   const primaryColor = tenantConfig.theme_color || '#C68A1E';
   const activeList = tenantConfig.active_addons || [];
 
+  const hasPlanOrPackage = tenantConfig.has_active_plan_contract || activeList.some(id => id.startsWith('pack-'));
+
+  const resolvedAddons = allAddons.map(addon => {
+    if (addon.id === 'campaigner') {
+      return {
+        ...addon,
+        monthlyPrice: hasPlanOrPackage ? 0 : 99,
+        yearlyPrice: hasPlanOrPackage ? 0 : 990,
+        description: hasPlanOrPackage 
+          ? 'Boletines masivos sin costo fijo. Cobro dinámico a $0.01 MXN por correo enviado.'
+          : 'Boletines masivos. Renta de $99 MXN/mes para contratación individual (incluido en planes/paquetes) + cobro dinámico a $0.01 MXN por correo enviado.'
+      };
+    }
+    return addon;
+  });
+
   // Categorize addons
-  const activeAddons = allAddons.filter((addon) => {
+  const activeAddons = resolvedAddons.filter((addon) => {
     // Check both base match and specific aliases
     if (activeList.includes(addon.id)) return true;
     if (addon.id === 'campaigner' && activeList.includes('newsletter-campaigner')) return true;
@@ -293,12 +309,115 @@ export default function TenantDashboardAddonsPage() {
     return false;
   });
 
-  const pendingAddons = allAddons.filter((addon) => {
+  const pendingAddons = resolvedAddons.filter((addon) => {
     if (activeList.includes(addon.id)) return false;
     if (addon.id === 'campaigner' && activeList.includes('newsletter-campaigner')) return false;
     if (addon.id === 'delivery-tracking' && activeList.includes('logistics-gps')) return false;
     return true;
   });
+
+  const pendingPackages = pendingAddons.filter(addon => addon.id.startsWith('pack-'));
+  const pendingModules = pendingAddons.filter(addon => !addon.id.startsWith('pack-'));
+  const activePackages = activeAddons.filter(addon => addon.id.startsWith('pack-'));
+  const activeModules = activeAddons.filter(addon => !addon.id.startsWith('pack-'));
+
+  const renderPendingAddon = (addon: AddonCatalogItem) => {
+    const price = billingCycle === 'monthly' ? addon.monthlyPrice : addon.yearlyPrice;
+    const savings = billingCycle === 'yearly' ? addon.monthlyPrice * 2 : 0;
+    return (
+      <div 
+        key={addon.id}
+        className="border rounded-[2rem] p-6 flex flex-col justify-between min-h-[300px] relative overflow-hidden backdrop-blur-md hover:scale-[1.02] transition-all duration-300 group"
+        style={{ 
+          backgroundColor: tenantConfig.card_bg_color || '#050a06', 
+          borderColor: tenantConfig.border_color || '#151F18' 
+        }}
+      >
+        <div className="absolute -top-24 -right-24 w-40 h-40 bg-white/[0.02] blur-[40px] rounded-full group-hover:bg-white/[0.04] transition-all duration-500 pointer-events-none"></div>
+
+        <div className="space-y-4">
+          <div className="flex justify-between items-start">
+            <span className="text-3xl">{addon.icon}</span>
+            <span className="px-2.5 py-0.5 bg-nectar-gold/10 text-nectar-gold border border-nectar-gold/25 text-[7px] font-black rounded-full uppercase tracking-wider font-mono">
+              {addon.categoryBadge}
+            </span>
+          </div>
+
+          <div>
+            <h3 className="text-sm font-black uppercase text-white tracking-wide mt-2">{addon.name}</h3>
+            <p className="text-[10px] text-white/50 leading-relaxed mt-2 line-clamp-4">{addon.description}</p>
+          </div>
+        </div>
+
+        <div className="border-t border-white/5 pt-4 mt-6 flex justify-between items-center">
+          <div>
+            <span className="text-[7.5px] uppercase font-black text-white/35 block">
+              Precio {billingCycle === 'monthly' ? 'mensual' : 'anual'}
+            </span>
+            <span className="text-base font-black text-white font-mono" style={{ color: primaryColor }}>
+              ${(price || 0).toLocaleString('es-MX')} MXN
+            </span>
+            {billingCycle === 'yearly' && savings > 0 && (
+              <p className="text-[7px] text-emerald-400 font-bold uppercase tracking-wider mt-0.5">
+                Ahorro de ${savings.toLocaleString('es-MX')} MXN
+              </p>
+            )}
+          </div>
+          
+          <button
+            onClick={handleRedirectToMain}
+            className="px-4 py-2 text-background text-[8px] font-black uppercase tracking-widest rounded-lg hover:scale-105 active:scale-95 transition-all shadow-md cursor-pointer"
+            style={{ backgroundColor: primaryColor }}
+          >
+            Activar Add-on
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  const renderActiveAddon = (addon: AddonCatalogItem) => {
+    return (
+      <div 
+        key={addon.id}
+        className="border rounded-[2rem] p-6 flex flex-col justify-between min-h-[300px] relative overflow-hidden backdrop-blur-md hover:scale-[1.02] transition-all duration-300 group"
+        style={{ 
+          backgroundColor: tenantConfig.card_bg_color || '#050a06', 
+          borderColor: tenantConfig.border_color || '#151F18' 
+        }}
+      >
+        <div className="space-y-4">
+          <div className="flex justify-between items-start">
+            <span className="text-3xl">{addon.icon}</span>
+            <span className="px-2.5 py-0.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 text-[7px] font-black rounded-full uppercase tracking-wider font-mono">
+              ✔️ Activo
+            </span>
+          </div>
+
+          <div>
+            <h3 className="text-sm font-black uppercase text-white tracking-wide mt-2">{addon.name}</h3>
+            <p className="text-[10px] text-white/50 leading-relaxed mt-2 line-clamp-4">{addon.description}</p>
+          </div>
+        </div>
+
+        <div className="border-t border-white/5 pt-4 mt-6 flex justify-between items-center">
+          <div>
+            <span className="text-[7.5px] uppercase font-black text-white/35 block">Módulo Licenciado</span>
+            <span className="text-xs font-black text-emerald-400 uppercase tracking-wider">
+              Listo para usar
+            </span>
+          </div>
+          
+          <button
+            onClick={() => router.push(`/portal-admin`)}
+            className="px-4 py-2 bg-white/5 border border-white/10 hover:bg-white/10 text-white text-[8px] font-black uppercase tracking-widest rounded-lg hover:scale-105 active:scale-95 transition-all cursor-pointer"
+          >
+            Configurar
+          </button>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div 
@@ -403,62 +522,40 @@ export default function TenantDashboardAddonsPage() {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in duration-300">
-              {pendingAddons.map((addon) => {
-                const price = billingCycle === 'monthly' ? addon.monthlyPrice : addon.yearlyPrice;
-                const savings = billingCycle === 'yearly' ? addon.monthlyPrice * 2 : 0;
-                return (
-                  <div 
-                    key={addon.id}
-                    className="border rounded-[2rem] p-6 flex flex-col justify-between min-h-[300px] relative overflow-hidden backdrop-blur-md hover:scale-[1.02] transition-all duration-300 group"
-                    style={{ 
-                      backgroundColor: tenantConfig.card_bg_color || '#050a06', 
-                      borderColor: tenantConfig.border_color || '#151F18' 
-                    }}
-                  >
-                    {/* Subtle Background Glow */}
-                    <div className="absolute -top-24 -right-24 w-40 h-40 bg-white/[0.02] blur-[40px] rounded-full group-hover:bg-white/[0.04] transition-all duration-500 pointer-events-none"></div>
-
-                    <div className="space-y-4">
-                      <div className="flex justify-between items-start">
-                        <span className="text-3xl">{addon.icon}</span>
-                        <span className="px-2.5 py-0.5 bg-nectar-gold/10 text-nectar-gold border border-nectar-gold/25 text-[7px] font-black rounded-full uppercase tracking-wider font-mono">
-                          {addon.categoryBadge}
-                        </span>
-                      </div>
-
-                      <div>
-                        <h3 className="text-sm font-black uppercase text-white tracking-wide mt-2">{addon.name}</h3>
-                        <p className="text-[10px] text-white/50 leading-relaxed mt-2 line-clamp-4">{addon.description}</p>
-                      </div>
-                    </div>
-
-                    <div className="border-t border-white/5 pt-4 mt-6 flex justify-between items-center">
-                      <div>
-                        <span className="text-[7.5px] uppercase font-black text-white/35 block">
-                          Precio {billingCycle === 'monthly' ? 'mensual' : 'anual'}
-                        </span>
-                        <span className="text-base font-black text-white font-mono" style={{ color: primaryColor }}>
-                          ${(price || 0).toLocaleString('es-MX')} MXN
-                        </span>
-                        {billingCycle === 'yearly' && savings > 0 && (
-                          <p className="text-[7px] text-emerald-400 font-bold uppercase tracking-wider mt-0.5">
-                            Ahorro de ${savings.toLocaleString('es-MX')} MXN
-                          </p>
-                        )}
-                      </div>
-                      
-                      <button
-                        onClick={handleRedirectToMain}
-                        className="px-4 py-2 text-background text-[8px] font-black uppercase tracking-widest rounded-lg hover:scale-105 active:scale-95 transition-all shadow-md cursor-pointer"
-                        style={{ backgroundColor: primaryColor }}
-                      >
-                        Activar Add-on
-                      </button>
-                    </div>
+            <div className="space-y-12 animate-in fade-in duration-300">
+              {/* Packages pending */}
+              {pendingPackages.length > 0 && (
+                <div>
+                  <div className="mb-5 border-b border-white/10 pb-3 flex justify-between items-center">
+                    <h2 className="text-sm font-black uppercase tracking-widest text-white/80">
+                      📦 Paquetes de Software Completos
+                    </h2>
+                    <span className="text-[8px] font-mono px-2 py-0.5 rounded bg-white/5 border border-white/10 text-white/50 uppercase tracking-widest">
+                      {pendingPackages.length} pendientes
+                    </span>
                   </div>
-                );
-              })}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {pendingPackages.map(renderPendingAddon)}
+                  </div>
+                </div>
+              )}
+
+              {/* Modules pending */}
+              {pendingModules.length > 0 && (
+                <div>
+                  <div className="mb-5 border-b border-white/10 pb-3 flex justify-between items-center">
+                    <h2 className="text-sm font-black uppercase tracking-widest text-white/80">
+                      🧩 Módulos & Funcionalidades Individuales
+                    </h2>
+                    <span className="text-[8px] font-mono px-2 py-0.5 rounded bg-white/5 border border-white/10 text-white/50 uppercase tracking-widest">
+                      {pendingModules.length} pendientes
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {pendingModules.map(renderPendingAddon)}
+                  </div>
+                </div>
+              )}
             </div>
           )
         ) : (
@@ -471,47 +568,40 @@ export default function TenantDashboardAddonsPage() {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in duration-300">
-              {activeAddons.map((addon) => (
-                <div 
-                  key={addon.id}
-                  className="border rounded-[2rem] p-6 flex flex-col justify-between min-h-[300px] relative overflow-hidden backdrop-blur-md hover:scale-[1.02] transition-all duration-300 group"
-                  style={{ 
-                    backgroundColor: tenantConfig.card_bg_color || '#050a06', 
-                    borderColor: tenantConfig.border_color || '#151F18' 
-                  }}
-                >
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-start">
-                      <span className="text-3xl">{addon.icon}</span>
-                      <span className="px-2.5 py-0.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 text-[7px] font-black rounded-full uppercase tracking-wider font-mono">
-                        ✔️ Activo
-                      </span>
-                    </div>
-
-                    <div>
-                      <h3 className="text-sm font-black uppercase text-white tracking-wide mt-2">{addon.name}</h3>
-                      <p className="text-[10px] text-white/50 leading-relaxed mt-2 line-clamp-4">{addon.description}</p>
-                    </div>
+            <div className="space-y-12 animate-in fade-in duration-300">
+              {/* Packages active */}
+              {activePackages.length > 0 && (
+                <div>
+                  <div className="mb-5 border-b border-white/10 pb-3 flex justify-between items-center">
+                    <h2 className="text-sm font-black uppercase tracking-widest text-white/80">
+                      📦 Paquetes Activos en tu Plan
+                    </h2>
+                    <span className="text-[8px] font-mono px-2 py-0.5 rounded bg-white/5 border border-white/10 text-white/50 uppercase tracking-widest">
+                      {activePackages.length} activos
+                    </span>
                   </div>
-
-                  <div className="border-t border-white/5 pt-4 mt-6 flex justify-between items-center">
-                    <div>
-                      <span className="text-[7.5px] uppercase font-black text-white/35 block">Módulo Licenciado</span>
-                      <span className="text-xs font-black text-emerald-400 uppercase tracking-wider">
-                        Listo para usar
-                      </span>
-                    </div>
-                    
-                    <button
-                      onClick={() => router.push(`/portal-admin`)}
-                      className="px-4 py-2 bg-white/5 border border-white/10 hover:bg-white/10 text-white text-[8px] font-black uppercase tracking-widest rounded-lg hover:scale-105 active:scale-95 transition-all cursor-pointer"
-                    >
-                      Configurar
-                    </button>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {activePackages.map(renderActiveAddon)}
                   </div>
                 </div>
-              ))}
+              )}
+
+              {/* Modules active */}
+              {activeModules.length > 0 && (
+                <div>
+                  <div className="mb-5 border-b border-white/10 pb-3 flex justify-between items-center">
+                    <h2 className="text-sm font-black uppercase tracking-widest text-white/80">
+                      🧩 Módulos Individuales Activos
+                    </h2>
+                    <span className="text-[8px] font-mono px-2 py-0.5 rounded bg-white/5 border border-white/10 text-white/50 uppercase tracking-widest">
+                      {activeModules.length} activos
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {activeModules.map(renderActiveAddon)}
+                  </div>
+                </div>
+              )}
             </div>
           )
         )}

@@ -13,6 +13,14 @@ def get_shipping_rates(destination, parcel=None, tenant=None):
     if not tenant:
         return []
 
+    # Validar saldo mínimo de $250.00 MXN para cotizar
+    if tenant.shipping_wallet_balance < 250.00:
+        logger.warning(
+            f"[Logística/Fulfillment] Saldo insuficiente en billetera de envío para Tenant #{tenant.id} "
+            f"para realizar cotización. Saldo actual: ${tenant.shipping_wallet_balance} MXN."
+        )
+        return []
+
     # 1. Resolver API Key (esquema híbrido)
     custom_key = tenant.skydropx_api_key
     nectar_key = os.environ.get("NECTAR_LABS_SKYDROPX_KEY", "")
@@ -142,6 +150,14 @@ def generate_shipping_label(order):
     # Si es trial y no usa custom key, requiere saldo suficiente para cubrir el costo base de la guía
     using_corporate_key = not custom_key and api_key == nectar_key
     cost_base = order.shipping_cost_base or Decimal('0.00')
+
+    # Enforce minimum balance of $250 MXN for generating labels
+    if tenant.shipping_wallet_balance < 250.00:
+        logger.error(
+            f"[Logística/Fulfillment] Saldo por debajo del mínimo de $250.00 MXN para Tenant #{tenant.id}. "
+            f"Saldo disponible: ${tenant.shipping_wallet_balance} MXN."
+        )
+        return False
 
     # Fallback Simulado en Local, Testing o sin API Key
     if not api_key or api_key == "mock_key" or getattr(settings, "TESTING", False) or not order.skydropx_rate_id or order.skydropx_rate_id.startswith("rate_mock_"):

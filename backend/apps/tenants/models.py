@@ -140,6 +140,17 @@ class Tenant(models.Model):
         help_text="Preferencia de facturación para los abonos de este inquilino."
     )
 
+    store_category = models.CharField(
+        max_length=100,
+        default="General",
+        blank=True,
+        help_text="Categoría de la tienda/negocio (ej: Consumibles, Ropa, Tecnología, Comida, etc.)"
+    )
+
+    # Stripe integration keys per tenant
+    stripe_publishable_key = models.CharField(max_length=255, blank=True, null=True, help_text="Clave pública de Stripe del Tenant")
+    stripe_secret_key = models.CharField(max_length=255, blank=True, null=True, help_text="Clave secreta de Stripe del Tenant")
+
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -248,13 +259,13 @@ class Tenant(models.Model):
             addons.update(['delivery-tracking', 'facturacion-cfdi', 'ecommerce', 'campaigner'])
 
         if 'pack-ecommerce-lite' in addons:
-            addons.update(['delivery-tracking', 'facturacion-cfdi', 'ecommerce', 'campaigner'])
+            addons.update(['delivery-tracking', 'facturacion-cfdi', 'ecommerce', 'campaigner', 'business-analytics'])
 
         if 'pack-pos-ecommerce' in addons:
-            addons.update(['delivery-tracking', 'facturacion-cfdi', 'ecommerce', 'pos-manager', 'campaigner'])
+            addons.update(['delivery-tracking', 'facturacion-cfdi', 'ecommerce', 'pos-manager', 'campaigner', 'business-analytics'])
 
         if 'pack-blog-sponsors' in addons:
-            addons.update(['sponsorship', 'ecommerce', 'facturacion-cfdi', 'campaigner'])
+            addons.update(['sponsorship', 'ecommerce', 'facturacion-cfdi', 'campaigner', 'business-analytics'])
 
         # Normalize/Expand active addons with aliases for full backend/frontend compatibility
         addon_aliases = {

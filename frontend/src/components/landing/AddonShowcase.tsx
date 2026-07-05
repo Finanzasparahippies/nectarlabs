@@ -168,17 +168,17 @@ const fallbackAddons: Omit<Addon, 'icon'>[] = [
     id: 'campaigner',
     name: 'Campaigner Masivo',
     categoryBadge: 'EMAIL MARKETING',
-    description: 'Envío de boletines y campañas de email masivo sin renta fija. Cobro dinámico a $0.01 MXN por correo enviado.',
-    detailedDescription: 'Envía boletines interactivos a tu base de contactos usando nuestro servicio integrado. Sin renta fija mensual ni anual; solo pagas 1 centavo ($0.01 MXN) por cada correo enviado, descontado de tu Cartera Digital prepago.',
-    monthlyPrice: 0,
-    yearlyPrice: 0,
+    description: 'Envío de boletines y campañas de email masivo. Costo de $99 MXN/mes para contratación individual (incluido en planes/paquetes) + cobro dinámico a $0.01 MXN por correo enviado.',
+    detailedDescription: 'Envía boletines interactivos a tu base de contactos usando nuestro servicio integrado. Licencia individual por $99 MXN/mes o $990 MXN/año (incluida sin costo en cualquier plan o paquete de Néctar). Solo pagas 1 centavo ($0.01 MXN) por cada correo enviado, descontado de tu Cartera Digital prepago.',
+    monthlyPrice: 99,
+    yearlyPrice: 990,
     complexity: 'Baja',
     serverRequirements: 'Cartera Digital con saldo positivo ($0.01 MXN por correo).',
     technicalDetails: [
       'Tokens únicos de desuscripción seguros (UUID)',
       'Render de templates de correo HTML interactivos',
       'Cobro automático por destinatario a $0.01 MXN',
-      'Sin renta fija mensual o anual'
+      'Licencia individual por $99 MXN/mes'
     ]
   },
   {
@@ -243,6 +243,83 @@ export default function AddonShowcase() {
       icon: getAddonIcon(a.id)
     })) as Addon[]
   );
+
+  const packages = addonsList.filter(addon => addon.id.startsWith('pack-'));
+  const modules = addonsList.filter(addon => !addon.id.startsWith('pack-'));
+
+  const renderAddonCard = (addon: Addon) => {
+    const price = billingCycle === 'monthly' ? addon.monthlyPrice : addon.yearlyPrice;
+    const savings = billingCycle === 'yearly' ? addon.monthlyPrice * 2 : 0;
+    return (
+      <div
+        key={addon.id}
+        className="bg-card-bg border border-card-border p-6 rounded-[2rem] flex flex-col justify-between min-h-[300px] relative overflow-hidden backdrop-blur-md hover:scale-[1.02] transition-all duration-300 group"
+      >
+        {/* Subtle Background Glow */}
+        <div className="absolute -top-24 -right-24 w-40 h-40 bg-white/[0.02] blur-[40px] rounded-full group-hover:bg-white/[0.04] transition-all duration-500 pointer-events-none"></div>
+
+        <div className="space-y-4">
+          {/* Category Badge & Icon */}
+          <div className="flex justify-between items-start">
+            <span className="text-3xl">{addon.icon}</span>
+            <span className="px-2.5 py-0.5 bg-nectar-gold/10 text-nectar-gold border border-nectar-gold/25 text-[7px] font-black rounded-full uppercase tracking-wider font-mono">
+              {addon.categoryBadge}
+            </span>
+          </div>
+
+          {/* Title & Description */}
+          <div>
+            <h3 className="text-sm font-black uppercase text-nectar-forest dark:text-white tracking-wide mt-2">{addon.name}</h3>
+            <p className="text-[10px] text-nectar-forest/70 dark:text-white/50 leading-relaxed mt-2 line-clamp-4">{addon.description}</p>
+          </div>
+        </div>
+
+        {/* Pricing & Call to Action */}
+        <div className="border-t border-card-border pt-4 mt-6">
+          <div className="flex justify-between items-center mb-4">
+            <div>
+              <span className="text-[7.5px] uppercase font-black text-nectar-forest/50 dark:text-white/35 block">
+                Precio {billingCycle === 'monthly' ? 'mensual' : 'anual'}
+              </span>
+              <span className="text-base font-black text-[#C68A1E] font-mono">
+                ${price.toLocaleString('es-MX')} MXN
+              </span>
+              {billingCycle === 'yearly' && savings > 0 && (
+                <p className="text-[7px] text-emerald-500 font-bold uppercase tracking-wider mt-0.5">
+                  Ahorro de ${savings.toLocaleString('es-MX')} MXN
+                </p>
+              )}
+            </div>
+
+            <span className={`text-[7px] font-black uppercase tracking-wider px-2 py-0.5 rounded border ${addon.complexity === 'Muy Alta' ? 'text-red-400 bg-red-400/5 border-red-400/20' :
+              addon.complexity === 'Alta' ? 'text-orange-400 bg-orange-400/5 border-orange-400/20' :
+                addon.complexity === 'Media' ? 'text-yellow-500 bg-yellow-500/5 border-yellow-500/20' :
+                  'text-emerald-500 bg-emerald-500/5 border-emerald-500/20'
+              }`}>
+              {addon.complexity}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              onClick={() => setSelectedAddon(addon)}
+              className="px-4 py-2 bg-foreground/5 border border-foreground/10 hover:bg-foreground/10 text-foreground text-[8px] font-black uppercase tracking-widest rounded-lg hover:scale-105 active:scale-95 transition-all cursor-pointer text-center"
+            >
+              Ficha
+            </button>
+            <Link href={`/dashboard/addons?request=${addon.id}`} className="w-full">
+              <button
+                className="w-full px-4 py-2 text-background text-[8px] font-black uppercase tracking-widest rounded-lg hover:scale-105 active:scale-95 transition-all shadow-md cursor-pointer text-center"
+                style={{ backgroundColor: '#C68A1E' }}
+              >
+                Integrar
+              </button>
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   useEffect(() => {
     const loadAddons = async () => {
@@ -310,80 +387,50 @@ export default function AddonShowcase() {
       </div>
 
       {/* Add-ons Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 relative z-10 animate-in fade-in duration-300">
-        {addonsList.map((addon) => {
-          const price = billingCycle === 'monthly' ? addon.monthlyPrice : addon.yearlyPrice;
-          const savings = billingCycle === 'yearly' ? addon.monthlyPrice * 2 : 0;
-          return (
-            <div
-              key={addon.id}
-              className="bg-card-bg border border-card-border p-6 rounded-[2rem] flex flex-col justify-between min-h-[300px] relative overflow-hidden backdrop-blur-md hover:scale-[1.02] transition-all duration-300 group"
-            >
-              {/* Subtle Background Glow */}
-              <div className="absolute -top-24 -right-24 w-40 h-40 bg-white/[0.02] blur-[40px] rounded-full group-hover:bg-white/[0.04] transition-all duration-500 pointer-events-none"></div>
-
-              <div className="space-y-4">
-                {/* Category Badge & Icon */}
-                <div className="flex justify-between items-start">
-                  <span className="text-3xl">{addon.icon}</span>
-                  <span className="px-2.5 py-0.5 bg-nectar-gold/10 text-nectar-gold border border-nectar-gold/25 text-[7px] font-black rounded-full uppercase tracking-wider font-mono">
-                    {addon.categoryBadge}
-                  </span>
-                </div>
-
-                {/* Title & Description */}
-                <div>
-                  <h3 className="text-sm font-black uppercase text-nectar-forest dark:text-white tracking-wide mt-2">{addon.name}</h3>
-                  <p className="text-[10px] text-nectar-forest/70 dark:text-white/50 leading-relaxed mt-2 line-clamp-4">{addon.description}</p>
-                </div>
+      <div className="space-y-16 relative z-10 animate-in fade-in duration-300">
+        {/* Packages Section */}
+        {packages.length > 0 && (
+          <div>
+            <div className="mb-6 border-b border-card-border pb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+              <div>
+                <h2 className="text-xl md:text-2xl font-black uppercase tracking-wider text-nectar-forest dark:text-white flex items-center gap-2">
+                  📦 Paquetes de Software Completos
+                </h2>
+                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-nectar-gold opacity-80 mt-1">
+                  Soluciones integrales llave en mano para tu negocio
+                </p>
               </div>
-
-              {/* Pricing & Call to Action */}
-              <div className="border-t border-card-border pt-4 mt-6">
-                <div className="flex justify-between items-center mb-4">
-                  <div>
-                    <span className="text-[7.5px] uppercase font-black text-nectar-forest/50 dark:text-white/35 block">
-                      Precio {billingCycle === 'monthly' ? 'mensual' : 'anual'}
-                    </span>
-                    <span className="text-base font-black text-[#C68A1E] font-mono">
-                      ${price.toLocaleString('es-MX')} MXN
-                    </span>
-                    {billingCycle === 'yearly' && savings > 0 && (
-                      <p className="text-[7px] text-emerald-500 font-bold uppercase tracking-wider mt-0.5">
-                        Ahorro de ${savings.toLocaleString('es-MX')} MXN
-                      </p>
-                    )}
-                  </div>
-
-                  <span className={`text-[7px] font-black uppercase tracking-wider px-2 py-0.5 rounded border ${addon.complexity === 'Muy Alta' ? 'text-red-400 bg-red-400/5 border-red-400/20' :
-                    addon.complexity === 'Alta' ? 'text-orange-400 bg-orange-400/5 border-orange-400/20' :
-                      addon.complexity === 'Media' ? 'text-yellow-500 bg-yellow-500/5 border-yellow-500/20' :
-                        'text-emerald-500 bg-emerald-500/5 border-emerald-500/20'
-                    }`}>
-                    {addon.complexity}
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    onClick={() => setSelectedAddon(addon)}
-                    className="px-4 py-2 bg-foreground/5 border border-foreground/10 hover:bg-foreground/10 text-foreground text-[8px] font-black uppercase tracking-widest rounded-lg hover:scale-105 active:scale-95 transition-all cursor-pointer text-center"
-                  >
-                    Ficha
-                  </button>
-                  <Link href={`/dashboard/addons?request=${addon.id}`} className="w-full">
-                    <button
-                      className="w-full px-4 py-2 text-background text-[8px] font-black uppercase tracking-widest rounded-lg hover:scale-105 active:scale-95 transition-all shadow-md cursor-pointer text-center"
-                      style={{ backgroundColor: '#C68A1E' }}
-                    >
-                      Integrar
-                    </button>
-                  </Link>
-                </div>
-              </div>
+              <span className="px-2.5 py-0.5 bg-nectar-gold/10 text-nectar-gold border border-nectar-gold/25 text-[8px] font-mono rounded font-bold uppercase tracking-wider">
+                {packages.length} {packages.length === 1 ? 'Paquete' : 'Paquetes'}
+              </span>
             </div>
-          );
-        })}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {packages.map(renderAddonCard)}
+            </div>
+          </div>
+        )}
+
+        {/* Individual Modules Section */}
+        {modules.length > 0 && (
+          <div>
+            <div className="mb-6 border-b border-card-border pb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+              <div>
+                <h2 className="text-xl md:text-2xl font-black uppercase tracking-wider text-nectar-forest dark:text-white flex items-center gap-2">
+                  🧩 Módulos & Funcionalidades Individuales
+                </h2>
+                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-nectar-gold opacity-80 mt-1">
+                  Equipamiento tecnológico específico a la carta
+                </p>
+              </div>
+              <span className="px-2.5 py-0.5 bg-nectar-gold/10 text-nectar-gold border border-nectar-gold/25 text-[8px] font-mono rounded font-bold uppercase tracking-wider">
+                {modules.length} {modules.length === 1 ? 'Módulo' : 'Módulos'}
+              </span>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {modules.map(renderAddonCard)}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Modal: View Details / Ficha Técnica */}
