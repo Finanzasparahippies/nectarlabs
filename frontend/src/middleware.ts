@@ -18,10 +18,12 @@ export function middleware(request: NextRequest) {
     url.pathname.startsWith('/api') ||
     url.pathname.startsWith('/_next') ||
     url.pathname.startsWith('/static') ||
+    url.pathname.startsWith('/contract') ||
     url.pathname.includes('.') // Excluir archivos estáticos como favicon.ico, logotipos, widget.js
   ) {
     return NextResponse.next();
   }
+
 
   // 2. DOMINIOS PRINCIPALES (SISTEMA MATRIZ)
   // Sitios de Nectar Labs que cargan la Landing Page o Dashboard de Clientes matriz.

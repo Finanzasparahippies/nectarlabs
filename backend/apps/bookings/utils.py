@@ -412,9 +412,11 @@ def generate_custom_contract_pdf(contract):
 
         # Save PDF
         output = pdf.output()
-        filename = f"contrato_personalizado_{contract.id}_{'FINAL' if contract.is_fully_signed else 'PROCESO'}.pdf"
+        # Acortamos el nombre para que no repita el UUID y quepa en el límite varchar(100) / varchar(255)
+        filename = f"contrato_{'final' if contract.is_fully_signed else 'proceso'}.pdf"
         contract.pdf_file.save(filename, ContentFile(output), save=True)
         return True
+
     except Exception as e:
         logger.error(f"Failed to generate custom contract PDF: {e}", exc_info=True)
         return False
@@ -434,10 +436,24 @@ def send_custom_contract_emails(contract, signatory_to_notify=None):
         tenant_name = tenant.name if tenant else "Néctar Labs"
         
         if signatory_to_notify:
-            # Enviar liga de firma
-            sign_url = f"{settings.FRONTEND_URL}/contract/sign-custom/{signatory_to_notify.token}"
-            if tenant and tenant.use_custom_domain and tenant.custom_domain:
-                sign_url = f"http://{tenant.custom_domain}/contract/sign-custom/{signatory_to_notify.token}"
+            # Construcción dinámica y adaptativa del enlace según el entorno (Local, Staging, Producción)
+            frontend_base = settings.FRONTEND_URL.rstrip('/')
+            if tenant:
+                if tenant.use_custom_domain and tenant.custom_domain:
+                    proto = "https" if "https" in frontend_base else "http"
+                    sign_url = f"{proto}://{tenant.custom_domain}/contract/sign-custom/{signatory_to_notify.token}"
+                else:
+                    if "staging.nectarlabs.dev" in frontend_base:
+                        sign_url = f"https://{tenant.subdomain}.staging.nectarlabs.dev/contract/sign-custom/{signatory_to_notify.token}"
+                    elif "nectarlabs.dev" in frontend_base:
+                        sign_url = f"https://{tenant.subdomain}.nectarlabs.dev/contract/sign-custom/{signatory_to_notify.token}"
+                    elif "localhost" in frontend_base:
+                        sign_url = f"http://{tenant.subdomain}.localhost:3000/contract/sign-custom/{signatory_to_notify.token}"
+                    else:
+                        sign_url = f"{frontend_base}/contract/sign-custom/{signatory_to_notify.token}"
+            else:
+                sign_url = f"{frontend_base}/contract/sign-custom/{signatory_to_notify.token}"
+
             
             subject = f"⚠️ ACCIÓN REQUERIDA: Firmar Contrato Digital - {contract.title}"
             
