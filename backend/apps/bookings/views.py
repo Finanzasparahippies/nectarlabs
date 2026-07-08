@@ -2,10 +2,22 @@ from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.utils import timezone
+from django.db import models
 from apps.tenants.permissions import HasAddOnPermission
-from .models import BookingInquiry, BookingContract, BookingConfig
-from .serializers import BookingInquirySerializer, BookingContractSerializer
-from .utils import generate_booking_contract_pdf, send_booking_contract_emails
+from .models import BookingInquiry, BookingContract, BookingConfig, CustomContractTemplate, CustomContract, CustomContractSignatory
+from .serializers import (
+    BookingInquirySerializer, 
+    BookingContractSerializer, 
+    CustomContractTemplateSerializer, 
+    CustomContractSerializer, 
+    CustomContractSignatorySerializer
+)
+from .utils import (
+    generate_booking_contract_pdf, 
+    send_booking_contract_emails, 
+    generate_custom_contract_pdf, 
+    send_custom_contract_emails
+)
 
 class BookingInquiryViewSet(viewsets.ModelViewSet):
     serializer_class = BookingInquirySerializer
@@ -154,3 +166,179 @@ class BookingContractViewSet(viewsets.ModelViewSet):
             return Response({'message': 'Contrato cerrado y certificado enviado con éxito.'})
 
         return Response({'error': 'Error al finalizar el contrato'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class CustomContractTemplateViewSet(viewsets.ModelViewSet):
+    serializer_class = CustomContractTemplateSerializer
+
+    def get_permissions(self):
+        return [permissions.IsAuthenticated(), HasAddOnPermission()]
+
+    addon_slug = 'booking-signature'
+
+    def get_queryset(self):
+        user = self.request.user
+        if not user or not user.is_authenticated:
+            return CustomContractTemplate.objects.none()
+        
+        # El CEO (ADMIN o staff) puede ver todo, incluyendo plantillas globales
+        if user.is_staff or getattr(user, 'role', None) == 'ADMIN':
+            return CustomContractTemplate.objects.all().order_by('-created_at')
+        
+        # El dueño del Tenant solo puede ver las globales (tenant=None) y las de su propia colmena
+        if getattr(user, 'role', None) == 'BUSINESS':
+            owned_tenants = user.owned_tenants.all()
+            return CustomContractTemplate.objects.filter(
+                models.Q(tenant__in=owned_tenants) | models.Q(tenant__isnull=True)
+            ).order_by('-created_at')
+            
+        return CustomContractTemplate.objects.none()
+
+    def perform_create(self, serializer):
+        user = self.request.user
+        # Si es BUSINESS, forzamos el tenant a su propiedad
+        if getattr(user, 'role', None) == 'BUSINESS':
+            tenant = user.owned_tenants.first()
+            if not tenant:
+                from rest_framework.exceptions import ValidationError
+                raise ValidationError({"detail": "No se encontró una colmena asociada a tu cuenta empresarial."})
+            serializer.save(tenant=tenant)
+        else:
+            # CEO puede elegir si es global o asociarlo a un tenant específico
+            serializer.save()
+
+    def perform_update(self, serializer):
+        # Impedimos que usuarios sin tenant o dueños de colmenas editen plantillas globales (tenant=None)
+        instance = self.get_object()
+        user = self.request.user
+        if not (user.is_staff or getattr(user, 'role', None) == 'ADMIN'):
+            if instance.tenant is None:
+                from rest_framework.exceptions import PermissionDenied
+                raise PermissionDenied("No tienes permisos para modificar plantillas globales de Néctar Labs.")
+            
+            # Verificar propiedad
+            if not user.owned_tenants.filter(id=instance.tenant.id).exists():
+                from rest_framework.exceptions import PermissionDenied
+                raise PermissionDenied("No tienes permisos para modificar esta plantilla.")
+        
+        serializer.save()
+
+
+class CustomContractViewSet(viewsets.ModelViewSet):
+    serializer_class = CustomContractSerializer
+
+    def get_permissions(self):
+        # Permitir a firmantes obtener y firmar contratos usando su token público
+        if self.action in ['by_token', 'sign_by_token']:
+            return [permissions.AllowAny()]
+        return [permissions.IsAuthenticated(), HasAddOnPermission()]
+
+    addon_slug = 'booking-signature'
+
+    def get_queryset(self):
+        user = self.request.user
+        if not user or not user.is_authenticated:
+            return CustomContract.objects.none()
+        
+        if user.is_staff or getattr(user, 'role', None) == 'ADMIN':
+            return CustomContract.objects.all().order_by('-created_at')
+            
+        if getattr(user, 'role', None) == 'BUSINESS':
+            owned_tenants = user.owned_tenants.all()
+            return CustomContract.objects.filter(tenant__in=owned_tenants).order_by('-created_at')
+            
+        return CustomContract.objects.none()
+
+    def perform_create(self, serializer):
+        user = self.request.user
+        tenant = None
+        if getattr(user, 'role', None) == 'BUSINESS':
+            tenant = user.owned_tenants.first()
+            if not tenant:
+                from rest_framework.exceptions import ValidationError
+                raise ValidationError({"detail": "No se encontró una colmena asociada a tu cuenta."})
+        
+        # Guardamos el contrato
+        contract = serializer.save(tenant=tenant)
+        
+        # Generar primer PDF (sin firmas) y disparar primer correo de invitación a firmar
+        generate_custom_contract_pdf(contract)
+        
+        first_sig = contract.signatories.all().order_by('id').first()
+        if first_sig:
+            send_custom_contract_emails(contract, signatory_to_notify=first_sig)
+
+    @action(detail=False, methods=['get'], url_path='by_token')
+    def by_token(self, request):
+        token = request.query_params.get('token')
+        if not token:
+            return Response({'error': 'Token requerido'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            signatory = CustomContractSignatory.objects.get(token=token)
+        except (CustomContractSignatory.DoesNotExist, ValueError):
+            return Response({'error': 'Enlace de firma no válido o expirado'}, status=status.HTTP_404_NOT_FOUND)
+        
+        contract = signatory.contract
+        serializer = self.get_serializer(contract)
+        
+        # Añadimos datos del firmante actual para el frontend
+        data = serializer.data
+        data['current_signatory'] = {
+            'id': str(signatory.id),
+            'name': signatory.name,
+            'email': signatory.email,
+            'role': signatory.role,
+            'has_signed': bool(signatory.signature_base64),
+        }
+        return Response(data)
+
+    @action(detail=False, methods=['post'], url_path='sign_by_token')
+    def sign_by_token(self, request):
+        token = request.data.get('token')
+        signature = request.data.get('signature')
+        
+        if not token or not signature:
+            return Response({'error': 'Token y Firma (base64) son campos obligatorios'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        try:
+            signatory = CustomContractSignatory.objects.get(token=token)
+        except (CustomContractSignatory.DoesNotExist, ValueError):
+            return Response({'error': 'Enlace de firma no válido'}, status=status.HTTP_404_NOT_FOUND)
+            
+        if signatory.signature_base64:
+            return Response({'error': 'Ya has firmado este contrato anteriormente'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        # Registrar firma
+        signatory.signature_base64 = signature
+        signatory.signed_at = timezone.now()
+        
+        # Guardar IP del firmante
+        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        if x_forwarded_for:
+            ip = x_forwarded_for.split(',')[0]
+        else:
+            ip = request.META.get('REMOTE_ADDR')
+        signatory.ip_address = ip
+        signatory.save()
+        
+        contract = signatory.contract
+        
+        # Validar si faltan firmantes por firmar
+        pending_signatories = contract.signatories.filter(signature_base64__isnull=True)
+        if not pending_signatories.exists():
+            contract.is_fully_signed = True
+            contract.save()
+            
+            # Generar PDF final y notificar a todos los firmantes
+            if generate_custom_contract_pdf(contract):
+                send_custom_contract_emails(contract)
+        else:
+            # Generar PDF parcial y notificar al siguiente firmante pendiente
+            generate_custom_contract_pdf(contract)
+            next_sig = pending_signatories.order_by('id').first()
+            if next_sig:
+                send_custom_contract_emails(contract, signatory_to_notify=next_sig)
+                
+        return Response({'message': 'Contrato firmado con éxito. Copia guardada.'})
+

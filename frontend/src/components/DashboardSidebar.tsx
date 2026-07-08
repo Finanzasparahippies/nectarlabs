@@ -236,7 +236,24 @@ function DashboardSidebarContent() {
       )
     },
     {
+      label: 'Contratos Digitales',
+      href: '/dashboard?tab=custom-contracts',
+      show: isCEO || isStaff,
+      active: pathname === '/dashboard' && activeTab === 'custom-contracts',
+      id: 'tour-sidebar-custom-contracts',
+      icon: (active: boolean) => (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={`w-4 h-4 transition-all duration-300 group-hover:scale-110 ${active ? 'text-nectar-gold' : 'text-foreground/45 group-hover:text-foreground'}`}>
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+          <polyline points="10 9 9 9 8 9"></polyline>
+        </svg>
+      )
+    },
+    {
       label: 'Rendimiento',
+
       href: '/dashboard/performance',
       show: isCEO,
       active: pathname === '/dashboard/performance',

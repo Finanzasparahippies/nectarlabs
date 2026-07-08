@@ -20,6 +20,10 @@ import dynamic from 'next/dynamic';
 const DriverPortal = dynamic(() => import('../../components/addons/logistics-gps/DriverPortal'), { ssr: false });
 const DriverStatsDashboard = dynamic(() => import('../../components/addons/logistics-gps/DriverStatsDashboard'), { ssr: false });
 const InteractiveTutorial = dynamic(() => import('../../components/ui/InteractiveTutorial'), { ssr: false });
+const CustomContractsManager = dynamic(
+  () => import('../../components/addons/booking-signature/CustomContractsManager'),
+  { ssr: false }
+);
 
 
 interface Project {
@@ -285,8 +289,8 @@ function DashboardPageOriginal() {
   };
   const searchParams = useSearchParams();
   const tabParam = searchParams.get('tab');
-  const activeTab: 'overview' | 'business' | 'hire-plan' | 'billing-global' | 'marketing' | 'driver-stats' =
-    tabParam === 'business' || tabParam === 'hire-plan' || tabParam === 'billing-global' || tabParam === 'marketing' || tabParam === 'driver-stats'
+  const activeTab: 'overview' | 'business' | 'hire-plan' | 'billing-global' | 'marketing' | 'driver-stats' | 'custom-contracts' =
+    tabParam === 'business' || tabParam === 'hire-plan' || tabParam === 'billing-global' || tabParam === 'marketing' || tabParam === 'driver-stats' || tabParam === 'custom-contracts'
       ? tabParam
       : 'overview';
 
@@ -1076,8 +1080,25 @@ function DashboardPageOriginal() {
               </div>
             </section>
           </div>
+        ) : activeTab === 'custom-contracts' && (isCEO || isStaff) ? (
+          <div className="space-y-8 animate-in fade-in duration-300">
+            <div className="admin-card border rounded-[2rem] p-8 relative overflow-hidden flex flex-col md:flex-row items-center gap-6 bg-card-bg border-card-border">
+              <div className="absolute -top-32 -right-32 w-64 h-64 bg-nectar-gold/10 blur-[100px] rounded-full pointer-events-none"></div>
+              <div className="w-14 h-14 rounded-2xl bg-foreground/[0.03] flex items-center justify-center text-3xl border border-white/5">
+                📝
+              </div>
+              <div className="flex-1 text-center md:text-left space-y-1">
+                <h2 className="text-xl font-black uppercase tracking-tight text-white">Contratos Digitales Personalizados</h2>
+                <p className="text-xs text-white/50 leading-relaxed">
+                  Crea y personaliza contratos dinámicos definiendo firmantes, roles personalizados, membretes, proemio, declaraciones y cláusulas para clientes de Néctar Labs.
+                </p>
+              </div>
+            </div>
+            <CustomContractsManager tenantId={null} primaryColor="#C68A1E" />
+          </div>
         ) : activeTab === 'billing-global' && isCEO ? (
           <div className="space-y-8 animate-in fade-in duration-300">
+
             <div className="admin-card border rounded-[2rem] p-8 relative overflow-hidden flex flex-col md:flex-row items-center gap-6 bg-card-bg border-card-border">
               <div className="absolute -top-32 -right-32 w-64 h-64 bg-nectar-gold/10 blur-[100px] rounded-full pointer-events-none"></div>
               <div className="w-14 h-14 rounded-2xl bg-foreground/[0.03] flex items-center justify-center text-3xl border border-white/5">

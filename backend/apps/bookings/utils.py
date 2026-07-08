@@ -275,3 +275,255 @@ def send_booking_contract_emails(contract):
                 
     except Exception as e:
         logger.error(f"Failed to send booking contract emails: {e}", exc_info=True)
+
+
+class CustomContractPDF(FPDF):
+    def __init__(self, contract, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.contract = contract
+
+    def header(self):
+        # Logo
+        if self.contract.logo:
+            try:
+                self.image(self.contract.logo.path, x=10, y=10, w=28)
+            except Exception as e:
+                logger.error(f"Error drawing logo on CustomContract PDF: {e}")
+        
+        # Header title
+        self.set_font('helvetica', 'B', 14)
+        self.set_text_color(30, 30, 30)
+        self.cell(0, 10, self.contract.title.upper(), new_x="LMARGIN", new_y="NEXT", align='R')
+        
+        # Decorative line
+        tenant_color = "#C68A1E"
+        if self.contract.tenant:
+            tenant_color = getattr(self.contract.tenant, "theme_color", "#C68A1E")
+        
+        # Parse hex color
+        r, g, b = 198, 138, 30 # fallback gold
+        if tenant_color.startswith('#') and len(tenant_color) == 7:
+            try:
+                r = int(tenant_color[1:3], 16)
+                g = int(tenant_color[3:5], 16)
+                b = int(tenant_color[5:7], 16)
+            except ValueError:
+                pass
+        
+        self.set_draw_color(r, g, b)
+        self.set_line_width(1)
+        self.line(10, 25, 200, 25)
+        self.ln(12)
+
+    def footer(self):
+        self.set_y(-15)
+        self.set_font('helvetica', 'I', 8)
+        self.set_text_color(120, 120, 120)
+        tenant_name = self.contract.tenant.name if self.contract.tenant else "Néctar Labs"
+        self.cell(0, 10, f'Página {self.page_no()} | Documento de Certificación Legal - {tenant_name}', align='C')
+
+
+def generate_custom_contract_pdf(contract):
+    """
+    Genera el PDF del contrato personalizado con la estructura de proemio, declaraciones, cláusulas
+    y el área dinámica de firmas para todos los firmantes.
+    """
+    try:
+        pdf = CustomContractPDF(contract)
+        pdf.add_page()
+        pdf.set_font('helvetica', '', 10)
+        pdf.set_text_color(50, 50, 50)
+
+        # 1. Proemio
+        pdf.set_font('helvetica', 'B', 11)
+        pdf.cell(0, 8, 'PROEMIO', new_x="LMARGIN", new_y="NEXT")
+        pdf.set_font('helvetica', '', 10)
+        pdf.multi_cell(0, 5.5, contract.proemio)
+        pdf.ln(6)
+
+        # 2. Declaraciones
+        pdf.set_font('helvetica', 'B', 11)
+        pdf.cell(0, 8, 'DECLARACIONES', new_x="LMARGIN", new_y="NEXT")
+        pdf.set_font('helvetica', '', 10)
+        pdf.multi_cell(0, 5.5, contract.declarations)
+        pdf.ln(6)
+
+        # 3. Cláusulas
+        pdf.set_font('helvetica', 'B', 11)
+        pdf.cell(0, 8, 'CLÁUSULAS', new_x="LMARGIN", new_y="NEXT")
+        pdf.set_font('helvetica', '', 10)
+        pdf.multi_cell(0, 5.5, contract.clauses)
+        pdf.ln(10)
+
+        # 4. Signatures Area
+        signatories = list(contract.signatories.all())
+        
+        # We dynamic render signatures in rows of 2
+        col_width = 80
+        col_gap = 20
+        start_x = 15
+        
+        y_pos = pdf.get_y()
+        
+        for i, sig in enumerate(signatories):
+            # If we exceed the bottom margin, add a page
+            if y_pos > 230:
+                pdf.add_page()
+                y_pos = 40
+            
+            # Determine column (0 or 1)
+            col = i % 2
+            if col == 0 and i > 0:
+                y_pos += 45 # row height
+            
+            x_pos = start_x + (col * (col_width + col_gap))
+            
+            # Draw signature image if present
+            if sig.signature_base64:
+                try:
+                    sig_data = safe_b64decode(sig.signature_base64)
+                    if sig_data and is_valid_image(sig_data):
+                        sig_img = BytesIO(sig_data)
+                        pdf.image(sig_img, x=x_pos + 17, y=y_pos, w=40, h=15)
+                except Exception as e:
+                    logger.error(f"Error drawing signatory {sig.name} signature: {e}")
+            
+            # Draw line and labels
+            pdf.set_draw_color(180, 180, 180)
+            pdf.set_line_width(0.5)
+            pdf.line(x_pos, y_pos + 16, x_pos + col_width, y_pos + 16)
+            
+            pdf.set_xy(x_pos, y_pos + 18)
+            pdf.set_font('helvetica', 'B', 9)
+            pdf.cell(col_width, 4, sig.name, align='C', new_x="LMARGIN", new_y="NEXT")
+            
+            pdf.set_xy(x_pos, y_pos + 22)
+            pdf.set_font('helvetica', 'I', 8)
+            pdf.cell(col_width, 4, sig.role.upper(), align='C', new_x="LMARGIN", new_y="NEXT")
+            
+            if sig.signed_at:
+                pdf.set_xy(x_pos, y_pos + 26)
+                pdf.set_font('helvetica', 'I', 6)
+                pdf.set_text_color(100, 100, 100)
+                pdf.cell(col_width, 3, f'IP: {sig.ip_address or "N/A"}', align='C', new_x="LMARGIN", new_y="NEXT")
+                pdf.set_xy(x_pos, y_pos + 29)
+                pdf.cell(col_width, 3, f'Fecha: {sig.signed_at.strftime("%d/%m/%Y %H:%M")}', align='C')
+                pdf.set_text_color(50, 50, 50)
+
+        # Save PDF
+        output = pdf.output()
+        filename = f"contrato_personalizado_{contract.id}_{'FINAL' if contract.is_fully_signed else 'PROCESO'}.pdf"
+        contract.pdf_file.save(filename, ContentFile(output), save=True)
+        return True
+    except Exception as e:
+        logger.error(f"Failed to generate custom contract PDF: {e}", exc_info=True)
+        return False
+
+
+def send_custom_contract_emails(contract, signatory_to_notify=None):
+    """
+    Envía notificaciones de firma por correo.
+    - Si se especifica signatory_to_notify, se envía la invitación de firma a ese destinatario.
+    - Si no, y el contrato está completado (is_fully_signed=True), se envía la copia certificada a todos.
+    """
+    try:
+        tenant = contract.tenant
+        connection, from_email = get_tenant_email_connection(tenant)
+        
+        theme_color = getattr(tenant, "theme_color", "#C68A1E") if tenant else "#C68A1E"
+        tenant_name = tenant.name if tenant else "Néctar Labs"
+        
+        if signatory_to_notify:
+            # Enviar liga de firma
+            sign_url = f"{settings.FRONTEND_URL}/contract/sign-custom/{signatory_to_notify.token}"
+            if tenant and tenant.use_custom_domain and tenant.custom_domain:
+                sign_url = f"http://{tenant.custom_domain}/contract/sign-custom/{signatory_to_notify.token}"
+            
+            subject = f"⚠️ ACCIÓN REQUERIDA: Firmar Contrato Digital - {contract.title}"
+            
+            html_context = {
+                'signatory': signatory_to_notify,
+                'contract': contract,
+                'sign_url': sign_url,
+                'theme_color': theme_color,
+                'tenant_name': tenant_name,
+            }
+            
+            # Intento de renderizar plantilla HTML, con fallback robusto en texto para evitar excepciones
+            try:
+                html_content = render_to_string('bookings/emails/custom_contract_invitation.html', html_context)
+            except Exception:
+                html_content = f"""
+                <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #1a231d; background: #050a06; color: #fff; border-radius: 20px;">
+                    <h2 style="color: {theme_color};">Firmar Contrato Digital</h2>
+                    <p>Hola <strong>{signatory_to_notify.name}</strong>,</p>
+                    <p>Se te solicita firmar el contrato digital: <strong>{contract.title}</strong>.</p>
+                    <p>Tu rol asignado es: <strong>{signatory_to_notify.role}</strong>.</p>
+                    <p style="margin: 30px 0; text-align: center;">
+                        <a href="{sign_url}" style="background-color: {theme_color}; color: #000; padding: 12px 30px; text-decoration: none; border-radius: 12px; font-weight: bold; display: inline-block;">Firmar Contrato</a>
+                    </p>
+                    <p style="font-size: 11px; color: #666;">Enviado de forma segura por {tenant_name} a través de Néctar Labs.</p>
+                </div>
+                """
+                
+            text_content = (
+                f"Hola {signatory_to_notify.name},\n\n"
+                f"Se te ha solicitado firmar el contrato digital '{contract.title}' por parte de {tenant_name}.\n"
+                f"Tu rol designado es: {signatory_to_notify.role}.\n\n"
+                f"Por favor accede al siguiente enlace seguro para estampar tu firma de conformidad:\n"
+                f"{sign_url}\n\n"
+                f"Atentamente,\n"
+                f"{tenant_name}"
+            )
+            
+            email = EmailMultiAlternatives(
+                subject, text_content, from_email, [signatory_to_notify.email], connection=connection
+            )
+            email.attach_alternative(html_content, "text/html")
+            email.send()
+            logger.info(f"Custom contract invitation sent to {signatory_to_notify.email} for token {signatory_to_notify.token}")
+            
+        elif contract.is_fully_signed:
+            # Enviar copia final certificada a todos los firmantes
+            subject = f"✅ Contrato Digital Certificado - {contract.title}"
+            recipients = [sig.email for sig in contract.signatories.all()]
+            
+            html_context = {
+                'contract': contract,
+                'theme_color': theme_color,
+                'tenant_name': tenant_name,
+            }
+            
+            try:
+                html_content = render_to_string('bookings/emails/custom_contract_certified.html', html_context)
+            except Exception:
+                html_content = f"""
+                <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #1a231d; background: #050a06; color: #fff; border-radius: 20px;">
+                    <h2 style="color: {theme_color};">Contrato Certificado</h2>
+                    <p>Estimados firmantes,</p>
+                    <p>El contrato digital <strong>{contract.title}</strong> ha sido completamente firmado por todas las partes.</p>
+                    <p>Adjunto a este correo electrónico encontrarán la copia oficial certificada en formato PDF.</p>
+                    <p style="font-size: 11px; color: #666;">Enviado de forma segura por {tenant_name} a través de Néctar Labs.</p>
+                </div>
+                """
+                
+            text_content = (
+                f"Estimados firmantes,\n\n"
+                f"El contrato digital '{contract.title}' ha sido completamente firmado por todas las partes involucradas.\n"
+                f"Adjunto a este correo encontrarán la copia final certificada en formato PDF.\n\n"
+                f"Atentamente,\n"
+                f"{tenant_name}"
+            )
+            
+            for dest in recipients:
+                email = EmailMultiAlternatives(subject, text_content, from_email, [dest], connection=connection)
+                email.attach_alternative(html_content, "text/html")
+                if contract.pdf_file:
+                    contract.pdf_file.seek(0)
+                    email.attach(f"Contrato_Certificado_{contract.id}.pdf", contract.pdf_file.read(), 'application/pdf')
+                email.send()
+                logger.info(f"Custom contract certified PDF sent to {dest}")
+                
+    except Exception as e:
+        logger.error(f"Failed to send custom contract emails: {e}", exc_info=True)
+

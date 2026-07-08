@@ -22,6 +22,10 @@ const DeliveryConfigTabInline = dynamic(
 const RoleSwitcher = dynamic(() => import('@/components/ui/RoleSwitcher'), { ssr: false });
 const DriverPortal = dynamic(() => import('@/components/addons/logistics-gps/DriverPortal'), { ssr: false });
 const InteractiveTutorial = dynamic(() => import('@/components/ui/InteractiveTutorial'), { ssr: false });
+const CustomContractsManager = dynamic(
+  () => import('@/components/addons/booking-signature/CustomContractsManager'),
+  { ssr: false }
+);
 
 
 interface TenantConfig {
@@ -94,7 +98,7 @@ export default function TenantAdminPage() {
   const [authorized, setAuthorized] = useState(false);
   const [userMe, setUserMe] = useState<any | null>(null);
   const [activeRoleMode, setActiveRoleMode] = useState<string>('ADMIN');
-  const [activeTab, setActiveTab] = useState<'metrics' | 'branding' | 'billing' | 'integrations' | 'pos' | 'store-config' | 'delivery-config'>('metrics');
+  const [activeTab, setActiveTab] = useState<'metrics' | 'branding' | 'billing' | 'integrations' | 'pos' | 'store-config' | 'delivery-config' | 'contracts'>('metrics');
   const [billingSubTab, setBillingSubTab] = useState<'catalog' | 'history' | 'config' | 'cartera'>('catalog');
 
   // Customization Form State
@@ -2156,7 +2160,21 @@ export default function TenantAdminPage() {
             >
               🧾 Facturación CFDI
             </button>
+            {tenantConfig?.active_addons?.includes('booking-signature') && (
+              <button
+                onClick={() => setActiveTab('contracts')}
+                className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border cursor-pointer"
+                style={{
+                  backgroundColor: activeTab === 'contracts' ? `${primaryColor}15` : 'transparent',
+                  borderColor: activeTab === 'contracts' ? primaryColor : 'transparent',
+                  color: activeTab === 'contracts' ? primaryColor : 'rgba(255, 255, 255, 0.6)'
+                }}
+              >
+                📝 Contratos Digitales
+              </button>
+            )}
             <button
+
               onClick={() => setActiveTab('integrations')}
               className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border cursor-pointer"
               style={{
@@ -3588,8 +3606,18 @@ export default function TenantAdminPage() {
             </div>
           )
         )}
+        {activeTab === 'contracts' && tenantConfig && (
+          <div className="max-w-7xl mx-auto animate-in fade-in duration-300">
+            <CustomContractsManager 
+              tenantId={tenantConfig.id} 
+              subdomain={subdomain} 
+              primaryColor={primaryColor} 
+            />
+          </div>
+        )}
 
         {activeTab === 'integrations' && (
+
           <div className="max-w-4xl mx-auto animate-in fade-in duration-300">
             {(() => {
               const hasNewsletterAddon = 
