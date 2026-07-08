@@ -7,7 +7,6 @@ import Link from 'next/link';
 import { fetcher, API_URL } from '../../lib/api';
 import StagingStatus from '../../components/dashboard/StagingStatus';
 import WeeklyLogs from '../../components/dashboard/WeeklyLogs';
-import BusinessCommander from '../../components/dashboard/BusinessCommander';
 import SalesCommander from '../../components/dashboard/SalesCommander';
 import DashboardSidebar from '../../components/DashboardSidebar';
 import Toast from '../../components/ui/Toast';
@@ -17,6 +16,11 @@ import FacturapiManager from '../../components/dashboard/FacturapiManager';
 import MarketingManager from '../../components/dashboard/MarketingManager';
 import dynamic from 'next/dynamic';
 
+const BusinessCommander = dynamic(
+  () => import('../../components/dashboard/BusinessCommander'),
+  { ssr: false }
+);
+
 const DriverPortal = dynamic(() => import('../../components/addons/logistics-gps/DriverPortal'), { ssr: false });
 const DriverStatsDashboard = dynamic(() => import('../../components/addons/logistics-gps/DriverStatsDashboard'), { ssr: false });
 const InteractiveTutorial = dynamic(() => import('../../components/ui/InteractiveTutorial'), { ssr: false });
@@ -24,6 +28,7 @@ const CustomContractsManager = dynamic(
   () => import('../../components/addons/booking-signature/CustomContractsManager'),
   { ssr: false }
 );
+
 
 
 interface Project {
