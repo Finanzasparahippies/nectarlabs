@@ -3,9 +3,10 @@ import dynamic from 'next/dynamic';
 import Link from 'next/link';
 
 const CustomContractsManager = dynamic(
-  () => import('../addons/booking-signature/CustomContractsManager'),
+  () => import('@/components/addons/booking-signature/CustomContractsManager'),
   { ssr: false }
 );
+
 
 import { fetcher, API_URL } from '@/lib/api';
 import Toast from '../ui/Toast';
