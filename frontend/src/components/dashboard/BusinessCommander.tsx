@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
+
+const CustomContractsManager = dynamic(
+  () => import('../addons/booking-signature/CustomContractsManager'),
+  { ssr: false }
+);
+
 import { fetcher, API_URL } from '@/lib/api';
 import Toast from '../ui/Toast';
 import ConfirmModal from '../ui/ConfirmModal';
@@ -89,7 +96,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
   const [cfdiInputs, setCfdiInputs] = useState<Record<number, string>>({});
 
   // Premium Tab State
-  const [activeTab, setActiveTab] = useState<'financials' | 'kanban' | 'quotes' | 'sales' | 'invoices' | 'marketing' | 'addons'>('financials');
+  const [activeTab, setActiveTab] = useState<'financials' | 'kanban' | 'quotes' | 'sales' | 'invoices' | 'marketing' | 'addons' | 'contracts'>('financials');
 
   // Invoices & Marketing Campaigns states
   const [systemInvoices, setSystemInvoices] = useState<any[]>([]);
@@ -1450,7 +1457,16 @@ export default function BusinessCommander({ stats, installments, setInstallments
           {activeTab === 'addons' && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-nectar-gold"></span>}
 
         </button>
+        <button
+          onClick={() => setActiveTab('contracts')}
+          className={`pb-4 text-xs font-black uppercase tracking-widest relative transition-all whitespace-nowrap ${activeTab === 'contracts' ? 'text-nectar-gold' : 'text-foreground/45 hover:text-foreground'
+            }`}
+        >
+          Contratos Personalizados
+          {activeTab === 'contracts' && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-nectar-gold"></span>}
+        </button>
       </div>
+
 
       {activeTab === 'financials' && (
         <>
@@ -3524,6 +3540,21 @@ export default function BusinessCommander({ stats, installments, setInstallments
           </div>
         </section>
       )}
+
+      {activeTab === 'contracts' && (
+        <section className="space-y-10 animate-fadeIn text-left">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-card-bg border border-card-border p-6 rounded-[2rem] shadow-lg">
+            <div>
+              <h2 className="text-xs font-black uppercase tracking-[0.4em] opacity-30 mb-1">Contratos Digitales Personalizados</h2>
+              <p className="text-[9px] font-bold text-foreground/30 uppercase tracking-wider">Crea y administra plantillas y contratos digitales para Néctar Labs a nivel global</p>
+            </div>
+          </div>
+          <div className="bg-card-bg border border-card-border rounded-[2.5rem] p-8 md:p-10 shadow-lg">
+            <CustomContractsManager tenantId={null} primaryColor="#C68A1E" />
+          </div>
+        </section>
+      )}
+
 
       {/* ── MODAL NUEVA COTIZACIÓN MODULAR ── */}
       {showQuoteModal && (
