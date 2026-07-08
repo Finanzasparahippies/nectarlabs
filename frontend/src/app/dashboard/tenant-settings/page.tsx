@@ -1,7 +1,14 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
+
+const CustomContractsManager = dynamic(
+  () => import('../../../components/addons/booking-signature/CustomContractsManager'),
+  { ssr: false }
+);
+
 import Link from 'next/link';
 import { fetcher } from '../../../lib/api';
 import DashboardSidebar from '../../../components/DashboardSidebar';
@@ -80,7 +87,7 @@ export default function TenantSettingsPage() {
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [origin, setOrigin] = useState('https://nectarlabs.dev');
-  const [activeSubTab, setActiveSubTab] = useState<'branding' | 'colors' | 'products' | 'users'>('branding');
+  const [activeSubTab, setActiveSubTab] = useState<'branding' | 'colors' | 'products' | 'users' | 'contracts'>('branding');
 
   // DNS verification states
   const [isValidatingDomain, setIsValidatingDomain] = useState(false);
@@ -806,7 +813,16 @@ export default function TenantSettingsPage() {
                     Usuarios
                     {activeSubTab === 'users' && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-nectar-gold"></span>}
                   </button>
+                  <button
+                    onClick={() => setActiveSubTab('contracts')}
+                    className={`pb-3 text-[10px] font-black uppercase tracking-widest relative transition-all whitespace-nowrap ${activeSubTab === 'contracts' ? 'text-nectar-gold' : 'text-foreground/45 hover:text-foreground'
+                      }`}
+                  >
+                    Contratos
+                    {activeSubTab === 'contracts' && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-nectar-gold"></span>}
+                  </button>
                 </div>
+
 
                 {/* Sub Tab Content */}
                 {activeSubTab === 'branding' && (
@@ -1833,7 +1849,19 @@ export default function TenantSettingsPage() {
                     </div>
                   </div>
                 )}
+                {activeSubTab === 'contracts' && selectedTenant && (
+                  <div className="space-y-6 animate-in fade-in duration-300">
+                    <div className="flex justify-between items-center border-b border-card-border pb-4">
+                      <div>
+                        <h3 className="text-xs font-black uppercase tracking-wider text-nectar-gold">Contratos Digitales Personalizados</h3>
+                        <p className="text-[8px] text-foreground/45 uppercase tracking-wider mt-1">Administra y crea contratos específicos para {selectedTenant.name}</p>
+                      </div>
+                    </div>
+                    <CustomContractsManager tenantId={selectedTenant.id} primaryColor={selectedTenant.theme_color || '#C68A1E'} />
+                  </div>
+                )}
               </div>
+
 
               {/* Real-time branding visual preview (30% column width on lg) */}
               {(activeSubTab === 'branding' || activeSubTab === 'colors') && (
