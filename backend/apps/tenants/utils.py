@@ -71,7 +71,8 @@ def get_tenant_email_connection(tenant=None):
     # Fallback si no hay credenciales configuradas para el proveedor seleccionado
     if not username or not password:
         # Retorna la conexión por defecto de django y el remitente de la plataforma
-        return None, settings.DEFAULT_FROM_EMAIL
+        from_email = get_platform_sender(tenant.name if tenant else "Néctar Labs")
+        return None, from_email
 
     connection = make_connection(
         host=host,

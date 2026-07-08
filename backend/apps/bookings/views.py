@@ -342,3 +342,18 @@ class CustomContractViewSet(viewsets.ModelViewSet):
                 
         return Response({'message': 'Contrato firmado con éxito. Copia guardada.'})
 
+    @action(detail=True, methods=['post'], url_path='resend-email')
+    def resend_email(self, request, pk=None):
+        contract = self.get_object()
+        if contract.is_fully_signed:
+            send_custom_contract_emails(contract)
+            return Response({'message': 'Contrato completamente firmado. Copia certificada reenviada a todos los firmantes.'})
+        
+        pending_signatories = contract.signatories.filter(signature_base64__isnull=True)
+        next_sig = pending_signatories.order_by('id').first()
+        if not next_sig:
+            return Response({'error': 'No hay firmantes pendientes para este contrato.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        send_custom_contract_emails(contract, signatory_to_notify=next_sig)
+        return Response({'message': f'Correo de invitación reenviado con éxito a {next_sig.email}.'})
+

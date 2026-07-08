@@ -283,22 +283,37 @@ class CustomContractPDF(FPDF):
         self.contract = contract
 
     def header(self):
-        # Logo
+        # We start with some top margin space
+        self.set_y(10)
+        
+        # Logo centrado si existe
         if self.contract.logo:
             try:
-                self.image(self.contract.logo.path, x=10, y=10, w=28)
+                try:
+                    logo_path = self.contract.logo.path
+                except (NotImplementedError, AttributeError):
+                    logo_path = self.contract.logo.url
+                # Page width A4 is 210mm. Center logo of width 30mm: (210 - 30) / 2 = 90
+                self.image(logo_path, x=90, y=10, w=30)
+                self.set_y(26) # space for logo
             except Exception as e:
                 logger.error(f"Error drawing logo on CustomContract PDF: {e}")
         
-        # Header title
-        self.set_font('helvetica', 'B', 14)
+        # Header title (Centrado)
+        self.set_font('helvetica', 'B', 16)
         self.set_text_color(30, 30, 30)
-        self.cell(0, 10, self.contract.title.upper(), new_x="LMARGIN", new_y="NEXT", align='R')
+        self.cell(0, 10, self.contract.title.upper(), new_x="LMARGIN", new_y="NEXT", align='C')
         
         # Decorative line
         tenant_color = "#C68A1E"
         if self.contract.tenant:
             tenant_color = getattr(self.contract.tenant, "theme_color", "#C68A1E")
+            
+            # Subtitle with tenant name
+            self.set_font('helvetica', 'I', 10)
+            self.set_text_color(100, 100, 100)
+            self.cell(0, 6, self.contract.tenant.name.upper(), new_x="LMARGIN", new_y="NEXT", align='C')
+            self.ln(2)
         
         # Parse hex color
         r, g, b = 198, 138, 30 # fallback gold
@@ -312,8 +327,9 @@ class CustomContractPDF(FPDF):
         
         self.set_draw_color(r, g, b)
         self.set_line_width(1)
-        self.line(10, 25, 200, 25)
-        self.ln(12)
+        y_line = self.get_y() + 1
+        self.line(10, y_line, 200, y_line)
+        self.set_y(y_line + 10)
 
     def footer(self):
         self.set_y(-15)
@@ -334,25 +350,45 @@ def generate_custom_contract_pdf(contract):
         pdf.set_font('helvetica', '', 10)
         pdf.set_text_color(50, 50, 50)
 
+        # Resolve tenant theme color to paint section titles
+        tenant_color = "#C68A1E"
+        if contract.tenant:
+            tenant_color = getattr(contract.tenant, "theme_color", "#C68A1E")
+        
+        r, g, b = 198, 138, 30
+        if tenant_color.startswith('#') and len(tenant_color) == 7:
+            try:
+                r = int(tenant_color[1:3], 16)
+                g = int(tenant_color[3:5], 16)
+                b = int(tenant_color[5:7], 16)
+            except ValueError:
+                pass
+
         # 1. Proemio
-        pdf.set_font('helvetica', 'B', 11)
+        pdf.set_font('helvetica', 'B', 12)
+        pdf.set_text_color(r, g, b)
         pdf.cell(0, 8, 'PROEMIO', new_x="LMARGIN", new_y="NEXT")
         pdf.set_font('helvetica', '', 10)
-        pdf.multi_cell(0, 5.5, contract.proemio)
+        pdf.set_text_color(50, 50, 50)
+        pdf.multi_cell(0, 6, contract.proemio)
         pdf.ln(6)
 
         # 2. Declaraciones
-        pdf.set_font('helvetica', 'B', 11)
+        pdf.set_font('helvetica', 'B', 12)
+        pdf.set_text_color(r, g, b)
         pdf.cell(0, 8, 'DECLARACIONES', new_x="LMARGIN", new_y="NEXT")
         pdf.set_font('helvetica', '', 10)
-        pdf.multi_cell(0, 5.5, contract.declarations)
+        pdf.set_text_color(50, 50, 50)
+        pdf.multi_cell(0, 6, contract.declarations)
         pdf.ln(6)
 
         # 3. Cláusulas
-        pdf.set_font('helvetica', 'B', 11)
+        pdf.set_font('helvetica', 'B', 12)
+        pdf.set_text_color(r, g, b)
         pdf.cell(0, 8, 'CLÁUSULAS', new_x="LMARGIN", new_y="NEXT")
         pdf.set_font('helvetica', '', 10)
-        pdf.multi_cell(0, 5.5, contract.clauses)
+        pdf.set_text_color(50, 50, 50)
+        pdf.multi_cell(0, 6, contract.clauses)
         pdf.ln(10)
 
         # 4. Signatures Area
