@@ -3,7 +3,7 @@ import dynamic from 'next/dynamic';
 import Link from 'next/link';
 
 const CustomContractsManager = dynamic(
-  () => import('@/components/addons/booking-signature/CustomContractsManager'),
+  () => import('../addons/booking-signature/CustomContractsManager'),
   { ssr: false }
 );
 
