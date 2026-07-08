@@ -19,6 +19,7 @@ interface TenantConfig {
   text_color: string;
   border_color: string;
   active_addons?: string[];
+  has_active_plan_contract?: boolean;
 }
 
 interface AddonCatalogItem {

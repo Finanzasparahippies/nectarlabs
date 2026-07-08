@@ -98,7 +98,7 @@ export default function TenantAdminPage() {
   const [authorized, setAuthorized] = useState(false);
   const [userMe, setUserMe] = useState<any | null>(null);
   const [activeRoleMode, setActiveRoleMode] = useState<string>('ADMIN');
-  const [activeTab, setActiveTab] = useState<'metrics' | 'branding' | 'billing' | 'integrations' | 'pos' | 'store-config' | 'delivery-config' | 'contracts'>('metrics');
+  const [activeTab, setActiveTab] = useState<'metrics' | 'branding' | 'billing' | 'integrations' | 'pos' | 'store-config' | 'delivery-config' | 'contracts' | 'products'>('metrics');
   const [billingSubTab, setBillingSubTab] = useState<'catalog' | 'history' | 'config' | 'cartera'>('catalog');
 
   // Customization Form State

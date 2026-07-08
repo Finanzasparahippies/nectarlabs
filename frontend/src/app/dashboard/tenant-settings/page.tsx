@@ -44,6 +44,7 @@ interface Tenant {
   created_at: string;
   updated_at: string;
   invoicing_mode?: string;
+  store_category?: string;
 }
 
 interface Product {

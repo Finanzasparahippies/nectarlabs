@@ -138,7 +138,7 @@ function DashboardSidebarContent() {
   };
 
   // Definición de enlaces con iconos premium y micro-animaciones (base)
-  const baseNavLinks = [
+  const baseNavLinks: any[] = [
     {
       label: 'Dashboard',
       href: '/dashboard?tab=overview',

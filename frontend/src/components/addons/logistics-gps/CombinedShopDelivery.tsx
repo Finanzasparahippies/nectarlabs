@@ -58,6 +58,7 @@ interface TenantConfig {
   text_color?: string;
   border_color?: string;
   logo_url?: string | null;
+  stripe_publishable_key?: string | null;
 }
 
 interface CombinedShopDeliveryProps {
