@@ -1,6 +1,7 @@
 from django.db import models
 from django.conf import settings
 from django.core.files.storage import default_storage
+import uuid
 
 # Determine storage class dynamically to allow local/test overrides
 if getattr(settings, 'TESTING', False):
@@ -91,3 +92,76 @@ class BookingContract(models.Model):
 
     def __str__(self):
         return f"Contrato de Booking - {self.inquiry.name} ({self.inquiry.date})"
+
+
+# Helper for dynamic path of custom contract PDFs and Logos
+def custom_contract_pdf_path(instance, filename):
+    tenant_part = str(instance.tenant.id) if instance.tenant else "nectar_labs"
+    return f"tenants/{tenant_part}/custom_contracts/{instance.id}/{filename}"
+
+def custom_template_logo_path(instance, filename):
+    tenant_part = str(instance.tenant.id) if instance.tenant else "nectar_labs"
+    return f"tenants/{tenant_part}/custom_contracts/templates/{filename}"
+
+
+class CustomContractTemplate(models.Model):
+    """
+    Plantillas de contratos personalizables creadas por el CEO o administradores de Tenants.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, null=True, blank=True, related_name='contract_templates')
+    title = models.CharField(max_length=255)
+    logo = models.ImageField(upload_to=custom_template_logo_path, null=True, blank=True)
+    header_design = models.JSONField(default=dict, blank=True, help_text="Configuración visual del membrete")
+    proemio = models.TextField(help_text="Texto introductorio del contrato")
+    declarations = models.TextField(help_text="Declaraciones de las partes")
+    clauses = models.TextField(help_text="Cláusulas y términos del contrato")
+    signatories_count = models.PositiveIntegerField(default=2, help_text="Número predeterminado de firmantes")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        tenant_str = self.tenant.subdomain if self.tenant else "Néctar Labs Raíz"
+        return f"{self.title} ({tenant_str})"
+
+
+class CustomContract(models.Model):
+    """
+    Instancia de contrato digital generado para ser firmado por múltiples destinatarios.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    template = models.ForeignKey(CustomContractTemplate, on_delete=models.SET_NULL, null=True, blank=True, related_name='contracts')
+    tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, null=True, blank=True, related_name='custom_contracts')
+    title = models.CharField(max_length=255)
+    logo = models.ImageField(upload_to=custom_contract_pdf_path, null=True, blank=True)
+    header_design = models.JSONField(default=dict, blank=True)
+    proemio = models.TextField()
+    declarations = models.TextField()
+    clauses = models.TextField()
+    pdf_file = models.FileField(upload_to=custom_contract_pdf_path, storage=raw_storage, null=True, blank=True)
+    is_fully_signed = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        tenant_str = self.tenant.subdomain if self.tenant else "Néctar Labs Raíz"
+        return f"{self.title} - {tenant_str}"
+
+
+class CustomContractSignatory(models.Model):
+    """
+    Firmantes asociados a un contrato personalizado. Cada uno posee su enlace único vía token.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    contract = models.ForeignKey(CustomContract, on_delete=models.CASCADE, related_name='signatories')
+    name = models.CharField(max_length=255)
+    email = models.EmailField()
+    role = models.CharField(max_length=150, help_text="Rol personalizado de este firmante (ej. Aval, Arrendatario)")
+    signature_base64 = models.TextField(null=True, blank=True, help_text="Firma digital trazada")
+    signed_at = models.DateTimeField(null=True, blank=True)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+
+    def __str__(self):
+        return f"{self.name} ({self.role}) - Contrato: {self.contract.title}"
+

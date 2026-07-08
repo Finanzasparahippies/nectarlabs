@@ -830,12 +830,17 @@ export default function TenantPortalPage() {
                 {
                   selector: '.tenant-header',
                   title: 'Navegación del Portal',
-                  content: 'Cambia rápidamente entre los servicios comerciales activos y el área de soporte al cliente.'
+                  content: 'Aquí puedes cambiar rápidamente entre los servicios comerciales (tienda, reservas) y el área de soporte técnico.'
                 },
                 {
-                  selector: '.tenant-card',
-                  title: 'Catálogo y Herramientas',
-                  content: 'Bienvenido. Aquí puedes acceder al catálogo de productos, solicitar facturas SAT o interactuar con las herramientas de la colmena.'
+                  selector: '#tour-tenant-tabs',
+                  title: 'Pestañas de Servicios',
+                  content: 'Selecciona la pestaña que necesites: puedes autodespachar compras, reservar una cita, suscribirte a boletines de novedades o solicitar facturación SAT CFDI 4.0 al instante.'
+                },
+                {
+                  selector: '#tour-tenant-content',
+                  title: 'Área de Interacción',
+                  content: 'Interactúa directamente con la herramienta o servicio seleccionado. Todo el proceso es digital y autónomo para tu comodidad.'
                 }
               ]}
             />
@@ -905,7 +910,7 @@ export default function TenantPortalPage() {
                 ></div>
 
                 {/* Tabs Dock Container */}
-                <div className="border-b pb-5 mb-8 tenant-border">
+                <div id="tour-tenant-tabs" className="border-b pb-5 mb-8 tenant-border">
                   <div className="flex gap-2.5 overflow-x-auto pb-2.5 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
                     {(() => {
                       // Build tab list — merge delivery-tracking + ecommerce into one immersive tab
@@ -943,7 +948,7 @@ export default function TenantPortalPage() {
                 </div>
 
                 {/* Tab Component Render */}
-                <div className="flex-1 min-h-[400px]">
+                <div id="tour-tenant-content" className="flex-1 min-h-[400px]">
                   {activeAddonTab === 'booking-signature' && <BookingCanvas tenantId={tenantConfig.id} subdomain={subdomain} primaryColor={primaryColor} />}
                   {activeAddonTab === 'shop-delivery' && (
                     <CombinedShopDelivery

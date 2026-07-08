@@ -19,6 +19,8 @@ import dynamic from 'next/dynamic';
 
 const DriverPortal = dynamic(() => import('../../components/addons/logistics-gps/DriverPortal'), { ssr: false });
 const DriverStatsDashboard = dynamic(() => import('../../components/addons/logistics-gps/DriverStatsDashboard'), { ssr: false });
+const InteractiveTutorial = dynamic(() => import('../../components/ui/InteractiveTutorial'), { ssr: false });
+
 
 interface Project {
   id: number;
@@ -1106,7 +1108,7 @@ function DashboardPageOriginal() {
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative z-10">
+              <div id="tour-client-plans" className="grid grid-cols-1 md:grid-cols-3 gap-8 relative z-10">
                 {plans.map((plan) => (
                   <div key={plan.id} className="p-8 rounded-[2rem] bg-background/50 border border-card-border flex flex-col justify-between hover:border-nectar-gold transition-all duration-300 group animate-in fade-in zoom-in-95">
                     <div>
@@ -2634,7 +2636,7 @@ function DashboardPageOriginal() {
                     <div className="h-0.5 flex-1 mx-8 bg-card-border mb-1.5 opacity-20"></div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div id="tour-client-projects" className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {fetching ? (
                       <>
                         <div className="p-8 rounded-[2.5rem] bg-card-bg border border-card-border animate-pulse h-64 flex flex-col justify-between">
@@ -2832,7 +2834,7 @@ function DashboardPageOriginal() {
                     <h2 className="text-xs font-black uppercase tracking-[0.3em] opacity-30">Bitácora de Desarrollo</h2>
                     <div className="h-0.5 flex-1 mx-8 bg-card-border mb-1.5 opacity-20"></div>
                   </div>
-                  <div className="bg-card-bg border border-card-border rounded-[2.5rem] overflow-hidden">
+                  <div id="tour-client-logs" className="bg-card-bg border border-card-border rounded-[2.5rem] overflow-hidden">
                     <WeeklyLogs logs={logs} />
                   </div>
                 </section>
@@ -2840,7 +2842,7 @@ function DashboardPageOriginal() {
 
               {/* Right Side: Support & Infrastructure */}
               <div className="space-y-12">
-                <section className="bg-card-bg border border-card-border rounded-[2.5rem] p-8">
+                <section id="tour-client-support" className="bg-card-bg border border-card-border rounded-[2.5rem] p-8">
                   <div className="flex justify-between items-center mb-10">
                     <h2 className="text-xs font-black tracking-[0.3em] uppercase opacity-30">
                       {isStaff ? 'Tickets del Sistema' : 'Soporte Activo'}
@@ -3008,6 +3010,126 @@ function DashboardPageOriginal() {
             setConfirmDlg(null);
           }}
           onCancel={() => setConfirmDlg(null)}
+        />
+      )}
+
+      {/* Interactive Tutorials for Dashboard Roles and Tabs */}
+      {isClient && activeTab === 'overview' && (
+        <InteractiveTutorial
+          tutorialKey="client_overview_tutorial"
+          steps={[
+            {
+              selector: '#tour-sidebar-dashboard',
+              title: 'Centro de Control Principal',
+              content: 'Este es tu punto de partida. Aquí puedes ver el resumen de tus proyectos tecnológicos y tus credenciales de acceso.'
+            },
+            {
+              selector: '#tour-client-projects',
+              title: 'Tus Proyectos Activos',
+              content: 'Visualiza el estado de tus proyectos en tiempo real y el porcentaje de consumo de las horas de ingeniería contratadas.'
+            },
+            {
+              selector: '#tour-client-logs',
+              title: 'Bitácora de Desarrollo',
+              content: 'Consulta el registro semanal detallado del avance y commits de nuestros ingenieros asignados a tu cuenta.'
+            },
+            {
+              selector: '#tour-client-support',
+              title: 'Soporte Técnico Especializado',
+              content: 'Levanta reportes de errores o solicita ajustes abriendo un ticket directamente a nuestro equipo.'
+            }
+          ]}
+        />
+      )}
+
+      {isClient && activeTab === 'hire-plan' && (
+        <InteractiveTutorial
+          tutorialKey="client_hireplan_tutorial"
+          steps={[
+            {
+              selector: '#tour-client-plans',
+              title: 'Planes de Inversión Tecnológica',
+              content: 'Compara nuestros planes de horas de ingeniería mensual y selecciona el que mejor se adapte al ritmo de crecimiento de tu negocio.'
+            }
+          ]}
+        />
+      )}
+
+      {isCEO && activeTab === 'overview' && (
+        <InteractiveTutorial
+          tutorialKey="ceo_overview_tutorial"
+          steps={[
+            {
+              selector: '#tour-sidebar-dashboard',
+              title: 'Consola del CEO',
+              content: 'Accede a la supervisión general del ecosistema multi-tenant de Néctar Labs. Control total sobre clientes y plataformas.'
+            }
+          ]}
+        />
+      )}
+
+      {isCEO && activeTab === 'business' && (
+        <InteractiveTutorial
+          tutorialKey="ceo_business_tutorial"
+          steps={[
+            {
+              selector: '#tour-sidebar-business',
+              title: 'Centro Financiero y de Infraestructura',
+              content: 'Monitorea métricas clave de facturación recurrente, salud de la infraestructura y activación de celdas modulares.'
+            }
+          ]}
+        />
+      )}
+
+      {isCEO && activeTab === 'billing-global' && (
+        <InteractiveTutorial
+          tutorialKey="ceo_billing_tutorial"
+          steps={[
+            {
+              selector: '#tour-sidebar-billing-global',
+              title: 'Gestión Global de Facturación',
+              content: 'Controla el catálogo de conceptos timbrados, retenciones y el registro de clientes del SAT en un solo lugar.'
+            }
+          ]}
+        />
+      )}
+
+      {isCEO && activeTab === 'marketing' && (
+        <InteractiveTutorial
+          tutorialKey="ceo_marketing_tutorial"
+          steps={[
+            {
+              selector: '#tour-sidebar-marketing',
+              title: 'Consola de Campañas y Correos',
+              content: 'Diseña y envía campañas masivas automatizadas mediante SMTP dedicado o Amazon SES a tus clientes.'
+            }
+          ]}
+        />
+      )}
+
+      {isDeveloper && (
+        <InteractiveTutorial
+          tutorialKey="developer_tutorial"
+          steps={[
+            {
+              selector: '#tour-sidebar-dashboard',
+              title: 'Workspace de Ingeniería',
+              content: 'Aquí puedes firmar digitalmente los acuerdos comerciales y contratos que el CEO asigne para su validación.'
+            }
+          ]}
+        />
+      )}
+
+      {isDesigner && (
+        <InteractiveTutorial
+          tutorialKey="designer_tutorial"
+          steps={[
+            {
+              selector: '#tour-sidebar-dashboard',
+              title: 'Centro de Diseño Creativo',
+              content: 'Supervisa las horas restantes del plan de diseño del mes y los activos visuales entregados.'
+            }
+          ]}
         />
       )}
 

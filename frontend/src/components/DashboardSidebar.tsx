@@ -144,6 +144,7 @@ function DashboardSidebarContent() {
       href: '/dashboard?tab=overview',
       show: true,
       active: pathname === '/dashboard' && activeTab === 'overview',
+      id: 'tour-sidebar-dashboard',
       icon: (active: boolean) => (
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={`w-4 h-4 transition-all duration-300 group-hover:scale-110 ${active ? 'text-nectar-gold' : 'text-foreground/45 group-hover:text-foreground'}`}>
           <rect x="3" y="3" width="7" height="7" rx="1"></rect>
@@ -158,6 +159,7 @@ function DashboardSidebarContent() {
       href: '/dashboard/sales',
       show: userRole === 'SALES',
       active: pathname === '/dashboard/sales',
+      id: 'tour-sidebar-financial',
       icon: (active: boolean) => (
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={`w-4 h-4 transition-all duration-300 group-hover:scale-110 ${active ? 'text-nectar-gold' : 'text-foreground/45 group-hover:text-foreground'}`}>
           <line x1="12" y1="1" x2="12" y2="23"></line>
@@ -171,6 +173,7 @@ function DashboardSidebarContent() {
       onClick: handleScrollToPayment,
       show: isClient && contracts.some(c => c.is_fully_signed),
       active: false,
+      id: 'tour-sidebar-payment',
       icon: () => (
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-foreground/45 group-hover:text-foreground transition-all duration-300 group-hover:scale-110">
           <rect x="2" y="5" width="20" height="14" rx="2" ry="2"></rect>
@@ -185,6 +188,7 @@ function DashboardSidebarContent() {
       href: '/dashboard?tab=hire-plan',
       show: isClient,
       active: pathname === '/dashboard' && activeTab === 'hire-plan',
+      id: 'tour-sidebar-hire-plan',
       icon: (active: boolean) => (
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={`w-4 h-4 transition-all duration-300 group-hover:scale-110 ${active ? 'text-nectar-gold' : 'text-foreground/45 group-hover:text-foreground'}`}>
           <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
@@ -196,6 +200,7 @@ function DashboardSidebarContent() {
       href: '/dashboard?tab=business',
       show: isCEO,
       active: pathname === '/dashboard' && activeTab === 'business',
+      id: 'tour-sidebar-business',
       icon: (active: boolean) => (
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={`w-4 h-4 transition-all duration-300 group-hover:scale-110 ${active ? 'text-nectar-gold' : 'text-foreground/45 group-hover:text-foreground'}`}>
           <line x1="18" y1="20" x2="18" y2="10"></line>
@@ -209,6 +214,7 @@ function DashboardSidebarContent() {
       href: '/dashboard?tab=billing-global',
       show: isCEO,
       active: pathname === '/dashboard' && activeTab === 'billing-global',
+      id: 'tour-sidebar-billing',
       icon: (active: boolean) => (
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={`w-4 h-4 transition-all duration-300 group-hover:scale-110 ${active ? 'text-nectar-gold' : 'text-foreground/45 group-hover:text-foreground'}`}>
           <rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect>
@@ -222,6 +228,7 @@ function DashboardSidebarContent() {
       href: '/dashboard?tab=marketing',
       show: isCEO,
       active: pathname === '/dashboard' && activeTab === 'marketing',
+      id: 'tour-sidebar-marketing',
       icon: (active: boolean) => (
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={`w-4 h-4 transition-all duration-300 group-hover:scale-110 ${active ? 'text-nectar-gold' : 'text-foreground/45 group-hover:text-foreground'}`}>
           <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"></path>
@@ -233,6 +240,7 @@ function DashboardSidebarContent() {
       href: '/dashboard/performance',
       show: isCEO,
       active: pathname === '/dashboard/performance',
+      id: 'tour-sidebar-performance',
       icon: (active: boolean) => (
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={`w-4 h-4 transition-all duration-300 group-hover:scale-110 ${active ? 'text-nectar-gold' : 'text-foreground/45 group-hover:text-foreground'}`}>
           <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
@@ -251,6 +259,7 @@ function DashboardSidebarContent() {
       },
       show: isCEO,
       active: false,
+      id: 'tour-sidebar-recoleccion',
       icon: () => (
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-foreground/45 group-hover:text-foreground transition-all duration-300 group-hover:scale-110">
           <line x1="12" y1="1" x2="12" y2="23"></line>
@@ -263,6 +272,7 @@ function DashboardSidebarContent() {
       href: '/dashboard/support-settings',
       show: isCEO,
       active: pathname === '/dashboard/support-settings',
+      id: 'tour-sidebar-support-settings',
       icon: (active: boolean) => (
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={`w-4 h-4 transition-all duration-300 group-hover:scale-110 ${active ? 'text-nectar-gold' : 'text-foreground/45 group-hover:text-foreground'}`}>
           <circle cx="12" cy="12" r="3"></circle>
@@ -275,6 +285,7 @@ function DashboardSidebarContent() {
       href: '/dashboard/tenant-settings',
       show: (userRole === 'BUSINESS' || tenants.length > 0) && !isCEO,
       active: pathname === '/dashboard/tenant-settings',
+      id: 'tour-sidebar-tenant-settings',
       icon: (active: boolean) => (
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={`w-4 h-4 transition-all duration-300 group-hover:scale-110 ${active ? 'text-nectar-gold' : 'text-foreground/45 group-hover:text-foreground'}`}>
           <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
@@ -298,6 +309,7 @@ function DashboardSidebarContent() {
       href: '/tickets',
       show: true,
       active: pathname.startsWith('/tickets'),
+      id: 'tour-sidebar-support',
       icon: (active: boolean) => (
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={`w-4 h-4 transition-all duration-300 group-hover:scale-110 ${active ? 'text-nectar-gold' : 'text-foreground/45 group-hover:text-foreground'}`}>
           <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
@@ -309,6 +321,7 @@ function DashboardSidebarContent() {
       href: '/projects',
       show: isStaff,
       active: pathname.startsWith('/projects'),
+      id: 'tour-sidebar-projects',
       icon: (active: boolean) => (
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={`w-4 h-4 transition-all duration-300 group-hover:scale-110 ${active ? 'text-nectar-gold' : 'text-foreground/45 group-hover:text-foreground'}`}>
           <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
@@ -320,6 +333,7 @@ function DashboardSidebarContent() {
       href: '/dashboard/addons',
       show: true,
       active: pathname === '/dashboard/addons',
+      id: 'tour-sidebar-addons',
       icon: (active: boolean) => (
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={`w-4 h-4 transition-all duration-300 group-hover:scale-110 ${active ? 'text-nectar-gold' : 'text-foreground/45 group-hover:text-foreground'}`}>
           <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
@@ -333,6 +347,7 @@ function DashboardSidebarContent() {
       href: '/dashboard/billing/guide',
       show: isCEO || userRole === 'BUSINESS',
       active: pathname === '/dashboard/billing/guide',
+      id: 'tour-sidebar-billing-guide',
       icon: (active: boolean) => (
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={`w-4 h-4 transition-all duration-300 group-hover:scale-110 ${active ? 'text-nectar-gold' : 'text-foreground/45 group-hover:text-foreground'}`}>
           <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -348,10 +363,43 @@ function DashboardSidebarContent() {
       href: '/dashboard/profile',
       show: true,
       active: pathname === '/dashboard/profile',
+      id: 'tour-sidebar-profile',
       icon: (active: boolean) => (
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={`w-4 h-4 transition-all duration-300 group-hover:scale-110 ${active ? 'text-nectar-gold' : 'text-foreground/45 group-hover:text-foreground'}`}>
           <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
           <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+      )
+    },
+    {
+      label: 'Reiniciar Guías 🚀',
+      href: '#',
+      onClick: (e: any) => {
+        e.preventDefault();
+        const keys = [
+          'completed_tutorial_client_overview_tutorial',
+          'completed_tutorial_client_hireplan_tutorial',
+          'completed_tutorial_client_addons_tutorial',
+          'completed_tutorial_ceo_overview_tutorial',
+          'completed_tutorial_ceo_business_tutorial',
+          'completed_tutorial_ceo_billing_tutorial',
+          'completed_tutorial_ceo_marketing_tutorial',
+          'completed_tutorial_developer_tutorial',
+          'completed_tutorial_designer_tutorial',
+          'completed_tutorial_driver_portal_tutorial',
+          'completed_tutorial_public_shop_tutorial'
+        ];
+        keys.forEach(k => localStorage.removeItem(k));
+        window.location.reload();
+      },
+      show: true,
+      active: false,
+      id: 'tour-sidebar-reset',
+      icon: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-nectar-gold animate-pulse">
+          <circle cx="12" cy="12" r="10"></circle>
+          <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+          <line x1="12" y1="17" x2="12.01" y2="17"></line>
         </svg>
       )
     }
@@ -365,6 +413,7 @@ function DashboardSidebarContent() {
       href: '/dashboard?tab=driver-console',
       show: true,
       active: activeTab === 'driver-console',
+      id: 'tour-sidebar-driver-console',
       icon: (active: boolean) => (
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={`w-4 h-4 transition-all duration-300 group-hover:scale-110 ${active ? 'text-nectar-gold' : 'text-foreground/45 group-hover:text-foreground'}`}>
           <rect x="1" y="3" width="15" height="13" rx="2" ry="2"></rect>
@@ -379,6 +428,7 @@ function DashboardSidebarContent() {
       href: '/dashboard?tab=driver-stats',
       show: true,
       active: activeTab === 'driver-stats',
+      id: 'tour-sidebar-driver-stats',
       icon: (active: boolean) => (
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={`w-4 h-4 transition-all duration-300 group-hover:scale-110 ${active ? 'text-nectar-gold' : 'text-foreground/45 group-hover:text-foreground'}`}>
           <line x1="18" y1="20" x2="18" y2="10"></line>
@@ -392,6 +442,7 @@ function DashboardSidebarContent() {
       href: '/dashboard/profile',
       show: true,
       active: pathname === '/dashboard/profile',
+      id: 'tour-sidebar-profile',
       icon: (active: boolean) => (
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={`w-4 h-4 transition-all duration-300 group-hover:scale-110 ${active ? 'text-nectar-gold' : 'text-foreground/45 group-hover:text-foreground'}`}>
           <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
@@ -404,9 +455,42 @@ function DashboardSidebarContent() {
       href: '/tickets',
       show: true,
       active: pathname.startsWith('/tickets'),
+      id: 'tour-sidebar-support',
       icon: (active: boolean) => (
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={`w-4 h-4 transition-all duration-300 group-hover:scale-110 ${active ? 'text-nectar-gold' : 'text-foreground/45 group-hover:text-foreground'}`}>
           <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+        </svg>
+      )
+    },
+    {
+      label: 'Reiniciar Guías 🚀',
+      href: '#',
+      onClick: (e: any) => {
+        e.preventDefault();
+        const keys = [
+          'completed_tutorial_client_overview_tutorial',
+          'completed_tutorial_client_hireplan_tutorial',
+          'completed_tutorial_client_addons_tutorial',
+          'completed_tutorial_ceo_overview_tutorial',
+          'completed_tutorial_ceo_business_tutorial',
+          'completed_tutorial_ceo_billing_tutorial',
+          'completed_tutorial_ceo_marketing_tutorial',
+          'completed_tutorial_developer_tutorial',
+          'completed_tutorial_designer_tutorial',
+          'completed_tutorial_driver_portal_tutorial',
+          'completed_tutorial_public_shop_tutorial'
+        ];
+        keys.forEach(k => localStorage.removeItem(k));
+        window.location.reload();
+      },
+      show: true,
+      active: false,
+      id: 'tour-sidebar-reset',
+      icon: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-nectar-gold animate-pulse">
+          <circle cx="12" cy="12" r="10"></circle>
+          <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+          <line x1="12" y1="17" x2="12.01" y2="17"></line>
         </svg>
       )
     }
@@ -436,7 +520,7 @@ function DashboardSidebarContent() {
     }
 
     return (
-      <div className="pt-6 border-t border-card-border/40 mt-4 space-y-3">
+      <div id="tour-sidebar-colmenas" className="pt-6 border-t border-card-border/40 mt-4 space-y-3">
         {/* Accordion header for the entire section */}
         <button
           onClick={() => setEcosystemsExpanded(!ecosystemsExpanded)}
@@ -580,6 +664,7 @@ function DashboardSidebarContent() {
                 href={link.href}
                 onClick={link.onClick}
                 title={link.label}
+                id={link.id}
                 className={`flex items-center gap-4 rounded-2xl font-black uppercase tracking-widest text-[9px] transition-all duration-300 group ${
                   isCollapsed ? 'justify-center px-0 py-3.5 w-full' : 'px-6 py-3.5 w-full text-left'
                 } ${link.active
@@ -612,6 +697,7 @@ function DashboardSidebarContent() {
                 href={link.href}
                 onClick={link.onClick}
                 title={link.label}
+                id={link.id}
                 className={`flex items-center gap-4 rounded-2xl font-black uppercase tracking-widest text-[9px] transition-all duration-300 group ${
                   isCollapsed ? 'justify-center px-0 py-3.5 w-full' : 'px-6 py-3.5 w-full text-left'
                 } ${link.active

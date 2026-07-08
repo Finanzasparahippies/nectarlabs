@@ -1,6 +1,10 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
+
+const InteractiveTutorial = dynamic(() => import('../ui/InteractiveTutorial'), { ssr: false });
+
 
 interface TutorialStep {
   number: string;
@@ -178,7 +182,7 @@ export default function AddonTutorial() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-12 items-stretch relative z-10">
         
         {/* Left Column: Selector Menu */}
-        <div className="lg:col-span-5 flex flex-col gap-3 sm:gap-4 justify-center">
+        <div id="tour-simulator-selector" className="lg:col-span-5 flex flex-col gap-3 sm:gap-4 justify-center">
           {addonsConfig.map((config) => (
             <button
               key={config.id}
@@ -216,7 +220,7 @@ export default function AddonTutorial() {
 
         {/* Right Column: Visual Mockup Phone / Screen */}
         <div className="lg:col-span-7 flex items-center justify-center">
-          <div className="w-full max-w-lg aspect-[9/16] rounded-[2.5rem] sm:rounded-[3.5rem] bg-[#020403] border-[6px] sm:border-[10px] border-neutral-800 p-4 sm:p-5 flex flex-col justify-between relative overflow-hidden shadow-2xl">
+          <div id="tour-simulator-phone" className="w-full max-w-lg aspect-[9/16] rounded-[2.5rem] sm:rounded-[3.5rem] bg-[#020403] border-[6px] sm:border-[10px] border-neutral-800 p-4 sm:p-5 flex flex-col justify-between relative overflow-hidden shadow-2xl">
             
             {/* Dynamic Status Bar (Signal, Wifi, Time, Battery) */}
             <div className="absolute top-2 left-0 right-0 px-8 flex justify-between items-center z-20 text-[9px] text-white/40 font-bold select-none">
@@ -657,6 +661,21 @@ export default function AddonTutorial() {
 
       </div>
 
+      <InteractiveTutorial
+        tutorialKey="public_landing_simulator_tutorial"
+        steps={[
+          {
+            selector: '#tour-simulator-selector',
+            title: 'Selector de Módulos (Add-ons)',
+            content: 'Aquí puedes alternar entre las diferentes celdas de soporte, analíticas o pasarelas que Néctar Labs ofrece. El código de estas celdas se auto-inyecta directamente en tu ecosistema final.'
+          },
+          {
+            selector: '#tour-simulator-phone',
+            title: 'Simulador de Teléfono Móvil',
+            content: 'Este panel móvil te muestra una réplica interactiva exacta de cómo experimentará tu cliente el Add-on seleccionado. ¡Prueba chatear, simular una firma SHA-256 o enviar un boletín masivo!'
+          }
+        ]}
+      />
     </section>
   );
 }
