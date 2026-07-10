@@ -12,7 +12,7 @@ class TenantAdmin(admin.ModelAdmin):
             'fields': ('name', 'subdomain', 'owner', 'is_active')
         }),
         ('Integration Options', {
-            'fields': ('api_key', 'allowed_origins', 'custom_domain')
+            'fields': ('api_key', 'allowed_origins', 'custom_domain', 'custom_frontend_url', 'custom_backend_url')
         }),
         ('Branding & Customization', {
             'fields': ('theme_color', 'logo_url', 'welcome_message', 'require_customer_info')

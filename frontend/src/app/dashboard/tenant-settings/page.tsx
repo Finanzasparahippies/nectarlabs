@@ -52,6 +52,8 @@ interface Tenant {
   updated_at: string;
   invoicing_mode?: string;
   store_category?: string;
+  custom_frontend_url?: string;
+  custom_backend_url?: string;
 }
 
 interface Product {
@@ -133,6 +135,8 @@ export default function TenantSettingsPage() {
   const [editAllowedOrigins, setEditAllowedOrigins] = useState('');
   const [editInvoicingMode, setEditInvoicingMode] = useState('MANUAL_CLIENT');
   const [editStoreCategory, setEditStoreCategory] = useState('General');
+  const [editCustomFrontendUrl, setEditCustomFrontendUrl] = useState('');
+  const [editCustomBackendUrl, setEditCustomBackendUrl] = useState('');
 
   // Undo History & Custom Particle settings
   const [historyLength, setHistoryLength] = useState(0);
@@ -172,6 +176,8 @@ export default function TenantSettingsPage() {
     editAllowedOrigins,
     editInvoicingMode,
     editStoreCategory,
+    editCustomFrontendUrl,
+    editCustomBackendUrl,
   });
 
   useEffect(() => {
@@ -180,7 +186,8 @@ export default function TenantSettingsPage() {
     editName, editSubdomain, editCustomDomain, editUseCustomDomain, editThemeColor, editAccentColor, editBgColor, editCardBgColor, editTextColor, editBorderColor,
     editThemeColorLight, editAccentColorLight, editBgColorLight, editCardBgColorLight, editTextColorLight, editBorderColorLight,
     editPollenActive, editPollenIcon, editPollenColor, editPollenCount, editPollenBlur,
-    editLogoUrl, editWelcomeMessage, editPortalTitle, editFooterText, editRequireCustomerInfo, editAllowedOrigins, editInvoicingMode, editStoreCategory
+    editLogoUrl, editWelcomeMessage, editPortalTitle, editFooterText, editRequireCustomerInfo, editAllowedOrigins, editInvoicingMode, editStoreCategory,
+    editCustomFrontendUrl, editCustomBackendUrl
   ]);
 
   const pushToHistory = () => {
@@ -230,6 +237,8 @@ export default function TenantSettingsPage() {
       setEditRequireCustomerInfo(previousState.editRequireCustomerInfo);
       setEditAllowedOrigins(previousState.editAllowedOrigins);
       setEditStoreCategory(previousState.editStoreCategory);
+      setEditCustomFrontendUrl(previousState.editCustomFrontendUrl || '');
+      setEditCustomBackendUrl(previousState.editCustomBackendUrl || '');
     }
   };
 
@@ -370,6 +379,8 @@ export default function TenantSettingsPage() {
     setEditAllowedOrigins(tenant.allowed_origins || '');
     setEditInvoicingMode(tenant.invoicing_mode || 'MANUAL_CLIENT');
     setEditStoreCategory(tenant.store_category || 'General');
+    setEditCustomFrontendUrl(tenant.custom_frontend_url || '');
+    setEditCustomBackendUrl(tenant.custom_backend_url || '');
     setDomainValidationResult(null);
 
     undoStackRef.current = [];
@@ -459,6 +470,11 @@ export default function TenantSettingsPage() {
       formData.append('allowed_origins', editAllowedOrigins.trim());
       formData.append('invoicing_mode', editInvoicingMode);
       formData.append('store_category', editStoreCategory);
+
+      if (userRole === 'ADMIN') {
+        formData.append('custom_frontend_url', editCustomFrontendUrl.trim());
+        formData.append('custom_backend_url', editCustomBackendUrl.trim());
+      }
 
       if (editLogoFile) {
         formData.append('logo', editLogoFile);
@@ -1215,6 +1231,36 @@ export default function TenantSettingsPage() {
                         ></textarea>
                         <p className="text-[8px] text-foreground/30 uppercase mt-1">Dominios desde los que se autoriza embeber el widget del portal.</p>
                       </div>
+
+                      {userRole === 'ADMIN' && (
+                        <div className="space-y-4 pt-4 border-t border-card-border">
+                          <h4 className="text-[10px] font-black uppercase tracking-widest text-nectar-gold">Configuraciones de Integración del Sistema (Sólo Administradores Matrix)</h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-1">
+                              <label className="text-[9px] font-black uppercase tracking-widest text-foreground/40">URL de Frontend Personalizada</label>
+                              <input
+                                type="text"
+                                value={editCustomFrontendUrl}
+                                onFocus={pushToHistory}
+                                onChange={(e) => setEditCustomFrontendUrl(e.target.value)}
+                                placeholder="Ej. /cursos/ingeniero-python/index.html o https://..."
+                                className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-foreground focus:outline-none focus:border-nectar-gold transition-all"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <label className="text-[9px] font-black uppercase tracking-widest text-foreground/40">URL de Backend Personalizada (Proxy)</label>
+                              <input
+                                type="text"
+                                value={editCustomBackendUrl}
+                                onFocus={pushToHistory}
+                                onChange={(e) => setEditCustomBackendUrl(e.target.value)}
+                                placeholder="Ej. http://localhost:8001 o https://..."
+                                className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-foreground focus:outline-none focus:border-nectar-gold transition-all"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     <div className="pt-6 border-t border-card-border flex justify-end">
