@@ -97,6 +97,8 @@ const PdfSignPageCanvas = ({ page, pageIndex, currentSignatory, signatories }: a
       <canvas ref={canvasRef} className="block" />
       
       {boxes.map((box: any, bIdx) => {
+        if (!dimensions.width || !dimensions.pointsWidth) return null;
+        
         const leftCss = (box.sig_x / dimensions.pointsWidth) * dimensions.width;
         const topCss = (box.sig_y / dimensions.pointsHeight) * dimensions.height;
         const widthCss = (box.sig_w / dimensions.pointsWidth) * dimensions.width;
@@ -113,10 +115,10 @@ const PdfSignPageCanvas = ({ page, pageIndex, currentSignatory, signatories }: a
                   : 'border-white/10 bg-white/5 text-white/40'
             }`}
             style={{
-              left: leftCss,
-              top: topCss,
-              width: widthCss,
-              height: heightCss
+              left: `${leftCss}px`,
+              top: `${topCss}px`,
+              width: `${widthCss}px`,
+              height: `${heightCss}px`
             }}
           >
             {box.isCurrent ? (

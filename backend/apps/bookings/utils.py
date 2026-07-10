@@ -350,7 +350,6 @@ def generate_custom_contract_pdf(contract):
             from pypdf import PdfReader, PdfWriter
             from fpdf import FPDF
             import os
-            from django.core.files.base import ContentFile
             from collections import defaultdict
             
             # Read original PDF

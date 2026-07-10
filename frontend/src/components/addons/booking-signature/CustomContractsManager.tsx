@@ -99,6 +99,7 @@ const PdfPageCanvas = ({ page, pageIndex, onDropSignature, signatureBoxes }: any
       
       {signatureBoxes.map((box: any) => {
         if (box.sig_page !== pageIndex + 1) return null;
+        if (!dimensions.width || !dimensions.pointsWidth) return null;
         
         const leftCss = (box.sig_x / dimensions.pointsWidth) * dimensions.width;
         const topCss = (box.sig_y / dimensions.pointsHeight) * dimensions.height;
@@ -110,10 +111,10 @@ const PdfPageCanvas = ({ page, pageIndex, onDropSignature, signatureBoxes }: any
             key={box.signatoryIndex}
             className="absolute border-2 border-[#C68A1E] bg-[#C68A1E]/20 flex flex-col items-center justify-center p-1 text-[8px] font-black uppercase text-[#C68A1E] rounded cursor-move animate-fadeIn"
             style={{
-              left: leftCss,
-              top: topCss,
-              width: widthCss,
-              height: heightCss
+              left: `${leftCss}px`,
+              top: `${topCss}px`,
+              width: `${widthCss}px`,
+              height: `${heightCss}px`
             }}
           >
             <span>Firma</span>
@@ -846,9 +847,27 @@ export default function CustomContractsManager({
                           <span className="font-bold text-[9px] text-foreground">{sig.name || `Firmante #${idx + 1}`}</span>
                         </div>
                         {sig.sig_page ? (
-                          <span className="text-[7px] bg-green-500/10 text-green-400 border border-green-500/25 px-2 py-0.5 rounded-full font-black font-mono">
-                            Pág. {sig.sig_page}
-                          </span>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[7px] bg-green-500/10 text-green-400 border border-green-500/25 px-2 py-0.5 rounded-full font-black font-mono">
+                              Pág. {sig.sig_page}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSignatories(prev => prev.map((s, i) => {
+                                  if (i === idx) {
+                                    const { sig_page, sig_x, sig_y, sig_w, sig_h, ...rest } = s;
+                                    return rest;
+                                  }
+                                  return s;
+                                }));
+                              }}
+                              className="text-[7px] text-red-400 hover:text-red-500 font-bold px-1.5 py-0.5 bg-red-500/10 border border-red-500/20 rounded cursor-pointer"
+                              title="Retirar firma del PDF"
+                            >
+                              Retirar
+                            </button>
+                          </div>
                         ) : (
                           <span className="text-[7px] bg-red-500/10 text-red-400 border border-red-500/25 px-2 py-0.5 rounded-full font-black font-mono">
                             Sin ubicar
