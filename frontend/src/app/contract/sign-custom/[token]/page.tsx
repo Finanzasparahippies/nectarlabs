@@ -201,6 +201,23 @@ export default function CustomContractSignPage() {
   const [isDrawing, setIsDrawing] = useState(false);
   const [hasDrawn, setHasDrawn] = useState(false);
 
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const preventDefault = (e: TouchEvent) => {
+      e.preventDefault();
+    };
+
+    canvas.addEventListener('touchstart', preventDefault, { passive: false });
+    canvas.addEventListener('touchmove', preventDefault, { passive: false });
+
+    return () => {
+      canvas.removeEventListener('touchstart', preventDefault);
+      canvas.removeEventListener('touchmove', preventDefault);
+    };
+  }, [contract, success]);
+
   // Load contract details from token
   const loadContract = async () => {
     setLoading(true);
@@ -587,6 +604,7 @@ export default function CustomContractSignPage() {
                     onTouchMove={draw}
                     onTouchEnd={stopDrawing}
                     className="w-full h-full block bg-white"
+                    style={{ touchAction: 'none' }}
                   />
                   {!hasDrawn && (
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none text-[9.5px] text-neutral-400 font-bold uppercase tracking-widest select-none">

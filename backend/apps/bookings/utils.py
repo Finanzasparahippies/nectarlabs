@@ -434,6 +434,19 @@ def generate_custom_contract_pdf(contract):
                                 h_mm = (sig.sig_h or 80.0) * pt_to_mm
                                 
                                 overlay_pdf.image(sig_img, x=x_mm, y=y_mm, w=w_mm, h=h_mm)
+                                
+                                # Draw IP Address and Date/Time Stamp below the signature block for legal proof
+                                overlay_pdf.set_font('helvetica', 'I', 4.5)
+                                overlay_pdf.set_text_color(80, 80, 80)
+                                
+                                ip_text = f"IP: {sig.ip_address or 'N/A'}"
+                                overlay_pdf.set_xy(x_mm, y_mm + h_mm + 0.5)
+                                overlay_pdf.cell(w_mm, 1.5, ip_text, align='C')
+                                
+                                date_str = sig.signed_at.strftime("%d/%m/%Y %H:%M UTC") if sig.signed_at else "N/A"
+                                date_text = f"Fecha: {date_str}"
+                                overlay_pdf.set_xy(x_mm, y_mm + h_mm + 2.0)
+                                overlay_pdf.cell(w_mm, 1.5, date_text, align='C')
                         except Exception as draw_err:
                             logger.error(f"Error drawing signature overlay for {sig.name}: {draw_err}", exc_info=True)
                     
