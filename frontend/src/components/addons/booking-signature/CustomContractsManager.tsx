@@ -180,7 +180,7 @@ export default function CustomContractsManager({
       const arrayBuffer = e.target?.result as ArrayBuffer;
       const pdfjsLib = (window as any).pdfjsLib;
       if (!pdfjsLib) {
-        showToast('Cargando motor de lectura PDF. Por favor espera un momento.', 'warning');
+        showToast('Cargando motor de lectura PDF. Por favor espera un momento.', 'info');
         return;
       }
       try {
@@ -309,7 +309,7 @@ export default function CustomContractsManager({
   };
 
   // Handle signatory inputs
-  const handleSignatoryChange = (index: number, field: keyof SignatoryInput, value: string) => {
+  const handleSignatoryChange = (index: number, field: 'name' | 'email' | 'role', value: string) => {
     const updated = [...signatories];
     updated[index][field] = value;
     setSignatories(updated);
@@ -346,7 +346,7 @@ export default function CustomContractsManager({
     if (creationMode === 'pdf') {
       const unplacedSig = signatories.some(s => s.sig_page === undefined || s.sig_x === undefined || s.sig_y === undefined);
       if (unplacedSig) {
-        showToast('Por favor arrastra y ubica las firmas de todos los firmantes en las páginas del PDF.', 'warning');
+        showToast('Por favor arrastra y ubica las firmas de todos los firmantes en las páginas del PDF.', 'error');
         return;
       }
     }
