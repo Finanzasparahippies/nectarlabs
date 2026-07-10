@@ -13,8 +13,12 @@
     <!-- Iconos Boxicons -->
     <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
     
-    <!-- PrismJS para resaltado de código en modo oscuro (Estética Tomorrow Night) -->
+    <!-- PrismJS para resaltado de código (teoría y ejemplos) -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    
+    <!-- CodeMirror 5 – Editor interactivo de ejercicios -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css" rel="stylesheet">
     
     <!-- Archivo de Estilos Personalizado -->
     <link rel="stylesheet" href="styles.css">
@@ -97,11 +101,11 @@
                         </div>
                     </div>
                     
-                    <!-- Pestaña 2: Ejemplos de Código (Prism) -->
+                    <!-- Pestaña 2: Ejemplos de Código (Prism – read-only) -->
                     <div class="tab-content" id="tab-ejemplos">
                         <div class="code-view-wrapper">
                             <div class="code-header">
-                                <span>ejemplos.py</span>
+                                <span id="ejemplos-filename">ejemplos.py</span>
                                 <button class="btn-copy" data-target="code-ejemplos">
                                     <i class="bx bx-copy"></i> Copiar
                                 </button>
@@ -110,23 +114,65 @@
                         </div>
                     </div>
                     
-                    <!-- Pestaña 3: Ejercicios -->
+                    <!-- Pestaña 3: Ejercicios (Editor Interactivo + Sandbox) -->
                     <div class="tab-content" id="tab-ejercicios">
-                        <div class="code-view-wrapper">
+                        <div class="code-view-wrapper editor-wrapper">
                             <div class="code-header">
-                                <span>ejercicios.py</span>
-                                <button class="btn-copy" data-target="code-ejercicios">
-                                    <i class="bx bx-copy"></i> Copiar
-                                </button>
+                                <span id="ejercicios-filename">ejercicios.py</span>
+                                <div class="header-right-actions">
+                                    <!-- Badge de estado de autenticación -->
+                                    <span class="auth-badge" id="auth-badge" style="display:none;">
+                                        <i class="bx bx-cloud-upload"></i>
+                                        <span id="auth-badge-label">Guardando progreso</span>
+                                    </span>
+                                    <button class="btn-copy" id="btn-copy-ejercicios">
+                                        <i class="bx bx-copy"></i> Copiar
+                                    </button>
+                                </div>
                             </div>
-                            <pre><code class="language-python" id="code-ejercicios"># Ejercicios cargando...</code></pre>
+                            <!-- Contenedor del editor CodeMirror -->
+                            <div id="editor-ejercicios"></div>
+                        </div>
+                        
+                        <!-- Barra de acción del ejercicio -->
+                        <div class="ejercicio-actions">
+                            <button class="btn btn-primary btn-evaluar" id="btn-evaluar-ejercicio">
+                                <i class="bx bx-play"></i> Ejecutar y Evaluar
+                            </button>
+                            <span class="ejercicio-hint" id="ejercicio-hint">
+                                <i class="bx bx-shield-check"></i> Sandbox aislado: sin red, 64MB RAM, 10s límite
+                            </span>
+                        </div>
+                        
+                        <!-- Panel de Resultados del Evaluador -->
+                        <div class="resultados-ejercicio" id="resultados-ejercicio" style="display:none;">
+                            <div class="resultado-header">
+                                <div class="score-ring-wrapper">
+                                    <svg class="score-ring" viewBox="0 0 64 64">
+                                        <circle class="ring-bg" cx="32" cy="32" r="26"/>
+                                        <circle class="ring-fill" id="score-ring-fill" cx="32" cy="32" r="26"
+                                            stroke-dasharray="163.36" stroke-dashoffset="163.36"/>
+                                    </svg>
+                                    <span id="score-ejercicio-valor" class="score-ring-text">0%</span>
+                                </div>
+                                <div class="resultado-meta">
+                                    <h4 id="resultado-titulo">Evaluando...</h4>
+                                    <p id="resultado-tiempo" class="result-time"></p>
+                                </div>
+                            </div>
+                            <div class="resultado-feedback" id="resultado-feedback"></div>
+                            <details class="resultado-stdout-wrapper" id="resultado-stdout-wrapper" style="display:none;">
+                                <summary><i class="bx bx-terminal"></i> Salida del sandbox</summary>
+                                <pre id="resultado-stdout" class="resultado-stdout-pre"></pre>
+                            </details>
                         </div>
                     </div>
+
                 </div>
             </div>
         </main>
         
-        <!-- Modal / Panel lateral del Simulador Berribot IA -->
+        <!-- Panel lateral del Simulador Berribot IA -->
         <div class="bot-drawer" id="bot-drawer">
             <div class="drawer-header">
                 <h3><i class="bx bx-bot"></i> Simulador Berribot IA</h3>
@@ -161,7 +207,6 @@
                     Evaluar Respuesta
                 </button>
                 
-                <!-- Resultados del Análisis de IA -->
                 <div class="resultados-ia" id="resultados-ia" style="display: none;">
                     <div class="scoring-circle-wrapper">
                         <div class="scoring-circle">
@@ -172,9 +217,7 @@
                     
                     <div class="feedback-detallado">
                         <h4>Palabras clave detectadas:</h4>
-                        <ul class="keywords-list" id="keywords-list-feedback">
-                            <!-- Inyectado por JS -->
-                        </ul>
+                        <ul class="keywords-list" id="keywords-list-feedback"></ul>
                         
                         <div class="retroalimentacion-caja">
                             <strong>Recomendación técnica:</strong>
@@ -190,13 +233,21 @@
     <!-- Librería Marked para renderizar Markdown a HTML -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
     
-    <!-- Librería PrismJS para coloreado de código -->
+    <!-- PrismJS para coloreado de código (ejemplos y teoría) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-typescript.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-elixir.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-yaml.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-hcl.min.js"></script>
+    
+    <!-- CodeMirror 5 – Editor interactivo de ejercicios -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/yaml/yaml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closebrackets.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.min.js"></script>
     
     <!-- Base de Datos estática offline para fallback universal (CORS-Safe) -->
     <script src="course_data.js"></script>

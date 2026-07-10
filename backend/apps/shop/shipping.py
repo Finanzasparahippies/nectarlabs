@@ -13,65 +13,22 @@ def get_shipping_rates(destination, parcel=None, tenant=None):
     if not tenant:
         return []
 
-    # Validar saldo mínimo de $250.00 MXN para cotizar
-    if tenant.shipping_wallet_balance < 250.00:
-        logger.warning(
-            f"[Logística/Fulfillment] Saldo insuficiente en billetera de envío para Tenant #{tenant.id} "
-            f"para realizar cotización. Saldo actual: ${tenant.shipping_wallet_balance} MXN."
-        )
-        return []
-
-    # 1. Resolver API Key (esquema híbrido)
+    # Fallback Simulado en Local, Testing o si no hay API Key
+    # IMPORTANT: This check must happen BEFORE the wallet balance validation
+    # so that tests always get mock rates regardless of wallet state.
     custom_key = tenant.skydropx_api_key
     nectar_key = os.environ.get("NECTAR_LABS_SKYDROPX_KEY", "")
     api_key = custom_key if custom_key else nectar_key
 
-    # 2. Dirección de origen del tenant (con valores por defecto)
-    origin_address = {
-        "name": tenant.shipping_origin_name or "Néctar Labs Bodega",
-        "phone": tenant.shipping_origin_phone or "6621000000",
-        "street": tenant.shipping_origin_street or "Av. Nectar Central 456",
-        "suburb": tenant.shipping_origin_suburb or "Centro",
-        "city": tenant.shipping_origin_city or "Hermosillo",
-        "state": (tenant.shipping_origin_state or "SO")[:2].upper(),
-        "zip_code": tenant.shipping_origin_zip_code or "83000",
-        "country": "MX"
-    }
-
-    # 3. Dirección de destino
-    dest_state = destination.get("state", "SO")
-    if dest_state:
-        dest_state = dest_state[:2].upper()
-    destination_address = {
-        "name": destination.get("name", "Cliente"),
-        "phone": destination.get("phone") or "6620000000",
-        "street": destination.get("street") or destination.get("street_and_number", "Calle Desconocida"),
-        "suburb": destination.get("suburb") or "Centro",
-        "city": destination.get("city") or "Hermosillo",
-        "state": dest_state,
-        "zip_code": destination.get("zip_code") or destination.get("postal_code", "83000"),
-        "country": "MX"
-    }
-
-    # 4. Datos del paquete (dimensiones por defecto)
-    parcel_data = parcel or {
-        "weight": 1,   # 1 kg
-        "height": 15,  # 15 cm
-        "width": 25,   # 25 cm
-        "length": 35   # 35 cm
-    }
-
-    # Fallback Simulado en Local, Testing o si no hay API Key
     if not api_key or api_key == "mock_key" or getattr(settings, "TESTING", False):
         logger.warning("[Logística/Mock] Cotización simulada exitosamente.")
-        # Simular dos tarifas
         markup_percentage = float(tenant.shipping_markup_percentage)
         markup_factor = 1 + (markup_percentage / 100.0)
-        
+
         base_cost_1 = 120.00
         base_cost_2 = 180.00
-        
-        rates = [
+
+        return [
             {
                 "id": "rate_mock_1",
                 "provider": "FedEx",
@@ -89,9 +46,51 @@ def get_shipping_rates(destination, parcel=None, tenant=None):
                 "total_amount": round(base_cost_2 * markup_factor, 2)
             }
         ]
-        return rates
 
-    # 5. Petición real a Skydropx
+    # Validar saldo mínimo de $250.00 MXN para cotizar (solo en producción con API Key real)
+    if tenant.shipping_wallet_balance < 250.00:
+        logger.warning(
+            f"[Logística/Fulfillment] Saldo insuficiente en billetera de envío para Tenant #{tenant.id} "
+            f"para realizar cotización. Saldo actual: ${tenant.shipping_wallet_balance} MXN."
+        )
+        return []
+
+    # Dirección de origen del tenant (con valores por defecto)
+    origin_address = {
+        "name": tenant.shipping_origin_name or "Néctar Labs Bodega",
+        "phone": tenant.shipping_origin_phone or "6621000000",
+        "street": tenant.shipping_origin_street or "Av. Nectar Central 456",
+        "suburb": tenant.shipping_origin_suburb or "Centro",
+        "city": tenant.shipping_origin_city or "Hermosillo",
+        "state": (tenant.shipping_origin_state or "SO")[:2].upper(),
+        "zip_code": tenant.shipping_origin_zip_code or "83000",
+        "country": "MX"
+    }
+
+    # Dirección de destino
+    dest_state = destination.get("state", "SO")
+    if dest_state:
+        dest_state = dest_state[:2].upper()
+    destination_address = {
+        "name": destination.get("name", "Cliente"),
+        "phone": destination.get("phone") or "6620000000",
+        "street": destination.get("street") or destination.get("street_and_number", "Calle Desconocida"),
+        "suburb": destination.get("suburb") or "Centro",
+        "city": destination.get("city") or "Hermosillo",
+        "state": dest_state,
+        "zip_code": destination.get("zip_code") or destination.get("postal_code", "83000"),
+        "country": "MX"
+    }
+
+    # Datos del paquete (dimensiones por defecto)
+    parcel_data = parcel or {
+        "weight": 1,   # 1 kg
+        "height": 15,  # 15 cm
+        "width": 25,   # 25 cm
+        "length": 35   # 35 cm
+    }
+
+    # Petición real a Skydropx
     try:
         headers = {
             "Authorization": f"Token token={api_key}",

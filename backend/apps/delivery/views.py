@@ -476,45 +476,10 @@ class DeliveryOrderViewSet(viewsets.ModelViewSet):
                     break
 
         if not assigned_driver:
-            from django.conf import settings
-            if getattr(settings, 'DEBUG', False) or getattr(settings, 'TESTING', False):
-                # Auto-provision the backup driver
-                from django.contrib.auth import get_user_model
-                User = get_user_model()
-                backup_email = "backup_driver@nectarlabs.dev"
-                user, created = User.objects.get_or_create(
-                    email=backup_email,
-                    defaults={
-                        'username': 'backup_driver',
-                        'first_name': 'Repartidor',
-                        'last_name': 'Respaldo',
-                        'role': 'DRIVER',
-                        'is_active': True,
-                    }
-                )
-                if created:
-                    user.set_password('nectarpass123')
-                    user.save()
-                
-                assigned_driver, dp_created = DriverProfile.objects.get_or_create(
-                    user=user,
-                    defaults={
-                        'name': 'Repartidor de Respaldo (Néctar Failover)',
-                        'phone': '5555555555',
-                        'email': backup_email,
-                        'is_available': True,
-                        'is_verified': True,
-                    }
-                )
-                if not dp_created:
-                    assigned_driver.is_available = True
-                    assigned_driver.is_verified = True
-                    assigned_driver.save(update_fields=['is_available', 'is_verified'])
-            else:
-                return Response(
-                    {"detail": "No hay repartidores disponibles en el área en este momento. Intenta de nuevo pronto."},
-                    status=status.HTTP_503_SERVICE_UNAVAILABLE
-                )
+            return Response(
+                {"detail": "No hay repartidores disponibles en el área en este momento. Intenta de nuevo pronto."},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE
+            )
 
         # ── Assign ──
         order.driver = assigned_driver

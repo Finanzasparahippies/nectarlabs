@@ -106,6 +106,7 @@ urlpatterns = [
     path('api/sponsorship/', include('apps.sponsorship.urls')), # Membresías y Sponsors (NSCAP)
     path('api/performance/', include('apps.performance.urls')), # Middleware de Monitoreo de Rendimiento
     path('api/newsletter/', include('apps.newsletter.urls')),   # Campañas de correo masivo
+    path('api/courses/', include('apps.courses.urls')),         # Cursos Interactivos (ejercicios + sandbox)
     
     # Registro de Usuarios
     path('api/register/', RegisterView.as_view(), name='register'),
