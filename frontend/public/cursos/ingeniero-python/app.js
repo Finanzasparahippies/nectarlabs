@@ -284,6 +284,7 @@ async function cargarModulo(id) {
     // ── 1. Cargar Teoría ──────────────────────────────────────────────
     document.getElementById("teoria-container").innerHTML = "<p>Cargando teoría...</p>";
     try {
+        let mdText = await _fetchWithFallback(pathTeoria, COURSE_DATA[modulo.id]?.teoria);
         const container = document.getElementById("teoria-container");
         container.innerHTML = marked.parse(mdText);
         Prism.highlightAllUnder(container);
