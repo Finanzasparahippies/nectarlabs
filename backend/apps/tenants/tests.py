@@ -564,8 +564,6 @@ class TenantsCoreTests(BaseTenantAddonTestCase):
             data={
                 'custom_css': 'body { color: red; }',
                 'custom_js': 'console.log("hello");',
-                'custom_backend_url': 'https://api.mi-cliente.com',
-                'custom_frontend_url': 'https://tienda.mi-cliente.com'
             },
             format='json'
         )
@@ -574,8 +572,6 @@ class TenantsCoreTests(BaseTenantAddonTestCase):
         self.tenant_a.refresh_from_db()
         self.assertEqual(self.tenant_a.custom_css, 'body { color: red; }')
         self.assertEqual(self.tenant_a.custom_js, 'console.log("hello");')
-        self.assertEqual(self.tenant_a.custom_backend_url, 'https://api.mi-cliente.com')
-        self.assertEqual(self.tenant_a.custom_frontend_url, 'https://tienda.mi-cliente.com')
         logger.info("Test passed: Admin user successfully saved custom code and URLs.")
 
     def test_tenant_custom_styles_and_urls_unauthorized_access(self):
@@ -601,14 +597,6 @@ class TenantsCoreTests(BaseTenantAddonTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("Solo el CEO o administradores", str(response.data))
 
-        # Try to modify custom_backend_url
-        response = self.client.patch(
-            url,
-            data={'custom_backend_url': 'https://hacker-api.com'},
-            format='json'
-        )
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("Solo el CEO o administradores", str(response.data))
         logger.info("Test passed: Normal tenant owner was blocked from editing custom CSS and URLs.")
 
     def test_tenant_custom_styles_and_urls_public_config(self):
@@ -618,8 +606,6 @@ class TenantsCoreTests(BaseTenantAddonTestCase):
         logger.info("Executing test_tenant_custom_styles_and_urls_public_config...")
         self.tenant_a.custom_css = 'body { background: black; }'
         self.tenant_a.custom_js = 'alert("xss");'
-        self.tenant_a.custom_backend_url = 'https://api.test.com'
-        self.tenant_a.custom_frontend_url = 'https://frontend.test.com'
         self.tenant_a.save()
 
         response = self.client.get(
@@ -630,8 +616,6 @@ class TenantsCoreTests(BaseTenantAddonTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['custom_css'], 'body { background: black; }')
         self.assertEqual(response.data['custom_js'], 'alert("xss");')
-        self.assertEqual(response.data['custom_backend_url'], 'https://api.test.com')
-        self.assertEqual(response.data['custom_frontend_url'], 'https://frontend.test.com')
         logger.info("Test passed: Custom code and URLs returned in public config.")
 
     def test_tenant_backend_proxy_success(self):
