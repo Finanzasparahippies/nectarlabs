@@ -151,6 +151,9 @@ class Tenant(models.Model):
     stripe_publishable_key = models.CharField(max_length=255, blank=True, null=True, help_text="Clave pública de Stripe del Tenant")
     stripe_secret_key = models.CharField(max_length=255, blank=True, null=True, help_text="Clave secreta de Stripe del Tenant")
 
+    custom_css = models.TextField(blank=True, null=True, help_text="Código CSS personalizado para el portal público del Tenant")
+    custom_js = models.TextField(blank=True, null=True, help_text="Código JS personalizado para el portal público del Tenant")
+
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

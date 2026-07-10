@@ -47,6 +47,8 @@ interface TenantConfig {
   pollen_blur?: number;
   active_addons?: string[];
   owner?: number;
+  custom_css?: string;
+  custom_js?: string;
 }
 
 
@@ -186,7 +188,7 @@ export default function TenantPortalPage() {
   useEffect(() => {
     if (tenantConfig?.active_addons) {
       const otherAddons = tenantConfig.active_addons.filter(slug => slug !== 'bot-chat');
-      
+
       // Auto-healer: Primero revisar si viene especificado por query param de la URL
       if (typeof window !== 'undefined') {
         const params = new URLSearchParams(window.location.search);
@@ -333,6 +335,24 @@ export default function TenantPortalPage() {
       loadPortalData();
     }
   }, [isAuthenticated, tenantConfig]);
+
+  // Inject Custom JS safely in the client if provided
+  useEffect(() => {
+    if (tenantConfig?.custom_js) {
+      try {
+        const script = document.createElement('script');
+        script.id = 'tenant-custom-js';
+        script.innerHTML = tenantConfig.custom_js;
+        document.body.appendChild(script);
+        return () => {
+          const oldScript = document.getElementById('tenant-custom-js');
+          if (oldScript) oldScript.remove();
+        };
+      } catch (err) {
+        console.error('Error executing custom tenant JS:', err);
+      }
+    }
+  }, [tenantConfig]);
 
   // 4. Polling for Live Chat & Ticket Updates
   useEffect(() => {
@@ -572,6 +592,20 @@ export default function TenantPortalPage() {
   const pollenColor = tenantConfig.pollen_color || primaryColor;
   const pollenIcon = tenantConfig.pollen_icon || '•';
 
+  // Masked Reverse Proxy: Servir frontend externo preservando la URL en el cliente
+  if (tenantConfig.custom_frontend_url) {
+    return (
+      <div className="w-screen h-screen overflow-hidden bg-[#020403]">
+        <iframe
+          src={tenantConfig.custom_frontend_url}
+          className="w-full h-full border-none"
+          title={`${tenantConfig.name} Portal`}
+          sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
+        />
+      </div>
+    );
+  }
+
   return (
     <div id="tenant-portal-root" className="min-h-screen flex flex-col font-sans relative overflow-hidden">
       {/* 🐝 Néctar Pollen Particles Effect */}
@@ -700,6 +734,7 @@ export default function TenantPortalPage() {
           filter: blur(${tenantConfig.pollen_blur !== undefined ? tenantConfig.pollen_blur : 0.2}px);
           text-shadow: 0 0 8px ${pollenColor};
         }
+        ${tenantConfig.custom_css || ''}
       `}</style>
 
       {/* 1. Header Navigation */}
@@ -962,7 +997,7 @@ export default function TenantPortalPage() {
                   {activeAddonTab === 'campaigner' && <SubscribeForm tenantId={tenantConfig.id} subdomain={subdomain} primaryColor={primaryColor} />}
                   {activeAddonTab === 'facturacion-cfdi' && <SATInvoicingForm tenantId={tenantConfig.id} subdomain={subdomain} primaryColor={primaryColor} ownerId={tenantConfig.owner} showToast={showToast} />}
                   {/* Legacy fallback */}
-                  {!['booking-signature','shop-delivery','sponsorship','campaigner','facturacion-cfdi'].includes(activeAddonTab || '') && null}
+                  {!['booking-signature', 'shop-delivery', 'sponsorship', 'campaigner', 'facturacion-cfdi'].includes(activeAddonTab || '') && null}
                 </div>
               </div>
             ) : (

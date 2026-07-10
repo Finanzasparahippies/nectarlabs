@@ -547,6 +547,140 @@ class TenantsCoreTests(BaseTenantAddonTestCase):
         self.assertIsNotNone(server_dt_pub)
         logger.info("Test passed: Tenant serializers successfully include valid server_time.")
 
+    def test_tenant_custom_styles_and_urls_admin_access(self):
+        """
+        Verify that an administrator user (staff or role=ADMIN) can configure custom CSS, JS,
+        and custom backend/frontend URLs.
+        """
+        logger.info("Executing test_tenant_custom_styles_and_urls_admin_access...")
+        # Authenticate as admin user
+        self.owner_a.is_staff = True
+        self.owner_a.save()
+        self.client.force_authenticate(user=self.owner_a)
+
+        url = reverse('tenant-detail', kwargs={'pk': str(self.tenant_a.id)})
+        response = self.client.patch(
+            url,
+            data={
+                'custom_css': 'body { color: red; }',
+                'custom_js': 'console.log("hello");',
+                'custom_backend_url': 'https://api.mi-cliente.com',
+                'custom_frontend_url': 'https://tienda.mi-cliente.com'
+            },
+            format='json'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.tenant_a.refresh_from_db()
+        self.assertEqual(self.tenant_a.custom_css, 'body { color: red; }')
+        self.assertEqual(self.tenant_a.custom_js, 'console.log("hello");')
+        self.assertEqual(self.tenant_a.custom_backend_url, 'https://api.mi-cliente.com')
+        self.assertEqual(self.tenant_a.custom_frontend_url, 'https://tienda.mi-cliente.com')
+        logger.info("Test passed: Admin user successfully saved custom code and URLs.")
+
+    def test_tenant_custom_styles_and_urls_unauthorized_access(self):
+        """
+        Verify that a normal tenant owner (non-admin) cannot modify custom CSS, JS,
+        or custom URLs, raising a ValidationError (400).
+        """
+        logger.info("Executing test_tenant_custom_styles_and_urls_unauthorized_access...")
+        # Ensure owner_a is not staff/admin
+        self.owner_a.is_staff = False
+        self.owner_a.role = 'USER'
+        self.owner_a.save()
+        self.client.force_authenticate(user=self.owner_a)
+
+        url = reverse('tenant-detail', kwargs={'pk': str(self.tenant_a.id)})
+        
+        # Try to modify custom_css
+        response = self.client.patch(
+            url,
+            data={'custom_css': 'body { color: blue; }'},
+            format='json'
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("Solo el CEO o administradores", str(response.data))
+
+        # Try to modify custom_backend_url
+        response = self.client.patch(
+            url,
+            data={'custom_backend_url': 'https://hacker-api.com'},
+            format='json'
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("Solo el CEO o administradores", str(response.data))
+        logger.info("Test passed: Normal tenant owner was blocked from editing custom CSS and URLs.")
+
+    def test_tenant_custom_styles_and_urls_public_config(self):
+        """
+        Verify that custom CSS, JS, and custom URLs are correctly returned via the public config endpoint.
+        """
+        logger.info("Executing test_tenant_custom_styles_and_urls_public_config...")
+        self.tenant_a.custom_css = 'body { background: black; }'
+        self.tenant_a.custom_js = 'alert("xss");'
+        self.tenant_a.custom_backend_url = 'https://api.test.com'
+        self.tenant_a.custom_frontend_url = 'https://frontend.test.com'
+        self.tenant_a.save()
+
+        response = self.client.get(
+            reverse('tenant_public_config'),
+            {'tenant_id': str(self.tenant_a.id)}
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['custom_css'], 'body { background: black; }')
+        self.assertEqual(response.data['custom_js'], 'alert("xss");')
+        self.assertEqual(response.data['custom_backend_url'], 'https://api.test.com')
+        self.assertEqual(response.data['custom_frontend_url'], 'https://frontend.test.com')
+        logger.info("Test passed: Custom code and URLs returned in public config.")
+
+    def test_tenant_backend_proxy_success(self):
+        """
+        Verify that the dynamic backend proxy correctly forwards HTTP requests
+        using urllib and returns the appropriate headers and status code.
+        """
+        logger.info("Executing test_tenant_backend_proxy_success...")
+        self.tenant_a.custom_backend_url = 'https://api.external-tenant.com'
+        self.tenant_a.save()
+
+        from unittest.mock import patch, MagicMock
+        with patch('urllib.request.urlopen') as mock_urlopen:
+            mock_response = MagicMock()
+            mock_response.read.return_value = b'{"status": "proxied_ok"}'
+            mock_response.status = 200
+            mock_response.headers = {'Content-Type': 'application/json', 'X-Custom-Response-Header': 'Verified'}
+            mock_urlopen.return_value.__enter__.return_value = mock_response
+
+            self.client.force_authenticate(user=self.owner_a)
+            url = reverse('tenant-backend-proxy', kwargs={'pk': str(self.tenant_a.id), 'sub_path': 'v1/data'})
+            response = self.client.get(url + "?param=abc")
+
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertEqual(response.content, b'{"status": "proxied_ok"}')
+            self.assertEqual(response.headers.get('X-Custom-Response-Header'), 'Verified')
+            
+            args, kwargs = mock_urlopen.call_args
+            req_obj = args[0]
+            self.assertEqual(req_obj.full_url, 'https://api.external-tenant.com/v1/data?param=abc')
+        logger.info("Test passed: Backend proxy successfully validated using mocked urllib requests.")
+
+    def test_tenant_backend_proxy_missing_url(self):
+        """
+        Verify that attempting to call the proxy on a tenant without a custom backend url
+        results in a 400 Bad Request error.
+        """
+        logger.info("Executing test_tenant_backend_proxy_missing_url...")
+        self.tenant_a.custom_backend_url = None
+        self.tenant_a.save()
+
+        self.client.force_authenticate(user=self.owner_a)
+        url = reverse('tenant-backend-proxy', kwargs={'pk': str(self.tenant_a.id), 'sub_path': 'v1/data'})
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("no tiene un backend personalizado", str(response.data))
+        logger.info("Test passed: Proxy attempt without config correctly returned 400.")
+
 
 class TenantActivationTests(APITestCase):
     def setUp(self):

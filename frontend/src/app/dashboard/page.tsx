@@ -3063,6 +3063,16 @@ function DashboardPageOriginal() {
               selector: '#tour-client-support',
               title: 'Soporte Técnico Especializado',
               content: 'Levanta reportes de errores o solicita ajustes abriendo un ticket directamente a nuestro equipo.'
+            },
+            {
+              selector: '#tour-sidebar-colmenas',
+              title: 'Subdominios Activos (Colmenas)',
+              content: 'Monitorea las instancias activas y configúralas con tu marca en la sección multi-tenant.'
+            },
+            {
+              selector: '#tour-sidebar-profile',
+              title: 'Ajustes del Perfil',
+              content: 'Actualiza tu información personal, correo electrónico y credenciales de seguridad en cualquier momento.'
             }
           ]}
         />
@@ -3072,6 +3082,11 @@ function DashboardPageOriginal() {
         <InteractiveTutorial
           tutorialKey="client_hireplan_tutorial"
           steps={[
+            {
+              selector: '#tour-sidebar-hire-plan',
+              title: 'Adquisición de Capacidad',
+              content: 'Desde aquí puedes contratar o escalar el número de horas asignadas de nuestros ingenieros para acelerar tu desarrollo.'
+            },
             {
               selector: '#tour-client-plans',
               title: 'Planes de Inversión Tecnológica',
@@ -3089,6 +3104,21 @@ function DashboardPageOriginal() {
               selector: '#tour-sidebar-dashboard',
               title: 'Consola del CEO',
               content: 'Accede a la supervisión general del ecosistema multi-tenant de Néctar Labs. Control total sobre clientes y plataformas.'
+            },
+            {
+              selector: '#tour-sidebar-colmenas',
+              title: 'Administración de Subdominios',
+              content: 'Gestione las instancias activas de los clientes y configure variables globales de rendimiento y facturación.'
+            },
+            {
+              selector: '#tour-sidebar-support-settings',
+              title: 'Configuración del Help Desk',
+              content: 'Administra las prioridades de los tickets y define las reglas automáticas del bot de soporte.'
+            },
+            {
+              selector: '#tour-sidebar-tenant-settings',
+              title: 'Personalización Avanzada de Branding',
+              content: 'Configura colores primarios, logotipos y estilos personalizados para el portal corporativo.'
             }
           ]}
         />
@@ -3102,6 +3132,16 @@ function DashboardPageOriginal() {
               selector: '#tour-sidebar-business',
               title: 'Centro Financiero y de Infraestructura',
               content: 'Monitorea métricas clave de facturación recurrente, salud de la infraestructura y activación de celdas modulares.'
+            },
+            {
+              selector: '#tour-sidebar-financial',
+              title: 'Métricas de Facturación',
+              content: 'Analiza el volumen de cobros procesados a través de las pasarelas de pago del sistema.'
+            },
+            {
+              selector: '#tour-sidebar-payment',
+              title: 'Bitácora de Stripe',
+              content: 'Consulta el estado detallado de pagos, reembolsos y las transacciones mensuales en producción.'
             }
           ]}
         />
@@ -3115,6 +3155,16 @@ function DashboardPageOriginal() {
               selector: '#tour-sidebar-billing-global',
               title: 'Gestión Global de Facturación',
               content: 'Controla el catálogo de conceptos timbrados, retenciones y el registro de clientes del SAT en un solo lugar.'
+            },
+            {
+              selector: '#tour-sidebar-billing',
+              title: 'Facturación CFDI 4.0',
+              content: 'Emite facturas y complementos de pago para los clientes en cumplimiento con la normativa fiscal vigente.'
+            },
+            {
+              selector: '#tour-sidebar-billing-guide',
+              title: 'Guía de Cumplimiento Fiscal',
+              content: 'Accede al manual interactivo de retenciones e impuestos aplicables del SAT.'
             }
           ]}
         />
@@ -3128,6 +3178,11 @@ function DashboardPageOriginal() {
               selector: '#tour-sidebar-marketing',
               title: 'Consola de Campañas y Correos',
               content: 'Diseña y envía campañas masivas automatizadas mediante SMTP dedicado o Amazon SES a tus clientes.'
+            },
+            {
+              selector: '#tour-sidebar-custom-contracts',
+              title: 'Monitoreo de Campañas',
+              content: 'Consulta la tasa de apertura, clics y cancelaciones de suscripción de cada campaña enviada.'
             }
           ]}
         />
@@ -3141,6 +3196,16 @@ function DashboardPageOriginal() {
               selector: '#tour-sidebar-dashboard',
               title: 'Workspace de Ingeniería',
               content: 'Aquí puedes firmar digitalmente los acuerdos comerciales y contratos que el CEO asigne para su validación.'
+            },
+            {
+              selector: '#tour-sidebar-performance',
+              title: 'APM y Logs de Rendimiento',
+              content: 'Supervisa el consumo de CPU, memoria RAM y velocidad de respuesta de las peticiones del portal.'
+            },
+            {
+              selector: '#tour-sidebar-recoleccion',
+              title: 'Módulo de Logística y Reparto',
+              content: 'Administra y haz seguimiento al despacho y entregas de paquetes activos de los clientes.'
             }
           ]}
         />
@@ -3154,6 +3219,16 @@ function DashboardPageOriginal() {
               selector: '#tour-sidebar-dashboard',
               title: 'Centro de Diseño Creativo',
               content: 'Supervisa las horas restantes del plan de diseño del mes y los activos visuales entregados.'
+            },
+            {
+              selector: '#tour-sidebar-projects',
+              title: 'Proyectos de Diseño',
+              content: 'Visualiza la lista de proyectos y mockups visuales pendientes por entregar y validar.'
+            },
+            {
+              selector: '#tour-sidebar-addons',
+              title: 'Catálogo de Estilos y Templates',
+              content: 'Configura y actualiza plantillas de branding, paletas de colores y layouts del ecosistema.'
             }
           ]}
         />

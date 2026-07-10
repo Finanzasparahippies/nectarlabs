@@ -133,6 +133,89 @@ class TenantViewSet(viewsets.ModelViewSet):
                 'message': f'Error durante la comprobación: {str(e)}'
             })
 
+    @action(detail=True, methods=['get', 'post', 'put', 'patch', 'delete'], url_path='proxy/(?P<sub_path>.*)')
+    def backend_proxy(self, request, pk=None, sub_path=None):
+        """
+        Reverse Proxy Action:
+        Reenvía de manera interna y transparente las peticiones hacia el custom_backend_url del Tenant
+        sin que el cliente final modifique su endpoint en el navegador.
+        """
+        tenant = self.get_object()
+        if not tenant.custom_backend_url:
+            return Response(
+                {"error": "Este Tenant no tiene un backend personalizado configurado."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # 1. Resolver URL de destino
+        target_base = tenant.custom_backend_url.rstrip('/')
+        target_url = f"{target_base}/{sub_path}" if sub_path else target_base
+        if request.META.get('QUERY_STRING'):
+            target_url = f"{target_url}?{request.META['QUERY_STRING']}"
+
+        # 2. Filtrar y copiar cabeceras HTTP de la petición original
+        headers = {}
+        for key, value in request.META.items():
+            if key.startswith('HTTP_'):
+                header_name = key[5:].replace('_', '-').title()
+                headers[header_name] = value
+            elif key in ('CONTENT_TYPE', 'CONTENT_LENGTH'):
+                header_name = key.replace('_', '-').title()
+                headers[header_name] = value
+
+        # Asegurar host correcto del destino
+        from urllib.parse import urlparse
+        parsed_target = urlparse(target_url)
+        headers['Host'] = parsed_target.netloc
+
+        # 3. Preparar los datos del Body
+        data = request.body if request.body else None
+
+        # 4. Realizar la petición HTTP utilizando urllib
+        import urllib.request
+        import urllib.error
+        from django.http import HttpResponse
+
+        req = urllib.request.Request(
+            target_url,
+            data=data,
+            headers=headers,
+            method=request.method
+        )
+
+        try:
+            with urllib.request.urlopen(req, timeout=15) as res:
+                response_content = res.read()
+                django_response = HttpResponse(
+                    response_content,
+                    status=res.status,
+                    content_type=res.headers.get('Content-Type')
+                )
+                for header_key, header_val in res.headers.items():
+                    if header_key.lower() not in ('transfer-encoding', 'content-encoding', 'connection'):
+                        django_response[header_key] = header_val
+                return django_response
+        except urllib.error.HTTPError as e:
+            err_content = e.read()
+            django_response = HttpResponse(
+                err_content,
+                status=e.code,
+                content_type=e.headers.get('Content-Type')
+            )
+            for header_key, header_val in e.headers.items():
+                if header_key.lower() not in ('transfer-encoding', 'content-encoding', 'connection'):
+                    django_response[header_key] = header_val
+            return django_response
+        except urllib.error.URLError as e:
+            return Response(
+                {"error": f"No se pudo conectar con el backend personalizado del Tenant: {str(e.reason)}"},
+                status=status.HTTP_502_BAD_GATEWAY
+            )
+        except Exception as e:
+            return Response(
+                {"error": f"Error interno en el proxy de Nectar Labs: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 @api_view(['GET'])

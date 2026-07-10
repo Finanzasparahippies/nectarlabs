@@ -50,7 +50,10 @@ class TenantSerializer(serializers.ModelSerializer):
             'is_ambassador', 'free_stamps_left', 'stamps_used_this_month', 'stamps_last_reset',
             
             # Newsletter
-            'subscriber_count'
+            'subscriber_count',
+
+            # Custom CSS/JS
+            'custom_css', 'custom_js'
         ]
         read_only_fields = [
             'id', 'owner', 'api_key', 'created_at', 'updated_at', 
@@ -176,6 +179,22 @@ class TenantSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError("Solo el CEO o administradores de Nectar Labs pueden configurar servidores SMTP personalizados.")
         return value
 
+    def validate_custom_css(self, value):
+        user = self.context.get('request').user if self.context.get('request') else None
+        if user and not (user.is_staff or user.role == 'ADMIN'):
+            current_val = getattr(self.instance, 'custom_css', None) if self.instance else None
+            if current_val != value:
+                raise serializers.ValidationError("Solo el CEO o administradores de Nectar Labs pueden agregar código CSS personalizado.")
+        return value
+
+    def validate_custom_js(self, value):
+        user = self.context.get('request').user if self.context.get('request') else None
+        if user and not (user.is_staff or user.role == 'ADMIN'):
+            current_val = getattr(self.instance, 'custom_js', None) if self.instance else None
+            if current_val != value:
+                raise serializers.ValidationError("Solo el CEO o administradores de Nectar Labs pueden agregar código JS personalizado.")
+        return value
+
     def to_representation(self, instance):
         instance.reset_stamps_if_new_month()
         ret = super().to_representation(instance)
@@ -207,7 +226,9 @@ class TenantPublicSerializer(serializers.ModelSerializer):
             'theme_color', 'accent_color', 'bg_color', 'card_bg_color', 'text_color', 'border_color',
             'theme_color_light', 'accent_color_light', 'bg_color_light', 'card_bg_color_light', 'text_color_light', 'border_color_light',
             # Pollen/Nectar Falling settings
-            'pollen_active', 'pollen_icon', 'pollen_color', 'pollen_count', 'pollen_blur'
+            'pollen_active', 'pollen_icon', 'pollen_color', 'pollen_count', 'pollen_blur',
+            # Custom CSS/JS
+            'custom_css', 'custom_js'
         ]
 
     def get_logo_url(self, obj):
