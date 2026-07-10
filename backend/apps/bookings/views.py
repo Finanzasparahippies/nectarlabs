@@ -365,10 +365,12 @@ class CustomContractViewSet(viewsets.ModelViewSet):
             return Response({'message': 'Contrato completamente firmado. Copia certificada reenviada a todos los firmantes.'})
         
         pending_signatories = contract.signatories.filter(signature_base64__isnull=True)
-        next_sig = pending_signatories.order_by('id').first()
-        if not next_sig:
+        if not pending_signatories.exists():
             return Response({'error': 'No hay firmantes pendientes para este contrato.'}, status=status.HTTP_400_BAD_REQUEST)
         
-        send_custom_contract_emails(contract, signatory_to_notify=next_sig, request=request)
-        return Response({'message': f'Correo de invitación reenviado con éxito a {next_sig.email}.'})
+        for sig in pending_signatories:
+            send_custom_contract_emails(contract, signatory_to_notify=sig, request=request)
+            
+        emails_list = ", ".join([sig.email for sig in pending_signatories])
+        return Response({'message': f'Correos de invitación reenviados con éxito a: {emails_list}.'})
 
