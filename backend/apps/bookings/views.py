@@ -277,9 +277,9 @@ class CustomContractViewSet(viewsets.ModelViewSet):
             # Generar primer PDF (sin firmas) desde texto
             generate_custom_contract_pdf(contract)
         
-        first_sig = contract.signatories.all().order_by('id').first()
-        if first_sig:
-            send_custom_contract_emails(contract, signatory_to_notify=first_sig)
+        # Enviar correos de invitación a TODOS los firmantes al mismo tiempo (firma en paralelo)
+        for sig in contract.signatories.all():
+            send_custom_contract_emails(contract, signatory_to_notify=sig)
 
     @action(detail=False, methods=['get'], url_path='by_token')
     def by_token(self, request):
@@ -352,11 +352,8 @@ class CustomContractViewSet(viewsets.ModelViewSet):
             if generate_custom_contract_pdf(contract):
                 send_custom_contract_emails(contract)
         else:
-            # Generar PDF parcial y notificar al siguiente firmante pendiente
+            # Generar PDF parcial con las firmas recopiladas hasta ahora
             generate_custom_contract_pdf(contract)
-            next_sig = pending_signatories.order_by('id').first()
-            if next_sig:
-                send_custom_contract_emails(contract, signatory_to_notify=next_sig)
                 
         return Response({'message': 'Contrato firmado con éxito. Copia guardada.'})
 

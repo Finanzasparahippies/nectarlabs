@@ -126,6 +126,93 @@ const PdfPageCanvas = ({ page, pageIndex, onDropSignature, signatureBoxes }: any
   );
 };
 
+// PDF.js Page Canvas Component for Preview
+const PdfPreviewPageCanvas = ({ page, pageIndex, signatories }: any) => {
+  const canvasRef = React.useRef<HTMLCanvasElement | null>(null);
+  const [dimensions, setDimensions] = useState({ width: 0, height: 0, pointsWidth: 0, pointsHeight: 0 });
+
+  React.useEffect(() => {
+    const renderPage = async () => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const context = canvas.getContext('2d');
+      if (!context) return;
+
+      const viewport = page.getViewport({ scale: 1.0 });
+      const pointsWidth = viewport.width;
+      const pointsHeight = viewport.height;
+
+      const displayWidth = Math.min(500, window.innerWidth - 80);
+      const scale = displayWidth / pointsWidth;
+      const scaledViewport = page.getViewport({ scale });
+
+      canvas.width = scaledViewport.width;
+      canvas.height = scaledViewport.height;
+      setDimensions({
+        width: scaledViewport.width,
+        height: scaledViewport.height,
+        pointsWidth,
+        pointsHeight
+      });
+
+      const renderContext = {
+        canvasContext: context,
+        viewport: scaledViewport
+      };
+      await page.render(renderContext).promise;
+    };
+    renderPage();
+  }, [page]);
+
+  const boxes = (signatories || []).filter((sig: any) => sig.sig_page === pageIndex + 1);
+
+  return (
+    <div
+      className="relative mx-auto my-6 border border-white/5 shadow-xl bg-[#0e1217] rounded-2xl overflow-hidden select-none"
+      style={{ width: dimensions.width, height: dimensions.height }}
+    >
+      <canvas ref={canvasRef} className="block" />
+      
+      {boxes.map((box: any, bIdx: number) => {
+        if (!dimensions.width || !dimensions.pointsWidth) return null;
+        const leftCss = (box.sig_x / dimensions.pointsWidth) * dimensions.width;
+        const topCss = (box.sig_y / dimensions.pointsHeight) * dimensions.height;
+        const widthCss = (box.sig_w / dimensions.pointsWidth) * dimensions.width;
+        const heightCss = (box.sig_h / dimensions.pointsHeight) * dimensions.height;
+
+        return (
+          <div
+            key={bIdx}
+            className={`absolute border-2 flex flex-col items-center justify-center p-1 text-[8px] font-black uppercase rounded ${
+              box.signature_base64
+                ? 'border-emerald-500 bg-emerald-500/25 text-emerald-400'
+                : 'border-white/15 bg-white/5 text-white/40'
+            }`}
+            style={{
+              left: `${leftCss}px`,
+              top: `${topCss}px`,
+              width: `${widthCss}px`,
+              height: `${heightCss}px`
+            }}
+          >
+            {box.signature_base64 ? (
+              <>
+                <img src={box.signature_base64} className="h-[25px] w-auto object-contain pointer-events-none" alt="Firma" />
+                <span className="truncate max-w-full font-mono mt-0.5 text-[7px]">{box.name}</span>
+              </>
+            ) : (
+              <>
+                <span>⏰ Pendiente</span>
+                <span className="truncate max-w-full font-mono mt-0.5 text-[7px]">{box.name}</span>
+              </>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
 export default function CustomContractsManager({
   tenantId,
   subdomain,
@@ -156,6 +243,7 @@ export default function CustomContractsManager({
   const [creationMode, setCreationMode] = useState<'editor' | 'pdf'>('editor');
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [pdfPages, setPdfPages] = useState<any[]>([]);
+  const [previewContract, setPreviewContract] = useState<any | null>(null);
 
   // Dynamically load PDF.js CDN
   useEffect(() => {
@@ -548,7 +636,16 @@ export default function CustomContractsManager({
                 <tbody className="divide-y divide-card-border/50">
                   {contracts.map((contract) => (
                     <tr key={contract.id} className="text-[10px] hover:bg-foreground/[0.02] transition-colors">
-                      <td className="py-4 pl-2 font-bold text-foreground max-w-[200px] truncate">{contract.title}</td>
+                      <td className="py-4 pl-2 font-bold max-w-[200px] truncate">
+                        <button
+                          type="button"
+                          onClick={() => setPreviewContract(contract)}
+                          className="hover:underline cursor-pointer text-left text-foreground hover:text-[#C68A1E] transition-colors"
+                          title="Ver Vista Previa del Contrato"
+                        >
+                          {contract.title}
+                        </button>
+                      </td>
                       <td className="py-4">
                         <div className="flex flex-wrap gap-1.5 max-w-[250px]">
                           {contract.signatories?.map((sig: any) => (
@@ -578,14 +675,23 @@ export default function CustomContractsManager({
                       <td className="py-4 text-foreground/60">{new Date(contract.created_at).toLocaleDateString()}</td>
                       <td className="py-4 pr-2 text-right space-x-2 whitespace-nowrap">
                         {contract.pdf_file && (
-                          <a
-                            href={contract.pdf_file}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="bg-foreground/5 hover:bg-foreground/10 border border-card-border text-foreground text-[8px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl transition-all inline-block"
-                          >
-                            Descargar PDF
-                          </a>
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => setPreviewContract(contract)}
+                              className="bg-[#C68A1E]/10 hover:bg-[#C68A1E]/20 border border-[#C68A1E]/30 text-[#C68A1E] text-[8px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl transition-all inline-block cursor-pointer"
+                            >
+                              👁️ Vista Previa
+                            </button>
+                            <a
+                              href={contract.pdf_file}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="bg-foreground/5 hover:bg-foreground/10 border border-card-border text-foreground text-[8px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl transition-all inline-block"
+                            >
+                              Descargar PDF
+                            </a>
+                          </>
                         )}
                         {!contract.is_fully_signed && (
                           <button
@@ -1032,6 +1138,96 @@ export default function CustomContractsManager({
           )}
         </div>
       )}
+      
+      {previewContract && (
+        <ContractPreviewModal
+          contract={previewContract}
+          onClose={() => setPreviewContract(null)}
+        />
+      )}
     </div>
   );
 }
+
+// Contract Preview Modal for Realtime visualization of signatures
+const ContractPreviewModal = ({ contract, onClose }: { contract: any; onClose: () => void }) => {
+  const [pdfPages, setPdfPages] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (!contract || !contract.pdf_file) return;
+    const loadPdf = async () => {
+      const pdfjsLib = (window as any).pdfjsLib;
+      if (!pdfjsLib) {
+        setTimeout(loadPdf, 500);
+        return;
+      }
+      try {
+        const pdf = await pdfjsLib.getDocument(contract.pdf_file).promise;
+        const pagesList: any[] = [];
+        for (let i = 1; i <= pdf.numPages; i++) {
+          pagesList.push(await pdf.getPage(i));
+        }
+        setPdfPages(pagesList);
+      } catch (err) {
+        console.error("Error reading preview PDF:", err);
+      }
+    };
+    loadPdf();
+  }, [contract]);
+
+  if (!contract) return null;
+
+  return (
+    <div className="fixed inset-0 bg-background/85 backdrop-blur-md z-50 flex items-center justify-center p-4 cursor-pointer" onClick={onClose}>
+      <div className="bg-background border border-card-border w-full max-w-2xl rounded-[2.5rem] p-6 md:p-8 shadow-2xl relative max-h-[90vh] overflow-y-auto cursor-default flex flex-col gap-5" onClick={e => e.stopPropagation()}>
+        <button onClick={onClose} className="absolute top-5 right-5 w-8 h-8 bg-foreground/5 hover:bg-foreground/10 text-foreground/60 rounded-full flex items-center justify-center text-sm transition-all cursor-pointer">✕</button>
+        
+        <div>
+          <span className="text-[7px] bg-[#C68A1E]/15 text-[#C68A1E] px-2 py-0.5 rounded-full font-black uppercase tracking-wider">Vista Previa en Tiempo Real</span>
+          <h2 className="text-xl font-black text-foreground mt-2 uppercase tracking-tight">{contract.title}</h2>
+          <p className="text-[8px] text-foreground/45 uppercase tracking-widest mt-0.5">Estatus de Firmas del Contrato</p>
+        </div>
+
+        <div className="flex-1 overflow-y-auto max-h-[50vh] border border-card-border/60 rounded-2xl p-4 bg-background/30 custom-scrollbar">
+          {pdfPages.length > 0 ? (
+            pdfPages.map((page, idx) => (
+              <div key={idx} className="relative">
+                <span className="text-[7px] font-black font-mono text-foreground/35 block text-center mb-1">PÁGINA {idx + 1} DE {pdfPages.length}</span>
+                <PdfPreviewPageCanvas
+                  page={page}
+                  pageIndex={idx}
+                  signatories={contract.signatories}
+                />
+              </div>
+            ))
+          ) : (
+            <div className="py-20 flex flex-col items-center justify-center gap-3">
+              <div className="w-6 h-6 rounded-full border-2 border-t-foreground border-foreground/10 animate-spin" style={{ borderTopColor: '#C68A1E' }}></div>
+              <span className="text-[8px] font-black uppercase tracking-widest text-foreground/45">Cargando páginas del contrato...</span>
+            </div>
+          )}
+        </div>
+
+        <div className="border-t border-card-border/50 pt-4 flex flex-wrap gap-4 justify-between items-center">
+          <div>
+            <span className="text-[7.5px] uppercase font-black tracking-widest text-foreground/45 block mb-1">Firmantes del Contrato</span>
+            <div className="flex flex-wrap gap-1.5">
+              {contract.signatories?.map((sig: any) => (
+                <span key={sig.id} className={`text-[7.5px] px-2 py-0.5 rounded-md font-bold border ${
+                  sig.signature_base64 ? 'bg-green-500/10 text-green-500 border-green-500/20' : 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20'
+                }`}>
+                  {sig.name} ({sig.role}) {sig.signature_base64 ? '✓' : '⏰'}
+                </span>
+              ))}
+            </div>
+          </div>
+          {contract.pdf_file && (
+            <a href={contract.pdf_file} target="_blank" rel="noopener noreferrer" className="px-4 py-2 bg-[#C68A1E] hover:scale-105 active:scale-95 transition-all text-black text-[8px] font-black uppercase tracking-widest rounded-xl font-bold">
+              Abrir PDF Completo
+            </a>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
