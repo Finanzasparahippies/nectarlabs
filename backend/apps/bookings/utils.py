@@ -10,6 +10,19 @@ from apps.tenants.utils import get_tenant_email_connection
 
 logger = logging.getLogger("apps")
 
+def get_frontend_origin_from_request(request=None):
+    if request:
+        origin = request.META.get('HTTP_ORIGIN')
+        if origin:
+            return origin
+        referer = request.META.get('HTTP_REFERER')
+        if referer:
+            from urllib.parse import urlparse
+            parsed = urlparse(referer)
+            return f"{parsed.scheme}://{parsed.netloc}"
+    from django.conf import settings
+    return getattr(settings, 'FRONTEND_URL', 'http://localhost:3000')
+
 def safe_b64decode(b64_string):
     if not b64_string:
         return None
@@ -176,7 +189,7 @@ def generate_booking_contract_pdf(contract):
         logger.error(f"Failed to generate booking contract PDF: {e}", exc_info=True)
         return False
 
-def send_booking_contract_emails(contract):
+def send_booking_contract_emails(contract, request=None):
     try:
         inquiry = contract.inquiry
         tenant = inquiry.tenant
@@ -190,10 +203,37 @@ def send_booking_contract_emails(contract):
         if not contract.is_fully_signed:
             # Stage 1: Proposal sent to Client, notify Manager to track it
             client_subject = f"✨ Propuesta de Contrato de Booking - {tenant.name}"
-            # Sign URL on frontend
-            sign_url = f"{settings.FRONTEND_URL}/bookings/sign/{contract.id}"
-            if tenant.use_custom_domain and tenant.custom_domain:
-                sign_url = f"http://{tenant.custom_domain}/bookings/sign/{contract.id}"
+            # Sign URL on frontend dynamically based on current environment origin
+            frontend_base = get_frontend_origin_from_request(request).rstrip('/')
+            from urllib.parse import urlparse
+            parsed = urlparse(frontend_base)
+            domain = parsed.netloc
+            scheme = parsed.scheme
+            
+            parts = domain.split('.')
+            if len(parts) > 2:
+                if 'localhost' in parts[-1] or 'localhost' in parts[-2]:
+                    base_domain = parts[-1]
+                else:
+                    if tenant and tenant.use_custom_domain and tenant.custom_domain:
+                        base_domain = tenant.custom_domain
+                    else:
+                        if "staging.nectarlabs.dev" in domain:
+                            base_domain = "staging.nectarlabs.dev"
+                        elif "nectarlabs.dev" in domain:
+                            base_domain = "nectarlabs.dev"
+                        else:
+                            base_domain = ".".join(parts[1:])
+            else:
+                base_domain = domain
+
+            if tenant:
+                if tenant.use_custom_domain and tenant.custom_domain:
+                    sign_url = f"{scheme}://{tenant.custom_domain}/bookings/sign/{contract.id}"
+                else:
+                    sign_url = f"{scheme}://{tenant.subdomain}.{base_domain}/bookings/sign/{contract.id}"
+            else:
+                sign_url = f"{frontend_base}/bookings/sign/{contract.id}"
             
             client_context = {
                 'inquiry': inquiry,
@@ -531,7 +571,7 @@ def generate_custom_contract_pdf(contract):
         return False
 
 
-def send_custom_contract_emails(contract, signatory_to_notify=None):
+def send_custom_contract_emails(contract, signatory_to_notify=None, request=None):
     """
     Envía notificaciones de firma por correo.
     - Si se especifica signatory_to_notify, se envía la invitación de firma a ese destinatario.
@@ -546,20 +586,34 @@ def send_custom_contract_emails(contract, signatory_to_notify=None):
         
         if signatory_to_notify:
             # Construcción dinámica y adaptativa del enlace según el entorno (Local, Staging, Producción)
-            frontend_base = settings.FRONTEND_URL.rstrip('/')
+            frontend_base = get_frontend_origin_from_request(request).rstrip('/')
+            from urllib.parse import urlparse
+            parsed = urlparse(frontend_base)
+            domain = parsed.netloc
+            scheme = parsed.scheme
+            
+            parts = domain.split('.')
+            if len(parts) > 2:
+                if 'localhost' in parts[-1] or 'localhost' in parts[-2]:
+                    base_domain = parts[-1]
+                else:
+                    if tenant and tenant.use_custom_domain and tenant.custom_domain:
+                        base_domain = tenant.custom_domain
+                    else:
+                        if "staging.nectarlabs.dev" in domain:
+                            base_domain = "staging.nectarlabs.dev"
+                        elif "nectarlabs.dev" in domain:
+                            base_domain = "nectarlabs.dev"
+                        else:
+                            base_domain = ".".join(parts[1:])
+            else:
+                base_domain = domain
+
             if tenant:
                 if tenant.use_custom_domain and tenant.custom_domain:
-                    proto = "https" if "https" in frontend_base else "http"
-                    sign_url = f"{proto}://{tenant.custom_domain}/contract/sign-custom/{signatory_to_notify.token}"
+                    sign_url = f"{scheme}://{tenant.custom_domain}/contract/sign-custom/{signatory_to_notify.token}"
                 else:
-                    if "staging.nectarlabs.dev" in frontend_base:
-                        sign_url = f"https://{tenant.subdomain}.staging.nectarlabs.dev/contract/sign-custom/{signatory_to_notify.token}"
-                    elif "nectarlabs.dev" in frontend_base:
-                        sign_url = f"https://{tenant.subdomain}.nectarlabs.dev/contract/sign-custom/{signatory_to_notify.token}"
-                    elif "localhost" in frontend_base:
-                        sign_url = f"http://{tenant.subdomain}.localhost:3000/contract/sign-custom/{signatory_to_notify.token}"
-                    else:
-                        sign_url = f"{frontend_base}/contract/sign-custom/{signatory_to_notify.token}"
+                    sign_url = f"{scheme}://{tenant.subdomain}.{base_domain}/contract/sign-custom/{signatory_to_notify.token}"
             else:
                 sign_url = f"{frontend_base}/contract/sign-custom/{signatory_to_notify.token}"
 

@@ -93,7 +93,7 @@ class BookingInquiryViewSet(viewsets.ModelViewSet):
         
         # Generate proposal PDF and send out emails
         if generate_booking_contract_pdf(contract):
-            send_booking_contract_emails(contract)
+            send_booking_contract_emails(contract, request=self.request)
 
 class BookingContractViewSet(viewsets.ModelViewSet):
     serializer_class = BookingContractSerializer
@@ -136,7 +136,7 @@ class BookingContractViewSet(viewsets.ModelViewSet):
 
         # Update contract PDF with client signature and notify manager
         if generate_booking_contract_pdf(contract):
-            send_booking_contract_emails(contract)
+            send_booking_contract_emails(contract, request=request)
             return Response({'message': 'Contrato firmado por el organizador con éxito. Pendiente de firma de management.'})
         
         return Response({'error': 'Error al actualizar el PDF del contrato'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -162,7 +162,7 @@ class BookingContractViewSet(viewsets.ModelViewSet):
 
         # Generate FINAL certified PDF and email to both
         if generate_booking_contract_pdf(contract):
-            send_booking_contract_emails(contract)
+            send_booking_contract_emails(contract, request=request)
             return Response({'message': 'Contrato cerrado y certificado enviado con éxito.'})
 
         return Response({'error': 'Error al finalizar el contrato'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -279,7 +279,7 @@ class CustomContractViewSet(viewsets.ModelViewSet):
         
         # Enviar correos de invitación a TODOS los firmantes al mismo tiempo (firma en paralelo)
         for sig in contract.signatories.all():
-            send_custom_contract_emails(contract, signatory_to_notify=sig)
+            send_custom_contract_emails(contract, signatory_to_notify=sig, request=self.request)
 
     @action(detail=False, methods=['get'], url_path='by_token')
     def by_token(self, request):
@@ -350,7 +350,7 @@ class CustomContractViewSet(viewsets.ModelViewSet):
             
             # Generar PDF final y notificar a todos los firmantes
             if generate_custom_contract_pdf(contract):
-                send_custom_contract_emails(contract)
+                send_custom_contract_emails(contract, request=request)
         else:
             # Generar PDF parcial con las firmas recopiladas hasta ahora
             generate_custom_contract_pdf(contract)
@@ -361,7 +361,7 @@ class CustomContractViewSet(viewsets.ModelViewSet):
     def resend_email(self, request, pk=None):
         contract = self.get_object()
         if contract.is_fully_signed:
-            send_custom_contract_emails(contract)
+            send_custom_contract_emails(contract, request=request)
             return Response({'message': 'Contrato completamente firmado. Copia certificada reenviada a todos los firmantes.'})
         
         pending_signatories = contract.signatories.filter(signature_base64__isnull=True)
@@ -369,6 +369,6 @@ class CustomContractViewSet(viewsets.ModelViewSet):
         if not next_sig:
             return Response({'error': 'No hay firmantes pendientes para este contrato.'}, status=status.HTTP_400_BAD_REQUEST)
         
-        send_custom_contract_emails(contract, signatory_to_notify=next_sig)
+        send_custom_contract_emails(contract, signatory_to_notify=next_sig, request=request)
         return Response({'message': f'Correo de invitación reenviado con éxito a {next_sig.email}.'})
 
