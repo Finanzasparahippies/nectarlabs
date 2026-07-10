@@ -211,6 +211,7 @@ function initEditor(codigoBase, language) {
         // Reutilizar instancia existente – solo actualizar contenido y modo
         cmEditor.setValue(codigoBase || "");
         cmEditor.setOption("mode", mode);
+        window.cmEditor = cmEditor;
         return;
     }
 
@@ -231,6 +232,7 @@ function initEditor(codigoBase, language) {
 
     // Altura responsive
     cmEditor.setSize("100%", "380px");
+    window.cmEditor = cmEditor;
 }
 
 // =====================================================================

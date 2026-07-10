@@ -16,7 +16,7 @@ test.describe('Curso de Python - Dashboard Interactivo (Enfoque A)', () => {
     // Verificar el título principal
     const title = page.locator('#current-module-title');
     await expect(title).toBeVisible();
-    await expect(title).toContainText('Fundamentos Avanzados');
+    await expect(title).toContainText('Python Avanzado y Edge Cases');
 
     // Verificar la lista de módulos en el sidebar
     const modules = page.locator('#modules-list li');
@@ -57,6 +57,18 @@ test.describe('Curso de Python - Dashboard Interactivo (Enfoque A)', () => {
     const btnEvaluar = page.locator('#btn-evaluar-ejercicio');
     await expect(btnEvaluar).toBeVisible();
     await expect(btnEvaluar).toContainText('Ejecutar y Evaluar');
+
+    // Escribir código válido para desencadenar la detección de palabras clave locales
+    await page.evaluate(() => {
+        (window as any).cmEditor.setValue(`
+import functools
+def mi_decorador(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        return func(*args, **kwargs)
+    return wrapper
+        `);
+    });
 
     // Simular clic en evaluar (sin token se evalúa offline de forma local)
     await btnEvaluar.click();
