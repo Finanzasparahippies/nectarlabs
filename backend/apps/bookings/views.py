@@ -261,8 +261,21 @@ class CustomContractViewSet(viewsets.ModelViewSet):
         # Guardamos el contrato
         contract = serializer.save(tenant=tenant)
         
-        # Generar primer PDF (sin firmas) y disparar primer correo de invitación a firmar
-        generate_custom_contract_pdf(contract)
+        # Si se subió un PDF, lo copiamos inicialmente a pdf_file de manera limpia
+        if contract.uploaded_pdf:
+            import os
+            from django.core.files.base import ContentFile
+            try:
+                contract.uploaded_pdf.seek(0)
+                orig_pdf_bytes = contract.uploaded_pdf.read()
+                filename = os.path.basename(contract.uploaded_pdf.name)
+                contract.pdf_file.save(filename, ContentFile(orig_pdf_bytes), save=False)
+                contract.save(update_fields=['pdf_file'])
+            except Exception as e:
+                logger.error(f"Error copying uploaded_pdf to pdf_file on create: {e}", exc_info=True)
+        else:
+            # Generar primer PDF (sin firmas) desde texto
+            generate_custom_contract_pdf(contract)
         
         first_sig = contract.signatories.all().order_by('id').first()
         if first_sig:
@@ -290,6 +303,11 @@ class CustomContractViewSet(viewsets.ModelViewSet):
             'email': signatory.email,
             'role': signatory.role,
             'has_signed': bool(signatory.signature_base64),
+            'sig_page': signatory.sig_page,
+            'sig_x': signatory.sig_x,
+            'sig_y': signatory.sig_y,
+            'sig_w': signatory.sig_w,
+            'sig_h': signatory.sig_h,
         }
         return Response(data)
 

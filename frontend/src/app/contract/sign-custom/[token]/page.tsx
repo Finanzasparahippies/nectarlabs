@@ -31,9 +31,116 @@ interface ContractData {
     email: string;
     role: string;
     has_signed: boolean;
+    sig_page?: number;
+    sig_x?: number;
+    sig_y?: number;
+    sig_w?: number;
+    sig_h?: number;
   };
   signatories?: Signatory[];
 }
+
+// PDF.js Page Canvas Component for Signing View
+const PdfSignPageCanvas = ({ page, pageIndex, currentSignatory, signatories }: any) => {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [dimensions, setDimensions] = useState({ width: 0, height: 0, pointsWidth: 0, pointsHeight: 0 });
+
+  useEffect(() => {
+    const renderPage = async () => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const context = canvas.getContext('2d');
+      if (!context) return;
+
+      const viewport = page.getViewport({ scale: 1.0 });
+      const pointsWidth = viewport.width;
+      const pointsHeight = viewport.height;
+
+      const displayWidth = Math.min(500, window.innerWidth - 80);
+      const scale = displayWidth / pointsWidth;
+      const scaledViewport = page.getViewport({ scale });
+
+      canvas.width = scaledViewport.width;
+      canvas.height = scaledViewport.height;
+      setDimensions({
+        width: scaledViewport.width,
+        height: scaledViewport.height,
+        pointsWidth,
+        pointsHeight
+      });
+
+      const renderContext = {
+        canvasContext: context,
+        viewport: scaledViewport
+      };
+      await page.render(renderContext).promise;
+    };
+    renderPage();
+  }, [page]);
+
+  // Combine current signatory and other signatories
+  const boxes: any[] = [];
+  if (currentSignatory && currentSignatory.sig_page === pageIndex + 1) {
+    boxes.push({ ...currentSignatory, isCurrent: true });
+  }
+  (signatories || []).forEach((sig: any) => {
+    if (sig.sig_page === pageIndex + 1 && sig.id !== currentSignatory?.id) {
+      boxes.push({ ...sig, isCurrent: false });
+    }
+  });
+
+  return (
+    <div
+      className="relative mx-auto my-6 border border-white/5 shadow-xl bg-[#0e1217] rounded-2xl overflow-hidden select-none"
+      style={{ width: dimensions.width, height: dimensions.height }}
+    >
+      <canvas ref={canvasRef} className="block" />
+      
+      {boxes.map((box: any, bIdx) => {
+        const leftCss = (box.sig_x / dimensions.pointsWidth) * dimensions.width;
+        const topCss = (box.sig_y / dimensions.pointsHeight) * dimensions.height;
+        const widthCss = (box.sig_w / dimensions.pointsWidth) * dimensions.width;
+        const heightCss = (box.sig_h / dimensions.pointsHeight) * dimensions.height;
+
+        return (
+          <div
+            key={bIdx}
+            className={`absolute border-2 flex flex-col items-center justify-center p-1 text-[8px] font-black uppercase rounded ${
+              box.isCurrent
+                ? 'border-[#C68A1E] bg-[#C68A1E]/20 text-[#C68A1E] animate-pulse'
+                : box.signature_base64
+                  ? 'border-emerald-500 bg-emerald-500/25 text-emerald-400'
+                  : 'border-white/10 bg-white/5 text-white/40'
+            }`}
+            style={{
+              left: leftCss,
+              top: topCss,
+              width: widthCss,
+              height: heightCss
+            }}
+          >
+            {box.isCurrent ? (
+              <>
+                <span>✍️ Firma Aquí</span>
+                <span className="truncate max-w-full font-mono mt-0.5">{box.name}</span>
+              </>
+            ) : box.signature_base64 ? (
+              <>
+                <span>✓ Firmado</span>
+                <span className="truncate max-w-full font-mono mt-0.5">{box.name}</span>
+              </>
+            ) : (
+              <>
+                <span>⏰ Pendiente</span>
+                <span className="truncate max-w-full font-mono mt-0.5">{box.name}</span>
+              </>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+};
 
 export default function CustomContractSignPage() {
   const params = useParams();
@@ -45,6 +152,47 @@ export default function CustomContractSignPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+
+  const [pdfPages, setPdfPages] = useState<any[]>([]);
+
+  // Dynamically load PDF.js CDN
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if ((window as any).pdfjsLib) return;
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+    script.async = true;
+    script.onload = () => {
+      (window as any).pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    };
+    document.head.appendChild(script);
+  }, []);
+
+  // Parse PDF pages into memory viewport objects once the contract is loaded and pdf_file is present
+  useEffect(() => {
+    if (!contract || !contract.pdf_file || (contract.proemio && contract.clauses)) {
+      setPdfPages([]);
+      return;
+    }
+    const loadPdfPages = async () => {
+      const pdfjsLib = (window as any).pdfjsLib;
+      if (!pdfjsLib) {
+        setTimeout(loadPdfPages, 500);
+        return;
+      }
+      try {
+        const pdf = await pdfjsLib.getDocument(contract.pdf_file).promise;
+        const pagesList: any[] = [];
+        for (let i = 1; i <= pdf.numPages; i++) {
+          pagesList.push(await pdf.getPage(i));
+        }
+        setPdfPages(pagesList);
+      } catch (err) {
+        console.error("Error reading PDF file for sign page:", err);
+      }
+    };
+    loadPdfPages();
+  }, [contract]);
 
   // Canvas ref for drawing board
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -297,29 +445,52 @@ export default function CustomContractSignPage() {
 
           {/* Document Content */}
           <div className="flex-1 text-left space-y-8 overflow-y-auto max-h-[60vh] pr-4 custom-scrollbar text-xs leading-relaxed text-white/80 select-text">
-            {/* Proemio */}
-            <div className="space-y-2">
-              <h3 className="text-[9px] font-black uppercase tracking-wider" style={{ color: primaryColor }}>PROEMIO</h3>
-              <p className="bg-white/[0.02] border border-white/5 p-4 rounded-xl font-medium leading-relaxed italic whitespace-pre-line text-white/70">
-                {contract.proemio}
-              </p>
-            </div>
+            {pdfPages.length > 0 ? (
+              <div className="space-y-4">
+                <span className="text-[8px] font-black uppercase text-[#C68A1E] block text-center tracking-widest bg-[#C68A1E]/10 border border-[#C68A1E]/20 p-2.5 rounded-xl">
+                  🔍 Ubicación de Firmas: Busca el bloque dorado que parpadea y firma en el panel derecho.
+                </span>
+                {pdfPages.map((page, idx) => (
+                  <div key={idx} className="relative">
+                    <span className="text-[7px] font-black font-mono text-white/35 block text-center mb-1">
+                      PÁGINA {idx + 1} DE {pdfPages.length}
+                    </span>
+                    <PdfSignPageCanvas
+                      page={page}
+                      pageIndex={idx}
+                      currentSignatory={contract.current_signatory}
+                      signatories={contract.signatories}
+                    />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <>
+                {/* Proemio */}
+                <div className="space-y-2">
+                  <h3 className="text-[9px] font-black uppercase tracking-wider" style={{ color: primaryColor }}>PROEMIO</h3>
+                  <p className="bg-white/[0.02] border border-white/5 p-4 rounded-xl font-medium leading-relaxed italic whitespace-pre-line text-white/70">
+                    {contract.proemio}
+                  </p>
+                </div>
 
-            {/* Declaraciones */}
-            <div className="space-y-2">
-              <h3 className="text-[9px] font-black uppercase tracking-wider" style={{ color: primaryColor }}>DECLARACIONES</h3>
-              <p className="whitespace-pre-line text-justify leading-relaxed font-normal">
-                {contract.declarations}
-              </p>
-            </div>
+                {/* Declaraciones */}
+                <div className="space-y-2">
+                  <h3 className="text-[9px] font-black uppercase tracking-wider" style={{ color: primaryColor }}>DECLARACIONES</h3>
+                  <p className="whitespace-pre-line text-justify leading-relaxed font-normal">
+                    {contract.declarations}
+                  </p>
+                </div>
 
-            {/* Clausulas */}
-            <div className="space-y-2">
-              <h3 className="text-[9px] font-black uppercase tracking-wider" style={{ color: primaryColor }}>CLÁUSULAS</h3>
-              <p className="whitespace-pre-line text-justify leading-relaxed font-normal">
-                {contract.clauses}
-              </p>
-            </div>
+                {/* Clausulas */}
+                <div className="space-y-2">
+                  <h3 className="text-[9px] font-black uppercase tracking-wider" style={{ color: primaryColor }}>CLÁUSULAS</h3>
+                  <p className="whitespace-pre-line text-justify leading-relaxed font-normal">
+                    {contract.clauses}
+                  </p>
+                </div>
+              </>
+            )}
           </div>
 
           {/* Document footer with status info */}

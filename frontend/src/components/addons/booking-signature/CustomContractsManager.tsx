@@ -6,6 +6,11 @@ interface SignatoryInput {
   name: string;
   email: string;
   role: string;
+  sig_page?: number;
+  sig_x?: number;
+  sig_y?: number;
+  sig_w?: number;
+  sig_h?: number;
 }
 
 interface CustomContractsManagerProps {
@@ -14,6 +19,111 @@ interface CustomContractsManagerProps {
   primaryColor?: string;
   token?: string;
 }
+
+// PDF.js Page Canvas Component
+const PdfPageCanvas = ({ page, pageIndex, onDropSignature, signatureBoxes }: any) => {
+  const canvasRef = React.useRef<HTMLCanvasElement | null>(null);
+  const containerRef = React.useRef<HTMLDivElement | null>(null);
+  const [dimensions, setDimensions] = useState({ width: 0, height: 0, pointsWidth: 0, pointsHeight: 0 });
+
+  React.useEffect(() => {
+    const renderPage = async () => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const context = canvas.getContext('2d');
+      if (!context) return;
+
+      const viewport = page.getViewport({ scale: 1.0 });
+      const pointsWidth = viewport.width;
+      const pointsHeight = viewport.height;
+
+      const displayWidth = Math.min(500, window.innerWidth - 80);
+      const scale = displayWidth / pointsWidth;
+      const scaledViewport = page.getViewport({ scale });
+
+      canvas.width = scaledViewport.width;
+      canvas.height = scaledViewport.height;
+      setDimensions({
+        width: scaledViewport.width,
+        height: scaledViewport.height,
+        pointsWidth,
+        pointsHeight
+      });
+
+      const renderContext = {
+        canvasContext: context,
+        viewport: scaledViewport
+      };
+      await page.render(renderContext).promise;
+    };
+    renderPage();
+  }, [page]);
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    const signatoryIndex = parseInt(e.dataTransfer.getData('signatoryIndex'));
+    if (isNaN(signatoryIndex)) return;
+
+    const rect = containerRef.current?.getBoundingClientRect();
+    if (!rect) return;
+
+    const clientX = e.clientX - rect.left;
+    const clientY = e.clientY - rect.top;
+
+    const boxWidthCss = 120;
+    const boxHeightCss = 60;
+    const leftCss = Math.max(0, Math.min(clientX - boxWidthCss / 2, dimensions.width - boxWidthCss));
+    const topCss = Math.max(0, Math.min(clientY - boxHeightCss / 2, dimensions.height - boxHeightCss));
+
+    const pdfX = (leftCss / dimensions.width) * dimensions.pointsWidth;
+    const pdfY = (topCss / dimensions.height) * dimensions.pointsHeight;
+    const pdfW = (boxWidthCss / dimensions.width) * dimensions.pointsWidth;
+    const pdfH = (boxHeightCss / dimensions.height) * dimensions.pointsHeight;
+
+    onDropSignature(signatoryIndex, pageIndex + 1, pdfX, pdfY, pdfW, pdfH);
+  };
+
+  return (
+    <div
+      ref={containerRef}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
+      className="relative mx-auto my-6 border border-card-border/80 shadow-lg bg-[#0e1217] rounded-2xl overflow-hidden select-none"
+      style={{ width: dimensions.width, height: dimensions.height }}
+    >
+      <canvas ref={canvasRef} className="block" />
+      
+      {signatureBoxes.map((box: any) => {
+        if (box.sig_page !== pageIndex + 1) return null;
+        
+        const leftCss = (box.sig_x / dimensions.pointsWidth) * dimensions.width;
+        const topCss = (box.sig_y / dimensions.pointsHeight) * dimensions.height;
+        const widthCss = (box.sig_w / dimensions.pointsWidth) * dimensions.width;
+        const heightCss = (box.sig_h / dimensions.pointsHeight) * dimensions.height;
+
+        return (
+          <div
+            key={box.signatoryIndex}
+            className="absolute border-2 border-[#C68A1E] bg-[#C68A1E]/20 flex flex-col items-center justify-center p-1 text-[8px] font-black uppercase text-[#C68A1E] rounded cursor-move animate-fadeIn"
+            style={{
+              left: leftCss,
+              top: topCss,
+              width: widthCss,
+              height: heightCss
+            }}
+          >
+            <span>Firma</span>
+            <span className="truncate max-w-full font-mono mt-0.5">{box.name || `Firmante #${box.signatoryIndex + 1}`}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
 
 export default function CustomContractsManager({
   tenantId,
@@ -40,6 +150,61 @@ export default function CustomContractsManager({
   ]);
   const [submitting, setSubmitting] = useState(false);
   const [logoFile, setLogoFile] = useState<File | null>(null);
+
+  // Creation Mode State for Custom PDF Drag & Drop
+  const [creationMode, setCreationMode] = useState<'editor' | 'pdf'>('editor');
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
+  const [pdfPages, setPdfPages] = useState<any[]>([]);
+
+  // Dynamically load PDF.js CDN
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if ((window as any).pdfjsLib) return;
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+    script.async = true;
+    script.onload = () => {
+      (window as any).pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    };
+    document.head.appendChild(script);
+  }, []);
+
+  // Parse PDF pages into memory canvas-ready viewport objects
+  useEffect(() => {
+    if (!pdfFile) {
+      setPdfPages([]);
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      const arrayBuffer = e.target?.result as ArrayBuffer;
+      const pdfjsLib = (window as any).pdfjsLib;
+      if (!pdfjsLib) {
+        showToast('Cargando motor de lectura PDF. Por favor espera un momento.', 'warning');
+        return;
+      }
+      try {
+        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        const pagesList: any[] = [];
+        for (let i = 1; i <= pdf.numPages; i++) {
+          pagesList.push(await pdf.getPage(i));
+        }
+        setPdfPages(pagesList);
+      } catch (err) {
+        showToast('Error al leer el archivo PDF.', 'error');
+      }
+    };
+    reader.readAsArrayBuffer(pdfFile);
+  }, [pdfFile]);
+
+  const handleDropSignature = (idx: number, page: number, x: number, y: number, w: number, h: number) => {
+    setSignatories(prev => prev.map((sig, i) => {
+      if (i === idx) {
+        return { ...sig, sig_page: page, sig_x: x, sig_y: y, sig_w: w, sig_h: h };
+      }
+      return sig;
+    }));
+  };
 
   // Template Form State
   const [isCreatingTemplate, setIsCreatingTemplate] = useState(false);
@@ -162,7 +327,12 @@ export default function CustomContractsManager({
   // Submit custom contract
   const handleSubmitContract = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title || !proemio || !declarations || !clauses) {
+    
+    if (creationMode === 'pdf' && (!title || !pdfFile)) {
+      showToast('Por favor introduce un título y carga el archivo PDF del contrato.', 'error');
+      return;
+    }
+    if (creationMode === 'editor' && (!title || !proemio || !declarations || !clauses)) {
       showToast('Por favor completa todos los campos del contrato.', 'error');
       return;
     }
@@ -173,26 +343,52 @@ export default function CustomContractsManager({
       return;
     }
 
+    if (creationMode === 'pdf') {
+      const unplacedSig = signatories.some(s => s.sig_page === undefined || s.sig_x === undefined || s.sig_y === undefined);
+      if (unplacedSig) {
+        showToast('Por favor arrastra y ubica las firmas de todos los firmantes en las páginas del PDF.', 'warning');
+        return;
+      }
+    }
+
     setSubmitting(true);
     try {
       const headers = getHeaders();
-      const payload = {
-        title,
-        proemio,
-        declarations,
-        clauses,
-        signatories,
-        header_design: {}
-      };
+      let res;
 
-      const res = await fetch('/api/bookings/custom-contracts/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...headers
-        },
-        body: JSON.stringify(payload)
-      });
+      if (creationMode === 'pdf') {
+        const formData = new FormData();
+        formData.append('title', title);
+        formData.append('proemio', '');
+        formData.append('declarations', '');
+        formData.append('clauses', '');
+        formData.append('signatories', JSON.stringify(signatories));
+        if (pdfFile) {
+          formData.append('uploaded_pdf', pdfFile);
+        }
+        res = await fetch('/api/bookings/custom-contracts/', {
+          method: 'POST',
+          headers, // Do NOT set Content-Type header; the browser will set boundary automatically
+          body: formData
+        });
+      } else {
+        const payload = {
+          title,
+          proemio,
+          declarations,
+          clauses,
+          signatories,
+          header_design: {}
+        };
+        res = await fetch('/api/bookings/custom-contracts/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...headers
+          },
+          body: JSON.stringify(payload)
+        });
+      }
 
       if (res.ok) {
         showToast('¡Contrato emitido e invitaciones de firma enviadas con éxito!', 'success');
@@ -201,6 +397,7 @@ export default function CustomContractsManager({
         setProemio('');
         setDeclarations('');
         setClauses('');
+        setPdfFile(null);
         setSignatories([
           { name: '', email: '', role: 'Representante Legal' },
           { name: '', email: '', role: 'Cliente' }
@@ -209,7 +406,7 @@ export default function CustomContractsManager({
         loadData();
       } else {
         const errData = await res.json();
-        showToast(errData.detail || 'Error al emitir el contrato.', 'error');
+        showToast(errData.detail || errData.error || 'Error al emitir el contrato.', 'error');
       }
     } catch (err) {
       showToast('Error de red al emitir el contrato.', 'error');
@@ -429,6 +626,31 @@ export default function CustomContractsManager({
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-4">
+              {/* Toggle Creation Mode */}
+              <div className="space-y-1">
+                <label className="text-[8px] uppercase tracking-wider font-black text-foreground/60 block">Método de Creación</label>
+                <div className="flex bg-background border border-card-border rounded-2xl p-1 gap-1 w-full sm:w-fit">
+                  <button
+                    type="button"
+                    onClick={() => setCreationMode('editor')}
+                    className={`px-3 py-1.5 rounded-xl text-[8px] font-black uppercase tracking-wider transition-all flex-1 sm:flex-initial cursor-pointer ${
+                      creationMode === 'editor' ? 'bg-[#C68A1E] text-black' : 'text-foreground/60 hover:text-foreground'
+                    }`}
+                  >
+                    ✍️ Redactar Contrato
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCreationMode('pdf')}
+                    className={`px-3 py-1.5 rounded-xl text-[8px] font-black uppercase tracking-wider transition-all flex-1 sm:flex-initial cursor-pointer ${
+                      creationMode === 'pdf' ? 'bg-[#C68A1E] text-black' : 'text-foreground/60 hover:text-foreground'
+                    }`}
+                  >
+                    📁 Subir PDF Existente
+                  </button>
+                </div>
+              </div>
+
               <div className="space-y-1">
                 <label className="text-[8px] uppercase tracking-wider font-black text-foreground/60 block">Título del Contrato</label>
                 <input
@@ -441,41 +663,92 @@ export default function CustomContractsManager({
                 />
               </div>
 
-              <div className="space-y-1">
-                <label className="text-[8px] uppercase tracking-wider font-black text-foreground/60 block">Proemio (Introducción Legal)</label>
-                <textarea
-                  required
-                  rows={4}
-                  placeholder="Ej. Contrato que celebran por una parte..."
-                  value={proemio}
-                  onChange={(e) => setProemio(e.target.value)}
-                  className="w-full bg-background border border-card-border rounded-2xl p-4 text-[10px] text-foreground focus:outline-none focus:border-foreground/35 transition-all font-mono resize-none"
-                />
-              </div>
+              {creationMode === 'editor' ? (
+                <>
+                  <div className="space-y-1">
+                    <label className="text-[8px] uppercase tracking-wider font-black text-foreground/60 block">Proemio (Introducción Legal)</label>
+                    <textarea
+                      required={creationMode === 'editor'}
+                      rows={4}
+                      placeholder="Ej. Contrato que celebran por una parte..."
+                      value={proemio}
+                      onChange={(e) => setProemio(e.target.value)}
+                      className="w-full bg-background border border-card-border rounded-2xl p-4 text-[10px] text-foreground focus:outline-none focus:border-foreground/35 transition-all font-mono resize-none"
+                    />
+                  </div>
 
-              <div className="space-y-1">
-                <label className="text-[8px] uppercase tracking-wider font-black text-foreground/60 block">Declaraciones</label>
-                <textarea
-                  required
-                  rows={6}
-                  placeholder="Ej. I. Declara el Prestador que es una persona física...\nII. Declara el Cliente que..."
-                  value={declarations}
-                  onChange={(e) => setDeclarations(e.target.value)}
-                  className="w-full bg-background border border-card-border rounded-2xl p-4 text-[10px] text-foreground focus:outline-none focus:border-foreground/35 transition-all font-mono resize-none"
-                />
-              </div>
+                  <div className="space-y-1">
+                    <label className="text-[8px] uppercase tracking-wider font-black text-foreground/60 block">Declaraciones</label>
+                    <textarea
+                      required={creationMode === 'editor'}
+                      rows={6}
+                      placeholder="Ej. I. Declara el Prestador que es una persona física...\nII. Declara el Cliente que..."
+                      value={declarations}
+                      onChange={(e) => setDeclarations(e.target.value)}
+                      className="w-full bg-background border border-card-border rounded-2xl p-4 text-[10px] text-foreground focus:outline-none focus:border-foreground/35 transition-all font-mono resize-none"
+                    />
+                  </div>
 
-              <div className="space-y-1">
-                <label className="text-[8px] uppercase tracking-wider font-black text-foreground/60 block">Cláusulas del Contrato</label>
-                <textarea
-                  required
-                  rows={8}
-                  placeholder="Ej. PRIMERA. OBJETO: ...\nSEGUNDA. HONORARIOS: ..."
-                  value={clauses}
-                  onChange={(e) => setClauses(e.target.value)}
-                  className="w-full bg-background border border-card-border rounded-2xl p-4 text-[10px] text-foreground focus:outline-none focus:border-foreground/35 transition-all font-mono resize-none"
-                />
-              </div>
+                  <div className="space-y-1">
+                    <label className="text-[8px] uppercase tracking-wider font-black text-foreground/60 block">Cláusulas del Contrato</label>
+                    <textarea
+                      required={creationMode === 'editor'}
+                      rows={8}
+                      placeholder="Ej. PRIMERA. OBJETO: ...\nSEGUNDA. HONORARIOS: ..."
+                      value={clauses}
+                      onChange={(e) => setClauses(e.target.value)}
+                      className="w-full bg-background border border-card-border rounded-2xl p-4 text-[10px] text-foreground focus:outline-none focus:border-foreground/35 transition-all font-mono resize-none"
+                    />
+                  </div>
+                </>
+              ) : (
+                <div className="space-y-4">
+                  <div className="space-y-1">
+                    <label className="text-[8px] uppercase tracking-wider font-black text-foreground/60 block">Archivo PDF del Contrato</label>
+                    <div className="border border-dashed border-card-border/80 hover:border-[#C68A1E]/50 rounded-2xl p-6 text-center cursor-pointer transition-colors relative bg-background/20">
+                      <input
+                        type="file"
+                        accept="application/pdf"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0] || null;
+                          setPdfFile(file);
+                        }}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                      />
+                      <span className="text-2xl block mb-2">📁</span>
+                      {pdfFile ? (
+                        <p className="text-[9px] font-bold text-foreground font-mono">{pdfFile.name} ({(pdfFile.size / 1024 / 1024).toFixed(2)} MB)</p>
+                      ) : (
+                        <p className="text-[8px] uppercase tracking-widest text-foreground/50 font-black">Selecciona o suelta tu archivo PDF aquí</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {pdfFile && pdfPages.length > 0 && (
+                    <div className="border border-card-border/60 rounded-3xl p-4 bg-background/40 max-h-[500px] overflow-y-auto custom-scrollbar">
+                      <span className="text-[7.5px] uppercase font-black text-foreground/50 tracking-wider block mb-4 text-center">
+                        Vista previa del documento y colocación de firmas
+                      </span>
+                      {pdfPages.map((page, idx) => (
+                        <div key={idx} className="relative">
+                          <span className="text-[7px] font-black font-mono text-foreground/35 block text-center mb-1">
+                            PÁGINA {idx + 1} DE {pdfPages.length}
+                          </span>
+                          <PdfPageCanvas
+                            page={page}
+                            pageIndex={idx}
+                            onDropSignature={handleDropSignature}
+                            signatureBoxes={signatories.map((sig, sigIdx) => ({
+                              ...sig,
+                              signatoryIndex: sigIdx
+                            })).filter(sig => sig.sig_page === idx + 1)}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Firmantes e Involucrados */}
@@ -547,6 +820,45 @@ export default function CustomContractsManager({
                   </div>
                 ))}
               </div>
+
+              {creationMode === 'pdf' && (
+                <div className="mt-4 pt-4 border-t border-card-border/50 space-y-2">
+                  <span className="text-[7.5px] uppercase font-black tracking-wider text-[#C68A1E] block mb-2">
+                    👉 Arrastra los firmantes al PDF:
+                  </span>
+                  <div className="grid grid-cols-1 gap-2">
+                    {signatories.map((sig, idx) => (
+                      <div
+                        key={idx}
+                        draggable={!!(sig.name && sig.email)}
+                        onDragStart={(e) => {
+                          e.dataTransfer.setData('signatoryIndex', String(idx));
+                        }}
+                        className={`p-3 rounded-xl border text-left flex justify-between items-center transition-all ${
+                          sig.name && sig.email
+                            ? 'bg-[#C68A1E]/10 border-[#C68A1E]/40 cursor-grab active:cursor-grabbing hover:border-[#C68A1E]'
+                            : 'bg-background/20 border-card-border opacity-40 cursor-not-allowed'
+                        }`}
+                        title={!(sig.name && sig.email) ? "Completa el nombre y correo del firmante para poder ubicar su firma." : "Arrastra al PDF"}
+                      >
+                        <div className="truncate max-w-[70%]">
+                          <span className="text-[7px] bg-[#C68A1E]/20 text-[#C68A1E] px-1.5 py-0.5 rounded font-black uppercase mr-1.5">{sig.role || 'Firmante'}</span>
+                          <span className="font-bold text-[9px] text-foreground">{sig.name || `Firmante #${idx + 1}`}</span>
+                        </div>
+                        {sig.sig_page ? (
+                          <span className="text-[7px] bg-green-500/10 text-green-400 border border-green-500/25 px-2 py-0.5 rounded-full font-black font-mono">
+                            Pág. {sig.sig_page}
+                          </span>
+                        ) : (
+                          <span className="text-[7px] bg-red-500/10 text-red-400 border border-red-500/25 px-2 py-0.5 rounded-full font-black font-mono">
+                            Sin ubicar
+                          </span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div className="border-t border-card-border pt-4 mt-4">
                 <button

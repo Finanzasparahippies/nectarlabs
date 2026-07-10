@@ -343,7 +343,81 @@ def generate_custom_contract_pdf(contract):
     """
     Genera el PDF del contrato personalizado con la estructura de proemio, declaraciones, cláusulas
     y el área dinámica de firmas para todos los firmantes.
+    Si posee uploaded_pdf, se realiza una superposición de firmas digitales con pypdf.
     """
+    if contract.uploaded_pdf:
+        try:
+            from pypdf import PdfReader, PdfWriter
+            from fpdf import FPDF
+            import os
+            from django.core.files.base import ContentFile
+            from collections import defaultdict
+            
+            # Read original PDF
+            contract.uploaded_pdf.seek(0)
+            orig_pdf_bytes = contract.uploaded_pdf.read()
+            reader = PdfReader(BytesIO(orig_pdf_bytes))
+            writer = PdfWriter()
+            
+            # Group signatories by page
+            sigs_by_page = defaultdict(list)
+            for sig in contract.signatories.all():
+                if sig.signature_base64 and sig.sig_x is not None and sig.sig_y is not None:
+                    # sig_page is 1-indexed, convert to 0-indexed page index
+                    page_idx = (sig.sig_page or 1) - 1
+                    if 0 <= page_idx < len(reader.pages):
+                        sigs_by_page[page_idx].append(sig)
+            
+            # Process each page
+            for idx, page in enumerate(reader.pages):
+                if idx in sigs_by_page:
+                    page_width = float(page.mediabox.width)
+                    page_height = float(page.mediabox.height)
+                    
+                    # Convert dimensions to mm (1 point = 25.4 / 72 mm = 0.352777 mm)
+                    pt_to_mm = 0.352777
+                    width_mm = page_width * pt_to_mm
+                    height_mm = page_height * pt_to_mm
+                    
+                    overlay_pdf = FPDF(unit="mm", format=(width_mm, height_mm))
+                    overlay_pdf.add_page()
+                    
+                    # Draw signatures
+                    for sig in sigs_by_page[idx]:
+                        try:
+                            sig_data = safe_b64decode(sig.signature_base64)
+                            if sig_data and is_valid_image(sig_data):
+                                sig_img = BytesIO(sig_data)
+                                
+                                x_mm = sig.sig_x * pt_to_mm
+                                y_mm = sig.sig_y * pt_to_mm
+                                w_mm = (sig.sig_w or 150.0) * pt_to_mm
+                                h_mm = (sig.sig_h or 80.0) * pt_to_mm
+                                
+                                overlay_pdf.image(sig_img, x=x_mm, y=y_mm, w=w_mm, h=h_mm)
+                        except Exception as draw_err:
+                            logger.error(f"Error drawing signature overlay for {sig.name}: {draw_err}", exc_info=True)
+                    
+                    overlay_bytes = overlay_pdf.output()
+                    overlay_reader = PdfReader(BytesIO(overlay_bytes))
+                    overlay_page = overlay_reader.pages[0]
+                    
+                    page.merge_page(overlay_page)
+                
+                writer.add_page(page)
+            
+            output_buffer = BytesIO()
+            writer.write(output_buffer)
+            output_bytes = output_buffer.getvalue()
+            
+            filename = os.path.basename(contract.uploaded_pdf.name)
+            contract.pdf_file.save(filename, ContentFile(output_bytes), save=False)
+            contract.save(update_fields=['pdf_file'])
+            return True
+        except Exception as e:
+            logger.error(f"Error generating signature overlay on uploaded PDF: {e}", exc_info=True)
+            return False
+
     try:
         pdf = CustomContractPDF(contract)
         pdf.add_page()

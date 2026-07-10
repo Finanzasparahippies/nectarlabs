@@ -9,6 +9,7 @@ const CALCULATOR_ADDONS = [
   { id: 'campaigner', name: 'Campaigner Masivo', monthlyPrice: 99, yearlyPrice: 990, desc: 'Boletines masivos. $99 MXN/mes + $0.01 MXN por correo.' },
   { id: 'booking-signature', name: 'Néctar Contratos Digitales', monthlyPrice: 99, yearlyPrice: 990, desc: 'Firma de contratos digitales ilimitados sin costo por firmante.' },
   { id: 'booking', name: 'Agendador de Citas & Kanban', monthlyPrice: 49, yearlyPrice: 490, desc: 'Gestión de citas y reservas con tablero Kanban integrado.' },
+  { id: 'bot-chat', name: 'Néctar AI Chat Bot', monthlyPrice: 99, yearlyPrice: 990, desc: 'Widget de chat flotante en tiempo real y consola multi-agente con soporte de IA.' },
 ];
 
 const PARTNER_PLANS = [

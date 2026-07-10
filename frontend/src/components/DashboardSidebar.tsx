@@ -238,7 +238,8 @@ function DashboardSidebarContent() {
     {
       label: 'Contratos Digitales',
       href: '/dashboard?tab=custom-contracts',
-      show: isCEO || isStaff,
+      show: (userRole === 'ADMIN' || userRole === 'STAFF') || 
+            (userRole === 'BUSINESS' && tenants.some(t => t.is_active && t.active_addons?.includes('booking-signature'))),
       active: pathname === '/dashboard' && activeTab === 'custom-contracts',
       id: 'tour-sidebar-custom-contracts',
       icon: (active: boolean) => (

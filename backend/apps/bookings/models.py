@@ -139,6 +139,7 @@ class CustomContract(models.Model):
     declarations = models.TextField()
     clauses = models.TextField()
     pdf_file = models.FileField(upload_to=custom_contract_pdf_path, storage=raw_storage, max_length=255, null=True, blank=True)
+    uploaded_pdf = models.FileField(upload_to=custom_contract_pdf_path, storage=raw_storage, max_length=255, null=True, blank=True)
 
     is_fully_signed = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -162,6 +163,13 @@ class CustomContractSignatory(models.Model):
     signed_at = models.DateTimeField(null=True, blank=True)
     ip_address = models.GenericIPAddressField(null=True, blank=True)
     token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+
+    # Signature placement details for custom PDF uploads
+    sig_page = models.IntegerField(null=True, blank=True, default=1)
+    sig_x = models.FloatField(null=True, blank=True)
+    sig_y = models.FloatField(null=True, blank=True)
+    sig_w = models.FloatField(null=True, blank=True, default=150)
+    sig_h = models.FloatField(null=True, blank=True, default=80)
 
     def __str__(self):
         return f"{self.name} ({self.role}) - Contrato: {self.contract.title}"

@@ -341,6 +341,10 @@ export default function AddonsPage() {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
   const [selectedAddon, setSelectedAddon] = useState<Addon | null>(null);
   const [requestAddon, setRequestAddon] = useState<Addon | null>(null);
+  const [annexedAddons, setAnnexedAddons] = useState<string[]>([]);
+  useEffect(() => {
+    setAnnexedAddons([]);
+  }, [requestAddon]);
   const [manageAddon, setManageAddon] = useState<Addon | null>(null);
   const [contracts, setContracts] = useState<any[]>([]);
   const [updatingContractId, setUpdatingContractId] = useState<number | null>(null);
@@ -556,7 +560,7 @@ export default function AddonsPage() {
       contracts.some(c => (c.addons || []).includes(addon.id) || (c.addons || []).includes(addonAlias));
 
     const hasActivePackage = currentActiveTenant?.active_addons?.some((id: string) => id.startsWith('pack-')) || false;
-    const isFree = hasPlanContract || hasActivePackage;
+    const isFree = hasPlanContract || (hasActivePackage && !['bot-chat', 'live-chat', 'booking-signature', 'booking'].includes(addon.id));
 
     return (
       <div
@@ -792,7 +796,8 @@ export default function AddonsPage() {
           method: 'POST',
           body: JSON.stringify({
             comments: checkoutComments,
-            billing_cycle: billingCycle
+            billing_cycle: billingCycle,
+            annexed_addons: annexedAddons
           })
         });
         if (data.url) {
@@ -1183,7 +1188,14 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
                       </span>
                     ) : (
                       <span className="font-black text-lg text-nectar-gold text-right">
-                        ${billingCycle === 'monthly' ? requestAddon.monthlyPrice.toLocaleString('es-MX') : requestAddon.yearlyPrice.toLocaleString('es-MX')} MXN
+                        ${(() => {
+                          let total = billingCycle === 'monthly' ? requestAddon.monthlyPrice : requestAddon.yearlyPrice;
+                          annexedAddons.forEach(id => {
+                            if (id === 'bot-chat' || id === 'booking-signature') total += billingCycle === 'monthly' ? 99 : 990;
+                            if (id === 'booking') total += billingCycle === 'monthly' ? 49 : 490;
+                          });
+                          return total.toLocaleString('es-MX');
+                        })()} MXN
                         <span className="text-[9px] font-bold text-muted opacity-60 block">
                           / {billingCycle === 'monthly' ? 'mes' : 'año'}
                         </span>
@@ -1191,6 +1203,54 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
                     )}
                   </div>
                 </div>
+
+                 {requestAddon.id.startsWith('pack-') && !hasPlanContract && (
+                   <div className="space-y-3 border-t border-card-border/50 pt-4">
+                     <label className="text-[10px] font-black uppercase tracking-widest text-nectar-gold block">
+                       Anexar Complementos Adicionales (Sumados al paquete)
+                     </label>
+                     <div className="grid grid-cols-1 gap-2.5">
+                       {[
+                         { id: 'bot-chat', name: 'Néctar AI Chat Bot (Chatbot IA)', mPrice: 99, yPrice: 990, icon: '💬' },
+                         { id: 'booking-signature', name: 'Néctar Contratos Digitales', mPrice: 99, yPrice: 990, icon: '✍️' },
+                         { id: 'booking', name: 'Agendador de Citas & Kanban', mPrice: 49, yPrice: 490, icon: '📅' }
+                       ].map(opt => {
+                         const isChecked = annexedAddons.includes(opt.id);
+                         const price = billingCycle === 'monthly' ? opt.mPrice : opt.yPrice;
+                         return (
+                           <button
+                             key={opt.id}
+                             type="button"
+                             onClick={() => {
+                               if (isChecked) {
+                                 setAnnexedAddons(prev => prev.filter(x => x !== opt.id));
+                               } else {
+                                 setAnnexedAddons(prev => [...prev, opt.id]);
+                               }
+                             }}
+                             className={`p-4 rounded-xl border text-left flex items-center justify-between transition-all cursor-pointer ${
+                               isChecked ? 'border-nectar-gold bg-nectar-gold/5' : 'border-card-border bg-background/30 hover:border-nectar-gold/30'
+                             }`}
+                           >
+                             <div className="flex items-center gap-3">
+                               <span className="text-xl">{opt.icon}</span>
+                               <div>
+                                 <span className="text-xs font-bold text-foreground block">{opt.name}</span>
+                                 <span className="text-[8px] text-muted uppercase font-black tracking-wider">Add-on independiente</span>
+                               </div>
+                             </div>
+                             <div className="flex items-center gap-3">
+                               <span className="text-xs font-black text-nectar-gold font-mono">+${price} MXN</span>
+                               <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${isChecked ? 'border-nectar-gold bg-nectar-gold text-background' : 'border-card-border'}`}>
+                                 {isChecked && <span className="text-[8px] font-black">✓</span>}
+                               </div>
+                             </div>
+                           </button>
+                         );
+                       })}
+                     </div>
+                   </div>
+                 )}
 
                 <div className="space-y-4 border-t border-card-border/50 pt-4">
                   <label className="text-[10px] font-black uppercase tracking-widest text-nectar-gold block">

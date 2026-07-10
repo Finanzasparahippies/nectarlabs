@@ -238,6 +238,30 @@ class AddOnViewSet(viewsets.ModelViewSet):
             comments = request.data.get('comments', '')
             comments_truncated = comments[:450] if comments else ''
             
+            annexed_addons = request.data.get('annexed_addons', [])
+            
+            # Build line items
+            line_items = [{
+                'price': price_id,
+                'quantity': 1,
+            }]
+            
+            valid_annexed_slugs = []
+            for slug in annexed_addons:
+                try:
+                    ann_addon = AddOn.objects.get(slug=slug)
+                    ann_price_id = ann_addon.stripe_yearly_price_id if billing_cycle == 'yearly' else ann_addon.stripe_price_id
+                    if ann_price_id and ann_price_id.startswith('price_'):
+                        line_items.append({
+                            'price': ann_price_id,
+                            'quantity': 1
+                        })
+                        valid_annexed_slugs.append(slug)
+                except AddOn.DoesNotExist:
+                    pass
+            
+            annexed_addons_str = ",".join(valid_annexed_slugs)
+
             discounts = []
             promo_code_str = request.data.get('promo_code', '').strip().upper()
             if promo_code_str:
@@ -253,19 +277,17 @@ class AddOnViewSet(viewsets.ModelViewSet):
 
             session_kwargs = {
                 'payment_method_types': ['card'],
-                'line_items': [{
-                    'price': price_id,
-                    'quantity': 1,
-                }],
+                'line_items': line_items,
                 'mode': 'subscription',
                 'allow_promotion_codes': True,
-                # AddOnViewSet en Django
                 'subscription_data': {
                     'metadata': {
                         'user_id': request.user.id,
                         'addon_id': addon.id,
                         'addon_slug': addon.slug, 
                         'type': 'addon_subscription',
+                        'billing_cycle': billing_cycle,
+                        'annexed_addons': annexed_addons_str,
                         'comments': comments_truncated
                     }
                 },
@@ -276,6 +298,8 @@ class AddOnViewSet(viewsets.ModelViewSet):
                     'addon_id': addon.id,
                     'addon_slug': addon.slug,
                     'type': 'addon_subscription',
+                    'billing_cycle': billing_cycle,
+                    'annexed_addons': annexed_addons_str,
                     'comments': comments_truncated
                 }
             }
@@ -370,6 +394,29 @@ class AddOnViewSet(viewsets.ModelViewSet):
                     'is_activated': True
                 }
             )
+            
+            # Activate any annexed addons in user's contract and subscriptions
+            annexed_addons_str = metadata.get('annexed_addons', '')
+            if annexed_addons_str:
+                annexed_slugs = [s.strip() for s in annexed_addons_str.split(',') if s.strip()]
+                for slug in annexed_slugs:
+                    try:
+                        ann_addon = AddOn.objects.get(slug=slug)
+                        contract.addons.add(ann_addon)
+                        AddOnSubscription.objects.update_or_create(
+                            user=user,
+                            addon=ann_addon,
+                            defaults={
+                                'tenant': tenant,
+                                'stripe_subscription_id': subscription_id,
+                                'status': 'active',
+                                'billing_cycle': billing_cycle,
+                                'price_paid': ann_addon.yearly_price if billing_cycle == 'yearly' else ann_addon.monthly_price,
+                                'is_activated': True
+                            }
+                        )
+                    except AddOn.DoesNotExist:
+                        pass
             
             if not tenant:
                 from django.utils.text import slugify
@@ -1209,6 +1256,29 @@ def stripe_webhook(request):
                                     'is_activated': True
                                 }
                             )
+
+                            # Activate annexed addons
+                            annexed_addons_str = session.get('metadata', {}).get('annexed_addons', '')
+                            if annexed_addons_str:
+                                annexed_slugs = [s.strip() for s in annexed_addons_str.split(',') if s.strip()]
+                                for slug in annexed_slugs:
+                                    try:
+                                        ann_addon = AddOn.objects.get(slug=slug)
+                                        contract.addons.add(ann_addon)
+                                        AddOnSubscription.objects.update_or_create(
+                                            user=user,
+                                            addon=ann_addon,
+                                            defaults={
+                                                'tenant': tenant,
+                                                'stripe_subscription_id': subscription_id,
+                                                'status': 'active',
+                                                'billing_cycle': billing_cycle,
+                                                'price_paid': ann_addon.yearly_price if billing_cycle == 'yearly' else ann_addon.monthly_price,
+                                                'is_activated': True
+                                            }
+                                        )
+                                    except AddOn.DoesNotExist:
+                                        pass
                         except Exception as sub_err:
                             _webhook_logger.error(f"[stripe_webhook] Error creating/updating AddOnSubscription in webhook: {sub_err}", exc_info=True)
                 except Exception as core_err:
@@ -1249,6 +1319,16 @@ def stripe_webhook(request):
                         try:
                             addon = AddOn.objects.get(id=addon_id)
                             AddOnSubscription.objects.filter(user=user, addon=addon).update(tenant=tenant)
+                            
+                            annexed_addons_str = session.get('metadata', {}).get('annexed_addons', '')
+                            if annexed_addons_str:
+                                annexed_slugs = [s.strip() for s in annexed_addons_str.split(',') if s.strip()]
+                                for slug in annexed_slugs:
+                                    try:
+                                        ann_addon = AddOn.objects.get(slug=slug)
+                                        AddOnSubscription.objects.filter(user=user, addon=ann_addon).update(tenant=tenant)
+                                    except Exception:
+                                        pass
                         except Exception:
                             pass
                 except Exception as tenant_err:

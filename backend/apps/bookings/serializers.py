@@ -27,7 +27,7 @@ class CustomContractTemplateSerializer(serializers.ModelSerializer):
 class CustomContractSignatorySerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomContractSignatory
-        fields = ['id', 'name', 'email', 'role', 'signature_base64', 'signed_at', 'ip_address', 'token']
+        fields = ['id', 'name', 'email', 'role', 'signature_base64', 'signed_at', 'ip_address', 'token', 'sig_page', 'sig_x', 'sig_y', 'sig_w', 'sig_h']
         read_only_fields = ['id', 'signed_at', 'ip_address', 'token']
 
 
@@ -36,13 +36,55 @@ class CustomContractSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CustomContract
-        fields = ['id', 'template', 'tenant', 'title', 'logo', 'header_design', 'proemio', 'declarations', 'clauses', 'pdf_file', 'is_fully_signed', 'created_at', 'updated_at', 'signatories']
+        fields = ['id', 'template', 'tenant', 'title', 'logo', 'header_design', 'proemio', 'declarations', 'clauses', 'pdf_file', 'uploaded_pdf', 'is_fully_signed', 'created_at', 'updated_at', 'signatories']
         read_only_fields = ['id', 'pdf_file', 'is_fully_signed', 'created_at', 'updated_at']
 
     def create(self, validated_data):
-        signatories_data = validated_data.pop('signatories', [])
+        request = self.context.get('request')
+        signatories_data = []
+        if request and 'signatories' in request.data:
+            sig_raw = request.data.get('signatories')
+            if isinstance(sig_raw, str):
+                import json
+                try:
+                    signatories_data = json.loads(sig_raw)
+                except Exception:
+                    pass
+            else:
+                signatories_data = validated_data.pop('signatories', [])
+        else:
+            signatories_data = validated_data.pop('signatories', [])
+
         contract = CustomContract.objects.create(**validated_data)
         for sig_data in signatories_data:
-            CustomContractSignatory.objects.create(contract=contract, **sig_data)
+            name = sig_data.get('name')
+            email = sig_data.get('email')
+            role = sig_data.get('role', 'Firmante')
+            sig_page = sig_data.get('sig_page', 1)
+            sig_x = sig_data.get('sig_x')
+            sig_y = sig_data.get('sig_y')
+            sig_w = sig_data.get('sig_w', 150)
+            sig_h = sig_data.get('sig_h', 80)
+            
+            try:
+                sig_page = int(sig_page) if sig_page is not None else 1
+                sig_x = float(sig_x) if sig_x is not None else None
+                sig_y = float(sig_y) if sig_y is not None else None
+                sig_w = float(sig_w) if sig_w is not None else 150
+                sig_h = float(sig_h) if sig_h is not None else 80
+            except (ValueError, TypeError):
+                pass
+
+            CustomContractSignatory.objects.create(
+                contract=contract,
+                name=name,
+                email=email,
+                role=role,
+                sig_page=sig_page,
+                sig_x=sig_x,
+                sig_y=sig_y,
+                sig_w=sig_w,
+                sig_h=sig_h
+            )
         return contract
 
