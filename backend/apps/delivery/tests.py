@@ -173,7 +173,7 @@ class DeliveryAddonTests(BaseTenantAddonTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['driver'], driver.id)
-        self.assertEqual(response.data['status'], 'ASSIGNED')
+        self.assertEqual(response.data['status'], 'WAITING_ACCEPTANCE')
 
         # Test Idempotency (repeating exact request must yield same assignment response)
         response_dup = self.client.post(

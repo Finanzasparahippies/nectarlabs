@@ -245,9 +245,8 @@ class BookingsAddonTests(BaseTenantAddonTestCase):
         self.assertFalse(db_contract.is_fully_signed)
         self.assertEqual(db_contract.signatories.count(), 2)
 
-        signatories = list(db_contract.signatories.all().order_by('id'))
-        sig_1 = signatories[0]
-        sig_2 = signatories[1]
+        sig_1 = db_contract.signatories.get(name='Juan Rep')
+        sig_2 = db_contract.signatories.get(name='Pedro Cliente')
 
         # Verify token generation
         self.assertIsNotNone(sig_1.token)
