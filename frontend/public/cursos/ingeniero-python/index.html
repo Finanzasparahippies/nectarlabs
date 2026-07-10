@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard: Curso de Ingeniería Python</title>
+    
+    <!-- Fuentes premium de Google -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Iconos Boxicons -->
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+    
+    <!-- PrismJS para resaltado de código en modo oscuro (Estética Tomorrow Night) -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    
+    <!-- Archivo de Estilos Personalizado -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        
+        <!-- Sidebar lateral de navegación -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <i class="bx bxl-python logo-icon"></i>
+                <div class="logo-text">
+                    <h2>PYTHON</h2>
+                    <span>STAFF ENGINEER</span>
+                </div>
+            </div>
+            
+            <nav class="modules-nav">
+                <h3>Módulos del Curso</h3>
+                <ul id="modules-list">
+                    <!-- Los módulos se inyectan dinámicamente con JavaScript -->
+                </ul>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="progress-container">
+                    <div class="progress-text">
+                        <span>Progreso General</span>
+                        <span id="general-progress-pct">0%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="general-progress-fill" style="width: 0%;"></div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+        
+        <!-- Contenido principal -->
+        <main class="main-content">
+            
+            <!-- Barra superior del header -->
+            <header class="main-header">
+                <div class="module-title-area">
+                    <span class="module-badge" id="current-module-id">MÓDULO 01</span>
+                    <h1 id="current-module-title">Fundamentos Avanzados</h1>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-secondary" id="btn-completar-modulo">
+                        <i class="bx bx-check-circle"></i> Completado
+                    </button>
+                    <button class="btn btn-primary" id="btn-abrir-bot">
+                        <i class="bx bx-bot"></i> Berribot IA
+                    </button>
+                </div>
+            </header>
+            
+            <!-- Contenedor del Visor e Interacciones -->
+            <div class="workspace">
+                
+                <!-- Navegación de pestañas internas -->
+                <div class="tabs-navigation">
+                    <button class="tab-btn active" data-tab="tab-teoria">
+                        <i class="bx bx-book-open"></i> Teoría (README)
+                    </button>
+                    <button class="tab-btn" data-tab="tab-ejemplos">
+                        <i class="bx bx-code-block"></i> Ejemplos.py
+                    </button>
+                    <button class="tab-btn" data-tab="tab-ejercicios">
+                        <i class="bx bx-edit-alt"></i> Ejercicios.py
+                    </button>
+                </div>
+                
+                <!-- Panel de Contenido Principal -->
+                <div class="content-panel">
+                    
+                    <!-- Pestaña 1: Teoría Renderizada (Markdown a HTML) -->
+                    <div class="tab-content active" id="tab-teoria">
+                        <div class="markdown-body" id="teoria-container">
+                            <!-- Teoría inyectada dinámicamente -->
+                        </div>
+                    </div>
+                    
+                    <!-- Pestaña 2: Ejemplos de Código (Prism) -->
+                    <div class="tab-content" id="tab-ejemplos">
+                        <div class="code-view-wrapper">
+                            <div class="code-header">
+                                <span>ejemplos.py</span>
+                                <button class="btn-copy" data-target="code-ejemplos">
+                                    <i class="bx bx-copy"></i> Copiar
+                                </button>
+                            </div>
+                            <pre><code class="language-python" id="code-ejemplos"># Código cargando...</code></pre>
+                        </div>
+                    </div>
+                    
+                    <!-- Pestaña 3: Ejercicios -->
+                    <div class="tab-content" id="tab-ejercicios">
+                        <div class="code-view-wrapper">
+                            <div class="code-header">
+                                <span>ejercicios.py</span>
+                                <button class="btn-copy" data-target="code-ejercicios">
+                                    <i class="bx bx-copy"></i> Copiar
+                                </button>
+                            </div>
+                            <pre><code class="language-python" id="code-ejercicios"># Ejercicios cargando...</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+        <!-- Modal / Panel lateral del Simulador Berribot IA -->
+        <div class="bot-drawer" id="bot-drawer">
+            <div class="drawer-header">
+                <h3><i class="bx bx-bot"></i> Simulador Berribot IA</h3>
+                <button class="close-drawer" id="btn-cerrar-bot"><i class="bx bx-x"></i></button>
+            </div>
+            <div class="drawer-body">
+                <p class="drawer-intro">Practica tus respuestas verbales o escritas para que el bot de Coforge te puntúe al 100%. Selecciona un escenario:</p>
+                
+                <div class="select-escenario-group">
+                    <label for="select-escenario">Escenario de Evaluación:</label>
+                    <select id="select-escenario">
+                        <option value="excepciones">Manejo de Excepciones y Robustez</option>
+                        <option value="decoradores">Decoradores en Python</option>
+                        <option value="entornos">Gestión de Dependencias y Replicabilidad</option>
+                        <option value="typescript">TypeScript Backend y Tipado</option>
+                        <option value="elixir">Elixir y Concurrencia OTP</option>
+                        <option value="aws">AWS, Microservicios y DevOps</option>
+                    </select>
+                </div>
+                
+                <div class="pregunta-box">
+                    <strong>Pregunta de la IA:</strong>
+                    <p id="pregunta-texto">¿Cómo manejas los errores en una API que conecta con una base de datos externa para asegurar que la aplicación no se caiga?</p>
+                </div>
+                
+                <div class="respuesta-box">
+                    <label for="input-respuesta">Tu respuesta técnica:</label>
+                    <textarea id="input-respuesta" placeholder="Escribe tu respuesta técnica aquí utilizando las mejores prácticas de la industria..."></textarea>
+                </div>
+                
+                <button class="btn btn-primary btn-block" id="btn-evaluar-respuesta">
+                    Evaluar Respuesta
+                </button>
+                
+                <!-- Resultados del Análisis de IA -->
+                <div class="resultados-ia" id="resultados-ia" style="display: none;">
+                    <div class="scoring-circle-wrapper">
+                        <div class="scoring-circle">
+                            <span id="score-pct">0%</span>
+                            <span>Match Score</span>
+                        </div>
+                    </div>
+                    
+                    <div class="feedback-detallado">
+                        <h4>Palabras clave detectadas:</h4>
+                        <ul class="keywords-list" id="keywords-list-feedback">
+                            <!-- Inyectado por JS -->
+                        </ul>
+                        
+                        <div class="retroalimentacion-caja">
+                            <strong>Recomendación técnica:</strong>
+                            <p id="recomendacion-texto">Intenta incluir más palabras clave de producción.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+
+    <!-- Librería Marked para renderizar Markdown a HTML -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
+    
+    <!-- Librería PrismJS para coloreado de código -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-typescript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-elixir.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-yaml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-hcl.min.js"></script>
+    
+    <!-- Base de Datos estática offline para fallback universal (CORS-Safe) -->
+    <script src="course_data.js"></script>
+    
+    <!-- Archivo JS de la aplicación -->
+    <script src="app.js"></script>
+</body>
+</html>

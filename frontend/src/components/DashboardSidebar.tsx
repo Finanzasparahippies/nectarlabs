@@ -518,7 +518,7 @@ function DashboardSidebarContent() {
 
   const renderTenantAccordion = () => {
     if (isDriver) return null;
-    const activeTenants = tenants.filter(t => t.is_active);
+    const activeTenants = tenants; // Mostrar todos los portales (activos e inactivos/reservados)
     if (activeTenants.length === 0) return null;
 
     if (isCollapsed) {
@@ -600,7 +600,7 @@ function DashboardSidebarContent() {
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <div className="w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)] animate-pulse shrink-0"></div>
+                      <div className={`w-1.5 h-1.5 rounded-full ${tenant.is_active ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]' : 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.6)]'} animate-pulse shrink-0`}></div>
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         viewBox="0 0 24 24"

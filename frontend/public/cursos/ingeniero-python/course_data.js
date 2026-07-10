@@ -1,0 +1,68 @@
+// Base de datos de contenidos auto-generada para acceso universal offline (CORS-Safe)
+const COURSE_DATA = {
+  "00": {
+    "teoria": "# Módulo 00: Preparación de IA y Berribot\n\nLas herramientas de IA como **Berribot** analizan respuestas buscando palabras clave y estructuras de comunicación lógicas.\n\n### 💡 Estructura de Respuesta Perfecta (P-S-B):\n1. **Problema (Contexto)**\n2. **Solución Propuesta**\n3. **Beneficio Técnico**\n\n### 🎯 Respuestas de Muestra:\n* **Manejo de Excepciones:** Usa try-except-finally específico, mitigando caídas transitorias mediante *exponential backoff* con *jitter*.\n* **Decoradores:** Define funciones de orden superior para Cross-Cutting Concerns usando `functools.wraps`.\n* **Replicabilidad:** Usa entornos virtuales (`venv` o `poetry`), `requirements.txt` y contenedores Docker multi-stage.",
+    "ejemplos": "",
+    "ejercicios": ""
+  },
+  "01": {
+    "teoria": "# Módulo 01: Python Avanzado\n\n### 🔍 1. Mutabilidad y Argumentos por Defecto\nDefinir parámetros con valores mutables por defecto como `lista=[]` causa fugas de datos.\n```python\n# Solución Correcta:\ndef agregar(item, lista=None):\n    if lista is None:\n        lista = []\n    lista.append(item)\n    return lista\n```\n\n### 🔒 2. Scoping (LEGB) y Closures\nPython busca variables en orden Local, Enclosing, Global, y Built-in.\n\n### 🎀 3. Decoradores\nUsa siempre `@wraps` del módulo `functools` para preservar metadatos originales.",
+    "ejemplos": "# Ejemplos Módulo 01\nfrom functools import wraps\n\ndef mi_decorador(func):\n    @wraps(func)\n    def wrapper(*args, **kwargs):\n        return func(*args, **kwargs)\n    return wrapper",
+    "ejercicios": "# Ejercicios Módulo 01\n# Escribe una función que use decoradores avanzados para medir el tiempo de ejecución."
+  },
+  "02": {
+    "teoria": "# Módulo 02: Concurrencia y Rendimiento\n\n### 🔒 1. El GIL (Global Interpreter Lock)\nAsegura que solo un hilo ejecute bytecode a la vez. Invalida la aceleración de tareas CPU-bound con hilos.\n\n### 🆚 2. Multiprocessing vs. Threading vs. Asyncio\n* **Threading:** Para operaciones I/O-bound medianas.\n* **Multiprocessing:** Para tareas de cómputo intensivo (CPU-bound).\n* **Asyncio:** Concurrencia cooperativa de un solo hilo para I/O masivo.\n\n### 🧠 3. Optimización con __slots__\nDefine atributos fijos para desactivar `__dict__` y ahorrar hasta 70% de RAM.",
+    "ejemplos": "# Ejemplos Módulo 02\nimport asyncio\nimport httpx\n\nasync def fetch():\n    async with httpx.AsyncClient() as client:\n        res = await client.get('https://httpbin.org/get')\n        return res.json()",
+    "ejercicios": "# Ejercicios Módulo 02\n# Optimiza una clase usando __slots__."
+  },
+  "03": {
+    "teoria": "# Módulo 03: Diseño de Software y Arquitectura Limpia\n\n### 💎 1. Principios SOLID\n* **Single Responsibility:** Una sola razón para cambiar.\n* **Open/Closed:** Abierto para la extensión, cerrado para la modificación.\n* **Liskov Substitution:** Las subclases deben poder reemplazar a sus superclases.\n* **Interface Segregation:** Muchas interfaces específicas en vez de una sola general.\n* **Dependency Inversion:** Depender de abstracciones, no de concreciones.\n\n### 🎨 2. Patrones de Diseño\n* **Singleton:** Instancia única robusta usando locks.\n* **Factory:** Desacopla creación de lógica de negocio.\n* **Strategy:** Intercambia algoritmos de forma dinámica.\n* **Observer:** Suscripción uno a muchos de eventos.",
+    "ejemplos": "# Ejemplos Módulo 03\nimport threading\n\nclass Singleton:\n    _instance = None\n    _lock = threading.Lock()\n    def __new__(cls):\n        with cls._lock:\n            if not cls._instance:\n                cls._instance = super().__new__(cls)\n            return cls._instance",
+    "ejercicios": "# Ejercicios Módulo 03\n# Implementa el patrón Strategy para pasarelas de pago."
+  },
+  "04": {
+    "teoria": "# Módulo 04: Robustez y Testing\n\n### ⚠️ 1. Manejo Explicito de Excepciones\nEvita `except Exception: pass`. Captura siempre excepciones concretas.\n\n### ⚡ 2. Tenacity (Exponential Backoff + Jitter)\nMitiga problemas transitorios de red evitando saturar el servidor mediante ruido aleatorio (jitter).\n\n### 🧪 3. Pytest y Mocking\nDefine scopes para fixtures (`function`, `module`, `session`) y patchea en el lugar donde se importa el recurso.",
+    "ejemplos": "# Ejemplos Módulo 04\nfrom tenacity import retry, wait_exponential_jitter\n\n@retry(wait=wait_exponential_jitter(initial=1, max=10))\ndef query_api():\n    pass",
+    "ejercicios": "# Ejercicios Módulo 04\n# Escribe una prueba unitaria usando mocks en pytest."
+  },
+  "05": {
+    "teoria": "# Módulo 05: Bases de Datos y APIs Resilientes\n\n### 🏎️ 1. Consultas N+1 (N+1 Query Problem)\nOcurre al hacer queries dinámicas dentro de bucles. Se soluciona con carga ansiosa (*joinedload* o *selectinload* en SQLAlchemy, *select_related* o *prefetch_related* en Django).\n\n### ⚙️ 2. Pools de Conexión\nControla el tamaño del pool (`pool_size`) para no sobrepasar el límite de la base de datos (Postgres Error 53300).\n\n### ⚡ 3. Idempotencia\nGarantiza transacciones únicas usando llaves de idempotencia (`Idempotency-Key`) en Redis.",
+    "ejemplos": "# Ejemplos Módulo 05\n# SQLAlchemy 2.0 selectinload\nfrom sqlalchemy.orm import selectinload\n# query = select(User).options(selectinload(User.addresses))",
+    "ejercicios": "# Ejercicios Módulo 05\n# Crea una simulación de idempotencia usando Redis."
+  },
+  "06": {
+    "teoria": "# Módulo 06: Retos Algorítmicos y Big-O\n\n### 📈 1. Big-O temporal y espacial\nEvita soluciones $O(N^2)$ (bucles anidados) usando estructuras $O(1)$ como diccionarios y conjuntos.\n\n### 🛠️ 2. Patrones Algorítmicos\n* **Ventana Deslizante (Sliding Window):** Subsecuencias contiguas.\n* **Dos Punteros (Two Pointers):** Búsqueda en listas ordenadas desde ambos extremos.\n* **HashMaps:** Conteo rápido de frecuencias y memorización.",
+    "ejemplos": "# Ejemplos Módulo 06\ndef two_sum(nums, target):\n    seen = {}\n    for i, num in enumerate(nums):\n        diff = target - num\n        if diff in seen:\n            return [seen[diff], i]\n        seen[num] = i",
+    "ejercicios": "# Ejercicios Módulo 06\n# Implementa una ventana deslizante para encontrar la suma máxima."
+  },
+  "07": {
+    "teoria": "# Módulo 07: Sistemas Distribuidos y Caché\n\n### ⚡ 1. Colas de Tareas (Celery)\nProcesa tareas pesadas de forma asíncrona mediante un Broker (Redis/RabbitMQ) y Workers.\n\n### 💾 2. Cache-Aside y Cache Stampede\nPreviene la expiración masiva concurrente de llaves de caché de alto tráfico mediante bloqueos distribuidos o expiración probabilística.\n\n### 🔒 3. Bloqueos Distribuidos (Redlock)\nUsa Redis con `NX` y `PX` para sincronizar servidores independientes de API.",
+    "ejemplos": "# Ejemplos Módulo 07\n# Celery Task\n# @app.task\n# def send_report_task(): pass",
+    "ejercicios": "# Ejercicios Módulo 07\n# Implementa un Lock distribuido básico con Redis."
+  },
+  "08": {
+    "teoria": "# Módulo 08: Tips & Tricks y Metaprogramación\n\n### 🏗️ 1. __new__ vs __init__\n`__new__` construye físicamente el objeto. `__init__` inicializa sus atributos.\n\n### 🎯 2. Descriptores (Descriptors)\nEncapsulan getters y setters para validación de atributos sin duplicar código.\n\n### 🧪 3. Metaclases\nInterceptan y validan la definición de clases en tiempo de importación.",
+    "ejemplos": "# Ejemplos Módulo 08\nclass KilometrajeDescriptor:\n    def __get__(self, instance, owner):\n        return instance.__dict__.get('_km', 0)\n    def __set__(self, instance, value):\n        if value < 0:\n            raise ValueError('Kilometraje no puede ser negativo')\n        instance.__dict__['_km'] = value",
+    "ejercicios": "# Ejercicios Módulo 08\n# Escribe una metaclase que valide que todos los métodos comiencen con minúsculas."
+  },
+  "09": {
+    "teoria": "# Módulo 09: Machine Learning y Redes Bayesianas\n\n### ⚠️ 1. Data Leakage\nFuga de información del test set en el train set. Se evita dividiendo primero y calculando los transformadores (`StandardScaler.fit()`) exclusivamente sobre el set de entrenamiento.\n\n### 🎲 2. Redes Bayesianas y Teorema de Bayes\nGrafo Acíclico Dirigido (DAG) que modela probabilidades condicionales entre variables para realizar inferencia.",
+    "ejemplos": "# Ejemplos Módulo 09\n# Evitar Data Leakage\n# scaler.fit(X_train)\n# X_train_scaled = scaler.transform(X_train)\n# X_test_scaled = scaler.transform(X_test)",
+    "ejercicios": "# Ejercicios Módulo 09\n# Implementa un clasificador Naive Bayes simple."
+  },
+  "10": {
+    "teoria": "# Módulo 10: TypeScript Backend Development\n\nEste módulo cubre el desarrollo avanzado de backend utilizando **TypeScript** y **Node.js**, enfocado en patrones de diseño senior, tipado estricto avanzado, decoración y optimización de compilación/ejecución.\n\n### Generics con Restricciones (Constraints)\nPermiten escribir funciones y clases reutilizables pero acotadas a ciertas estructuras:\n```typescript\ninterface HasId {\n  id: string | number;\n}\n\nfunction getRecord<T extends HasId>(records: T[], id: T['id']): T | undefined {\n  return records.find(r => r.id === id);\n}\n```\n\n### Discriminated Unions\nManeja payloads polimórficos de forma segura mediante un campo común discriminador (ej. status o type).",
+    "ejemplos": "// 1. Uso Avanzado de Generics con Restricciones e Indexación\ninterface Identifiable {\n  id: string;\n}\n\nclass DatabaseStore<T extends Identifiable> {\n  private registry = new Map<string, T>();\n\n  public save(item: T): void {\n    this.registry.set(item.id, item);\n  }\n\n  public getById(id: string): T | undefined {\n    return this.registry.get(id);\n  }\n}\n\n// 2. Type Guards y Tipos Desconocidos (Unknown)\nfunction isUserPayload(payload: any): payload is { username: string; role: string } {\n  return payload !== null && typeof payload === 'object' && typeof payload.username === 'string';\n}",
+    "ejercicios": "// RETO 1: Utility Type 'DeepReadonly<T>'\ntype DeepReadonly<T> = {\n  readonly [P in keyof T]: T[P] extends object\n    ? T[P] extends (...args: any[]) => any\n      ? T[P]\n      : DeepReadonly<T[P]>\n    : T[P];\n};\n\n// RETO 2: Interfaces Discriminadas y Type Guards\ninterface HttpEvent { type: 'HTTP'; url: string; }\ninterface DatabaseEvent { type: 'DATABASE'; query: string; }\ntype SystemEvent = HttpEvent | DatabaseEvent;"
+  },
+  "11": {
+    "teoria": "# Módulo 11: Elixir & Concurrencia Masiva OTP\n\n### Ecosistema Erlang VM (BEAM)\nElixir corre sobre la BEAM, utilizando procesos ultra-ligeros con memoria aislada que permiten alta concurrencia.\n\n### Modelo de Actores\nLos procesos encapsulan su propio estado y se comunican enviando y recibiendo mensajes asíncronos en sus buzones (mailbox).\n\n### GenServer\nGeneric Server es la abstracción estándar de OTP para almacenar estado mutable de forma funcional y responder peticiones síncronas (`handle_call`) y asíncronas (`handle_cast`).\n\n### Supervisors y \"Let it crash\"\nEn lugar de blindar el código defensivamente, permitimos fallos y dejamos que un Supervisor limpie e inicie nuevamente los subprocesos según la estrategia elegida (ej. `:one_for_one`).",
+    "ejemplos": "defmodule BasicActor do\n  def listen do\n    receive do\n      {:ping, sender_pid} ->\n        send(sender_pid, :pong)\n        listen()\n      :stop -> :ok\n    end\n  end\nend\n\ndefmodule TenantBalanceManager do\n  use GenServer\n  \n  def init(balance) do\n    {:ok, balance}\n  end\n  \n  def handle_call(:get, _from, balance) do\n    {:reply, balance, balance}\n  end\nend",
+    "ejercicios": "defmodule ImageWorker do\n  # RETO: Controlar que no se ejecuten más de 3 tareas concurrentes simultáneas.\nend\n\ndefmodule ImageWorkerSolution do\n  def start, do: spawn(fn -> listen(0) end)\n  defp listen(active) do\n    receive do\n      {:process, id} when active < 3 ->\n        parent = self()\n        spawn(fn ->\n          :timer.sleep(1000)\n          send(parent, :done)\n        end)\n        listen(active + 1)\n      :done -> listen(max(0, active - 1))\n    end\n  end\nend"
+  },
+  "12": {
+    "teoria": "# Módulo 12: Arquitectura AWS, Microservicios y DevOps\n\n### Patrones de Microservicios\n* **Event-Driven (EDA):** Comunicación asíncrona mediante colas (SQS/SNS, RabbitMQ) para desacoplamiento.\n* **Sagas:** Transacciones distribuidas con compensaciones en reversa ante fallos en lugar de transacciones ACID globales.\n* **CQRS:** Segregación de consultas (lecturas rápidas) y comandos (escrituras seguras).\n\n### AWS Infrastructure\n* **ECS Fargate:** Contenedores sin servidor.\n* **RDS Multi-AZ:** Bases de datos PostgreSQL resilientes.\n* **IAM:** Principio de mínimo privilegio.\n\n### DevOps e Infraestructura como Código (IaC)\n* **Terraform:** Declaración y aprovisionamiento reproducible de recursos de red y bases de datos.\n* **CI/CD:** Pipelines que validan tipos (Mypy), analizan calidad (Ruff), corren tests (Pytest) y despliegan a AWS ECS.",
+    "ejemplos": "# Recursos de AWS declarados en Terraform (ejemplos.tf)\nresource \"aws_sqs_queue\" \"dead_letter\" {\n  name = \"nectar-orders-dlq\"\n}\n\nresource \"aws_sqs_queue\" \"orders\" {\n  name = \"nectar-orders-processing-queue\"\n  redrive_policy = jsonencode({\n    deadLetterTargetArn = aws_sqs_queue.dead_letter.arn\n    maxReceiveCount     = 5\n  })\n}",
+    "ejercicios": "# GitHub Actions CI/CD Pipeline (ci_cd_example.yml)\nname: Nectar Labs CI/CD\n\non:\n  push:\n    branches: [ main ]\n\njobs:\n  test:\n    runs-on: ubuntu-latest\n    steps:\n    - uses: actions/checkout@v4\n    - name: Run Pytest\n      run: pytest backend/"
+  }
+};
