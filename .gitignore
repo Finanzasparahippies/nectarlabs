@@ -33,3 +33,4 @@ Thumbs.db
 backend/test_*.py
 backend/test_write.txt
 backend/media/contracts/
+coforge-interview.md
