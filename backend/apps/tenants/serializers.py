@@ -53,7 +53,7 @@ class TenantSerializer(serializers.ModelSerializer):
             'subscriber_count',
 
             # Custom CSS/JS
-            'custom_css', 'custom_js'
+            'custom_css', 'custom_js', 'custom_backend_url', 'custom_frontend_url'
         ]
         read_only_fields = [
             'id', 'owner', 'api_key', 'created_at', 'updated_at', 
