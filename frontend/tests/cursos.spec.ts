@@ -58,6 +58,9 @@ test.describe('Curso de Python - Dashboard Interactivo (Enfoque A)', () => {
     await expect(btnEvaluar).toBeVisible();
     await expect(btnEvaluar).toContainText('Ejecutar y Evaluar');
 
+    // Esperar a que el editor CodeMirror esté listo en el DOM y expuesto
+    await page.waitForFunction(() => (window as any).cmEditor !== undefined && (window as any).cmEditor !== null);
+
     // Escribir código válido para desencadenar la detección de palabras clave locales
     await page.evaluate(() => {
         (window as any).cmEditor.setValue(`
