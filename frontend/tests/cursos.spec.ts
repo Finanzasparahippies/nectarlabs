@@ -3,8 +3,8 @@ import { test, expect } from '@playwright/test';
 test.describe('Curso de Python - Dashboard Interactivo (Enfoque A)', () => {
   
   test.beforeEach(async ({ page }) => {
-    // Navegar directamente a la ruta pública del curso embebido
-    await page.goto('/cursos/ingeniero-python/');
+    // Navegar directamente a la ruta pública del curso embebido con index.html para evitar ruteos 404 del dev server de Next.js
+    await page.goto('/cursos/ingeniero-python/index.html');
   });
 
   test('Debe cargar el curso con título,Badge y los Módulos de la barra lateral', async ({ page }) => {
