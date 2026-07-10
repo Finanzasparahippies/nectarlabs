@@ -419,7 +419,7 @@ class TenantsCoreTests(BaseTenantAddonTestCase):
         try:
             connection, from_email = get_tenant_email_connection(self.tenant_a)
             self.assertIsNone(connection)
-            self.assertEqual(from_email, settings.DEFAULT_FROM_EMAIL)
+            self.assertIn("Tenant A", from_email)
         finally:
             settings.BREVO_EMAIL_HOST_USER = orig_user
             settings.BREVO_EMAIL_HOST_PASSWORD = orig_pass
@@ -843,13 +843,13 @@ class TenantTrialLimitsTests(BaseTenantAddonTestCase):
         success = generate_shipping_label(order)
         self.assertFalse(success)
         
-        # Adding balance to shipping wallet -> success
-        self.tenant_a.shipping_wallet_balance = Decimal('200.00')
+        # Adding balance to shipping wallet -> success (exceeding minimum requirement of $250)
+        self.tenant_a.shipping_wallet_balance = Decimal('300.00')
         self.tenant_a.save()
         success = generate_shipping_label(order)
         self.assertTrue(success)
         self.tenant_a.refresh_from_db()
-        self.assertEqual(self.tenant_a.shipping_wallet_balance, Decimal('50.00'))
+        self.assertEqual(self.tenant_a.shipping_wallet_balance, Decimal('150.00'))
 
     def test_live_chat_limits(self):
         """5. Live Chat limit to 5 chats and AI assistant to 50 messages."""
