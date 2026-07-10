@@ -53,7 +53,8 @@ class TenantSerializer(serializers.ModelSerializer):
             'subscriber_count',
 
             # Custom CSS/JS
-            'custom_css', 'custom_js'
+            'custom_css', 'custom_js',
+            'custom_backend_url', 'custom_frontend_url'
         ]
         read_only_fields = [
             'id', 'owner', 'api_key', 'created_at', 'updated_at', 
@@ -195,6 +196,22 @@ class TenantSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError("Solo el CEO o administradores de Nectar Labs pueden agregar código JS personalizado.")
         return value
 
+    def validate_custom_backend_url(self, value):
+        user = self.context.get('request').user if self.context.get('request') else None
+        if user and not (user.is_staff or user.role == 'ADMIN'):
+            current_val = getattr(self.instance, 'custom_backend_url', None) if self.instance else None
+            if current_val != value:
+                raise serializers.ValidationError("Solo el CEO o administradores de Nectar Labs pueden configurar servidores de backend personalizados.")
+        return value
+
+    def validate_custom_frontend_url(self, value):
+        user = self.context.get('request').user if self.context.get('request') else None
+        if user and not (user.is_staff or user.role == 'ADMIN'):
+            current_val = getattr(self.instance, 'custom_frontend_url', None) if self.instance else None
+            if current_val != value:
+                raise serializers.ValidationError("Solo el CEO o administradores de Nectar Labs pueden configurar servidores de frontend personalizados.")
+        return value
+
     def to_representation(self, instance):
         instance.reset_stamps_if_new_month()
         ret = super().to_representation(instance)
@@ -228,7 +245,8 @@ class TenantPublicSerializer(serializers.ModelSerializer):
             # Pollen/Nectar Falling settings
             'pollen_active', 'pollen_icon', 'pollen_color', 'pollen_count', 'pollen_blur',
             # Custom CSS/JS
-            'custom_css', 'custom_js'
+            'custom_css', 'custom_js',
+            'custom_backend_url', 'custom_frontend_url'
         ]
 
     def get_logo_url(self, obj):
