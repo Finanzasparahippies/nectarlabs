@@ -230,7 +230,7 @@ class TenantPublicSerializer(serializers.ModelSerializer):
             # Pollen/Nectar Falling settings
             'pollen_active', 'pollen_icon', 'pollen_color', 'pollen_count', 'pollen_blur',
             # Custom CSS/JS
-            'custom_css', 'custom_js'
+            'custom_css', 'custom_js', 'custom_frontend_url', 'custom_backend_url'
         ]
 
     def get_logo_url(self, obj):
