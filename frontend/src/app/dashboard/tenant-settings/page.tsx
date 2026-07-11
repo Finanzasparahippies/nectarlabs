@@ -471,7 +471,7 @@ export default function TenantSettingsPage() {
       formData.append('invoicing_mode', editInvoicingMode);
       formData.append('store_category', editStoreCategory);
 
-      if (userRole === 'ADMIN') {
+      if (userRole === 'ADMIN' || isStaff) {
         formData.append('custom_frontend_url', editCustomFrontendUrl.trim());
         formData.append('custom_backend_url', editCustomBackendUrl.trim());
       }
@@ -1232,7 +1232,7 @@ export default function TenantSettingsPage() {
                         <p className="text-[8px] text-foreground/30 uppercase mt-1">Dominios desde los que se autoriza embeber el widget del portal.</p>
                       </div>
 
-                      {userRole === 'ADMIN' && (
+                      {(userRole === 'ADMIN' || isStaff) && (
                         <div className="space-y-4 pt-4 border-t border-card-border">
                           <h4 className="text-[10px] font-black uppercase tracking-widest text-nectar-gold">Configuraciones de Integración del Sistema (Sólo Administradores Matrix)</h4>
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

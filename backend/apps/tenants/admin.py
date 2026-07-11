@@ -17,6 +17,10 @@ class TenantAdmin(admin.ModelAdmin):
         ('Branding & Customization', {
             'fields': ('theme_color', 'logo_url', 'welcome_message', 'require_customer_info')
         }),
+        ('Custom Styling & Masking', {
+            'fields': ('custom_css', 'custom_js', 'custom_backend_url', 'custom_frontend_url'),
+            'classes': ('collapse',),
+        }),
         ('Newsletter Billing & Limits', {
             'fields': ('newsletter_plan', 'newsletter_extra_credits', 'newsletter_sent_this_month', 'newsletter_last_reset')
         }),
