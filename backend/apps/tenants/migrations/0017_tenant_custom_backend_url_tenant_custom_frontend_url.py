@@ -13,11 +13,11 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='tenant',
             name='custom_backend_url',
-            field=models.URLField(blank=True, help_text='URL de backend personalizada para redirigir peticiones API', max_length=500, null=True),
+            field=models.CharField(blank=True, help_text='URL de backend personalizada (acepta rutas relativas o URLs absolutas) para redirigir peticiones API', max_length=500, null=True),
         ),
         migrations.AddField(
             model_name='tenant',
             name='custom_frontend_url',
-            field=models.URLField(blank=True, help_text='URL de frontend personalizada para enmascarar en iframe', max_length=500, null=True),
+            field=models.CharField(blank=True, help_text='URL de frontend personalizada (acepta rutas relativas o URLs absolutas) para enmascarar en iframe', max_length=500, null=True),
         ),
     ]

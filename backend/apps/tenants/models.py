@@ -153,8 +153,8 @@ class Tenant(models.Model):
 
     custom_css = models.TextField(blank=True, null=True, help_text="Código CSS personalizado para el portal público del Tenant")
     custom_js = models.TextField(blank=True, null=True, help_text="Código JS personalizado para el portal público del Tenant")
-    custom_backend_url = models.URLField(max_length=500, blank=True, null=True, help_text="URL de backend personalizada para redirigir peticiones API")
-    custom_frontend_url = models.URLField(max_length=500, blank=True, null=True, help_text="URL de frontend personalizada para enmascarar en iframe")
+    custom_backend_url = models.CharField(max_length=500, blank=True, null=True, help_text="URL de backend personalizada (acepta rutas relativas o URLs absolutas) para redirigir peticiones API")
+    custom_frontend_url = models.CharField(max_length=500, blank=True, null=True, help_text="URL de frontend personalizada (acepta rutas relativas o URLs absolutas) para enmascarar en iframe")
 
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
