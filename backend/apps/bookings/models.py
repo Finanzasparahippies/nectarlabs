@@ -60,10 +60,11 @@ class BookingInquiry(models.Model):
     is_reviewed = models.BooleanField(default=False)
 
     def get_venue_type_display(self):
+        from django.core.exceptions import ObjectDoesNotExist
         try:
             config = self.tenant.booking_config
             return config.get_venue_display(self.venue_type)
-        except Exception:
+        except (ObjectDoesNotExist, AttributeError):
             defaults = {
                 'festival': 'Festival',
                 'theater': 'Teatro / Auditorio',

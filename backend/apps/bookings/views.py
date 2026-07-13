@@ -58,11 +58,13 @@ class BookingInquiryViewSet(viewsets.ModelViewSet):
             tenant_id = self.request.data.get('tenant_id') or self.request.query_params.get('tenant_id')
             subdomain = self.request.data.get('subdomain') or self.request.query_params.get('subdomain')
             from apps.tenants.models import Tenant
+            from django.core.exceptions import ValidationError as DjangoValidationError
             if tenant_id:
                 try:
                     tenant = Tenant.objects.filter(id=tenant_id, is_active=True).first()
-                except Exception:
-                    pass
+                except (DjangoValidationError, ValueError) as e:
+                    logger.warning(f"ID de tenant inválido proporcionado en consulta: {tenant_id}. Detalle: {e}")
+                    tenant = None
             elif subdomain:
                 tenant = Tenant.objects.filter(subdomain=subdomain.lower(), is_active=True).first()
 
@@ -82,11 +84,12 @@ class BookingInquiryViewSet(viewsets.ModelViewSet):
         
         # Fetch dynamic configuration or fallback
         fee = 25000.00
+        from django.db import DatabaseError
         try:
             config, _ = BookingConfig.objects.get_or_create(tenant=tenant)
             fee = config.default_fee
-        except Exception:
-            pass
+        except DatabaseError as e:
+            logger.error(f"Error de base de datos al obtener BookingConfig para el tenant {tenant}: {e}", exc_info=True)
 
         # Automatically generate a booking contract proposal
         contract = BookingContract.objects.create(

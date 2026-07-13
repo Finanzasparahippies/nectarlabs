@@ -37,20 +37,23 @@ def safe_b64decode(b64_string):
     if missing_padding:
         b64_string += '=' * (4 - missing_padding)
         
+    import binascii
     try:
         return base64.b64decode(b64_string)
-    except Exception:
+    except (binascii.Error, ValueError, TypeError) as e:
+        logger.warning(f"Error decodificando base64: {e}")
         return None
 
 def is_valid_image(image_bytes):
     if not image_bytes:
         return False
     try:
-        from PIL import Image
+        from PIL import Image, UnidentifiedImageError
         img = Image.open(BytesIO(image_bytes))
         img.verify()
         return True
-    except Exception:
+    except (UnidentifiedImageError, IOError, OSError, ValueError) as e:
+        logger.warning(f"Imagen no válida o corrupta: {e}")
         return False
 
 class BookingContractPDF(FPDF):
@@ -110,11 +113,13 @@ def generate_booking_contract_pdf(contract):
         pdf.cell(0, 10, 'TÉRMINOS Y CLÁUSULAS DEL CONTRATO', new_x="LMARGIN", new_y="NEXT")
         pdf.set_font('helvetica', '', 10)
         
+        from django.db import DatabaseError
         try:
             from .models import BookingConfig
             config, _ = BookingConfig.objects.get_or_create(tenant=tenant)
             template_text = config.contract_template
-        except Exception:
+        except DatabaseError as e:
+            logger.error(f"Error de base de datos al obtener BookingConfig para tenant {tenant}: {e}", exc_info=True)
             template_text = (
                 "1. OBJETO: El prestador brindará sus servicios oficiales el día {{event_date}}.\n"
                 "2. HONORARIOS: Se establece una tarifa de ${{fee}} MXN.\n"
@@ -642,9 +647,11 @@ def send_custom_contract_emails(contract, signatory_to_notify=None, request=None
             }
             
             # Intento de renderizar plantilla HTML, con fallback robusto en texto para evitar excepciones
+            from django.template import TemplateDoesNotExist
             try:
                 html_content = render_to_string('bookings/emails/custom_contract_invitation.html', html_context)
-            except Exception:
+            except TemplateDoesNotExist as e:
+                logger.warning(f"La plantilla HTML de invitación no existe: {e}. Usando fallback embebido.")
                 html_content = f"""
                 <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #1a231d; background: #050a06; color: #fff; border-radius: 20px;">
                     <h2 style="color: {theme_color};">Firmar Contrato Digital</h2>
@@ -652,7 +659,21 @@ def send_custom_contract_emails(contract, signatory_to_notify=None, request=None
                     <p>Se te solicita firmar el contrato digital: <strong>{contract.title}</strong>.</p>
                     <p>Tu rol asignado es: <strong>{signatory_to_notify.role}</strong>.</p>
                     <p style="margin: 30px 0; text-align: center;">
-                        <a href="{sign_url}" style="background-color: {theme_color}; color: #000; padding: 12px 30px; text-decoration: none; border-radius: 12px; font-weight: bold; display: inline-block;">Firmar Contrato</a>
+                         <a href="{sign_url}" style="background-color: {theme_color}; color: #000; padding: 12px 30px; text-decoration: none; border-radius: 12px; font-weight: bold; display: inline-block;">Firmar Contrato</a>
+                    </p>
+                    <p style="font-size: 11px; color: #666;">Enviado de forma segura por {tenant_name} a través de Néctar Labs.</p>
+                </div>
+                """
+            except Exception as e:
+                logger.exception(f"Error inesperado al renderizar plantilla de invitación para {signatory_to_notify.email}. Usando fallback.")
+                html_content = f"""
+                <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #1a231d; background: #050a06; color: #fff; border-radius: 20px;">
+                    <h2 style="color: {theme_color};">Firmar Contrato Digital</h2>
+                    <p>Hola <strong>{signatory_to_notify.name}</strong>,</p>
+                    <p>Se te solicita firmar el contrato digital: <strong>{contract.title}</strong>.</p>
+                    <p>Tu rol asignado es: <strong>{signatory_to_notify.role}</strong>.</p>
+                    <p style="margin: 30px 0; text-align: center;">
+                         <a href="{sign_url}" style="background-color: {theme_color}; color: #000; padding: 12px 30px; text-decoration: none; border-radius: 12px; font-weight: bold; display: inline-block;">Firmar Contrato</a>
                     </p>
                     <p style="font-size: 11px; color: #666;">Enviado de forma segura por {tenant_name} a través de Néctar Labs.</p>
                 </div>
@@ -686,9 +707,22 @@ def send_custom_contract_emails(contract, signatory_to_notify=None, request=None
                 'tenant_name': tenant_name,
             }
             
+            from django.template import TemplateDoesNotExist
             try:
                 html_content = render_to_string('bookings/emails/custom_contract_certified.html', html_context)
-            except Exception:
+            except TemplateDoesNotExist as e:
+                logger.warning(f"La plantilla HTML de certificación no existe: {e}. Usando fallback embebido.")
+                html_content = f"""
+                <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #1a231d; background: #050a06; color: #fff; border-radius: 20px;">
+                    <h2 style="color: {theme_color};">Contrato Certificado</h2>
+                    <p>Estimados firmantes,</p>
+                    <p>El contrato digital <strong>{contract.title}</strong> ha sido completamente firmado por todas las partes.</p>
+                    <p>Adjunto a este correo electrónico encontrarán la copia oficial certificada en formato PDF.</p>
+                    <p style="font-size: 11px; color: #666;">Enviado de forma segura por {tenant_name} a través de Néctar Labs.</p>
+                </div>
+                """
+            except Exception as e:
+                logger.exception("Error inesperado al renderizar plantilla de certificación. Usando fallback.")
                 html_content = f"""
                 <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #1a231d; background: #050a06; color: #fff; border-radius: 20px;">
                     <h2 style="color: {theme_color};">Contrato Certificado</h2>

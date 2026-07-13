@@ -59,20 +59,7 @@ class CustomContractSerializer(serializers.ModelSerializer):
         return super().to_internal_value(mutable_data)
 
     def create(self, validated_data):
-        request = self.context.get('request')
-        signatories_data = []
-        if request and 'signatories' in request.data:
-            sig_raw = request.data.get('signatories')
-            if isinstance(sig_raw, str):
-                import json
-                try:
-                    signatories_data = json.loads(sig_raw)
-                except Exception:
-                    pass
-            else:
-                signatories_data = validated_data.pop('signatories', [])
-        else:
-            signatories_data = validated_data.pop('signatories', [])
+        signatories_data = validated_data.pop('signatories', [])
 
         contract = CustomContract.objects.create(**validated_data)
         for sig_data in signatories_data:
