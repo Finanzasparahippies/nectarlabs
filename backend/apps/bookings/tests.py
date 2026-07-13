@@ -312,3 +312,45 @@ class BookingsAddonTests(BaseTenantAddonTestCase):
         db_contract.refresh_from_db()
         self.assertTrue(db_contract.is_fully_signed)
         logger.info("Test passed: Full custom contract signing flow completed with success.")
+
+    def test_custom_contract_signatories_json_string(self):
+        """
+        Verify that CustomContractViewSet correctly parses signatories list
+        when sent as a JSON string (simulating multipart/form-data requests).
+        """
+        logger.info("Executing test_custom_contract_signatories_json_string...")
+        # Activate addon
+        contract_a = Contract.objects.create(
+            user=self.owner_a,
+            full_name="Owner A Contract",
+            tax_id="TAXA123",
+            address="Address A",
+            is_fully_signed=True,
+            is_active=True
+        )
+        contract_a.addons.add(self.booking_addon)
+        self.client.force_authenticate(user=self.owner_a)
+
+        import json
+        signatories_data = [
+            {'name': 'Juan Rep', 'email': 'juan@example.com', 'role': 'Representante'},
+            {'name': 'Pedro Cliente', 'email': 'pedro@example.com', 'role': 'Cliente'}
+        ]
+
+        # Enviar como diccionario pero con 'signatories' como un JSON string
+        response = self.client.post(
+            '/api/bookings/custom-contracts/',
+            data={
+                'title': 'Contrato Multipart Test',
+                'proemio': 'Proemio test',
+                'declarations': 'Declaraciones test',
+                'clauses': 'Clausulas test',
+                'signatories': json.dumps(signatories_data)
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        
+        # Verificar en base de datos
+        db_contract = CustomContract.objects.get(title='Contrato Multipart Test')
+        self.assertEqual(db_contract.signatories.count(), 2)
+        logger.info("Test passed: Custom contract signatories JSON string parsed successfully.")
