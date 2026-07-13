@@ -527,7 +527,24 @@ export default function CustomContractsManager({
         loadData();
       } else {
         const errData = await res.json();
-        showToast(errData.detail || errData.error || 'Error al emitir el contrato.', 'error');
+        let errorMessage = 'Error al emitir el contrato.';
+        if (errData.detail) {
+          errorMessage = String(errData.detail);
+        } else if (errData.error) {
+          errorMessage = String(errData.error);
+        } else if (errData && typeof errData === 'object') {
+          const fieldErrors = Object.entries(errData)
+            .map(([field, msgs]) => {
+              const messages = Array.isArray(msgs) ? msgs.join(', ') : String(msgs);
+              return `${field}: ${messages}`;
+            })
+            .join(' | ');
+          if (fieldErrors) {
+            errorMessage = `Error de validación - ${fieldErrors}`;
+          }
+        }
+        console.error('Error al emitir el contrato:', errData);
+        showToast(errorMessage, 'error');
       }
     } catch (err) {
       showToast('Error de red al emitir el contrato.', 'error');

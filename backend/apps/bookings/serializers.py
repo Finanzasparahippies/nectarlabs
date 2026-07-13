@@ -1,5 +1,8 @@
+import logging
 from rest_framework import serializers
 from .models import BookingInquiry, BookingContract, CustomContractTemplate, CustomContract, CustomContractSignatory
+
+logger = logging.getLogger(__name__)
 
 class BookingInquirySerializer(serializers.ModelSerializer):
     contract_id = serializers.IntegerField(source='contract.id', read_only=True, allow_null=True)
@@ -40,8 +43,8 @@ class CustomContractSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'pdf_file', 'is_fully_signed', 'created_at', 'updated_at']
 
     def to_internal_value(self, data):
-        if hasattr(data, 'copy'):
-            mutable_data = data.copy()
+        if hasattr(data, 'dict'):
+            mutable_data = data.dict()
         else:
             mutable_data = dict(data)
 
@@ -50,8 +53,8 @@ class CustomContractSerializer(serializers.ModelSerializer):
             import json
             try:
                 mutable_data['signatories'] = json.loads(sig_raw)
-            except Exception:
-                pass
+            except json.JSONDecodeError as e:
+                logger.error(f"Error decodificando la cadena JSON de signatories: {e.msg} en la línea {e.lineno}, col {e.colno}")
                 
         return super().to_internal_value(mutable_data)
 
