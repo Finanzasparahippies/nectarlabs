@@ -46,6 +46,7 @@ const PdfSignPageCanvas = ({ page, pageIndex, currentSignatory, signatories }: a
   const [dimensions, setDimensions] = useState({ width: 0, height: 0, pointsWidth: 0, pointsHeight: 0 });
 
   useEffect(() => {
+    let renderTask: any = null;
     const renderPage = async () => {
       const canvas = canvasRef.current;
       if (!canvas) return;
@@ -73,9 +74,22 @@ const PdfSignPageCanvas = ({ page, pageIndex, currentSignatory, signatories }: a
         canvasContext: context,
         viewport: scaledViewport
       };
-      await page.render(renderContext).promise;
+      
+      try {
+        renderTask = page.render(renderContext);
+        await renderTask.promise;
+      } catch (err: any) {
+        if (err.name !== 'RenderingCancelledException') {
+          console.error('Error rendering sign page:', err);
+        }
+      }
     };
     renderPage();
+    return () => {
+      if (renderTask) {
+        renderTask.cancel();
+      }
+    };
   }, [page]);
 
   // Combine current signatory and other signatories

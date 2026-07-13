@@ -39,6 +39,22 @@ class CustomContractSerializer(serializers.ModelSerializer):
         fields = ['id', 'template', 'tenant', 'title', 'logo', 'header_design', 'proemio', 'declarations', 'clauses', 'pdf_file', 'uploaded_pdf', 'is_fully_signed', 'created_at', 'updated_at', 'signatories']
         read_only_fields = ['id', 'pdf_file', 'is_fully_signed', 'created_at', 'updated_at']
 
+    def to_internal_value(self, data):
+        if hasattr(data, 'copy'):
+            mutable_data = data.copy()
+        else:
+            mutable_data = dict(data)
+
+        sig_raw = mutable_data.get('signatories')
+        if sig_raw and isinstance(sig_raw, str):
+            import json
+            try:
+                mutable_data['signatories'] = json.loads(sig_raw)
+            except Exception:
+                pass
+                
+        return super().to_internal_value(mutable_data)
+
     def create(self, validated_data):
         request = self.context.get('request')
         signatories_data = []
