@@ -8,7 +8,7 @@ const COURSE_SLUG = 'ingeniero-python';
 
 // ── Listado estructurado de módulos del curso ─────────────────────────
 const MODULOS = [
-    { id: "00", badge: "MÓDULO 00", title: "Preparación de IA y Berribot", folder: "00_preparacion_ia_y_berribot" },
+    { id: "00", badge: "MÓDULO 00", title: "Preparación de IA y Nectar Bot", folder: "00_preparacion_ia_y_berribot" },
     { id: "01", badge: "MÓDULO 01", title: "Python Avanzado y Edge Cases", folder: "01_python_avanzado" },
     { id: "02", badge: "MÓDULO 02", title: "Concurrencia y Rendimiento", folder: "02_concurrencia_y_rendimiento" },
     { id: "03", badge: "MÓDULO 03", title: "Diseño y Arquitectura", folder: "03_diseno_y_arquitectura" },
@@ -23,75 +23,75 @@ const MODULOS = [
     { id: "12", badge: "MÓDULO 12", title: "AWS, Microservicios y DevOps", folder: "12_arquitectura_aws_devops" },
 ];
 
-// ── Escenarios Berribot IA ─────────────────────────────────────────────
+// ── Escenarios Nectar Bot IA (Guía Zen) ─────────────────────────────────
 const ESCENARIOS_BOT = {
     excepciones: {
         pregunta: "¿Cómo manejas los errores en una API que conecta con una base de datos externa para asegurar que la aplicación no se caiga?",
         keywords: [
-            { palabra: "try-except-finally", reg: /try.*except.*finally/i },
-            { palabra: "específica", reg: /especifica|específico/i },
-            { palabra: "ConnectionError", reg: /connectionerror|operationalerror/i },
-            { palabra: "exponential backoff", reg: /exponential backoff|retraso exponencial/i },
-            { palabra: "finally", reg: /finally/i },
-            { palabra: "context managers", reg: /context manager|administrador.*contexto|with/i },
+            { palabra: "try-except-finally", reg: /try.*except.*finally/i, pista: "El bloque de contención y conclusión final" },
+            { palabra: "específica", reg: /especifica|específico/i, pista: "La captura precisa de fallos concretos" },
+            { palabra: "ConnectionError", reg: /connectionerror|operationalerror/i, pista: "La naturaleza del error de comunicación" },
+            { palabra: "exponential backoff", reg: /exponential backoff|retraso exponencial/i, pista: "La virtud de la paciencia en los reintentos" },
+            { palabra: "finally", reg: /finally/i, pista: "El cierre incondicional de los recursos" },
+            { palabra: "context managers", reg: /context manager|administrador.*contexto|with/i, pista: "El guardián automático del ciclo de vida" },
         ],
-        recomendacion: "Intenta mencionar bloques específicos try-except-finally, capturar excepciones concretas (ConnectionError) y políticas de reintentos como exponential backoff.",
+        recomendacion: "Contempla cómo asegurar el flujo ante una tormenta de red, reintentando con calma y liberando todo recurso al concluir.",
     },
     decoradores: {
         pregunta: "¿Qué es un decorador en Python y proporciona un caso de uso real en una aplicación web?",
         keywords: [
-            { palabra: "función de orden superior", reg: /orden superior|higher order/i },
-            { palabra: "modificar comportamiento", reg: /modificar.*comportamiento|extender.*comportamiento/i },
-            { palabra: "autenticación / JWT", reg: /autenticacion|jwt|token/i },
-            { palabra: "logging / auditoría", reg: /logging|auditoria|registro/i },
-            { palabra: "functools.wraps", reg: /functools\.wraps|@wraps/i },
+            { palabra: "función de orden superior", reg: /orden superior|higher order/i, pista: "La función que envuelve a otra función" },
+            { palabra: "modificar comportamiento", reg: /modificar.*comportamiento|extender.*comportamiento/i, pista: "El arte de alterar la acción sin cambiar el interior" },
+            { palabra: "autenticación / JWT", reg: /autenticacion|jwt|token/i, pista: "El sello de identidad de quien ingresa" },
+            { palabra: "logging / auditoría", reg: /logging|auditoria|registro/i, pista: "El registro del paso del tiempo y las acciones" },
+            { palabra: "functools.wraps", reg: /functools\.wraps|@wraps/i, pista: "La preservación de la identidad original del objeto" },
         ],
-        recomendacion: "Describe el decorador como una función de orden superior y menciona casos como JWT, logging, y el uso indispensable de @wraps.",
+        recomendacion: "Reflexiona sobre las envolturas que alteran el destino de una función, protegiendo su verdadera identidad original.",
     },
     entornos: {
         pregunta: "¿Cómo garantizas que tu código de Python sea perfectamente replicable en cualquier entorno de servidor o la nube?",
         keywords: [
-            { palabra: "entorno virtual / venv", reg: /entorno virtual|venv|poetry|pipenv/i },
-            { palabra: "requirements.txt", reg: /requirements\.txt|pyproject\.toml/i },
-            { palabra: "Docker / Dockerfile", reg: /docker|dockerfile/i },
-            { palabra: "python:3.11-slim", reg: /slim|alpine|imagen.*ligera/i },
-            { palabra: "usuario no-root", reg: /no-root|no root|seguridad/i },
+            { palabra: "entorno virtual / venv", reg: /entorno virtual|venv|poetry|pipenv/i, pista: "El aislamiento del ecosistema local" },
+            { palabra: "requirements.txt", reg: /requirements\.txt|pyproject\.toml/i, pista: "El registro estricto de las dependencias" },
+            { palabra: "Docker / Dockerfile", reg: /docker|dockerfile/i, pista: "El contenedor universal e inmutable" },
+            { palabra: "python:3.11-slim", reg: /slim|alpine|imagen.*ligera/i, pista: "La ligereza y minimalismo de la base" },
+            { palabra: "usuario no-root", reg: /no-root|no root|seguridad/i, pista: "La humildad de privilegios (no gobernar como raíz)" },
         ],
-        recomendacion: "Habla sobre venv/poetry, empaquetar con Docker usando imágenes ligeras (slim) y ejecutar con un usuario no-root por seguridad.",
+        recomendacion: "Busca que tu creación nazca aislada de forma pura, encapsulada en una vasija minimalista y segura del exterior.",
     },
     typescript: {
         pregunta: "¿Cómo diseñas un tipado seguro y robusto en TypeScript para manejar payloads de APIs de terceros con estructuras desconocidas?",
         keywords: [
-            { palabra: "unknown", reg: /unknown/i },
-            { palabra: "Type Guards", reg: /type guard|isUserPayload|is[A-Z]/i },
-            { palabra: "Discriminated Unions", reg: /discriminated union|union.*discriminada/i },
-            { palabra: "Zod / runtime validation", reg: /zod|runtime|class-validator/i },
-            { palabra: "Generics", reg: /generic|genérico/i },
+            { palabra: "unknown", reg: /unknown/i, pista: "El tipo de aquello que no ha sido revelado (lo desconocido)" },
+            { palabra: "Type Guards", reg: /type guard|isUserPayload|is[A-Z]/i, pista: "Los guardianes que validan la forma en tiempo de ejecución" },
+            { palabra: "Discriminated Unions", reg: /discriminated union|union.*discriminada/i, pista: "La unión diferenciada por un sello identificativo" },
+            { palabra: "Zod / runtime validation", reg: /zod|runtime|class-validator/i, pista: "El contrato de validación al instante" },
+            { palabra: "Generics", reg: /generic|genérico/i, pista: "La flexibilidad de formas universales" },
         ],
-        recomendacion: "Explica el uso de 'unknown' en lugar de 'any', la creación de Type Guards de validación en tiempo de ejecución (Zod) y el uso de uniones discriminadas.",
+        recomendacion: "Medita sobre cómo recibir lo incierto, verificando su naturaleza con guardianes antes de darle un lugar seguro.",
     },
     elixir: {
         pregunta: "¿Cómo manejas la concurrencia y la tolerancia a fallos extrema en una aplicación utilizando Elixir y el estándar OTP?",
         keywords: [
-            { palabra: "Modelo de Actores", reg: /actor|actores/i },
-            { palabra: "procesos BEAM", reg: /beam|proceso.*ligero/i },
-            { palabra: "GenServer", reg: /genserver/i },
-            { palabra: "Supervisor / Let it crash", reg: /supervisor|let it crash|deja.*caer/i },
-            { palabra: "One_For_One", reg: /one_for_one|one for one/i },
+            { palabra: "Modelo de Actores", reg: /actor|actores/i, pista: "El modelo de entidades independientes que conversan" },
+            { palabra: "procesos BEAM", reg: /beam|proceso.*ligero/i, pista: "Las chispas ligeras de ejecución de la máquina virtual" },
+            { palabra: "GenServer", reg: /genserver/i, pista: "El servidor genérico que atesora el estado" },
+            { palabra: "Supervisor / Let it crash", reg: /supervisor|let it crash|deja.*caer/i, pista: "La filosofía de permitir el colapso controlado" },
+            { palabra: "One_For_One", reg: /one_for_one|one for one/i, pista: "La estrategia de revivir solo al caído" },
         ],
-        recomendacion: "Menciona el Modelo de Actores, los GenServers y la jerarquía de Supervisors usando estrategias como :one_for_one bajo la filosofía 'Let it crash'.",
+        recomendacion: "Acepta el error como parte del ciclo; deja que lo imperfecto caiga para que su supervisor lo resucite en paz.",
     },
     aws: {
         pregunta: "¿Cómo diseñarías una arquitectura de microservicios de alta disponibilidad y tolerante a fallos utilizando AWS?",
         keywords: [
-            { palabra: "Event-Driven Architecture", reg: /event-driven|event driven|arquitectura.*evento/i },
-            { palabra: "SQS / SNS / colas", reg: /sqs|sns|cola|kafka/i },
-            { palabra: "Patrón Sagas", reg: /saga|sagas|compensacion/i },
-            { palabra: "ECS / Lambda / serverless", reg: /ecs|fargate|lambda|serverless/i },
-            { palabra: "RDS Multi-AZ", reg: /rds|multi-az|multi az/i },
-            { palabra: "Idempotencia", reg: /idempotencia|idempotente/i },
+            { palabra: "Event-Driven Architecture", reg: /event-driven|event driven|arquitectura.*evento/i, pista: "La danza basada en los sucesos ocurridos" },
+            { palabra: "SQS / SNS / colas", reg: /sqs|sns|cola|kafka/i, pista: "Las vías de paso y colas de mensajes desacopladas" },
+            { palabra: "Patrón Sagas", reg: /saga|sagas|compensacion/i, pista: "El viaje transaccional con retorno compensatorio" },
+            { palabra: "ECS / Lambda / serverless", reg: /ecs|fargate|lambda|serverless/i, pista: "El cómputo sin servidores fijos" },
+            { palabra: "RDS Multi-AZ", reg: /rds|multi-az|multi az/i, pista: "Las bases replicadas en múltiples zonas" },
+            { palabra: "Idempotencia", reg: /idempotencia|idempotente/i, pista: "La garantía de que la misma acción repetida no altera el resultado" },
         ],
-        recomendacion: "Describe microservicios Event-Driven con SQS/SNS, transacciones con Patrón Sagas, RDS Multi-AZ y endpoints idempotentes.",
+        recomendacion: "Dibuja un flujo donde los servicios conversen por eventos en colas infinitas, listos para deshacer el camino si hay desarmonía.",
     },
 };
 
@@ -643,10 +643,15 @@ function evaluarRespuestaIA() {
 
     escenario.keywords.forEach(keyword => {
         const isMatched = keyword.reg.test(respuesta);
-        if (isMatched) matchedCount++;
         const li = document.createElement("li");
-        li.className = isMatched ? "matched" : "";
-        li.innerHTML = `<i class="bx ${isMatched ? "bx-check-double" : "bx-x"}"></i> ${keyword.palabra}`;
+        if (isMatched) {
+            matchedCount++;
+            li.className = "matched";
+            li.innerHTML = `<i class="bx bx-check-double"></i> Concepto alineado: ${keyword.palabra}`;
+        } else {
+            li.className = "";
+            li.innerHTML = `<i class="bx bx-compass"></i> Senda oculta: ${keyword.pista}`;
+        }
         feedbackList.appendChild(li);
     });
 
@@ -655,11 +660,11 @@ function evaluarRespuestaIA() {
 
     const recText = document.getElementById("recomendacion-texto");
     if (scorePct === 100) {
-        recText.textContent = "¡Excelente! Tu respuesta cubre todas las directivas del bot. Estás listo.";
+        recText.textContent = "🙏 Armonía absoluta. Tu mente técnica ha alcanzado el equilibrio perfecto.";
     } else if (scorePct >= 60) {
-        recText.textContent = "Buen trabajo, pero te faltan palabras clave importantes. " + escenario.recomendacion;
+        recText.textContent = "🍃 Vas por buen camino. Sin embargo, aún quedan misterios por revelar. " + escenario.recomendacion;
     } else {
-        recText.textContent = "Respuesta incompleta o poco estructurada. " + escenario.recomendacion;
+        recText.textContent = "🕯️ Tu respuesta necesita meditarse más. Escucha las sendas ocultas de los principios de diseño. " + escenario.recomendacion;
     }
 
     document.getElementById("resultados-ia").style.display = "block";

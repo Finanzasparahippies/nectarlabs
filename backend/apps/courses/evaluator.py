@@ -32,7 +32,7 @@ COURSES_RUBRICS: dict[str, dict[str, dict]] = {
         "00": {
             "language": "python",
             "keywords": ["try", "except", "backoff", "wraps", "docker", "venv"],
-            "description": "Preparación IA y Berribot",
+            "description": "Preparación IA y Nectar Bot",
             "executable": False,
         },
         "01": {
