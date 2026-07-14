@@ -96,7 +96,7 @@ class CoursesAPITests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertGreaterEqual(response.data['score'], 60)
         self.assertTrue(response.data['is_completed'])
-        self.assertEqual(response.data['stdout'], "TEST_PASS: decorador funciona correctamente")
+        self.assertEqual(response.data['stdout'], "TEST_PASS: limitar_llamadas correcto")
         mock_sandbox.assert_called_once()
 
     def test_course_progress_endpoint(self):
