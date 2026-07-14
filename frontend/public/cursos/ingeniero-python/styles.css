@@ -1248,3 +1248,122 @@ body {
     border: 1px solid rgba(239, 68, 68, 0.25);
     color: #ef4444;
 }
+
+/* NectarLabs Premium Promo Card */
+.nectarlabs-promo-card {
+    position: relative;
+    margin: 16px;
+    padding: 16px;
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.9) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.3);
+}
+
+.nectarlabs-promo-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at 100% 0%, rgba(99, 102, 241, 0.15) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+.nectarlabs-promo-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(99, 102, 241, 0.3);
+    box-shadow: 0 8px 30px -4px rgba(99, 102, 241, 0.15);
+}
+
+.promo-glow {
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(99, 102, 241, 0.05) 0%, transparent 50%);
+    animation: rotateGlow 10s linear infinite;
+    pointer-events: none;
+}
+
+@keyframes rotateGlow {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.promo-content {
+    position: relative;
+    z-index: 1;
+}
+
+.promo-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #818cf8;
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+
+.nectarlabs-promo-card h4 {
+    font-size: 15px;
+    font-weight: 700;
+    color: #ffffff;
+    margin: 0 0 6px 0;
+    letter-spacing: -0.2px;
+}
+
+.nectarlabs-promo-card p {
+    font-size: 11.5px;
+    color: #94a3b8;
+    line-height: 1.4;
+    margin: 0 0 12px 0;
+}
+
+.promo-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 8px 12px;
+    background: rgba(99, 102, 241, 0.1);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    border-radius: 6px;
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.promo-btn i {
+    font-size: 14px;
+    transition: transform 0.2s ease;
+}
+
+.promo-btn:hover {
+    background: #6366f1;
+    border-color: #6366f1;
+}
+
+.promo-btn:hover i {
+    transform: translateX(4px);
+}
+
+/* Ocultar widgets de chat globales que puedan solaparse */
+#hubspot-messages-iframe-container,
+.crisp-client,
+#tawk-container,
+#tidio-chat,
+.fb_reset,
+.hubspot-conversations-iframe,
+[id^="whatsapp-widget"] {
+    display: none !important;
+}
