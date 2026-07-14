@@ -27,142 +27,272 @@ logger = logging.getLogger("apps")
 # Cada rúbrica define las keywords evaluadas en el fallback estático.
 # Para módulos Python también se ejecuta el código real en el sandbox.
 # ──────────────────────────────────────────────────────────────────────────────
-RUBRICS: dict[str, dict] = {
-    "00": {
-        "language": "python",
-        "keywords": ["try", "except", "backoff", "wraps", "docker", "venv"],
-        "description": "Preparación IA y Berribot",
-        "executable": False,
-    },
-    "01": {
-        "language": "python",
-        "keywords": ["wraps", "functools", "def", "wrapper", "@"],
-        "description": "Python Avanzado – Decoradores",
-        "executable": True,
-        "test_code": """
+COURSES_RUBRICS: dict[str, dict[str, dict]] = {
+    "ingeniero-python": {
+        "00": {
+            "language": "python",
+            "keywords": ["try", "except", "backoff", "wraps", "docker", "venv"],
+            "description": "Preparación IA y Berribot",
+            "executable": False,
+        },
+        "01": {
+            "language": "python",
+            "keywords": ["limitar_llamadas", "limpiar_datos", "filtrar_por_precio", "bloqueo_recurso", "wraps", "yield"],
+            "description": "Python Avanzado y Edge Cases",
+            "executable": True,
+            "test_code": """
 # Auto-test inyectado por el evaluador
 try:
-    result = mi_decorador(lambda: 42)()
-    assert result == 42, "El decorador debe preservar el valor de retorno"
-    print("TEST_PASS: decorador funciona correctamente")
-except Exception as e:
-    print(f"TEST_FAIL: {e}")
-""",
-    },
-    "02": {
-        "language": "python",
-        "keywords": ["__slots__", "asyncio", "await", "async"],
-        "description": "Concurrencia y Rendimiento",
-        "executable": True,
-        "test_code": """
-try:
-    c = Coche()
-    c.marca = "Toyota"
-    assert c.marca == "Toyota"
-    print("TEST_PASS: __slots__ funciona correctamente")
-except AttributeError as e:
-    print(f"TEST_FAIL: {e}")
-except Exception as e:
-    print(f"TEST_FAIL: {e}")
-""",
-    },
-    "03": {
-        "language": "python",
-        "keywords": ["class", "def", "strategy", "interface", "abstract", "__init__"],
-        "description": "Diseño y Arquitectura – Strategy Pattern",
-        "executable": True,
-        "test_code": """
-try:
-    ctx = Contexto(EstrategiaA())
-    r1 = ctx.ejecutar()
-    ctx.set_strategy(EstrategiaB())
-    r2 = ctx.ejecutar()
-    assert r1 != r2, "Estrategias distintas deben producir resultados distintos"
-    print("TEST_PASS: Strategy Pattern implementado correctamente")
-except Exception as e:
-    print(f"TEST_FAIL: {e}")
-""",
-    },
-    "04": {
-        "language": "python",
-        "keywords": ["pytest", "mock", "patch", "assert", "def test_", "MagicMock"],
-        "description": "Robustez y Testing – Pytest Mocks",
-        "executable": False,
-    },
-    "05": {
-        "language": "python",
-        "keywords": ["redis", "idempotency", "key", "set", "get", "nx"],
-        "description": "Bases de Datos – Idempotencia Redis",
-        "executable": False,
-    },
-    "06": {
-        "language": "python",
-        "keywords": ["def", "window", "max", "sum", "for", "range"],
-        "description": "Algoritmos – Ventana Deslizante",
-        "executable": True,
-        "test_code": """
-try:
-    result = max_sum_window([2, 1, 5, 1, 3, 2], k=3)
-    assert result == 9, f"Esperado 9, obtenido {result}"
-    result2 = max_sum_window([1, 2, 3, 4, 5], k=2)
-    assert result2 == 9, f"Esperado 9, obtenido {result2}"
-    print("TEST_PASS: Ventana deslizante correcta")
-except Exception as e:
-    print(f"TEST_FAIL: {e}")
-""",
-    },
-    "07": {
-        "language": "python",
-        "keywords": ["redis", "lock", "nx", "px", "set", "delete"],
-        "description": "Sistemas Distribuidos – Distributed Lock",
-        "executable": False,
-    },
-    "08": {
-        "language": "python",
-        "keywords": ["__get__", "__set__", "descriptor", "class", "def", "raise"],
-        "description": "Metaprogramación – Descriptores",
-        "executable": True,
-        "test_code": """
-try:
-    class Vehiculo:
-        km = KilometrajeDescriptor()
-    v = Vehiculo()
-    v.km = 100
-    assert v.km == 100
+    import time
+    # 1. Test limitar_llamadas
+    @limitar_llamadas(max_llamadas=2, periodo_segundos=1.0)
+    def test_func():
+        return True
+    assert test_func() is True
+    assert test_func() is True
     try:
-        v.km = -1
-        print("TEST_FAIL: Debería lanzar ValueError con valor negativo")
-    except ValueError:
-        print("TEST_PASS: Descriptor valida correctamente")
+        test_func()
+        print("TEST_FAIL: limitar_llamadas no lanzó error al exceder límite")
+    except ValueError as e:
+        if str(e) == "Límite de peticiones excedido":
+            print("TEST_PASS: limitar_llamadas correcto")
+        else:
+            print(f"TEST_FAIL: mensaje incorrecto: {e}")
+    except Exception as e:
+        print(f"TEST_FAIL: excepción incorrecta: {type(e)}")
+
+    # 2. Test limpiar_datos y filtrar_por_precio
+    datos = [
+        {"id": 1, "modelo": "Toyota Corolla", "precio": "$22,500.00"},
+        {"id": 2, "modelo": "Honda Civic", "precio": None},
+        {"id": 3, "modelo": "Ford Mustang", "precio": "$55,000.50"},
+    ]
+    limpios = list(limpiar_datos(datos))
+    assert len(limpios) == 2, "limpiar_datos no filtró el None"
+    assert limpios[0]["precio"] == 22500.0, "precio mal formateado"
+    
+    filtrados = list(filtrar_por_precio(limpiar_datos(datos), 30000.0))
+    assert len(filtrados) == 1, "filtrar_por_precio no filtró por valor mínimo"
+    assert filtrados[0]["modelo"] == "Ford Mustang", "filtrado incorrecto"
+    print("TEST_PASS: generadores correctos")
+
+    # 3. Test bloqueo_recurso
+    RECURSOS_BLOQUEADOS.clear()
+    with bloqueo_recurso("auto_test"):
+        assert "auto_test" in RECURSOS_BLOQUEADOS, "recurso no agregado al set"
+        try:
+            with bloqueo_recurso("auto_test"):
+                print("TEST_FAIL: no impidió doble bloqueo")
+        except RuntimeError as e:
+            if str(e) == "Recurso actualmente bloqueado":
+                print("TEST_PASS: bloqueo_recurso correcto")
+            else:
+                print(f"TEST_FAIL: mensaje incorrecto: {e}")
+    assert "auto_test" not in RECURSOS_BLOQUEADOS, "recurso no eliminado al salir"
 except Exception as e:
-    print(f"TEST_FAIL: {e}")
+    print(f"TEST_FAIL: error en pruebas: {e}")
 """,
-    },
-    "09": {
-        "language": "python",
-        "keywords": ["NaiveBayes", "fit", "predict", "class", "def", "prior", "likelihood"],
-        "description": "Machine Learning – Naive Bayes",
-        "executable": False,
-    },
-    "10": {
-        "language": "typescript",
-        "keywords": ["type", "interface", "generic", "extends", "readonly", "unknown"],
-        "description": "TypeScript Backend – Tipos avanzados",
-        "executable": False,
-    },
-    "11": {
-        "language": "elixir",
-        "keywords": ["defmodule", "GenServer", "handle_call", "handle_cast", "init", "Supervisor"],
-        "description": "Elixir OTP – GenServer",
-        "executable": False,
-    },
-    "12": {
-        "language": "yaml",
-        "keywords": ["jobs", "steps", "uses", "run", "pytest", "on", "push"],
-        "description": "DevOps – CI/CD Pipeline",
-        "executable": False,
-    },
+        },
+        "02": {
+            "language": "python",
+            "keywords": ["descargar_concurrente", "Vehiculo", "verificar_clave_segura_async", "__slots__", "asyncio", "gather", "ProcessPoolExecutor"],
+            "description": "Concurrencia y Rendimiento",
+            "executable": True,
+            "test_code": """
+# Auto-test inyectado por el evaluador
+import asyncio
+try:
+    # 1. Test descargar_concurrente
+    original_simular = globals().get('simular_peticion_api')
+    async def mock_simular(client, post_id):
+        return f"Post {post_id} - Status 200"
+    globals()['simular_peticion_api'] = mock_simular
+    res = asyncio.run(descargar_concurrente([1, 2]))
+    assert len(res) == 2
+    assert "Post 1" in res[0]
+    print("TEST_PASS: descargar_concurrente correcto")
+    if original_simular:
+        globals()['simular_peticion_api'] = original_simular
+
+    # 2. Test Vehiculo con __slots__
+    v = Vehiculo(vin="123", marca="Ford", kilometraje=1000)
+    assert v.vin == "123"
+    try:
+        v.color = "Rojo"
+        print("TEST_FAIL: Vehiculo no restringe atributos dinámicos")
+    except AttributeError:
+        print("TEST_PASS: Vehiculo slots correcto")
+
+    # 3. Test verificar_clave_segura_async
+    original_hash = globals().get('hash_pesado_cpu')
+    globals()['hash_pesado_cpu'] = lambda c: "hash_ok"
+    h = asyncio.run(verificar_clave_segura_async("secreto"))
+    assert h == "hash_ok"
+    print("TEST_PASS: verificar_clave_segura_async correcto")
+    if original_hash:
+        globals()['hash_pesado_cpu'] = original_hash
+except Exception as e:
+    print(f"TEST_FAIL: error en pruebas: {e}")
+""",
+        },
+        "03": {
+            "language": "python",
+            "keywords": ["Observador", "UsuarioSuscriptor", "AutoPublicacion", "PasarelaPago", "StripeGateway", "ProcesadorPagosRefactorizado", "abstractmethod", "ABC"],
+            "description": "Diseño y Arquitectura",
+            "executable": True,
+            "test_code": """
+# Auto-test inyectado por el evaluador
+try:
+    # 1. Test Observer Pattern
+    log_obs = []
+    class MockSuscriptor(Observador):
+        def actualizar(self, modelo: str, nuevo_precio: float):
+            log_obs.append((modelo, nuevo_precio))
+
+    auto = AutoPublicacion("Toyota Yaris", 15000.0)
+    sub = MockSuscriptor()
+    auto.suscribir(sub)
+    auto.modificar_precio(14500.0)
+    assert len(log_obs) == 1
+    assert log_obs[0] == ("Toyota Yaris", 14500.0)
+    auto.desuscribir(sub)
+    auto.modificar_precio(14000.0)
+    assert len(log_obs) == 1, "Desuscribir no funcionó"
+    print("TEST_PASS: Observer Pattern correcto")
+
+    # 2. Test Inversión de Dependencia (DIP)
+    class MockPasarela(PasarelaPago):
+        def procesar_transaccion(self, monto: float) -> bool:
+            return True
+    pasarela = MockPasarela()
+    procesador = ProcesadorPagosRefactorizado(pasarela)
+    assert procesador.comprar_auto(100.0) is True
+    print("TEST_PASS: DIP correcto")
+except Exception as e:
+    print(f"TEST_FAIL: error en pruebas: {e}")
+""",
+        },
+        "04": {
+            "language": "python",
+            "keywords": ["pytest", "mock", "patch", "assert", "def test_", "MagicMock", "retry", "stop_after_attempt", "retry_if_exception_type", "mocker", "asyncio"],
+            "description": "Robustez y Testing",
+            "executable": False,
+        },
+        "05": {
+            "language": "python",
+            "keywords": ["selectinload", "Concesionaria", "SessionLocal", "verificar_idempotencia", "CACHE_IDEMPOTENCIA", "idempotency_key", "datos_auto"],
+            "description": "Bases de Datos y APIs",
+            "executable": False,
+        },
+        "06": {
+            "language": "python",
+            "keywords": ["remover_duplicados_in_place", "marca_mas_vendida", "for", "puntero", "def"],
+            "description": "Retos Algorítmicos",
+            "executable": True,
+            "test_code": """
+# Auto-test inyectado por el evaluador
+try:
+    # 1. Test remover_duplicados_in_place
+    arr = [1, 1, 2, 2, 3]
+    l = remover_duplicados_in_place(arr)
+    assert l == 3
+    assert arr[:3] == [1, 2, 3]
+    print("TEST_PASS: remover_duplicados correcto")
+
+    # 2. Test marca_mas_vendida
+    marcas = ["Toyota", "Ford", "Toyota", "Chevrolet", "Ford", "Toyota"]
+    res = marca_mas_vendida(marcas)
+    assert res == ("Toyota", 3)
+    assert marca_mas_vendida([]) is None
+    print("TEST_PASS: marca_mas_vendida correcto")
+except Exception as e:
+    print(f"TEST_FAIL: error en pruebas: {e}")
+""",
+        },
+        "07": {
+            "language": "python",
+            "keywords": ["cached", "lock_distribuido", "MEMORIA_CACHE", "REDIS_LOCKS", "ttl_segundos", "token_unico"],
+            "description": "Sistemas Distribuidos y Caché",
+            "executable": False,
+        },
+        "08": {
+            "language": "python",
+            "keywords": ["PrecioSeguro", "MetaVerificaTesting", "__get__", "__set__", "__new__", "descriptor", "metaclass"],
+            "description": "Tips & Tricks y Metaprogramación",
+            "executable": True,
+            "test_code": """
+# Auto-test inyectado por el evaluador
+try:
+    # 1. Test PrecioSeguro
+    class MockVehiculo:
+        precio = PrecioSeguro("precio")
+        def __init__(self, p):
+            self.precio = p
+    mv = MockVehiculo(20000.0)
+    assert mv.precio == 20000.0
+    
+    try:
+        mv.precio = -100
+        print("TEST_FAIL: PrecioSeguro permitió precio negativo")
+    except ValueError as e:
+        if str(e) == "Precio debe ser mayor a cero":
+            print("TEST_PASS: PrecioSeguro negativo correcto")
+        else:
+            print(f"TEST_FAIL: mensaje incorrecto: {e}")
+            
+    try:
+        mv.precio = "gratis"
+        print("TEST_FAIL: PrecioSeguro permitió precio string")
+    except TypeError as e:
+        if str(e) == "Precio debe ser numérico":
+            print("TEST_PASS: PrecioSeguro tipo correcto")
+        else:
+            print(f"TEST_FAIL: mensaje incorrecto: {e}")
+
+    # 2. Test MetaVerificaTesting
+    try:
+        class SuiteInvalida(SuitePruebasBase):
+            def una_funcion(self):
+                pass
+        print("TEST_FAIL: MetaVerificaTesting permitió clase sin test")
+    except TypeError as e:
+        if "debe tener al menos un método de test" in str(e):
+            print("TEST_PASS: MetaVerificaTesting correcto")
+        else:
+            print(f"TEST_FAIL: mensaje incorrecto: {e}")
+except Exception as e:
+    print(f"TEST_FAIL: error en pruebas: {e}")
+""",
+        },
+        "09": {
+            "language": "python",
+            "keywords": ["calcular_bayes", "inferir_falla_motor", "prior", "likelihood", "def"],
+            "description": "Machine Learning y Bayes",
+            "executable": False,
+        },
+        "10": {
+            "language": "typescript",
+            "keywords": ["type", "interface", "generic", "extends", "readonly", "unknown", "DeepReadonly", "HttpEvent", "DatabaseEvent"],
+            "description": "TypeScript Backend",
+            "executable": False,
+        },
+        "11": {
+            "language": "elixir",
+            "keywords": ["defmodule", "spawn", "receive", "send", "listen", "active_tasks"],
+            "description": "Elixir & Concurrencia OTP",
+            "executable": False,
+        },
+        "12": {
+            "language": "yaml",
+            "keywords": ["jobs", "steps", "uses", "run", "pytest", "on", "push", "ECR", "ECS", "AWS"],
+            "description": "DevOps – CI/CD Pipeline",
+            "executable": False,
+        },
+    }
 }
+
+# Referencia por compatibilidad retroactiva
+RUBRICS = COURSES_RUBRICS["ingeniero-python"]
 
 PASS_THRESHOLD = 60  # % mínimo para marcar como completado
 
@@ -297,12 +427,13 @@ def _evaluate_static(code: str, rubric: dict) -> tuple[int, list[str], list[str]
 # EVALUADOR PRINCIPAL
 # ──────────────────────────────────────────────────────────────────────────────
 
-def evaluate_exercise(module_id: str, code: str) -> dict:
+def evaluate_exercise(course_slug: str, module_id: str, code: str) -> dict:
     """
     Punto de entrada principal del evaluador.
     Retorna un dict con todos los campos para poblar ExerciseSubmission.
     """
-    rubric = RUBRICS.get(module_id)
+    course_rubrics = COURSES_RUBRICS.get(course_slug, COURSES_RUBRICS["ingeniero-python"])
+    rubric = course_rubrics.get(module_id)
     if not rubric:
         return {
             "score": 0,

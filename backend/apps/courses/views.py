@@ -31,7 +31,7 @@ class SubmitExerciseView(APIView):
         d = ser.validated_data
 
         # Evaluar el código
-        result = evaluate_exercise(d['module_id'], d['code'])
+        result = evaluate_exercise(d['course_slug'], d['module_id'], d['code'])
 
         # Upsert: un registro por (user, course_slug, module_id)
         submission, _ = ExerciseSubmission.objects.update_or_create(

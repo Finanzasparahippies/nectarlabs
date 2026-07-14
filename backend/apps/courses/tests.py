@@ -68,20 +68,17 @@ class CoursesAPITests(APITestCase):
         returns code details and outputs correctly, and saves progress.
         """
         mock_sandbox.return_value = {
-            "stdout": "TEST_PASS: decorador funciona correctamente",
+            "stdout": "TEST_PASS: limitar_llamadas correcto",
             "stderr": "",
             "exit_code": 0,
             "execution_time_ms": 45,
         }
 
-        # Module 01 is executable and requires 'wraps', 'functools', 'def', 'wrapper', '@'
+        # Module 01 is executable and requires 'limitar_llamadas', 'limpiar_datos', 'filtrar_por_precio', 'bloqueo_recurso', 'wraps', 'yield'
         valid_code = """
-        import functools
-        def mi_decorador(func):
-            @functools.wraps(func)
-            def wrapper(*args, **kwargs):
-                return func(*args, **kwargs)
-            return wrapper
+        # limitar_llamadas limpiar_datos filtrar_por_precio bloqueo_recurso wraps yield
+        def limitar_llamadas():
+            pass
         """
 
         url = reverse('course_submit')
