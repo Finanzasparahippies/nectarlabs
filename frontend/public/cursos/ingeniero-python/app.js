@@ -614,7 +614,10 @@ function configurarEventosBot() {
     const selectEscenario = document.getElementById("select-escenario");
     const btnEvaluar = document.getElementById("btn-evaluar-respuesta");
 
-    btnAbrir.addEventListener("click", () => drawer.classList.add("open"));
+    btnAbrir.addEventListener("click", () => {
+        drawer.classList.add("open");
+        actualizarEscenariosEvaluacion();
+    });
     btnCerrar.addEventListener("click", () => drawer.classList.remove("open"));
 
     selectEscenario.addEventListener("change", () => {
@@ -622,9 +625,34 @@ function configurarEventosBot() {
         document.getElementById("pregunta-texto").textContent = escenario.pregunta;
         document.getElementById("input-respuesta").value = "";
         document.getElementById("resultados-ia").style.display = "none";
+        actualizarEscenariosEvaluacion();
     });
 
     btnEvaluar.addEventListener("click", evaluarRespuestaIA);
+
+    // Configurar pestañas del bot
+    const botTabButtons = document.querySelectorAll(".bot-tab-btn");
+    const botTabContents = document.querySelectorAll(".bot-tab-content");
+
+    botTabButtons.forEach(btn => {
+        btn.addEventListener("click", () => {
+            botTabButtons.forEach(b => b.classList.remove("active"));
+            botTabContents.forEach(c => c.classList.remove("active"));
+            btn.classList.add("active");
+            
+            const targetId = "bot-panel-" + btn.getAttribute("data-bot-tab");
+            const targetContent = document.getElementById(targetId);
+            if (targetContent) {
+                targetContent.classList.add("active");
+            }
+        });
+    });
+
+    // Inicializar Chat Zen e interactividad
+    inicializarChatZen();
+    
+    // Inicializar el estado de bloqueo de las evaluaciones
+    actualizarEscenariosEvaluacion();
 }
 
 function evaluarRespuestaIA() {
@@ -668,4 +696,203 @@ function evaluarRespuestaIA() {
     }
 
     document.getElementById("resultados-ia").style.display = "block";
+
+    // Persistir progreso si pasa la prueba
+    if (scorePct >= 60) {
+        let evalProgreso = {};
+        try {
+            evalProgreso = JSON.parse(localStorage.getItem("nectar_bot_eval_progress") || "{}");
+        } catch(e) {}
+        evalProgreso[selectValue] = scorePct;
+        localStorage.setItem("nectar_bot_eval_progress", JSON.stringify(evalProgreso));
+        
+        // Refrescar candados e interfaces
+        setTimeout(actualizarEscenariosEvaluacion, 1500);
+    }
+}
+
+// =====================================================================
+// FUNCIONES DE APOYO NECTAR BOT (Chat Zen & Desbloqueos)
+// =====================================================================
+function actualizarEscenariosEvaluacion() {
+    const select = document.getElementById("select-escenario");
+    if (!select) return;
+
+    let evalProgreso = {};
+    try {
+        evalProgreso = JSON.parse(localStorage.getItem("nectar_bot_eval_progress") || "{}");
+    } catch(e) {}
+
+    const ORDEN = ["excepciones", "decoradores", "entornos", "typescript", "elixir", "aws"];
+    const selectValue = select.value;
+
+    const index = ORDEN.indexOf(selectValue);
+    let isBlocked = false;
+    let blockedReason = "";
+
+    if (index > 0) {
+        const escenarioAnterior = ORDEN[index - 1];
+        const scoreAnterior = evalProgreso[escenarioAnterior] || 0;
+        if (scoreAnterior < 60) {
+            isBlocked = true;
+            blockedReason = `Debes aprobar el escenario anterior (${obtenerNombreEscenario(escenarioAnterior)}) con un score mínimo del 60% para desbloquear este sendero.`;
+        }
+    }
+
+    const contentWrapper = document.getElementById("eval-content-wrapper");
+    const blockedMessage = document.getElementById("eval-blocked-message");
+    const reasonText = document.getElementById("blocked-reason-text");
+
+    if (isBlocked) {
+        if (contentWrapper) contentWrapper.style.display = "none";
+        if (blockedMessage) blockedMessage.style.display = "flex";
+        if (reasonText) reasonText.textContent = blockedReason;
+    } else {
+        if (contentWrapper) contentWrapper.style.display = "block";
+        if (blockedMessage) blockedMessage.style.display = "none";
+    }
+
+    Array.from(select.options).forEach(opt => {
+        const optVal = opt.value;
+        const optIdx = ORDEN.indexOf(optVal);
+        let optBlocked = false;
+        if (optIdx > 0) {
+            const antVal = ORDEN[optIdx - 1];
+            if ((evalProgreso[antVal] || 0) < 60) {
+                optBlocked = true;
+            }
+        }
+        const baseName = obtenerNombreEscenario(optVal);
+        opt.textContent = optBlocked ? `🔒 ${baseName}` : `✓ ${baseName}`;
+    });
+}
+
+function obtenerNombreEscenario(val) {
+    const nombres = {
+        excepciones: "Manejo de Excepciones",
+        decoradores: "Decoradores en Python",
+        entornos: "Gestión de Dependencias",
+        typescript: "TypeScript Backend",
+        elixir: "Elixir y Concurrencia OTP",
+        aws: "AWS & DevOps"
+    };
+    return nombres[val] || val;
+}
+
+function inicializarChatZen() {
+    const btnEnviar = document.getElementById("btn-chat-enviar");
+    const inputText = document.getElementById("chat-input-text");
+    const container = document.getElementById("chat-conversation");
+
+    if (!btnEnviar || !inputText || !container) return;
+
+    // Remover listeners viejos clonando el botón para evitar duplicados
+    const newBtn = btnEnviar.cloneNode(true);
+    btnEnviar.parentNode.replaceChild(newBtn, btnEnviar);
+
+    inputText.onkeypress = (e) => {
+        if (e.key === "Enter") {
+            newBtn.click();
+        }
+    };
+
+    newBtn.onclick = () => {
+        const txt = inputText.value.trim();
+        if (!txt) return;
+
+        agregarMensajeChat("user", txt);
+        inputText.value = "";
+        container.scrollTop = container.scrollHeight;
+
+        const typingId = agregarMensajeChat("bot", "🕯️ <i>Nectar Bot medita tu duda...</i>");
+        container.scrollTop = container.scrollHeight;
+
+        setTimeout(() => {
+            const typingMsg = document.getElementById(typingId);
+            if (typingMsg) typingMsg.remove();
+
+            const respuestaZen = generarRespuestaChatZen(txt);
+            agregarMensajeChat("bot", respuestaZen);
+            container.scrollTop = container.scrollHeight;
+        }, 1200);
+    };
+}
+
+function agregarMensajeChat(sender, text) {
+    const container = document.getElementById("chat-conversation");
+    const msgId = "chat-msg-" + Date.now() + "-" + Math.round(Math.random() * 10000);
+
+    const div = document.createElement("div");
+    div.className = `chat-message ${sender}`;
+    div.id = msgId;
+
+    const bubble = document.createElement("div");
+    bubble.className = "chat-bubble";
+    bubble.innerHTML = text;
+
+    div.appendChild(bubble);
+    container.appendChild(div);
+    return msgId;
+}
+
+function generarRespuestaChatZen(userText) {
+    const modId = moduloActivo ? moduloActivo.id : "00";
+    const txt = userText.toLowerCase();
+
+    if (txt.includes("hola") || txt.includes("saludos") || txt.includes("buenas") || txt.includes("buen")) {
+        return "Saludos, buscador del código armonioso. Que la paz reine en tu compilación. ¿Qué concepto de este módulo deseas contemplar hoy?";
+    }
+    if (txt.includes("gracias") || txt.includes("entendido") || txt.includes("perfecto") || txt.includes("gracia")) {
+        return "El conocimiento no se posee, se transita. Que tu código fluya libre de fallos. ¿Hay algo más que tu mente técnica busque aclarar en este módulo?";
+    }
+
+    switch(modId) {
+        case "01": // Python Avanzado
+            if (txt.includes("mutable") || txt.includes("inmutable") || txt.includes("referencia") || txt.includes("valor")) {
+                return "🧘 <b>La ilusión de la pertenencia:</b> En Python, las variables no contienen objetos; son etiquetas (referencias) unidas a ellos. Si el objeto es <i>mutable</i> (listas, dicts), cualquier etiqueta que lo comparta puede alterar su caudal. Si es <i>inmutable</i> (tuplas, strings), cada cambio genera una nueva entidad en la memoria, dejando la original intacta. ¿Ves cómo el paso por asignación comparte la etiqueta y no el objeto mismo? Medita en esto: ¿qué ocurre cuando pasas una lista vacía como argumento por defecto en una función?";
+            }
+            if (txt.includes("decorador") || txt.includes("wraps") || txt.includes("wrapper")) {
+                return "🎭 <b>El velo del decorador:</b> Un decorador envuelve a una función para modificar su comportamiento sin destruir su esencia original. Pero cuidado: al envolverla, puedes ocultar sus metadatos (como su nombre y docstring). Para evitar esto, recurrimos al sabio <code>functools.wraps</code>, que preserva la identidad original detrás del velo. ¿Cómo te ayuda esto a mantener la transparencia ante herramientas de inspección o tests?";
+            }
+            return "🐍 <b>El sendero de Python Avanzado:</b> Siente la sutil diferencia entre lo que cambia y lo que permanece eterno en memoria. Contempla el ámbito LEGB (Local, Enclosing, Global, Built-in) como círculos concéntricos en el agua. ¿Qué concepto de este módulo desafía la paz de tu arquitectura?";
+
+        case "02": // Concurrencia
+            if (txt.includes("gil") || txt.includes("lock") || txt.includes("global interpreter")) {
+                return "🔒 <b>El Guardián Único (GIL):</b> El Global Interpreter Lock es un guardián celoso. Solo permite que una mente (hilo de CPU) ejecute código Python a la vez para proteger la integridad interna. Para tareas que exigen fuerza bruta (CPU-bound), un solo hilo no es suficiente; debemos clonar la mente en múltiples procesos (<code>multiprocessing</code>). Para tareas que esperan (I/O-bound), podemos usar la asincronía (<code>asyncio</code>) para que un solo hilo asista a otros mientras esperan el flujo de datos. ¿Qué tipo de bloqueo está limitando la velocidad de tu flujo actual?";
+            }
+            if (txt.includes("generador") || txt.includes("lazy") || txt.includes("evaluacion perezosa")) {
+                return "🌱 <b>La paciencia del Generador:</b> Cargar un inventario masivo en una lista es como recolectar todas las cosechas del año y meterlas juntas en tu pequeña cabaña (RAM). El generador, mediante <code>yield</code>, te da una sola fruta a la vez cuando tienes hambre (Lazy Evaluation). Tu consumo de memoria se mantiene constante ($O(1)$) sin importar el tamaño del campo. ¿Cómo implementarías esta paciencia para procesar un CSV de varios gigabytes?";
+            }
+            return "⚡ <b>La danza del tiempo (Concurrencia):</b> El tiempo pasa de forma distinta para las CPU y la red. ¿Tu código está bloqueado esperando la respuesta de un servidor externo, o está consumido por operaciones matemáticas pesadas? Escucha el latido de tu hardware.";
+
+        case "10": // TypeScript
+            if (txt.includes("any") || txt.includes("unknown")) {
+                return "🌌 <b>El abismo del 'any':</b> Usar <code>any</code> es rendirse ante el caos; es apagar la luz de TypeScript y caminar a oscuras. Por el contrario, <code>unknown</code> reconoce la incertidumbre de forma ordenada: te dice 'esto existe, pero no sabemos qué es aún'. Te obliga a usar un <i>Type Guard</i> para verificar su verdadera naturaleza antes de actuar. ¿Ves cómo la duda metódica de <code>unknown</code> fortalece tu arquitectura ante payloads externos?";
+            }
+            if (txt.includes("generic") || txt.includes("generico")) {
+                return "🧩 <b>La forma universal (Generics):</b> Los tipos genéricos son moldes vacíos que cobran vida al ser llenados por el invocador. Permiten escribir lógica reutilizable sin perder la seguridad del tipado. Es la abstracción en su máxima pureza. ¿En qué componentes de tu API te beneficiaría delegar la definición de tipos al momento de la llamada?";
+            }
+            return "🟦 <b>El orden de TypeScript:</b> El compilador es un maestro riguroso, no un enemigo. Te advierte de los peligros en el tiempo de diseño para que tu aplicación sea eterna en el tiempo de ejecución. ¿Qué tipo o contrato te genera discordia?";
+
+        case "11": // Elixir
+            if (txt.includes("actor") || txt.includes("proceso") || txt.includes("beam")) {
+                return "🐝 <b>La colmena BEAM:</b> En Elixir, los procesos son más livianos que el aire. No comparten memoria, lo que evita que el fallo de uno contamine a sus hermanos. Se comunican arrojando cartas a los buzones ajenos de forma asíncrona. Esta inmutabilidad absoluta elimina las condiciones de carrera en el estado. ¿Qué crees que sucedería si el buzón de un proceso se llena y nadie responde?";
+            }
+            if (txt.includes("supervisor") || txt.includes("let it crash") || txt.includes("caer")) {
+                return "🍂 <b>La sabiduría del colapso (Let it crash):</b> Elixir no teme a la caída. En lugar de atrapar cada posible error defensivamente con bloques oscuros, permite que el proceso muera en paz ante lo imprevisto. Un Supervisor atento detectará su partida y lo revivirá instantáneamente en un estado inicial limpio. Es el ciclo eterno de renacimiento de OTP. ¿Qué estrategia de supervisión elegirías para procesos que dependen críticamente entre sí?";
+            }
+            return "💧 <b>El fluir de Elixir:</b> Un GenServer maneja el estado a través de la recursión pura, recibiendo llamadas síncronas (<code>call</code>) y asíncronas (<code>cast</code>). Dibuja en tu mente la jerarquía de supervisores que protegen tu aplicación de la caída.";
+
+        case "12": // AWS & DevOps
+            if (txt.includes("docker") || txt.includes("multi-stage") || txt.includes("stage")) {
+                return "📦 <b>El capullo ligero (Multi-stage Docker):</b> Crear una imagen Docker con todas las herramientas de desarrollo es cargar con herramientas que no usarás en producción. El diseño multi-stage te permite compilar en una fase pesada y luego copiar únicamente el artefacto final a una imagen limpia y minimalista (como <code>alpine</code> o <code>slim</code>). Tu despliegue será más rápido y seguro. ¿Qué dependencias innecesarias estás arrastrando hoy en tus contenedores?";
+            }
+            if (txt.includes("resiliencia") || txt.includes("circuit") || txt.includes("breaker") || txt.includes("gateway")) {
+                return "🛡️ <b>El fusible (Circuit Breaker):</b> Si un microservicio remoto está caído, seguir enviándole peticiones es como intentar cruzar una puerta cerrada a cabezazos: solo gastarás energía y saturarás tu sistema. El Circuit Breaker detecta los fallos repetidos y abre el circuito para responder de inmediato con un error o fallback alternativo, dando tiempo al servicio remoto para sanar. ¿Cómo mitigas el impacto al usuario final cuando una API externa deja de responder?";
+            }
+            return "☁️ <b>La nube inmensa (AWS & DevOps):</b> La alta disponibilidad no se logra con servidores más grandes, sino distribuyendo el peso del flujo mediante balanceadores, colas desacopladas (SQS) y replicación multizona. ¿Qué cuello de botella estás tratando de aliviar en tu arquitectura de despliegue?";
+
+        default:
+            return "🌱 <b>Bienvenido al sendero del conocimiento.</b> Cada duda es un escalón hacia la maestría. Medita en el flujo lógico, la inmutabilidad y la resiliencia del diseño de software. ¿Qué duda conceptual de este módulo deseas contemplar hoy?";
+    }
 }

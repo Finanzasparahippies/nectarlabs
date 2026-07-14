@@ -175,54 +175,94 @@
         <!-- Panel lateral del Simulador Nectar Bot -->
         <div class="bot-drawer" id="bot-drawer">
             <div class="drawer-header">
-                <h3><i class="bx bx-bot"></i> Simulador Nectar Bot</h3>
+                <h3><i class="bx bx-bot"></i> Nectar Bot</h3>
                 <button class="close-drawer" id="btn-cerrar-bot"><i class="bx bx-x"></i></button>
             </div>
-            <div class="drawer-body">
-                <p class="drawer-intro">Practica tus respuestas verbales o escritas para que el bot de Coforge te puntúe al 100%. Selecciona un escenario:</p>
-                
-                <div class="select-escenario-group">
-                    <label for="select-escenario">Escenario de Evaluación:</label>
-                    <select id="select-escenario">
-                        <option value="excepciones">Manejo de Excepciones y Robustez</option>
-                        <option value="decoradores">Decoradores en Python</option>
-                        <option value="entornos">Gestión de Dependencias y Replicabilidad</option>
-                        <option value="typescript">TypeScript Backend y Tipado</option>
-                        <option value="elixir">Elixir y Concurrencia OTP</option>
-                        <option value="aws">AWS, Microservicios y DevOps</option>
-                    </select>
-                </div>
-                
-                <div class="pregunta-box">
-                    <strong>Pregunta de la IA:</strong>
-                    <p id="pregunta-texto">¿Cómo manejas los errores en una API que conecta con una base de datos externa para asegurar que la aplicación no se caiga?</p>
-                </div>
-                
-                <div class="respuesta-box">
-                    <label for="input-respuesta">Tu respuesta técnica:</label>
-                    <textarea id="input-respuesta" placeholder="Escribe tu respuesta técnica aquí utilizando las mejores prácticas de la industria..."></textarea>
-                </div>
-                
-                <button class="btn btn-primary btn-block" id="btn-evaluar-respuesta">
-                    Evaluar Respuesta
+            
+            <!-- Selector de Pestañas del Bot -->
+            <div class="bot-tabs">
+                <button class="bot-tab-btn active" data-bot-tab="chat">
+                    <i class="bx bx-message-rounded-dots"></i> Chat Zen
                 </button>
-                
-                <div class="resultados-ia" id="resultados-ia" style="display: none;">
-                    <div class="scoring-circle-wrapper">
-                        <div class="scoring-circle">
-                            <span id="score-pct">0%</span>
-                            <span>Match Score</span>
+                <button class="bot-tab-btn" data-bot-tab="eval">
+                    <i class="bx bx-award"></i> Evaluaciones
+                </button>
+            </div>
+            
+            <div class="drawer-body">
+                <!-- Panel 1: Chat Zen -->
+                <div class="bot-tab-content active" id="bot-panel-chat">
+                    <p class="drawer-intro">Conversa con Nectar Bot para resolver tus dudas conceptuales de forma Zen. El bot se adapta al módulo que estás estudiando actualmente.</p>
+                    
+                    <div class="chat-conversation" id="chat-conversation">
+                        <div class="chat-message bot">
+                            <div class="chat-bubble">Saludos, buscador del código puro. Soy Nectar Bot, tu guía espiritual en este curso. ¿Qué concepto de este módulo deseas contemplar hoy?</div>
                         </div>
                     </div>
                     
-                    <div class="feedback-detallado">
-                        <h4>Palabras clave detectadas:</h4>
-                        <ul class="keywords-list" id="keywords-list-feedback"></ul>
-                        
-                        <div class="retroalimentacion-caja">
-                            <strong>Recomendación técnica:</strong>
-                            <p id="recomendacion-texto">Intenta incluir más palabras clave de producción.</p>
+                    <div class="chat-input-area">
+                        <input type="text" id="chat-input-text" placeholder="Escribe tu duda conceptual aquí..." autocomplete="off">
+                        <button id="btn-chat-enviar" class="btn btn-primary"><i class="bx bx-send"></i></button>
+                    </div>
+                </div>
+
+                <!-- Panel 2: Evaluaciones (Secuencial y Gamificado) -->
+                <div class="bot-tab-content" id="bot-panel-eval">
+                    <p class="drawer-intro">Desafía tu comprensión técnica. Las evaluaciones deben completarse en orden secuencial aprobando la anterior (Score >= 60%).</p>
+                    
+                    <div class="select-escenario-group">
+                        <label for="select-escenario">Escenario de Evaluación:</label>
+                        <select id="select-escenario">
+                            <option value="excepciones">Manejo de Excepciones y Robustez</option>
+                            <option value="decoradores">Decoradores en Python</option>
+                            <option value="entornos">Gestión de Dependencias y Replicabilidad</option>
+                            <option value="typescript">TypeScript Backend y Tipado</option>
+                            <option value="elixir">Elixir y Concurrencia OTP</option>
+                            <option value="aws">AWS, Microservicios y DevOps</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Envoltura de contenido de evaluación activa -->
+                    <div id="eval-content-wrapper">
+                        <div class="pregunta-box">
+                            <strong>Pregunta del bot:</strong>
+                            <p id="pregunta-texto">¿Cómo manejas los errores en una API que conecta con una base de datos externa para asegurar que la aplicación no se caiga?</p>
                         </div>
+                        
+                        <div class="respuesta-box">
+                            <label for="input-respuesta">Tu respuesta técnica:</label>
+                            <textarea id="input-respuesta" placeholder="Escribe tu respuesta técnica aquí utilizando las mejores prácticas de la industria..."></textarea>
+                        </div>
+                        
+                        <button class="btn btn-primary btn-block" id="btn-evaluar-respuesta">
+                            Evaluar Respuesta
+                        </button>
+                        
+                        <div class="resultados-ia" id="resultados-ia" style="display: none;">
+                            <div class="scoring-circle-wrapper">
+                                <div class="scoring-circle">
+                                    <span id="score-pct">0%</span>
+                                    <span>Match Score</span>
+                                </div>
+                            </div>
+                            
+                            <div class="feedback-detallado">
+                                <h4>Conceptos evaluados:</h4>
+                                <ul class="keywords-list" id="keywords-list-feedback"></ul>
+                                
+                                <div class="retroalimentacion-caja">
+                                    <strong>Guía Zen:</strong>
+                                    <p id="recomendacion-texto">Intenta incluir más palabras clave de producción.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Mensaje de escenario bloqueado -->
+                    <div id="eval-blocked-message" class="eval-blocked-card" style="display: none;">
+                        <div class="lock-icon"><i class="bx bx-lock-alt"></i></div>
+                        <h4>Senda Bloqueada</h4>
+                        <p id="blocked-reason-text">Debes aprobar el escenario anterior con un score mínimo del 60% para poder transitar este camino.</p>
                     </div>
                 </div>
             </div>
