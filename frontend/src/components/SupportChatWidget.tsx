@@ -40,9 +40,6 @@ export default function SupportChatWidget() {
     }
   }, [pathname]);
 
-  if (shouldHide) {
-    return null;
-  }
 
   const [token, setToken] = useState<string | null>(null);
   const [isStaff, setIsStaff] = useState(false);
@@ -360,8 +357,8 @@ export default function SupportChatWidget() {
     }
   };
 
-  // Do not show widget if user is staff (staff uses tickets page instead)
-  if (isStaff) return null;
+  // Do not show widget if user is staff or if we are in course/tenant routes
+  if (isStaff || shouldHide) return null;
 
   return (
     <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end font-sans">
