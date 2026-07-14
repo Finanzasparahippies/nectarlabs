@@ -8,19 +8,19 @@ const COURSE_SLUG = 'ingeniero-python';
 
 // ── Listado estructurado de módulos del curso ─────────────────────────
 const MODULOS = [
-    { id: "00", badge: "MÓDULO 00", title: "Preparación de IA y Berribot",    folder: "00_preparacion_ia_y_berribot" },
-    { id: "01", badge: "MÓDULO 01", title: "Python Avanzado y Edge Cases",     folder: "01_python_avanzado" },
-    { id: "02", badge: "MÓDULO 02", title: "Concurrencia y Rendimiento",        folder: "02_concurrencia_y_rendimiento" },
-    { id: "03", badge: "MÓDULO 03", title: "Diseño y Arquitectura",             folder: "03_diseno_y_arquitectura" },
-    { id: "04", badge: "MÓDULO 04", title: "Robustez y Testing",               folder: "04_robustez_y_testing" },
-    { id: "05", badge: "MÓDULO 05", title: "Bases de Datos y APIs",            folder: "05_bases_de_datos_y_apis" },
-    { id: "06", badge: "MÓDULO 06", title: "Retos Algorítmicos",               folder: "06_retos_algoritmicos" },
-    { id: "07", badge: "MÓDULO 07", title: "Sistemas Distribuidos y Caché",    folder: "07_sistemas_distribuidos" },
-    { id: "08", badge: "MÓDULO 08", title: "Tips & Tricks y Metaprog.",        folder: "08_tips_and_tricks" },
-    { id: "09", badge: "MÓDULO 09", title: "Machine Learning y Bayes",         folder: "09_machine_learning_y_bayes" },
-    { id: "10", badge: "MÓDULO 10", title: "TypeScript Backend & Node",        folder: "10_typescript_backend" },
-    { id: "11", badge: "MÓDULO 11", title: "Elixir & Concurrencia OTP",        folder: "11_elixir_concurrencia_otp" },
-    { id: "12", badge: "MÓDULO 12", title: "AWS, Microservicios y DevOps",     folder: "12_arquitectura_aws_devops" },
+    { id: "00", badge: "MÓDULO 00", title: "Preparación de IA y Berribot", folder: "00_preparacion_ia_y_berribot" },
+    { id: "01", badge: "MÓDULO 01", title: "Python Avanzado y Edge Cases", folder: "01_python_avanzado" },
+    { id: "02", badge: "MÓDULO 02", title: "Concurrencia y Rendimiento", folder: "02_concurrencia_y_rendimiento" },
+    { id: "03", badge: "MÓDULO 03", title: "Diseño y Arquitectura", folder: "03_diseno_y_arquitectura" },
+    { id: "04", badge: "MÓDULO 04", title: "Robustez y Testing", folder: "04_robustez_y_testing" },
+    { id: "05", badge: "MÓDULO 05", title: "Bases de Datos y APIs", folder: "05_bases_de_datos_y_apis" },
+    { id: "06", badge: "MÓDULO 06", title: "Retos Algorítmicos", folder: "06_retos_algoritmicos" },
+    { id: "07", badge: "MÓDULO 07", title: "Sistemas Distribuidos y Caché", folder: "07_sistemas_distribuidos" },
+    { id: "08", badge: "MÓDULO 08", title: "Tips & Tricks y Metaprog.", folder: "08_tips_and_tricks" },
+    { id: "09", badge: "MÓDULO 09", title: "Machine Learning y Bayes", folder: "09_machine_learning_y_bayes" },
+    { id: "10", badge: "MÓDULO 10", title: "TypeScript Backend & Node", folder: "10_typescript_backend" },
+    { id: "11", badge: "MÓDULO 11", title: "Elixir & Concurrencia OTP", folder: "11_elixir_concurrencia_otp" },
+    { id: "12", badge: "MÓDULO 12", title: "AWS, Microservicios y DevOps", folder: "12_arquitectura_aws_devops" },
 ];
 
 // ── Escenarios Berribot IA ─────────────────────────────────────────────
@@ -28,12 +28,12 @@ const ESCENARIOS_BOT = {
     excepciones: {
         pregunta: "¿Cómo manejas los errores en una API que conecta con una base de datos externa para asegurar que la aplicación no se caiga?",
         keywords: [
-            { palabra: "try-except-finally",   reg: /try.*except.*finally/i },
-            { palabra: "específica",            reg: /especifica|específico/i },
-            { palabra: "ConnectionError",       reg: /connectionerror|operationalerror/i },
-            { palabra: "exponential backoff",   reg: /exponential backoff|retraso exponencial/i },
-            { palabra: "finally",              reg: /finally/i },
-            { palabra: "context managers",     reg: /context manager|administrador.*contexto|with/i },
+            { palabra: "try-except-finally", reg: /try.*except.*finally/i },
+            { palabra: "específica", reg: /especifica|específico/i },
+            { palabra: "ConnectionError", reg: /connectionerror|operationalerror/i },
+            { palabra: "exponential backoff", reg: /exponential backoff|retraso exponencial/i },
+            { palabra: "finally", reg: /finally/i },
+            { palabra: "context managers", reg: /context manager|administrador.*contexto|with/i },
         ],
         recomendacion: "Intenta mencionar bloques específicos try-except-finally, capturar excepciones concretas (ConnectionError) y políticas de reintentos como exponential backoff.",
     },
@@ -41,43 +41,43 @@ const ESCENARIOS_BOT = {
         pregunta: "¿Qué es un decorador en Python y proporciona un caso de uso real en una aplicación web?",
         keywords: [
             { palabra: "función de orden superior", reg: /orden superior|higher order/i },
-            { palabra: "modificar comportamiento",  reg: /modificar.*comportamiento|extender.*comportamiento/i },
-            { palabra: "autenticación / JWT",        reg: /autenticacion|jwt|token/i },
-            { palabra: "logging / auditoría",        reg: /logging|auditoria|registro/i },
-            { palabra: "functools.wraps",            reg: /functools\.wraps|@wraps/i },
+            { palabra: "modificar comportamiento", reg: /modificar.*comportamiento|extender.*comportamiento/i },
+            { palabra: "autenticación / JWT", reg: /autenticacion|jwt|token/i },
+            { palabra: "logging / auditoría", reg: /logging|auditoria|registro/i },
+            { palabra: "functools.wraps", reg: /functools\.wraps|@wraps/i },
         ],
         recomendacion: "Describe el decorador como una función de orden superior y menciona casos como JWT, logging, y el uso indispensable de @wraps.",
     },
     entornos: {
         pregunta: "¿Cómo garantizas que tu código de Python sea perfectamente replicable en cualquier entorno de servidor o la nube?",
         keywords: [
-            { palabra: "entorno virtual / venv",  reg: /entorno virtual|venv|poetry|pipenv/i },
-            { palabra: "requirements.txt",         reg: /requirements\.txt|pyproject\.toml/i },
-            { palabra: "Docker / Dockerfile",      reg: /docker|dockerfile/i },
-            { palabra: "python:3.11-slim",         reg: /slim|alpine|imagen.*ligera/i },
-            { palabra: "usuario no-root",          reg: /no-root|no root|seguridad/i },
+            { palabra: "entorno virtual / venv", reg: /entorno virtual|venv|poetry|pipenv/i },
+            { palabra: "requirements.txt", reg: /requirements\.txt|pyproject\.toml/i },
+            { palabra: "Docker / Dockerfile", reg: /docker|dockerfile/i },
+            { palabra: "python:3.11-slim", reg: /slim|alpine|imagen.*ligera/i },
+            { palabra: "usuario no-root", reg: /no-root|no root|seguridad/i },
         ],
         recomendacion: "Habla sobre venv/poetry, empaquetar con Docker usando imágenes ligeras (slim) y ejecutar con un usuario no-root por seguridad.",
     },
     typescript: {
         pregunta: "¿Cómo diseñas un tipado seguro y robusto en TypeScript para manejar payloads de APIs de terceros con estructuras desconocidas?",
         keywords: [
-            { palabra: "unknown",               reg: /unknown/i },
-            { palabra: "Type Guards",           reg: /type guard|isUserPayload|is[A-Z]/i },
-            { palabra: "Discriminated Unions",  reg: /discriminated union|union.*discriminada/i },
+            { palabra: "unknown", reg: /unknown/i },
+            { palabra: "Type Guards", reg: /type guard|isUserPayload|is[A-Z]/i },
+            { palabra: "Discriminated Unions", reg: /discriminated union|union.*discriminada/i },
             { palabra: "Zod / runtime validation", reg: /zod|runtime|class-validator/i },
-            { palabra: "Generics",              reg: /generic|genérico/i },
+            { palabra: "Generics", reg: /generic|genérico/i },
         ],
         recomendacion: "Explica el uso de 'unknown' en lugar de 'any', la creación de Type Guards de validación en tiempo de ejecución (Zod) y el uso de uniones discriminadas.",
     },
     elixir: {
         pregunta: "¿Cómo manejas la concurrencia y la tolerancia a fallos extrema en una aplicación utilizando Elixir y el estándar OTP?",
         keywords: [
-            { palabra: "Modelo de Actores",          reg: /actor|actores/i },
-            { palabra: "procesos BEAM",              reg: /beam|proceso.*ligero/i },
-            { palabra: "GenServer",                  reg: /genserver/i },
-            { palabra: "Supervisor / Let it crash",  reg: /supervisor|let it crash|deja.*caer/i },
-            { palabra: "One_For_One",                reg: /one_for_one|one for one/i },
+            { palabra: "Modelo de Actores", reg: /actor|actores/i },
+            { palabra: "procesos BEAM", reg: /beam|proceso.*ligero/i },
+            { palabra: "GenServer", reg: /genserver/i },
+            { palabra: "Supervisor / Let it crash", reg: /supervisor|let it crash|deja.*caer/i },
+            { palabra: "One_For_One", reg: /one_for_one|one for one/i },
         ],
         recomendacion: "Menciona el Modelo de Actores, los GenServers y la jerarquía de Supervisors usando estrategias como :one_for_one bajo la filosofía 'Let it crash'.",
     },
@@ -85,11 +85,11 @@ const ESCENARIOS_BOT = {
         pregunta: "¿Cómo diseñarías una arquitectura de microservicios de alta disponibilidad y tolerante a fallos utilizando AWS?",
         keywords: [
             { palabra: "Event-Driven Architecture", reg: /event-driven|event driven|arquitectura.*evento/i },
-            { palabra: "SQS / SNS / colas",          reg: /sqs|sns|cola|kafka/i },
-            { palabra: "Patrón Sagas",               reg: /saga|sagas|compensacion/i },
-            { palabra: "ECS / Lambda / serverless",  reg: /ecs|fargate|lambda|serverless/i },
-            { palabra: "RDS Multi-AZ",               reg: /rds|multi-az|multi az/i },
-            { palabra: "Idempotencia",               reg: /idempotencia|idempotente/i },
+            { palabra: "SQS / SNS / colas", reg: /sqs|sns|cola|kafka/i },
+            { palabra: "Patrón Sagas", reg: /saga|sagas|compensacion/i },
+            { palabra: "ECS / Lambda / serverless", reg: /ecs|fargate|lambda|serverless/i },
+            { palabra: "RDS Multi-AZ", reg: /rds|multi-az|multi az/i },
+            { palabra: "Idempotencia", reg: /idempotencia|idempotente/i },
         ],
         recomendacion: "Describe microservicios Event-Driven con SQS/SNS, transacciones con Patrón Sagas, RDS Multi-AZ y endpoints idempotentes.",
     },
@@ -98,10 +98,10 @@ const ESCENARIOS_BOT = {
 // =====================================================================
 // ESTADO GLOBAL
 // =====================================================================
-let moduloActivo  = MODULOS[1];
+let moduloActivo = MODULOS[1];
 let progresoModulos = {};
-let authToken     = null;
-let cmEditor      = null;   // Instancia activa de CodeMirror
+let authToken = null;
+let cmEditor = null;   // Instancia activa de CodeMirror
 
 // =====================================================================
 // INICIALIZACIÓN
@@ -187,11 +187,11 @@ async function cargarProgresoBackend() {
 // EDITOR CODEMIRROR
 // =====================================================================
 const LANG_MODE_MAP = {
-    python:     "python",
+    python: "python",
     typescript: "javascript",
-    elixir:     "text/plain",   // No hay modo Elixir en CM5 CDN
-    yaml:       "yaml",
-    hcl:        "text/plain",
+    elixir: "text/plain",   // No hay modo Elixir en CM5 CDN
+    yaml: "yaml",
+    hcl: "text/plain",
 };
 
 function obtenerLenguajeModulo(moduleId) {
@@ -216,22 +216,22 @@ function initEditor(codigoBase, language) {
     }
 
     cmEditor = CodeMirror(container, {
-        value:          codigoBase || "",
-        mode:           mode,
-        theme:          "dracula",
-        lineNumbers:    true,
-        tabSize:        4,
+        value: codigoBase || "",
+        mode: mode,
+        theme: "dracula",
+        lineNumbers: true,
+        tabSize: 4,
         indentWithTabs: false,
         autoCloseBrackets: true,
-        matchBrackets:  true,
-        lineWrapping:   false,
+        matchBrackets: true,
+        lineWrapping: false,
         extraKeys: {
             "Tab": cm => cm.execCommand("insertSoftTab"),
         },
     });
 
-    // Altura responsive
-    cmEditor.setSize("100%", "380px");
+    // Altura del editor
+    cmEditor.setSize("100%", "550px");
     window.cmEditor = cmEditor;
 }
 
@@ -244,7 +244,7 @@ async function cargarModulo(id) {
     moduloActivo = modulo;
 
     // Actualizar encabezados
-    document.getElementById("current-module-id").textContent    = modulo.badge;
+    document.getElementById("current-module-id").textContent = modulo.badge;
     document.getElementById("current-module-title").textContent = modulo.title;
 
     // Estado del botón Completar
@@ -270,7 +270,7 @@ async function cargarModulo(id) {
     else if (modulo.id === "11") { extEjemplos = "exs"; extEjercicios = "exs"; langEjemplos = "elixir"; }
     else if (modulo.id === "12") { extEjemplos = "tf"; extEjercicios = "yml"; langEjemplos = "hcl"; }
 
-    const fileEjemplos   = `ejemplos.${extEjemplos}`;
+    const fileEjemplos = `ejemplos.${extEjemplos}`;
     const fileEjercicios = modulo.id === "12" ? `ci_cd_example.${extEjercicios}` : `ejercicios.${extEjercicios}`;
 
     // Actualizar labels de cabecera
@@ -279,8 +279,8 @@ async function cargarModulo(id) {
     if (ejEl) ejEl.textContent = fileEjemplos;
     if (ezEl) ezEl.textContent = fileEjercicios;
 
-    const pathTeoria     = `../${modulo.folder}/README.md`;
-    const pathEjemplos   = `../${modulo.folder}/${fileEjemplos}`;
+    const pathTeoria = `../${modulo.folder}/README.md`;
+    const pathEjemplos = `../${modulo.folder}/${fileEjemplos}`;
     const pathEjercicios = `../${modulo.folder}/${fileEjercicios}`;
 
     // ── 1. Cargar Teoría ──────────────────────────────────────────────
@@ -297,9 +297,9 @@ async function cargarModulo(id) {
     // ── 2. Cargar Ejemplos (Prism – read-only) ────────────────────────
     try {
         const codeText = await _fetchWithFallback(pathEjemplos, COURSE_DATA[modulo.id]?.ejemplos);
-        const codeEl   = document.getElementById("code-ejemplos");
+        const codeEl = document.getElementById("code-ejemplos");
         codeEl.textContent = codeText;
-        codeEl.className   = `language-${langEjemplos}`;
+        codeEl.className = `language-${langEjemplos}`;
         Prism.highlightElement(codeEl);
     } catch (err) {
         document.getElementById("code-ejemplos").textContent = err.message;
@@ -380,7 +380,7 @@ async function submitEjercicio() {
         // ── Evaluación real: backend + sandbox Docker ──────────────────
         const result = await apiRequest("POST", "/courses/submit/", {
             course_slug: COURSE_SLUG,
-            module_id:   moduloActivo.id,
+            module_id: moduloActivo.id,
             code,
             language,
         });
@@ -424,8 +424,8 @@ function _evaluarOffline(code, moduleId) {
         "12": ["jobs", "steps", "pytest"],
     };
     const keywords = KEYWORDS_MAP[moduleId] || [];
-    const found    = keywords.filter(kw => new RegExp(kw, "i").test(code));
-    const score    = keywords.length > 0 ? Math.round((found.length / keywords.length) * 100) : 50;
+    const found = keywords.filter(kw => new RegExp(kw, "i").test(code));
+    const score = keywords.length > 0 ? Math.round((found.length / keywords.length) * 100) : 50;
     return {
         score,
         is_completed: score >= 60,
@@ -440,7 +440,7 @@ function _evaluarOffline(code, moduleId) {
 
 // ── Renderizar resultados en el panel ─────────────────────────────────
 function _mostrarResultados(result) {
-    const score  = result.score ?? 0;
+    const score = result.score ?? 0;
     const passed = result.is_completed ?? score >= 60;
 
     document.getElementById("score-ejercicio-valor").textContent = `${score}%`;
@@ -450,8 +450,8 @@ function _mostrarResultados(result) {
     titulo.textContent = passed
         ? "✅ Ejercicio aprobado"
         : score >= 40
-        ? "📝 Necesitas mejorar"
-        : "🔴 Intenta de nuevo";
+            ? "📝 Necesitas mejorar"
+            : "🔴 Intenta de nuevo";
     titulo.style.color = passed ? "var(--accent)" : score >= 40 ? "#f59e0b" : "#ef4444";
 
     // Tiempo de ejecución
@@ -473,7 +473,7 @@ function _mostrarResultados(result) {
 
     // Stdout del sandbox
     const stdoutWrapper = document.getElementById("resultado-stdout-wrapper");
-    const stdoutPre     = document.getElementById("resultado-stdout");
+    const stdoutPre = document.getElementById("resultado-stdout");
     if (stdoutWrapper && stdoutPre) {
         const output = [result.stdout, result.stderr].filter(Boolean).join("\n").trim();
         if (output) {
@@ -504,7 +504,7 @@ function inicializarSidebar() {
 
     MODULOS.forEach(mod => {
         const isCompleted = !!progresoModulos[mod.id];
-        const checkIcon   = isCompleted ? "bx-check-circle" : "bx-circle";
+        const checkIcon = isCompleted ? "bx-check-circle" : "bx-circle";
 
         const li = document.createElement("li");
         li.className = `module-item ${mod.id === moduloActivo.id ? "active" : ""}`;
@@ -549,23 +549,23 @@ function toggleModuloCompletadoPorId(id) {
 }
 
 function actualizarProgresoGeneral() {
-    const total      = MODULOS.length;
+    const total = MODULOS.length;
     const completados = Object.keys(progresoModulos).length;
-    const pct        = Math.round((completados / total) * 100);
-    document.getElementById("general-progress-pct").textContent   = `${pct}%`;
-    document.getElementById("general-progress-fill").style.width  = `${pct}%`;
+    const pct = Math.round((completados / total) * 100);
+    document.getElementById("general-progress-pct").textContent = `${pct}%`;
+    document.getElementById("general-progress-fill").style.width = `${pct}%`;
 }
 
 // =====================================================================
 // PESTAÑAS
 // =====================================================================
 function configurarEventosPestañas() {
-    const tabButtons  = document.querySelectorAll(".tab-btn");
+    const tabButtons = document.querySelectorAll(".tab-btn");
     const tabContents = document.querySelectorAll(".tab-content");
 
     tabButtons.forEach(btn => {
         btn.addEventListener("click", () => {
-            tabButtons.forEach(b  => b.classList.remove("active"));
+            tabButtons.forEach(b => b.classList.remove("active"));
             tabContents.forEach(c => c.classList.remove("active"));
             btn.classList.add("active");
             const targetId = btn.getAttribute("data-tab");
@@ -582,7 +582,7 @@ function configurarEventosPestañas() {
     document.querySelectorAll(".btn-copy[data-target]").forEach(btn => {
         btn.addEventListener("click", () => {
             const targetId = btn.getAttribute("data-target");
-            const text     = document.getElementById(targetId)?.textContent || "";
+            const text = document.getElementById(targetId)?.textContent || "";
             navigator.clipboard.writeText(text).then(() => {
                 btn.innerHTML = `<i class="bx bx-check"></i> Copiado`;
                 setTimeout(() => { btn.innerHTML = `<i class="bx bx-copy"></i> Copiar`; }, 2000);
@@ -608,19 +608,19 @@ function configurarEventosCopiarEjercicios() {
 // SIMULADOR BERRIBOT IA
 // =====================================================================
 function configurarEventosBot() {
-    const drawer         = document.getElementById("bot-drawer");
-    const btnAbrir       = document.getElementById("btn-abrir-bot");
-    const btnCerrar      = document.getElementById("btn-cerrar-bot");
+    const drawer = document.getElementById("bot-drawer");
+    const btnAbrir = document.getElementById("btn-abrir-bot");
+    const btnCerrar = document.getElementById("btn-cerrar-bot");
     const selectEscenario = document.getElementById("select-escenario");
-    const btnEvaluar     = document.getElementById("btn-evaluar-respuesta");
+    const btnEvaluar = document.getElementById("btn-evaluar-respuesta");
 
-    btnAbrir.addEventListener("click",  () => drawer.classList.add("open"));
+    btnAbrir.addEventListener("click", () => drawer.classList.add("open"));
     btnCerrar.addEventListener("click", () => drawer.classList.remove("open"));
 
     selectEscenario.addEventListener("change", () => {
         const escenario = ESCENARIOS_BOT[selectEscenario.value];
         document.getElementById("pregunta-texto").textContent = escenario.pregunta;
-        document.getElementById("input-respuesta").value      = "";
+        document.getElementById("input-respuesta").value = "";
         document.getElementById("resultados-ia").style.display = "none";
     });
 
@@ -629,8 +629,8 @@ function configurarEventosBot() {
 
 function evaluarRespuestaIA() {
     const selectValue = document.getElementById("select-escenario").value;
-    const escenario   = ESCENARIOS_BOT[selectValue];
-    const respuesta   = document.getElementById("input-respuesta").value;
+    const escenario = ESCENARIOS_BOT[selectValue];
+    const respuesta = document.getElementById("input-respuesta").value;
 
     if (!respuesta.trim()) {
         alert("Por favor, ingresa una respuesta técnica primero.");

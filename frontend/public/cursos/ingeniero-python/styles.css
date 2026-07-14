@@ -4,20 +4,31 @@
 
 :root {
     /* Paleta de colores HSL */
-    --bg-dark: 228, 30%, 8%;        /* #090a10 */
-    --bg-card: 228, 25%, 12%;       /* #121522 */
-    --bg-header: 228, 24%, 10%;     /* #0f111c */
-    --border-color: 228, 20%, 20%;  /* #292d3e */
-    
-    --accent-blue: 206, 98%, 65%;   /* #4facfe */
-    --accent-cyan: 182, 100%, 50%;  /* #00f2fe */
-    --accent-green: 152, 100%, 50%; /* #00ff87 */
-    --accent-purple: 270, 95%, 65%;/* #ab64ff */
-    
-    --text-primary: 210, 20%, 95%;  /* #f1f2f6 */
-    --text-secondary: 215, 15%, 70%;/* #b2bec3 */
-    --text-muted: 220, 10%, 45%;    /* #636e72 */
-    
+    --bg-dark: 228, 30%, 8%;
+    /* #090a10 */
+    --bg-card: 228, 25%, 12%;
+    /* #121522 */
+    --bg-header: 228, 24%, 10%;
+    /* #0f111c */
+    --border-color: 228, 20%, 20%;
+    /* #292d3e */
+
+    --accent-blue: 206, 98%, 65%;
+    /* #4facfe */
+    --accent-cyan: 182, 100%, 50%;
+    /* #00f2fe */
+    --accent-green: 152, 100%, 50%;
+    /* #00ff87 */
+    --accent-purple: 270, 95%, 65%;
+    /* #ab64ff */
+
+    --text-primary: 210, 20%, 95%;
+    /* #f1f2f6 */
+    --text-secondary: 215, 15%, 70%;
+    /* #b2bec3 */
+    --text-muted: 220, 10%, 45%;
+    /* #636e72 */
+
     --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     --font-mono: 'Fira Code', 'Courier New', Courier, monospace;
 }
@@ -396,7 +407,7 @@ body {
     align-items: center;
     background-color: #121321;
     padding: 10px 20px;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     font-family: var(--font-mono);
     font-size: 13px;
     color: hsl(var(--text-secondary));
@@ -439,22 +450,39 @@ body {
     color: hsl(var(--text-primary));
 }
 
-.markdown-body h1, .markdown-body h2, .markdown-body h3 {
+.markdown-body h1,
+.markdown-body h2,
+.markdown-body h3 {
     margin-top: 24px;
     margin-bottom: 16px;
     font-weight: 600;
     line-height: 1.25;
 }
 
-.markdown-body h1 { font-size: 26px; border-bottom: 1px solid hsl(var(--border-color)); padding-bottom: 8px; }
-.markdown-body h2 { font-size: 20px; border-bottom: 1px solid hsl(var(--border-color)); padding-bottom: 6px; }
-.markdown-body h3 { font-size: 16px; }
+.markdown-body h1 {
+    font-size: 26px;
+    border-bottom: 1px solid hsl(var(--border-color));
+    padding-bottom: 8px;
+}
 
-.markdown-body p, .markdown-body ul, .markdown-body ol {
+.markdown-body h2 {
+    font-size: 20px;
+    border-bottom: 1px solid hsl(var(--border-color));
+    padding-bottom: 6px;
+}
+
+.markdown-body h3 {
+    font-size: 16px;
+}
+
+.markdown-body p,
+.markdown-body ul,
+.markdown-body ol {
     margin-bottom: 16px;
 }
 
-.markdown-body ul, .markdown-body ol {
+.markdown-body ul,
+.markdown-body ol {
     padding-left: 20px;
 }
 
@@ -499,7 +527,8 @@ body {
     margin-bottom: 16px;
 }
 
-.markdown-body th, .markdown-body td {
+.markdown-body th,
+.markdown-body td {
     padding: 12px;
     border: 1px solid hsl(var(--border-color));
     text-align: left;
@@ -522,7 +551,7 @@ body {
     height: 100%;
     background-color: hsl(var(--bg-header));
     border-left: 1px solid hsl(var(--border-color));
-    box-shadow: -10px 0 30px rgba(0,0,0,0.3);
+    box-shadow: -10px 0 30px rgba(0, 0, 0, 0.3);
     z-index: 100;
     display: flex;
     flex-direction: column;
@@ -583,7 +612,8 @@ body {
     gap: 8px;
 }
 
-.select-escenario-group label, .respuesta-box label {
+.select-escenario-group label,
+.respuesta-box label {
     font-size: 12px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -602,7 +632,7 @@ body {
 }
 
 .pregunta-box {
-    background-color: rgba(255,255,255,0.02);
+    background-color: rgba(255, 255, 255, 0.02);
     border: 1px dashed hsl(var(--border-color));
     border-radius: 8px;
     padding: 16px;
@@ -740,10 +770,19 @@ body {
 .editor-wrapper .CodeMirror {
     font-family: var(--font-mono);
     font-size: 13.5px;
-    line-height: 1.65;
+    line-height: 1.45 !important;
     border-radius: 0 0 10px 10px;
     border-top: 1px solid hsl(var(--border-color));
-    height: 380px;
+    height: 550px !important;
+}
+
+.editor-wrapper .CodeMirror-lines {
+    padding: 10px 0 !important;
+}
+
+.editor-wrapper .CodeMirror-line {
+    padding: 1px 16px !important;
+    line-height: 1.45 !important;
 }
 
 /* Cabecera con lado derecho que incluye badge + botón copiar */
@@ -822,13 +861,25 @@ body {
 }
 
 @keyframes slideUp {
-    from { opacity: 0; transform: translateY(8px); }
-    to   { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; }
-    to   { opacity: 1; }
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
 
 .resultado-header {
@@ -864,7 +915,7 @@ body {
     stroke-width: 5;
     stroke-linecap: round;
     transition: stroke-dashoffset 0.7s cubic-bezier(0.4, 0, 0.2, 1),
-                stroke 0.4s ease;
+        stroke 0.4s ease;
 }
 
 .score-ring-text {
