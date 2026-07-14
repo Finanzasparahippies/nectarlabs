@@ -247,6 +247,10 @@ async function cargarModulo(id) {
     document.getElementById("current-module-id").textContent = modulo.badge;
     document.getElementById("current-module-title").textContent = modulo.title;
 
+    // Limitar y reiniciar chat para el módulo cargado
+    reiniciarChatParaModuloActivo();
+    actualizarLimiteChatZen();
+
     // Estado del botón Completar
     const btnCompletar = document.getElementById("btn-completar-modulo");
     if (progresoModulos[modulo.id]) {
@@ -791,7 +795,7 @@ function inicializarChatZen() {
     btnEnviar.parentNode.replaceChild(newBtn, btnEnviar);
 
     inputText.onkeypress = (e) => {
-        if (e.key === "Enter") {
+        if (e.key === "Enter" && !newBtn.disabled) {
             newBtn.click();
         }
     };
@@ -800,9 +804,26 @@ function inicializarChatZen() {
         const txt = inputText.value.trim();
         if (!txt) return;
 
+        const moduloId = moduloActivo ? moduloActivo.id : "00";
+        let chatUsage = {};
+        try {
+            chatUsage = JSON.parse(localStorage.getItem("nectar_bot_chat_usage") || "{}");
+        } catch(e) {}
+
+        const preguntasHechas = chatUsage[moduloId] || 0;
+        if (preguntasHechas >= 5) {
+            alert("Has alcanzado el límite de 5 dudas en este módulo.");
+            return;
+        }
+
         agregarMensajeChat("user", txt);
         inputText.value = "";
         container.scrollTop = container.scrollHeight;
+
+        // Incrementar y persistir
+        chatUsage[moduloId] = preguntasHechas + 1;
+        localStorage.setItem("nectar_bot_chat_usage", JSON.stringify(chatUsage));
+        actualizarLimiteChatZen();
 
         const typingId = agregarMensajeChat("bot", "🕯️ <i>Nectar Bot medita tu duda...</i>");
         container.scrollTop = container.scrollHeight;
@@ -812,10 +833,72 @@ function inicializarChatZen() {
             if (typingMsg) typingMsg.remove();
 
             const respuestaZen = generarRespuestaChatZen(txt);
-            agregarMensajeChat("bot", respuestaZen);
+            const msgId = agregarMensajeChat("bot", respuestaZen);
+            
+            // Colorear código recién inyectado
+            const msgEl = document.getElementById(msgId);
+            if (msgEl && typeof Prism !== "undefined") {
+                msgEl.querySelectorAll("pre code").forEach(el => {
+                    Prism.highlightElement(el);
+                });
+            }
             container.scrollTop = container.scrollHeight;
         }, 1200);
     };
+}
+
+function actualizarLimiteChatZen() {
+    const moduloId = moduloActivo ? moduloActivo.id : "00";
+    
+    let chatUsage = {};
+    try {
+        chatUsage = JSON.parse(localStorage.getItem("nectar_bot_chat_usage") || "{}");
+    } catch(e) {}
+
+    const preguntasHechas = chatUsage[moduloId] || 0;
+    const preguntasRestantes = Math.max(0, 5 - preguntasHechas);
+
+    const countEl = document.getElementById("chat-questions-left");
+    const warningEl = document.getElementById("chat-limit-warning");
+    const inputText = document.getElementById("chat-input-text");
+    const btnEnviar = document.getElementById("btn-chat-enviar");
+
+    if (countEl) countEl.textContent = preguntasRestantes;
+
+    if (preguntasRestantes <= 0) {
+        if (warningEl) {
+            warningEl.classList.add("limit-reached");
+            warningEl.innerHTML = `<i class="bx bx-error-circle"></i> Has alcanzado el límite de 5 reflexiones conceptuales para este módulo.`;
+        }
+        if (inputText) {
+            inputText.disabled = true;
+            inputText.placeholder = "Límite de reflexiones alcanzado en este módulo.";
+        }
+        if (btnEnviar) btnEnviar.disabled = true;
+    } else {
+        if (warningEl) {
+            warningEl.classList.remove("limit-reached");
+            warningEl.innerHTML = `<i class="bx bx-info-circle"></i> Reflexiones restantes en este módulo: <strong id="chat-questions-left">${preguntasRestantes}</strong>/5`;
+        }
+        if (inputText) {
+            inputText.disabled = false;
+            inputText.placeholder = "Escribe tu duda conceptual aquí...";
+        }
+        if (btnEnviar) btnEnviar.disabled = false;
+    }
+}
+
+function reiniciarChatParaModuloActivo() {
+    const container = document.getElementById("chat-conversation");
+    if (!container) return;
+
+    container.innerHTML = "";
+    
+    const bienvenida = moduloActivo && moduloActivo.id === "00" 
+        ? "Saludos, buscador del código puro. Soy Nectar Bot, tu guía espiritual en este curso. ¿Qué concepto de este módulo deseas contemplar hoy?"
+        : `Saludos. He adaptado mi conciencia al <b>${moduloActivo.title}</b>. ¿Qué duda conceptual o técnica de este sendero deseas contemplar hoy?`;
+
+    agregarMensajeChat("bot", bienvenida);
 }
 
 function agregarMensajeChat(sender, text) {
@@ -849,46 +932,228 @@ function generarRespuestaChatZen(userText) {
     switch(modId) {
         case "01": // Python Avanzado
             if (txt.includes("mutable") || txt.includes("inmutable") || txt.includes("referencia") || txt.includes("valor")) {
-                return "🧘 <b>La ilusión de la pertenencia:</b> En Python, las variables no contienen objetos; son etiquetas (referencias) unidas a ellos. Si el objeto es <i>mutable</i> (listas, dicts), cualquier etiqueta que lo comparta puede alterar su caudal. Si es <i>inmutable</i> (tuplas, strings), cada cambio genera una nueva entidad en la memoria, dejando la original intacta. ¿Ves cómo el paso por asignación comparte la etiqueta y no el objeto mismo? Medita en esto: ¿qué ocurre cuando pasas una lista vacía como argumento por defecto en una función?";
+                return `🧘 <b>Paso por Asignación de Objeto (Mutability):</b><br><br>
+<b>El Porqué:</b> En Python no existe el paso por valor puro ni por referencia pura. Python usa <i>pass-by-assignment</i>. Al pasar un argumento a una función, se copia la referencia al objeto en memoria.<br>
+• Si el objeto es <b>mutable</b> (list, dict, set), cualquier cambio en su interior dentro de la función afectará al objeto original.<br>
+• Si es <b>inmutable</b> (int, str, tuple, frozenset), reasignarlo dentro de la función simplemente hace que la variable local apunte a un nuevo objeto, dejando el original intacto.<br><br>
+<b>El Cómo (Evitando el anti-patrón de argumentos por defecto mutables):</b>
+<pre class="language-python"><code class="language-python"># INCORRECTO: la lista se evalúa una sola vez en la definición
+def agregar_auto_incorrecto(auto, catalogo=[]):
+    catalogo.append(auto)
+    return catalogo
+
+# CORRECTO (Zen): usamos None como centinela inmutable
+def agregar_auto_seguro(auto, catalogo=None):
+    if catalogo is None:
+        catalogo = []
+    catalogo.append(auto)
+    return catalogo</code></pre>`;
             }
             if (txt.includes("decorador") || txt.includes("wraps") || txt.includes("wrapper")) {
-                return "🎭 <b>El velo del decorador:</b> Un decorador envuelve a una función para modificar su comportamiento sin destruir su esencia original. Pero cuidado: al envolverla, puedes ocultar sus metadatos (como su nombre y docstring). Para evitar esto, recurrimos al sabio <code>functools.wraps</code>, que preserva la identidad original detrás del velo. ¿Cómo te ayuda esto a mantener la transparencia ante herramientas de inspección o tests?";
+                return `🎭 <b>El Velo del Decorador y functools.wraps:</b><br><br>
+<b>El Porqué:</b> Un decorador es una función de orden superior que envuelve a otra para extender su comportamiento. Sin embargo, por defecto, la función resultante (el wrapper) reemplaza los metadatos de la función original (como su nombre <code>__name__</code> y docstring <code>__doc__</code>). Esto rompe la depuración, el análisis estático y las pruebas automatizadas. El uso de <code>@wraps</code> copia de vuelta estos metadatos esenciales.<br><br>
+<b>El Cómo:</b>
+<pre class="language-python"><code class="language-python">from functools import wraps
+
+def registrar_llamada(func):
+    @wraps(func)  # Copia el nombre y docstring original
+    def wrapper(*args, **kwargs):
+        print(f"Ejecutando: {func.__name__}")
+        return func(*args, **kwargs)
+    return wrapper
+
+@registrar_llamada
+def limitar_llamadas():
+    """Docstring original del reto."""
+    pass
+
+print(limitar_llamadas.__name__)  # Devuelve 'limitar_llamadas' y no 'wrapper'
+print(limitar_llamadas.__doc__)   # Conserva el docstring original</code></pre>`;
             }
             return "🐍 <b>El sendero de Python Avanzado:</b> Siente la sutil diferencia entre lo que cambia y lo que permanece eterno en memoria. Contempla el ámbito LEGB (Local, Enclosing, Global, Built-in) como círculos concéntricos en el agua. ¿Qué concepto de este módulo desafía la paz de tu arquitectura?";
 
         case "02": // Concurrencia
             if (txt.includes("gil") || txt.includes("lock") || txt.includes("global interpreter")) {
-                return "🔒 <b>El Guardián Único (GIL):</b> El Global Interpreter Lock es un guardián celoso. Solo permite que una mente (hilo de CPU) ejecute código Python a la vez para proteger la integridad interna. Para tareas que exigen fuerza bruta (CPU-bound), un solo hilo no es suficiente; debemos clonar la mente en múltiples procesos (<code>multiprocessing</code>). Para tareas que esperan (I/O-bound), podemos usar la asincronía (<code>asyncio</code>) para que un solo hilo asista a otros mientras esperan el flujo de datos. ¿Qué tipo de bloqueo está limitando la velocidad de tu flujo actual?";
+                return `🔒 <b>El Guardián del Intérprete (GIL):</b><br><br>
+<b>El Porqué:</b> El Global Interpreter Lock es un mutex en CPython que previene que múltiples hilos nativos ejecuten bytecode de Python al mismo tiempo. Existe para proteger la gestión de memoria no segura para hilos de CPython (basada en conteo de referencias).<br>
+• Para tareas <b>I/O-Bound</b> (esperas de red o disco), el GIL se libera cooperativamente, por lo que <code>asyncio</code> o <code>threading</code> son altamente eficientes.<br>
+• Para tareas <b>CPU-Bound</b> (procesamiento matemático pesado), los hilos competirían por el GIL desperdiciando recursos. Debemos usar <code>multiprocessing</code> para evadir el GIL instanciando intérpretes independientes en múltiples núcleos de CPU.<br><br>
+<b>El Cómo:</b>
+<pre class="language-python"><code class="language-python"># I/O Bound asíncrono
+import asyncio
+
+async def realizar_peticion():
+    await asyncio.sleep(1) # Libera el control para que otras hilos/tareas corran
+    return "API response"
+
+# CPU Bound en paralelo (evadiendo el GIL)
+from multiprocessing import Process
+
+def computar_inventario():
+    # Procesamiento pesado que corre en su propio núcleo e intérprete
+    pass
+
+if __name__ == "__main__":
+    p = Process(target=computar_inventario)
+    p.start()</code></pre>`;
             }
             if (txt.includes("generador") || txt.includes("lazy") || txt.includes("evaluacion perezosa")) {
-                return "🌱 <b>La paciencia del Generador:</b> Cargar un inventario masivo en una lista es como recolectar todas las cosechas del año y meterlas juntas en tu pequeña cabaña (RAM). El generador, mediante <code>yield</code>, te da una sola fruta a la vez cuando tienes hambre (Lazy Evaluation). Tu consumo de memoria se mantiene constante ($O(1)$) sin importar el tamaño del campo. ¿Cómo implementarías esta paciencia para procesar un CSV de varios gigabytes?";
+                return `🌱 <b>Generadores y Lazy Evaluation (Evaluación Perezosa):</b><br><br>
+<b>El Porqué:</b> Cargar un inventario masivo en una lista convencional <code>[auto for auto in data]</code> asigna memoria RAM para todos los objetos simultáneamente ($O(N)$ en espacio). Si el archivo o base de datos es de varios gigabytes, el servidor colapsará. Las expresiones generadoras <code>(auto for auto in data)</code> y el uso de <code>yield</code> evalúan un elemento a la vez bajo demanda, logrando un uso de memoria constante de $O(1)$.<br><br>
+<b>El Cómo:</b>
+<pre class="language-python"><code class="language-python"># Ineficiente (Carga todo en RAM)
+def leer_catalogo_lista(autos):
+    return [procesar(a) for a in autos]
+
+# Eficiente y Zen (O(1) RAM)
+def leer_catalogo_generador(autos):
+    for a in autos:
+        yield procesar(a) # Genera bajo demanda del consumidor
+
+# Se consume paso a paso usando next() o un loop 'for'
+for auto in leer_catalogo_generador(autos_db):
+    print(auto)  # Solo existe un auto a la vez en memoria</code></pre>`;
             }
             return "⚡ <b>La danza del tiempo (Concurrencia):</b> El tiempo pasa de forma distinta para las CPU y la red. ¿Tu código está bloqueado esperando la respuesta de un servidor externo, o está consumido por operaciones matemáticas pesadas? Escucha el latido de tu hardware.";
 
         case "10": // TypeScript
             if (txt.includes("any") || txt.includes("unknown")) {
-                return "🌌 <b>El abismo del 'any':</b> Usar <code>any</code> es rendirse ante el caos; es apagar la luz de TypeScript y caminar a oscuras. Por el contrario, <code>unknown</code> reconoce la incertidumbre de forma ordenada: te dice 'esto existe, pero no sabemos qué es aún'. Te obliga a usar un <i>Type Guard</i> para verificar su verdadera naturaleza antes de actuar. ¿Ves cómo la duda metódica de <code>unknown</code> fortalece tu arquitectura ante payloads externos?";
+                return `🌌 <b>unknown vs any en Payload Seguro:</b><br><br>
+<b>El Porqué:</b> Usar <code>any</code> apaga el compilador e introduce potenciales fallos en tiempo de ejecución. <code>unknown</code> es el tipo seguro para datos externos cuyo tipo es incierto (ej. respuestas de API). A diferencia de <code>any</code>, el compilador de TypeScript te impedirá interactuar con un objeto de tipo <code>unknown</code> hasta que verifiques y demuestres su estructura mediante un Type Guard o validación de runtime (como Zod).<br><br>
+<b>El Cómo (Type Guard en TypeScript):</b>
+<pre class="language-typescript"><code class="language-typescript">interface Auto {
+    marca: string;
+    anio: number;
+}
+
+// Type Guard para verificar el payload
+function esAuto(payload: unknown): payload is Auto {
+    return (
+        typeof payload === "object" &&
+        payload !== null &&
+        "marca" in payload &&
+        "anio" in payload
+    );
+}
+
+function procesarRespuesta(data: unknown) {
+    if (esAuto(data)) {
+        console.log(data.marca); // Seguro: TS sabe que es de tipo Auto
+    } else {
+        console.error("Payload desconocido");
+    }
+}</code></pre>`;
             }
             if (txt.includes("generic") || txt.includes("generico")) {
-                return "🧩 <b>La forma universal (Generics):</b> Los tipos genéricos son moldes vacíos que cobran vida al ser llenados por el invocador. Permiten escribir lógica reutilizable sin perder la seguridad del tipado. Es la abstracción en su máxima pureza. ¿En qué componentes de tu API te beneficiaría delegar la definición de tipos al momento de la llamada?";
+                return `🧩 <b>El Poder de los Genéricos (Generics):</b><br><br>
+<b>El Porqué:</b> Los genéricos actúan como variables de tipo. Permiten crear funciones, clases o interfaces altamente reutilizables que funcionan con múltiples tipos sin perder el tipado seguro (a diferencia de usar <code>any</code>). Permiten al cliente definir la forma del dato al momento de invocar el código.<br><br>
+<b>El Cómo:</b>
+<pre class="language-typescript"><code class="language-typescript">// Una interfaz genérica para respuestas de API
+interface ApiResponse<T> {
+    status: number;
+    data: T;
+}
+
+interface Usuario {
+    nombre: string;
+}
+
+// Invocación especificando el tipo concreto
+const respuesta: ApiResponse<Usuario> = {
+    status: 200,
+    data: { nombre: "Carlos" }
+};</code></pre>`;
             }
             return "🟦 <b>El orden de TypeScript:</b> El compilador es un maestro riguroso, no un enemigo. Te advierte de los peligros en el tiempo de diseño para que tu aplicación sea eterna en el tiempo de ejecución. ¿Qué tipo o contrato te genera discordia?";
 
         case "11": // Elixir
             if (txt.includes("actor") || txt.includes("proceso") || txt.includes("beam")) {
-                return "🐝 <b>La colmena BEAM:</b> En Elixir, los procesos son más livianos que el aire. No comparten memoria, lo que evita que el fallo de uno contamine a sus hermanos. Se comunican arrojando cartas a los buzones ajenos de forma asíncrona. Esta inmutabilidad absoluta elimina las condiciones de carrera en el estado. ¿Qué crees que sucedería si el buzón de un proceso se llena y nadie responde?";
+                return `🐝 <b>El Modelo de Actores e Inmutabilidad en BEAM:</b><br><br>
+<b>El Porqué:</b> En Elixir, a diferencia de lenguajes como Python u Node, los procesos no son hilos del sistema operativo; son gestionados por la máquina virtual BEAM, son extremadamente ligeros (millones de ellos simultáneos) y lo más importante: <b>no comparten memoria alguna</b>. La comunicación se realiza únicamente enviando mensajes asíncronos que se encolan en el buzón (<i>mailbox</i>) del actor receptor, evitando condiciones de carrera de forma natural.<br><br>
+<b>El Cómo:</b>
+<pre class="language-elixir"><code class="language-elixir"># Envío de mensaje asíncrono
+send(destinatario_pid, {:filtrar_auto, "Toyota"})
+
+# Recepción en el proceso receptor
+receive do
+  {:filtrar_auto, marca} ->
+    IO.puts("Filtrando catalogo por: #{marca}")
+  _otro ->
+    IO.puts("Mensaje no reconocido")
+end</code></pre>`;
             }
             if (txt.includes("supervisor") || txt.includes("let it crash") || txt.includes("caer")) {
-                return "🍂 <b>La sabiduría del colapso (Let it crash):</b> Elixir no teme a la caída. En lugar de atrapar cada posible error defensivamente con bloques oscuros, permite que el proceso muera en paz ante lo imprevisto. Un Supervisor atento detectará su partida y lo revivirá instantáneamente en un estado inicial limpio. Es el ciclo eterno de renacimiento de OTP. ¿Qué estrategia de supervisión elegirías para procesos que dependen críticamente entre sí?";
+                return `🍂 <b>Tolerancia a fallos: Let it crash y Supervision Trees:</b><br><br>
+<b>El Porqué:</b> En lugar de atrapar defensivamente cada posible error con try-except (lo cual deja el proceso en un estado interno inconsistente), Elixir asume la filosofía <i>"Let it crash"</i>. Si ocurre un fallo imprevisto, dejamos que el proceso trabajador muera de inmediato. Un proceso supervisor jerárquico se encarga de atrapar la señal de muerte y reiniciarlo automáticamente desde un estado inicial garantizado y consistente.<br><br>
+<b>El Cómo:</b>
+<pre class="language-elixir"><code class="language-elixir"># Definición de un Supervisor en OTP
+defmodule NectarApp.Supervisor do
+  use Supervisor
+
+  def start_link(opts) do
+    Supervisor.start_link(__MODULE__, :ok, opts)
+  end
+
+  @impl true
+  def init(:ok) do
+    children = [
+      # Si el trabajador cae, se reinicia de forma limpia
+      {NectarApp.TrabajadorCatalogo, []}
+    ]
+
+    # Estrategia :one_for_one -> Solo reinicia al proceso hijo caído
+    Supervisor.init(children, strategy: :one_for_one)
+  end
+end</code></pre>`;
             }
             return "💧 <b>El fluir de Elixir:</b> Un GenServer maneja el estado a través de la recursión pura, recibiendo llamadas síncronas (<code>call</code>) y asíncronas (<code>cast</code>). Dibuja en tu mente la jerarquía de supervisores que protegen tu aplicación de la caída.";
 
         case "12": // AWS & DevOps
             if (txt.includes("docker") || txt.includes("multi-stage") || txt.includes("stage")) {
-                return "📦 <b>El capullo ligero (Multi-stage Docker):</b> Crear una imagen Docker con todas las herramientas de desarrollo es cargar con herramientas que no usarás en producción. El diseño multi-stage te permite compilar en una fase pesada y luego copiar únicamente el artefacto final a una imagen limpia y minimalista (como <code>alpine</code> o <code>slim</code>). Tu despliegue será más rápido y seguro. ¿Qué dependencias innecesarias estás arrastrando hoy en tus contenedores?";
+                return `📦 <b>Imágenes Ligeras con Docker Multi-Stage:</b><br><br>
+<b>El Porqué:</b> En un flujo de CI/CD para producción, compilar código o instalar dependencias de desarrollo (como compilers de C, herramientas de test o linters) dentro del contenedor final genera imágenes gigantescas e introduce riesgos graves de seguridad (vulnerabilidades). Los multi-stage builds permiten separar el entorno de compilación (Stage 1) del entorno de ejecución (Stage 2), copiando sólo los artefactos puros necesarios al entorno final de producción.<br><br>
+<b>El Cómo (Dockerfile optimizado):</b>
+<pre class="language-dockerfile"><code class="language-dockerfile"># --- STAGE 1: Compilación ---
+FROM python:3.11-slim AS builder
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --user --no-cache-dir -r requirements.txt
+
+# --- STAGE 2: Imagen Final Ligera de Producción ---
+FROM python:3.11-slim
+WORKDIR /app
+# Copiamos solo los binarios compilados del Stage 1
+COPY --from=builder /root/.local /root/.local
+COPY . .
+ENV PATH=/root/.local/bin:$PATH
+# Ejecutar como usuario no-root por seguridad
+USER guest
+CMD ["python", "main.py"]</code></pre>`;
             }
             if (txt.includes("resiliencia") || txt.includes("circuit") || txt.includes("breaker") || txt.includes("gateway")) {
-                return "🛡️ <b>El fusible (Circuit Breaker):</b> Si un microservicio remoto está caído, seguir enviándole peticiones es como intentar cruzar una puerta cerrada a cabezazos: solo gastarás energía y saturarás tu sistema. El Circuit Breaker detecta los fallos repetidos y abre el circuito para responder de inmediato con un error o fallback alternativo, dando tiempo al servicio remoto para sanar. ¿Cómo mitigas el impacto al usuario final cuando una API externa deja de responder?";
+                return `🛡️ <b>Resiliencia: API Gateway & Circuit Breaker:</b><br><br>
+<b>El Porqué:</b> En arquitecturas distribuidas, si un servicio del cual dependes (como el procesador de pagos) experimenta lentitud o caídas, seguir bombardeándolo de peticiones saturará la red, agotará los hilos del servidor y provocará un fallo en cascada en toda tu aplicación. El patrón <i>Circuit Breaker</i> (Fusible) intercepta las llamadas fallidas de red y, tras un umbral de errores, abre el circuito respondiendo instantáneamente con un error local o fallback sin tocar la red, permitiendo que el microservicio caído se recupere.<br><br>
+<b>El Cómo (Flujo del Circuit Breaker):</b>
+<pre class="language-python"><code class="language-python"># Pseudocódigo de un interceptor de llamadas
+class CircuitBreaker:
+    def __init__(self, fallback_func):
+        self.state = "CLOSED" # Estados: CLOSED, OPEN, HALF-OPEN
+        self.failure_threshold = 5
+        self.failures = 0
+
+    def call(self, request_func, *args):
+        if self.state == "OPEN":
+            return self.fallback_func() # Retorna de inmediato la respuesta zen
+
+        try:
+            res = request_func(*args)
+            self.failures = 0
+            return res
+        except Exception as e:
+            self.failures += 1
+            if self.failures >= self.failure_threshold:
+                self.state = "OPEN" # Abre el circuito ante fallas recurrentes
+            raise e</code></pre>`;
             }
             return "☁️ <b>La nube inmensa (AWS & DevOps):</b> La alta disponibilidad no se logra con servidores más grandes, sino distribuyendo el peso del flujo mediante balanceadores, colas desacopladas (SQS) y replicación multizona. ¿Qué cuello de botella estás tratando de aliviar en tu arquitectura de despliegue?";
 

@@ -1221,3 +1221,30 @@ body {
     max-width: 260px;
     line-height: 1.5;
 }
+
+/* Limit warnings in chat */
+.chat-limit-warning {
+    background-color: rgba(245, 158, 11, 0.08);
+    border: 1px solid rgba(245, 158, 11, 0.25);
+    color: #f59e0b;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 12.5px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    animation: fadeIn 0.4s ease;
+}
+
+.chat-limit-warning strong {
+    font-family: var(--font-mono);
+    font-weight: 700;
+}
+
+.chat-limit-warning.limit-reached {
+    background-color: rgba(239, 68, 68, 0.08);
+    border: 1px solid rgba(239, 68, 68, 0.25);
+    color: #ef4444;
+}
