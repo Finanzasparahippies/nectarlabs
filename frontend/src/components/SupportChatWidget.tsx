@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { fetcher } from '../lib/api';
+import { usePathname } from 'next/navigation';
 
 interface Message {
   id: number;
@@ -19,6 +20,13 @@ interface SupportChat {
 }
 
 export default function SupportChatWidget() {
+  const pathname = usePathname();
+  
+  // No renderizar el widget de chat global dentro de las páginas de cursos
+  if (pathname && pathname.includes('/cursos/')) {
+    return null;
+  }
+
   const [token, setToken] = useState<string | null>(null);
   const [isStaff, setIsStaff] = useState(false);
   const [isOpen, setIsOpen] = useState(false);

@@ -1251,6 +1251,8 @@ body {
 
 /* NectarLabs Premium Promo Card */
 .nectarlabs-promo-card {
+    display: block;
+    text-decoration: none;
     position: relative;
     margin: 16px;
     padding: 16px;
@@ -1348,12 +1350,12 @@ body {
     transition: transform 0.2s ease;
 }
 
-.promo-btn:hover {
+.nectarlabs-promo-card:hover .promo-btn {
     background: #6366f1;
     border-color: #6366f1;
 }
 
-.promo-btn:hover i {
+.nectarlabs-promo-card:hover .promo-btn i {
     transform: translateX(4px);
 }
 

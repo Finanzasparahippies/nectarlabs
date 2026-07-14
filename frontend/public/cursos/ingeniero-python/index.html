@@ -1,31 +1,35 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard: Curso de Ingeniería Python</title>
-    
+
     <!-- Fuentes premium de Google -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+
     <!-- Iconos Boxicons -->
     <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
-    
+
     <!-- PrismJS para resaltado de código (teoría y ejemplos) -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
-    
+
     <!-- CodeMirror 5 – Editor interactivo de ejercicios -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css" rel="stylesheet">
-    
+
     <!-- Archivo de Estilos Personalizado -->
     <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
     <div class="app-container">
-        
+
         <!-- Sidebar lateral de navegación -->
         <aside class="sidebar">
             <div class="sidebar-header">
@@ -35,21 +39,21 @@
                     <span>STAFF ENGINEER</span>
                 </div>
             </div>
-            
+
             <nav class="modules-nav">
                 <h3>Módulos del Curso</h3>
                 <ul id="modules-list">
                     <!-- Los módulos se inyectan dinámicamente con JavaScript -->
                 </ul>
             </nav>
-            
+
             <div class="nectarlabs-promo-card">
                 <div class="promo-glow"></div>
                 <div class="promo-content">
                     <span class="promo-tag"><i class="bx bxs-zap"></i> Desarrollado por</span>
                     <h4>Nectar Labs</h4>
-                    <p>Construimos sistemas multi-tenant robustos y agentes autónomos de IA a medida.</p>
-                    <a href="https://nectarlabs.co" target="_blank" class="promo-btn">
+                    <p>Construimos sistemas robustos y agentes autónomos de IA a medida.</p>
+                    <a href="https://nectarlabs.dev" target="_blank" class="promo-btn">
                         <span>Lleva tu empresa al futuro</span>
                         <i class="bx bx-right-arrow-alt"></i>
                     </a>
@@ -68,10 +72,10 @@
                 </div>
             </div>
         </aside>
-        
+
         <!-- Contenido principal -->
         <main class="main-content">
-            
+
             <!-- Barra superior del header -->
             <header class="main-header">
                 <div class="module-title-area">
@@ -87,10 +91,10 @@
                     </button>
                 </div>
             </header>
-            
+
             <!-- Contenedor del Visor e Interacciones -->
             <div class="workspace">
-                
+
                 <!-- Navegación de pestañas internas -->
                 <div class="tabs-navigation">
                     <button class="tab-btn active" data-tab="tab-teoria">
@@ -103,17 +107,17 @@
                         <i class="bx bx-edit-alt"></i> Ejercicios.py
                     </button>
                 </div>
-                
+
                 <!-- Panel de Contenido Principal -->
                 <div class="content-panel">
-                    
+
                     <!-- Pestaña 1: Teoría Renderizada (Markdown a HTML) -->
                     <div class="tab-content active" id="tab-teoria">
                         <div class="markdown-body" id="teoria-container">
                             <!-- Teoría inyectada dinámicamente -->
                         </div>
                     </div>
-                    
+
                     <!-- Pestaña 2: Ejemplos de Código (Prism – read-only) -->
                     <div class="tab-content" id="tab-ejemplos">
                         <div class="code-view-wrapper">
@@ -126,7 +130,7 @@
                             <pre><code class="language-python" id="code-ejemplos"># Código cargando...</code></pre>
                         </div>
                     </div>
-                    
+
                     <!-- Pestaña 3: Ejercicios (Editor Interactivo + Sandbox) -->
                     <div class="tab-content" id="tab-ejercicios">
                         <div class="code-view-wrapper editor-wrapper">
@@ -146,7 +150,7 @@
                             <!-- Contenedor del editor CodeMirror -->
                             <div id="editor-ejercicios"></div>
                         </div>
-                        
+
                         <!-- Barra de acción del ejercicio -->
                         <div class="ejercicio-actions">
                             <button class="btn btn-primary btn-evaluar" id="btn-evaluar-ejercicio">
@@ -156,15 +160,15 @@
                                 <i class="bx bx-shield-check"></i> Sandbox aislado: sin red, 64MB RAM, 10s límite
                             </span>
                         </div>
-                        
+
                         <!-- Panel de Resultados del Evaluador -->
                         <div class="resultados-ejercicio" id="resultados-ejercicio" style="display:none;">
                             <div class="resultado-header">
                                 <div class="score-ring-wrapper">
                                     <svg class="score-ring" viewBox="0 0 64 64">
-                                        <circle class="ring-bg" cx="32" cy="32" r="26"/>
+                                        <circle class="ring-bg" cx="32" cy="32" r="26" />
                                         <circle class="ring-fill" id="score-ring-fill" cx="32" cy="32" r="26"
-                                            stroke-dasharray="163.36" stroke-dashoffset="163.36"/>
+                                            stroke-dasharray="163.36" stroke-dashoffset="163.36" />
                                     </svg>
                                     <span id="score-ejercicio-valor" class="score-ring-text">0%</span>
                                 </div>
@@ -174,7 +178,8 @@
                                 </div>
                             </div>
                             <div class="resultado-feedback" id="resultado-feedback"></div>
-                            <details class="resultado-stdout-wrapper" id="resultado-stdout-wrapper" style="display:none;">
+                            <details class="resultado-stdout-wrapper" id="resultado-stdout-wrapper"
+                                style="display:none;">
                                 <summary><i class="bx bx-terminal"></i> Salida del sandbox</summary>
                                 <pre id="resultado-stdout" class="resultado-stdout-pre"></pre>
                             </details>
@@ -184,14 +189,14 @@
                 </div>
             </div>
         </main>
-        
+
         <!-- Panel lateral del Simulador Nectar Bot -->
         <div class="bot-drawer" id="bot-drawer">
             <div class="drawer-header">
                 <h3><i class="bx bx-bot"></i> Nectar Bot</h3>
                 <button class="close-drawer" id="btn-cerrar-bot"><i class="bx bx-x"></i></button>
             </div>
-            
+
             <!-- Selector de Pestañas del Bot -->
             <div class="bot-tabs">
                 <button class="bot-tab-btn active" data-bot-tab="chat">
@@ -201,31 +206,36 @@
                     <i class="bx bx-award"></i> Evaluaciones
                 </button>
             </div>
-            
+
             <div class="drawer-body">
                 <!-- Panel 1: Chat Zen -->
                 <div class="bot-tab-content active" id="bot-panel-chat">
-                    <p class="drawer-intro">Conversa con Nectar Bot para resolver tus dudas conceptuales de forma Zen. El bot se adapta al módulo que estás estudiando actualmente.</p>
+                    <p class="drawer-intro">Conversa con Nectar Bot para resolver tus dudas conceptuales de forma Zen.
+                        El bot se adapta al módulo que estás estudiando actualmente.</p>
                     <div class="chat-limit-warning" id="chat-limit-warning">
-                        <i class="bx bx-info-circle"></i> Reflexiones restantes en este módulo: <strong id="chat-questions-left">5</strong>/5
+                        <i class="bx bx-info-circle"></i> Reflexiones restantes en este módulo: <strong
+                            id="chat-questions-left">5</strong>/5
                     </div>
-                    
+
                     <div class="chat-conversation" id="chat-conversation">
                         <div class="chat-message bot">
-                            <div class="chat-bubble">Saludos, buscador del código puro. Soy Nectar Bot, tu guía espiritual en este curso. ¿Qué concepto de este módulo deseas contemplar hoy?</div>
+                            <div class="chat-bubble">Saludos, buscador del código puro. Soy Nectar Bot, tu guía
+                                espiritual en este curso. ¿Qué concepto de este módulo deseas contemplar hoy?</div>
                         </div>
                     </div>
-                    
+
                     <div class="chat-input-area">
-                        <input type="text" id="chat-input-text" placeholder="Escribe tu duda conceptual aquí..." autocomplete="off">
+                        <input type="text" id="chat-input-text" placeholder="Escribe tu duda conceptual aquí..."
+                            autocomplete="off">
                         <button id="btn-chat-enviar" class="btn btn-primary"><i class="bx bx-send"></i></button>
                     </div>
                 </div>
 
                 <!-- Panel 2: Evaluaciones (Secuencial y Gamificado) -->
                 <div class="bot-tab-content" id="bot-panel-eval">
-                    <p class="drawer-intro">Desafía tu comprensión técnica. Las evaluaciones deben completarse en orden secuencial aprobando la anterior (Score >= 60%).</p>
-                    
+                    <p class="drawer-intro">Desafía tu comprensión técnica. Las evaluaciones deben completarse en orden
+                        secuencial aprobando la anterior (Score >= 60%).</p>
+
                     <div class="select-escenario-group">
                         <label for="select-escenario">Escenario de Evaluación:</label>
                         <select id="select-escenario">
@@ -237,23 +247,25 @@
                             <option value="aws">AWS, Microservicios y DevOps</option>
                         </select>
                     </div>
-                    
+
                     <!-- Envoltura de contenido de evaluación activa -->
                     <div id="eval-content-wrapper">
                         <div class="pregunta-box">
                             <strong>Pregunta del bot:</strong>
-                            <p id="pregunta-texto">¿Cómo manejas los errores en una API que conecta con una base de datos externa para asegurar que la aplicación no se caiga?</p>
+                            <p id="pregunta-texto">¿Cómo manejas los errores en una API que conecta con una base de
+                                datos externa para asegurar que la aplicación no se caiga?</p>
                         </div>
-                        
+
                         <div class="respuesta-box">
                             <label for="input-respuesta">Tu respuesta técnica:</label>
-                            <textarea id="input-respuesta" placeholder="Escribe tu respuesta técnica aquí utilizando las mejores prácticas de la industria..."></textarea>
+                            <textarea id="input-respuesta"
+                                placeholder="Escribe tu respuesta técnica aquí utilizando las mejores prácticas de la industria..."></textarea>
                         </div>
-                        
+
                         <button class="btn btn-primary btn-block" id="btn-evaluar-respuesta">
                             Evaluar Respuesta
                         </button>
-                        
+
                         <div class="resultados-ia" id="resultados-ia" style="display: none;">
                             <div class="scoring-circle-wrapper">
                                 <div class="scoring-circle">
@@ -261,11 +273,11 @@
                                     <span>Match Score</span>
                                 </div>
                             </div>
-                            
+
                             <div class="feedback-detallado">
                                 <h4>Conceptos evaluados:</h4>
                                 <ul class="keywords-list" id="keywords-list-feedback"></ul>
-                                
+
                                 <div class="retroalimentacion-caja">
                                     <strong>Guía Zen:</strong>
                                     <p id="recomendacion-texto">Intenta incluir más palabras clave de producción.</p>
@@ -273,22 +285,23 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <!-- Mensaje de escenario bloqueado -->
                     <div id="eval-blocked-message" class="eval-blocked-card" style="display: none;">
                         <div class="lock-icon"><i class="bx bx-lock-alt"></i></div>
                         <h4>Senda Bloqueada</h4>
-                        <p id="blocked-reason-text">Debes aprobar el escenario anterior con un score mínimo del 60% para poder transitar este camino.</p>
+                        <p id="blocked-reason-text">Debes aprobar el escenario anterior con un score mínimo del 60% para
+                            poder transitar este camino.</p>
                     </div>
                 </div>
             </div>
         </div>
-        
+
     </div>
 
     <!-- Librería Marked para renderizar Markdown a HTML -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
-    
+
     <!-- PrismJS para coloreado de código (ejemplos y teoría) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
@@ -296,7 +309,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-elixir.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-yaml.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-hcl.min.js"></script>
-    
+
     <!-- CodeMirror 5 – Editor interactivo de ejercicios -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
@@ -304,11 +317,12 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/yaml/yaml.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closebrackets.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.min.js"></script>
-    
+
     <!-- Base de Datos estática offline para fallback universal (CORS-Safe) -->
     <script src="course_data.js"></script>
-    
+
     <!-- Archivo JS de la aplicación -->
     <script src="app.js"></script>
 </body>
+
 </html>
