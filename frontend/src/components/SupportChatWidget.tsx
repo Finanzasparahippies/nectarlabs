@@ -21,9 +21,26 @@ interface SupportChat {
 
 export default function SupportChatWidget() {
   const pathname = usePathname();
-  
-  // No renderizar el widget de chat global dentro de las páginas de cursos
-  if (pathname && pathname.includes('/cursos/')) {
+  const [shouldHide, setShouldHide] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const hostname = window.location.hostname;
+      const parts = hostname.split('.');
+      // Ocultar si es un subdominio de nectarlabs (como carlos.nectarlabs.dev)
+      const isSubdomain = parts.length > 2 && !hostname.includes('localhost');
+      // Ocultar si estamos dentro de un iframe
+      const inIframe = window.self !== window.top;
+      // Ocultar si el path de Next.js es de cursos o tenants
+      const isCoursePath = pathname && (pathname.includes('/cursos/') || pathname.includes('/tenants/'));
+
+      if (isSubdomain || inIframe || isCoursePath) {
+        setShouldHide(true);
+      }
+    }
+  }, [pathname]);
+
+  if (shouldHide) {
     return null;
   }
 

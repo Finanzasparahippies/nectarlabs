@@ -1254,6 +1254,7 @@ body {
     display: block;
     text-decoration: none;
     position: relative;
+    z-index: 5;
     margin: 16px;
     padding: 16px;
     background: linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.9) 100%);
@@ -1330,6 +1331,9 @@ body {
 }
 
 .promo-btn {
+    position: relative;
+    z-index: 10;
+    cursor: pointer;
     display: inline-flex;
     align-items: center;
     justify-content: space-between;
