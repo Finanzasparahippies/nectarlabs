@@ -287,35 +287,58 @@ async function cargarModulo(id) {
     const pathEjemplos = `../${modulo.folder}/${fileEjemplos}`;
     const pathEjercicios = `../${modulo.folder}/${fileEjercicios}`;
 
-    // ── 1. Cargar Teoría ──────────────────────────────────────────────
+    // ── Cargar Contenidos desde el Backend (Base de Datos) o Fallback local ──
     document.getElementById("teoria-container").innerHTML = "<p>Cargando teoría...</p>";
-    try {
-        let mdText = await _fetchWithFallback(pathTeoria, COURSE_DATA[modulo.id]?.teoria);
-        const container = document.getElementById("teoria-container");
-        container.innerHTML = marked.parse(mdText);
-        Prism.highlightAllUnder(container);
-    } catch (err) {
-        document.getElementById("teoria-container").innerHTML = `<p class="error-text">${err.message}</p>`;
-    }
-
-    // ── 2. Cargar Ejemplos (Prism – read-only) ────────────────────────
-    try {
-        const codeText = await _fetchWithFallback(pathEjemplos, COURSE_DATA[modulo.id]?.ejemplos);
-        const codeEl = document.getElementById("code-ejemplos");
-        codeEl.textContent = codeText;
-        codeEl.className = `language-${langEjemplos}`;
-        Prism.highlightElement(codeEl);
-    } catch (err) {
-        document.getElementById("code-ejemplos").textContent = err.message;
-    }
-
-    // ── 3. Cargar Ejercicios en el Editor CodeMirror ──────────────────
+    let teoria = "";
+    let ejemplos = "";
     let codigoBase = "";
+
     try {
-        codigoBase = await _fetchWithFallback(pathEjercicios, COURSE_DATA[modulo.id]?.ejercicios);
-    } catch {
-        codigoBase = COURSE_DATA[modulo.id]?.ejercicios || `# Ejercicios del Módulo ${modulo.id}`;
+        const moduloData = await apiRequest("GET", `/courses/modules/${modulo.id}/?course_slug=${COURSE_SLUG}`);
+        if (moduloData) {
+            teoria = moduloData.teoria;
+            ejemplos = moduloData.ejemplos;
+            codigoBase = moduloData.ejercicios;
+        }
+    } catch (err) {
+        console.warn("No se pudo conectar con el backend de cursos, usando fallback local:", err);
     }
+
+    // Fallbacks si la API no devolvió datos
+    if (!teoria) {
+        try {
+            teoria = await _fetchWithFallback(pathTeoria, COURSE_DATA[modulo.id]?.teoria);
+        } catch (err) {
+            teoria = `<p class="error-text">No se pudo cargar la teoría: ${err.message}</p>`;
+        }
+    }
+    if (!ejemplos) {
+        try {
+            ejemplos = await _fetchWithFallback(pathEjemplos, COURSE_DATA[modulo.id]?.ejemplos);
+        } catch (err) {
+            ejemplos = `Error al cargar ejemplos: ${err.message}`;
+        }
+    }
+    if (!codigoBase) {
+        try {
+            codigoBase = await _fetchWithFallback(pathEjercicios, COURSE_DATA[modulo.id]?.ejercicios);
+        } catch {
+            codigoBase = COURSE_DATA[modulo.id]?.ejercicios || `# Ejercicios del Módulo ${modulo.id}`;
+        }
+    }
+
+    // ── 1. Renderizar Teoría ──────────────────────────────────────────
+    const container = document.getElementById("teoria-container");
+    container.innerHTML = marked.parse(teoria);
+    Prism.highlightAllUnder(container);
+
+    // ── 2. Renderizar Ejemplos (Prism – read-only) ────────────────────
+    const codeEl = document.getElementById("code-ejemplos");
+    codeEl.textContent = ejemplos;
+    codeEl.className = `language-${langEjemplos}`;
+    Prism.highlightElement(codeEl);
+
+    // ── 3. Preparar Ejercicios en el Editor CodeMirror ────────────────
 
     // Si el alumno tiene una submission guardada en el backend, la cargamos como código inicial
     if (authToken) {

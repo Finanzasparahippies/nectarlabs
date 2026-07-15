@@ -8,11 +8,12 @@ import re
 import logging
 from django.conf import settings
 
-from .models import ExerciseSubmission
+from .models import ExerciseSubmission, Course, CourseModule
 from .serializers import (
     ExerciseSubmissionSerializer,
     ExerciseSubmitSerializer,
     CourseProgressSerializer,
+    CourseModuleSerializer,
 )
 from .evaluator import evaluate_exercise
 from .conceptual_data import CONCEPTUAL_SCENARIOS
@@ -257,4 +258,135 @@ class EvaluateConceptualView(APIView):
             "score": score,
             "justificacion": justificacion
         }, status=status.HTTP_200_OK)
+
+
+MODULES_METADATA = {
+    "00": {"title": "Preparación IA y Berribot", "folder": "00_preparacion_ia_y_berribot", "language": "python"},
+    "01": {"title": "Python Avanzado y Edge Cases", "folder": "01_python_avanzado", "language": "python"},
+    "02": {"title": "Concurrencia, Paralelismo y Rendimiento", "folder": "02_concurrencia_y_rendimiento", "language": "python"},
+    "03": {"title": "Diseño Orientado a Objetos y Arquitectura Limpia", "folder": "03_diseno_y_arquitectura", "language": "python"},
+    "04": {"title": "Robustez, Calidad de Código y Testing", "folder": "04_robustez_y_testing", "language": "python"},
+    "05": {"title": "Bases de Datos, ORMs y APIs Modernas", "folder": "05_bases_de_datos_y_apis", "language": "python"},
+    "06": {"title": "Retos Algorítmicos y Optimización Big-O", "folder": "06_retos_algoritmicos", "language": "python"},
+    "07": {"title": "Sistemas Distribuidos y Estrategias de Caché", "folder": "07_sistemas_distribuidos", "language": "python"},
+    "08": {"title": "Tips, Tricks y Secretos Ocultos de Python", "folder": "08_tips_and_tricks", "language": "python"},
+    "09": {"title": "Machine Learning, Pipelines y Teorema de Bayes", "folder": "09_machine_learning_y_bayes", "language": "python"},
+    "10": {"title": "TypeScript Backend Development", "folder": "10_typescript_backend", "language": "typescript"},
+    "11": {"title": "Elixir, Concurrencia Ligera y OTP", "folder": "11_elixir_concurrencia_otp", "language": "elixir"},
+    "12": {"title": "Arquitectura AWS, Microservicios y DevOps", "folder": "12_arquitectura_aws_devops", "language": "yaml"}
+}
+
+def load_and_seed_course_data():
+    """
+    Auto-puebla los módulos y la teoría en la base de datos a partir de course_data.js.
+    """
+    import os
+    import json
+
+    # 1. Asegurar el curso global de Python
+    course, _ = Course.objects.get_or_create(
+        slug='ingeniero-python',
+        defaults={
+            'title': 'Curso de Ingeniería Python',
+            'description': 'Curso avanzado de desarrollo de software, patrones de diseño y edge cases en Python.'
+        }
+    )
+
+    # 2. Si no hay módulos cargados, realizar el seed
+    if not CourseModule.objects.filter(course=course).exists():
+        js_path = os.path.join(os.path.dirname(__file__), "course_data.js")
+        if not os.path.exists(js_path):
+            logger.error(f"Archivo de seed no encontrado en {js_path}")
+            return
+
+        try:
+            with open(js_path, "r", encoding="utf-8") as f:
+                content = f.read()
+
+            # Extraer el JSON del archivo JS
+            start_idx = content.find("const COURSE_DATA =")
+            if start_idx == -1:
+                logger.error("No se encontró la constante COURSE_DATA en course_data.js")
+                return
+
+            json_str = content[start_idx + len("const COURSE_DATA ="):].strip()
+            if json_str.endswith(";"):
+                json_str = json_str[:-1]
+
+            data = json.loads(json_str)
+
+            for mod_id, mod_content in data.items():
+                meta = MODULES_METADATA.get(mod_id, {
+                    "title": f"Módulo {mod_id}",
+                    "folder": f"{mod_id}_modulo",
+                    "language": "python"
+                })
+
+                CourseModule.objects.update_or_create(
+                    course=course,
+                    module_id=mod_id,
+                    defaults={
+                        'title': meta['title'],
+                        'badge': f"MÓDULO {mod_id}",
+                        'folder': meta['folder'],
+                        'teoria': mod_content.get('teoria', ''),
+                        'ejemplos': mod_content.get('ejemplos', ''),
+                        'ejercicios': mod_content.get('ejercicios', ''),
+                        'language': meta['language']
+                    }
+                )
+            logger.info("Base de datos de cursos poblada exitosamente desde course_data.js")
+        except Exception as e:
+            logger.error(f"Error al realizar el seed de cursos: {str(e)}")
+
+
+class CourseModuleListView(APIView):
+    """
+    GET /api/courses/modules/?course_slug=ingeniero-python
+    Retorna la lista de módulos disponibles para un curso.
+    """
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        course_slug = request.query_params.get('course_slug', 'ingeniero-python')
+
+        # Auto-poblar de ser necesario
+        load_and_seed_course_data()
+
+        modules = CourseModule.objects.filter(course_id=course_slug).order_by('module_id')
+
+        # Lista liviana
+        data = [{
+            'module_id': m.module_id,
+            'title': m.title,
+            'badge': m.badge,
+            'folder': m.folder,
+            'language': m.language
+        } for m in modules]
+
+        return Response(data, status=status.HTTP_200_OK)
+
+
+class CourseModuleDetailView(APIView):
+    """
+    GET /api/courses/modules/<module_id>/?course_slug=ingeniero-python
+    Retorna el contenido detallado de un módulo específico.
+    """
+    permission_classes = [AllowAny]
+
+    def get(self, request, module_id):
+        course_slug = request.query_params.get('course_slug', 'ingeniero-python')
+
+        # Auto-poblar de ser necesario
+        load_and_seed_course_data()
+
+        module = CourseModule.objects.filter(course_id=course_slug, module_id=module_id).first()
+        if not module:
+            return Response(
+                {'error': f'Módulo {module_id} no encontrado para el curso {course_slug}.'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        serializer = CourseModuleSerializer(module)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 

@@ -73,6 +73,14 @@ export function middleware(request: NextRequest) {
     isSystemDomain = true;
   }
 
+  // Validación robusta: si el host es una IP o un nombre interno sin puntos (Docker, VPS hostname)
+  const cleanHost = hostname.split(':')[0].toLowerCase();
+  const isIP = /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/.test(cleanHost);
+  const hasNoDots = !cleanHost.includes('.');
+  if (isIP || hasNoDots) {
+    isSystemDomain = true;
+  }
+
   // 3. ENRUTAMIENTO DINÁMICO DE SUBDOMINIOS (COLMENAS DE SOCIOS)
   // Si no es un dominio del sistema principal, extrae el identificador (subdominio o subdominio en staging)
   if (!isSystemDomain) {
