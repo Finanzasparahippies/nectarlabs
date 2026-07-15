@@ -773,7 +773,7 @@ body {
     line-height: 1.45 !important;
     border-radius: 0 0 10px 10px;
     border-top: 1px solid hsl(var(--border-color));
-    height: 550px !important;
+    height: 100% !important;
 }
 
 .editor-wrapper .CodeMirror-lines {
@@ -1087,6 +1087,11 @@ body {
     display: flex;
 }
 
+#bot-panel-eval {
+    overflow-y: auto;
+    padding-right: 6px;
+}
+
 /* ── Estilos del Chat Zen ────────────────────────────────────────────── */
 #bot-panel-chat {
     display: none;
@@ -1295,8 +1300,13 @@ body {
 }
 
 @keyframes rotateGlow {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 .promo-content {

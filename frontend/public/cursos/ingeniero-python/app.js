@@ -659,7 +659,7 @@ function configurarEventosBot() {
     actualizarEscenariosEvaluacion();
 }
 
-function evaluarRespuestaIA() {
+async function evaluarRespuestaIA() {
     const selectValue = document.getElementById("select-escenario").value;
     const escenario = ESCENARIOS_BOT[selectValue];
     const respuesta = document.getElementById("input-respuesta").value;
@@ -669,49 +669,121 @@ function evaluarRespuestaIA() {
         return;
     }
 
+    const btnEvaluar = document.getElementById("btn-evaluar-respuesta");
+    const originalText = btnEvaluar.innerHTML;
+
+    // Deshabilitar botón e indicar carga
+    btnEvaluar.disabled = true;
+    btnEvaluar.innerHTML = `<i class="bx bx-loader-alt bx-spin"></i> Nectar Bot meditando...`;
+
+    // Ocultar resultados previos
+    document.getElementById("resultados-ia").style.display = "none";
+
+    let result = null;
+
+    // 1. Intentar llamar al backend para evaluación conceptual (LLM)
+    try {
+        const response = await fetch(`${API_BASE}/courses/evaluate-conceptual/`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                ...(authToken ? { "Authorization": `Bearer ${authToken}` } : {})
+            },
+            body: JSON.stringify({
+                module_id: selectValue,
+                respuesta_alumno: respuesta
+            })
+        });
+
+        if (response.ok) {
+            result = await response.json();
+        }
+    } catch (err) {
+        console.warn("Error al evaluar con backend, aplicando fallback local:", err);
+    }
+
+    // 2. Fallback local por keywords si no se pudo obtener respuesta del backend
+    if (!result) {
+        let matchedCount = 0;
+        const conceptosEvaluados = escenario.keywords.map(keyword => {
+            const isMatched = keyword.reg.test(respuesta);
+            if (isMatched) matchedCount++;
+            return {
+                nombre: keyword.palabra,
+                cumple: isMatched
+            };
+        });
+
+        const scorePct = Math.round((matchedCount / escenario.keywords.length) * 100);
+        const conceptosFaltantes = conceptosEvaluados.filter(c => !c.cumple).map(c => c.nombre);
+
+        result = {
+            idea_principal: scorePct >= 50,
+            conceptos: conceptosEvaluados,
+            errores: conceptosFaltantes.length > 0 ? [`Falta profundizar en los conceptos clave: ${conceptosFaltantes.join(", ")}`] : [],
+            score: scorePct,
+            justificacion: "Evaluación local completada mediante palabras clave. [Modo offline]"
+        };
+    }
+
+    // 3. Renderizar resultados detallados
     const feedbackList = document.getElementById("keywords-list-feedback");
     feedbackList.innerHTML = "";
-    let matchedCount = 0;
 
-    escenario.keywords.forEach(keyword => {
-        const isMatched = keyword.reg.test(respuesta);
+    result.conceptos.forEach(concept => {
         const li = document.createElement("li");
-        if (isMatched) {
-            matchedCount++;
+        if (concept.cumple) {
             li.className = "matched";
-            li.innerHTML = `<i class="bx bx-check-double"></i> Concepto alineado: ${keyword.palabra}`;
+            li.innerHTML = `<i class="bx bx-check-double"></i> ${concept.nombre}`;
         } else {
             li.className = "";
-            li.innerHTML = `<i class="bx bx-compass"></i> Senda oculta: ${keyword.pista}`;
+            li.innerHTML = `<i class="bx bx-compass"></i> ${concept.nombre}`;
         }
         feedbackList.appendChild(li);
     });
 
-    const scorePct = Math.round((matchedCount / escenario.keywords.length) * 100);
-    document.getElementById("score-pct").textContent = `${scorePct}%`;
+    document.getElementById("score-pct").textContent = `${result.score}%`;
 
     const recText = document.getElementById("recomendacion-texto");
-    if (scorePct === 100) {
-        recText.textContent = "🙏 Armonía absoluta. Tu mente técnica ha alcanzado el equilibrio perfecto.";
-    } else if (scorePct >= 60) {
-        recText.textContent = "🍃 Vas por buen camino. Sin embargo, aún quedan misterios por revelar. " + escenario.recomendacion;
-    } else {
-        recText.textContent = "🕯️ Tu respuesta necesita meditarse más. Escucha las sendas ocultas de los principios de diseño. " + escenario.recomendacion;
+    let recHTML = `<span>${result.justificacion}</span>`;
+
+    if (result.errores && result.errores.length > 0) {
+        recHTML += `<div style="margin-top: 12px; padding-top: 10px; border-top: 1px dashed rgba(255,255,255,0.1)">` +
+                   `<strong style="font-size:12px; color:hsl(var(--accent-blue)); display:block; margin-bottom:6px;">Detalles a mejorar:</strong>` +
+                   `<ul style="margin: 0; padding-left: 16px; font-size: 12.5px; color: hsl(var(--text-secondary)); list-style-type: none;">` +
+                   result.errores.map(e => `<li style="margin-bottom: 4px; display:flex; align-items:flex-start; gap:6px;"><i class="bx bx-info-circle" style="color:hsl(var(--accent-blue)); font-size:14px; margin-top:2px;"></i><span>${e}</span></li>`).join("") +
+                   `</ul></div>`;
     }
+    recText.innerHTML = recHTML;
 
     document.getElementById("resultados-ia").style.display = "block";
 
-    // Persistir progreso si pasa la prueba
-    if (scorePct >= 60) {
+    // 4. Persistir progreso si pasa la prueba
+    if (result.score >= 60) {
         let evalProgreso = {};
         try {
             evalProgreso = JSON.parse(localStorage.getItem("nectar_bot_eval_progress") || "{}");
         } catch(e) {}
-        evalProgreso[selectValue] = scorePct;
+        evalProgreso[selectValue] = result.score;
         localStorage.setItem("nectar_bot_eval_progress", JSON.stringify(evalProgreso));
-        
+
         // Refrescar candados e interfaces
         setTimeout(actualizarEscenariosEvaluacion, 1500);
+    }
+
+    // Restaurar botón
+    btnEvaluar.disabled = false;
+    btnEvaluar.innerHTML = originalText;
+
+    // Desplazar el panel del bot suavemente hacia abajo para ver el feedback
+    const drawerPanel = document.getElementById("bot-panel-eval");
+    if (drawerPanel) {
+        setTimeout(() => {
+            drawerPanel.scrollTo({
+                top: drawerPanel.scrollHeight,
+                behavior: "smooth"
+            });
+        }, 150);
     }
 }
 

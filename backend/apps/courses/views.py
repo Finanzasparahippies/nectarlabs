@@ -1,7 +1,12 @@
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
+
+import json
+import re
+import logging
+from django.conf import settings
 
 from .models import ExerciseSubmission
 from .serializers import (
@@ -10,6 +15,9 @@ from .serializers import (
     CourseProgressSerializer,
 )
 from .evaluator import evaluate_exercise
+from .conceptual_data import CONCEPTUAL_SCENARIOS
+
+logger = logging.getLogger("apps")
 
 
 class SubmitExerciseView(APIView):
@@ -111,3 +119,142 @@ class ExerciseDetailView(APIView):
             ExerciseSubmissionSerializer(submission).data,
             status=status.HTTP_200_OK
         )
+
+
+class EvaluateConceptualView(APIView):
+    """
+    POST /api/courses/evaluate-conceptual/
+    Evalúa la respuesta conceptual del alumno para un escenario específico
+    utilizando Groq (Llama 3.1) o un fallback local basado en keywords si la API no está disponible.
+    """
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        module_id = request.data.get("module_id")
+        respuesta_alumno = request.data.get("respuesta_alumno", "").strip()
+
+        if not module_id or not respuesta_alumno:
+            return Response(
+                {"error": "Se requieren los parámetros 'module_id' y 'respuesta_alumno'."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        scenario = CONCEPTUAL_SCENARIOS.get(module_id)
+        if not scenario:
+            return Response(
+                {"error": f"No existe un escenario conceptual definido para '{module_id}'."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        pregunta = scenario["pregunta"]
+        respuesta_modelo = scenario["respuesta_modelo"]
+        conceptos_clave = scenario["conceptos_clave"]
+
+        # Intentar evaluación con LLM (Groq)
+        api_key = getattr(settings, 'GROQ_API_KEY', '') or ''
+        if api_key:
+            try:
+                from groq import Groq
+                client = Groq(api_key=api_key)
+
+                conceptos_nombres = [c["nombre"] for c in conceptos_clave]
+
+                prompt_sistema = (
+                    "Eres un evaluador académico experto en desarrollo de software y computación.\n"
+                    "Tu tarea es evaluar la respuesta de un estudiante comparándola con la respuesta esperada y la pregunta.\n"
+                    "Debes responder ESTRICTAMENTE en formato JSON plano sin bloques de código markdown ni texto adicional. "
+                    "El JSON debe tener exactamente esta estructura:\n"
+                    "{\n"
+                    '  "idea_principal": true/false,\n'
+                    '  "conceptos": [\n'
+                    '    {"nombre": "Nombre del Concepto", "cumple": true/false}\n'
+                    '  ],\n'
+                    '  "errores": ["Descripción del error conceptual o lo que falta"],\n'
+                    '  "score": 0 a 100,\n'
+                    '  "justificacion": "Retroalimentación detallada y constructiva en español"\n'
+                    "}\n\n"
+                    "Los conceptos que debes evaluar en la lista 'conceptos' son exactamente los siguientes:\n"
+                    f"{json.dumps(conceptos_nombres, ensure_ascii=False)}\n\n"
+                    "Sé justo pero riguroso. Si el estudiante transmite la misma idea con sinónimos o explicaciones propias, "
+                    "márcalo como que cumple. Si confunde términos o dice cosas incorrectas, añade la descripción en 'errores'."
+                )
+
+                prompt_usuario = (
+                    f"Pregunta:\n{pregunta}\n\n"
+                    f"Respuesta Modelo / Esperada:\n{respuesta_modelo}\n\n"
+                    f"Respuesta del Alumno:\n{respuesta_alumno}\n"
+                )
+
+                completion = client.chat.completions.create(
+                    messages=[
+                        {"role": "system", "content": prompt_sistema},
+                        {"role": "user", "content": prompt_usuario}
+                    ],
+                    model="llama-3.1-8b-instant",
+                    temperature=0.2,
+                    max_tokens=600,
+                    response_format={"type": "json_object"}
+                )
+
+                response_text = completion.choices[0].message.content.strip()
+                result = json.loads(response_text)
+                
+                # Validar la estructura mínima del resultado
+                if all(k in result for k in ["idea_principal", "conceptos", "errores", "score", "justificacion"]):
+                    # Asegurar tipos
+                    result["score"] = int(result["score"])
+                    result["idea_principal"] = bool(result["idea_principal"])
+                    return Response(result, status=status.HTTP_200_OK)
+
+            except Exception as e:
+                logger.error(f"[ConceptualEval] Error en la llamada al LLM Groq: {e}", exc_info=True)
+                # Fallback al evaluador local en caso de error
+
+        # Fallback local basado en expresiones regulares / keywords
+        logger.info(f"[ConceptualEval] Ejecutando evaluación por fallback local para '{module_id}'")
+        conceptos_evaluados = []
+        matched_count = 0
+
+        for concepto in conceptos_clave:
+            nombre = concepto["nombre"]
+            keywords = concepto["keywords"]
+            
+            # Buscar coincidencia
+            cumple = False
+            for kw in keywords:
+                pattern = re.compile(r'\b' + re.escape(kw) + r'\b|' + re.escape(kw), re.IGNORECASE)
+                if pattern.search(respuesta_alumno):
+                    cumple = True
+                    break
+
+            if cumple:
+                matched_count += 1
+
+            conceptos_evaluados.append({
+                "nombre": nombre,
+                "cumple": cumple
+            })
+
+        total_conceptos = len(conceptos_clave)
+        score = round((matched_count / total_conceptos) * 100) if total_conceptos > 0 else 50
+        idea_principal = score >= 50
+
+        # Identificar conceptos faltantes para darlos como feedback o errores
+        conceptos_faltantes = [c["nombre"] for c in conceptos_evaluados if not c["cumple"]]
+        errores = []
+        if conceptos_faltantes:
+            errores.append(f"Faltó profundizar en: {', '.join(conceptos_faltantes)}")
+
+        justificacion = (
+            "Evaluación automatizada basada en términos clave y conceptos fundamentales de diseño. "
+            "[Modo de respaldo local activo]"
+        )
+
+        return Response({
+            "idea_principal": idea_principal,
+            "conceptos": conceptos_evaluados,
+            "errores": errores,
+            "score": score,
+            "justificacion": justificacion
+        }, status=status.HTTP_200_OK)
+
