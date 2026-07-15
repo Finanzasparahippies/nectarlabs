@@ -39,12 +39,39 @@ export function middleware(request: NextRequest) {
     'www.nectarlabs.dev',
     'staging.nectarlabs.dev',
     'www.staging.nectarlabs.dev',
+    'frontend',
+    'frontend-staging',
+    'nectar_frontend',
+    'nectar_frontend_staging',
   ];
 
+  // Agregar dinámicamente el host de FRONTEND_URL si está definido en el entorno
+  if (process.env.FRONTEND_URL) {
+    try {
+      const parsedUrl = new URL(process.env.FRONTEND_URL);
+      const frontendHost = parsedUrl.host; // Incluye el puerto si lo tiene
+      if (frontendHost && !systemDomains.includes(frontendHost)) {
+        systemDomains.push(frontendHost);
+      }
+    } catch (e) {
+      // Ignorar errores de parseo
+    }
+  }
+
   // Determinar si la petición va dirigida al dominio principal del sistema
-  const isSystemDomain = systemDomains.some(
+  let isSystemDomain = systemDomains.some(
     (domain) => hostname.toLowerCase() === domain || hostname.toLowerCase().startsWith(domain + ':')
   );
+
+  // Soporte dinámico para entornos de desarrollo en la nube (Codespaces, Gitpod, etc.)
+  if (!isSystemDomain && (
+    hostname.endsWith('.app.github.dev') ||
+    hostname.endsWith('.gitpod.io') ||
+    hostname.includes('codespaces') ||
+    hostname.includes('githubpreview')
+  )) {
+    isSystemDomain = true;
+  }
 
   // 3. ENRUTAMIENTO DINÁMICO DE SUBDOMINIOS (COLMENAS DE SOCIOS)
   // Si no es un dominio del sistema principal, extrae el identificador (subdominio o subdominio en staging)
