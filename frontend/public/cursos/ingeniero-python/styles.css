@@ -773,7 +773,7 @@ body {
     line-height: 1.45 !important;
     border-radius: 0 0 10px 10px;
     border-top: 1px solid hsl(var(--border-color));
-    height: 75vh !important;
+    height: 75% !important;
 }
 
 .editor-wrapper .CodeMirror-lines {
