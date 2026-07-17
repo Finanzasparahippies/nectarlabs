@@ -644,8 +644,13 @@ class LeadAppointmentViewSet(viewsets.ModelViewSet):
         return [permissions.IsAuthenticated()]
 
     def get_authenticators(self):
-        if self.action in ['create', 'confirm', 'availability']:
-            return []
+        request = getattr(self, 'request', None)
+        if request:
+            path = request.path
+            if 'appointments/availability' in path or 'appointments/confirm' in path:
+                return []
+            if 'appointments' in path and request.method == 'POST':
+                return []
         return super().get_authenticators()
 
     def get_queryset(self):
