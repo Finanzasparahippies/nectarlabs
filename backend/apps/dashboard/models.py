@@ -268,7 +268,22 @@ class LeadAppointment(models.Model):
         COMPLETED = 'COMPLETED', 'Completada'
         CANCELLED = 'CANCELLED', 'Cancelada'
 
+    class ConsultingType(models.TextChoices):
+        PARTNER = 'partner', 'Contrato de Socio Tecnológico'
+        GENERAL = 'general', 'Consultoría General'
+
     lead = models.ForeignKey(Lead, on_delete=models.CASCADE, related_name='appointments')
+    consulting_type = models.CharField(
+        max_length=50,
+        choices=ConsultingType.choices,
+        default=ConsultingType.GENERAL,
+        help_text="Tipo de consultoría seleccionada"
+    )
+    interview_answers = models.JSONField(
+        default=dict,
+        blank=True,
+        help_text="Respuestas a las preguntas de la entrevista base"
+    )
     addon = models.ForeignKey(
         'shop.AddOn', 
         on_delete=models.SET_NULL, 

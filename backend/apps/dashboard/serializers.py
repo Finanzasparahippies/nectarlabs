@@ -53,8 +53,10 @@ class ProjectQuoteSerializer(serializers.ModelSerializer):
         for mod in modules:
             try:
                 total += float(mod.get('price', 0.00))
-            except (ValueError, TypeError):
-                pass
+            except (ValueError, TypeError) as e:
+                import logging
+                logging.getLogger(__name__).warning(f"Formato de precio inválido en cotización de módulo: {mod.get('price')} - {e}")
+                raise serializers.ValidationError({"modules": f"El precio del módulo '{mod.get('name', 'Sin Nombre')}' debe ser un valor numérico válido."})
         attrs['total_price'] = total
         return attrs
 
@@ -116,7 +118,8 @@ class LeadAppointmentSerializer(serializers.ModelSerializer):
             'addons_details',
             'salesperson', 'salesperson_email', 'date', 'time', 'status', 'notes',
             'is_confirmed_by_client', 'created_at', 'updated_at',
-            'client_name', 'client_email', 'client_phone', 'addon_slug', 'addon_slugs'
+            'client_name', 'client_email', 'client_phone', 'addon_slug', 'addon_slugs',
+            'consulting_type', 'interview_answers'
         ]
         read_only_fields = ('lead', 'salesperson', 'is_confirmed_by_client')
 

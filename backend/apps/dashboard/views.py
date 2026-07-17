@@ -668,8 +668,20 @@ class LeadAppointmentViewSet(viewsets.ModelViewSet):
             import json
             try:
                 addon_slugs = json.loads(addon_slugs)
-            except Exception:
+            except Exception as e:
+                import logging
+                logging.getLogger(__name__).warning(f"Error parsing addon_slugs JSON, falling back to string list: {e}")
                 addon_slugs = [addon_slugs]
+        consulting_type = self.request.data.get('consulting_type', 'general')
+        interview_answers = self.request.data.get('interview_answers', {})
+        if isinstance(interview_answers, str):
+            import json
+            try:
+                interview_answers = json.loads(interview_answers)
+            except Exception as e:
+                import logging
+                logging.getLogger(__name__).error(f"Error parsing interview_answers JSON: {e}")
+                interview_answers = {}
         notes = self.request.data.get('notes', '')
         date = self.request.data.get('date')
         time = self.request.data.get('time')
@@ -731,7 +743,9 @@ class LeadAppointmentViewSet(viewsets.ModelViewSet):
             lead=lead,
             salesperson=salesperson,
             addon=addon,
-            is_confirmed_by_client=False # Requiere confirmación por correo
+            is_confirmed_by_client=False, # Requiere confirmación por correo
+            consulting_type=consulting_type,
+            interview_answers=interview_answers
         )
 
         if addon_slugs:
