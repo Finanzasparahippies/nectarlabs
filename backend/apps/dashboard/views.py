@@ -793,6 +793,7 @@ class LeadAppointmentViewSet(viewsets.ModelViewSet):
     def availability(self, request):
         from django.contrib.auth import get_user_model
         from django.db.models import Count
+        from django.utils import timezone
         User = get_user_model()
         salespeople_count = User.objects.filter(role=User.Role.SALES).count()
         if salespeople_count == 0:
