@@ -643,6 +643,11 @@ class LeadAppointmentViewSet(viewsets.ModelViewSet):
             return [permissions.AllowAny()]
         return [permissions.IsAuthenticated()]
 
+    def get_authenticators(self):
+        if self.action in ['create', 'confirm', 'availability']:
+            return []
+        return super().get_authenticators()
+
     def get_queryset(self):
         user = self.request.user
         if not user or not user.is_authenticated:
