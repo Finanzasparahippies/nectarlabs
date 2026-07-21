@@ -7,7 +7,7 @@ services:
     build: ./backend
     volumes:
       - ./backend:/app:z
-      - /var/run/docker.sock:/var/run/docker.sock  # Sandbox executor: permite crear contenedores efímeros para evaluar ejercicios
+      - ${DOCKER_SOCK:-/var/run/docker.sock}:/var/run/docker.sock:z  # Sandbox executor: permite crear contenedores efímeros para evaluar ejercicios
     env_file:
       - .env
     environment:

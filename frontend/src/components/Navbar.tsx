@@ -51,6 +51,10 @@ export default function Navbar() {
             <a href="/#pricing" className="text-[10px] font-black uppercase tracking-widest text-foreground opacity-60 hover:opacity-100 transition-opacity">Planes</a>
             <a href="/#addons" className="text-[10px] font-black uppercase tracking-widest text-foreground opacity-60 hover:opacity-100 transition-opacity">Add-ons</a>
             <Link href="/stores" className="text-[10px] font-black uppercase tracking-widest text-foreground opacity-60 hover:opacity-100 transition-opacity">Tiendas</Link>
+            <Link href="/nectarcast" className="text-[10px] font-black uppercase tracking-widest text-nectar-gold hover:opacity-100 transition-opacity flex items-center gap-1">
+              <span>NectarCast</span>
+              <span className="px-1.5 py-0.5 text-[8px] bg-nectar-gold/20 text-nectar-gold border border-nectar-gold/30 rounded-md font-bold">GRATIS</span>
+            </Link>
             <a href="/#seller-program" className="text-[10px] font-black uppercase tracking-widest text-nectar-gold/70 hover:text-nectar-gold transition-colors flex items-center gap-1.5 font-bold">
               <span className="w-1.5 h-1.5 rounded-full bg-nectar-gold animate-pulse" />
               Únete a Nosotros
@@ -119,6 +123,10 @@ export default function Navbar() {
             <a href="/#pricing" onClick={() => setMobileMenuOpen(false)} className="text-xl font-black uppercase tracking-widest text-foreground hover:text-nectar-gold transition-colors">Planes</a>
             <a href="/#addons" onClick={() => setMobileMenuOpen(false)} className="text-xl font-black uppercase tracking-widest text-foreground hover:text-nectar-gold transition-colors">Add-ons</a>
             <Link href="/stores" onClick={() => setMobileMenuOpen(false)} className="text-xl font-black uppercase tracking-widest text-foreground hover:text-nectar-gold transition-colors">Tiendas</Link>
+            <Link href="/nectarcast" onClick={() => setMobileMenuOpen(false)} className="text-xl font-black uppercase tracking-widest text-nectar-gold hover:underline flex items-center justify-between">
+              <span>NectarCast</span>
+              <span className="px-2 py-0.5 text-xs bg-nectar-gold/20 text-nectar-gold border border-nectar-gold/30 rounded-lg font-bold">GRATIS</span>
+            </Link>
             <a href="/#seller-program" onClick={() => setMobileMenuOpen(false)} className="text-xl font-black uppercase tracking-widest text-nectar-gold hover:underline">Únete a Nosotros</a>
             <Link href="/blog" onClick={() => setMobileMenuOpen(false)} className="text-xl font-black uppercase tracking-widest text-foreground hover:text-nectar-gold transition-colors">Blog</Link>
             {isLoggedIn && (

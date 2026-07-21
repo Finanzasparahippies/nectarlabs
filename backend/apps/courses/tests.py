@@ -179,3 +179,110 @@ class CoursesAPITests(APITestCase):
         # Progress
         response_progress = self.client.get(reverse('course_progress'))
         self.assertEqual(response_progress.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    @patch('requests.post')
+    def test_submit_exercise_custom_backend_success(self, mock_post):
+        """
+        Verify that if the tenant has a custom backend URL, the submission
+        request is forwarded to the custom backend instead of evaluated locally.
+        """
+        from apps.tenants.models import Tenant
+        
+        # Create a dummy tenant with custom backend
+        tenant = Tenant.objects.create(
+            name="Custom Tenant",
+            subdomain="custom",
+            custom_backend_url="https://api.custom-tenant-backend.com",
+            owner=self.user
+        )
+        self.user.tenant = tenant
+        self.user.save()
+        
+        # Setup mock response
+        mock_response = mock_post.return_value
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            "score": 90,
+            "feedback": "Perfect submission via custom backend",
+            "stdout": "custom backend output",
+            "stderr": "",
+            "execution_time_ms": 25,
+            "is_completed": True
+        }
+        
+        code = "print('hello from custom backend')"
+        url = reverse('course_submit')
+        response = self.client.post(
+            url,
+            data={
+                'course_slug': self.course_slug,
+                'module_id': '01',
+                'code': code,
+                'language': 'python'
+            },
+            format='json'
+        )
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['score'], 90)
+        self.assertEqual(response.data['stdout'], "custom backend output")
+        
+        # Check requests.post was called with the correct target URL
+        self.assertTrue(mock_post.called)
+        called_url = mock_post.call_args[0][0]
+        self.assertEqual(called_url, "https://api.custom-tenant-backend.com/api/courses/submit/")
+
+    @patch('apps.courses.evaluator._run_in_docker_sandbox')
+    @patch('requests.post')
+    def test_submit_exercise_custom_backend_fallback(self, mock_post, mock_sandbox):
+        """
+        Verify that if the custom backend fails, the evaluator falls back to local evaluation.
+        """
+        from apps.tenants.models import Tenant
+        
+        # Create a dummy tenant with custom backend
+        tenant = Tenant.objects.create(
+            name="Custom Tenant Fallback",
+            subdomain="customfallback",
+            custom_backend_url="https://api.custom-tenant-backend-failed.com",
+            owner=self.user
+        )
+        self.user.tenant = tenant
+        self.user.save()
+        
+        # Setup mock post to raise exception
+        mock_post.side_effect = Exception("Connection Refused")
+        
+        # Setup mock local sandbox
+        mock_sandbox.return_value = {
+            "stdout": "TEST_PASS: decorador funciona correctamente",
+            "stderr": "",
+            "exit_code": 0,
+            "execution_time_ms": 12,
+        }
+        
+        code = """
+        import functools
+        def mi_decorador(func):
+            @functools.wraps(func)
+            def wrapper(*args, **kwargs):
+                return func(*args, **kwargs)
+            return wrapper
+        """
+        
+        url = reverse('course_submit')
+        response = self.client.post(
+            url,
+            data={
+                'course_slug': self.course_slug,
+                'module_id': '01',
+                'code': code,
+                'language': 'python'
+            },
+            format='json'
+        )
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertGreaterEqual(response.data['score'], 60)
+        self.assertEqual(response.data['stdout'], "TEST_PASS: decorador funciona correctamente")
+        mock_sandbox.assert_called_once()

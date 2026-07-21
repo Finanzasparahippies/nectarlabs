@@ -8,6 +8,15 @@ if [ $# -gt 0 ]; then
     shift
 fi
 
+# Detect rootless Podman socket and export DOCKER_SOCK if not already set
+if [ -z "$DOCKER_SOCK" ]; then
+    if [ -S "$XDG_RUNTIME_DIR/podman/podman.sock" ]; then
+        export DOCKER_SOCK="$XDG_RUNTIME_DIR/podman/podman.sock"
+    elif [ -S "/run/user/$(id -u)/podman/podman.sock" ]; then
+        export DOCKER_SOCK="/run/user/$(id -u)/podman/podman.sock"
+    fi
+fi
+
 # Helper function to run Django commands in dev (using exec if running, run --rm if not)
 run_django_cmd_dev() {
     if docker compose ps --services --filter "status=running" | grep -q "^backend$"; then
