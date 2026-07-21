@@ -1,5 +1,8 @@
+import logging
 from rest_framework import serializers
 from .models import BookingInquiry, BookingContract, CustomContractTemplate, CustomContract, CustomContractSignatory
+
+logger = logging.getLogger(__name__)
 
 class BookingInquirySerializer(serializers.ModelSerializer):
     contract_id = serializers.IntegerField(source='contract.id', read_only=True, allow_null=True)
@@ -39,21 +42,24 @@ class CustomContractSerializer(serializers.ModelSerializer):
         fields = ['id', 'template', 'tenant', 'title', 'logo', 'header_design', 'proemio', 'declarations', 'clauses', 'pdf_file', 'uploaded_pdf', 'is_fully_signed', 'created_at', 'updated_at', 'signatories']
         read_only_fields = ['id', 'pdf_file', 'is_fully_signed', 'created_at', 'updated_at']
 
-    def create(self, validated_data):
-        request = self.context.get('request')
-        signatories_data = []
-        if request and 'signatories' in request.data:
-            sig_raw = request.data.get('signatories')
-            if isinstance(sig_raw, str):
-                import json
-                try:
-                    signatories_data = json.loads(sig_raw)
-                except Exception:
-                    pass
-            else:
-                signatories_data = validated_data.pop('signatories', [])
+    def to_internal_value(self, data):
+        if hasattr(data, 'dict'):
+            mutable_data = data.dict()
         else:
-            signatories_data = validated_data.pop('signatories', [])
+            mutable_data = dict(data)
+
+        sig_raw = mutable_data.get('signatories')
+        if sig_raw and isinstance(sig_raw, str):
+            import json
+            try:
+                mutable_data['signatories'] = json.loads(sig_raw)
+            except json.JSONDecodeError as e:
+                logger.error(f"Error decodificando la cadena JSON de signatories: {e.msg} en la línea {e.lineno}, col {e.colno}")
+                
+        return super().to_internal_value(mutable_data)
+
+    def create(self, validated_data):
+        signatories_data = validated_data.pop('signatories', [])
 
         contract = CustomContract.objects.create(**validated_data)
         for sig_data in signatories_data:

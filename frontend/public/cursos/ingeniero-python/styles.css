@@ -4,20 +4,31 @@
 
 :root {
     /* Paleta de colores HSL */
-    --bg-dark: 228, 30%, 8%;        /* #090a10 */
-    --bg-card: 228, 25%, 12%;       /* #121522 */
-    --bg-header: 228, 24%, 10%;     /* #0f111c */
-    --border-color: 228, 20%, 20%;  /* #292d3e */
-    
-    --accent-blue: 206, 98%, 65%;   /* #4facfe */
-    --accent-cyan: 182, 100%, 50%;  /* #00f2fe */
-    --accent-green: 152, 100%, 50%; /* #00ff87 */
-    --accent-purple: 270, 95%, 65%;/* #ab64ff */
-    
-    --text-primary: 210, 20%, 95%;  /* #f1f2f6 */
-    --text-secondary: 215, 15%, 70%;/* #b2bec3 */
-    --text-muted: 220, 10%, 45%;    /* #636e72 */
-    
+    --bg-dark: 228, 30%, 8%;
+    /* #090a10 */
+    --bg-card: 228, 25%, 12%;
+    /* #121522 */
+    --bg-header: 228, 24%, 10%;
+    /* #0f111c */
+    --border-color: 228, 20%, 20%;
+    /* #292d3e */
+
+    --accent-blue: 206, 98%, 65%;
+    /* #4facfe */
+    --accent-cyan: 182, 100%, 50%;
+    /* #00f2fe */
+    --accent-green: 152, 100%, 50%;
+    /* #00ff87 */
+    --accent-purple: 270, 95%, 65%;
+    /* #ab64ff */
+
+    --text-primary: 210, 20%, 95%;
+    /* #f1f2f6 */
+    --text-secondary: 215, 15%, 70%;
+    /* #b2bec3 */
+    --text-muted: 220, 10%, 45%;
+    /* #636e72 */
+
     --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     --font-mono: 'Fira Code', 'Courier New', Courier, monospace;
 }
@@ -396,7 +407,7 @@ body {
     align-items: center;
     background-color: #121321;
     padding: 10px 20px;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     font-family: var(--font-mono);
     font-size: 13px;
     color: hsl(var(--text-secondary));
@@ -439,22 +450,39 @@ body {
     color: hsl(var(--text-primary));
 }
 
-.markdown-body h1, .markdown-body h2, .markdown-body h3 {
+.markdown-body h1,
+.markdown-body h2,
+.markdown-body h3 {
     margin-top: 24px;
     margin-bottom: 16px;
     font-weight: 600;
     line-height: 1.25;
 }
 
-.markdown-body h1 { font-size: 26px; border-bottom: 1px solid hsl(var(--border-color)); padding-bottom: 8px; }
-.markdown-body h2 { font-size: 20px; border-bottom: 1px solid hsl(var(--border-color)); padding-bottom: 6px; }
-.markdown-body h3 { font-size: 16px; }
+.markdown-body h1 {
+    font-size: 26px;
+    border-bottom: 1px solid hsl(var(--border-color));
+    padding-bottom: 8px;
+}
 
-.markdown-body p, .markdown-body ul, .markdown-body ol {
+.markdown-body h2 {
+    font-size: 20px;
+    border-bottom: 1px solid hsl(var(--border-color));
+    padding-bottom: 6px;
+}
+
+.markdown-body h3 {
+    font-size: 16px;
+}
+
+.markdown-body p,
+.markdown-body ul,
+.markdown-body ol {
     margin-bottom: 16px;
 }
 
-.markdown-body ul, .markdown-body ol {
+.markdown-body ul,
+.markdown-body ol {
     padding-left: 20px;
 }
 
@@ -499,7 +527,8 @@ body {
     margin-bottom: 16px;
 }
 
-.markdown-body th, .markdown-body td {
+.markdown-body th,
+.markdown-body td {
     padding: 12px;
     border: 1px solid hsl(var(--border-color));
     text-align: left;
@@ -522,7 +551,7 @@ body {
     height: 100%;
     background-color: hsl(var(--bg-header));
     border-left: 1px solid hsl(var(--border-color));
-    box-shadow: -10px 0 30px rgba(0,0,0,0.3);
+    box-shadow: -10px 0 30px rgba(0, 0, 0, 0.3);
     z-index: 100;
     display: flex;
     flex-direction: column;
@@ -583,7 +612,8 @@ body {
     gap: 8px;
 }
 
-.select-escenario-group label, .respuesta-box label {
+.select-escenario-group label,
+.respuesta-box label {
     font-size: 12px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -602,7 +632,7 @@ body {
 }
 
 .pregunta-box {
-    background-color: rgba(255,255,255,0.02);
+    background-color: rgba(255, 255, 255, 0.02);
     border: 1px dashed hsl(var(--border-color));
     border-radius: 8px;
     padding: 16px;
@@ -740,10 +770,19 @@ body {
 .editor-wrapper .CodeMirror {
     font-family: var(--font-mono);
     font-size: 13.5px;
-    line-height: 1.65;
+    line-height: 1.45 !important;
     border-radius: 0 0 10px 10px;
     border-top: 1px solid hsl(var(--border-color));
-    height: 380px;
+    height: 100% !important;
+}
+
+.editor-wrapper .CodeMirror-lines {
+    padding: 10px 0 !important;
+}
+
+.editor-wrapper .CodeMirror-line {
+    padding: 1px 16px !important;
+    line-height: 1.45 !important;
 }
 
 /* Cabecera con lado derecho que incluye badge + botón copiar */
@@ -822,13 +861,25 @@ body {
 }
 
 @keyframes slideUp {
-    from { opacity: 0; transform: translateY(8px); }
-    to   { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; }
-    to   { opacity: 1; }
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
 
 .resultado-header {
@@ -864,7 +915,7 @@ body {
     stroke-width: 5;
     stroke-linecap: round;
     transition: stroke-dashoffset 0.7s cubic-bezier(0.4, 0, 0.2, 1),
-                stroke 0.4s ease;
+        stroke 0.4s ease;
 }
 
 .score-ring-text {
@@ -974,4 +1025,362 @@ body {
 * {
     scrollbar-width: thin;
     scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+}
+
+/* =====================================================================
+   ESTILOS PREMIUM NECTAR BOT (Chat Zen & Evaluaciones)
+   ===================================================================== */
+
+.bot-tabs {
+    display: flex;
+    background-color: hsl(var(--bg-dark));
+    border-bottom: 1px solid hsl(var(--border-color));
+    padding: 0 16px;
+    flex-shrink: 0;
+}
+
+.bot-tab-btn {
+    flex: 1;
+    background: none;
+    border: none;
+    outline: none;
+    color: hsl(var(--text-muted));
+    font-size: 13px;
+    font-weight: 600;
+    padding: 14px 0;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    position: relative;
+    transition: color 0.2s ease, background-color 0.2s ease;
+}
+
+.bot-tab-btn:hover {
+    color: hsl(var(--text-primary));
+    background-color: rgba(255, 255, 255, 0.02);
+}
+
+.bot-tab-btn.active {
+    color: hsl(var(--accent-cyan));
+}
+
+.bot-tab-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, hsl(var(--accent-blue)), hsl(var(--accent-cyan)));
+}
+
+.bot-tab-content {
+    display: none;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+}
+
+.bot-tab-content.active {
+    display: flex;
+}
+
+#bot-panel-eval {
+    overflow-y: auto;
+    padding-right: 6px;
+}
+
+/* ── Estilos del Chat Zen ────────────────────────────────────────────── */
+#bot-panel-chat {
+    display: none;
+    height: 100%;
+}
+
+#bot-panel-chat.active {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.chat-conversation {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 16px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-height: calc(100vh - 280px);
+}
+
+.chat-message {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    max-width: 85%;
+    animation: fadeIn 0.3s ease;
+}
+
+.chat-message.bot {
+    align-self: flex-start;
+}
+
+.chat-message.user {
+    align-self: flex-end;
+    flex-direction: row-reverse;
+}
+
+.chat-bubble {
+    padding: 12px 16px;
+    border-radius: 14px;
+    font-size: 13.5px;
+    line-height: 1.5;
+    word-wrap: break-word;
+}
+
+.chat-message.bot .chat-bubble {
+    background-color: hsl(var(--bg-card));
+    color: hsl(var(--text-primary));
+    border: 1px solid hsl(var(--border-color));
+    border-top-left-radius: 2px;
+}
+
+.chat-message.user .chat-bubble {
+    background: linear-gradient(135deg, rgba(79, 172, 254, 0.2), rgba(0, 242, 254, 0.1));
+    color: hsl(var(--text-primary));
+    border: 1px solid rgba(0, 242, 254, 0.25);
+    border-top-right-radius: 2px;
+}
+
+.chat-input-area {
+    display: flex;
+    gap: 8px;
+    padding: 12px 0 4px 0;
+    border-top: 1px solid hsl(var(--border-color));
+    background-color: hsl(var(--bg-header));
+    flex-shrink: 0;
+}
+
+.chat-input-area input {
+    flex-grow: 1;
+    background-color: hsl(var(--bg-dark));
+    border: 1px solid hsl(var(--border-color));
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: hsl(var(--text-primary));
+    font-size: 13.5px;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.chat-input-area input:focus {
+    border-color: hsl(var(--accent-blue));
+}
+
+.chat-input-area button {
+    padding: 10px 16px;
+    border-radius: 8px;
+    flex-shrink: 0;
+}
+
+/* ── Estilos de Tarjeta Bloqueada ─────────────────────────────────────── */
+.eval-blocked-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 40px 20px;
+    background-color: rgba(0, 0, 0, 0.15);
+    border: 1px dashed hsl(var(--border-color));
+    border-radius: 12px;
+    margin-top: 16px;
+    animation: fadeIn 0.4s ease;
+}
+
+.eval-blocked-card .lock-icon {
+    font-size: 40px;
+    color: hsl(var(--text-muted));
+    margin-bottom: 16px;
+    background-color: rgba(255, 255, 255, 0.02);
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.eval-blocked-card h4 {
+    font-size: 16px;
+    font-weight: 600;
+    color: hsl(var(--text-secondary));
+    margin-bottom: 8px;
+}
+
+.eval-blocked-card p {
+    font-size: 13px;
+    color: hsl(var(--text-muted));
+    max-width: 260px;
+    line-height: 1.5;
+}
+
+/* Limit warnings in chat */
+.chat-limit-warning {
+    background-color: rgba(245, 158, 11, 0.08);
+    border: 1px solid rgba(245, 158, 11, 0.25);
+    color: #f59e0b;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 12.5px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    animation: fadeIn 0.4s ease;
+}
+
+.chat-limit-warning strong {
+    font-family: var(--font-mono);
+    font-weight: 700;
+}
+
+.chat-limit-warning.limit-reached {
+    background-color: rgba(239, 68, 68, 0.08);
+    border: 1px solid rgba(239, 68, 68, 0.25);
+    color: #ef4444;
+}
+
+/* NectarLabs Premium Promo Card */
+.nectarlabs-promo-card {
+    display: block;
+    text-decoration: none;
+    position: relative;
+    z-index: 5;
+    cursor: pointer;
+    margin: 16px;
+    padding: 16px;
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.9) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.3);
+}
+
+.nectarlabs-promo-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at 100% 0%, rgba(99, 102, 241, 0.15) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+.nectarlabs-promo-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(99, 102, 241, 0.3);
+    box-shadow: 0 8px 30px -4px rgba(99, 102, 241, 0.15);
+}
+
+.promo-glow {
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(99, 102, 241, 0.05) 0%, transparent 50%);
+    animation: rotateGlow 10s linear infinite;
+    pointer-events: none;
+}
+
+@keyframes rotateGlow {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.promo-content {
+    position: relative;
+    z-index: 1;
+}
+
+.promo-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #818cf8;
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+
+.nectarlabs-promo-card h4 {
+    font-size: 15px;
+    font-weight: 700;
+    color: #ffffff;
+    margin: 0 0 6px 0;
+    letter-spacing: -0.2px;
+}
+
+.nectarlabs-promo-card p {
+    font-size: 11.5px;
+    color: #94a3b8;
+    line-height: 1.4;
+    margin: 0 0 12px 0;
+}
+
+.promo-btn {
+    position: relative;
+    z-index: 10;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 8px 12px;
+    background: rgba(99, 102, 241, 0.1);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    border-radius: 6px;
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.promo-btn i {
+    font-size: 14px;
+    transition: transform 0.2s ease;
+}
+
+.nectarlabs-promo-card:hover .promo-btn {
+    background: #6366f1;
+    border-color: #6366f1;
+}
+
+.nectarlabs-promo-card:hover .promo-btn i {
+    transform: translateX(4px);
+}
+
+/* Ocultar widgets de chat globales que puedan solaparse */
+#hubspot-messages-iframe-container,
+.crisp-client,
+#tawk-container,
+#tidio-chat,
+.fb_reset,
+.hubspot-conversations-iframe,
+[id^="whatsapp-widget"] {
+    display: none !important;
 }

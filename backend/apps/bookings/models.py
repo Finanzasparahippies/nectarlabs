@@ -60,10 +60,11 @@ class BookingInquiry(models.Model):
     is_reviewed = models.BooleanField(default=False)
 
     def get_venue_type_display(self):
+        from django.core.exceptions import ObjectDoesNotExist
         try:
             config = self.tenant.booking_config
             return config.get_venue_display(self.venue_type)
-        except Exception:
+        except (ObjectDoesNotExist, AttributeError):
             defaults = {
                 'festival': 'Festival',
                 'theater': 'Teatro / Auditorio',
@@ -135,9 +136,9 @@ class CustomContract(models.Model):
     title = models.CharField(max_length=255)
     logo = models.ImageField(upload_to=custom_contract_pdf_path, max_length=255, null=True, blank=True)
     header_design = models.JSONField(default=dict, blank=True)
-    proemio = models.TextField()
-    declarations = models.TextField()
-    clauses = models.TextField()
+    proemio = models.TextField(blank=True, default='')
+    declarations = models.TextField(blank=True, default='')
+    clauses = models.TextField(blank=True, default='')
     pdf_file = models.FileField(upload_to=custom_contract_pdf_path, storage=raw_storage, max_length=255, null=True, blank=True)
     uploaded_pdf = models.FileField(upload_to=custom_contract_pdf_path, storage=raw_storage, max_length=255, null=True, blank=True)
 

@@ -1,6 +1,9 @@
+import logging
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
+
+logger = logging.getLogger(__name__)
 from django.utils import timezone
 from django.db import models
 from apps.tenants.permissions import HasAddOnPermission
@@ -55,11 +58,13 @@ class BookingInquiryViewSet(viewsets.ModelViewSet):
             tenant_id = self.request.data.get('tenant_id') or self.request.query_params.get('tenant_id')
             subdomain = self.request.data.get('subdomain') or self.request.query_params.get('subdomain')
             from apps.tenants.models import Tenant
+            from django.core.exceptions import ValidationError as DjangoValidationError
             if tenant_id:
                 try:
                     tenant = Tenant.objects.filter(id=tenant_id, is_active=True).first()
-                except Exception:
-                    pass
+                except (DjangoValidationError, ValueError) as e:
+                    logger.warning(f"ID de tenant inválido proporcionado en consulta: {tenant_id}. Detalle: {e}")
+                    tenant = None
             elif subdomain:
                 tenant = Tenant.objects.filter(subdomain=subdomain.lower(), is_active=True).first()
 
@@ -79,11 +84,12 @@ class BookingInquiryViewSet(viewsets.ModelViewSet):
         
         # Fetch dynamic configuration or fallback
         fee = 25000.00
+        from django.db import DatabaseError
         try:
             config, _ = BookingConfig.objects.get_or_create(tenant=tenant)
             fee = config.default_fee
-        except Exception:
-            pass
+        except DatabaseError as e:
+            logger.error(f"Error de base de datos al obtener BookingConfig para el tenant {tenant}: {e}", exc_info=True)
 
         # Automatically generate a booking contract proposal
         contract = BookingContract.objects.create(
@@ -226,6 +232,37 @@ class CustomContractTemplateViewSet(viewsets.ModelViewSet):
 
 class CustomContractViewSet(viewsets.ModelViewSet):
     serializer_class = CustomContractSerializer
+
+    def create(self, request, *args, **kwargs):
+        from rest_framework.exceptions import ValidationError, APIException
+        logger.info("Iniciando creación de CustomContract en el ViewSet.")
+        try:
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+        except ValidationError as e:
+            logger.warning(
+                f"Error de validación de campos en CustomContract: {e.detail}. "
+                f"Datos enviados: {request.data}"
+            )
+            raise e
+        except APIException as e:
+            logger.error(
+                f"Error de API REST al crear CustomContract: {e.detail} (código: {e.status_code})"
+            )
+            raise e
+        except Exception as e:
+            logger.exception("Excepción inesperada en la creación de CustomContract")
+            raise e
+        else:
+            try:
+                self.perform_create(serializer)
+            except Exception as e:
+                logger.exception("Error al persistir CustomContract durante perform_create")
+                raise e
+            
+            headers = self.get_success_headers(serializer.data)
+            logger.info("CustomContract creado y guardado con éxito.")
+            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def get_permissions(self):
         # Permitir a firmantes obtener y firmar contratos usando su token público

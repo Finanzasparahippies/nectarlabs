@@ -9,63 +9,107 @@ interface ConsultationSchedulerProps {
   initialAddonSlug?: string;
 }
 
-const ADDONS = [
-  { id: 'general', name: 'Consultoría General', slug: '', desc: 'Diseño de arquitectura de software a medida, plan de digitalización y optimización de infraestructura.' },
-  { id: 'bot-chat', name: 'Néctar AI Chat Bot', slug: 'bot-chat', desc: 'Widget de chat flotante en tiempo real y consola multi-agente con IA.' },
-  { id: 'booking-signature', name: 'Néctar Contratos Digitales', slug: 'booking-signature', desc: 'Motor de contratos digitales con firma incrustada y PDFs.' },
-  { id: 'delivery-tracking', name: 'Tienda + Envíos con Skydropx', slug: 'delivery-tracking', desc: 'Cotiza envíos en tiempo real y emite guías automáticamente.' },
-  { id: 'sponsorship', name: 'Néctar Sponsors & NSCAP', slug: 'sponsorship', desc: 'Suscripciones de Stripe y feeds exclusivos para miembros.' },
-  { id: 'business-analytics', name: 'Néctar Analytics y Ventas', slug: 'business-analytics', desc: 'Dashboard de métricas de ventas y analytics en tiempo real.' },
-  { id: 'campaigner', name: 'Néctar Newsletter', slug: 'campaigner', desc: 'Campañas masivas de correo HTML con 1,000 envíos incluidos.' },
-  { id: 'facturacion-cfdi', name: 'Facturación SAT México', slug: 'facturacion-cfdi', desc: 'Emisión de facturas CFDI 4.0 oficiales con 20 timbres incluidos.' },
-  { id: 'automatic-invoicing', name: 'Facturación Automática SAT', slug: 'automatic-invoicing', desc: 'Timbrado automático de facturas al recibir pagos de clientes.' },
-  { id: 'ecommerce-combo', name: 'Combo E-commerce Automatizado', slug: 'ecommerce-combo', desc: 'Tienda + Envíos Skydropx, Facturación SAT y Newsletter Masivo.' },
-];
-
 const TIME_SLOTS = [
   "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00"
 ];
 
+// Opciones de tipo de consultoría simplificadas
+const CONSULTING_OPTIONS = [
+  {
+    id: 'partner',
+    name: 'Contrato de Socio Tecnológico',
+    desc: 'Para empresas y startups que buscan un aliado tecnológico a largo plazo que lidere su desarrollo de software e ingeniería de forma continua.'
+  },
+  {
+    id: 'general',
+    name: 'Consultoría General de Software',
+    desc: 'Para proyectos con alcances definidos, diseño de arquitectura de software, validación técnica o asesoría puntual en infraestructura.'
+  }
+];
+
+// Preguntas base de la pre-entrevista (redactadas de forma clara para clientes no técnicos)
+const INTERVIEW_QUESTIONS = {
+  queBuscas: {
+    question: '¿Qué buscas lograr con tu proyecto?',
+    options: [
+      'Página web para conseguir clientes o ventas (Landing Page)',
+      'Tienda en línea o plataforma web a la medida (E-commerce / Web App)',
+      'Aplicación para teléfonos celulares (iPhone o Android)',
+      'Mejorar la velocidad, seguridad o capacidad de mi sistema actual',
+      'Tener un equipo de tecnología aliado a largo plazo (Socio Tecnológico)'
+    ]
+  },
+  etapaProyecto: {
+    question: '¿En qué etapa se encuentra tu proyecto hoy?',
+    options: [
+      'Apenas es una idea en papel',
+      'Tengo un diseño básico o boceto',
+      'Ya está funcionando y en el mercado',
+      'Tengo un desarrollo iniciado que necesito rescatar o mejorar'
+    ]
+  },
+  desafioPrincipal: {
+    question: '¿Cuál es tu principal obstáculo o desafío hoy?',
+    options: [
+      'No tengo programadores ni equipo técnico que me respalde',
+      'Mi plataforma actual falla o no soporta muchos usuarios',
+      'No estoy atrayendo suficientes clientes o ventas en internet',
+      'Necesito lanzar una primera versión muy rápido al mercado (MVP)'
+    ]
+  }
+};
+
 export default function ConsultationScheduler({ isOpen, onClose, initialAddonSlug = '' }: ConsultationSchedulerProps) {
   const [step, setStep] = useState(1);
-  const [selectedAddon, setSelectedAddon] = useState(initialAddonSlug);
+  const [consultingType, setConsultingType] = useState('general');
+  
+  // Respuestas de la pre-entrevista
+  const [selectedGoals, setSelectedGoals] = useState<string[]>([]);
+  const [selectedStage, setSelectedStage] = useState('');
+  const [selectedChallenge, setSelectedChallenge] = useState('');
+
+  // Fecha y hora
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
   const [busySlots, setBusySlots] = useState<Array<{ date: string; time: string }>>([]);
   const [currentMonth, setCurrentMonth] = useState(new Date());
   
-  // Lead info
+  // Datos de contacto del Lead
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [notes, setNotes] = useState('');
   
-  const [loading, setLoading] = useState(false);
+  const [loadingAvailability, setLoadingAvailability] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [success, setSuccess] = useState(false);
 
-  // Sync initial addon slug when prop changes
+  // Mapear initialAddonSlug al tipo de consultoría correspondiente para mantener compatibilidad
   useEffect(() => {
     if (initialAddonSlug) {
-      setSelectedAddon(initialAddonSlug);
+      if (initialAddonSlug === 'general') {
+        setConsultingType('general');
+      } else {
+        setConsultingType('partner');
+      }
     }
   }, [initialAddonSlug]);
 
-  // Fetch busy slots on load or date step entry
+  // Cargar disponibilidad de citas al abrir el modal
   useEffect(() => {
     if (isOpen) {
       const loadAvailability = async () => {
-        setLoading(true);
+        setLoadingAvailability(true);
         try {
           const res = await fetcher('/appointments/availability/');
           if (Array.isArray(res)) {
             setBusySlots(res);
           }
         } catch (err: any) {
-          console.error("Failed to load availability:", err);
+          console.error("Error al cargar disponibilidad de citas:", err);
         } finally {
-          setLoading(false);
+          setLoadingAvailability(false);
         }
       };
       loadAvailability();
@@ -74,7 +118,7 @@ export default function ConsultationScheduler({ isOpen, onClose, initialAddonSlu
 
   if (!isOpen) return null;
 
-  // Calendar calculations
+  // Operaciones auxiliares del calendario mensual
   const daysInMonth = (year: number, month: number) => new Date(year, month + 1, 0).getDate();
   const firstDayOfMonth = (year: number, month: number) => new Date(year, month, 1).getDay();
 
@@ -97,31 +141,28 @@ export default function ConsultationScheduler({ isOpen, onClose, initialAddonSlu
   const firstDay = firstDayOfMonth(year, month);
 
   const days = [];
-  // Empty slots for previous month offset
+  // Rellenar espacios vacíos del mes anterior
   for (let i = 0; i < firstDay; i++) {
     days.push(<div key={`empty-${i}`} className="h-10 sm:h-12 border border-white/5 opacity-10"></div>);
   }
 
-  // Days of the month
+  // Renderizar los días del mes actual
   for (let d = 1; d <= totalDays; d++) {
     const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
     const isSelected = date === dateStr;
-    
-    // Check if day is in the past
     const todayStr = new Date().toISOString().split('T')[0];
     const isPast = dateStr < todayStr;
-    
-    // Check if all times for this day are fully busy
     const dayBusySlotsCount = busySlots.filter(s => s.date === dateStr).length;
     const isDayFullyBusy = dayBusySlotsCount >= TIME_SLOTS.length;
 
     days.push(
       <button
         key={d}
+        type="button"
         disabled={isPast || isDayFullyBusy}
         onClick={() => {
           setDate(dateStr);
-          setTime(''); // Reset time selection
+          setTime(''); // Limpiar hora previa al cambiar de día
         }}
         className={`h-10 sm:h-12 text-xs font-black rounded-xl border flex flex-col items-center justify-center relative transition-all duration-300 ${
           isPast || isDayFullyBusy
@@ -139,10 +180,11 @@ export default function ConsultationScheduler({ isOpen, onClose, initialAddonSlu
     );
   }
 
+  // Manejar el submit final de la cita
   const handleBookingSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!date || !time || !name || !email) {
-      setErrorMsg("Por favor completa todos los campos requeridos.");
+      setErrorMsg("Por favor completa todos los campos obligatorios.");
       return;
     }
 
@@ -156,7 +198,12 @@ export default function ConsultationScheduler({ isOpen, onClose, initialAddonSlu
           client_name: name,
           client_email: email,
           client_phone: phone,
-          addon_slug: selectedAddon,
+          consulting_type: consultingType,
+          interview_answers: {
+            que_buscas: selectedGoals,
+            etapa_proyecto: selectedStage,
+            desafio_principal: selectedChallenge
+          },
           notes: notes,
           date: date,
           time: `${time}:00`
@@ -164,26 +211,36 @@ export default function ConsultationScheduler({ isOpen, onClose, initialAddonSlu
       });
       setSuccess(true);
     } catch (err: any) {
-      setErrorMsg(err.message || "Error al programar la cita. Inténtalo de nuevo.");
+      setErrorMsg(err.message || "Ocurrió un error al agendar tu cita. Por favor, intenta de nuevo.");
     } finally {
       setSubmitting(false);
     }
   };
 
+  // Manejar la selección múltiple de metas de la pre-entrevista
+  const handleToggleGoal = (goal: string) => {
+    if (selectedGoals.includes(goal)) {
+      setSelectedGoals(selectedGoals.filter(g => g !== goal));
+    } else {
+      setSelectedGoals([...selectedGoals, goal]);
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#020403]/80 backdrop-blur-md animate-fadeIn">
-      {/* Modal Card */}
+      {/* Tarjeta del Modal */}
       <div className="relative w-full max-w-4xl bg-card-bg dark:bg-[#070d0a] border border-nectar-forest/20 dark:border-nectar-leaf/30 rounded-[2.5rem] shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
-        {/* Glow */}
+        {/* Destello de fondo decorativo */}
         <div className="absolute -top-40 -left-40 w-96 h-96 bg-nectar-forest/10 dark:bg-nectar-leaf/10 blur-[120px] rounded-full pointer-events-none"></div>
 
-        {/* Modal Header */}
+        {/* Encabezado del Modal */}
         <div className="p-6 sm:p-8 border-b border-card-border/80 dark:border-card-border/20 flex items-center justify-between relative z-10">
           <div>
-            <span className="text-[9px] text-nectar-gold font-black uppercase tracking-[0.3em] block mb-1">Citas & Consultoría</span>
-            <h2 className="text-xl sm:text-3xl font-black tracking-tight text-foreground">Agenda tu Consultoría</h2>
+            <span className="text-[9px] text-nectar-gold font-black uppercase tracking-[0.3em] block mb-1">Agenda tu Sesión</span>
+            <h2 className="text-xl sm:text-3xl font-black tracking-tight text-foreground">Consultoría Tecnológica</h2>
           </div>
           <button 
+            type="button"
             onClick={onClose}
             className="w-10 h-10 rounded-full border border-card-border/80 dark:border-card-border/20 flex items-center justify-center hover:bg-foreground/5 transition-colors cursor-pointer text-foreground"
           >
@@ -193,22 +250,26 @@ export default function ConsultationScheduler({ isOpen, onClose, initialAddonSlu
           </button>
         </div>
 
-        {/* Stepper progress */}
+        {/* Stepper de Progreso */}
         {!success && (
           <div className="px-6 sm:px-8 py-3 bg-foreground/5 border-b border-card-border/40 dark:border-card-border/10 flex justify-between items-center text-[10px] font-black uppercase tracking-wider text-foreground/40">
-            <span className={step >= 1 ? 'text-nectar-gold' : ''}>1. Servicio</span>
-            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <span className={step >= 1 ? 'text-nectar-gold' : ''}>1. Tipo</span>
+            <svg className="w-3 h-3 text-foreground/20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
-            <span className={step >= 2 ? 'text-nectar-gold' : ''}>2. Fecha & Hora</span>
-            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <span className={step >= 2 ? 'text-nectar-gold' : ''}>2. Proyecto</span>
+            <svg className="w-3 h-3 text-foreground/20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
-            <span className={step >= 3 ? 'text-nectar-gold' : ''}>3. Datos</span>
+            <span className={step >= 3 ? 'text-nectar-gold' : ''}>3. Fecha & Hora</span>
+            <svg className="w-3 h-3 text-foreground/20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+            <span className={step >= 4 ? 'text-nectar-gold' : ''}>4. Datos</span>
           </div>
         )}
 
-        {/* Modal Scrollable Content */}
+        {/* Contenido Scrollable */}
         <div className="flex-1 overflow-y-auto p-6 sm:p-8">
           {success ? (
             <div className="py-12 text-center max-w-lg mx-auto space-y-6">
@@ -217,12 +278,13 @@ export default function ConsultationScheduler({ isOpen, onClose, initialAddonSlu
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
-              <h3 className="text-2xl sm:text-4xl font-black tracking-tight text-foreground uppercase">¡Solicitud Registrada!</h3>
+              <h3 className="text-2xl sm:text-4xl font-black tracking-tight text-foreground uppercase">¡Cita Registrada!</h3>
               <p className="text-sm text-foreground/60 leading-relaxed font-bold">
-                Hemos enviado un correo de confirmación a <span className="text-nectar-gold font-bold">{email}</span>. 
-                Por favor abre el mensaje y haz clic en el enlace para confirmar tu cita. El enlace expirará en 24 horas.
+                Hemos enviado un enlace de confirmación a tu correo <span className="text-nectar-gold font-bold">{email}</span>. 
+                Por favor, ábrelo y haz clic en él para confirmar la sesión. Expirará en 24 horas.
               </p>
               <button 
+                type="button"
                 onClick={onClose}
                 className="px-8 py-3.5 bg-nectar-forest text-white font-black uppercase tracking-widest text-xs rounded-xl hover:bg-nectar-gold transition-colors cursor-pointer"
               >
@@ -237,35 +299,36 @@ export default function ConsultationScheduler({ isOpen, onClose, initialAddonSlu
                 </div>
               )}
 
-              {/* Step 1: Service selection */}
+              {/* Paso 1: Tipo de Consultoría */}
               {step === 1 && (
                 <div className="space-y-6">
                   <div>
-                    <h3 className="text-sm font-black uppercase tracking-wider text-foreground mb-1">Módulo o Add-on de interés</h3>
-                    <p className="text-xs text-foreground/50">Elige el servicio sobre el cual deseas la consultoría técnica.</p>
+                    <h3 className="text-sm font-black uppercase tracking-wider text-foreground mb-1">¿Qué modalidad de consultoría prefieres?</h3>
+                    <p className="text-xs text-foreground/50">Selecciona la opción que mejor se adapte a tus necesidades actuales.</p>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {ADDONS.map((addon) => {
-                      const isSelected = selectedAddon === addon.slug;
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    {CONSULTING_OPTIONS.map((opt) => {
+                      const isSelected = consultingType === opt.id;
                       return (
                         <button
-                          key={addon.id}
+                          key={opt.id}
+                          type="button"
                           onClick={() => {
-                            setSelectedAddon(addon.slug);
+                            setConsultingType(opt.id);
                             setStep(2);
                           }}
-                          className={`p-5 rounded-2xl border text-left flex flex-col justify-between transition-all cursor-pointer min-h-[120px] ${
+                          className={`p-6 rounded-3xl border text-left flex flex-col justify-between transition-all cursor-pointer min-h-[160px] ${
                             isSelected
                               ? 'border-nectar-gold bg-nectar-gold/5 dark:bg-nectar-gold/[0.03] shadow-md'
                               : 'border-card-border bg-background/20 hover:border-nectar-gold/30'
                           }`}
                         >
                           <div>
-                            <span className="text-xs font-black text-foreground block">{addon.name}</span>
-                            <p className="text-[10px] text-foreground/50 line-clamp-2 mt-1.5 leading-relaxed">{addon.desc}</p>
+                            <span className="text-sm font-black text-foreground block">{opt.name}</span>
+                            <p className="text-xs text-foreground/50 mt-2 leading-relaxed">{opt.desc}</p>
                           </div>
-                          <span className="text-[8px] font-black text-nectar-gold uppercase tracking-wider mt-4 block">
+                          <span className="text-[9px] font-black text-nectar-gold uppercase tracking-wider mt-4 block">
                             {isSelected ? '✓ Seleccionado' : 'Seleccionar'}
                           </span>
                         </button>
@@ -275,16 +338,123 @@ export default function ConsultationScheduler({ isOpen, onClose, initialAddonSlu
                 </div>
               )}
 
-              {/* Step 2: Date & Time selector */}
+              {/* Paso 2: Pre-Entrevista Cuestionario */}
               {step === 2 && (
+                <div className="space-y-8">
+                  <div>
+                    <h3 className="text-sm font-black uppercase tracking-wider text-foreground mb-1">Cuéntanos un poco sobre tu proyecto</h3>
+                    <p className="text-xs text-foreground/50">Esto nos servirá de base para enfocar la sesión y aprovechar el tiempo al máximo.</p>
+                  </div>
+
+                  {/* Pregunta 1 */}
+                  <div className="space-y-3">
+                    <label className="text-[11px] font-black uppercase tracking-wider text-foreground/70 block">
+                      {INTERVIEW_QUESTIONS.queBuscas.question} <span className="text-nectar-gold">(Selección múltiple)</span>
+                    </label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {INTERVIEW_QUESTIONS.queBuscas.options.map((opt) => {
+                        const isSelected = selectedGoals.includes(opt);
+                        return (
+                          <button
+                            key={opt}
+                            type="button"
+                            onClick={() => handleToggleGoal(opt)}
+                            className={`p-4 rounded-xl border text-xs text-left transition-all ${
+                              isSelected
+                                ? 'bg-nectar-gold/10 border-nectar-gold text-foreground font-bold'
+                                : 'border-card-border bg-background/20 hover:border-nectar-gold/30 text-foreground/75'
+                            }`}
+                          >
+                            {opt}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Pregunta 2 */}
+                  <div className="space-y-3">
+                    <label className="text-[11px] font-black uppercase tracking-wider text-foreground/70 block">
+                      {INTERVIEW_QUESTIONS.etapaProyecto.question}
+                    </label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {INTERVIEW_QUESTIONS.etapaProyecto.options.map((opt) => {
+                        const isSelected = selectedStage === opt;
+                        return (
+                          <button
+                            key={opt}
+                            type="button"
+                            onClick={() => setSelectedStage(opt)}
+                            className={`p-4 rounded-xl border text-xs text-left transition-all ${
+                              isSelected
+                                ? 'bg-nectar-gold/10 border-nectar-gold text-foreground font-bold'
+                                : 'border-card-border bg-background/20 hover:border-nectar-gold/30 text-foreground/75'
+                            }`}
+                          >
+                            {opt}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Pregunta 3 */}
+                  <div className="space-y-3">
+                    <label className="text-[11px] font-black uppercase tracking-wider text-foreground/70 block">
+                      {INTERVIEW_QUESTIONS.desafioPrincipal.question}
+                    </label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {INTERVIEW_QUESTIONS.desafioPrincipal.options.map((opt) => {
+                        const isSelected = selectedChallenge === opt;
+                        return (
+                          <button
+                            key={opt}
+                            type="button"
+                            onClick={() => setSelectedChallenge(opt)}
+                            className={`p-4 rounded-xl border text-xs text-left transition-all ${
+                              isSelected
+                                ? 'bg-nectar-gold/10 border-nectar-gold text-foreground font-bold'
+                                : 'border-card-border bg-background/20 hover:border-nectar-gold/30 text-foreground/75'
+                            }`}
+                          >
+                            {opt}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Navegación del Paso 2 */}
+                  <div className="flex justify-between items-center pt-6 border-t border-card-border/40 dark:border-card-border/10">
+                    <button
+                      type="button"
+                      onClick={() => setStep(1)}
+                      className="text-xs font-black text-foreground/50 hover:text-foreground uppercase tracking-wider cursor-pointer"
+                    >
+                      ← Volver a Modalidad
+                    </button>
+                    <button
+                      type="button"
+                      disabled={selectedGoals.length === 0 || !selectedStage || !selectedChallenge}
+                      onClick={() => setStep(3)}
+                      className="px-8 py-3.5 bg-nectar-forest text-white font-black uppercase tracking-widest text-xs rounded-xl hover:bg-nectar-gold transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                    >
+                      Continuar →
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Paso 3: Selección de Fecha y Hora */}
+              {step === 3 && (
                 <div className="space-y-6">
                   <div>
                     <h3 className="text-sm font-black uppercase tracking-wider text-foreground mb-1">Selecciona Fecha y Hora</h3>
-                    <p className="text-xs text-foreground/50">Elige un día disponible y luego tu hora preferida.</p>
+                    <p className="text-xs text-foreground/50">Elige un día disponible en el calendario y luego selecciona el horario.</p>
                   </div>
 
                   <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-                    {/* Calendar */}
+                    {/* Calendario Mensual */}
                     <div className="lg:col-span-7 bg-foreground/5 p-5 rounded-3xl border border-card-border">
                       <div className="flex items-center justify-between mb-4">
                         <span className="text-xs font-black text-foreground uppercase tracking-widest">
@@ -292,6 +462,7 @@ export default function ConsultationScheduler({ isOpen, onClose, initialAddonSlu
                         </span>
                         <div className="flex gap-1">
                           <button 
+                            type="button"
                             onClick={handlePrevMonth}
                             className="p-2 border border-card-border rounded-full hover:bg-foreground/5 text-foreground cursor-pointer"
                           >
@@ -300,6 +471,7 @@ export default function ConsultationScheduler({ isOpen, onClose, initialAddonSlu
                             </svg>
                           </button>
                           <button 
+                            type="button"
                             onClick={handleNextMonth}
                             className="p-2 border border-card-border rounded-full hover:bg-foreground/5 text-foreground cursor-pointer"
                           >
@@ -310,7 +482,7 @@ export default function ConsultationScheduler({ isOpen, onClose, initialAddonSlu
                         </div>
                       </div>
 
-                      {/* Day labels */}
+                      {/* Etiquetas de Días de la semana */}
                       <div className="grid grid-cols-7 gap-1 text-center text-[9px] font-black uppercase tracking-widest text-foreground/40 mb-2">
                         <span>Dom</span>
                         <span>Lun</span>
@@ -321,23 +493,23 @@ export default function ConsultationScheduler({ isOpen, onClose, initialAddonSlu
                         <span>Sáb</span>
                       </div>
 
-                      {/* Day numbers grid */}
+                      {/* Cuadrícula de días */}
                       <div className="grid grid-cols-7 gap-1">
                         {days}
                       </div>
                     </div>
 
-                    {/* Time slots */}
+                    {/* Horas Disponibles */}
                     <div className="lg:col-span-5 space-y-4">
                       <span className="text-[10px] font-black uppercase tracking-wider text-foreground/55 block">Horarios Disponibles</span>
                       {date ? (
                         <div className="grid grid-cols-2 gap-2">
                           {TIME_SLOTS.map((t) => {
-                            // Check if this time slot is fully busy
                             const isBusy = busySlots.some(s => s.date === date && s.time.startsWith(t));
                             return (
                               <button
                                 key={t}
+                                type="button"
                                 disabled={isBusy}
                                 onClick={() => setTime(t)}
                                 className={`p-3 rounded-xl border text-xs font-black transition-all cursor-pointer ${
@@ -361,16 +533,19 @@ export default function ConsultationScheduler({ isOpen, onClose, initialAddonSlu
                     </div>
                   </div>
 
+                  {/* Navegación del Paso 3 */}
                   <div className="flex justify-between items-center pt-6 border-t border-card-border/40 dark:border-card-border/10">
                     <button
-                      onClick={() => setStep(1)}
+                      type="button"
+                      onClick={() => setStep(2)}
                       className="text-xs font-black text-foreground/50 hover:text-foreground uppercase tracking-wider cursor-pointer"
                     >
-                      ← Volver a Servicios
+                      ← Volver a Cuestionario
                     </button>
                     <button
+                      type="button"
                       disabled={!date || !time}
-                      onClick={() => setStep(3)}
+                      onClick={() => setStep(4)}
                       className="px-8 py-3.5 bg-nectar-forest text-white font-black uppercase tracking-widest text-xs rounded-xl hover:bg-nectar-gold transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                     >
                       Continuar →
@@ -379,12 +554,12 @@ export default function ConsultationScheduler({ isOpen, onClose, initialAddonSlu
                 </div>
               )}
 
-              {/* Step 3: Lead details Form */}
-              {step === 3 && (
+              {/* Paso 4: Confirmar Datos y Enviar */}
+              {step === 4 && (
                 <form onSubmit={handleBookingSubmit} className="space-y-6">
                   <div>
-                    <h3 className="text-sm font-black uppercase tracking-wider text-foreground mb-1">Confirma tus Datos</h3>
-                    <p className="text-xs text-foreground/50">Completa la siguiente información para formalizar el registro de prospecto.</p>
+                    <h3 className="text-sm font-black uppercase tracking-wider text-foreground mb-1">Confirma tus Datos de Contacto</h3>
+                    <p className="text-xs text-foreground/50">Por favor, rellena tus datos para enviarte los detalles y el enlace de la reunión.</p>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -424,40 +599,41 @@ export default function ConsultationScheduler({ isOpen, onClose, initialAddonSlu
                     </div>
 
                     <div className="space-y-2 sm:col-span-2">
-                      <label className="text-[10px] font-black uppercase tracking-wider text-foreground/60 block">Idea de Proyecto / Notas de Consulta</label>
+                      <label className="text-[10px] font-black uppercase tracking-wider text-foreground/60 block">Notas adicionales (Opcional)</label>
                       <textarea 
                         value={notes}
                         onChange={(e) => setNotes(e.target.value)}
-                        placeholder="Platícanos sobre tu visión, alcance deseado o necesidades técnicas..."
-                        rows={4}
+                        placeholder="Platícanos más a fondo si deseas que revisemos algo en específico durante la sesión..."
+                        rows={3}
                         className="w-full p-4 rounded-xl border border-card-border bg-background/20 text-xs focus:border-nectar-gold outline-none text-foreground resize-none"
                       />
                     </div>
                   </div>
 
-                  {/* Summary Box */}
+                  {/* Resumen Final de la Cita */}
                   <div className="p-5 rounded-2xl bg-foreground/5 border border-card-border space-y-2.5 text-xs">
                     <span className="text-[9px] font-black text-nectar-gold uppercase tracking-wider">Resumen de Cita</span>
                     <div className="flex justify-between">
-                      <span className="text-foreground/50">Servicio de interés:</span>
+                      <span className="text-foreground/50">Modalidad:</span>
                       <span className="font-bold text-foreground">
-                        {ADDONS.find(a => a.slug === selectedAddon)?.name || 'Consultoría General'}
+                        {CONSULTING_OPTIONS.find(o => o.id === consultingType)?.name || 'Consultoría General'}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-foreground/50">Fecha Programada:</span>
+                      <span className="text-foreground/50">Fecha:</span>
                       <span className="font-bold text-foreground">{date}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-foreground/50">Horario de Consulta:</span>
+                      <span className="text-foreground/50">Horario:</span>
                       <span className="font-bold text-nectar-gold">{time} hrs</span>
                     </div>
                   </div>
 
+                  {/* Navegación del Paso 4 */}
                   <div className="flex justify-between items-center pt-6 border-t border-card-border/40 dark:border-card-border/10">
                     <button
                       type="button"
-                      onClick={() => setStep(2)}
+                      onClick={() => setStep(3)}
                       className="text-xs font-black text-foreground/50 hover:text-foreground uppercase tracking-wider cursor-pointer"
                     >
                       ← Volver a Fecha

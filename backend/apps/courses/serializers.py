@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import ExerciseSubmission
+from .models import ExerciseSubmission, CourseModule
 
 
 class ExerciseSubmissionSerializer(serializers.ModelSerializer):
@@ -38,3 +38,13 @@ class CourseProgressSerializer(serializers.Serializer):
     score = serializers.IntegerField()
     is_completed = serializers.BooleanField()
     updated_at = serializers.DateTimeField()
+
+
+class CourseModuleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CourseModule
+        fields = [
+            'id', 'module_id', 'title', 'badge', 'folder',
+            'teoria', 'ejemplos', 'ejercicios', 'language'
+        ]
+

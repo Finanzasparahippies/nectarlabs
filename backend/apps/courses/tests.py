@@ -68,20 +68,17 @@ class CoursesAPITests(APITestCase):
         returns code details and outputs correctly, and saves progress.
         """
         mock_sandbox.return_value = {
-            "stdout": "TEST_PASS: decorador funciona correctamente",
+            "stdout": "TEST_PASS: limitar_llamadas correcto",
             "stderr": "",
             "exit_code": 0,
             "execution_time_ms": 45,
         }
 
-        # Module 01 is executable and requires 'wraps', 'functools', 'def', 'wrapper', '@'
+        # Module 01 is executable and requires 'limitar_llamadas', 'limpiar_datos', 'filtrar_por_precio', 'bloqueo_recurso', 'wraps', 'yield'
         valid_code = """
-        import functools
-        def mi_decorador(func):
-            @functools.wraps(func)
-            def wrapper(*args, **kwargs):
-                return func(*args, **kwargs)
-            return wrapper
+        # limitar_llamadas limpiar_datos filtrar_por_precio bloqueo_recurso wraps yield
+        def limitar_llamadas():
+            pass
         """
 
         url = reverse('course_submit')
@@ -99,7 +96,7 @@ class CoursesAPITests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertGreaterEqual(response.data['score'], 60)
         self.assertTrue(response.data['is_completed'])
-        self.assertEqual(response.data['stdout'], "TEST_PASS: decorador funciona correctamente")
+        self.assertEqual(response.data['stdout'], "TEST_PASS: limitar_llamadas correcto")
         mock_sandbox.assert_called_once()
 
     def test_course_progress_endpoint(self):

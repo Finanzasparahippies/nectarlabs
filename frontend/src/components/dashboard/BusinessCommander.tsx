@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
-import Link from 'next/link';
+import React, { useEffect, useState } from 'react';
 
 const CustomContractsManager = dynamic(
   () => import('../addons/booking-signature/CustomContractsManager'),
@@ -8,11 +7,11 @@ const CustomContractsManager = dynamic(
 );
 
 
-import { fetcher, API_URL } from '@/lib/api';
-import Toast from '../ui/Toast';
+import { API_URL, fetcher } from '@/lib/api';
 import ConfirmModal from '../ui/ConfirmModal';
-import SATAutocomplete from '../ui/SATAutocomplete';
 import CreateCustomerModal from '../ui/CreateCustomerModal';
+import SATAutocomplete from '../ui/SATAutocomplete';
+import Toast from '../ui/Toast';
 
 const getInlineViewUrl = (url: string | null | undefined, type: 'quote' | 'contract' | 'receipt', id: string | number) => {
   if (!url) return '';
@@ -3964,7 +3963,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
               <span className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold text-[8px] font-black uppercase tracking-widest rounded-full border border-nectar-gold/20">
                 Facturación SAT
               </span>
-                {/* Seleccionar Inquilino */}
+              {/* Seleccionar Inquilino */}
               <div className="space-y-1.5">
                 <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Seleccionar Inquilino (Tenant)</label>
                 {(() => {
@@ -3993,7 +3992,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
                       </div>
                     );
                   }
-                  
+
                   return (
                     <div className="flex gap-2">
                       <div className="flex-1 relative">
@@ -4018,20 +4017,20 @@ export default function BusinessCommander({ stats, installments, setInstallments
                           <div className="absolute left-0 right-0 mt-1 bg-[#050a06]/95 border border-white/10 rounded-2xl shadow-2xl p-2 z-50 max-h-48 overflow-y-auto space-y-1 backdrop-blur-md">
                             {(() => {
                               const query = tenantSearchQuery.toLowerCase().trim();
-                              const filtered = allTenants.filter(t => 
+                              const filtered = allTenants.filter(t =>
                                 (t.brand_name && t.brand_name.toLowerCase().includes(query)) ||
                                 (t.subdomain && t.subdomain.toLowerCase().includes(query)) ||
                                 (t.owner_email && t.owner_email.toLowerCase().includes(query))
                               );
-                              
+
                               if (filtered.length === 0) {
-                                  return (
-                                    <div className="p-3 text-center text-white/30 text-[8px] uppercase tracking-wider font-bold">
-                                      Sin inquilinos coincidentes
-                                    </div>
-                                  );
+                                return (
+                                  <div className="p-3 text-center text-white/30 text-[8px] uppercase tracking-wider font-bold">
+                                    Sin inquilinos coincidentes
+                                  </div>
+                                );
                               }
-                              
+
                               return filtered.map(t => (
                                 <button
                                   key={t.id}
@@ -4370,10 +4369,10 @@ export default function BusinessCommander({ stats, installments, setInstallments
         onSuccess={async (newUser) => {
           const usersData = await fetcher('/users/');
           setUsers(Array.isArray(usersData) ? usersData : []);
-          
+
           const tenantsData = await fetcher('/tenants/');
           setAllTenants(tenantsData || []);
-          
+
           if (newUser.tenant) {
             setSelectedTenantId(String(newUser.tenant));
             handleTenantChange(newUser.tenant);

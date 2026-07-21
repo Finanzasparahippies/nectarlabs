@@ -1,5 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Outfit:wght@400;700;900&display=swap');
 @import "tailwindcss";
+@variant dark (&:where(.dark, .dark *));
+
 
 @theme inline {
   --color-background: var(--background);
@@ -170,4 +172,30 @@ body {
 select option {
   background-color: #121815 !important;
   color: #F9FAFB !important;
+}
+
+/* -------------------------------------------------------
+   Input / select / textarea contrast fix
+   Garantiza visibilidad del texto usando la variable
+   --foreground, que se adapta automáticamente al modo
+   claro u oscuro elegido por el usuario.
+------------------------------------------------------- */
+input:not([type="file"]),
+select,
+textarea {
+  color: var(--foreground);
+  background-color: var(--background);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: color-mix(in srgb, var(--foreground) 30%, transparent);
+}
+
+/* color-scheme para que los controles nativos del browser
+   (calendario, color picker, etc.) coincidan con el tema */
+.dark input,
+.dark select,
+.dark textarea {
+  color-scheme: dark;
 }

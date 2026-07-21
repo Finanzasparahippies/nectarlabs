@@ -27,6 +27,7 @@ const PdfPageCanvas = ({ page, pageIndex, onDropSignature, signatureBoxes }: any
   const [dimensions, setDimensions] = useState({ width: 0, height: 0, pointsWidth: 0, pointsHeight: 0 });
 
   React.useEffect(() => {
+    let renderTask: any = null;
     const renderPage = async () => {
       const canvas = canvasRef.current;
       if (!canvas) return;
@@ -54,9 +55,22 @@ const PdfPageCanvas = ({ page, pageIndex, onDropSignature, signatureBoxes }: any
         canvasContext: context,
         viewport: scaledViewport
       };
-      await page.render(renderContext).promise;
+      
+      try {
+        renderTask = page.render(renderContext);
+        await renderTask.promise;
+      } catch (err: any) {
+        if (err.name !== 'RenderingCancelledException') {
+          console.error('Error rendering page:', err);
+        }
+      }
     };
     renderPage();
+    return () => {
+      if (renderTask) {
+        renderTask.cancel();
+      }
+    };
   }, [page]);
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -109,6 +123,10 @@ const PdfPageCanvas = ({ page, pageIndex, onDropSignature, signatureBoxes }: any
         return (
           <div
             key={box.signatoryIndex}
+            draggable
+            onDragStart={(e) => {
+              e.dataTransfer.setData('signatoryIndex', String(box.signatoryIndex));
+            }}
             className="absolute border-2 border-[#C68A1E] bg-[#C68A1E]/20 flex flex-col items-center justify-center p-1 text-[8px] font-black uppercase text-[#C68A1E] rounded cursor-move animate-fadeIn"
             style={{
               left: `${leftCss}px`,
@@ -132,6 +150,7 @@ const PdfPreviewPageCanvas = ({ page, pageIndex, signatories }: any) => {
   const [dimensions, setDimensions] = useState({ width: 0, height: 0, pointsWidth: 0, pointsHeight: 0 });
 
   React.useEffect(() => {
+    let renderTask: any = null;
     const renderPage = async () => {
       const canvas = canvasRef.current;
       if (!canvas) return;
@@ -159,9 +178,22 @@ const PdfPreviewPageCanvas = ({ page, pageIndex, signatories }: any) => {
         canvasContext: context,
         viewport: scaledViewport
       };
-      await page.render(renderContext).promise;
+      
+      try {
+        renderTask = page.render(renderContext);
+        await renderTask.promise;
+      } catch (err: any) {
+        if (err.name !== 'RenderingCancelledException') {
+          console.error('Error rendering preview page:', err);
+        }
+      }
     };
     renderPage();
+    return () => {
+      if (renderTask) {
+        renderTask.cancel();
+      }
+    };
   }, [page]);
 
   const boxes = (signatories || []).filter((sig: any) => sig.sig_page === pageIndex + 1);
@@ -495,7 +527,24 @@ export default function CustomContractsManager({
         loadData();
       } else {
         const errData = await res.json();
-        showToast(errData.detail || errData.error || 'Error al emitir el contrato.', 'error');
+        let errorMessage = 'Error al emitir el contrato.';
+        if (errData.detail) {
+          errorMessage = String(errData.detail);
+        } else if (errData.error) {
+          errorMessage = String(errData.error);
+        } else if (errData && typeof errData === 'object') {
+          const fieldErrors = Object.entries(errData)
+            .map(([field, msgs]) => {
+              const messages = Array.isArray(msgs) ? msgs.join(', ') : String(msgs);
+              return `${field}: ${messages}`;
+            })
+            .join(' | ');
+          if (fieldErrors) {
+            errorMessage = `Error de validación - ${fieldErrors}`;
+          }
+        }
+        console.error('Error al emitir el contrato:', errData);
+        showToast(errorMessage, 'error');
       }
     } catch (err) {
       showToast('Error de red al emitir el contrato.', 'error');

@@ -491,7 +491,45 @@ class LeadAppointmentTests(APITestCase):
         # Verify verification email was sent
         self.assertEqual(len(mail.outbox), 1)
         self.assertIn("Consulta de Software Solicitada", mail.outbox[0].subject)
-        
+
+    def test_anonymous_booking_with_consulting_type_and_interview_answers(self):
+        from apps.dashboard.models import Lead, LeadAppointment
+        from django.core import mail
+
+        data = {
+            "client_name": "Carlos Gomez",
+            "client_email": "carlos@example.com",
+            "client_phone": "555-5678",
+            "notes": "Prefers late contact",
+            "date": "2026-06-15",
+            "time": "11:00:00",
+            "consulting_type": "partner",
+            "interview_answers": {
+                "que_buscas": ["Página web para conseguir clientes o ventas (Landing Page)"],
+                "etapa_proyecto": "Apenas es una idea en papel",
+                "desafio_principal": "No tengo programadores ni equipo técnico"
+            }
+        }
+
+        response = self.client.post(reverse('appointment-list'), data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        appt = LeadAppointment.objects.get(lead__email="carlos@example.com")
+        self.assertEqual(appt.consulting_type, "partner")
+        self.assertEqual(
+            appt.interview_answers["que_buscas"],
+            ["Página web para conseguir clientes o ventas (Landing Page)"]
+        )
+        self.assertEqual(appt.interview_answers["etapa_proyecto"], "Apenas es una idea en papel")
+        self.assertEqual(appt.interview_answers["desafio_principal"], "No tengo programadores ni equipo técnico")
+
+        # Verify email contains the consulting type and questions
+        self.assertEqual(len(mail.outbox), 1)
+        email_html = mail.outbox[0].alternatives[0][0]
+        self.assertIn("Contrato de Socio Tecnológico", email_html)
+        self.assertIn("¿Qué buscas lograr con tu proyecto?", email_html)
+        self.assertIn("Página web para conseguir clientes o ventas", email_html)
+
     def test_double_booking_prevention_assigns_other_salesperson(self):
         from apps.dashboard.models import Lead, LeadAppointment
         

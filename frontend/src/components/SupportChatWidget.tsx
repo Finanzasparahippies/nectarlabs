@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { fetcher } from '../lib/api';
+import { usePathname } from 'next/navigation';
 
 interface Message {
   id: number;
@@ -19,6 +20,27 @@ interface SupportChat {
 }
 
 export default function SupportChatWidget() {
+  const pathname = usePathname();
+  const [shouldHide, setShouldHide] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const hostname = window.location.hostname;
+      const parts = hostname.split('.');
+      // Ocultar si es un subdominio de nectarlabs (como carlos.nectarlabs.dev)
+      const isSubdomain = parts.length > 2 && !hostname.includes('localhost');
+      // Ocultar si estamos dentro de un iframe
+      const inIframe = window.self !== window.top;
+      // Ocultar si el path de Next.js es de cursos o tenants
+      const isCoursePath = pathname && (pathname.includes('/cursos/') || pathname.includes('/tenants/'));
+
+      if (isSubdomain || inIframe || isCoursePath) {
+        setShouldHide(true);
+      }
+    }
+  }, [pathname]);
+
+
   const [token, setToken] = useState<string | null>(null);
   const [isStaff, setIsStaff] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
@@ -335,8 +357,8 @@ export default function SupportChatWidget() {
     }
   };
 
-  // Do not show widget if user is staff (staff uses tickets page instead)
-  if (isStaff) return null;
+  // Do not show widget if user is staff or if we are in course/tenant routes
+  if (isStaff || shouldHide) return null;
 
   return (
     <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end font-sans">

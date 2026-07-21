@@ -237,7 +237,11 @@ def send_lead_appointment_email(appointment, email_type='creation'):
     button_text = ""
     link = ""
     
-    if appointment.id and appointment.addons.exists():
+    if getattr(appointment, 'consulting_type', None) == 'partner':
+        addon_name = "Contrato de Socio Tecnológico"
+    elif getattr(appointment, 'consulting_type', None) == 'general':
+        addon_name = "Consultoría General"
+    elif appointment.id and appointment.addons.exists():
         addon_name = ", ".join([a.name for a in appointment.addons.all()])
     else:
         addon_name = appointment.addon.name if appointment.addon else "Consultoría General de Software"
@@ -254,12 +258,25 @@ def send_lead_appointment_email(appointment, email_type='creation'):
         message = f"Hola {appointment.lead.name}, tu sesión de consultoría ha sido programada con éxito. Nuestro equipo te contactará en la fecha y hora indicadas."
         button_text = "Ir al Portal de Néctar Labs"
         link = settings.FRONTEND_URL
-    else: # reminder
-        subject = f"⏰ Recordatorio de Consulta - Néctar Labs"
-        title = "Recordatorio de Sesión"
-        message = f"Hola {appointment.lead.name}, te recordamos tu sesión de consultoría tecnológica programada para hoy. Por favor, confirma tu asistencia haciendo clic en el botón de abajo."
-        button_text = "Confirmar Asistencia"
-        link = confirmation_url
+    interview_section = ""
+    interview_answers = getattr(appointment, 'interview_answers', {})
+    if interview_answers and isinstance(interview_answers, dict):
+        # Mapeo de preguntas accesibles sin tecnicismos
+        question_mapping = {
+            "que_buscas": "¿Qué buscas lograr con tu proyecto?",
+            "etapa_proyecto": "¿En qué etapa está tu proyecto?",
+            "desafio_principal": "¿Cuál es tu principal desafío actual?"
+        }
+        interview_section = "<div class='details' style='margin-top: 15px;'><strong>Respuestas de la Pre-Entrevista:</strong><br>"
+        for key, question in question_mapping.items():
+            if key in interview_answers:
+                val = interview_answers[key]
+                if isinstance(val, list):
+                    val_str = ", ".join(val)
+                else:
+                    val_str = str(val)
+                interview_section += f"<div class='detail-item' style='margin: 10px 0;'><strong>{question}</strong><br><span class='highlight' style='color: #C68A1E;'>{val_str}</span></div>"
+        interview_section += "</div>"
 
     html_content = f"""
     <!DOCTYPE html>
@@ -296,6 +313,7 @@ def send_lead_appointment_email(appointment, email_type='creation'):
                     <div class="detail-item"><strong>Hora:</strong> <span class="highlight">{appointment.time}</span></div>
                     <div class="detail-item"><strong>Agente Asignado:</strong> <span class="highlight">{appointment.salesperson.get_full_name() or appointment.salesperson.email}</span></div>
                 </div>
+                {interview_section}
                 <a href="{link}" class="button">{button_text}</a>
             </div>
             <div class="footer">

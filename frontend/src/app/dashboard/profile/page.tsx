@@ -178,7 +178,7 @@ export default function UserProfilePage() {
                       type="text"
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
-                      className="w-full bg-background border border-[#151F18] rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-nectar-gold"
+                      className="w-full bg-background border border-[#151F18] rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-nectar-gold"
                     />
                   </div>
                   <div className="space-y-1">
@@ -187,7 +187,7 @@ export default function UserProfilePage() {
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="w-full bg-background border border-[#151F18] rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-nectar-gold"
+                      className="w-full bg-background border border-[#151F18] rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-nectar-gold"
                     />
                   </div>
                 </div>
@@ -205,7 +205,7 @@ export default function UserProfilePage() {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="Dejar vacío para mantener actual"
-                      className="w-full bg-background border border-[#151F18] rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-nectar-gold placeholder-white/20"
+                      className="w-full bg-background border border-[#151F18] rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-nectar-gold"
                     />
                   </div>
                   <div className="space-y-1">
@@ -215,7 +215,7 @@ export default function UserProfilePage() {
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       placeholder="Dejar vacío para mantener actual"
-                      className="w-full bg-background border border-[#151F18] rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-nectar-gold placeholder-white/20"
+                      className="w-full bg-background border border-[#151F18] rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-nectar-gold"
                     />
                   </div>
                 </div>
@@ -251,7 +251,7 @@ export default function UserProfilePage() {
                       <select
                         value={vehicleType}
                         onChange={(e) => setVehicleType(e.target.value)}
-                        className="w-full bg-background border border-[#151F18] rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-nectar-gold"
+                        className="w-full bg-background border border-[#151F18] rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-nectar-gold"
                       >
                         <option value="BICYCLE">Bicicleta</option>
                         <option value="MOTORCYCLE">Motocicleta</option>
@@ -267,7 +267,7 @@ export default function UserProfilePage() {
                         value={plateNumber}
                         onChange={(e) => setPlateNumber(e.target.value)}
                         placeholder="Ej. ABC-1234"
-                        className="w-full bg-background border border-[#151F18] rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-nectar-gold placeholder-white/20"
+                        className="w-full bg-background border border-[#151F18] rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-nectar-gold"
                       />
                     </div>
 
