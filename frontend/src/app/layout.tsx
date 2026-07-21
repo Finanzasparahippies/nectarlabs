@@ -60,7 +60,9 @@ export default function RootLayout({
     >
       <head>
         <meta name="google-adsense-account" content="ca-pub-2582703158474486" />
-        <script
+        <Script
+          id="theme-initializer"
+          strategy="beforeInteractive"
           dangerouslySetInnerHTML={{
             __html: `
               (function() {

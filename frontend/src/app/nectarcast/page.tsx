@@ -59,7 +59,7 @@ export default function NectarCastPage() {
       title: 'macOS',
       icon: (
         <svg className="w-10 h-10 fill-current text-slate-200 dark:text-slate-100" viewBox="0 0 24 24">
-          <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.18c.67-.82 1.12-1.95.99-3.08-1 .04-2.19.67-2.88 1.47-.6.7-1.13 1.83-.99 2.94 1.11.09 2.22-.51 2.88-1.33z"/>
+          <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.18c.67-.82 1.12-1.95.99-3.08-1 .04-2.19.67-2.88 1.47-.6.7-1.13 1.83-.99 2.94 1.11.09 2.22-.51 2.88-1.33z" />
         </svg>
       ),
       badge: 'Apple Silicon (M1/M2/M3) & Intel',
@@ -74,7 +74,7 @@ export default function NectarCastPage() {
       title: 'Linux',
       icon: (
         <svg className="w-10 h-10 fill-current text-amber-500" viewBox="0 0 24 24">
-          <path d="M12 2A4 4 0 0 0 8 6C8 7.37 8.7 8.57 9.77 9.27C9.37 10.37 8 13.5 8 15.5C8 17.5 9 19 10.5 20.5C9.5 20.8 7.5 21 5.5 20C4.5 19.5 3 20 3 21C3 22 5.5 22.5 8 22.5C11.5 22.5 12.5 21.5 12.5 20.5C12.5 19.5 11.5 18 11.5 16.5C11.5 13.5 12.5 13.5 13.5 13.5C14.5 13.5 15.5 15 15.5 16.5C15.5 18 14.5 19.5 14.5 20.5C14.5 21.5 15.5 22.5 19 22.5C21.5 22.5 24 22 24 21C24 20 22.5 19.5 21.5 20C19.5 21 17.5 20.8 16.5 20.5C18 19 19 17.5 19 15.5C19 13.5 17.63 10.37 17.23 9.27C18.3 8.57 19 7.37 19 6A4 4 0 0 0 15 2H12Z"/>
+          <path d="M12 2A4 4 0 0 0 8 6C8 7.37 8.7 8.57 9.77 9.27C9.37 10.37 8 13.5 8 15.5C8 17.5 9 19 10.5 20.5C9.5 20.8 7.5 21 5.5 20C4.5 19.5 3 20 3 21C3 22 5.5 22.5 8 22.5C11.5 22.5 12.5 21.5 12.5 20.5C12.5 19.5 11.5 18 11.5 16.5C11.5 13.5 12.5 13.5 13.5 13.5C14.5 13.5 15.5 15 15.5 16.5C15.5 18 14.5 19.5 14.5 20.5C14.5 21.5 15.5 22.5 19 22.5C21.5 22.5 24 22 24 21C24 20 22.5 19.5 21.5 20C19.5 21 17.5 20.8 16.5 20.5C18 19 19 17.5 19 15.5C19 13.5 17.63 10.37 17.23 9.27C18.3 8.57 19 7.37 19 6A4 4 0 0 0 15 2H12Z" />
         </svg>
       ),
       badge: 'Ubuntu, Debian, Fedora, Arch & derivados',
@@ -142,7 +142,7 @@ export default function NectarCastPage() {
         {/* Quick Link Scroll Button */}
         <a href="#downloads" className="mt-4 px-8 py-4 bg-nectar-gold text-background font-black rounded-2xl hover:scale-105 transition-all shadow-xl shadow-nectar-gold/20 flex items-center gap-3 text-sm uppercase tracking-widest">
           <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
-            <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+            <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
           </svg>
           Ir al Centro de Descargas
         </a>
@@ -161,13 +161,12 @@ export default function NectarCastPage() {
 
         {/* OS Grid Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          
+
           {/* WINDOWS CARD */}
-          <div className={`relative flex flex-col justify-between p-8 rounded-3xl border transition-all duration-300 ${
-            detectedOS === 'windows' 
-              ? 'bg-card-bg border-nectar-gold shadow-2xl shadow-nectar-gold/10 scale-[1.02]' 
+          <div className={`relative flex flex-col justify-between p-8 rounded-3xl border transition-all duration-300 ${detectedOS === 'windows'
+              ? 'bg-card-bg border-nectar-gold shadow-2xl shadow-nectar-gold/10 scale-[1.02]'
               : 'bg-card-bg/40 border-card-border hover:border-card-border/80'
-          }`}>
+            }`}>
             {detectedOS === 'windows' && (
               <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-nectar-gold text-background text-[10px] font-black tracking-widest uppercase rounded-full shadow-md">
                 ⭐ Tu Sistema Detectado
@@ -184,7 +183,7 @@ export default function NectarCastPage() {
               <p className="text-xs text-foreground/60 font-semibold mb-6">{downloads.windows.badge}</p>
 
               <div className="space-y-4">
-                <a 
+                <a
                   href={downloads.windows.primary.url}
                   className="w-full py-4 px-6 bg-nectar-gold text-background font-black rounded-xl hover:scale-[1.02] transition-all flex items-center justify-between text-xs tracking-wider shadow-lg shadow-nectar-gold/20 group"
                 >
@@ -197,7 +196,7 @@ export default function NectarCastPage() {
                   </svg>
                 </a>
 
-                <a 
+                <a
                   href={downloads.windows.secondary.url}
                   className="w-full py-3 px-5 bg-foreground/5 border border-card-border text-foreground hover:bg-foreground/10 font-bold rounded-xl transition-all flex items-center justify-between text-xs tracking-wider"
                 >
@@ -216,11 +215,10 @@ export default function NectarCastPage() {
           </div>
 
           {/* MAC CARD */}
-          <div className={`relative flex flex-col justify-between p-8 rounded-3xl border transition-all duration-300 ${
-            detectedOS === 'mac' 
-              ? 'bg-card-bg border-nectar-gold shadow-2xl shadow-nectar-gold/10 scale-[1.02]' 
+          <div className={`relative flex flex-col justify-between p-8 rounded-3xl border transition-all duration-300 ${detectedOS === 'mac'
+              ? 'bg-card-bg border-nectar-gold shadow-2xl shadow-nectar-gold/10 scale-[1.02]'
               : 'bg-card-bg/40 border-card-border hover:border-card-border/80'
-          }`}>
+            }`}>
             {detectedOS === 'mac' && (
               <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-nectar-gold text-background text-[10px] font-black tracking-widest uppercase rounded-full shadow-md">
                 ⭐ Tu Sistema Detectado
@@ -237,7 +235,7 @@ export default function NectarCastPage() {
               <p className="text-xs text-foreground/60 font-semibold mb-6">{downloads.mac.badge}</p>
 
               <div className="space-y-4">
-                <a 
+                <a
                   href={downloads.mac.primary.url}
                   className="w-full py-4 px-6 bg-nectar-gold text-background font-black rounded-xl hover:scale-[1.02] transition-all flex items-center justify-between text-xs tracking-wider shadow-lg shadow-nectar-gold/20 group"
                 >
@@ -258,11 +256,10 @@ export default function NectarCastPage() {
           </div>
 
           {/* LINUX CARD */}
-          <div className={`relative flex flex-col justify-between p-8 rounded-3xl border transition-all duration-300 ${
-            detectedOS === 'linux' 
-              ? 'bg-card-bg border-nectar-gold shadow-2xl shadow-nectar-gold/10 scale-[1.02]' 
+          <div className={`relative flex flex-col justify-between p-8 rounded-3xl border transition-all duration-300 ${detectedOS === 'linux'
+              ? 'bg-card-bg border-nectar-gold shadow-2xl shadow-nectar-gold/10 scale-[1.02]'
               : 'bg-card-bg/40 border-card-border hover:border-card-border/80'
-          }`}>
+            }`}>
             {detectedOS === 'linux' && (
               <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-nectar-gold text-background text-[10px] font-black tracking-widest uppercase rounded-full shadow-md">
                 ⭐ Tu Sistema Detectado
@@ -279,7 +276,7 @@ export default function NectarCastPage() {
               <p className="text-xs text-foreground/60 font-semibold mb-6">{downloads.linux.badge}</p>
 
               <div className="space-y-4">
-                <a 
+                <a
                   href={downloads.linux.primary.url}
                   className="w-full py-4 px-6 bg-nectar-gold text-background font-black rounded-xl hover:scale-[1.02] transition-all flex items-center justify-between text-xs tracking-wider shadow-lg shadow-nectar-gold/20 group"
                 >
@@ -293,7 +290,7 @@ export default function NectarCastPage() {
                 </a>
 
                 {downloads.linux.secondary && (
-                  <a 
+                  <a
                     href={downloads.linux.secondary.url}
                     className="w-full py-3 px-5 bg-foreground/5 border border-card-border text-foreground hover:bg-foreground/10 font-bold rounded-xl transition-all flex items-center justify-between text-xs tracking-wider"
                   >
@@ -334,33 +331,30 @@ export default function NectarCastPage() {
           <button
             onClick={() => setActiveTab('windows')}
             aria-label="Ver guía para Windows"
-            className={`px-6 py-3 rounded-2xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 ${
-              activeTab === 'windows'
+            className={`px-6 py-3 rounded-2xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 ${activeTab === 'windows'
                 ? 'bg-nectar-gold text-background shadow-lg shadow-nectar-gold/20'
                 : 'bg-card-bg/60 border border-card-border text-foreground/70 hover:text-foreground'
-            }`}
+              }`}
           >
             Instalación en Windows
           </button>
           <button
             onClick={() => setActiveTab('mac')}
             aria-label="Ver guía para macOS"
-            className={`px-6 py-3 rounded-2xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 ${
-              activeTab === 'mac'
+            className={`px-6 py-3 rounded-2xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 ${activeTab === 'mac'
                 ? 'bg-nectar-gold text-background shadow-lg shadow-nectar-gold/20'
                 : 'bg-card-bg/60 border border-card-border text-foreground/70 hover:text-foreground'
-            }`}
+              }`}
           >
             Instalación en macOS
           </button>
           <button
             onClick={() => setActiveTab('linux')}
             aria-label="Ver guía para Linux"
-            className={`px-6 py-3 rounded-2xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 ${
-              activeTab === 'linux'
+            className={`px-6 py-3 rounded-2xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 ${activeTab === 'linux'
                 ? 'bg-nectar-gold text-background shadow-lg shadow-nectar-gold/20'
                 : 'bg-card-bg/60 border border-card-border text-foreground/70 hover:text-foreground'
-            }`}
+              }`}
           >
             Instalación en Linux
           </button>
@@ -430,7 +424,7 @@ export default function NectarCastPage() {
             </p>
             <div className="p-3 bg-background border border-card-border rounded-xl flex items-center justify-between gap-2">
               <code className="text-[11px] font-mono text-nectar-gold truncate">rtmp://127.0.0.1:1935/live</code>
-              <button 
+              <button
                 onClick={handleCopyRtmp}
                 className="px-2 py-1 bg-nectar-gold/20 text-nectar-gold hover:bg-nectar-gold hover:text-background text-[10px] font-bold rounded transition-all whitespace-nowrap"
               >
@@ -471,31 +465,31 @@ export default function NectarCastPage() {
       {/* Ecosystem Promotion Section (Publicidad para Nectar-Labs) */}
       <section className="w-full max-w-6xl px-6 py-20 my-10">
         <div className="relative p-10 sm:p-16 rounded-[2.5rem] bg-gradient-to-br from-nectar-forest/80 via-card-bg to-background border-2 border-nectar-gold/30 overflow-hidden shadow-2xl shadow-nectar-forest/30">
-          
+
           <div className="absolute top-0 right-0 -mt-10 -mr-10 w-80 h-80 bg-nectar-gold/20 rounded-full blur-[100px] pointer-events-none"></div>
 
           <div className="relative z-10 max-w-3xl">
             <div className="inline-block px-4 py-1.5 mb-6 text-[10px] font-black tracking-widest text-nectar-gold uppercase border border-nectar-gold/30 rounded-full bg-background/50 backdrop-blur-md">
               Desarrollado por Nectar-Labs
             </div>
-            
+
             <h2 className="text-3xl sm:text-5xl font-black tracking-tight leading-tight mb-6">
               ¿Quieres llevar tu proyecto digital al siguiente nivel?
             </h2>
-            
+
             <p className="text-sm sm:text-lg text-foreground/80 font-medium leading-relaxed mb-8">
               Néctar Cast es solo una muestra de la ingeniería de software artesanal que creamos en <strong className="text-foreground">Nectar-Labs</strong>. Desarrollamos aplicaciones de escritorio, plataformas web de alto rendimiento, sistemas ERP/CRM y soluciones en la nube adaptadas a tus necesidades.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4">
-              <Link 
-                href="/#pricing" 
+              <Link
+                href="/#pricing"
                 className="px-8 py-4 bg-nectar-gold text-background font-black rounded-2xl hover:scale-105 transition-all text-xs uppercase tracking-widest text-center shadow-xl shadow-nectar-gold/20"
               >
                 Explorar Planes Nectar-Labs
               </Link>
-              <Link 
-                href="/portfolio" 
+              <Link
+                href="/portfolio"
                 className="px-8 py-4 bg-foreground/10 border border-card-border text-foreground hover:bg-foreground/20 font-black rounded-2xl transition-all text-xs uppercase tracking-widest text-center backdrop-blur-md"
               >
                 Ver Portafolio de Proyectos

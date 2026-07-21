@@ -8,11 +8,13 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userEmail, setUserEmail] = useState('');
+  const [mounted, setMounted] = useState(false);
   
   // Mobile menu state
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     const handleScroll = () => setScrolled(window.scrollY > 50);
     const checkAuth = () => {
       const token = localStorage.getItem('token');
@@ -60,7 +62,7 @@ export default function Navbar() {
               Únete a Nosotros
             </a>
             <Link href="/blog" className="text-[10px] font-black uppercase tracking-widest text-foreground opacity-60 hover:opacity-100 transition-opacity">Blog</Link>
-            {isLoggedIn && (
+            {mounted && isLoggedIn && (
               <Link href="/dashboard" className="text-[10px] font-black uppercase tracking-widest text-nectar-gold font-bold">Dashboard</Link>
             )}
           </div>
@@ -68,13 +70,13 @@ export default function Navbar() {
           {/* Botones y Selector de Tema (Escritorio) */}
           <div className="hidden md:flex items-center gap-6">
             <ThemeToggle />
-            {isLoggedIn && (
+            {mounted && isLoggedIn && (
               <div className="hidden lg:flex flex-col items-end">
                 <span className="text-[9px] font-black uppercase tracking-widest text-nectar-gold/50">Sesión Activa</span>
                 <span className="text-[10px] font-black text-foreground/85">{userEmail}</span>
               </div>
             )}
-            {!isLoggedIn ? (
+            {!(mounted && isLoggedIn) ? (
               <div className="flex items-center gap-4">
                 <Link href="/login" className="px-6 py-2.5 text-[10px] font-black uppercase tracking-widest text-foreground hover:bg-foreground/5 rounded-xl transition-all">
                   Entrar
@@ -129,13 +131,13 @@ export default function Navbar() {
             </Link>
             <a href="/#seller-program" onClick={() => setMobileMenuOpen(false)} className="text-xl font-black uppercase tracking-widest text-nectar-gold hover:underline">Únete a Nosotros</a>
             <Link href="/blog" onClick={() => setMobileMenuOpen(false)} className="text-xl font-black uppercase tracking-widest text-foreground hover:text-nectar-gold transition-colors">Blog</Link>
-            {isLoggedIn && (
+            {mounted && isLoggedIn && (
               <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)} className="text-xl font-black uppercase tracking-widest text-nectar-gold font-bold">Dashboard</Link>
             )}
           </div>
           
           <div className="pt-8 border-t border-card-border flex flex-col gap-4">
-            {isLoggedIn ? (
+            {mounted && isLoggedIn ? (
               <>
                 <div className="text-left mb-2">
                   <p className="text-[9px] font-black uppercase tracking-widest text-nectar-gold/50">Sesión Activa</p>
