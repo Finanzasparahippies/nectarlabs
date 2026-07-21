@@ -19,6 +19,9 @@ export const metadata: Metadata = {
   description: "Diseñamos software artesanal y arquitectura escalable para negocios que exigen independencia técnica y rendimiento industrial. Tu partner tecnológico estratégico.",
   keywords: ["software artesanal", "arquitectura de software", "desarrollo web méxico", "nectar labs", "partner tecnológico", "django nextjs", "desarrollo a medida"],
   authors: [{ name: "Jesus Saul Villegas Cruz" }],
+  other: {
+    "google-adsense-account": "ca-pub-2582703158474486",
+  },
   openGraph: {
     title: "Néctar Labs | Software Artesanal",
     description: "Arquitectura de software para negocios que exigen independencia técnica y rendimiento industrial.",
@@ -58,34 +61,31 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
-      <head>
-        <meta name="google-adsense-account" content="ca-pub-2582703158474486" />
-        <Script
-          id="theme-initializer"
-          strategy="beforeInteractive"
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function() {
-                try {
-                  var savedTheme = localStorage.getItem('theme');
-                  var systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                  if (savedTheme === 'dark' || (!savedTheme && systemDark)) {
-                    document.documentElement.classList.add('dark');
-                  } else {
-                    document.documentElement.classList.remove('dark');
-                  }
-                } catch (e) {}
-              })();
-            `
-          }}
-        />
-        <Script
-          async
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2582703158474486"
-          crossOrigin="anonymous"
-          strategy="afterInteractive"
-        />
-      </head>
+      <Script
+        id="theme-initializer"
+        strategy="beforeInteractive"
+        dangerouslySetInnerHTML={{
+          __html: `
+            (function() {
+              try {
+                var savedTheme = localStorage.getItem('theme');
+                var systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                if (savedTheme === 'dark' || (!savedTheme && systemDark)) {
+                  document.documentElement.classList.add('dark');
+                } else {
+                  document.documentElement.classList.remove('dark');
+                }
+              } catch (e) {}
+            })();
+          `
+        }}
+      />
+      <Script
+        async
+        src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2582703158474486"
+        crossOrigin="anonymous"
+        strategy="afterInteractive"
+      />
       <body className="min-h-full flex flex-col">
         {children}
         <SupportChatWidget />
