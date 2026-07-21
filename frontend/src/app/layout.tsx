@@ -57,36 +57,25 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="en"
+      lang="es"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
-      <Script
-        id="theme-initializer"
-        strategy="beforeInteractive"
-        dangerouslySetInnerHTML={{
-          __html: `
-            (function() {
-              try {
-                var savedTheme = localStorage.getItem('theme');
-                var systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                if (savedTheme === 'dark' || (!savedTheme && systemDark)) {
-                  document.documentElement.classList.add('dark');
-                } else {
-                  document.documentElement.classList.remove('dark');
-                }
-              } catch (e) {}
-            })();
-          `
-        }}
-      />
-      <Script
-        async
-        src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2582703158474486"
-        crossOrigin="anonymous"
-        strategy="afterInteractive"
-      />
+      <head>
+        <meta name="google-adsense-account" content="ca-pub-2582703158474486" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var s=localStorage.getItem('theme'),d=window.matchMedia('(prefers-color-scheme: dark)').matches;if(s==='dark'||(!s&&d)){document.documentElement.classList.add('dark')}else{document.documentElement.classList.remove('dark')}}catch(e){}})()`,
+          }}
+        />
+      </head>
       <body className="min-h-full flex flex-col">
+        <Script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2582703158474486"
+          crossOrigin="anonymous"
+          strategy="afterInteractive"
+        />
         {children}
         <SupportChatWidget />
       </body>
