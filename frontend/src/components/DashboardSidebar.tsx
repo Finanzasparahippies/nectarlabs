@@ -1,5 +1,13 @@
 'use client';
 
+/**
+ * Componente Nectar-Labs DashboardSidebar
+ * 
+ * Gestiona el menú de navegación principal del Dashboard con soporte responsivo (drawer móvil / barra colapsable),
+ * control de acceso basado en roles (ADMIN/CEO, DEVELOPER, DESIGNER, BUSINESS, CUSTOMER) y acordeón interactivo
+ * para el ecosistema de inquilinos (Tenants / Subdominios).
+ */
+
 import React, { useEffect, useState, Suspense } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';

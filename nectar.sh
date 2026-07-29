@@ -17,6 +17,23 @@ if [ -z "$DOCKER_SOCK" ]; then
     fi
 fi
 
+# Garantizar la existencia de la red externa 'prod_network' para Docker y Podman
+ensure_network() {
+    local net_name="prod_network"
+    if command -v podman >/dev/null 2>&1; then
+        if ! podman network exists "$net_name" 2>/dev/null; then
+            echo "🌐 Creando red de Podman/Docker '$net_name'..."
+            podman network create "$net_name" 2>/dev/null || true
+        fi
+    elif command -v docker >/dev/null 2>&1; then
+        if ! docker network inspect "$net_name" >/dev/null 2>&1; then
+            echo "🌐 Creando red de Docker '$net_name'..."
+            docker network create "$net_name" 2>/dev/null || true
+        fi
+    fi
+}
+
+
 # Helper function to run Django commands in dev (using exec if running, run --rm if not)
 run_django_cmd_dev() {
     if docker compose ps --services --filter "status=running" | grep -q "^backend$"; then
@@ -132,6 +149,7 @@ case $COMMAND in
     # ── DEVELOPMENT ENV ──
     dev)
         echo "Starting Nectar Labs Dev Environment..."
+        ensure_network
         docker compose up -d --build "$@"
         ;;
     stop)
@@ -191,6 +209,7 @@ case $COMMAND in
     # ── STAGING ENV ──
     up-staging)
         echo "Starting Nectar Labs Staging Environment..."
+        ensure_network
         docker compose -f docker-compose.staging.yml up -d --build "$@"
         ;;
     down-staging|stop-staging)
@@ -255,6 +274,7 @@ case $COMMAND in
     # ── PRODUCTION ENV ──
     up-prod)
         echo "Starting Nectar Labs Production Environment..."
+        ensure_network
         docker compose -f docker-compose.prod.yml up -d "$@"
         ;;
     down-prod)

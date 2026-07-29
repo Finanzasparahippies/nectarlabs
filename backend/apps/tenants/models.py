@@ -1,3 +1,12 @@
+"""
+Módulo de Gestión de Inquilinos (Multi-Tenancy) y Configuración Fiscal en Nectar-Labs.
+
+Este módulo define la entidad principal `Tenant`, representando la organización o negocio cliente.
+Soporta subdominios aislados, mapeo de dominios personalizados (BYO Domain), personalización
+de marca con tema Glassmorphism (paletas de 6 colores en modo oscuro y claro), balance de timbres
+para Facturación CFDI 4.0 y monedero de envíos.
+"""
+
 import uuid
 from decimal import Decimal
 from django.db import models
@@ -5,13 +14,18 @@ from django.conf import settings
 from django.utils import timezone
 
 class Tenant(models.Model):
+    """
+    Entidad principal de Inquilino (Negocio / Cliente) en la arquitectura multi-tenant de Nectar Labs.
+    Mantiene la relación con su propietario, configuración de marca, límites de correo y timbres fiscales.
+    """
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    name = models.CharField(max_length=100)
-    subdomain = models.SlugField(max_length=50, unique=True, db_index=True)
+    name = models.CharField(max_length=100, verbose_name="Nombre del Negocio")
+    subdomain = models.SlugField(max_length=50, unique=True, db_index=True, verbose_name="Subdominio Nectar")
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL, 
         on_delete=models.CASCADE, 
-        related_name="owned_tenants"
+        related_name="owned_tenants",
+        verbose_name="Propietario del Negocio"
     )
     api_key = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     allowed_origins = models.TextField(
