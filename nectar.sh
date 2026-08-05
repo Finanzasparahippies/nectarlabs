@@ -1,14 +1,47 @@
 #!/bin/bash
 
-# Nectar Labs Base CLI
-# Script to manage Nectar Labs projects
+# Nectar Labs CLI
+# Script to manage Nectar Labs environments (Dev, Staging, Production)
 
 COMMAND=$1
 if [ $# -gt 0 ]; then
     shift
 fi
 
-# Detect rootless Podman socket and export DOCKER_SOCK if not already set or not accessible
+# Detect Container runtime (docker or podman)
+if command -v docker &> /dev/null; then
+    DOCKER_BIN="docker"
+elif command -v podman &> /dev/null; then
+    DOCKER_BIN="podman"
+else
+    echo "==========================================="
+    echo "  [ERROR] No container runtime detected!   "
+    echo "==========================================="
+    echo "No se encontró ni 'docker' ni 'podman' en el PATH del sistema."
+    exit 1
+fi
+
+# Detect Compose provider
+COMPOSE_BIN=""
+if [ "$DOCKER_BIN" = "docker" ]; then
+    if docker compose version &> /dev/null; then
+        COMPOSE_BIN="docker compose"
+    elif command -v docker-compose &> /dev/null; then
+        COMPOSE_BIN="docker-compose"
+    fi
+elif [ "$DOCKER_BIN" = "podman" ]; then
+    if command -v podman-compose &> /dev/null; then
+        COMPOSE_BIN="podman-compose"
+    elif podman compose version &> /dev/null 2>&1; then
+        COMPOSE_BIN="podman compose"
+    fi
+fi
+
+if [ -z "$COMPOSE_BIN" ]; then
+    COMPOSE_BIN="docker compose"
+fi
+
+# Detect rootless Podman socket and export DOCKER_SOCK if not set
 if [ -z "$DOCKER_SOCK" ] || [ ! -e "$DOCKER_SOCK" ]; then
     if [ -S "$XDG_RUNTIME_DIR/podman/podman.sock" ]; then
         export DOCKER_SOCK="$XDG_RUNTIME_DIR/podman/podman.sock"
@@ -22,7 +55,7 @@ if [ -z "$DOCKER_SOCK" ] || [ ! -e "$DOCKER_SOCK" ]; then
     fi
 fi
 
-# Garantizar la existencia de la red externa 'prod_network' para Docker y Podman
+# Ensure external network 'prod_network' exists
 ensure_network() {
     local net_name="prod_network"
     if command -v podman >/dev/null 2>&1; then
@@ -38,81 +71,119 @@ ensure_network() {
     fi
 }
 
-
-# Función auxiliar para comprobar si un contenedor específico está en ejecución
+# Helper function to check container status
 is_container_running() {
     local container_name=$1
-    if command -v podman >/dev/null 2>&1; then
+    if [ "$DOCKER_BIN" = "podman" ]; then
         podman ps --format "{{.Names}}" 2>/dev/null | grep -q "^${container_name}$"
     else
-        docker compose ps --services --filter "status=running" 2>/dev/null | grep -q "^${container_name}$"
+        docker ps --format "{{.Names}}" 2>/dev/null | grep -q "^${container_name}$"
     fi
 }
 
-# Helper function to run Django commands in dev (using exec if running, run --rm if not)
+# Helper function to run Django manage.py commands in Dev
 run_django_cmd_dev() {
+    local tty_flag=""
+    if [ -t 0 ]; then
+        tty_flag="-it"
+    fi
     if is_container_running "nectar_backend"; then
-        docker compose exec backend python manage.py "$@"
+        $DOCKER_BIN exec $tty_flag nectar_backend python manage.py "$@"
+    elif $COMPOSE_BIN ps 2>/dev/null | grep -q "backend"; then
+        $COMPOSE_BIN exec $tty_flag backend python manage.py "$@"
     else
-        docker compose run --rm backend python manage.py "$@"
+        $COMPOSE_BIN run --rm $tty_flag -w /app backend python manage.py "$@"
     fi
 }
 
-# Helper function to run Django commands in staging (using exec if running, run --rm if not)
+# Helper function to run Django manage.py commands in Staging
 run_django_cmd_staging() {
+    local tty_flag=""
+    if [ -t 0 ]; then
+        tty_flag="-it"
+    fi
     if is_container_running "nectar_backend_staging"; then
-        docker compose -f docker-compose.staging.yml exec backend-staging python manage.py "$@"
+        $DOCKER_BIN exec $tty_flag nectar_backend_staging python manage.py "$@"
+    elif $COMPOSE_BIN -f docker-compose.staging.yml ps 2>/dev/null | grep -q "backend-staging"; then
+        $COMPOSE_BIN -f docker-compose.staging.yml exec $tty_flag backend-staging python manage.py "$@"
     else
-        docker compose -f docker-compose.staging.yml run --rm backend-staging python manage.py "$@"
+        $COMPOSE_BIN -f docker-compose.staging.yml run --rm $tty_flag -w /app backend-staging python manage.py "$@"
     fi
 }
 
-# Helper function to run Django commands in prod (using exec if running, run --rm if not)
+# Helper function to run Django manage.py commands in Production
 run_django_cmd_prod() {
-    if is_container_running "nectar_backend"; then
-        docker compose -f docker-compose.prod.yml exec backend python manage.py "$@"
+    local tty_flag=""
+    if [ -t 0 ]; then
+        tty_flag="-it"
+    fi
+    if is_container_running "nectar_backend_prod" || is_container_running "nectar_backend"; then
+        local c_name="nectar_backend"
+        if is_container_running "nectar_backend_prod"; then c_name="nectar_backend_prod"; fi
+        $DOCKER_BIN exec $tty_flag $c_name python manage.py "$@"
+    elif $COMPOSE_BIN -f docker-compose.prod.yml ps 2>/dev/null | grep -q "backend"; then
+        $COMPOSE_BIN -f docker-compose.prod.yml exec $tty_flag backend python manage.py "$@"
     else
-        docker compose -f docker-compose.prod.yml run --rm backend python manage.py "$@"
+        $COMPOSE_BIN -f docker-compose.prod.yml run --rm $tty_flag -w /app backend python manage.py "$@"
     fi
 }
 
-# Helper function to run npm commands in dev frontend container
+# Helper function to run npm commands in Dev frontend
 run_npm_cmd_dev() {
+    local tty_flag=""
+    if [ -t 0 ]; then tty_flag="-it"; fi
     if is_container_running "nectar_frontend"; then
-        docker compose exec frontend npm "$@"
+        $DOCKER_BIN exec $tty_flag nectar_frontend npm "$@"
+    elif $COMPOSE_BIN ps 2>/dev/null | grep -q "frontend"; then
+        $COMPOSE_BIN exec $tty_flag frontend npm "$@"
+    elif [ -d "frontend" ] && command -v npm &> /dev/null; then
+        (cd frontend && npm "$@")
     else
-        docker compose run --rm frontend npm "$@"
+        $COMPOSE_BIN run --rm $tty_flag -w /app frontend npm "$@"
     fi
 }
 
-# Helper function to run npm commands in staging frontend container
+# Helper function to run npm commands in Staging frontend
 run_npm_cmd_staging() {
-    if docker compose -f docker-compose.staging.yml ps --services --filter "status=running" | grep -q "^frontend-staging$"; then
-        docker compose -f docker-compose.staging.yml exec frontend-staging npm "$@"
+    local tty_flag=""
+    if [ -t 0 ]; then tty_flag="-it"; fi
+    if is_container_running "nectar_frontend_staging"; then
+        $DOCKER_BIN exec $tty_flag nectar_frontend_staging npm "$@"
+    elif $COMPOSE_BIN -f docker-compose.staging.yml ps 2>/dev/null | grep -q "frontend-staging"; then
+        $COMPOSE_BIN -f docker-compose.staging.yml exec $tty_flag frontend-staging npm "$@"
     else
-        docker compose -f docker-compose.staging.yml run --rm frontend-staging npm "$@"
+        $COMPOSE_BIN -f docker-compose.staging.yml run --rm $tty_flag -w /app frontend-staging npm "$@"
     fi
 }
 
-# Helper function to run npm commands in prod frontend container
+# Helper function to run npm commands in Production frontend
 run_npm_cmd_prod() {
-    if docker compose -f docker-compose.prod.yml ps --services --filter "status=running" | grep -q "^frontend$"; then
-        docker compose -f docker-compose.prod.yml exec frontend npm "$@"
+    local tty_flag=""
+    if [ -t 0 ]; then tty_flag="-it"; fi
+    if is_container_running "nectar_frontend_prod"; then
+        $DOCKER_BIN exec $tty_flag nectar_frontend_prod npm "$@"
+    elif $COMPOSE_BIN -f docker-compose.prod.yml ps 2>/dev/null | grep -q "frontend"; then
+        $COMPOSE_BIN -f docker-compose.prod.yml exec $tty_flag frontend npm "$@"
     else
-        docker compose -f docker-compose.prod.yml run --rm frontend npm "$@"
+        $COMPOSE_BIN -f docker-compose.prod.yml run --rm $tty_flag -w /app frontend npm "$@"
     fi
 }
 
 show_help() {
-    echo "Nectar Labs CLI"
+    echo "==========================================="
+    echo "          Nectar Labs CLI v2.0             "
+    echo "==========================================="
     echo ""
     echo "Usage: ./nectar.sh [command]"
     echo ""
     echo "=== DEVELOPMENT ENV (Local) ==="
     echo "  dev                      - Start development environment (Docker)"
+    echo "  deploy / deploy-dev      - Build and start development environment"
     echo "  stop                     - Stop development containers"
     echo "  restart                  - Restart development containers"
+    echo "  status                   - Show status of dev containers"
     echo "  logs                     - Show real-time dev logs"
+    echo "  manage [args...]         - Run ANY Django manage.py command (Dev)"
     echo "  makemigrations           - Generate database migrations (Dev)"
     echo "  migrate                  - Run database migrations (Dev)"
     echo "  createsuperuser          - Create Django admin user (Dev)"
@@ -122,14 +193,19 @@ show_help() {
     echo "  typecheck                - Run TypeScript typecheck (Dev frontend)"
     echo "  buildcheck               - Run Next.js buildcheck (Dev frontend)"
     echo "  seed-addons              - Seed addons table in Dev database"
+    echo "  seed-plans               - Seed plans table in Dev database"
+    echo "  backup-db                - Execute database backup script (Dev)"
     echo "  install-frontend         - Install npm packages in local Dev"
     echo ""
     echo "=== STAGING ENV ==="
     echo "  up-staging               - Start staging environment"
+    echo "  deploy-staging           - Build and start staging environment"
     echo "  down-staging             - Stop staging environment"
     echo "  restart-staging          - Restart staging environment"
     echo "  build-staging            - Build staging Docker images"
+    echo "  status-staging           - Show status of staging containers"
     echo "  logs-staging             - View staging logs in real-time"
+    echo "  manage-staging [args...] - Run ANY Django manage.py command (Staging)"
     echo "  makemigrations-staging   - Generate database migrations (Staging)"
     echo "  migrate-staging          - Run database migrations (Staging)"
     echo "  createsuperuser-staging  - Create admin user (Staging)"
@@ -139,13 +215,18 @@ show_help() {
     echo "  typecheck-staging        - Run TypeScript typecheck (Staging frontend)"
     echo "  buildcheck-staging       - Run Next.js buildcheck (Staging frontend)"
     echo "  seed-addons-staging      - Seed addons table in Staging database"
+    echo "  seed-plans-staging       - Seed plans table in Staging database"
     echo "  install-frontend-staging - Install npm packages in Staging container"
     echo ""
     echo "=== PRODUCTION ENV (Prod) ==="
     echo "  up-prod                  - Start production environment"
+    echo "  deploy-prod              - Build and start production environment"
     echo "  down-prod                - Stop production environment"
+    echo "  restart-prod             - Restart production environment"
+    echo "  status-prod              - Show status of production containers"
     echo "  logs-prod                - View production logs in real-time"
     echo "  build                    - Build production Docker images"
+    echo "  manage-prod [args...]    - Run ANY Django manage.py command (Prod)"
     echo "  makemigrations-prod      - Generate database migrations (Prod)"
     echo "  migrate-prod             - Run database migrations (Prod)"
     echo "  createsuperuser-prod     - Create admin user (Prod)"
@@ -153,11 +234,12 @@ show_help() {
     echo "  collectstatic            - Run collectstatic in backend (Prod)"
     echo "  certbot                  - Request SSL certificate (Prod)"
     echo "  seed-addons-prod         - Seed addons table in Production database"
+    echo "  seed-plans-prod          - Seed plans table in Production database"
     echo "  install-frontend-prod    - Install npm packages in Production container"
     echo ""
     echo "=== UTILITIES ==="
-    echo "  clean                    - Safe Docker cleanup (cache, networks, volumes)"
-    echo "  help                     - Show this help"
+    echo "  clean [--all|-a]        - Safe Docker cleanup (cache, networks, volumes)"
+    echo "  help                     - Show this help screen"
 }
 
 case $COMMAND in
@@ -165,22 +247,33 @@ case $COMMAND in
     dev)
         echo "Starting Nectar Labs Dev Environment..."
         ensure_network
-        docker compose up -d --build "$@"
+        $COMPOSE_BIN up -d --build "$@"
+        ;;
+    deploy|deploy-dev)
+        echo "Deploying Nectar Labs Dev Environment..."
+        ensure_network
+        $COMPOSE_BIN up -d --build "$@"
         ;;
     stop)
         echo "Stopping dev containers..."
-        docker compose down "$@"
+        $COMPOSE_BIN down "$@"
         ;;
     restart)
         echo "Restarting dev containers..."
-        docker compose restart "$@"
+        $COMPOSE_BIN restart "$@"
+        ;;
+    status|status-dev)
+        $COMPOSE_BIN ps "$@"
         ;;
     logs)
         if [ $# -eq 0 ]; then
-            docker compose logs -f --tail=100
+            $COMPOSE_BIN logs -f --tail=100
         else
-            docker compose logs "$@"
+            $COMPOSE_BIN logs "$@"
         fi
+        ;;
+    manage|manage-dev)
+        run_django_cmd_dev "$@"
         ;;
     makemigrations|makemigrations-dev)
         run_django_cmd_dev makemigrations "$@"
@@ -202,18 +295,42 @@ case $COMMAND in
         ;;
     typecheck)
         echo "Running TypeScript type-check in Dev frontend..."
-        docker compose exec frontend npx tsc --noEmit "$@"
+        if is_container_running "nectar_frontend"; then
+            $DOCKER_BIN exec nectar_frontend npx tsc --noEmit "$@"
+        else
+            $COMPOSE_BIN exec frontend npx tsc --noEmit "$@"
+        fi
         ;;
     buildcheck)
         echo "Running Next.js build-check in Dev frontend..."
-        docker compose exec frontend npm run build "$@"
+        if is_container_running "nectar_frontend"; then
+            $DOCKER_BIN exec nectar_frontend npm run build "$@"
+        else
+            $COMPOSE_BIN exec frontend npm run build "$@"
+        fi
         ;;
     seed-addons|seed-addons-dev)
         echo "Seeding addons in Local Dev..."
-        if docker compose ps --services --filter "status=running" | grep -q "^backend$"; then
-            docker compose exec backend python seed_addons.py "$@"
+        if is_container_running "nectar_backend"; then
+            $DOCKER_BIN exec nectar_backend python seed_addons.py "$@"
         else
-            docker compose run --rm backend python seed_addons.py "$@"
+            $COMPOSE_BIN run --rm backend python seed_addons.py "$@"
+        fi
+        ;;
+    seed-plans|seed-plans-dev)
+        echo "Seeding plans in Local Dev..."
+        if is_container_running "nectar_backend"; then
+            $DOCKER_BIN exec nectar_backend python seed_plans.py "$@"
+        else
+            $COMPOSE_BIN run --rm backend python seed_plans.py "$@"
+        fi
+        ;;
+    backup-db)
+        echo "Executing database backup script in Local Dev..."
+        if is_container_running "nectar_backend"; then
+            $DOCKER_BIN exec nectar_backend python backup_db.py "$@"
+        else
+            $COMPOSE_BIN run --rm backend python backup_db.py "$@"
         fi
         ;;
     install-frontend)
@@ -225,26 +342,37 @@ case $COMMAND in
     up-staging)
         echo "Starting Nectar Labs Staging Environment..."
         ensure_network
-        docker compose -f docker-compose.staging.yml up -d --build "$@"
+        $COMPOSE_BIN -f docker-compose.staging.yml up -d --build "$@"
+        ;;
+    deploy-staging)
+        echo "Deploying Nectar Labs Staging Environment..."
+        ensure_network
+        $COMPOSE_BIN -f docker-compose.staging.yml up -d --build "$@"
         ;;
     down-staging|stop-staging)
         echo "Stopping Staging Environment..."
-        docker compose -f docker-compose.staging.yml down "$@"
+        $COMPOSE_BIN -f docker-compose.staging.yml down "$@"
         ;;
     restart-staging)
         echo "Restarting Staging Environment..."
-        docker compose -f docker-compose.staging.yml restart "$@"
+        $COMPOSE_BIN -f docker-compose.staging.yml restart "$@"
         ;;
     build-staging)
         echo "Building Staging Images..."
-        docker compose -f docker-compose.staging.yml build "$@"
+        $COMPOSE_BIN -f docker-compose.staging.yml build "$@"
+        ;;
+    status-staging)
+        $COMPOSE_BIN -f docker-compose.staging.yml ps "$@"
         ;;
     logs-staging)
         if [ $# -eq 0 ]; then
-            docker compose -f docker-compose.staging.yml logs -f --tail=100
+            $COMPOSE_BIN -f docker-compose.staging.yml logs -f --tail=100
         else
-            docker compose -f docker-compose.staging.yml logs "$@"
+            $COMPOSE_BIN -f docker-compose.staging.yml logs "$@"
         fi
+        ;;
+    manage-staging)
+        run_django_cmd_staging "$@"
         ;;
     makemigrations-staging)
         run_django_cmd_staging makemigrations "$@"
@@ -267,18 +395,26 @@ case $COMMAND in
         ;;
     typecheck-staging)
         echo "Running TypeScript type-check in Staging frontend..."
-        docker compose -f docker-compose.staging.yml exec frontend-staging npx tsc --noEmit "$@"
+        $COMPOSE_BIN -f docker-compose.staging.yml exec frontend-staging npx tsc --noEmit "$@"
         ;;
     buildcheck-staging)
         echo "Running Next.js build-check in Staging frontend..."
-        docker compose -f docker-compose.staging.yml exec frontend-staging npm run build "$@"
+        $COMPOSE_BIN -f docker-compose.staging.yml exec frontend-staging npm run build "$@"
         ;;
     seed-addons-staging)
         echo "Seeding addons in Staging..."
-        if docker compose -f docker-compose.staging.yml ps --services --filter "status=running" | grep -q "^backend-staging$"; then
-            docker compose -f docker-compose.staging.yml exec backend-staging python seed_addons.py "$@"
+        if is_container_running "nectar_backend_staging"; then
+            $DOCKER_BIN exec nectar_backend_staging python seed_addons.py "$@"
         else
-            docker compose -f docker-compose.staging.yml run --rm backend-staging python seed_addons.py "$@"
+            $COMPOSE_BIN -f docker-compose.staging.yml run --rm backend-staging python seed_addons.py "$@"
+        fi
+        ;;
+    seed-plans-staging)
+        echo "Seeding plans in Staging..."
+        if is_container_running "nectar_backend_staging"; then
+            $DOCKER_BIN exec nectar_backend_staging python seed_plans.py "$@"
+        else
+            $COMPOSE_BIN -f docker-compose.staging.yml run --rm backend-staging python seed_plans.py "$@"
         fi
         ;;
     install-frontend-staging)
@@ -290,21 +426,36 @@ case $COMMAND in
     up-prod)
         echo "Starting Nectar Labs Production Environment..."
         ensure_network
-        docker compose -f docker-compose.prod.yml up -d "$@"
+        $COMPOSE_BIN -f docker-compose.prod.yml up -d "$@"
         ;;
-    down-prod)
+    deploy-prod)
+        echo "Deploying Nectar Labs Production Environment..."
+        ensure_network
+        $COMPOSE_BIN -f docker-compose.prod.yml up -d --build "$@"
+        ;;
+    down-prod|stop-prod)
         echo "Stopping Production Environment..."
-        docker compose -f docker-compose.prod.yml down "$@"
+        $COMPOSE_BIN -f docker-compose.prod.yml down "$@"
+        ;;
+    restart-prod)
+        echo "Restarting Production Environment..."
+        $COMPOSE_BIN -f docker-compose.prod.yml restart "$@"
+        ;;
+    status-prod)
+        $COMPOSE_BIN -f docker-compose.prod.yml ps "$@"
         ;;
     logs-prod)
         if [ $# -eq 0 ]; then
-            docker compose -f docker-compose.prod.yml logs -f --tail=100
+            $COMPOSE_BIN -f docker-compose.prod.yml logs -f --tail=100
         else
-            docker compose -f docker-compose.prod.yml logs "$@"
+            $COMPOSE_BIN -f docker-compose.prod.yml logs "$@"
         fi
         ;;
     build)
-        docker compose -f docker-compose.prod.yml build "$@"
+        $COMPOSE_BIN -f docker-compose.prod.yml build "$@"
+        ;;
+    manage-prod)
+        run_django_cmd_prod "$@"
         ;;
     makemigrations-prod)
         run_django_cmd_prod makemigrations "$@"
@@ -319,12 +470,8 @@ case $COMMAND in
         run_django_cmd_prod shell "$@"
         ;;
     collectstatic)
-        echo "Running collectstatic..."
-        if docker ps --filter "name=nectar_backend" --filter "status=running" | grep -q "nectar_backend"; then
-            docker exec -it nectar_backend python manage.py collectstatic --no-input "$@"
-        else
-            docker compose -f docker-compose.prod.yml run --rm backend python manage.py collectstatic --no-input "$@"
-        fi
+        echo "Running collectstatic in Production..."
+        run_django_cmd_prod collectstatic --no-input "$@"
         ;;
     certbot)
         DOMAIN=$1
@@ -332,14 +479,26 @@ case $COMMAND in
             echo "Usage: ./nectar.sh certbot example.com"
             exit 1
         fi
-        docker compose -f docker-compose.prod.yml run --rm certbot certonly --webroot --webroot-path=/var/www/certbot -d $DOMAIN -d www.$DOMAIN
+        $COMPOSE_BIN -f docker-compose.prod.yml run --rm certbot certonly --webroot --webroot-path=/var/www/certbot -d $DOMAIN -d www.$DOMAIN
         ;;
     seed-addons-prod)
         echo "Seeding addons in Production..."
-        if docker compose -f docker-compose.prod.yml ps --services --filter "status=running" | grep -q "^backend$"; then
-            docker compose -f docker-compose.prod.yml exec backend python seed_addons.py "$@"
+        if is_container_running "nectar_backend_prod" || is_container_running "nectar_backend"; then
+            local c_name="nectar_backend"
+            if is_container_running "nectar_backend_prod"; then c_name="nectar_backend_prod"; fi
+            $DOCKER_BIN exec $c_name python seed_addons.py "$@"
         else
-            docker compose -f docker-compose.prod.yml run --rm backend python seed_addons.py "$@"
+            $COMPOSE_BIN -f docker-compose.prod.yml run --rm backend python seed_addons.py "$@"
+        fi
+        ;;
+    seed-plans-prod)
+        echo "Seeding plans in Production..."
+        if is_container_running "nectar_backend_prod" || is_container_running "nectar_backend"; then
+            local c_name="nectar_backend"
+            if is_container_running "nectar_backend_prod"; then c_name="nectar_backend_prod"; fi
+            $DOCKER_BIN exec $c_name python seed_plans.py "$@"
+        else
+            $COMPOSE_BIN -f docker-compose.prod.yml run --rm backend python seed_plans.py "$@"
         fi
         ;;
     install-frontend-prod)
@@ -351,28 +510,36 @@ case $COMMAND in
     clean)
         echo "Starting comprehensive and safe VPS cleanup..."
         echo ""
+        DEEP_PRUNING=false
+        if [ "$1" = "--all" ] || [ "$1" = "-a" ]; then
+            DEEP_PRUNING=true
+        fi
+
         echo "1. Removing stopped containers..."
-        docker container prune -f
+        $DOCKER_BIN container prune -f
         
         echo "2. Removing dangling networks..."
-        docker network prune -f
+        $DOCKER_BIN network prune -f
         
-        echo "3. Removing dangling volumes (only unused/anonymous volumes)..."
-        docker volume prune -f
+        echo "3. Removing dangling volumes..."
+        $DOCKER_BIN volume prune -f
         
         echo "4. Removing dangling/untagged images..."
-        docker image prune -f
+        $DOCKER_BIN image prune -f
         
         echo "5. Removing Docker build cache..."
-        docker builder prune -f
+        $DOCKER_BIN builder prune -f 2>/dev/null || true
         
-        # Check if running on Linux with journalctl to clean system logs
+        if [ "$DEEP_PRUNING" = true ]; then
+            echo "   Executing deep system prune..."
+            $DOCKER_BIN system prune -a --volumes -f
+        fi
+        
         if command -v journalctl &> /dev/null; then
             echo "6. Vacuuming system logs (journald) to 100MB..."
             sudo journalctl --vacuum-size=100M 2>/dev/null || echo "   (Skip: sudo privileges required to vacuum logs)"
         fi
         
-        # Check if running on Debian/Ubuntu to clean apt cache
         if command -v apt-get &> /dev/null; then
             echo "7. Cleaning APT package cache..."
             sudo apt-get autoclean -y 2>/dev/null || echo "   (Skip: sudo privileges required to clean APT cache)"
