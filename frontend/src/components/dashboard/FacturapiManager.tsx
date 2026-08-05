@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { fetcher } from '@/lib/api';
 import SATAutocomplete from '@/components/ui/SATAutocomplete';
+import { getErrorMessage } from '@/lib/types';
 
 interface FacturapiManagerProps {
   tenantId?: string | number;
@@ -242,8 +243,8 @@ export default function FacturapiManager({
       }
       setShowCustomerModal(false);
       fetchCustomers();
-    } catch (err: any) {
-      setCustomerError(err.message || 'Error al guardar cliente.');
+    } catch (err: unknown) {
+      setCustomerError(getErrorMessage(err) || 'Error al guardar cliente.');
     } finally {
       setSavingCustomer(false);
     }
@@ -257,8 +258,8 @@ export default function FacturapiManager({
       });
       showToast('Cliente eliminado del catálogo.');
       fetchCustomers();
-    } catch (err: any) {
-      showToast(err.message || 'Error al eliminar cliente.', 'error');
+    } catch (err: unknown) {
+      showToast(getErrorMessage(err) || 'Error al eliminar cliente.', 'error');
     } finally {
       setDeletingCustomerId(null);
     }
@@ -312,8 +313,8 @@ export default function FacturapiManager({
       }
       setShowProductModal(false);
       fetchProducts();
-    } catch (err: any) {
-      setProductError(err.message || 'Error al guardar producto.');
+    } catch (err: unknown) {
+      setProductError(getErrorMessage(err) || 'Error al guardar producto.');
     } finally {
       setSavingProduct(false);
     }
@@ -327,8 +328,8 @@ export default function FacturapiManager({
       });
       showToast('Producto eliminado del catálogo.');
       fetchProducts();
-    } catch (err: any) {
-      showToast(err.message || 'Error al eliminar producto.', 'error');
+    } catch (err: unknown) {
+      showToast(getErrorMessage(err) || 'Error al eliminar producto.', 'error');
     } finally {
       setDeletingProductId(null);
     }

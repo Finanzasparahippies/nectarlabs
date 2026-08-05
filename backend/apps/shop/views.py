@@ -482,9 +482,10 @@ class AddOnSubscriptionViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
+        qs = AddOnSubscription.objects.select_related('addon', 'user', 'tenant')
         if user.is_staff or user.role in ['ADMIN', 'BUSINESS']:
-            return AddOnSubscription.objects.all().order_by('-created_at')
-        return AddOnSubscription.objects.filter(user=user).order_by('-created_at')
+            return qs.all().order_by('-created_at')
+        return qs.filter(user=user).order_by('-created_at')
 
     def perform_create(self, serializer):
         user = self.request.user
@@ -659,17 +660,18 @@ class ContractViewSet(viewsets.ModelViewSet):
                     logging.error(f"Error auto-healing tenant: {e}", exc_info=True)
 
         user = self.request.user
+        qs = Contract.objects.select_related('user', 'plan').prefetch_related('addons')
         if user.is_staff or getattr(user, 'role', '') == 'ADMIN':
-            return Contract.objects.all()
+            return qs.all()
         elif getattr(user, 'role', '') == 'BUSINESS':
             from django.db.models import Q
-            return Contract.objects.filter(Q(user=user) | Q(user__tenant__in=user.owned_tenants.all())).distinct()
+            return qs.filter(Q(user=user) | Q(user__tenant__in=user.owned_tenants.all())).distinct()
         elif getattr(user, 'role', '') == 'STAFF':
             if user.tenant:
-                return Contract.objects.filter(user__tenant=user.tenant)
-            return Contract.objects.filter(id=user.id)
+                return qs.filter(user__tenant=user.tenant)
+            return qs.filter(id=user.id)
         # Los clientes solo ven sus propios contratos
-        return Contract.objects.filter(user=user)
+        return qs.filter(user=user)
 
     def perform_create(self, serializer):
         # Asignar el usuario actual al contrato
@@ -941,9 +943,10 @@ class PaymentInstallmentViewSet(viewsets.ModelViewSet):
                     contract.save()
 
         is_admin_or_business = self.request.user.is_staff or self.request.user.role in ['ADMIN', 'BUSINESS']
+        qs = PaymentInstallment.objects.select_related('contract', 'contract__user', 'contract__plan')
         if is_admin_or_business:
-            return PaymentInstallment.objects.all().order_by('due_date')
-        return PaymentInstallment.objects.filter(contract__user=self.request.user).order_by('due_date')
+            return qs.all().order_by('due_date')
+        return qs.filter(contract__user=self.request.user).order_by('due_date')
 
     def perform_update(self, serializer):
         is_admin_or_business = self.request.user.is_staff or self.request.user.role in ['ADMIN', 'BUSINESS']
@@ -2376,7 +2379,7 @@ class OrderViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.AllowAny]
 
     def get_queryset(self):
-        queryset = Order.objects.all()
+        queryset = Order.objects.select_related('tenant', 'user').prefetch_related('items', 'items__product')
         tenant_id = self.request.query_params.get('tenant_id')
         if tenant_id:
             try:

@@ -269,12 +269,13 @@ class InvoiceViewSet(BillingTenantMixin, viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         is_system_admin = user.is_staff or getattr(user, 'role', '') == 'ADMIN'
+        qs = Invoice.objects.select_related('tenant')
         
         if is_system_admin and not self.request.query_params.get('tenant_id'):
-            return Invoice.objects.all()
+            return qs.all()
             
         tenant = self.get_tenant()
-        return Invoice.objects.filter(tenant=tenant)
+        return qs.filter(tenant=tenant)
 
     @action(detail=False, methods=['post'], url_path='issue-from-installment')
     def issue_from_installment(self, request):
@@ -1240,9 +1241,10 @@ class SalesNoteViewSet(viewsets.ModelViewSet):
         user = self.request.user
         if not user or not user.is_authenticated:
             return SalesNote.objects.none()
+        qs = SalesNote.objects.select_related('tenant', 'tenant__owner')
         if user.is_staff or user.role == 'ADMIN':
-            return SalesNote.objects.all().order_by('-created_at')
-        return SalesNote.objects.filter(tenant__owner=user).order_by('-created_at')
+            return qs.all().order_by('-created_at')
+        return qs.filter(tenant__owner=user).order_by('-created_at')
 
     def perform_create(self, serializer):
         tenant = serializer.validated_data.get('tenant')

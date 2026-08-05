@@ -9,7 +9,7 @@ services:
       dockerfile: Dockerfile
     volumes:
       - ./backend:/app:Z
-      - ${DOCKER_SOCK:-/var/run/docker.sock}:/var/run/docker.sock:z
+      - ${DOCKER_SOCK:-./docker/dummy_sock}:/var/run/docker.sock:z
     env_file:
       - .env.staging
     environment:
@@ -53,7 +53,7 @@ services:
 
   redis:
     container_name: nectar_redis_staging
-    image: redis:alpine
+    image: docker.io/library/redis:alpine
     restart: always
     logging:
       driver: "json-file"

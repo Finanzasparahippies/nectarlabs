@@ -124,20 +124,32 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # ==============================================================================
 # CONFIGURACIÓN DE BASE DE DATOS (POSTGRESQL / SQLITE FALLBACK)
 # ==============================================================================
-# Se conecta a PostgreSQL (usualmente Supabase o DB local en Docker) a través de
-# DATABASE_URL. Si no está presente, construye la configuración con parámetros individuales.
-# En caso extremo, realiza un fallback automático a SQLite local.
-DATABASES = {
-    "default": env.db("DATABASE_URL", default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}")
-}
-if not env("DATABASE_URL", default=None):
-    DATABASES["default"] = {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": env("DB_NAME", default="postgres"),
-        "USER": env("DB_USER", default="postgres"),
-        "PASSWORD": env("DB_PASSWORD", default=""),
-        "HOST": env("DB_HOST", default="localhost"),
-        "PORT": env("DB_PORT", default="5432"),
+# Se conecta a PostgreSQL a través de DATABASE_URL o DB_HOST.
+# En desarrollo local o si DB_HOST apunta a Supabase no disponible, usa SQLite local.
+db_url = env("DATABASE_URL", default=None)
+db_host = env("DB_HOST", default="localhost")
+
+if db_url and "supabase.com" not in db_url:
+    DATABASES = {
+        "default": env.db("DATABASE_URL")
+    }
+elif "supabase.com" in db_host or env.bool("USE_SQLITE", default=True):
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
+    }
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": env("DB_NAME", default="postgres"),
+            "USER": env("DB_USER", default="postgres"),
+            "PASSWORD": env("DB_PASSWORD", default=""),
+            "HOST": db_host,
+            "PORT": env("DB_PORT", default="5432"),
+        }
     }
 
 # ------------------------------------------------------------------------------

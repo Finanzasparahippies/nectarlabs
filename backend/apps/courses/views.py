@@ -75,7 +75,7 @@ class SubmitExerciseView(APIView):
 
         if not custom_backend_success:
             # Evaluar el código localmente en el sandbox
-            result = evaluate_exercise(d['module_id'], d['code'])
+            result = evaluate_exercise(d['course_slug'], d['module_id'], d['code'])
 
         # Upsert: un registro por (user, course_slug, module_id)
         submission, _ = ExerciseSubmission.objects.update_or_create(

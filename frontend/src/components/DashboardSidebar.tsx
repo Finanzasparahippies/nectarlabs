@@ -13,14 +13,15 @@ import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { fetcher, getMainDomainUrl } from '@/lib/api';
 import ThemeToggle from './ThemeToggle';
+import { Plan, AddOn, Tenant, User } from '@/lib/types';
 
 interface Contract {
-  id: number;
+  id: number | string;
   is_active: boolean;
   is_fully_signed: boolean;
   brand_design_price: number;
-  plan: any;
-  addons: any[];
+  plan?: Plan;
+  addons?: AddOn[];
   full_name: string;
   next_payment_date: string;
 }
@@ -36,8 +37,8 @@ function DashboardSidebarContent() {
   const [isClient, setIsClient] = useState(false);
   const [userRole, setUserRole] = useState('');
   const [contracts, setContracts] = useState<Contract[]>([]);
-  const [tenants, setTenants] = useState<any[]>([]);
-  const [currentUser, setCurrentUser] = useState<any | null>(null);
+  const [tenants, setTenants] = useState<Tenant[]>([]);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
 
   // Responsive navigation and mobile drawer state
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -56,7 +57,7 @@ function DashboardSidebarContent() {
   };
 
   // Accordion state for tenants/ecosystems
-  const [openTenants, setOpenTenants] = useState<Record<number, boolean>>({});
+  const [openTenants, setOpenTenants] = useState<Record<string, boolean>>({});
   const [ecosystemsExpanded, setEcosystemsExpanded] = useState(true);
 
   useEffect(() => {
@@ -68,8 +69,8 @@ function DashboardSidebarContent() {
     }
   }, [tenants]);
 
-  const toggleTenant = (id: number) => {
-    setOpenTenants(prev => ({ ...prev, [id]: !prev[id] }));
+  const toggleTenant = (id: number | string) => {
+    setOpenTenants(prev => ({ ...prev, [String(id)]: !prev[String(id)] }));
   };
 
   useEffect(() => {
@@ -584,7 +585,7 @@ function DashboardSidebarContent() {
                   return `https://${tenant.subdomain}.nectarlabs.dev`;
                 })();
 
-              const isOpen = !!openTenants[tenant.id];
+              const isOpen = !!openTenants[String(tenant.id)];
 
               return (
                 <div key={`tenant-group-${tenant.id}`} className="space-y-1">

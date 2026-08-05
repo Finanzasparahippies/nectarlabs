@@ -8,12 +8,17 @@ if [ $# -gt 0 ]; then
     shift
 fi
 
-# Detect rootless Podman socket and export DOCKER_SOCK if not already set
-if [ -z "$DOCKER_SOCK" ]; then
+# Detect rootless Podman socket and export DOCKER_SOCK if not already set or not accessible
+if [ -z "$DOCKER_SOCK" ] || [ ! -e "$DOCKER_SOCK" ]; then
     if [ -S "$XDG_RUNTIME_DIR/podman/podman.sock" ]; then
         export DOCKER_SOCK="$XDG_RUNTIME_DIR/podman/podman.sock"
     elif [ -S "/run/user/$(id -u)/podman/podman.sock" ]; then
         export DOCKER_SOCK="/run/user/$(id -u)/podman/podman.sock"
+    elif [ -S "/var/run/docker.sock" ] && [ -r "/var/run/docker.sock" ]; then
+        export DOCKER_SOCK="/var/run/docker.sock"
+    else
+        mkdir -p ./docker/dummy_sock
+        export DOCKER_SOCK="$(pwd)/docker/dummy_sock"
     fi
 fi
 
@@ -34,9 +39,19 @@ ensure_network() {
 }
 
 
+# Función auxiliar para comprobar si un contenedor específico está en ejecución
+is_container_running() {
+    local container_name=$1
+    if command -v podman >/dev/null 2>&1; then
+        podman ps --format "{{.Names}}" 2>/dev/null | grep -q "^${container_name}$"
+    else
+        docker compose ps --services --filter "status=running" 2>/dev/null | grep -q "^${container_name}$"
+    fi
+}
+
 # Helper function to run Django commands in dev (using exec if running, run --rm if not)
 run_django_cmd_dev() {
-    if docker compose ps --services --filter "status=running" | grep -q "^backend$"; then
+    if is_container_running "nectar_backend"; then
         docker compose exec backend python manage.py "$@"
     else
         docker compose run --rm backend python manage.py "$@"
@@ -45,7 +60,7 @@ run_django_cmd_dev() {
 
 # Helper function to run Django commands in staging (using exec if running, run --rm if not)
 run_django_cmd_staging() {
-    if docker compose -f docker-compose.staging.yml ps --services --filter "status=running" | grep -q "^backend-staging$"; then
+    if is_container_running "nectar_backend_staging"; then
         docker compose -f docker-compose.staging.yml exec backend-staging python manage.py "$@"
     else
         docker compose -f docker-compose.staging.yml run --rm backend-staging python manage.py "$@"
@@ -54,7 +69,7 @@ run_django_cmd_staging() {
 
 # Helper function to run Django commands in prod (using exec if running, run --rm if not)
 run_django_cmd_prod() {
-    if docker compose -f docker-compose.prod.yml ps --services --filter "status=running" | grep -q "^backend$"; then
+    if is_container_running "nectar_backend"; then
         docker compose -f docker-compose.prod.yml exec backend python manage.py "$@"
     else
         docker compose -f docker-compose.prod.yml run --rm backend python manage.py "$@"
@@ -63,7 +78,7 @@ run_django_cmd_prod() {
 
 # Helper function to run npm commands in dev frontend container
 run_npm_cmd_dev() {
-    if docker compose ps --services --filter "status=running" | grep -q "^frontend$"; then
+    if is_container_running "nectar_frontend"; then
         docker compose exec frontend npm "$@"
     else
         docker compose run --rm frontend npm "$@"

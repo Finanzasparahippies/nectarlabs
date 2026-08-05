@@ -7,7 +7,7 @@ services:
     build: ./backend
     volumes:
       - ./backend:/app:z
-      - ${DOCKER_SOCK:-/var/run/docker.sock}:/var/run/docker.sock:z  # Sandbox executor: permite crear contenedores efímeros para evaluar ejercicios
+      - ${DOCKER_SOCK:-./docker/dummy_sock}:/var/run/docker.sock:z  # Sandbox executor: permite crear contenedores efímeros para evaluar ejercicios
     env_file:
       - .env
     environment:
@@ -58,15 +58,15 @@ services:
       - NEXT_DISABLE_SOURCEMAPS=0
     depends_on:
       backend:
-        condition: service_healthy
+        condition: service_started
     networks:
       - prod_network
 
   nginx:
     container_name: nectar_nginx
-    image: nginx:alpine
+    image: docker.io/library/nginx:alpine
     ports:
-      - "80:80"
+      - "8080:80"
     logging:
       driver: "json-file"
       options:
@@ -79,7 +79,7 @@ services:
       - ./backend/media:/app/media:z
     depends_on:
       backend:
-        condition: service_healthy
+        condition: service_started
       frontend:
         condition: service_started
     command: >
@@ -89,7 +89,7 @@ services:
 
   redis:
     container_name: nectar_redis
-    image: redis:alpine
+    image: docker.io/library/redis:alpine
     restart: always
     ports:
       - "6379:6379"
