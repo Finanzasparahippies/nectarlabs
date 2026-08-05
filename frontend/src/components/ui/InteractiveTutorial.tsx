@@ -29,16 +29,35 @@ export default function InteractiveTutorial({
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const isCompleted = localStorage.getItem(`completed_tutorial_${tutorialKey}`);
-      if (!isCompleted && steps && steps.length > 0) {
-        // Retrasar 2.5 segundos para que la página renderice completamente
+      // Solo se abre automáticamente si NUNCA ha sido completado
+      if (isCompleted !== 'true' && steps && steps.length > 0) {
         const timer = setTimeout(() => {
           setIsVisible(true);
           setCurrentStepIdx(0);
-        }, 2500);
+        }, 2000);
         return () => clearTimeout(timer);
       }
     }
   }, [tutorialKey, steps]);
+
+  // Soporte para reinicio manual mediante eventos personalizados del sistema
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const handleManualRestart = (e: Event) => {
+      const customEvent = e as CustomEvent<{ key?: string }>;
+      if (!customEvent.detail?.key || customEvent.detail.key === tutorialKey) {
+        localStorage.removeItem(`completed_tutorial_${tutorialKey}`);
+        setIsVisible(true);
+        setCurrentStepIdx(0);
+      }
+    };
+
+    window.addEventListener('restart_tutorial', handleManualRestart);
+    return () => {
+      window.removeEventListener('restart_tutorial', handleManualRestart);
+    };
+  }, [tutorialKey]);
 
   // Update tooltip & highlight coordinates based on selected element
   const updatePosition = () => {

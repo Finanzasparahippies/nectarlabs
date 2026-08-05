@@ -941,6 +941,20 @@ function DashboardSidebarContent() {
               </button>
             )}
 
+            <button
+              onClick={() => {
+                if (typeof window !== 'undefined') {
+                  window.dispatchEvent(new CustomEvent('restart_tutorial', { detail: {} }));
+                }
+              }}
+              title="Reabrir Guía Interactiva"
+              className="flex items-center justify-center w-10 h-10 rounded-2xl text-nectar-gold/70 hover:text-nectar-gold hover:bg-nectar-gold/10 transition-all cursor-pointer border border-nectar-gold/20"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5} className="w-4 h-4">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M12 18h.008v.008H12V18z" />
+              </svg>
+            </button>
+
             <ThemeToggle />
           </div>
         </div>

@@ -199,3 +199,45 @@ textarea::placeholder {
 .dark textarea {
   color-scheme: dark;
 }
+
+/* ==============================================================================
+   ESTILOS DE BARRA DE DESPLAZAMIENTO PERSONALIZADA (.custom-scrollbar)
+   Diseño ultra-fino (5px), bordes redondeados y micro-interacciones Nectar Gold.
+   ============================================================================== */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(198, 138, 30, 0.35) transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(198, 138, 30, 0.25);
+  border-radius: 8px;
+  backdrop-filter: blur(4px);
+  transition: background 0.3s ease;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(198, 138, 30, 0.75);
+}
+
+.dark .custom-scrollbar {
+  scrollbar-color: rgba(198, 138, 30, 0.4) transparent;
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(198, 138, 30, 0.3);
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(198, 138, 30, 0.85);
+}
