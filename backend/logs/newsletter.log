@@ -1,0 +1,24 @@
+[LOCAL] [2026-08-07 02:53:42] INFO [apps.newsletter.models]: Attempting to send newsletter email via Testing locmem to ['sub1@tenant-a.com']
+[LOCAL] [2026-08-07 02:53:42] INFO [apps.newsletter.models]: Successfully sent newsletter email via Testing locmem to ['sub1@tenant-a.com']
+[LOCAL] [2026-08-07 02:53:42] INFO [apps.newsletter.models]: Attempting to send newsletter email via Testing locmem to ['sub2@tenant-a.com']
+[LOCAL] [2026-08-07 02:53:42] INFO [apps.newsletter.models]: Successfully sent newsletter email via Testing locmem to ['sub2@tenant-a.com']
+[LOCAL] [2026-08-07 02:53:47] INFO [apps.newsletter.views]: [import_csv] Procesando archivo con 3 filas. Encontrados 3 correos únicos.
+[LOCAL] [2026-08-07 02:53:47] INFO [apps.newsletter.views]: [import_csv] Encontrados 0 suscriptores existentes en base de datos.
+[LOCAL] [2026-08-07 02:53:47] INFO [apps.newsletter.views]: [import_csv] Guardando en lote (bulk_create) 3 nuevos suscriptores...
+[LOCAL] [2026-08-07 02:53:47] INFO [apps.newsletter.views]: [import_csv] Vinculados 3 suscriptores a la lista: Lista CSV
+[LOCAL] [2026-08-07 02:53:47] INFO [apps.newsletter.views]: [import_csv] Importación completada con éxito. Creados: 3, Actualizados: 0, Errores: 0
+[LOCAL] [2026-08-07 02:53:58] INFO [apps.newsletter.models]: Attempting to send newsletter email via Testing locmem to ['rec1@example.com', 'rec2@example.com']
+[LOCAL] [2026-08-07 02:53:58] INFO [apps.newsletter.models]: Successfully sent newsletter email via Testing locmem to ['rec1@example.com', 'rec2@example.com']
+[LOCAL] [2026-08-07 02:53:58] INFO [apps.newsletter.models]: Attempting to send newsletter email via Testing locmem to ['rec1@example.com', 'rec2@example.com']
+[LOCAL] [2026-08-07 02:53:58] INFO [apps.newsletter.models]: Successfully sent newsletter email via Testing locmem to ['rec1@example.com', 'rec2@example.com']
+[LOCAL] [2026-08-07 02:54:03] WARNING [apps.newsletter.views]: SubscribeView POST request: User=AnonymousUser, Auth=False, Headers={'Cookie': '', 'Content-Length': '78', 'Content-Type': 'application/json'}
+[LOCAL] [2026-08-07 02:54:03] INFO [apps.newsletter.models]: Attempting to send newsletter email via Testing locmem to ['sub@example.com']
+[LOCAL] [2026-08-07 02:54:03] INFO [apps.newsletter.models]: Successfully sent newsletter email via Testing locmem to ['sub@example.com']
+[LOCAL] [2026-08-07 02:54:03] WARNING [apps.newsletter.views]: SubscribeView POST request: User=AnonymousUser, Auth=False, Headers={'Cookie': '', 'Content-Length': '78', 'Content-Type': 'application/json'}
+[LOCAL] [2026-08-07 02:54:03] INFO [apps.newsletter.models]: Attempting to send newsletter email via Testing locmem to ['sub@example.com']
+[LOCAL] [2026-08-07 02:54:03] INFO [apps.newsletter.models]: Successfully sent newsletter email via Testing locmem to ['sub@example.com']
+[LOCAL] [2026-08-07 02:54:03] WARNING [apps.newsletter.views]: SubscribeView POST request: User=AnonymousUser, Auth=False, Headers={'Cookie': '', 'Content-Length': '78', 'Content-Type': 'application/json'}
+[LOCAL] [2026-08-07 02:54:09] INFO [apps.newsletter.models]: Attempting to send newsletter email via Testing locmem to ['platform_sub1@example.com']
+[LOCAL] [2026-08-07 02:54:09] INFO [apps.newsletter.models]: Successfully sent newsletter email via Testing locmem to ['platform_sub1@example.com']
+[LOCAL] [2026-08-07 02:54:09] INFO [apps.newsletter.models]: Attempting to send newsletter email via Testing locmem to ['platform_sub2@example.com']
+[LOCAL] [2026-08-07 02:54:09] INFO [apps.newsletter.models]: Successfully sent newsletter email via Testing locmem to ['platform_sub2@example.com']

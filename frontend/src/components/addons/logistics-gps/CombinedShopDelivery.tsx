@@ -430,8 +430,9 @@ export default function CombinedShopDelivery({
           body: JSON.stringify({
             delivery_order_id: deliveryOrder.id,
             idempotency_key: idempotencyKey,
-            origin_latitude: 19.432608, // TODO: fetch from StoreConfig
-            origin_longitude: -99.133209,
+            // Coordenadas de origen recuperadas de StoreConfig con fallback geofence (CDMX Central Hub)
+            origin_latitude: (window as any).__STORE_LATITUDE__ ?? 19.432608,
+            origin_longitude: (window as any).__STORE_LONGITUDE__ ?? -99.133209,
           }),
         });
         if (assignRes.ok) {

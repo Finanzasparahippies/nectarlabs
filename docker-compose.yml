@@ -7,6 +7,7 @@ services:
     build: ./backend
     volumes:
       - ./backend:/app:z
+      - ./backend/logs:/app/logs:z
       - ${DOCKER_SOCK:-./docker/dummy_sock}:/var/run/docker.sock:z  # Sandbox executor: permite crear contenedores efímeros para evaluar ejercicios
     env_file:
       - .env

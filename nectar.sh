@@ -169,6 +169,18 @@ run_npm_cmd_prod() {
     fi
 }
 
+# Helper function to find and remove conflicting containers from other project namespaces
+remove_conflicting_containers() {
+    local container_names=("$@")
+    for container in "${container_names[@]}"; do
+        if $DOCKER_BIN ps -a --format '{{.Names}}' 2>/dev/null | grep -q "^${container}$" || $DOCKER_BIN ps -a --format '{{.Name}}' 2>/dev/null | grep -q "^${container}$"; then
+            echo "Warning: Container '${container}' already exists."
+            echo "Removing existing container '${container}' to prevent naming conflicts..."
+            $DOCKER_BIN rm -f "${container}" 2>/dev/null || true
+        fi
+    done
+}
+
 show_help() {
     echo "==========================================="
     echo "          Nectar Labs CLI v2.0             "
@@ -189,6 +201,7 @@ show_help() {
     echo "  createsuperuser          - Create Django admin user (Dev)"
     echo "  shell                    - Open Django shell (Dev)"
     echo "  test                     - Run Django tests (Dev)"
+    echo "  pycheck                  - Run Python syntax check (py_compile)"
     echo "  frontend                 - Run Next.js frontend locally (npm run dev)"
     echo "  typecheck                - Run TypeScript typecheck (Dev frontend)"
     echo "  buildcheck               - Run Next.js buildcheck (Dev frontend)"
@@ -212,6 +225,7 @@ show_help() {
     echo "  shell-staging            - Open Django shell (Staging)"
     echo "  collectstatic-staging    - Run collectstatic (Staging)"
     echo "  test-staging             - Run Django tests (Staging)"
+    echo "  pycheck-staging         - Run Python syntax check (Staging)"
     echo "  typecheck-staging        - Run TypeScript typecheck (Staging frontend)"
     echo "  buildcheck-staging       - Run Next.js buildcheck (Staging frontend)"
     echo "  seed-addons-staging      - Seed addons table in Staging database"
@@ -232,6 +246,7 @@ show_help() {
     echo "  createsuperuser-prod     - Create admin user (Prod)"
     echo "  shell-prod               - Open Django shell (Prod)"
     echo "  collectstatic            - Run collectstatic in backend (Prod)"
+    echo "  pycheck-prod             - Run Python syntax check (Prod)"
     echo "  certbot                  - Request SSL certificate (Prod)"
     echo "  seed-addons-prod         - Seed addons table in Production database"
     echo "  seed-plans-prod          - Seed plans table in Production database"
@@ -247,11 +262,13 @@ case $COMMAND in
     dev)
         echo "Starting Nectar Labs Dev Environment..."
         ensure_network
+        remove_conflicting_containers nectar_backend nectar_frontend nectar_nginx nectar_redis
         $COMPOSE_BIN up -d --build "$@"
         ;;
     deploy|deploy-dev)
         echo "Deploying Nectar Labs Dev Environment..."
         ensure_network
+        remove_conflicting_containers nectar_backend nectar_frontend nectar_nginx nectar_redis
         $COMPOSE_BIN up -d --build "$@"
         ;;
     stop)
@@ -289,6 +306,18 @@ case $COMMAND in
         ;;
     test|test-dev)
         run_django_cmd_dev test "$@"
+        ;;
+    pycheck)
+        echo "Running Python syntax check (py_compile)..."
+        if is_container_running "nectar_backend"; then
+            $DOCKER_BIN exec nectar_backend python -m py_compile config/settings.py apps/performance/views.py
+        elif $COMPOSE_BIN ps 2>/dev/null | grep -q "backend"; then
+            $COMPOSE_BIN exec backend python -m py_compile config/settings.py apps/performance/views.py
+        elif command -v python3 &> /dev/null; then
+            (cd backend && python3 -m py_compile config/settings.py apps/performance/views.py)
+        else
+            $COMPOSE_BIN run --rm -w /app backend python -m py_compile config/settings.py apps/performance/views.py
+        fi
         ;;
     frontend)
         cd frontend && npm run dev "$@"
@@ -342,11 +371,13 @@ case $COMMAND in
     up-staging)
         echo "Starting Nectar Labs Staging Environment..."
         ensure_network
+        remove_conflicting_containers nectar_backend_staging nectar_frontend_staging nectar_redis_staging nectar_realtime_staging
         $COMPOSE_BIN -f docker-compose.staging.yml up -d --build "$@"
         ;;
     deploy-staging)
         echo "Deploying Nectar Labs Staging Environment..."
         ensure_network
+        remove_conflicting_containers nectar_backend_staging nectar_frontend_staging nectar_redis_staging nectar_realtime_staging
         $COMPOSE_BIN -f docker-compose.staging.yml up -d --build "$@"
         ;;
     down-staging|stop-staging)
@@ -393,6 +424,14 @@ case $COMMAND in
     test-staging)
         run_django_cmd_staging test "$@"
         ;;
+    pycheck-staging)
+        echo "Running Python syntax check (py_compile) in Staging..."
+        if is_container_running "nectar_backend_staging"; then
+            $DOCKER_BIN exec nectar_backend_staging python -m py_compile config/settings.py apps/performance/views.py
+        else
+            $COMPOSE_BIN -f docker-compose.staging.yml run --rm -w /app backend-staging python -m py_compile config/settings.py apps/performance/views.py
+        fi
+        ;;
     typecheck-staging)
         echo "Running TypeScript type-check in Staging frontend..."
         $COMPOSE_BIN -f docker-compose.staging.yml exec frontend-staging npx tsc --noEmit "$@"
@@ -426,11 +465,13 @@ case $COMMAND in
     up-prod)
         echo "Starting Nectar Labs Production Environment..."
         ensure_network
+        remove_conflicting_containers nectar_backend_prod nectar_backend nectar_frontend_prod nectar_frontend
         $COMPOSE_BIN -f docker-compose.prod.yml up -d "$@"
         ;;
     deploy-prod)
         echo "Deploying Nectar Labs Production Environment..."
         ensure_network
+        remove_conflicting_containers nectar_backend_prod nectar_backend nectar_frontend_prod nectar_frontend
         $COMPOSE_BIN -f docker-compose.prod.yml up -d --build "$@"
         ;;
     down-prod|stop-prod)
@@ -472,6 +513,16 @@ case $COMMAND in
     collectstatic)
         echo "Running collectstatic in Production..."
         run_django_cmd_prod collectstatic --no-input "$@"
+        ;;
+    pycheck-prod)
+        echo "Running Python syntax check (py_compile) in Production..."
+        if is_container_running "nectar_backend_prod" || is_container_running "nectar_backend"; then
+            local c_name="nectar_backend"
+            if is_container_running "nectar_backend_prod"; then c_name="nectar_backend_prod"; fi
+            $DOCKER_BIN exec $c_name python -m py_compile config/settings.py apps/performance/views.py
+        else
+            $COMPOSE_BIN -f docker-compose.prod.yml run --rm -w /app backend python -m py_compile config/settings.py apps/performance/views.py
+        fi
         ;;
     certbot)
         DOMAIN=$1

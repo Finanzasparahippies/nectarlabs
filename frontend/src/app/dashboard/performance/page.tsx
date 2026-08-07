@@ -43,12 +43,21 @@ interface PerformanceSummary {
   hardware: HardwareSummary;
 }
 
+interface LogFile {
+  name: string;
+  size: number;
+  modified: number | null;
+}
+
 export default function PerformancePage() {
   const router = useRouter();
   const [summary, setSummary] = useState<PerformanceSummary | null>(null);
+  const [logs, setLogs] = useState<LogFile[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingLogs, setLoadingLogs] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isStaff, setIsStaff] = useState(false);
+  const [downloadingLog, setDownloadingLog] = useState<string | null>(null);
 
   useEffect(() => {
     const staff = localStorage.getItem('is_staff') === 'true';
@@ -72,8 +81,58 @@ export default function PerformancePage() {
       }
     };
 
+    const loadLogs = async () => {
+      try {
+        const logsData = await fetcher('/performance/logs/');
+        setLogs(logsData || []);
+      } catch (err: any) {
+        console.error("Error loading logs list:", err);
+      } finally {
+        setLoadingLogs(false);
+      }
+    };
+
     loadPerformance();
+    loadLogs();
   }, [router]);
+
+  const handleDownloadLog = async (filename: string) => {
+    setDownloadingLog(filename);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/performance/logs/download/?file=${encodeURIComponent(filename)}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error("No se pudo descargar el archivo de log");
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (err: any) {
+      alert(`Error al descargar ${filename}: ${err.message || 'Intente de nuevo'}`);
+    } finally {
+      setDownloadingLog(null);
+    }
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
 
   if (!isStaff) return null;
 
@@ -314,6 +373,86 @@ export default function PerformancePage() {
             </div>
           </div>
         </div>
+
+        {/* System Logs Manager & Downloader Section */}
+        <section className="mt-12">
+          <div className="bg-card-bg border border-card-border rounded-[3rem] p-8 md:p-12">
+            <header className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+              <div>
+                <h2 className="text-2xl md:text-3xl font-black tracking-tighter">Archivos de Log del Sistema</h2>
+                <p className="text-[10px] font-black uppercase tracking-widest text-nectar-gold opacity-80 mt-1">
+                  Gestión y descarga segura de auditoría (Rotating File Handlers UTF-8)
+                </p>
+              </div>
+              <span className="text-xs font-mono font-bold px-4 py-2 bg-nectar-gold/10 text-nectar-gold rounded-full self-start md:self-auto border border-nectar-gold/20">
+                {logs.length} archivos registrados
+              </span>
+            </header>
+
+            {loadingLogs ? (
+              <div className="text-center py-12">
+                <div className="w-8 h-8 border-2 border-nectar-gold border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+                <p className="text-xs font-bold opacity-40 uppercase tracking-widest">Cargando directorio de logs...</p>
+              </div>
+            ) : logs.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                  <thead>
+                    <tr className="border-b border-card-border/60 text-[10px] uppercase font-black tracking-widest text-foreground/40">
+                      <th className="pb-4 pl-4">Nombre del Archivo</th>
+                      <th className="pb-4">Tamaño</th>
+                      <th className="pb-4">Última Modificación</th>
+                      <th className="pb-4 text-right pr-4">Acción</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-card-border/30">
+                    {logs.map((logFile) => (
+                      <tr key={logFile.name} className="hover:bg-background/40 transition-colors group">
+                        <td className="py-4 pl-4 font-mono text-xs font-bold flex items-center gap-3">
+                          <svg className="w-4 h-4 text-nectar-gold shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                          </svg>
+                          <span className="truncate max-w-[260px] md:max-w-xs">{logFile.name}</span>
+                        </td>
+                        <td className="py-4 font-mono text-xs opacity-70">
+                          {formatFileSize(logFile.size)}
+                        </td>
+                        <td className="py-4 text-xs opacity-60">
+                          {logFile.modified ? new Date(logFile.modified * 1000).toLocaleString('es-MX') : 'Sin registros'}
+                        </td>
+                        <td className="py-4 text-right pr-4">
+                          <button
+                            onClick={() => handleDownloadLog(logFile.name)}
+                            disabled={downloadingLog === logFile.name}
+                            className="px-4 py-2 bg-nectar-gold/10 hover:bg-nectar-gold hover:text-black text-nectar-gold border border-nectar-gold/30 rounded-xl text-xs font-black uppercase tracking-wider transition-all disabled:opacity-50 flex items-center gap-2 ml-auto"
+                          >
+                            {downloadingLog === logFile.name ? (
+                              <>
+                                <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                                <span>Descargando...</span>
+                              </>
+                            ) : (
+                              <>
+                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                </svg>
+                                <span>Descargar</span>
+                              </>
+                            )}
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="text-center py-12 text-sm opacity-40 font-bold">
+                No se encontraron archivos de log en el servidor.
+              </div>
+            )}
+          </div>
+        </section>
       </main>
     </div>
   );

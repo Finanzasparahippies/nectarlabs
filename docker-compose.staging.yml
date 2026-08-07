@@ -9,6 +9,7 @@ services:
       dockerfile: Dockerfile
     volumes:
       - ./backend:/app:Z
+      - ./backend/logs:/app/logs:Z
       - ${DOCKER_SOCK:-./docker/dummy_sock}:/var/run/docker.sock:z
     env_file:
       - .env.staging

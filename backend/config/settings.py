@@ -23,9 +23,14 @@ environ.Env.read_env(env_path)
 # ------------------------------------------------------------------------------
 # MÁSTIL DE SEGURIDAD BÁSICA Y VARIABLES GLOBALES
 # ------------------------------------------------------------------------------
-ENVIRONMENT = env("ENVIRONMENT", default="local")
-DEBUG = env.bool("DEBUG", default=(ENVIRONMENT == "local"))
+ENVIRONMENT = env("DJANGO_ENV", default=env("ENVIRONMENT", default="local"))
+ENV_TAG = f"[{ENVIRONMENT.upper()}]"
+DEBUG = env.bool("DEBUG", default=(ENVIRONMENT in ["local", "dev"]))
 SECRET_KEY = env("SECRET_KEY", default="django-insecure-default-key")
+
+# Directorio de logs del servidor
+LOGS_DIR = BASE_DIR / 'logs'
+LOGS_DIR.mkdir(parents=True, exist_ok=True)
 
 # Hosts autorizados para procesar peticiones HTTP.
 ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["*", "localhost", "127.0.0.1", "backend"])
@@ -397,30 +402,114 @@ else:
     }
 
 # ------------------------------------------------------------------------------
-# MONITOREO Y LOGS (LOGGING SYSTEM)
-# Formatea y canaliza los logs del servidor Django para visibilidad en consola.
+# MONITOREO Y LOGS (LOGGING SYSTEM) - NECTAR LABS
 # ------------------------------------------------------------------------------
+import logging
+from logging.handlers import RotatingFileHandler
+
+class SafeConcurrentRotatingFileHandler(RotatingFileHandler):
+    """
+    Handler de rotación de archivos resiliente frente a escrituras masivas
+    y carreras de procesos (process/thread concurrency safety) bajo Gunicorn/uWSGI workers.
+    Captura de forma segura excepciones BlockingIOError / PermissionError / OSError durante el doRollover.
+    """
+    def doRollover(self):
+        try:
+            super().doRollover()
+        except (PermissionError, BlockingIOError, OSError):
+            pass
+
+class SensitiveDataFilter(logging.Filter):
+    """
+    Filtro de seguridad que intercepta los registros de log y enmascara tokens, API Keys,
+    secrets y contraseñas usando expresiones regulares.
+    """
+    def filter(self, record):
+        from apps.common.utils import sanitize_sensitive_info
+        if isinstance(record.msg, str):
+            record.msg = sanitize_sensitive_info(record.msg)
+        if record.args:
+            if isinstance(record.args, dict):
+                record.args = {k: (sanitize_sensitive_info(v) if isinstance(v, str) else v) for k, v in record.args.items()}
+            elif isinstance(record.args, tuple):
+                record.args = tuple((sanitize_sensitive_info(arg) if isinstance(arg, str) else arg) for arg in record.args)
+        return True
+
+def create_file_handler(file_name):
+    return {
+        'level': 'INFO',
+        'class': 'config.settings.SafeConcurrentRotatingFileHandler',
+        'filename': str(LOGS_DIR / file_name),
+        'maxBytes': 5 * 1024 * 1024,  # 5MB
+        'backupCount': 5,
+        'formatter': 'clean',
+        'encoding': 'utf-8',
+        'filters': ['sensitive_data_filter'],
+    }
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
+    'filters': {
+        'sensitive_data_filter': {
+            '()': SensitiveDataFilter,
+        },
+    },
     'formatters': {
         'verbose': {
-            'format': '[\033[94m%(asctime)s\033[0m] %(levelname)s [%(name)s] %(message)s',
+            'format': f'{ENV_TAG} [%(asctime)s] %(levelname)s [%(name)s] %(message)s',
             'datefmt': '%H:%M:%S'
+        },
+        'clean': {
+            'format': f'{ENV_TAG} [%(asctime)s] %(levelname)s [%(name)s]: %(message)s',
+            'datefmt': '%Y-%m-%d %H:%M:%S'
         },
     },
     'handlers': {
         'console': {
             'class': 'logging.StreamHandler',
             'formatter': 'verbose',
+            'filters': ['sensitive_data_filter'],
         },
+        'tickets_file': create_file_handler('tickets.log'),
+        'shop_file': create_file_handler('shop.log'),
+        'blog_file': create_file_handler('blog.log'),
+        'dashboard_file': create_file_handler('dashboard.log'),
+        'events_file': create_file_handler('events.log'),
+        'users_file': create_file_handler('users.log'),
+        'performance_file': create_file_handler('performance.log'),
+        'billing_file': create_file_handler('billing.log'),
+        'courses_file': create_file_handler('courses.log'),
+        'delivery_file': create_file_handler('delivery.log'),
+        'newsletter_file': create_file_handler('newsletter.log'),
+        'sponsorship_file': create_file_handler('sponsorship.log'),
+        'tenants_file': create_file_handler('tenants.log'),
+        'bookings_file': create_file_handler('bookings.log'),
     },
     'loggers': {
-        'apps': {
+        'django': {
             'handlers': ['console'],
             'level': 'INFO',
             'propagate': True,
         },
+        'apps': {
+            'handlers': ['console', 'dashboard_file'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'apps.tickets': {'handlers': ['tickets_file'], 'level': 'INFO', 'propagate': True},
+        'apps.shop': {'handlers': ['shop_file'], 'level': 'INFO', 'propagate': True},
+        'apps.blog': {'handlers': ['blog_file'], 'level': 'INFO', 'propagate': True},
+        'apps.dashboard': {'handlers': ['dashboard_file'], 'level': 'INFO', 'propagate': True},
+        'apps.users': {'handlers': ['users_file'], 'level': 'INFO', 'propagate': True},
+        'apps.performance': {'handlers': ['performance_file'], 'level': 'INFO', 'propagate': True},
+        'apps.billing': {'handlers': ['billing_file'], 'level': 'INFO', 'propagate': True},
+        'apps.courses': {'handlers': ['courses_file'], 'level': 'INFO', 'propagate': True},
+        'apps.delivery': {'handlers': ['delivery_file'], 'level': 'INFO', 'propagate': True},
+        'apps.newsletter': {'handlers': ['newsletter_file'], 'level': 'INFO', 'propagate': True},
+        'apps.sponsorship': {'handlers': ['sponsorship_file'], 'level': 'INFO', 'propagate': True},
+        'apps.tenants': {'handlers': ['tenants_file'], 'level': 'INFO', 'propagate': True},
+        'apps.bookings': {'handlers': ['bookings_file'], 'level': 'INFO', 'propagate': True},
         'tests': {
             'handlers': ['console'],
             'level': 'INFO',

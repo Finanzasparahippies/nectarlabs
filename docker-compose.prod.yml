@@ -10,6 +10,7 @@ services:
     volumes:
       - static_volume:/app/staticfiles
       - media_volume:/app/media
+      - logs_volume:/app/logs
       - ${DOCKER_SOCK:-./docker/dummy_sock}:/var/run/docker.sock:z
     env_file:
       - .env.prod
@@ -74,6 +75,7 @@ services:
 volumes:
   static_volume:
   media_volume:
+  logs_volume:
 
 networks:
   prod_network:

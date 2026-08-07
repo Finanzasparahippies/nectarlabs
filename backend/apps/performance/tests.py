@@ -164,3 +164,93 @@ class PerformanceMiddlewareTestCase(BaseTenantAddonTestCase):
 
         # Verify no request log was created for performance endpoint
         self.assertEqual(ServerRequestLog.objects.count(), 0)
+
+class LogManagementAndSecurityTestCase(BaseTenantAddonTestCase):
+    def setUp(self):
+        super().setUp()
+        self.admin_user = User.objects.create_superuser(
+            username="logadmin",
+            email="logadmin@example.com",
+            password="adminpassword123"
+        )
+
+    def test_list_logs_admin_success(self):
+        url = reverse("performance-list-logs")
+        self.client.force_authenticate(user=self.admin_user)
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIsInstance(response.data, list)
+        self.assertTrue(len(response.data) > 0)
+        self.assertTrue(any(f["name"] == "tickets.log" for f in response.data))
+
+    def test_list_logs_anonymous_denied(self):
+        url = reverse("performance-list-logs")
+        response = self.client.get(url)
+        self.assertIn(response.status_code, [status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN])
+
+    def test_download_log_success(self):
+        url = reverse("performance-download-log") + "?file=tickets.log"
+        self.client.force_authenticate(user=self.admin_user)
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response["Content-Type"], "text/plain; charset=utf-8")
+
+    def test_download_log_path_traversal_prevention(self):
+        self.client.force_authenticate(user=self.admin_user)
+        invalid_files = [
+            "../config/settings.py",
+            "..\\..\\etc\\passwd",
+            "/etc/passwd",
+            "tickets.log/../../settings.py",
+            "invalid_file.txt"
+        ]
+        for file_name in invalid_files:
+            url = reverse("performance-download-log") + f"?file={file_name}"
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, f"Failed to reject: {file_name}")
+
+    def test_sensitive_data_masking(self):
+        from apps.common.utils import sanitize_sensitive_info
+        raw_log = "User authenticated with Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9 and api_key=secret_key_12345 & password=MySuperPassword"
+        sanitized = sanitize_sensitive_info(raw_log)
+        self.assertNotIn("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9", sanitized)
+        self.assertNotIn("secret_key_12345", sanitized)
+        self.assertNotIn("MySuperPassword", sanitized)
+        self.assertIn("[REDACTED_TOKEN]", sanitized)
+        self.assertIn("[REDACTED]", sanitized)
+
+    def test_safe_concurrent_rotating_file_handler_utf8(self):
+        import logging
+        from config.settings import SafeConcurrentRotatingFileHandler, LOGS_DIR
+
+        test_log_path = LOGS_DIR / "test_concurrency.log"
+        handler = SafeConcurrentRotatingFileHandler(
+            str(test_log_path),
+            maxBytes=1024,
+            backupCount=2,
+            encoding='utf-8'
+        )
+        logger = logging.getLogger("test_utf8_concurrency")
+        logger.addHandler(handler)
+        logger.setLevel(logging.INFO)
+
+        # Write log with UTF-8 emojis and accents
+        utf8_msg = "🚀 Néctar Labs test log con acentos y emojis 🌟 (Concurrencia multihilo)"
+        logger.info(utf8_msg)
+
+        # Verify file content
+        handler.close()
+        logger.removeHandler(handler)
+
+        if test_log_path.exists():
+            with open(test_log_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+                self.assertIn("Néctar Labs test log", content)
+                self.assertIn("🚀", content)
+
+            # Cleanup test log
+            try:
+                test_log_path.unlink()
+            except OSError:
+                pass
+

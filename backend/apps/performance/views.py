@@ -90,7 +90,7 @@ def get_disk_usage():
 
 class PerformanceViewSet(viewsets.ViewSet):
     def get_permissions(self):
-        if self.action == 'get_summary':
+        if self.action in ['get_summary', 'list_logs', 'download_log']:
             return [IsAdminUser()]
         return [AllowAny()]
 
@@ -139,3 +139,95 @@ class PerformanceViewSet(viewsets.ViewSet):
                 'disk': get_disk_usage()
             }
         })
+
+    @action(detail=False, methods=['get'], url_path='logs', permission_classes=[IsAdminUser])
+    def list_logs(self, request):
+        """Lista los archivos de log disponibles en el directorio LOGS_DIR (activos y rotados)."""
+        from django.conf import settings
+
+        logs_dir = getattr(settings, 'LOGS_DIR', settings.BASE_DIR / 'logs')
+        if not os.path.exists(logs_dir):
+            os.makedirs(logs_dir, exist_ok=True)
+
+        allowed_bases = (
+            'tickets.log', 'shop.log', 'events.log', 'users.log', 'blog.log',
+            'dashboard.log', 'performance.log', 'billing.log', 'courses.log',
+            'delivery.log', 'newsletter.log', 'sponsorship.log', 'tenants.log', 'bookings.log'
+        )
+        log_files = []
+        existing_files = {}
+
+        try:
+            for file_name in os.listdir(logs_dir):
+                if file_name.startswith(allowed_bases):
+                    file_path = os.path.join(logs_dir, file_name)
+                    if os.path.isfile(file_path):
+                        stat = os.stat(file_path)
+                        existing_files[file_name] = {
+                            'name': file_name,
+                            'size': stat.st_size,
+                            'modified': stat.st_mtime
+                        }
+        except Exception:
+            pass
+
+        for base_name in allowed_bases:
+            if base_name in existing_files:
+                log_files.append(existing_files[base_name])
+            else:
+                log_files.append({
+                    'name': base_name,
+                    'size': 0,
+                    'modified': None
+                })
+
+            for file_name, file_info in sorted(existing_files.items()):
+                if file_name != base_name and file_name.startswith(base_name):
+                    log_files.append(file_info)
+
+        return Response(log_files)
+
+    @action(detail=False, methods=['get'], url_path='logs/download', permission_classes=[IsAdminUser])
+    def download_log(self, request):
+        """Descarga de forma segura un archivo de log evitando ataques de Path Traversal."""
+        from django.conf import settings
+        from django.http import FileResponse, Http404
+
+        file_name = request.query_params.get('file', '').strip()
+        allowed_bases = (
+            'tickets.log', 'shop.log', 'events.log', 'users.log', 'blog.log',
+            'dashboard.log', 'performance.log', 'billing.log', 'courses.log',
+            'delivery.log', 'newsletter.log', 'sponsorship.log', 'tenants.log', 'bookings.log'
+        )
+
+        if not file_name or not file_name.startswith(allowed_bases):
+            return Response({'error': 'Archivo de log no permitido.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Mitigación estricta de Path Traversal
+        if '/' in file_name or '\\' in file_name or '..' in file_name:
+            return Response({'error': 'Nombre de archivo inválido.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        logs_dir = getattr(settings, 'LOGS_DIR', settings.BASE_DIR / 'logs')
+        file_path = os.path.join(logs_dir, file_name)
+
+        if not os.path.exists(file_path):
+            if file_name in allowed_bases:
+                try:
+                    os.makedirs(logs_dir, exist_ok=True)
+                    with open(file_path, 'w', encoding='utf-8') as f:
+                        pass
+                except Exception as e:
+                    return Response({'error': f'No se pudo inicializar el archivo de log: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            else:
+                raise Http404("El archivo de log no existe.")
+
+        try:
+            response = FileResponse(
+                open(file_path, 'rb'),
+                as_attachment=True,
+                filename=file_name,
+                content_type='text/plain; charset=utf-8'
+            )
+            return response
+        except Exception as e:
+            return Response({'error': f'Error al descargar el archivo: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
