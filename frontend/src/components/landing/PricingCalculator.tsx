@@ -1,21 +1,38 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { fetcher } from '@/lib/api';
 
-const CALCULATOR_ADDONS = [
-  { id: 'pack-ecommerce-lite', name: 'Paquete E-commerce Lite', monthlyPrice: 799, yearlyPrice: 7990, desc: 'Envíos nacionales Skydropx, Facturación SAT (100 timbres), Tienda y Campaigner.' },
-  { id: 'pack-pos-ecommerce', name: 'Paquete POS & E-commerce Pro', monthlyPrice: 799, yearlyPrice: 7990, desc: 'Punto de venta físico, Tienda, Envíos, Facturación y Campaigner.' },
-  { id: 'pack-blog-sponsors', name: 'Paquete Blog & Sponsors', monthlyPrice: 499, yearlyPrice: 4990, desc: 'Blog, Sponsors recurrentes (Stripe), Tienda, Facturación y Campaigner.' },
-  { id: 'campaigner', name: 'Campaigner Masivo', monthlyPrice: 99, yearlyPrice: 990, desc: 'Boletines masivos. $99 MXN/mes + $0.01 MXN por correo.' },
-  { id: 'booking-signature', name: 'Néctar Contratos Digitales', monthlyPrice: 99, yearlyPrice: 990, desc: 'Firma de contratos digitales ilimitados sin costo por firmante.' },
-  { id: 'booking', name: 'Agendador de Citas & Kanban', monthlyPrice: 49, yearlyPrice: 490, desc: 'Gestión de citas y reservas con tablero Kanban integrado.' },
-  { id: 'bot-chat', name: 'Néctar AI Chat Bot', monthlyPrice: 99, yearlyPrice: 990, desc: 'Widget de chat flotante en tiempo real y consola multi-agente con soporte de IA.' },
+export interface PartnerPlan {
+  id: number;
+  name: string;
+  hours: number;
+  totalMonthly: number;
+  description: string;
+}
+
+export interface CalculatorAddon {
+  id: string;
+  name: string;
+  monthlyPrice: number;
+  yearlyPrice: number;
+  desc: string;
+}
+
+const DEFAULT_PARTNER_PLANS: PartnerPlan[] = [
+  { id: 1, name: 'Plan Básico', hours: 6, totalMonthly: 2499, description: 'Solución ágil para startups y pequeños negocios. Incluye mantenimiento, hosting y 6 horas de desarrollo mensual.' },
+  { id: 2, name: 'Plan Mid', hours: 8, totalMonthly: 2999, description: 'Desarrollo continuo y escalabilidad de producto. Incluye soporte prioritario y 8 horas de desarrollo mensual.' },
+  { id: 3, name: 'Plan Premium', hours: 12, totalMonthly: 3499, description: 'Ingeniería dedicada de alto impacto. Máxima velocidad de ejecución, soporte 24/7 y 12 horas de desarrollo mensual.' },
 ];
 
-const PARTNER_PLANS = [
-  { id: 1, name: 'Plan Básico', hours: 8, price: 750, period: 'semana', totalMonthly: 3000, description: 'Ideales para prototipos y MVPs. Incluye desarrollo, diseño, hosting, base de datos y dominio .com.' },
-  { id: 2, name: 'Plan Mid', hours: 10, price: 1400, period: 'quincena', totalMonthly: 2800, description: 'Desarrollo continuo de producto, arquitectura serverless escalable y optimizaciones Premium.' },
-  { id: 3, name: 'Plan Premium', hours: 12, price: 2500, period: 'mes', totalMonthly: 2500, description: 'Ingeniería de software dedicada, soporte y control total de infraestructura de alta disponibilidad.' },
+const DEFAULT_CALCULATOR_ADDONS: CalculatorAddon[] = [
+  { id: 'pack-ecommerce-lite', name: 'Paquete E-commerce Lite', monthlyPrice: 799, yearlyPrice: 7990, desc: 'Envíos Skydropx, Facturación SAT (100 timbres), Tienda y Campaigner.' },
+  { id: 'pack-pos-ecommerce', name: 'Paquete POS & E-commerce Pro', monthlyPrice: 799, yearlyPrice: 7990, desc: 'Punto de venta físico, Tienda online, Envíos y Facturación.' },
+  { id: 'pack-blog-sponsors', name: 'Paquete Blog & Sponsors', monthlyPrice: 499, yearlyPrice: 4990, desc: 'Blog corporativo, Sponsors recurrentes (Stripe) y boletines.' },
+  { id: 'campaigner', name: 'Campaigner Masivo', monthlyPrice: 99, yearlyPrice: 990, desc: 'Boletines masivos por correo con analítica en tiempo real.' },
+  { id: 'booking-signature', name: 'Néctar Contratos Digitales', monthlyPrice: 99, yearlyPrice: 990, desc: 'Firma de contratos digitales ilimitados sin costo por firmante.' },
+  { id: 'booking', name: 'Agendador de Citas & Kanban', monthlyPrice: 49, yearlyPrice: 490, desc: 'Gestión de citas con agenda inteligente y flujo de trabajo.' },
+  { id: 'bot-chat', name: 'Néctar AI Chat Bot', monthlyPrice: 99, yearlyPrice: 990, desc: 'Widget de chat flotante en tiempo real y soporte multi-agente.' },
 ];
 
 const BRAND_DESIGN_PRICES = {
@@ -26,11 +43,55 @@ const BRAND_DESIGN_PRICES = {
 };
 
 export default function PricingCalculator({ onOpenScheduler }: { onOpenScheduler?: (addonSlug?: string) => void }) {
+  const [partnerPlans, setPartnerPlans] = useState<PartnerPlan[]>(DEFAULT_PARTNER_PLANS);
+  const [calculatorAddons, setCalculatorAddons] = useState<CalculatorAddon[]>(DEFAULT_CALCULATOR_ADDONS);
   const [mode, setMode] = useState<'partner' | 'addons'>('partner');
   const [planIndex, setPlanIndex] = useState(1); // Default to Plan Mid (index 1)
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
   const [brandDesign, setBrandDesign] = useState<'none' | 'monthly' | 'biweekly' | 'weekly'>('none');
   const [selectedAddons, setSelectedAddons] = useState<string[]>([]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    // Cargar Planes dinámicos de la API REST
+    fetcher('/plans/', { isPublic: true })
+      .then((data: any) => {
+        if (isMounted && Array.isArray(data) && data.length > 0) {
+          const mappedPlans: PartnerPlan[] = data.map((p: any) => ({
+            id: p.id,
+            name: p.name,
+            hours: p.hours,
+            totalMonthly: parseFloat(p.price) || 2999,
+            description: p.description
+          }));
+          setPartnerPlans(mappedPlans);
+        }
+      })
+      .catch(err => {
+        console.warn("PricingCalculator: fallback defensivo para planes activado.", err);
+      });
+
+    // Cargar Add-ons dinámicos de la API REST
+    fetcher('/addons/', { isPublic: true })
+      .then((data: any) => {
+        if (isMounted && Array.isArray(data) && data.length > 0) {
+          const mappedAddons: CalculatorAddon[] = data.map((a: any) => ({
+            id: a.slug || a.id,
+            name: a.name,
+            monthlyPrice: parseFloat(a.monthly_price) || 99,
+            yearlyPrice: parseFloat(a.yearly_price) || 990,
+            desc: a.description || a.detailed_description || ''
+          }));
+          setCalculatorAddons(mappedAddons);
+        }
+      })
+      .catch(err => {
+        console.warn("PricingCalculator: fallback defensivo para add-ons activado.", err);
+      });
+
+    return () => { isMounted = false; };
+  }, []);
 
   const agencyRate = 1200; // MXN/h
 
@@ -48,7 +109,7 @@ export default function PricingCalculator({ onOpenScheduler }: { onOpenScheduler
   };
 
   // Calculations for Partner Tecnológico Mode
-  const activePlan = PARTNER_PLANS[planIndex];
+  const activePlan = partnerPlans[planIndex] || partnerPlans[0] || DEFAULT_PARTNER_PLANS[0];
   const brandDesignInfo = BRAND_DESIGN_PRICES[brandDesign];
   const partnerSubtotal = activePlan.totalMonthly + brandDesignInfo.price;
   const partnerIva = partnerSubtotal * 0.16;
@@ -60,12 +121,12 @@ export default function PricingCalculator({ onOpenScheduler }: { onOpenScheduler
 
   // Calculations for Solo Módulos Mode
   const addonsSubtotalMonthly = selectedAddons.reduce((sum, id) => {
-    const addon = CALCULATOR_ADDONS.find(a => a.id === id);
+    const addon = calculatorAddons.find(a => a.id === id);
     return sum + (addon ? addon.monthlyPrice : 0);
   }, 0);
 
   const baseSubtotal = selectedAddons.reduce((sum, id) => {
-    const addon = CALCULATOR_ADDONS.find(a => a.id === id);
+    const addon = calculatorAddons.find(a => a.id === id);
     if (!addon) return sum;
     return sum + (billingCycle === 'monthly' ? addon.monthlyPrice : addon.yearlyPrice);
   }, 0);
@@ -198,7 +259,7 @@ export default function PricingCalculator({ onOpenScheduler }: { onOpenScheduler
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {CALCULATOR_ADDONS.map((addon) => (
+                  {calculatorAddons.map((addon) => (
                     <div
                       key={addon.id}
                       className="p-4 rounded-2xl border border-card-border bg-background/10 dark:bg-card-bg/20 flex items-center justify-between gap-3 group hover:border-nectar-forest/40 dark:hover:border-nectar-leaf/40 transition-colors"
@@ -262,7 +323,7 @@ export default function PricingCalculator({ onOpenScheduler }: { onOpenScheduler
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {CALCULATOR_ADDONS.map((addon) => {
+                  {calculatorAddons.map((addon) => {
                     const isChecked = selectedAddons.includes(addon.id);
                     const price = billingCycle === 'monthly' ? addon.monthlyPrice : addon.yearlyPrice;
                     return (
@@ -371,7 +432,7 @@ export default function PricingCalculator({ onOpenScheduler }: { onOpenScheduler
                   <div className="flex justify-between items-center py-2.5 border-b border-white/5">
                     <div>
                       <span className="font-bold text-white block">{activePlan.name}</span>
-                      <span className="text-[9px] text-white/50">{activePlan.hours} horas/mes • ${activePlan.price.toLocaleString('es-MX')} MXN/{activePlan.period}</span>
+                      <span className="text-[9px] text-white/50">{activePlan.hours} horas de desarrollo/mes</span>
                     </div>
                     <span className="font-mono font-bold">${activePlan.totalMonthly.toLocaleString('es-MX')} MXN</span>
                   </div>
@@ -400,7 +461,8 @@ export default function PricingCalculator({ onOpenScheduler }: { onOpenScheduler
                 <>
                   {selectedAddons.length > 0 ? (
                     selectedAddons.map(id => {
-                      const addon = CALCULATOR_ADDONS.find(a => a.id === id)!;
+                      const addon = calculatorAddons.find(a => a.id === id);
+                      if (!addon) return null;
                       const price = billingCycle === 'monthly' ? addon.monthlyPrice : addon.yearlyPrice;
                       return (
                         <div key={id} className="flex justify-between items-center py-2.5 border-b border-white/5">

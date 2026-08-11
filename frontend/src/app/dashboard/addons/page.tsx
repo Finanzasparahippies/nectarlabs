@@ -620,12 +620,8 @@ export default function AddonsPage() {
               )}
             </div>
             
-            <span className={`text-[7px] font-black uppercase tracking-wider px-2 py-0.5 rounded border ${addon.complexity === 'Muy Alta' ? 'text-red-400 bg-red-400/5 border-red-400/20' :
-              addon.complexity === 'Alta' ? 'text-orange-400 bg-orange-400/5 border-orange-400/20' :
-              addon.complexity === 'Media' ? 'text-yellow-400 bg-yellow-400/5 border-yellow-400/20' :
-              'text-emerald-400 bg-emerald-400/5 border-emerald-400/20'
-              }`}>
-              {addon.complexity}
+            <span className="text-[7px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full border text-emerald-400 bg-emerald-400/10 border-emerald-400/20">
+              Módulo de Negocio
             </span>
           </div>
 

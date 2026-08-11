@@ -984,22 +984,20 @@ export default function TenantSettingsPage() {
                         <label className="text-[9px] font-black uppercase tracking-widest text-foreground/40">Tipo de Dominio Preferido</label>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           {/* Option 1: Nectarlabs Subdomain */}
-                          <div 
+                          <div
                             onClick={() => {
                               pushToHistory();
                               setEditUseCustomDomain(false);
                             }}
-                            className={`p-5 rounded-2xl border transition-all duration-300 cursor-pointer flex flex-col gap-2 relative overflow-hidden select-none ${
-                              !editUseCustomDomain 
-                                ? 'bg-nectar-gold/5 border-nectar-gold shadow-md' 
-                                : 'bg-background border-card-border hover:border-foreground/30'
-                            }`}
+                            className={`p-5 rounded-2xl border transition-all duration-300 cursor-pointer flex flex-col gap-2 relative overflow-hidden select-none ${!editUseCustomDomain
+                              ? 'bg-nectar-gold/5 border-nectar-gold shadow-md'
+                              : 'bg-background border-card-border hover:border-foreground/30'
+                              }`}
                           >
                             <div className="flex justify-between items-center">
                               <span className="text-xs font-black uppercase tracking-wider text-foreground">Subdominio Nectar Labs</span>
-                              <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
-                                !editUseCustomDomain ? 'border-nectar-gold bg-nectar-gold' : 'border-card-border'
-                              }`}>
+                              <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${!editUseCustomDomain ? 'border-nectar-gold bg-nectar-gold' : 'border-card-border'
+                                }`}>
                                 {!editUseCustomDomain && <div className="w-1.5 h-1.5 rounded-full bg-background"></div>}
                               </div>
                             </div>
@@ -1009,22 +1007,20 @@ export default function TenantSettingsPage() {
                           </div>
 
                           {/* Option 2: Custom Domain */}
-                          <div 
+                          <div
                             onClick={() => {
                               pushToHistory();
                               setEditUseCustomDomain(true);
                             }}
-                            className={`p-5 rounded-2xl border transition-all duration-300 cursor-pointer flex flex-col gap-2 relative overflow-hidden select-none ${
-                              editUseCustomDomain 
-                                ? 'bg-nectar-gold/5 border-nectar-gold shadow-md' 
-                                : 'bg-background border-card-border hover:border-foreground/30'
-                            }`}
+                            className={`p-5 rounded-2xl border transition-all duration-300 cursor-pointer flex flex-col gap-2 relative overflow-hidden select-none ${editUseCustomDomain
+                              ? 'bg-nectar-gold/5 border-nectar-gold shadow-md'
+                              : 'bg-background border-card-border hover:border-foreground/30'
+                              }`}
                           >
                             <div className="flex justify-between items-center">
                               <span className="text-xs font-black uppercase tracking-wider text-foreground">Dominio Personalizado</span>
-                              <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
-                                editUseCustomDomain ? 'border-nectar-gold bg-nectar-gold' : 'border-card-border'
-                              }`}>
+                              <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${editUseCustomDomain ? 'border-nectar-gold bg-nectar-gold' : 'border-card-border'
+                                }`}>
                                 {editUseCustomDomain && <div className="w-1.5 h-1.5 rounded-full bg-background"></div>}
                               </div>
                             </div>
@@ -1085,8 +1081,8 @@ export default function TenantSettingsPage() {
                                 {domainValidationResult && (
                                   <div
                                     className={`p-3 rounded-lg border text-[10px] ${domainValidationResult.is_valid
-                                        ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
-                                        : 'bg-red-500/10 border-red-500/30 text-red-400'
+                                      ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                                      : 'bg-red-500/10 border-red-500/30 text-red-400'
                                       }`}
                                   >
                                     <p className="font-bold">
@@ -1120,7 +1116,7 @@ export default function TenantSettingsPage() {
                                     <div><span className="text-foreground/40 font-bold">Nombre / Host:</span> tienda <span className="text-foreground/30 font-normal">(o tu subdominio de preferencia)</span></div>
                                     <div className="flex justify-between items-center">
                                       <div><span className="text-foreground/40 font-bold">Valor / Destino:</span> <span className="text-nectar-gold font-bold">nectarlabs.dev</span></div>
-                                      <button 
+                                      <button
                                         type="button"
                                         onClick={() => {
                                           navigator.clipboard.writeText("nectarlabs.dev");
@@ -1585,7 +1581,7 @@ export default function TenantSettingsPage() {
                                 borderColor: previewDarkMode ? editBorderColor : editBorderColorLight
                               }}
                             >
-                              {previewDarkMode ? '☀️ Preview Modo Claro' : '🌙 Preview Modo Oscuro'}
+                              {previewDarkMode ? '🌙 Preview Modo Oscuro' : '☀️ Preview Modo Claro'}
                             </button>
                             <span
                               className="w-3 h-3 rounded-full animate-pulse"
@@ -1864,8 +1860,8 @@ export default function TenantSettingsPage() {
                               <td className="py-4 text-xs opacity-80 select-all">{userItem.email}</td>
                               <td className="py-4">
                                 <span className={`px-2.5 py-0.5 text-[7px] font-black uppercase tracking-widest rounded-full ${userItem.role === 'BUSINESS'
-                                    ? 'bg-nectar-gold/10 text-nectar-gold border border-nectar-gold/20'
-                                    : 'bg-foreground/5 text-foreground/70 border border-card-border/50'
+                                  ? 'bg-nectar-gold/10 text-nectar-gold border border-nectar-gold/20'
+                                  : 'bg-foreground/5 text-foreground/70 border border-card-border/50'
                                   }`}>
                                   {userItem.role}
                                 </span>

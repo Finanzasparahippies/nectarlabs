@@ -1,5 +1,8 @@
+import logging
 from django.utils import timezone
 from rest_framework import viewsets, status, permissions
+
+logger = logging.getLogger(__name__)
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.views import APIView
@@ -35,8 +38,8 @@ def _resolve_tenant(request):
         if tenant_id:
             try:
                 tenant = Tenant.objects.filter(id=tenant_id, is_active=True).first()
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning(f"Error resolving tenant_id '{tenant_id}' in delivery views: {e}", exc_info=True)
         elif subdomain:
             tenant = Tenant.objects.filter(subdomain=subdomain.lower(), is_active=True).first()
     return tenant
@@ -68,9 +71,8 @@ def _broadcast_driver_location(tenant_subdomain: str, driver_data: dict):
                     "data": driver_data,
                 }
             )
-    except Exception:
-        # Channels not installed or not configured – silently skip real-time broadcast
-        pass
+    except Exception as e:
+        logger.warning(f"WebSocket delivery broadcast skipped: {e}", exc_info=True)
 
 
 # ──────────────────────────────────────────────
@@ -194,7 +196,8 @@ class StopViewSet(BaseDeliveryViewSet):
 # ──────────────────────────────────────────────
 class DriverProfileViewSet(viewsets.ModelViewSet):
     serializer_class = DriverProfileSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, HasAddOnPermission]
+    addon_slug = 'driver-unlimited'
 
     def get_queryset(self):
         user = self.request.user
@@ -212,7 +215,8 @@ class DriverProfileViewSet(viewsets.ModelViewSet):
         # Drivers see their own profile
         try:
             return DriverProfile.objects.filter(user=user)
-        except Exception:
+        except Exception as e:
+            logger.warning(f"Error fetching DriverProfile for user {user}: {e}", exc_info=True)
             return DriverProfile.objects.none()
 
     @action(detail=True, methods=['post'], url_path='update-location')

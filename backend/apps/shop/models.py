@@ -463,7 +463,9 @@ class AddOn(models.Model):
                             f"{existing.unit_amount} but model has {int(self.monthly_price * 100)}. Clearing to regenerate."
                         )
                         self.stripe_price_id = None
-                except Exception:
+                except Exception as e:
+                    import logging
+                    logging.getLogger("apps").warning(f"AddOn {self.slug}: error retrieving monthly price {self.stripe_price_id}: {e}", exc_info=True)
                     self.stripe_price_id = None
             if self.stripe_yearly_price_id:
                 try:
@@ -475,7 +477,9 @@ class AddOn(models.Model):
                             f"{existing_yearly.unit_amount} but model has {int(self.yearly_price * 100)}. Clearing to regenerate."
                         )
                         self.stripe_yearly_price_id = None
-                except Exception:
+                except Exception as e:
+                    import logging
+                    logging.getLogger("apps").warning(f"AddOn {self.slug}: error retrieving yearly price {self.stripe_yearly_price_id}: {e}", exc_info=True)
                     self.stripe_yearly_price_id = None
 
         super().save(*args, **kwargs)

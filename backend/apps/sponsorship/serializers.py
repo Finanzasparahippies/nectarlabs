@@ -1,5 +1,8 @@
+import logging
 from rest_framework import serializers
 from .models import SponsorshipConfig, SponsorTarget, SponsorshipTier, Sponsorship, SponsorshipUpdateTag, SponsorshipUpdate, SponsorshipUpdateImage
+
+logger = logging.getLogger(__name__)
 
 class SponsorshipConfigSerializer(serializers.ModelSerializer):
     class Meta:
@@ -25,7 +28,8 @@ class SponsorshipTierSerializer(serializers.ModelSerializer):
         if obj.image:
             try:
                 return obj.image.url
-            except Exception:
+            except Exception as e:
+                logger.warning(f"Could not resolve image URL for SponsorshipTier {obj.id}: {e}", exc_info=True)
                 return None
         return None
 
@@ -56,7 +60,8 @@ class SponsorshipUpdateImageSerializer(serializers.ModelSerializer):
         if obj.image:
             try:
                 return obj.image.url
-            except Exception:
+            except Exception as e:
+                logger.warning(f"Could not resolve image URL for SponsorshipUpdateImage {obj.id}: {e}", exc_info=True)
                 return None
         return None
 
@@ -80,6 +85,7 @@ class SponsorshipUpdateSerializer(serializers.ModelSerializer):
         if obj.image:
             try:
                 return obj.image.url
-            except Exception:
+            except Exception as e:
+                logger.warning(f"Could not resolve image URL for SponsorshipUpdate {obj.id}: {e}", exc_info=True)
                 return None
         return None

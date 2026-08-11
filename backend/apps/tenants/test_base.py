@@ -54,9 +54,9 @@ class BaseTenantAddonTestCase(APITestCase):
 
         # Create Plans and AddOns
         self.plan_6m = Plan.objects.create(
-            name="6 Months Plan",
-            price=3000.00,
-            hours=20,
+            name="Plan Premium (6 Meses)",
+            price=3499.00,
+            hours=12,
             description="6 months plan"
         )
         self.live_chat_addon = AddOn.objects.create(

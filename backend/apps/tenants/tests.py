@@ -3,7 +3,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 from apps.tenants.models import Tenant
-from apps.shop.models import Plan, Contract, Order
+from apps.shop.models import Plan, Contract, Order, AddOn, AddOnSubscription
 from apps.tenants.test_base import BaseTenantAddonTestCase, logger, User
 
 from apps.newsletter.models import Subscriber
@@ -951,4 +951,136 @@ class TenantTrialLimitsTests(BaseTenantAddonTestCase):
         })
         self.assertEqual(response_fail.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("prueba está limitado a un máximo de 5 publicaciones de actualización", response_fail.data['detail'])
+
+
+class TenantAddOnPermissionsAndMatrixTests(BaseTenantAddonTestCase):
+    """
+    Casos de prueba para verificar la Matriz de Inclusión por Plan Base (Básico/Mid vs Premium)
+    y el bloqueo defensivo 403 (HasAddOnPermission).
+    """
+    def setUp(self):
+        super().setUp()
+        self.driver_addon = AddOn.objects.create(
+            slug="driver-unlimited",
+            name="Módulo de Repartidor",
+            category_badge="Logística",
+            description="Driver module",
+            detailed_description="Driver module detailed",
+            monthly_price=399.00,
+            yearly_price=3990.00,
+            origin_project="Nectar",
+            source_reference="Ref"
+        )
+        self.plan_basic = Plan.objects.create(
+            name="Plan Básico",
+            price=3000.00,
+            hours=8,
+            description="Plan básico"
+        )
+        self.plan_premium = Plan.objects.create(
+            name="Plan Producción Premium",
+            price=49999.00,
+            hours=160,
+            description="Plan producción premium"
+        )
+
+    def test_unpaid_addon_without_plan_returns_active_addons_empty(self):
+        """
+        Verify that a tenant without active trial or plan contract has no base active_addons.
+        """
+        self.tenant_a.trial_ends_at = None
+        self.tenant_a.save()
+        self.assertEqual(self.tenant_a.active_addons, [])
+
+    def test_basic_plan_grants_official_packages(self):
+        """
+        Verify that a tenant with Plan Básico automatically gets all 3 official packages
+        and their expanded structural modules (facturacion-cfdi, delivery-tracking, etc.).
+        """
+        self.tenant_a.trial_ends_at = None
+        self.tenant_a.save()
+
+        Contract.objects.create(
+            user=self.owner_a,
+            plan=self.plan_basic,
+            full_name="Owner A",
+            tax_id="TAX123",
+            address="Address A",
+            project_idea="Idea A",
+            signature_base64="sig==",
+            is_fully_signed=True,
+            is_active=True
+        )
+
+        active = self.tenant_a.active_addons
+        # Should contain official 3 packages and structural module aliases
+        self.assertIn('pack-ecommerce-lite', active)
+        self.assertIn('pack-pos-ecommerce', active)
+        self.assertIn('pack-blog-sponsors', active)
+        self.assertIn('facturacion-cfdi', active)
+        self.assertIn('delivery-tracking', active)
+        self.assertIn('sponsorship', active)
+        # Should NOT contain standalone driver-unlimited unless subscribed
+        self.assertNotIn('driver-unlimited', active)
+
+    def test_premium_plan_grants_all_modules_and_addons(self):
+        """
+        Verify that a tenant with Plan Premium gets ALL active addons in the system including standalone modules.
+        """
+        self.tenant_a.trial_ends_at = None
+        self.tenant_a.save()
+
+        Contract.objects.create(
+            user=self.owner_a,
+            plan=self.plan_premium,
+            full_name="Owner A Premium",
+            tax_id="TAX123",
+            address="Address A",
+            project_idea="Idea A",
+            signature_base64="sig==",
+            is_fully_signed=True,
+            is_active=True
+        )
+
+        active = self.tenant_a.active_addons
+        self.assertIn('pack-ecommerce-lite', active)
+        self.assertIn('driver-unlimited', active)
+        self.assertIn('bot-chat', active)
+
+    def test_has_addon_permission_enforces_403_on_unpurchased_view(self):
+        """
+        Verify that HasAddOnPermission returns 403 Forbidden when accessing an unpurchased addon module endpoint.
+        """
+        self.tenant_a.trial_ends_at = None
+        self.tenant_a.save()
+
+        # Contract for basic plan (does not include driver-unlimited)
+        Contract.objects.create(
+            user=self.owner_a,
+            plan=self.plan_basic,
+            full_name="Owner A",
+            tax_id="TAX123",
+            address="Address A",
+            project_idea="Idea A",
+            signature_base64="sig==",
+            is_fully_signed=True,
+            is_active=True
+        )
+
+        self.client.force_authenticate(user=self.owner_a)
+        
+        # Test endpoint that requires driver-unlimited addon (not in basic plan)
+        response_driver = self.client.get(
+            reverse('delivery-drivers-list'),
+            {'tenant_id': str(self.tenant_a.id)}
+        )
+        self.assertEqual(response_driver.status_code, status.HTTP_403_FORBIDDEN)
+        
+        # Test endpoint for billing invoice (facturacion-cfdi IS in basic plan 3-packages matrix, so invoice-list succeeds 200)
+        response_invoice = self.client.get(
+            reverse('billing-invoice-list'),
+            {'tenant_id': str(self.tenant_a.id)}
+        )
+        self.assertEqual(response_invoice.status_code, status.HTTP_200_OK)
+
 

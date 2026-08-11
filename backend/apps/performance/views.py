@@ -1,6 +1,9 @@
 import time
 import os
+import logging
 from rest_framework import viewsets, status
+
+logger = logging.getLogger(__name__)
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAdminUser
@@ -31,12 +34,14 @@ def get_cpu_usage():
         else:
             cpu_usage = 0.0
         return cpu_usage
-    except Exception:
+    except Exception as e:
+        logger.warning(f"Error reading /proc/stat: {e}", exc_info=True)
         try:
             with open('/proc/loadavg', 'r') as f:
                 load = f.read().split()[0]
             return min(99.9, round(float(load) * 50, 1))
-        except Exception:
+        except Exception as e2:
+            logger.warning(f"Error reading /proc/loadavg: {e2}", exc_info=True)
             return 12.5
 
 def get_ram_usage():
@@ -67,7 +72,8 @@ def get_ram_usage():
             'total': total_gb,
             'percent': percent
         }
-    except Exception:
+    except Exception as e:
+        logger.warning(f"Error calculating get_ram_usage: {e}", exc_info=True)
         return {'used': 1.15, 'total': 2.00, 'percent': 57.5}
 
 def get_disk_usage():
@@ -85,7 +91,8 @@ def get_disk_usage():
             'total': total_gb,
             'percent': percent
         }
-    except Exception:
+    except Exception as e:
+        logger.warning(f"Error calculating get_disk_usage: {e}", exc_info=True)
         return {'used': 14.2, 'total': 40.0, 'percent': 35.5}
 
 class PerformanceViewSet(viewsets.ViewSet):
@@ -168,8 +175,8 @@ class PerformanceViewSet(viewsets.ViewSet):
                             'size': stat.st_size,
                             'modified': stat.st_mtime
                         }
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"Error listing log files in {logs_dir}: {e}", exc_info=True)
 
         for base_name in allowed_bases:
             if base_name in existing_files:

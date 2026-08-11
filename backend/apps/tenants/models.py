@@ -253,7 +253,38 @@ class Tenant(models.Model):
         if self.trial_ends_at and self.trial_ends_at > timezone.now():
             addons.update(AddOn.objects.filter(is_active=True).values_list('slug', flat=True).distinct())
         elif self.has_active_plan_contract:
-            addons.update(AddOn.objects.filter(is_active=True).values_list('slug', flat=True).distinct())
+            # Check active plan tier
+            active_contract = Contract.objects.filter(
+                user=self.owner,
+                is_active=True,
+                is_fully_signed=True,
+                plan__isnull=False
+            ).select_related('plan').first()
+            
+            plan_name = active_contract.plan.name.lower() if (active_contract and active_contract.plan) else ""
+            is_premium_tier = self.is_ambassador or any(kw in plan_name for kw in ['produccion', 'producción', 'premium', 'embajador'])
+            
+            if is_premium_tier:
+                # Premium gets all packages AND all individual modules
+                addons.update(['pack-ecommerce-lite', 'pack-pos-ecommerce', 'pack-blog-sponsors'])
+                addons.update(AddOn.objects.filter(is_active=True).values_list('slug', flat=True).distinct())
+            else:
+                # Basic & Mid tiers get all 3 official packages
+                addons.update(['pack-ecommerce-lite', 'pack-pos-ecommerce', 'pack-blog-sponsors'])
+                
+            # Also include explicitly attached contract addons & active subscriptions
+            addons.update(AddOn.objects.filter(
+                is_active=True,
+                contracts__user=self.owner,
+                contracts__is_active=True
+            ).values_list('slug', flat=True).distinct())
+            
+            active_subs = AddOnSubscription.objects.filter(
+                user=self.owner,
+                status__in=['active', 'trialing'],
+                is_activated=True
+            ).values_list('addon__slug', flat=True)
+            addons.update(active_subs)
         else:
             # Return only the ones explicitly purchased or assigned via active contracts
             addons.update(AddOn.objects.filter(

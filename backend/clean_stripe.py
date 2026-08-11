@@ -130,8 +130,8 @@ def clean_stripe():
                 try:
                     stripe.Price.modify(price.id, active=False)
                     print(f"   Precio desactivado: {price.id}")
-                except Exception:
-                    pass
+                except Exception as pe:
+                    print(f"   Warning deshabilitando precio {price.id}: {pe}")
 
         # Intentar eliminar producto permanentemente
         try:

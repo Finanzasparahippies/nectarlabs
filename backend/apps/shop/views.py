@@ -1,4 +1,7 @@
+import logging
 from rest_framework import viewsets, permissions, status
+
+logger = logging.getLogger(__name__)
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.utils import timezone
@@ -88,8 +91,8 @@ class ProductViewSet(viewsets.ModelViewSet):
         if tenant_id:
             try:
                 tenant = Tenant.objects.get(id=tenant_id)
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning(f"Failed to retrieve tenant {tenant_id} in ProductViewSet: {e}", exc_info=True)
         
         if not tenant:
             user = request.user
@@ -144,8 +147,8 @@ class ProductViewSet(viewsets.ModelViewSet):
                 if p.metadata.get('local_product_id') == str(product.id):
                     stripe_product_id = p.id
                     break
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"Error listing Stripe products for local product {product.id}: {e}", exc_info=True)
 
         if not stripe_product_id:
             try:
@@ -169,8 +172,8 @@ class ProductViewSet(viewsets.ModelViewSet):
                 target_amount = int(product.price * 100)
                 if current_amount == target_amount:
                     price_changed = False
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning(f"Error retrieving Stripe price {product.stripe_price_id}: {e}", exc_info=True)
 
         if price_changed and stripe_product_id:
             try:
@@ -207,13 +210,15 @@ class AddOnViewSet(viewsets.ModelViewSet):
             if billing_cycle == 'yearly' and addon.stripe_yearly_price_id:
                 try:
                     stripe.Price.retrieve(addon.stripe_yearly_price_id)
-                except Exception:
+                except Exception as e:
+                    logger.warning(f"Addon {addon.slug} yearly price invalid on Stripe: {e}", exc_info=True)
                     addon.stripe_yearly_price_id = None
                     healed = True
             elif billing_cycle != 'yearly' and addon.stripe_price_id:
                 try:
                     stripe.Price.retrieve(addon.stripe_price_id)
-                except Exception:
+                except Exception as e:
+                    logger.warning(f"Addon {addon.slug} monthly price invalid on Stripe: {e}", exc_info=True)
                     addon.stripe_price_id = None
                     healed = True
             
@@ -853,7 +858,8 @@ class ContractViewSet(viewsets.ModelViewSet):
                     user = JWTAuthentication().get_user(validated_token)
                     request.user = user
                     self.request.user = user
-                except Exception:
+                except Exception as e:
+                    logger.warning(f"Invalid or expired token in contract view_pdf: {e}", exc_info=True)
                     from django.http import HttpResponse
                     return HttpResponse("Token no válido o expirado.", status=401)
         
@@ -915,7 +921,8 @@ def get_or_create_stripe_coupon(promo):
     coupon_id = f"django_{promo.code.lower()}"
     try:
         return stripe.Coupon.retrieve(coupon_id).id
-    except Exception:
+    except Exception as e:
+        logger.info(f"Stripe coupon {coupon_id} not found ({e}). Creating new coupon...")
         duration = "once" if promo.code_type == PromoCode.CodeType.SELLER else "forever"
         coupon = stripe.Coupon.create(
             id=coupon_id,
@@ -1008,8 +1015,8 @@ class PaymentInstallmentViewSet(viewsets.ModelViewSet):
                 if not plan.stripe_product_id:
                     try:
                         plan.save()
-                    except Exception:
-                        pass
+                    except Exception as e:
+                        logger.warning(f"Failed to auto-save plan {plan.id} during checkout: {e}", exc_info=True)
                 stripe_product_id = plan.stripe_product_id
             
             if not stripe_product_id:
@@ -1063,7 +1070,8 @@ class PaymentInstallmentViewSet(viewsets.ModelViewSet):
                     user = JWTAuthentication().get_user(validated_token)
                     request.user = user
                     self.request.user = user
-                except Exception:
+                except Exception as e:
+                    logger.warning(f"Invalid or expired token in receipt view: {e}", exc_info=True)
                     from django.http import HttpResponse
                     return HttpResponse("Token no válido o expirado.", status=401)
         
@@ -1330,10 +1338,10 @@ def stripe_webhook(request):
                                     try:
                                         ann_addon = AddOn.objects.get(slug=slug)
                                         AddOnSubscription.objects.filter(user=user, addon=ann_addon).update(tenant=tenant)
-                                    except Exception:
-                                        pass
-                        except Exception:
-                            pass
+                                    except Exception as ann_err:
+                                        _webhook_logger.warning(f"Failed to update annexed addon subscription {slug}: {ann_err}", exc_info=True)
+                        except Exception as add_err:
+                            _webhook_logger.warning(f"Failed to update addon subscription for addon_id {addon_id}: {add_err}", exc_info=True)
                 except Exception as tenant_err:
                     _webhook_logger.error(f"Error creating/activating tenant on addon subscription: {tenant_err}", exc_info=True)
 
@@ -1363,8 +1371,8 @@ def stripe_webhook(request):
                         try:
                             from apps.tenants.models import Tenant as _Tenant
                             _tenant_obj = _Tenant.objects.filter(owner=_notify_user).first()
-                        except Exception:
-                            pass
+                        except Exception as tenant_fetch_err:
+                            _webhook_logger.warning(f"Failed to fetch tenant for user {_notify_user}: {tenant_fetch_err}", exc_info=True)
                         _webhook_logger.info(f"[stripe_webhook] Llamando notify_support_addon_subscription addon={addon_obj.name} tenant={getattr(_tenant_obj, 'name', None)}")
                         notify_support_addon_subscription(_notify_user, addon_obj, tenant=_tenant_obj)
                         _webhook_logger.info("[stripe_webhook] notify_support_addon_subscription completado sin excepción")
@@ -2143,7 +2151,8 @@ class GetShippingRatesView(APIView):
                     # Control de edge cases: distancias negativas
                     if distance_km < 0:
                         distance_km = 0.0
-                except Exception:
+                except Exception as dist_err:
+                    logger.warning(f"Haversine calculation error: {dist_err}", exc_info=True)
                     distance_km = 3.0  # fallback
             else:
                 distance_km = 3.0  # fallback if no coords are specified

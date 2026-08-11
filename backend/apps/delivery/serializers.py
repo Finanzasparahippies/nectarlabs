@@ -1,4 +1,7 @@
+import logging
 from rest_framework import serializers
+
+logger = logging.getLogger(__name__)
 from .models import (
     DeliveryConfig, Vehicle, VehicleLocation, Stop,
     DriverProfile, DeliveryOrder, StoreConfig
@@ -114,8 +117,8 @@ class DeliveryOrderSerializer(serializers.ModelSerializer):
                     if order.stripe_session_id or order.stripe_payment_intent:
                         return 'STRIPE'
                     return 'CASH'
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning(f"Failed to fetch payment method for ecommerce_order_id {obj.ecommerce_order_id}: {e}", exc_info=True)
         return 'STRIPE'
 
     def get_total_amount(self, obj):
@@ -125,8 +128,8 @@ class DeliveryOrderSerializer(serializers.ModelSerializer):
                 order = Order.objects.filter(id=obj.ecommerce_order_id).first()
                 if order:
                     return float(order.total)
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning(f"Failed to fetch total_amount for ecommerce_order_id {obj.ecommerce_order_id}: {e}", exc_info=True)
         return 0.00
 
 

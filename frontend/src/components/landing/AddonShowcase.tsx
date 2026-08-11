@@ -114,122 +114,122 @@ const fallbackAddons: Omit<Addon, 'icon'>[] = [
     id: 'pack-ecommerce-lite',
     name: 'Paquete E-commerce Lite',
     categoryBadge: 'PAQUETE PRINCIPAL',
-    description: 'Todo para tu tienda en línea: Envíos Nacionales por tus paqueterias favoritas, Facturación SAT, Tienda Online y Campaigner Lite.',
-    detailedDescription: 'El paquete integral ideal para comenzar a vender en línea. Habilita de golpe las funciones de cotización y emisión de guías de envío nacionales de Skydropx, facturación fiscal automatizada CFDI 4.0 con 100 timbres base gratis al mes, y campaigner lite sin costo.',
+    description: 'Todo para tu tienda en línea: Envíos Nacionales automatizados, Facturación SAT, Tienda Online y Campaigner Lite.',
+    detailedDescription: 'El paquete integral ideal para vender en línea de inmediato. Habilita cotización y emisión de guías de envío nacionales con Skydropx, facturación fiscal automatizada CFDI 4.0 con 100 timbres gratis al mes y boletines de email marketing.',
     monthlyPrice: 799,
     yearlyPrice: 7990,
     complexity: 'Alta',
-    serverRequirements: 'Configuración completa de llaves de Stripe, Skydropx API Key y Facturapi API Key.',
+    serverRequirements: 'Integración inmediata a tu portal Néctar con configuración cloud asistida.',
     technicalDetails: [
-      'Acceso completo a módulo Tienda + Envíos Skydropx',
-      'Acceso completo a módulo Facturación SAT (100 timbres base)',
+      'Acceso completo a módulo Tienda + Envíos Nacionales',
+      'Acceso completo a módulo Facturación SAT (100 timbres incluidos)',
       'Acceso completo a módulo Newsletter Masivo (Campaigner Lite)',
-      'Ahorro de $148.00 MXN mensuales sobre la compra individual',
-      'Configuración unificada y automatización de negocio cruzada'
+      'Ahorro directo sobre la contratación de módulos individuales',
+      'Automatización comercial unificada de extremo a extremo'
     ]
   },
   {
     id: 'pack-pos-ecommerce',
     name: 'Paquete POS & E-commerce Pro',
     categoryBadge: 'PAQUETE PRINCIPAL',
-    description: 'Punto de venta físico, Tienda en línea, Envíos con Skydropx, Facturación SAT y Campaigner Lite.',
-    detailedDescription: 'La solución comercial definitiva para negocios omnicanal. Integra tu tienda en línea y tu mostrador físico (POS) con inventario unificado. Incluye 100 timbres fiscales al mes, Campaigner Lite y es compatible con hardware POS comercial (pago único de hardware de $1,799.00 MXN).',
+    description: 'Punto de venta físico, Tienda en línea, Envíos automatizados, Facturación SAT y Campaigner Lite.',
+    detailedDescription: 'La solución comercial definitiva para negocios omnicanal. Conecta tu mostrador físico (POS) con tu tienda digital mediante inventario unificado en tiempo real, facturación fiscal SAT y marketing automatizado.',
     monthlyPrice: 799,
     yearlyPrice: 7990,
     complexity: 'Muy Alta',
-    serverRequirements: 'Lector de código de barras USB + Impresora térmica + Cajón de dinero RJ11 (Hardware adicional).',
+    serverRequirements: 'Sincronización omnicanal multi-dispositivo para mostrador físico y tienda online.',
     technicalDetails: [
-      'Consola POS rápida con lector de barras',
-      'Sincronización de inventario en tiempo real',
-      'Acceso completo a Tienda + Envíos Skydropx',
+      'Consola POS ultra-rápida con soporte para lector de código de barras',
+      'Sincronización de inventario físico y digital en tiempo real',
+      'Acceso completo a Tienda + Envíos Nacionales',
       'Facturación SAT con 100 timbres incluidos',
-      'Campaigner Lite sin costo'
+      'Campaigner Lite para fidelización de clientes'
     ]
   },
   {
     id: 'pack-blog-sponsors',
     name: 'Paquete Blog & Sponsors',
     categoryBadge: 'PAQUETE PRINCIPAL',
-    description: 'Monetiza tu contenido: Blog, Sponsorship (Patreon), Tienda Online, Facturación SAT y Campaigner Lite.',
-    detailedDescription: 'El paquete ideal para creadores de contenido y marcas personales. Permite monetizar mediante suscripciones recurrentes de Stripe (Sponsors), vender productos físicos o digitales en tu tienda y emitir facturas del SAT de forma integrada, con boletines de Campaigner Lite.',
+    description: 'Monetiza tu contenido: Blog corporativo, Sponsors recurrentes, Tienda Online, Facturación SAT y Campaigner.',
+    detailedDescription: 'El paquete ideal para creadores de contenido y marcas. Monetiza tu audiencia mediante membresías y patrocinios recurrentes con Stripe, vende productos físicos o digitales y emite facturas SAT integradas.',
     monthlyPrice: 499,
     yearlyPrice: 4990,
     complexity: 'Media',
-    serverRequirements: 'Cuenta de Stripe para suscripciones + Configuración de Tienda.',
+    serverRequirements: 'Configuración ágil y cobranza automatizada vía Stripe Connect.',
     technicalDetails: [
-      'Suscripciones recurrentes de Stripe con tiers',
-      'Gestión de roles y feeds exclusivos para sponsors',
+      'Suscripciones recurrentes de patrocinadores con niveles flexibles',
+      'Feeds y contenido exclusivo para miembros y patrocinios',
       'Acceso completo a Tienda Online',
-      'Facturación SAT integrada',
-      'Campaigner Lite sin costo'
+      'Facturación SAT automatizada',
+      'Boletines informativos con Campaigner'
     ]
   },
   {
     id: 'campaigner',
     name: 'Campaigner Masivo',
     categoryBadge: 'EMAIL MARKETING',
-    description: 'Envío de boletines y campañas de email masivo. Costo de $99 MXN/mes para contratación individual (incluido en planes/paquetes) + cobro dinámico a $0.01 MXN por correo enviado.',
-    detailedDescription: 'Envía boletines interactivos a tu base de contactos usando nuestro servicio integrado. Licencia individual por $99 MXN/mes o $990 MXN/año (incluida sin costo en cualquier plan o paquete de Néctar). Solo pagas 1 centavo ($0.01 MXN) por cada correo enviado, descontado de tu Cartera Digital prepago.',
+    description: 'Envío de boletines y campañas de email masivo con analítica en tiempo real para acelerar tus ventas.',
+    detailedDescription: 'Diseña y envía campañas masivas de correo electrónico con plantillas profesionales, control de bajas automático y medición de conversiones para mantener a tu audiencia comprometida.',
     monthlyPrice: 99,
     yearlyPrice: 990,
     complexity: 'Baja',
-    serverRequirements: 'Cartera Digital con saldo positivo ($0.01 MXN por correo).',
+    serverRequirements: 'Envío asistido de alta entregabilidad por infraestructura prepago ($0.01 MXN/correo).',
     technicalDetails: [
-      'Tokens únicos de desuscripción seguros (UUID)',
-      'Render de templates de correo HTML interactivos',
-      'Cobro automático por destinatario a $0.01 MXN',
-      'Licencia individual por $99 MXN/mes'
+      'Desuscripción segura en un clic y protección anti-spam',
+      'Editor visual de correos HTML interactivos',
+      'Cobro transparente a $0.01 MXN por correo enviado',
+      'Métricas detalladas de apertura y clics'
     ]
   },
   {
     id: 'booking-signature',
     name: 'Néctar Contratos Digitales',
     categoryBadge: 'CONTRATOS DIGITALES',
-    description: 'Motor de contratos digitales con firma incrustada en lienzo y generación automática de PDFs. Sin límites de documentos ni de firmantes.',
-    detailedDescription: 'Ideal para digitalizar acuerdos contractuales. Permite configurar contratos, generar propuestas en PDF automáticas y capturar firmas táctiles seguras con marcas de tiempo, sin límites en la cantidad de documentos o firmantes.',
+    description: 'Motor de contratos digitales con firma en pantalla táctil y generación automática de PDFs legales.',
+    detailedDescription: 'Digitaliza el cierre de acuerdos comerciales. Genera cotizaciones y contratos profesionales, envía enlaces de firma digital a tus clientes y almacena evidencias firmadas de forma segura.',
     monthlyPrice: 99,
     yearlyPrice: 990,
     complexity: 'Alta',
-    serverRequirements: 'Almacenamiento seguro en la nube para PDFs.',
+    serverRequirements: 'Bóveda digital de almacenamiento seguro en la nube con sellado de tiempo.',
     technicalDetails: [
-      'Lienzo de firma en React (HTML5 Canvas)',
-      'Generación de documentos PDF vía backend',
-      'Notificaciones de propuesta por correo electrónico',
-      'Sin límite de documentos o firmantes'
+      'Lienzo de firma digital compatible con móviles y computadoras',
+      'Generación instantánea de documentos PDF con identidad de marca',
+      'Notificaciones y alertas de propuesta por correo electrónico',
+      'Firma ilimitada de documentos sin costo adicional por firmante'
     ]
   },
   {
     id: 'booking',
     name: 'Agendador de Citas & Kanban',
     categoryBadge: 'GESTIÓN Y CITAS',
-    description: 'Gestor de reservas y agendador de citas interactivo integrado con un tablero Kanban para seguimiento de estados.',
-    detailedDescription: 'Permite a tus clientes agendar citas directamente desde tu portal. Gestiona la disponibilidad, envía recordatorios y organiza las reservas en un tablero Kanban interactivo para optimizar el flujo de trabajo.',
+    description: 'Gestor de reservas y citas interactivo integrado con un tablero Kanban para seguimiento operativo.',
+    detailedDescription: 'Permite a tus clientes agendar citas directamente desde tu web. Configura tu disponibilidad, evita cruces de agenda y gestiona el estado de cada servicio en un tablero Kanban intuitivo.',
     monthlyPrice: 49,
     yearlyPrice: 490,
     complexity: 'Media',
-    serverRequirements: 'Base de datos relacional para control de solapamiento de horarios.',
+    serverRequirements: 'Control inteligente de horarios y prevención de solapamientos.',
     technicalDetails: [
-      'Calendario de reservas interactivo para clientes',
-      'Tablero Kanban integrado para gestión interna',
-      'Configuración de horarios de atención',
-      'Notificaciones y recordatorios automáticos'
+      'Calendario de reservas en tiempo real disponible 24/7',
+      'Tablero Kanban operativo para seguimiento de citas',
+      'Horarios flexibles por especialista o tipo de servicio',
+      'Recordatorios automáticos por correo para reducir ausentismo'
     ]
   },
   {
     id: 'bot-chat',
     name: 'Néctar AI Chat Bot',
     categoryBadge: 'COMUNICACIÓN EN VIVO',
-    description: 'Widget de chat flotante en tiempo real y consola multi-agente con historial persistente.',
-    detailedDescription: 'Un canal de comunicación instantáneo integrado para retención y soporte de usuarios. Los clientes ven un widget interactivo de chat, mientras que los agentes de soporte de IA responden y el staff técnico gestiona las conversaciones desde una consola interna dedicada.',
+    description: 'Widget de chat flotante en tiempo real y consola multi-agente con asistencia inteligente.',
+    detailedDescription: 'Aumenta la conversión atendiendo las dudas de tus prospectos al instante. Widget flotante configurable en tu sitio web con panel de atención para tu equipo o asistencia inteligente.',
     monthlyPrice: 99,
     yearlyPrice: 990,
     complexity: 'Media',
-    serverRequirements: 'Django Channels (ASGI) con servidor de caché Redis + Base de Datos relacional.',
+    serverRequirements: 'Comunicación en vivo instantánea con resiliencia de conexión.',
     technicalDetails: [
-      'Widget JS reactivo y ligero incrustable',
-      'Polling persistente o WebSocket fallback',
-      'Asignación dinámica de chats a staff técnico',
-      'Marcado de estado abierto/resuelto/cerrado'
+      'Widget flotante elegante e incrustable en cualquier página',
+      'Consola de atención unificada para tu equipo de ventas',
+      'Asignación ágil de conversaciones y seguimiento de estado',
+      'Historial persistente de conversaciones por cliente'
     ]
   }
 ];
@@ -291,12 +291,8 @@ export default function AddonShowcase() {
               )}
             </div>
 
-            <span className={`text-[7px] font-black uppercase tracking-wider px-2 py-0.5 rounded border ${addon.complexity === 'Muy Alta' ? 'text-red-400 bg-red-400/5 border-red-400/20' :
-              addon.complexity === 'Alta' ? 'text-orange-400 bg-orange-400/5 border-orange-400/20' :
-                addon.complexity === 'Media' ? 'text-yellow-500 bg-yellow-500/5 border-yellow-500/20' :
-                  'text-emerald-500 bg-emerald-500/5 border-emerald-500/20'
-              }`}>
-              {addon.complexity}
+            <span className="text-[7px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full border text-emerald-400 bg-emerald-400/10 border-emerald-400/20">
+              Valor de Negocio
             </span>
           </div>
 

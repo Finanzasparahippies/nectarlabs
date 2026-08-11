@@ -1,7 +1,10 @@
+import logging
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.db.models import Q
+
+logger = logging.getLogger(__name__)
 from apps.tenants.permissions import HasAddOnPermission
 from .models import SponsorshipConfig, SponsorTarget, SponsorshipTier, Sponsorship, SponsorshipUpdateTag, SponsorshipUpdate
 from .serializers import (
@@ -34,8 +37,8 @@ class BaseSponsorshipViewSet(viewsets.ModelViewSet):
             if tenant_id:
                 try:
                     tenant = Tenant.objects.filter(id=tenant_id, is_active=True).first()
-                except Exception:
-                    pass
+                except Exception as e:
+                    logger.warning(f"Error parsing tenant_id '{tenant_id}' in BaseSponsorshipViewSet: {e}", exc_info=True)
             elif subdomain:
                 tenant = Tenant.objects.filter(subdomain=subdomain.lower(), is_active=True).first()
         return tenant
@@ -234,8 +237,8 @@ class SponsorshipViewSet(viewsets.ModelViewSet):
             if tenant_id:
                 try:
                     tenant = Tenant.objects.filter(id=tenant_id, is_active=True).first()
-                except Exception:
-                    pass
+                except Exception as e:
+                    logger.warning(f"Error parsing tenant_id '{tenant_id}' in PublicSponsorshipViewSet: {e}", exc_info=True)
             elif subdomain:
                 tenant = Tenant.objects.filter(subdomain=subdomain.lower(), is_active=True).first()
         return tenant

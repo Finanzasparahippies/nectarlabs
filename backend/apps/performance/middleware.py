@@ -1,6 +1,9 @@
 import time
+import logging
 from django.db import connection
 from .models import ServerRequestLog
+
+logger = logging.getLogger(__name__)
 
 class PerformanceMiddleware:
     def __init__(self, get_response):
@@ -57,7 +60,8 @@ class PerformanceMiddleware:
 
             if tenant and 'business-analytics' in tenant.active_addons:
                 has_apm = True
-        except Exception:
+        except Exception as e:
+            logger.warning(f"Error checking APM entitlement in PerformanceMiddleware: {e}", exc_info=True)
             has_apm = False
 
         if not has_apm:
@@ -72,9 +76,8 @@ class PerformanceMiddleware:
                 response_time=round(duration, 4),
                 query_count=query_count
             )
-        except Exception:
-            # Avoid breaking the site if logging fails
-            pass
+        except Exception as e:
+            logger.warning(f"Failed to record ServerRequestLog in PerformanceMiddleware: {e}", exc_info=True)
 
         return response
 

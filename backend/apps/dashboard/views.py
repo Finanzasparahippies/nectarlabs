@@ -557,7 +557,9 @@ class ProjectQuoteViewSet(viewsets.ModelViewSet):
                     user = JWTAuthentication().get_user(validated_token)
                     request.user = user
                     self.request.user = user
-                except Exception:
+                except Exception as e:
+                    import logging
+                    logging.getLogger(__name__).warning(f"Invalid or expired JWT token in PDF download: {e}", exc_info=True)
                     from django.http import HttpResponse
                     return HttpResponse("Token no válido o expirado.", status=401)
         

@@ -13,10 +13,10 @@ def seed_database():
     Plan.objects.update_or_create(
         id=1,
         defaults={
-            "name": "Plan Basico",
-            "price": 3000.00,
-            "hours": 8,
-            "description": "Ideales para prototipos y MVPs. Incluye desarrollo, diseño, hosting, base de datos y dominio .com.",
+            "name": "Plan Básico",
+            "price": 2499.00,
+            "hours": 6,
+            "description": "Solución ágil para startups y pequeños negocios. Incluye mantenimiento, hosting y 6 horas de desarrollo mensual.",
             "is_recommended": False,
             "is_active": True
         }
@@ -25,11 +25,11 @@ def seed_database():
     Plan.objects.update_or_create(
         id=2,
         defaults={
-            "name": "Plan Staging",
-            "price": 29999.00,
-            "hours": 90,
-            "description": "Nuestro plan insignia. Desarrollo continuo de producto, arquitectura serverless escalable y optimizaciones Premium.",
-            "is_recommended": True,
+            "name": "Plan Mid",
+            "price": 2999.00,
+            "hours": 8,
+            "description": "Desarrollo continuo y escalabilidad de producto. Incluye soporte prioritario y 8 horas de desarrollo mensual.",
+            "is_recommended": False,
             "is_active": True
         }
     )
@@ -37,11 +37,11 @@ def seed_database():
     Plan.objects.update_or_create(
         id=3,
         defaults={
-            "name": "Plan Producción",
-            "price": 49999.00,
-            "hours": 160,
-            "description": "Ingeniería de software dedicada, soporte 24/7 y control total de infraestructura de alta disponibilidad.",
-            "is_recommended": False,
+            "name": "Plan Premium",
+            "price": 3499.00,
+            "hours": 12,
+            "description": "Ingeniería dedicada de alto impacto. Máxima velocidad de ejecución, soporte 24/7 y 12 horas de desarrollo mensual.",
+            "is_recommended": True,
             "is_active": True
         }
     )

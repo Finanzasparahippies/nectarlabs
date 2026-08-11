@@ -21,8 +21,8 @@ def create_stripe_product_and_price(tier):
     if hasattr(tier, 'image') and tier.image:
         try:
             images.append(tier.image.url)
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"Error accessing image URL for tier {tier.id}: {e}", exc_info=True)
 
     # Search for an existing product with this tenant subdomain and tier level metadata
     product = None
