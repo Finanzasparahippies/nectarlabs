@@ -45,6 +45,38 @@ class Tenant(models.Model):
         help_text="Whether to use the custom domain instead of the subdomain."
     )
     
+    # Standalone & Supabase Independent Deployment Configuration
+    class DeploymentMode(models.TextChoices):
+        INTEGRATED = 'INTEGRATED', 'Integrado Nectar Labs'
+        STANDALONE = 'STANDALONE', 'Independiente Standalone (Supabase / External App)'
+
+    deployment_mode = models.CharField(
+        max_length=20,
+        choices=DeploymentMode.choices,
+        default=DeploymentMode.INTEGRATED,
+        help_text="Modo de despliegue de la e-commerce"
+    )
+    external_frontend_url = models.URLField(
+        blank=True, 
+        null=True, 
+        help_text="URL de la aplicación e-commerce independiente (ej: https://koreshair.com)"
+    )
+    external_backend_url = models.URLField(
+        blank=True, 
+        null=True, 
+        help_text="URL del backend API independiente (ej: https://api.koreshair.com)"
+    )
+    supabase_url = models.URLField(
+        blank=True, 
+        null=True, 
+        help_text="Instancia de Supabase conectada al tenant independiente"
+    )
+    supabase_anon_key = models.TextField(
+        blank=True, 
+        null=True, 
+        help_text="Anon Key de Supabase para consultas sincronizadas"
+    )
+    
     # Customization & Branding fields
     logo = models.ImageField(upload_to="tenant_logos/", blank=True, null=True)
     logo_url = models.URLField(blank=True, null=True)

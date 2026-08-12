@@ -2520,6 +2520,78 @@ class OrderViewSet(viewsets.ModelViewSet):
         res_data['stripe_session_url'] = stripe_session_url
         return Response(res_data, status=status.HTTP_201_CREATED)
 
+    @action(detail=False, methods=['post'], url_path='sync-external-order')
+    @transaction.atomic
+    def sync_external_order(self, request):
+        """
+        Sincroniza compras generadas en la e-commerce independiente (Supabase)
+        hacia la infraestructura central de Nectar Labs.
+        """
+        api_key = request.headers.get('X-Tenant-API-Key') or request.data.get('api_key')
+        tenant_slug = request.data.get('tenant_slug', 'kores')
+        
+        from apps.tenants.models import Tenant
+        tenant = None
+        if api_key:
+            tenant = Tenant.objects.filter(api_key=api_key).first()
+        if not tenant:
+            tenant = Tenant.objects.filter(subdomain=tenant_slug.lower()).first()
+            
+        if not tenant:
+            return Response({"detail": "Tenant no identificado para sincronización."}, status=status.HTTP_401_UNAUTHORIZED)
+            
+        external_order_id = request.data.get('external_order_id')
+        user_email = request.data.get('user_email')
+        total = Decimal(str(request.data.get('total', '0.00')))
+        full_name = request.data.get('full_name', '')
+        phone = request.data.get('phone', '')
+        items_data = request.data.get('items', [])
+        
+        # Idempotencia: Verificar si ya fue sincronizado previamente
+        existing_order = Order.objects.filter(tenant=tenant, stripe_payment_intent=f"EXTERNAL_{external_order_id}").first()
+        if existing_order:
+            return Response({"detail": "Orden ya sincronizada previa.", "order_id": existing_order.id}, status=status.HTTP_200_OK)
+            
+        order = Order.objects.create(
+            tenant=tenant,
+            user_email=user_email,
+            total=total,
+            status=Order.Status.PAID,
+            payment_method=request.data.get('payment_method', 'STRIPE'),
+            stripe_payment_intent=f"EXTERNAL_{external_order_id}",
+            full_name=full_name,
+            phone=phone
+        )
+        
+        for item in items_data:
+            p_name = item.get('name')
+            p_qty = int(item.get('quantity', 1))
+            p_price = Decimal(str(item.get('price', '0.00')))
+            
+            # Buscar o crear producto de catálogo de Nectar Labs
+            product = Product.objects.filter(tenant=tenant, name__iexact=p_name).first()
+            if product:
+                if product.stock >= p_qty:
+                    product.stock -= p_qty
+                    product.save(update_fields=['stock'])
+            else:
+                product = Product.objects.create(
+                    tenant=tenant,
+                    name=p_name,
+                    description=item.get('description', ''),
+                    price=p_price,
+                    stock=0
+                )
+                
+            OrderItem.objects.create(
+                order=order,
+                product=product,
+                quantity=p_qty,
+                price=p_price
+            )
+            
+        return Response({"detail": "Orden externa sincronizada exitosamente con Nectar Labs.", "order_id": order.id}, status=status.HTTP_201_CREATED)
+
     @action(detail=True, methods=['post'], url_path='verify-stripe-payment')
     def verify_stripe_payment(self, request, pk=None):
         """
