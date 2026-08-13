@@ -217,6 +217,7 @@ Exception: Connection Refused
 [LOCAL] [2026-08-07 02:57:59] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner A Contract' automatically generated for Contract #1.
 [LOCAL] [2026-08-07 02:58:03] INFO [apps.shop.signals]: Project 'Ecosistema 6 Months Plan - Owner A Contract' automatically generated for Contract #1.
 [LOCAL] [2026-08-07 02:58:47] INFO [apps.users.utils]: Verification email sent to newregistered@example.com
+<<<<<<< Updated upstream
 [LOCAL] [2026-08-11 05:06:48] INFO [apps.shop.signals]: Project 'Ecosistema Developer Plan - Owner Contract Test' automatically generated for Contract #1.
 [LOCAL] [2026-08-11 05:07:01] WARNING [apps.tickets.ai_service]: [AI/Limit] Límite de 50 respuestas de IA alcanzado para el tenant Tenant A (tenanta) en periodo de prueba.
 [LOCAL] [2026-08-11 05:07:04] ERROR [apps]: [Logística/Fulfillment] Saldo por debajo del mínimo de $250.00 MXN para Tenant #26fde751-5ac7-433c-b0f5-f57b891aa526. Saldo disponible: $0.00 MXN.
@@ -946,3 +947,7 @@ rest_framework_simplejwt.exceptions.InvalidToken: {'detail': ErrorDetail(string=
 [LOCAL] [2026-08-11 07:05:15] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner A Contract' automatically generated for Contract #1.
 [LOCAL] [2026-08-11 07:05:17] INFO [apps.shop.signals]: Project 'Ecosistema Plan Premium (6 Meses) - Owner A Contract' automatically generated for Contract #1.
 [LOCAL] [2026-08-11 07:05:38] INFO [apps.users.utils]: Verification email sent to newregistered@example.com
+=======
+[LOCAL] [2026-08-07 03:31:20] INFO [apps.users.utils]: Verification email sent to contacto@finanzasparahippies.com
+[LOCAL] [2026-08-07 03:38:09] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Finanzasparahippies' automatically generated for Contract #1.
+>>>>>>> Stashed changes
