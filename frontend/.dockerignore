@@ -1,0 +1,28 @@
+# Dependencies and build outputs
+node_modules
+.next
+out
+build
+dist
+
+# Testing and reports
+playwright-report
+test-results
+coverage
+
+# Logs and environment runtime files
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Editor & OS files
+.git
+.gitignore
+.vscode
+.idea
+.DS_Store

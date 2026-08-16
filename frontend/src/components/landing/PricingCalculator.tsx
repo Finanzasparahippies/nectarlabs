@@ -8,6 +8,8 @@ export interface PartnerPlan {
   name: string;
   hours: number;
   totalMonthly: number;
+  price?: number;
+  period?: string;
   description: string;
 }
 
@@ -20,9 +22,9 @@ export interface CalculatorAddon {
 }
 
 const DEFAULT_PARTNER_PLANS: PartnerPlan[] = [
-  { id: 1, name: 'Plan Básico', hours: 6, totalMonthly: 2499, description: 'Solución ágil para startups y pequeños negocios. Incluye mantenimiento, hosting y 6 horas de desarrollo mensual.' },
-  { id: 2, name: 'Plan Mid', hours: 8, totalMonthly: 2999, description: 'Desarrollo continuo y escalabilidad de producto. Incluye soporte prioritario y 8 horas de desarrollo mensual.' },
-  { id: 3, name: 'Plan Premium', hours: 12, totalMonthly: 3499, description: 'Ingeniería dedicada de alto impacto. Máxima velocidad de ejecución, soporte 24/7 y 12 horas de desarrollo mensual.' },
+  { id: 1, name: 'Plan Básico', hours: 6, totalMonthly: 2499, price: 2499, period: 'mes', description: 'Solución ágil para startups y pequeños negocios. Incluye mantenimiento, hosting y 6 horas de desarrollo mensual.' },
+  { id: 2, name: 'Plan Mid', hours: 8, totalMonthly: 2999, price: 2999, period: 'mes', description: 'Desarrollo continuo y escalabilidad de producto. Incluye soporte prioritario y 8 horas de desarrollo mensual.' },
+  { id: 3, name: 'Plan Premium', hours: 12, totalMonthly: 3499, price: 3499, period: 'mes', description: 'Ingeniería dedicada de alto impacto. Máxima velocidad de ejecución, soporte 24/7 y 12 horas de desarrollo mensual.' },
 ];
 
 const DEFAULT_CALCULATOR_ADDONS: CalculatorAddon[] = [
@@ -58,13 +60,18 @@ export default function PricingCalculator({ onOpenScheduler }: { onOpenScheduler
     fetcher('/plans/', { isPublic: true })
       .then((data: any) => {
         if (isMounted && Array.isArray(data) && data.length > 0) {
-          const mappedPlans: PartnerPlan[] = data.map((p: any) => ({
-            id: p.id,
-            name: p.name,
-            hours: p.hours,
-            totalMonthly: parseFloat(p.price) || 2999,
-            description: p.description
-          }));
+          const mappedPlans: PartnerPlan[] = data.map((p: any) => {
+            const planPrice = parseFloat(p.price || p.totalMonthly) || 2999;
+            return {
+              id: p.id,
+              name: p.name,
+              hours: p.hours,
+              totalMonthly: planPrice,
+              price: planPrice,
+              period: p.period || 'mes',
+              description: p.description
+            };
+          });
           setPartnerPlans(mappedPlans);
         }
       })
@@ -239,7 +246,7 @@ export default function PricingCalculator({ onOpenScheduler }: { onOpenScheduler
                   </div>
                   <div className="shrink-0 bg-nectar-forest/5 dark:bg-nectar-leaf/10 border border-nectar-forest/10 dark:border-nectar-leaf/20 px-3.5 py-2 rounded-xl text-center">
                     <span className="text-[8px] font-black block opacity-40 uppercase">Precio Plan</span>
-                    <span className="text-sm font-black text-nectar-gold">${activePlan.price.toLocaleString('es-MX')} / {activePlan.period}</span>
+                    <span className="text-sm font-black text-nectar-gold">${(activePlan.price ?? activePlan.totalMonthly).toLocaleString('es-MX')} / {activePlan.period || 'mes'}</span>
                   </div>
                 </div>
               </div>

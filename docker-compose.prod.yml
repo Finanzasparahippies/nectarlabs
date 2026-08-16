@@ -30,8 +30,8 @@ services:
       context: ./frontend
       dockerfile: Dockerfile.prod
       args:
-        INTERNAL_API_URL: ${INTERNAL_API_URL}
-        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+        INTERNAL_API_URL: ${INTERNAL_API_URL:-http://backend:8000}
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://nectarlabs.dev/api}
     env_file:
       - .env.prod
     restart: always

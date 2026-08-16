@@ -466,34 +466,34 @@ case $COMMAND in
         echo "Starting Nectar Labs Production Environment..."
         ensure_network
         remove_conflicting_containers nectar_backend_prod nectar_backend nectar_frontend_prod nectar_frontend
-        $COMPOSE_BIN -f docker-compose.prod.yml up -d "$@"
+        $COMPOSE_BIN --env-file .env.prod -f docker-compose.prod.yml up -d "$@"
         ;;
     deploy-prod)
         echo "Deploying Nectar Labs Production Environment..."
         ensure_network
         remove_conflicting_containers nectar_backend_prod nectar_backend nectar_frontend_prod nectar_frontend
-        $COMPOSE_BIN -f docker-compose.prod.yml up -d --build "$@"
+        $COMPOSE_BIN --env-file .env.prod -f docker-compose.prod.yml up -d --build "$@"
         ;;
     down-prod|stop-prod)
         echo "Stopping Production Environment..."
-        $COMPOSE_BIN -f docker-compose.prod.yml down "$@"
+        $COMPOSE_BIN --env-file .env.prod -f docker-compose.prod.yml down "$@"
         ;;
     restart-prod)
         echo "Restarting Production Environment..."
-        $COMPOSE_BIN -f docker-compose.prod.yml restart "$@"
+        $COMPOSE_BIN --env-file .env.prod -f docker-compose.prod.yml restart "$@"
         ;;
     status-prod)
-        $COMPOSE_BIN -f docker-compose.prod.yml ps "$@"
+        $COMPOSE_BIN --env-file .env.prod -f docker-compose.prod.yml ps "$@"
         ;;
     logs-prod)
         if [ $# -eq 0 ]; then
-            $COMPOSE_BIN -f docker-compose.prod.yml logs -f --tail=100
+            $COMPOSE_BIN --env-file .env.prod -f docker-compose.prod.yml logs -f --tail=100
         else
-            $COMPOSE_BIN -f docker-compose.prod.yml logs "$@"
+            $COMPOSE_BIN --env-file .env.prod -f docker-compose.prod.yml logs "$@"
         fi
         ;;
     build)
-        $COMPOSE_BIN -f docker-compose.prod.yml build "$@"
+        $COMPOSE_BIN --env-file .env.prod -f docker-compose.prod.yml build "$@"
         ;;
     manage-prod)
         run_django_cmd_prod "$@"
