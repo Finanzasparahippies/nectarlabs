@@ -18,6 +18,19 @@ interface Addon {
   icon: React.ReactNode;
 }
 
+export const ensureArray = (val: any): string[] => {
+  if (Array.isArray(val)) return val;
+  if (typeof val === 'string' && val.trim()) {
+    try {
+      const parsed = JSON.parse(val);
+      if (Array.isArray(parsed)) return parsed;
+    } catch {
+      return val.split('\n').map(s => s.trim()).filter(Boolean);
+    }
+  }
+  return [];
+};
+
 const getAddonIcon = (id: string) => {
   switch (id) {
     case 'pack-ecommerce-lite':
@@ -322,19 +335,22 @@ export default function AddonShowcase() {
       try {
         const data = await fetcher('/addons/', { isPublic: true });
         if (Array.isArray(data)) {
-          const mapped: Addon[] = data.map((item: any) => ({
-            id: item.slug,
-            name: item.name,
-            categoryBadge: item.category_badge,
-            description: item.description,
-            detailedDescription: item.detailed_description,
-            monthlyPrice: parseFloat(item.monthly_price),
-            yearlyPrice: parseFloat(item.yearly_price),
-            complexity: item.complexity,
-            serverRequirements: item.server_requirements,
-            technicalDetails: item.technical_details || [],
-            icon: getAddonIcon(item.slug),
-          }));
+          const mapped: Addon[] = data.map((item: any) => {
+            const addonSlug = item.slug || item.id || '';
+            return {
+              id: addonSlug,
+              name: item.name || 'Módulo',
+              categoryBadge: item.category_badge || 'MÓDULO ADICIONAL',
+              description: item.description || '',
+              detailedDescription: item.detailed_description || item.description || '',
+              monthlyPrice: parseFloat(item.monthly_price) || 0,
+              yearlyPrice: parseFloat(item.yearly_price) || 0,
+              complexity: item.complexity || 'Media',
+              serverRequirements: item.server_requirements || 'Infraestructura cloud asistida.',
+              technicalDetails: ensureArray(item.technical_details),
+              icon: getAddonIcon(addonSlug),
+            };
+          });
           setAddonsList(mapped);
         }
       } catch (error) {
@@ -464,19 +480,26 @@ export default function AddonShowcase() {
             </p>
 
             <div className="space-y-6 border-t border-card-border pt-8 mb-8">
-              <div>
-                <h4 className="text-[10px] font-black uppercase tracking-widest text-nectar-gold mb-3">
-                  Funcionalidades Clave
-                </h4>
-                <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {selectedAddon.technicalDetails.map((detail, idx) => (
-                    <li key={idx} className="flex items-center gap-2.5 text-xs text-foreground/80">
-                      <span className="w-1.5 h-1.5 bg-nectar-gold rounded-full shrink-0"></span>
-                      {detail}
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              {(() => {
+                const detailsList = ensureArray(selectedAddon.technicalDetails);
+                if (detailsList.length === 0) return null;
+
+                return (
+                  <div>
+                    <h4 className="text-[10px] font-black uppercase tracking-widest text-nectar-gold mb-3">
+                      Funcionalidades Clave
+                    </h4>
+                    <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {detailsList.map((detail, idx) => (
+                        <li key={idx} className="flex items-center gap-2.5 text-xs text-foreground/80">
+                          <span className="w-1.5 h-1.5 bg-nectar-gold rounded-full shrink-0"></span>
+                          {detail}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                );
+              })()}
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 border-t border-card-border/50 pt-6">
                 <div>

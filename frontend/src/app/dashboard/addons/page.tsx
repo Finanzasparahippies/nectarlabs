@@ -24,6 +24,19 @@ interface Addon {
   icon: React.ReactNode;
 }
 
+const ensureArray = (val: any): string[] => {
+  if (Array.isArray(val)) return val;
+  if (typeof val === 'string' && val.trim()) {
+    try {
+      const parsed = JSON.parse(val);
+      if (Array.isArray(parsed)) return parsed;
+    } catch {
+      return val.split('\n').map(s => s.trim()).filter(Boolean);
+    }
+  }
+  return [];
+};
+
 const getAddonIcon = (id: string) => {
   switch (id) {
     case 'bot-chat':
@@ -440,7 +453,7 @@ export default function AddonsPage() {
               sourceReference: item.source_reference,
               complexity: item.complexity,
               serverRequirements: item.server_requirements,
-              technicalDetails: item.technical_details || [],
+              technicalDetails: ensureArray(item.technical_details),
               icon: getAddonIcon(item.slug),
             };
           });
@@ -1074,19 +1087,26 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
               </p>
 
               <div className="space-y-6 border-t border-card-border pt-8 mb-8">
-                <div>
-                  <h4 className="text-[10px] font-black uppercase tracking-widest text-nectar-gold mb-3">
-                    Funcionalidades Clave
-                  </h4>
-                  <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {selectedAddon.technicalDetails.map((detail, idx) => (
-                      <li key={idx} className="flex items-center gap-2.5 text-xs text-foreground/80">
-                        <span className="w-1.5 h-1.5 bg-nectar-gold rounded-full shrink-0"></span>
-                        {detail}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+                {(() => {
+                  const detailsList = ensureArray(selectedAddon.technicalDetails);
+                  if (detailsList.length === 0) return null;
+
+                  return (
+                    <div>
+                      <h4 className="text-[10px] font-black uppercase tracking-widest text-nectar-gold mb-3">
+                        Funcionalidades Clave
+                      </h4>
+                      <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {detailsList.map((detail, idx) => (
+                          <li key={idx} className="flex items-center gap-2.5 text-xs text-foreground/80">
+                            <span className="w-1.5 h-1.5 bg-nectar-gold rounded-full shrink-0"></span>
+                            {detail}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  );
+                })()}
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 border-t border-card-border/50 pt-6">
                   <div>
