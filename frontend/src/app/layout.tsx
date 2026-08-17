@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import Script from "next/script";
 import "./globals.css";
 import SupportChatWidget from "../components/SupportChatWidget";
 
@@ -15,6 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://staging.nectarlabs.dev"),
   title: "Néctar Labs | Software Artesanal & Arquitectura de Alto Rendimiento",
   description: "Diseñamos software artesanal y arquitectura escalable para negocios que exigen independencia técnica y rendimiento industrial. Tu partner tecnológico estratégico.",
   keywords: ["software artesanal", "arquitectura de software", "desarrollo web méxico", "nectar labs", "partner tecnológico", "django nextjs", "desarrollo a medida"],
@@ -64,18 +64,17 @@ export default function RootLayout({
       <head>
         <meta name="google-adsense-account" content="ca-pub-2582703158474486" />
         <script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2582703158474486"
+          crossOrigin="anonymous"
+        />
+        <script
           dangerouslySetInnerHTML={{
             __html: `(function(){try{var s=localStorage.getItem('theme'),d=window.matchMedia('(prefers-color-scheme: dark)').matches;if(s==='dark'||(!s&&d)){document.documentElement.classList.add('dark')}else{document.documentElement.classList.remove('dark')}}catch(e){}})()`,
           }}
         />
       </head>
       <body className="min-h-full flex flex-col">
-        <Script
-          async
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2582703158474486"
-          crossOrigin="anonymous"
-          strategy="afterInteractive"
-        />
         {children}
         <SupportChatWidget />
       </body>
