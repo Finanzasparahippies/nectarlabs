@@ -558,15 +558,34 @@ function OnboardingContent() {
                   </section>
 
                   <section className="space-y-3">
-                    <h3 className="text-lg font-black uppercase tracking-tight text-foreground">5. GESTIÓN DE HORAS Y PROPIEDAD</h3>
-                    <p><strong>Límite de Horas:</strong> El paquete incluye {selectedPlanObj?.hours || 0} horas de ingeniería mensuales dedicadas al proyecto.</p>
-                    <p><strong>Excedentes (Mes 1-6):</strong> Las horas adicionales de ingeniería solicitadas se facturarán a una tasa de <strong>$225 MXN</strong> por hora.</p>
-                    <p><strong>Propiedad Intelectual:</strong> La propiedad del código fuente y los activos de diseño se transfieren a EL CLIENTE tras la liquidación del periodo obligatorio (6 meses).</p>
+                    <h3 className="text-lg font-black uppercase tracking-tight text-foreground">5. GESTIÓN DE ALCANCE Y PROPIEDAD DE CÓDIGO (CONTRATO A 6 MESES)</h3>
+                    <p><strong>Periodo Obligatorio:</strong> El presente contrato contempla una duración mínima de 6 meses.</p>
+                    <p><strong>Alcance del Plan Seleccionado ({selectedPlanObj?.name || 'Seleccionado'}):</strong></p>
+                    <ul className="list-disc pl-5 space-y-1 text-xs">
+                      {selectedPlanObj?.name?.toLowerCase().includes('premium') ? (
+                        <>
+                          <li><strong>Bolsa de Desarrollo:</strong> Incluye 12 horas dedicadas de desarrollo e ingeniería mensual.</li>
+                          <li><strong>Desarrollo a Medida:</strong> Creación de funcionalidades desde cero o adaptación de plantillas oficiales.</li>
+                          <li><strong>Add-ons & Marca:</strong> Soporte completo para todos los add-ons personalizados a la marca de EL CLIENTE.</li>
+                        </>
+                      ) : selectedPlanObj?.name?.toLowerCase().includes('mid') ? (
+                        <>
+                          <li><strong>Personalización de Marca:</strong> Soporte para todos los add-ons personalizados a la marca por el equipo de Nectar Labs.</li>
+                          <li><strong>Restricción de Desarrollo:</strong> Uso exclusivo y customización de plantillas oficiales. No incluye desarrollo de funcionalidades a medida desde cero.</li>
+                        </>
+                      ) : (
+                        <>
+                          <li><strong>Add-ons y Plantillas:</strong> Acceso a todos los add-ons utilizables dentro de plantillas oficiales.</li>
+                          <li><strong>Restricción de Marca:</strong> Personalización autónoma por EL CLIENTE utilizando herramientas nativas de la plataforma (sin intervención directa de diseño/desarrollo a medida).</li>
+                        </>
+                      )}
+                    </ul>
+                    <p><strong>Propiedad Intelectual:</strong> La propiedad de los activos digitales configurados y el código se consolida a favor de EL CLIENTE al cumplir los 6 meses de contrato.</p>
                   </section>
                   
                   <section className="space-y-3 font-semibold text-foreground/80">
                     <h3 className="text-lg font-black uppercase tracking-tight text-foreground">6. CONTINUIDAD POST-COMPROMISO (MES 7+)</h3>
-                    <p>Al finalizar el periodo inicial de 6 meses, EL CLIENTE podrá optar por suscripción continua (mantiene beneficios y horas) o Servicio por Evento (On-Demand) a $500 MXN/hora.</p>
+                    <p>Al finalizar el periodo obligatorio de 6 meses, EL CLIENTE podrá renovar su suscripción de Partner Tecnológico o migrar a mantenimiento autónomo de la colmena digital.</p>
                   </section>
                 </div>
               </div>

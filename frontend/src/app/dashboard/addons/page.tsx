@@ -340,6 +340,7 @@ export default function AddonsPage() {
   const [loading, setLoading] = useState(true);
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
   const [selectedAddon, setSelectedAddon] = useState<Addon | null>(null);
+  const [exportWidgetAddon, setExportWidgetAddon] = useState<Addon | null>(null);
   const [requestAddon, setRequestAddon] = useState<Addon | null>(null);
   const [annexedAddons, setAnnexedAddons] = useState<string[]>([]);
   useEffect(() => {
@@ -625,19 +626,27 @@ export default function AddonsPage() {
             </span>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-3 gap-2">
             <button
               type="button"
               onClick={() => setSelectedAddon(addon)}
-              className="px-4 py-2 bg-foreground/[0.04] border border-card-border hover:bg-foreground/[0.08] text-foreground text-[8px] font-black uppercase tracking-widest rounded-lg hover:scale-105 active:scale-95 transition-all cursor-pointer text-center"
+              className="px-2 py-2 bg-foreground/[0.04] border border-card-border hover:bg-foreground/[0.08] text-foreground text-[8px] font-black uppercase tracking-widest rounded-lg hover:scale-105 active:scale-95 transition-all cursor-pointer text-center truncate"
             >
               Ficha
+            </button>
+            <button
+              type="button"
+              onClick={() => setExportWidgetAddon(addon)}
+              className="px-2 py-2 bg-nectar-gold/10 border border-nectar-gold/30 text-nectar-gold hover:bg-nectar-gold/20 text-[8px] font-black uppercase tracking-widest rounded-lg hover:scale-105 active:scale-95 transition-all cursor-pointer text-center truncate"
+              title="Exportar Widget Embebible"
+            >
+              Widget 🧩
             </button>
             {isStaff ? (
               <button
                 type="button"
                 onClick={() => setManageAddon(addon)}
-                className="px-4 py-2 text-background text-[8px] font-black uppercase tracking-widest rounded-lg hover:scale-105 active:scale-95 transition-all shadow-md cursor-pointer text-center"
+                className="px-2 py-2 text-background text-[8px] font-black uppercase tracking-widest rounded-lg hover:scale-105 active:scale-95 transition-all shadow-md cursor-pointer text-center truncate"
                 style={{ backgroundColor: '#C68A1E' }}
               >
                 Asignar
@@ -646,7 +655,7 @@ export default function AddonsPage() {
               hasPlanContract ? (
                 <button
                   disabled
-                  className="px-4 py-2 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[8px] font-black uppercase tracking-widest rounded-lg cursor-default text-center"
+                  className="px-2 py-2 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[8px] font-black uppercase tracking-widest rounded-lg cursor-default text-center truncate"
                 >
                   Activo
                 </button>
@@ -655,7 +664,7 @@ export default function AddonsPage() {
                   type="button"
                   onClick={handleOpenBillingPortal}
                   disabled={isSubmitting}
-                  className="px-4 py-2 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 text-[8px] font-black uppercase tracking-widest rounded-lg hover:scale-105 active:scale-95 transition-all shadow-md cursor-pointer text-center"
+                  className="px-2 py-2 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 text-[8px] font-black uppercase tracking-widest rounded-lg hover:scale-105 active:scale-95 transition-all shadow-md cursor-pointer text-center truncate"
                 >
                   {isSubmitting ? '...' : 'Gestionar'}
                 </button>
@@ -664,7 +673,7 @@ export default function AddonsPage() {
               <button
                 type="button"
                 onClick={() => setRequestAddon(addon)}
-                className="px-4 py-2 text-background text-[8px] font-black uppercase tracking-widest rounded-lg hover:scale-105 active:scale-95 transition-all shadow-md cursor-pointer text-center"
+                className="px-2 py-2 text-background text-[8px] font-black uppercase tracking-widest rounded-lg hover:scale-105 active:scale-95 transition-all shadow-md cursor-pointer text-center truncate"
                 style={{ backgroundColor: '#C68A1E' }}
               >
                 {hasPlanContract ? 'Solicitar' : 'Adquirir'}
@@ -1129,6 +1138,109 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
                   type="button"
                   onClick={() => setSelectedAddon(null)}
                   className="px-8 py-4 text-xs font-black uppercase tracking-widest hover:bg-foreground/5 rounded-xl border border-card-border text-center transition-all"
+                >
+                  Cerrar
+                </button>
+              </div>
+            </div>
+        {/* Modal: Export Widget Embebible & CORS Origin Control */}
+        {exportWidgetAddon && (
+          <div
+            onClick={() => setExportWidgetAddon(null)}
+            className="fixed inset-0 bg-background/80 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-premium cursor-pointer"
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className="bg-card-bg border border-card-border w-full max-w-2xl rounded-[3rem] p-8 md:p-12 shadow-2xl relative max-h-[90vh] overflow-y-auto cursor-default space-y-6"
+            >
+              <button
+                type="button"
+                onClick={() => setExportWidgetAddon(null)}
+                className="absolute top-6 right-6 w-10 h-10 bg-foreground/5 hover:bg-foreground/10 text-foreground/60 hover:text-foreground rounded-full flex items-center justify-center text-lg font-bold transition-all"
+              >
+                ✕
+              </button>
+
+              <div className="flex items-center gap-4">
+                <div className="p-4 bg-nectar-gold/10 rounded-2xl">
+                  {exportWidgetAddon.icon}
+                </div>
+                <div>
+                  <span className="text-[8px] font-black uppercase tracking-widest text-nectar-gold block mb-1">
+                    Exportador de Widgets SaaS Embebibles
+                  </span>
+                  <h2 className="text-2xl font-black tracking-tight">{exportWidgetAddon.name}</h2>
+                </div>
+              </div>
+
+              <p className="text-xs text-foreground/70 leading-relaxed">
+                Este módulo puede exportarse como un widget embebible en cualquier página o sitio web externo, o consumirse dentro del ecosistema Nectar Labs.
+              </p>
+
+              {/* Script Embed Code */}
+              <div className="space-y-2">
+                <label className="text-[9px] font-black uppercase tracking-widest text-nectar-gold block">
+                  1. Fragmento de Código Script (&lt;script&gt;)
+                </label>
+                <div className="bg-background/80 border border-card-border p-4 rounded-2xl font-mono text-[10px] text-foreground/90 relative group">
+                  <code className="break-all block">
+                    {`<script src="https://nectarlabs.ai/widget.js" data-tenant="${tenants[0]?.subdomain || 'mi-marca'}" data-addon="${exportWidgetAddon.id}" async></script>`}
+                  </code>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(`<script src="https://nectarlabs.ai/widget.js" data-tenant="${tenants[0]?.subdomain || 'mi-marca'}" data-addon="${exportWidgetAddon.id}" async></script>`);
+                      showToast("Código script copiado al portapapeles", "success");
+                    }}
+                    className="mt-3 block w-full py-2.5 bg-nectar-gold text-background font-black text-[9px] uppercase tracking-widest rounded-xl hover:scale-[1.01] transition-transform cursor-pointer text-center"
+                  >
+                    Copiar Código Script
+                  </button>
+                </div>
+              </div>
+
+              {/* iframe Embed Code */}
+              <div className="space-y-2">
+                <label className="text-[9px] font-black uppercase tracking-widest text-nectar-gold block">
+                  2. Fragmento de Código iframe (&lt;iframe&gt;)
+                </label>
+                <div className="bg-background/80 border border-card-border p-4 rounded-2xl font-mono text-[10px] text-foreground/90 relative group">
+                  <code className="break-all block">
+                    {`<iframe src="https://${tenants[0]?.subdomain || 'mi-marca'}.nectarlabs.ai/widgets/${exportWidgetAddon.id}" width="100%" height="600" frameborder="0" allow="camera; microphone; payment"></iframe>`}
+                  </code>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(`<iframe src="https://${tenants[0]?.subdomain || 'mi-marca'}.nectarlabs.ai/widgets/${exportWidgetAddon.id}" width="100%" height="600" frameborder="0" allow="camera; microphone; payment"></iframe>`);
+                      showToast("Código iframe copiado al portapapeles", "success");
+                    }}
+                    className="mt-3 block w-full py-2.5 border border-card-border text-foreground font-black text-[9px] uppercase tracking-widest rounded-xl hover:bg-foreground/5 transition-colors cursor-pointer text-center"
+                  >
+                    Copiar Código iframe
+                  </button>
+                </div>
+              </div>
+
+              {/* CORS / Allowed Origins Security Section */}
+              <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/25 space-y-2">
+                <div className="flex items-center gap-2 text-amber-400 text-xs font-black uppercase tracking-wider">
+                  <span>🛡️</span> Control de Origen CORS & Seguridad de Dominios
+                </div>
+                <p className="text-[10px] text-foreground/80 leading-relaxed">
+                  Para evitar el uso no autorizado o el secuestro de tus widgets en sitios externos no suscritos, el backend de Nectar Labs valida estrictamente los dominios autorizados en la cabecera HTTP origin.
+                </p>
+                <div className="pt-2 flex justify-between items-center text-[9px] font-mono">
+                  <span className="text-foreground/60">Dominios Registrados actualmente:</span>
+                  <span className="text-nectar-gold font-bold">{tenants[0]?.allowed_origins || 'Subdominio Nativo'}</span>
+                </div>
+                <Link href="/dashboard/tenant-settings" className="inline-block mt-2 text-[9px] font-black uppercase tracking-widest text-nectar-gold hover:underline">
+                  → Configurar Dominios Autorizados (CORS) en Ajustes de la Colmena
+                </Link>
+              </div>
+
+              <div className="pt-4 border-t border-card-border flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setExportWidgetAddon(null)}
+                  className="px-8 py-3 text-xs font-black uppercase tracking-widest hover:bg-foreground/5 rounded-xl border border-card-border transition-all cursor-pointer"
                 >
                   Cerrar
                 </button>

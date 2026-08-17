@@ -14,9 +14,9 @@ def seed_database():
         id=1,
         defaults={
             "name": "Plan Básico",
-            "price": 2499.00,
-            "hours": 6,
-            "description": "Solución ágil para startups y pequeños negocios. Incluye mantenimiento, hosting y 6 horas de desarrollo mensual.",
+            "price": 2999.00,
+            "hours": 0,
+            "description": "Contrato a 6 meses. Acceso a todos los add-ons utilizables dentro de las plantillas oficiales de Nectar Labs. Personalización autónoma mediante herramientas nativas de la plataforma.",
             "is_recommended": False,
             "is_active": True
         }
@@ -26,9 +26,9 @@ def seed_database():
         id=2,
         defaults={
             "name": "Plan Mid",
-            "price": 2999.00,
-            "hours": 8,
-            "description": "Desarrollo continuo y escalabilidad de producto. Incluye soporte prioritario y 8 horas de desarrollo mensual.",
+            "price": 3499.00,
+            "hours": 0,
+            "description": "Contrato a 6 meses. Soporte para todos los add-ons de Nectar Labs personalizados a la marca del cliente. Restringido exclusivamente al uso y customización visual de plantillas oficiales (no incluye desarrollo a medida ni diseño desde cero).",
             "is_recommended": False,
             "is_active": True
         }
@@ -38,9 +38,9 @@ def seed_database():
         id=3,
         defaults={
             "name": "Plan Premium",
-            "price": 3499.00,
+            "price": 3999.00,
             "hours": 12,
-            "description": "Ingeniería dedicada de alto impacto. Máxima velocidad de ejecución, soporte 24/7 y 12 horas de desarrollo mensual.",
+            "description": "Contrato a 6 meses. 12 horas de desarrollo mensual dedicadas. Soporte completo para todos los add-ons personalizados a la marca. Desarrollo a medida desde cero o adaptando plantillas oficiales.",
             "is_recommended": True,
             "is_active": True
         }
