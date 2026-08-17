@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import ThemeToggle from './ThemeToggle';
 
@@ -10,8 +10,11 @@ export default function Navbar() {
   const [userEmail, setUserEmail] = useState('');
   const [mounted, setMounted] = useState(false);
   
-  // Mobile menu state
+  // Mobile menu & Dropdown states
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [instalablesDropdownOpen, setInstalablesDropdownOpen] = useState(false);
+
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -23,15 +26,30 @@ export default function Navbar() {
       if (email) setUserEmail(email);
     };
 
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setInstalablesDropdownOpen(false);
+      }
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setInstalablesDropdownOpen(false);
+        setMobileMenuOpen(false);
+      }
+    };
+
     window.addEventListener('scroll', handleScroll);
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
     checkAuth();
     
     return () => {
       window.removeEventListener('scroll', handleScroll);
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
     };
   }, []);
-
-
 
   const handleLogout = () => {
     localStorage.clear();
@@ -53,10 +71,82 @@ export default function Navbar() {
             <a href="/#pricing" className="text-[10px] font-black uppercase tracking-widest text-foreground opacity-60 hover:opacity-100 transition-opacity">Planes</a>
             <a href="/#addons" className="text-[10px] font-black uppercase tracking-widest text-foreground opacity-60 hover:opacity-100 transition-opacity">Add-ons</a>
             <Link href="/stores" className="text-[10px] font-black uppercase tracking-widest text-foreground opacity-60 hover:opacity-100 transition-opacity">Tiendas</Link>
-            <Link href="/nectarcast" className="text-[10px] font-black uppercase tracking-widest text-nectar-gold hover:opacity-100 transition-opacity flex items-center gap-1">
-              <span>NectarCast</span>
-              <span className="px-1.5 py-0.5 text-[8px] bg-nectar-gold/20 text-nectar-gold border border-nectar-gold/30 rounded-md font-bold">GRATIS</span>
-            </Link>
+            
+            {/* Dropdown de Instalables */}
+            <div 
+              ref={dropdownRef}
+              className="relative"
+              onMouseEnter={() => setInstalablesDropdownOpen(true)}
+              onMouseLeave={() => setInstalablesDropdownOpen(false)}
+            >
+              <button
+                onClick={() => setInstalablesDropdownOpen(!instalablesDropdownOpen)}
+                aria-expanded={instalablesDropdownOpen}
+                aria-haspopup="true"
+                className="text-[10px] font-black uppercase tracking-widest text-nectar-gold hover:opacity-100 transition-all flex items-center gap-1.5 focus:outline-none cursor-pointer"
+              >
+                <span>Instalables</span>
+                <svg 
+                  className={`w-3 h-3 transition-transform duration-300 ${instalablesDropdownOpen ? 'rotate-180 text-nectar-gold' : 'text-nectar-gold/70'}`} 
+                  fill="none" 
+                  viewBox="0 0 24 24" 
+                  stroke="currentColor" 
+                  strokeWidth={2.5}
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              {/* Menú Desplegable */}
+              {instalablesDropdownOpen && (
+                <div 
+                  role="menu"
+                  aria-orientation="vertical"
+                  className="absolute top-full left-0 mt-3 w-64 bg-card-bg/95 backdrop-blur-2xl border border-card-border rounded-2xl p-3 shadow-2xl animate-in fade-in slide-in-from-top-2 duration-200 z-50 cursor-default"
+                >
+                  <Link 
+                    href="/nectarcast"
+                    onClick={() => setInstalablesDropdownOpen(false)}
+                    role="menuitem"
+                    className="flex items-start gap-3 p-3 rounded-xl hover:bg-foreground/5 transition-all group/item"
+                  >
+                    <div className="p-2 bg-nectar-gold/10 text-nectar-gold rounded-lg group-hover/item:bg-nectar-gold group-hover/item:text-background transition-colors">
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <div className="text-[11px] font-black uppercase tracking-wider text-foreground flex items-center gap-1.5">
+                        NectarCast
+                        <span className="px-1.5 py-0.2 text-[7px] bg-nectar-gold/20 text-nectar-gold border border-nectar-gold/30 rounded font-bold">GRATIS</span>
+                      </div>
+                      <p className="text-[9px] text-muted leading-tight mt-0.5">Transmisión & Multimedia Desktop</p>
+                    </div>
+                  </Link>
+
+                  <Link 
+                    href="/nectarq"
+                    onClick={() => setInstalablesDropdownOpen(false)}
+                    role="menuitem"
+                    className="flex items-start gap-3 p-3 rounded-xl hover:bg-foreground/5 transition-all group/item mt-1"
+                  >
+                    <div className="p-2 bg-nectar-gold/10 text-nectar-gold rounded-lg group-hover/item:bg-nectar-gold group-hover/item:text-background transition-colors">
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <div className="text-[11px] font-black uppercase tracking-wider text-foreground flex items-center gap-1.5">
+                        NectarQ
+                        <span className="px-1.5 py-0.2 text-[7px] bg-nectar-gold/20 text-nectar-gold border border-nectar-gold/30 rounded font-bold">DESKTOP</span>
+                      </div>
+                      <p className="text-[9px] text-muted leading-tight mt-0.5">Gestión de Filas & Cliente Nativo</p>
+                    </div>
+                  </Link>
+                </div>
+              )}
+            </div>
+
             <a href="/#seller-program" className="text-[10px] font-black uppercase tracking-widest text-nectar-gold/70 hover:text-nectar-gold transition-colors flex items-center gap-1.5 font-bold">
               <span className="w-1.5 h-1.5 rounded-full bg-nectar-gold animate-pulse" />
               Únete a Nosotros
@@ -69,7 +159,10 @@ export default function Navbar() {
 
           {/* Botones y Selector de Tema (Escritorio) */}
           <div className="hidden md:flex items-center gap-6">
-            <ThemeToggle />
+            {/* ThemeToggle oculto temporalmente manteniendo código fuente */}
+            <div className="hidden" aria-hidden="true">
+              <ThemeToggle />
+            </div>
             {mounted && isLoggedIn && (
               <div className="hidden lg:flex flex-col items-end">
                 <span className="text-[9px] font-black uppercase tracking-widest text-nectar-gold/50">Sesión Activa</span>
@@ -97,7 +190,10 @@ export default function Navbar() {
 
           {/* Controles de Dispositivos Móviles (Hamburguesa y Tema) */}
           <div className="flex md:hidden items-center gap-4">
-            <ThemeToggle />
+            {/* ThemeToggle oculto temporalmente manteniendo código fuente */}
+            <div className="hidden" aria-hidden="true">
+              <ThemeToggle />
+            </div>
             <button 
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="p-2 text-foreground focus:outline-none z-50 rounded-xl border border-card-border bg-card-bg/40 flex items-center justify-center w-10 h-10"
@@ -125,10 +221,20 @@ export default function Navbar() {
             <a href="/#pricing" onClick={() => setMobileMenuOpen(false)} className="text-xl font-black uppercase tracking-widest text-foreground hover:text-nectar-gold transition-colors">Planes</a>
             <a href="/#addons" onClick={() => setMobileMenuOpen(false)} className="text-xl font-black uppercase tracking-widest text-foreground hover:text-nectar-gold transition-colors">Add-ons</a>
             <Link href="/stores" onClick={() => setMobileMenuOpen(false)} className="text-xl font-black uppercase tracking-widest text-foreground hover:text-nectar-gold transition-colors">Tiendas</Link>
-            <Link href="/nectarcast" onClick={() => setMobileMenuOpen(false)} className="text-xl font-black uppercase tracking-widest text-nectar-gold hover:underline flex items-center justify-between">
-              <span>NectarCast</span>
-              <span className="px-2 py-0.5 text-xs bg-nectar-gold/20 text-nectar-gold border border-nectar-gold/30 rounded-lg font-bold">GRATIS</span>
-            </Link>
+            
+            {/* Instalables en Móvil */}
+            <div className="flex flex-col gap-3 py-2 border-y border-card-border/50">
+              <span className="text-[9px] font-black uppercase tracking-widest text-nectar-gold/70">Instalables</span>
+              <Link href="/nectarcast" onClick={() => setMobileMenuOpen(false)} className="text-lg font-black uppercase tracking-widest text-nectar-gold hover:underline flex items-center justify-between">
+                <span>NectarCast</span>
+                <span className="px-2 py-0.5 text-xs bg-nectar-gold/20 text-nectar-gold border border-nectar-gold/30 rounded-lg font-bold">GRATIS</span>
+              </Link>
+              <Link href="/nectarq" onClick={() => setMobileMenuOpen(false)} className="text-lg font-black uppercase tracking-widest text-foreground hover:text-nectar-gold transition-colors flex items-center justify-between">
+                <span>NectarQ</span>
+                <span className="px-2 py-0.5 text-xs bg-nectar-gold/20 text-nectar-gold border border-nectar-gold/30 rounded-lg font-bold">DESKTOP</span>
+              </Link>
+            </div>
+
             <a href="/#seller-program" onClick={() => setMobileMenuOpen(false)} className="text-xl font-black uppercase tracking-widest text-nectar-gold hover:underline">Únete a Nosotros</a>
             <Link href="/blog" onClick={() => setMobileMenuOpen(false)} className="text-xl font-black uppercase tracking-widest text-foreground hover:text-nectar-gold transition-colors">Blog</Link>
             {mounted && isLoggedIn && (
