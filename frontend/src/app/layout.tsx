@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import SupportChatWidget from "../components/SupportChatWidget";
 
@@ -64,17 +65,19 @@ export default function RootLayout({
       <head>
         <meta name="google-adsense-account" content="ca-pub-2582703158474486" />
         <script
-          async
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2582703158474486"
-          crossOrigin="anonymous"
-        />
-        <script
+          suppressHydrationWarning
           dangerouslySetInnerHTML={{
             __html: `(function(){try{var s=localStorage.getItem('theme'),d=window.matchMedia('(prefers-color-scheme: dark)').matches;if(s==='dark'||(!s&&d)){document.documentElement.classList.add('dark')}else{document.documentElement.classList.remove('dark')}}catch(e){}})()`,
           }}
         />
       </head>
       <body className="min-h-full flex flex-col">
+        <Script
+          id="google-adsense"
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2582703158474486"
+          crossOrigin="anonymous"
+          strategy="afterInteractive"
+        />
         {children}
         <SupportChatWidget />
       </body>
