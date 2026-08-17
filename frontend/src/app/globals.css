@@ -102,6 +102,17 @@ body {
   animation: glow 4s ease-in-out infinite;
 }
 
+/* Performance & Core Web Vitals Optimization (ms-ambar standard) */
+.transform-gpu {
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+.will-change-transform {
+  will-change: transform, opacity;
+}
+
 /* Glassmorphism utility - Updated for better visibility on solid bg */
 .glass {
   background: rgba(255, 255, 255, 0.05);

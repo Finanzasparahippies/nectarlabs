@@ -15,6 +15,27 @@ export default function Navbar() {
   const [instalablesDropdownOpen, setInstalablesDropdownOpen] = useState(false);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleDropdownOpen = () => {
+    if (closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current);
+      closeTimeoutRef.current = null;
+    }
+    setInstalablesDropdownOpen(true);
+  };
+
+  const handleDropdownCloseWithDelay = () => {
+    if (closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current);
+    }
+    closeTimeoutRef.current = setTimeout(() => {
+      // Only close if focus is not currently inside the dropdown
+      if (dropdownRef.current && !dropdownRef.current.contains(document.activeElement)) {
+        setInstalablesDropdownOpen(false);
+      }
+    }, 180);
+  };
 
   useEffect(() => {
     setMounted(true);
@@ -45,6 +66,7 @@ export default function Navbar() {
     checkAuth();
     
     return () => {
+      if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
       window.removeEventListener('scroll', handleScroll);
       document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('keydown', handleKeyDown);
@@ -58,10 +80,10 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className={`fixed top-0 left-0 w-full z-50 transition-all duration-500 ${scrolled || mobileMenuOpen ? 'py-4 bg-background/85 backdrop-blur-xl border-b border-card-border' : 'py-8 bg-transparent'}`}>
+      <nav className={`fixed top-0 left-0 w-full z-50 transition-all duration-500 will-change-transform ${scrolled || mobileMenuOpen ? 'py-4 bg-background/85 backdrop-blur-xl border-b border-card-border shadow-lg' : 'py-8 bg-transparent'}`}>
         <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
           <Link href="/" onClick={() => setMobileMenuOpen(false)} className="text-2xl font-black tracking-tighter flex items-center gap-2 group">
-            <div className="w-8 h-8 bg-nectar-gold rounded-lg flex items-center justify-center text-background font-black italic group-hover:rotate-12 transition-transform">N</div>
+            <div className="w-8 h-8 bg-nectar-gold rounded-lg flex items-center justify-center text-background font-black italic group-hover:rotate-12 transition-transform transform-gpu">N</div>
             <span className="text-foreground">NECTAR <span className="text-nectar-gold">LABS</span></span>
           </Link>
 
@@ -72,22 +94,29 @@ export default function Navbar() {
             <a href="/#addons" className="text-[10px] font-black uppercase tracking-widest text-foreground opacity-60 hover:opacity-100 transition-opacity">Add-ons</a>
             <Link href="/stores" className="text-[10px] font-black uppercase tracking-widest text-foreground opacity-60 hover:opacity-100 transition-opacity">Tiendas</Link>
             
-            {/* Dropdown de Instalables */}
+            {/* Dropdown de Instalables con Hover Bridge & ARIA Focus Safety */}
             <div 
               ref={dropdownRef}
-              className="relative"
-              onMouseEnter={() => setInstalablesDropdownOpen(true)}
-              onMouseLeave={() => setInstalablesDropdownOpen(false)}
+              className="relative py-2 -my-2"
+              onMouseEnter={handleDropdownOpen}
+              onMouseLeave={handleDropdownCloseWithDelay}
+              onFocus={handleDropdownOpen}
+              onBlur={(e) => {
+                if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                  handleDropdownCloseWithDelay();
+                }
+              }}
             >
               <button
                 onClick={() => setInstalablesDropdownOpen(!instalablesDropdownOpen)}
                 aria-expanded={instalablesDropdownOpen}
                 aria-haspopup="true"
-                className="text-[10px] font-black uppercase tracking-widest text-nectar-gold hover:opacity-100 transition-all flex items-center gap-1.5 focus:outline-none cursor-pointer"
+                aria-label="Desplegar menú de aplicaciones instalables"
+                className="text-[10px] font-black uppercase tracking-widest text-nectar-gold hover:opacity-100 transition-all flex items-center gap-1.5 focus:outline-none focus:ring-1 focus:ring-nectar-gold/50 rounded-md px-1 cursor-pointer"
               >
                 <span>Instalables</span>
                 <svg 
-                  className={`w-3 h-3 transition-transform duration-300 ${instalablesDropdownOpen ? 'rotate-180 text-nectar-gold' : 'text-nectar-gold/70'}`} 
+                  className={`w-3 h-3 transition-transform duration-300 transform-gpu ${instalablesDropdownOpen ? 'rotate-180 text-nectar-gold' : 'text-nectar-gold/70'}`} 
                   fill="none" 
                   viewBox="0 0 24 24" 
                   stroke="currentColor" 
@@ -97,52 +126,54 @@ export default function Navbar() {
                 </svg>
               </button>
 
-              {/* Menú Desplegable */}
+              {/* Menú Desplegable con Puente Interactivo */}
               {instalablesDropdownOpen && (
                 <div 
                   role="menu"
                   aria-orientation="vertical"
-                  className="absolute top-full left-0 mt-3 w-64 bg-card-bg/95 backdrop-blur-2xl border border-card-border rounded-2xl p-3 shadow-2xl animate-in fade-in slide-in-from-top-2 duration-200 z-50 cursor-default"
+                  className="absolute top-full left-0 pt-2 w-64 z-50 cursor-default"
                 >
-                  <Link 
-                    href="/nectarcast"
-                    onClick={() => setInstalablesDropdownOpen(false)}
-                    role="menuitem"
-                    className="flex items-start gap-3 p-3 rounded-xl hover:bg-foreground/5 transition-all group/item"
-                  >
-                    <div className="p-2 bg-nectar-gold/10 text-nectar-gold rounded-lg group-hover/item:bg-nectar-gold group-hover/item:text-background transition-colors">
-                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                      </svg>
-                    </div>
-                    <div>
-                      <div className="text-[11px] font-black uppercase tracking-wider text-foreground flex items-center gap-1.5">
-                        NectarCast
-                        <span className="px-1.5 py-0.2 text-[7px] bg-nectar-gold/20 text-nectar-gold border border-nectar-gold/30 rounded font-bold">GRATIS</span>
+                  <div className="bg-card-bg/95 backdrop-blur-2xl border border-card-border rounded-2xl p-3 shadow-2xl animate-in fade-in slide-in-from-top-2 duration-200 transform-gpu">
+                    <Link 
+                      href="/nectarcast"
+                      onClick={() => setInstalablesDropdownOpen(false)}
+                      role="menuitem"
+                      className="flex items-start gap-3 p-3 rounded-xl hover:bg-foreground/5 transition-all group/item focus:outline-none focus:bg-foreground/10"
+                    >
+                      <div className="p-2 bg-nectar-gold/10 text-nectar-gold rounded-lg group-hover/item:bg-nectar-gold group-hover/item:text-background transition-colors">
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
                       </div>
-                      <p className="text-[9px] text-muted leading-tight mt-0.5">Transmisión & Multimedia Desktop</p>
-                    </div>
-                  </Link>
+                      <div>
+                        <div className="text-[11px] font-black uppercase tracking-wider text-foreground flex items-center gap-1.5">
+                          NectarCast
+                          <span className="px-1.5 py-0.2 text-[7px] bg-nectar-gold/20 text-nectar-gold border border-nectar-gold/30 rounded font-bold">GRATIS</span>
+                        </div>
+                        <p className="text-[9px] text-muted leading-tight mt-0.5">Transmisión & Multimedia Desktop</p>
+                      </div>
+                    </Link>
 
-                  <Link 
-                    href="/nectarq"
-                    onClick={() => setInstalablesDropdownOpen(false)}
-                    role="menuitem"
-                    className="flex items-start gap-3 p-3 rounded-xl hover:bg-foreground/5 transition-all group/item mt-1"
-                  >
-                    <div className="p-2 bg-nectar-gold/10 text-nectar-gold rounded-lg group-hover/item:bg-nectar-gold group-hover/item:text-background transition-colors">
-                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                      </svg>
-                    </div>
-                    <div>
-                      <div className="text-[11px] font-black uppercase tracking-wider text-foreground flex items-center gap-1.5">
-                        NectarQ
-                        <span className="px-1.5 py-0.2 text-[7px] bg-nectar-gold/20 text-nectar-gold border border-nectar-gold/30 rounded font-bold">DESKTOP</span>
+                    <Link 
+                      href="/nectarq"
+                      onClick={() => setInstalablesDropdownOpen(false)}
+                      role="menuitem"
+                      className="flex items-start gap-3 p-3 rounded-xl hover:bg-foreground/5 transition-all group/item mt-1 focus:outline-none focus:bg-foreground/10"
+                    >
+                      <div className="p-2 bg-nectar-gold/10 text-nectar-gold rounded-lg group-hover/item:bg-nectar-gold group-hover/item:text-background transition-colors">
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
                       </div>
-                      <p className="text-[9px] text-muted leading-tight mt-0.5">Gestión de Filas & Cliente Nativo</p>
-                    </div>
-                  </Link>
+                      <div>
+                        <div className="text-[11px] font-black uppercase tracking-wider text-foreground flex items-center gap-1.5">
+                          NectarQ
+                          <span className="px-1.5 py-0.2 text-[7px] bg-nectar-gold/20 text-nectar-gold border border-nectar-gold/30 rounded font-bold">DESKTOP</span>
+                        </div>
+                        <p className="text-[9px] text-muted leading-tight mt-0.5">Gestión de Filas & Cliente Nativo</p>
+                      </div>
+                    </Link>
+                  </div>
                 </div>
               )}
             </div>
