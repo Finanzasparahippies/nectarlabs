@@ -1,20 +1,20 @@
 'use client';
 import { Suspense } from 'react';
 
-import React, { useEffect, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
-import { fetcher, API_URL } from '../../lib/api';
-import StagingStatus from '../../components/dashboard/StagingStatus';
-import WeeklyLogs from '../../components/dashboard/WeeklyLogs';
-import SalesCommander from '../../components/dashboard/SalesCommander';
-import DashboardSidebar from '../../components/DashboardSidebar';
-import Toast from '../../components/ui/Toast';
-import ConfirmModal from '../../components/ui/ConfirmModal';
+import { useRouter, useSearchParams } from 'next/navigation';
+import React, { useEffect, useState } from 'react';
 import ContactSupportModal from '../../components/dashboard/ContactSupportModal';
 import FacturapiManager from '../../components/dashboard/FacturapiManager';
 import MarketingManager from '../../components/dashboard/MarketingManager';
-import dynamic from 'next/dynamic';
+import SalesCommander from '../../components/dashboard/SalesCommander';
+import StagingStatus from '../../components/dashboard/StagingStatus';
+import WeeklyLogs from '../../components/dashboard/WeeklyLogs';
+import DashboardSidebar from '../../components/DashboardSidebar';
+import ConfirmModal from '../../components/ui/ConfirmModal';
+import Toast from '../../components/ui/Toast';
+import { API_URL, fetcher } from '../../lib/api';
 
 const BusinessCommander = dynamic(
   () => import('../../components/dashboard/BusinessCommander'),
@@ -835,18 +835,18 @@ function DashboardPageOriginal() {
           <h1 className="text-4xl md:text-6xl font-black tracking-tighter mb-2">
             {isDriver ? (activeTab === 'driver-stats' ? 'Resumen de Entregas' : 'Panel de Repartidor') :
               isCEO ? (activeTab === 'business' ? 'Control de Negocio' : 'Consola del CEO') :
-              isDeveloper ? 'Consola de Ingeniería' :
-                isDesigner ? 'Centro de Diseño' :
-                  isSales ? 'Consola de Ventas' :
-                    activeTab === 'hire-plan' ? 'Escala tu Ecosistema' : 'Centro de Control'}
+                isDeveloper ? 'Consola de Ingeniería' :
+                  isDesigner ? 'Centro de Diseño' :
+                    isSales ? 'Consola de Ventas' :
+                      activeTab === 'hire-plan' ? 'Escala tu Ecosistema' : 'Centro de Control'}
           </h1>
           <p className="text-[10px] font-black uppercase tracking-[0.5em] text-nectar-gold opacity-80">
             {isDriver ? (activeTab === 'driver-stats' ? 'Ganancias, Historial de Viajes e Indicadores' : 'Consola de Entregas y GPS en Vivo') :
               isCEO ? (activeTab === 'business' ? 'Consola Financiera y de Infraestructura' : 'Panel de Operaciones Néctar Labs') :
-              isDeveloper ? 'Workspace de Desarrollo y Soporte' :
-                isDesigner ? 'Activos y Proyectos Creativos' :
-                  isSales ? 'Comisiones, Referidos y Métricas de Rendimiento' :
-                    activeTab === 'hire-plan' ? 'Elige tu Plan de Ingeniería Dedicado' : 'Workspace / Cliente Principal'}
+                isDeveloper ? 'Workspace de Desarrollo y Soporte' :
+                  isDesigner ? 'Activos y Proyectos Creativos' :
+                    isSales ? 'Comisiones, Referidos y Métricas de Rendimiento' :
+                      activeTab === 'hire-plan' ? 'Elige tu Plan de Ingeniería Dedicado' : 'Workspace / Cliente Principal'}
           </p>
         </header>
 
@@ -1135,68 +1135,112 @@ function DashboardPageOriginal() {
               </div>
 
               <div id="tour-client-plans" className="grid grid-cols-1 md:grid-cols-3 gap-8 relative z-10">
-                {plans.map((plan) => (
-                  <div key={plan.id} className="p-8 rounded-[2rem] bg-background/50 border border-card-border flex flex-col justify-between hover:border-nectar-gold transition-all duration-300 group animate-in fade-in zoom-in-95">
-                    <div>
-                      <h3 className="text-2xl font-black tracking-tight mb-2">{plan.name}</h3>
-                      {(() => {
-                        const discount = parseFloat(plan.discount_percentage || '0');
-                        const origPrice = parseFloat(plan.price);
-                        const finalPrice = discount > 0 ? origPrice * (1 - discount / 100) : origPrice;
+                {plans.map((plan) => {
+                  const isPremium = plan.name?.toLowerCase().includes('premium');
+                  const isMid = plan.name?.toLowerCase().includes('mid');
 
-                        if (discount > 0) {
+                  return (
+                    <div key={plan.id} className="p-8 rounded-[2rem] bg-background/50 border border-card-border flex flex-col justify-between hover:border-nectar-gold transition-all duration-300 group animate-in fade-in zoom-in-95 relative">
+                      <div>
+                        <div className="flex items-center justify-between gap-2 mb-2">
+                          <span className="px-2.5 py-0.5 bg-nectar-gold/10 text-nectar-gold text-[8px] font-black uppercase tracking-wider rounded-full border border-nectar-gold/20">
+                            Contrato 6 Meses
+                          </span>
+                        </div>
+                        <h3 className="text-2xl font-black tracking-tight mb-2">{plan.name}</h3>
+                        {(() => {
+                          const discount = parseFloat(plan.discount_percentage || '0');
+                          const origPrice = parseFloat(plan.price);
+                          const finalPrice = discount > 0 ? origPrice * (1 - discount / 100) : origPrice;
+
+                          if (discount > 0) {
+                            return (
+                              <div className="mb-6">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span className="text-xs line-through opacity-50 font-mono">
+                                    ${origPrice.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                                  </span>
+                                  <span className="px-2 py-0.5 bg-red-500/10 text-red-500 text-[8px] font-black uppercase tracking-widest rounded-full border border-red-500/20">
+                                    -{discount}% OFF
+                                  </span>
+                                </div>
+                                <div className="text-3xl font-black text-nectar-gold font-mono">
+                                  ${finalPrice.toLocaleString('es-MX', { minimumFractionDigits: 2 })} <span className="text-[10px] text-foreground/50 uppercase tracking-widest">MXN / Mes</span>
+                                </div>
+                              </div>
+                            );
+                          }
+
                           return (
-                            <div className="mb-6">
-                              <div className="flex items-center gap-2 mb-1">
-                                <span className="text-xs line-through opacity-50 font-mono">
-                                  ${origPrice.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
-                                </span>
-                                <span className="px-2 py-0.5 bg-red-500/10 text-red-500 text-[8px] font-black uppercase tracking-widest rounded-full border border-red-500/20">
-                                  -{discount}% OFF
-                                </span>
-                              </div>
-                              <div className="text-3xl font-black text-nectar-gold font-mono">
-                                ${finalPrice.toLocaleString('es-MX', { minimumFractionDigits: 2 })} <span className="text-[10px] text-foreground/50 uppercase tracking-widest">MXN / Mes</span>
-                              </div>
+                            <div className="text-3xl font-black text-nectar-gold mb-6 font-mono">
+                              ${origPrice.toLocaleString('es-MX', { minimumFractionDigits: 2 })} <span className="text-[10px] text-foreground/50 uppercase tracking-widest">MXN / Mes</span>
                             </div>
                           );
-                        }
+                        })()}
 
-                        return (
-                          <div className="text-3xl font-black text-nectar-gold mb-6 font-mono">
-                            ${origPrice.toLocaleString('es-MX', { minimumFractionDigits: 2 })} <span className="text-[10px] text-foreground/50 uppercase tracking-widest">MXN / Mes</span>
-                          </div>
-                        );
-                      })()}
+                        <ul className="space-y-3 mb-8 text-xs text-foreground/80">
+                          {isPremium ? (
+                            <>
+                              <li className="flex items-center gap-2">
+                                <span className="text-nectar-gold font-bold">✓</span>
+                                <strong>{plan.hours}</strong> de ingeniería dedicada/mes
+                              </li>
+                              <li className="flex items-center gap-2">
+                                <span className="text-nectar-gold font-bold">✓</span>
+                                Desarrollo a medida desde cero o plantillas
+                              </li>
+                              <li className="flex items-center gap-2">
+                                <span className="text-nectar-gold font-bold">✓</span>
+                                Personalización total adaptada a tu marca
+                              </li>
+                            </>
+                          ) : isMid ? (
+                            <>
+                              <li className="flex items-center gap-2">
+                                <span className="text-nectar-gold font-bold">✓</span>
+                                Soporte para add-ons con marca del cliente
+                              </li>
+                              <li className="flex items-center gap-2">
+                                <span className="text-nectar-gold font-bold">✓</span>
+                                Customización visual de plantillas oficiales
+                              </li>
+                              <li className="flex items-center gap-2">
+                                <span className="text-foreground/40 font-bold">✕</span>
+                                Sin desarrollo a medida desde cero
+                              </li>
+                            </>
+                          ) : (
+                            <>
+                              <li className="flex items-center gap-2">
+                                <span className="text-nectar-gold font-bold">✓</span>
+                                Acceso a plantillas oficiales de Nectar Labs
+                              </li>
+                              <li className="flex items-center gap-2">
+                                <span className="text-nectar-gold font-bold">✓</span>
+                                Personalización autónoma con herramientas nativas
+                              </li>
+                              <li className="flex items-center gap-2">
+                                <span className="text-foreground/40 font-bold">✕</span>
+                                Sin personalización directa por el equipo
+                              </li>
+                            </>
+                          )}
+                          <li className="flex items-center gap-2">
+                            <span className="text-nectar-gold font-bold">✓</span>
+                            Infraestructura Cloud, Hosting & SSL
+                          </li>
+                        </ul>
+                      </div>
 
-                      <ul className="space-y-3 mb-8 text-xs text-foreground/80">
-                        <li className="flex items-center gap-2">
-                          <span className="text-nectar-gold font-bold">✓</span>
-                          <strong>{plan.hours} Horas</strong> de ingeniería dedicadas
-                        </li>
-                        <li className="flex items-center gap-2">
-                          <span className="text-nectar-gold font-bold">✓</span>
-                          Docker Containers
-                        </li>
-                        <li className="flex items-center gap-2">
-                          <span className="text-nectar-gold font-bold">✓</span>
-                          Seguridad SSL Incluida
-                        </li>
-                        <li className="flex items-center gap-2">
-                          <span className="text-nectar-gold font-bold">✓</span>
-                          Soporte Multi-tenant
-                        </li>
-                      </ul>
+                      <Link
+                        href={`/onboarding?plan=${plan.id}`}
+                        className="w-full py-4 bg-nectar-gold hover:bg-nectar-gold/90 text-background text-center rounded-xl text-[10px] font-black uppercase tracking-widest transition-all hover:scale-[1.02] shadow-lg shadow-nectar-gold/10"
+                      >
+                        Contratar Plan
+                      </Link>
                     </div>
-
-                    <Link
-                      href={`/onboarding?plan=${plan.id}`}
-                      className="w-full py-4 bg-nectar-gold hover:bg-nectar-gold/90 text-background text-center rounded-xl text-[10px] font-black uppercase tracking-widest transition-all hover:scale-[1.02] shadow-lg shadow-nectar-gold/10"
-                    >
-                      Contratar Plan
-                    </Link>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </section>
           </div>
@@ -1280,8 +1324,8 @@ function DashboardPageOriginal() {
                           key={filter}
                           onClick={() => setContractFilter(filter)}
                           className={`px-4 py-2 rounded-xl text-[8.5px] font-black uppercase tracking-wider transition-all duration-300 ${isActive
-                              ? 'bg-nectar-gold text-background shadow-md shadow-nectar-gold/10 font-bold'
-                              : 'text-foreground/50 hover:text-foreground hover:bg-foreground/5 font-bold'
+                            ? 'bg-nectar-gold text-background shadow-md shadow-nectar-gold/10 font-bold'
+                            : 'text-foreground/50 hover:text-foreground hover:bg-foreground/5 font-bold'
                             }`}
                         >
                           {labels[filter]}
@@ -1387,7 +1431,7 @@ function DashboardPageOriginal() {
                                     const host = typeof window !== 'undefined' ? window.location.hostname : '';
                                     const hasCustomDomain = !!contract.tenant_custom_domain;
                                     const hasCustomDomainActive = !!(contract.tenant_use_custom_domain && contract.tenant_custom_domain);
-                                    
+
                                     let activeDomain = hasCustomDomainActive
                                       ? `https://${contract.tenant_custom_domain}`
                                       : `https://${contract.tenant_subdomain}.nectarlabs.dev`;
@@ -1417,7 +1461,7 @@ function DashboardPageOriginal() {
                                               className="text-green-400 hover:text-green-300 transition-colors font-extrabold flex items-center gap-0.5"
                                             >
                                               <span>🌐 {contract.tenant_custom_domain}</span>
-                                              <svg className="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6m12-2l-11 11m11-11h-6m6 0v6"/></svg>
+                                              <svg className="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6m12-2l-11 11m11-11h-6m6 0v6" /></svg>
                                             </a>
                                           </div>
                                         )}
@@ -1432,7 +1476,7 @@ function DashboardPageOriginal() {
                                             className="text-nectar-gold hover:text-white transition-colors font-extrabold flex items-center gap-0.5"
                                           >
                                             <span>🚀 {activeDisplay}</span>
-                                            <svg className="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6m12-2l-11 11m11-11h-6m6 0v6"/></svg>
+                                            <svg className="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6m12-2l-11 11m11-11h-6m6 0v6" /></svg>
                                           </a>
                                           {hasCustomDomain && !hasCustomDomainActive && (
                                             <span className="text-[7px] text-yellow-500/80 font-black uppercase tracking-wider mt-0.5">
@@ -1563,12 +1607,12 @@ function DashboardPageOriginal() {
                                                   value={inst.status}
                                                   onChange={(e) => handleUpdateInstallmentStatus(inst.id, e.target.value)}
                                                   className={`px-2 py-0.5 text-[7px] font-black uppercase tracking-wider rounded-full bg-background border focus:outline-none cursor-pointer transition-colors ${inst.status === 'PAID'
-                                                      ? 'border-green-500/30 text-green-500 bg-green-500/5'
-                                                      : inst.status === 'CANCELLED'
-                                                        ? 'border-red-500/30 text-red-500 bg-red-500/5'
-                                                        : inst.receipt_file
-                                                          ? 'border-orange-500/30 text-orange-500 bg-orange-500/5'
-                                                          : 'border-yellow-500/30 text-yellow-500 bg-yellow-500/5'
+                                                    ? 'border-green-500/30 text-green-500 bg-green-500/5'
+                                                    : inst.status === 'CANCELLED'
+                                                      ? 'border-red-500/30 text-red-500 bg-red-500/5'
+                                                      : inst.receipt_file
+                                                        ? 'border-orange-500/30 text-orange-500 bg-orange-500/5'
+                                                        : 'border-yellow-500/30 text-yellow-500 bg-yellow-500/5'
                                                     }`}
                                                 >
                                                   <option value="PENDING" className="text-yellow-500">Pendiente</option>
@@ -1814,11 +1858,10 @@ function DashboardPageOriginal() {
                                       setSelectedPaymentMethods(prev => ({ ...prev, [nextPending.id]: method.value }));
                                     }
                                   }}
-                                  className={`flex flex-col items-start p-4 rounded-2xl border text-left transition-all relative cursor-pointer group hover:scale-[1.02] active:scale-95 ${
-                                    isSelected 
-                                      ? 'bg-nectar-gold/10 border-nectar-gold shadow-lg shadow-nectar-gold/5' 
+                                  className={`flex flex-col items-start p-4 rounded-2xl border text-left transition-all relative cursor-pointer group hover:scale-[1.02] active:scale-95 ${isSelected
+                                      ? 'bg-nectar-gold/10 border-nectar-gold shadow-lg shadow-nectar-gold/5'
                                       : 'bg-background/40 border-card-border hover:border-foreground/20'
-                                  }`}
+                                    }`}
                                 >
                                   {isSelected && (
                                     <span className="absolute top-3 right-3 text-nectar-gold text-[10px]">●</span>
@@ -1907,7 +1950,7 @@ function DashboardPageOriginal() {
                               </div>
                             </div>
                           </div>
-                          
+
                           {nextPending && (
                             <div className="pt-4 border-t border-card-border/30 space-y-4">
                               <div className="flex items-center justify-between gap-2">
@@ -1925,7 +1968,7 @@ function DashboardPageOriginal() {
                                   </label>
                                 </div>
                               </div>
-                              
+
                               {nextPending.receipt_file ? (
                                 <div className="p-3 bg-green-500/5 border border-green-500/20 rounded-xl flex items-center justify-between">
                                   <span className="text-[8px] text-green-400 font-black uppercase tracking-widest">✓ Comprobante Subido</span>
@@ -1991,7 +2034,7 @@ function DashboardPageOriginal() {
                               </div>
                             </div>
                           </div>
-                          
+
                           {nextPending && (
                             <div className="pt-4 border-t border-card-border/30 space-y-4">
                               <div className="flex items-center justify-between gap-2">
@@ -2009,7 +2052,7 @@ function DashboardPageOriginal() {
                                   </label>
                                 </div>
                               </div>
-                              
+
                               {nextPending.receipt_file ? (
                                 <div className="p-3 bg-green-500/5 border border-green-500/20 rounded-xl flex items-center justify-between">
                                   <span className="text-[8px] text-green-400 font-black uppercase tracking-widest">✓ Comprobante Subido</span>
@@ -2353,138 +2396,138 @@ function DashboardPageOriginal() {
                                         );
                                       })
                                       .map((inst) => {
-                                      const isPaid = inst.status === 'PAID';
-                                      const isPendingReview = !isPaid && inst.receipt_file;
-                                      const instMethod = selectedPaymentMethods[inst.id] || inst.payment_method || activeContract.payment_commitment_method || 'SPEI';
-                                      let statusText = 'Pendiente';
-                                      let bgClass = 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20';
-                                      if (isPaid) {
-                                        statusText = 'Pagado';
-                                        bgClass = 'bg-green-500/10 text-green-500 border-green-500/20';
-                                      } else if (isPendingReview) {
-                                        statusText = 'En Revisión';
-                                        bgClass = 'bg-orange-500/10 text-orange-500 border-orange-500/20';
-                                      }
+                                        const isPaid = inst.status === 'PAID';
+                                        const isPendingReview = !isPaid && inst.receipt_file;
+                                        const instMethod = selectedPaymentMethods[inst.id] || inst.payment_method || activeContract.payment_commitment_method || 'SPEI';
+                                        let statusText = 'Pendiente';
+                                        let bgClass = 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20';
+                                        if (isPaid) {
+                                          statusText = 'Pagado';
+                                          bgClass = 'bg-green-500/10 text-green-500 border-green-500/20';
+                                        } else if (isPendingReview) {
+                                          statusText = 'En Revisión';
+                                          bgClass = 'bg-orange-500/10 text-orange-500 border-orange-500/20';
+                                        }
 
-                                      return (
-                                        <tr key={inst.id} className="border-b border-card-border/30 last:border-0 hover:bg-foreground/[0.01] transition-colors">
-                                          <td className="p-4 pl-6">
-                                            <div className="flex items-center gap-2">
-                                              <span className="w-5 h-5 rounded-full bg-foreground/5 flex items-center justify-center text-[9px] font-bold text-foreground/70">
-                                                {inst.installment_number}
-                                              </span>
-                                              <div>
-                                                <span className="font-bold text-xs">Mes {inst.installment_number}</span>
-                                                {inst.project_name && (
-                                                  <p className="text-[7.5px] font-bold text-nectar-gold uppercase tracking-wider mt-0.5 max-w-[120px] truncate">{inst.project_name}</p>
-                                                )}
-                                              </div>
-                                            </div>
-                                          </td>
-                                          <td className="p-4 text-xs font-medium text-foreground/75">
-                                            {formatDate(inst.due_date)}
-                                          </td>
-                                          <td className="p-4 text-right font-mono font-bold text-xs text-foreground">
-                                            <div>
-                                              ${(parseFloat(inst.amount) * (wantsInvoiceMap[inst.id] ? 1.16 : 1.0)).toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN
-                                            </div>
-                                            {wantsInvoiceMap[inst.id] && (
-                                              <span className="text-[7.5px] text-green-400 font-bold uppercase block mt-0.5">Con 16% IVA</span>
-                                            )}
-                                          </td>
-                                          <td className="p-4 text-center">
-                                            <span className={`px-2.5 py-0.5 text-[7px] font-black uppercase tracking-widest rounded-full border ${bgClass}`}>
-                                              {statusText}
-                                            </span>
-                                          </td>
-                                          <td className="p-4 text-right pr-6">
-                                            {!isPaid ? (
-                                              <div className="flex flex-col items-end gap-1.5 justify-end">
-                                                {/* Selector de Método de Pago */}
-                                                <select
-                                                  value={instMethod}
-                                                  onChange={(e) => setSelectedPaymentMethods(prev => ({ ...prev, [inst.id]: e.target.value }))}
-                                                  className="bg-background/50 border border-card-border rounded-lg px-2 py-1 focus:outline-none focus:border-nectar-gold text-[9px] font-bold text-foreground"
-                                                >
-                                                  <option value="SPEI">SPEI (Trans.)</option>
-                                                  <option value="DEPOSIT">Depósito</option>
-                                                  <option value="STRIPE">Tarjeta (Stripe)</option>
-                                                </select>
-
-                                                {/* Checkbox Facturar */}
-                                                <div className="flex items-center gap-1.5 justify-end">
-                                                  <input
-                                                    type="checkbox"
-                                                    id={`wants-invoice-${inst.id}`}
-                                                    checked={!!wantsInvoiceMap[inst.id]}
-                                                    onChange={(e) => setWantsInvoiceMap(prev => ({ ...prev, [inst.id]: e.target.checked }))}
-                                                    className="rounded border-card-border bg-card-bg dark:border-white/20 dark:bg-black/40 text-nectar-gold focus:ring-nectar-gold w-3 h-3 cursor-pointer"
-                                                  />
-                                                  <label htmlFor={`wants-invoice-${inst.id}`} className="text-[7.5px] uppercase font-bold text-foreground/50 cursor-pointer select-none">
-                                                    Facturar (+16%)
-                                                  </label>
+                                        return (
+                                          <tr key={inst.id} className="border-b border-card-border/30 last:border-0 hover:bg-foreground/[0.01] transition-colors">
+                                            <td className="p-4 pl-6">
+                                              <div className="flex items-center gap-2">
+                                                <span className="w-5 h-5 rounded-full bg-foreground/5 flex items-center justify-center text-[9px] font-bold text-foreground/70">
+                                                  {inst.installment_number}
+                                                </span>
+                                                <div>
+                                                  <span className="font-bold text-xs">Mes {inst.installment_number}</span>
+                                                  {inst.project_name && (
+                                                    <p className="text-[7.5px] font-bold text-nectar-gold uppercase tracking-wider mt-0.5 max-w-[120px] truncate">{inst.project_name}</p>
+                                                  )}
                                                 </div>
-
-                                                {instMethod === 'STRIPE' ? (
-                                                  <button
-                                                    onClick={() => handlePayStripe(inst.id)}
-                                                    className="px-3 py-1.5 bg-[#635BFF] hover:bg-[#5b53e8] text-white text-[8px] font-black uppercase tracking-widest rounded-lg transition-all"
+                                              </div>
+                                            </td>
+                                            <td className="p-4 text-xs font-medium text-foreground/75">
+                                              {formatDate(inst.due_date)}
+                                            </td>
+                                            <td className="p-4 text-right font-mono font-bold text-xs text-foreground">
+                                              <div>
+                                                ${(parseFloat(inst.amount) * (wantsInvoiceMap[inst.id] ? 1.16 : 1.0)).toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN
+                                              </div>
+                                              {wantsInvoiceMap[inst.id] && (
+                                                <span className="text-[7.5px] text-green-400 font-bold uppercase block mt-0.5">Con 16% IVA</span>
+                                              )}
+                                            </td>
+                                            <td className="p-4 text-center">
+                                              <span className={`px-2.5 py-0.5 text-[7px] font-black uppercase tracking-widest rounded-full border ${bgClass}`}>
+                                                {statusText}
+                                              </span>
+                                            </td>
+                                            <td className="p-4 text-right pr-6">
+                                              {!isPaid ? (
+                                                <div className="flex flex-col items-end gap-1.5 justify-end">
+                                                  {/* Selector de Método de Pago */}
+                                                  <select
+                                                    value={instMethod}
+                                                    onChange={(e) => setSelectedPaymentMethods(prev => ({ ...prev, [inst.id]: e.target.value }))}
+                                                    className="bg-background/50 border border-card-border rounded-lg px-2 py-1 focus:outline-none focus:border-nectar-gold text-[9px] font-bold text-foreground"
                                                   >
-                                                    Pagar con Stripe
-                                                  </button>
-                                                ) : isPendingReview ? (
-                                                  <span className="text-[8px] font-bold opacity-60 italic py-1 px-2.5 bg-background/50 rounded border border-card-border/30">
-                                                    Validando...
-                                                  </span>
-                                                ) : (
-                                                  <label className="px-3 py-1.5 border border-dashed border-nectar-gold/50 text-nectar-gold hover:bg-nectar-gold hover:text-background text-[8px] font-black uppercase tracking-widest rounded-lg transition-all cursor-pointer">
-                                                    Subir Comprobante
-                                                    <input
-                                                      type="file"
-                                                      accept="image/*,application/pdf"
-                                                      className="hidden"
-                                                      onChange={(e) => {
-                                                        const file = e.target.files?.[0];
-                                                        if (file) handleUploadReceipt(inst.id, file);
-                                                      }}
-                                                    />
-                                                  </label>
-                                                )}
-                                              </div>
-                                            ) : (
-                                              <div className="flex items-center justify-end gap-2">
-                                                <span className="text-xs text-green-500 font-bold">✓ Pagado</span>
-                                                {(() => {
-                                                  const myTenant = tenants.find(t => t.owner === currentUser?.id) || tenants[0];
-                                                  const hasCFDI = inst.cfdi_uuid && inst.cfdi_uuid !== 'FAILED' && inst.cfdi_uuid !== 'LCO_PENDING';
-                                                  const isManualAdmin = myTenant?.invoicing_mode === 'MANUAL_ADMIN';
+                                                    <option value="SPEI">SPEI (Trans.)</option>
+                                                    <option value="DEPOSIT">Depósito</option>
+                                                    <option value="STRIPE">Tarjeta (Stripe)</option>
+                                                  </select>
 
-                                                  if (!hasCFDI && !isManualAdmin) {
-                                                    const isPending = inst.cfdi_uuid === 'LCO_PENDING';
-                                                    return (
-                                                      <button
-                                                        onClick={() => handleRequestInvoice(inst.id)}
-                                                        disabled={isPending || requestingInvoice === inst.id}
-                                                        className="px-2.5 py-1 bg-nectar-gold/10 text-nectar-gold hover:bg-nectar-gold hover:text-background text-[8px] font-black uppercase tracking-widest rounded-lg border border-nectar-gold/20 transition-all disabled:opacity-50"
-                                                      >
-                                                        {isPending ? 'Sincronizando SAT...' : requestingInvoice === inst.id ? 'Emitiendo...' : 'Solicitar Factura (CFDI)'}
-                                                      </button>
-                                                    );
-                                                  } else if (hasCFDI) {
-                                                    return (
-                                                      <span className="text-[9px] font-mono text-foreground/45 font-bold block select-all">
-                                                        CFDI: {inst.cfdi_uuid}
-                                                      </span>
-                                                    );
-                                                  }
-                                                  return null;
-                                                })()}
-                                              </div>
-                                            )}
-                                          </td>
-                                        </tr>
-                                      );
-                                    })}
+                                                  {/* Checkbox Facturar */}
+                                                  <div className="flex items-center gap-1.5 justify-end">
+                                                    <input
+                                                      type="checkbox"
+                                                      id={`wants-invoice-${inst.id}`}
+                                                      checked={!!wantsInvoiceMap[inst.id]}
+                                                      onChange={(e) => setWantsInvoiceMap(prev => ({ ...prev, [inst.id]: e.target.checked }))}
+                                                      className="rounded border-card-border bg-card-bg dark:border-white/20 dark:bg-black/40 text-nectar-gold focus:ring-nectar-gold w-3 h-3 cursor-pointer"
+                                                    />
+                                                    <label htmlFor={`wants-invoice-${inst.id}`} className="text-[7.5px] uppercase font-bold text-foreground/50 cursor-pointer select-none">
+                                                      Facturar (+16%)
+                                                    </label>
+                                                  </div>
+
+                                                  {instMethod === 'STRIPE' ? (
+                                                    <button
+                                                      onClick={() => handlePayStripe(inst.id)}
+                                                      className="px-3 py-1.5 bg-[#635BFF] hover:bg-[#5b53e8] text-white text-[8px] font-black uppercase tracking-widest rounded-lg transition-all"
+                                                    >
+                                                      Pagar con Stripe
+                                                    </button>
+                                                  ) : isPendingReview ? (
+                                                    <span className="text-[8px] font-bold opacity-60 italic py-1 px-2.5 bg-background/50 rounded border border-card-border/30">
+                                                      Validando...
+                                                    </span>
+                                                  ) : (
+                                                    <label className="px-3 py-1.5 border border-dashed border-nectar-gold/50 text-nectar-gold hover:bg-nectar-gold hover:text-background text-[8px] font-black uppercase tracking-widest rounded-lg transition-all cursor-pointer">
+                                                      Subir Comprobante
+                                                      <input
+                                                        type="file"
+                                                        accept="image/*,application/pdf"
+                                                        className="hidden"
+                                                        onChange={(e) => {
+                                                          const file = e.target.files?.[0];
+                                                          if (file) handleUploadReceipt(inst.id, file);
+                                                        }}
+                                                      />
+                                                    </label>
+                                                  )}
+                                                </div>
+                                              ) : (
+                                                <div className="flex items-center justify-end gap-2">
+                                                  <span className="text-xs text-green-500 font-bold">✓ Pagado</span>
+                                                  {(() => {
+                                                    const myTenant = tenants.find(t => t.owner === currentUser?.id) || tenants[0];
+                                                    const hasCFDI = inst.cfdi_uuid && inst.cfdi_uuid !== 'FAILED' && inst.cfdi_uuid !== 'LCO_PENDING';
+                                                    const isManualAdmin = myTenant?.invoicing_mode === 'MANUAL_ADMIN';
+
+                                                    if (!hasCFDI && !isManualAdmin) {
+                                                      const isPending = inst.cfdi_uuid === 'LCO_PENDING';
+                                                      return (
+                                                        <button
+                                                          onClick={() => handleRequestInvoice(inst.id)}
+                                                          disabled={isPending || requestingInvoice === inst.id}
+                                                          className="px-2.5 py-1 bg-nectar-gold/10 text-nectar-gold hover:bg-nectar-gold hover:text-background text-[8px] font-black uppercase tracking-widest rounded-lg border border-nectar-gold/20 transition-all disabled:opacity-50"
+                                                        >
+                                                          {isPending ? 'Sincronizando SAT...' : requestingInvoice === inst.id ? 'Emitiendo...' : 'Solicitar Factura (CFDI)'}
+                                                        </button>
+                                                      );
+                                                    } else if (hasCFDI) {
+                                                      return (
+                                                        <span className="text-[9px] font-mono text-foreground/45 font-bold block select-all">
+                                                          CFDI: {inst.cfdi_uuid}
+                                                        </span>
+                                                      );
+                                                    }
+                                                    return null;
+                                                  })()}
+                                                </div>
+                                              )}
+                                            </td>
+                                          </tr>
+                                        );
+                                      })}
                                   </tbody>
                                 </table>
                               </div>
@@ -2920,8 +2963,8 @@ function DashboardPageOriginal() {
                                 )}
                               </div>
                               <span className={`px-2.5 py-1 text-[7px] font-black uppercase tracking-widest rounded-full border shrink-0 ${tenant.is_active
-                                  ? 'bg-green-500/10 text-green-500 border-green-500/20'
-                                  : 'bg-amber-500/10 text-amber-500 border-amber-500/20'
+                                ? 'bg-green-500/10 text-green-500 border-green-500/20'
+                                : 'bg-amber-500/10 text-amber-500 border-amber-500/20'
                                 }`}>
                                 {tenant.is_active ? 'Activo' : 'Reservado'}
                               </span>
@@ -2975,8 +3018,8 @@ function DashboardPageOriginal() {
                                 }
                               }}
                               className={`flex-1 min-w-[90px] py-2 text-center rounded-xl text-[8px] font-black uppercase tracking-widest transition-all cursor-pointer font-bold ${tenant.is_active
-                                  ? 'bg-nectar-gold/10 hover:bg-nectar-gold hover:text-background border border-nectar-gold/20 hover:border-nectar-gold text-nectar-gold'
-                                  : 'bg-card-border text-foreground/40 cursor-not-allowed border border-transparent'
+                                ? 'bg-nectar-gold/10 hover:bg-nectar-gold hover:text-background border border-nectar-gold/20 hover:border-nectar-gold text-nectar-gold'
+                                : 'bg-card-border text-foreground/40 cursor-not-allowed border border-transparent'
                                 }`}
                               title={tenant.is_active ? 'Abrir Portal' : 'El portal está en estado reservado hasta recibir el pago.'}
                               disabled={!tenant.is_active}

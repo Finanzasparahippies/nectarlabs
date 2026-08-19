@@ -22,9 +22,9 @@ export interface CalculatorAddon {
 }
 
 const DEFAULT_PARTNER_PLANS: PartnerPlan[] = [
-  { id: 1, name: 'Plan Básico', hours: 6, totalMonthly: 2499, price: 2499, period: 'mes', description: 'Solución ágil para startups y pequeños negocios. Incluye mantenimiento, hosting y 6 horas de desarrollo mensual.' },
-  { id: 2, name: 'Plan Mid', hours: 8, totalMonthly: 2999, price: 2999, period: 'mes', description: 'Desarrollo continuo y escalabilidad de producto. Incluye soporte prioritario y 8 horas de desarrollo mensual.' },
-  { id: 3, name: 'Plan Premium', hours: 12, totalMonthly: 3499, price: 3499, period: 'mes', description: 'Ingeniería dedicada de alto impacto. Máxima velocidad de ejecución, soporte 24/7 y 12 horas de desarrollo mensual.' },
+  { id: 1, name: 'Plan Básico', hours: 0, totalMonthly: 2999, price: 2999, period: 'mes', description: 'Contrato a 6 meses. Acceso a todos los add-ons dentro de plantillas oficiales. Configuración autónoma con herramientas nativas.' },
+  { id: 2, name: 'Plan Mid', hours: 0, totalMonthly: 3499, price: 3499, period: 'mes', description: 'Contrato a 6 meses. Soporte para todos los add-ons personalizados a tu marca. Uso y customización visual de plantillas oficiales.' },
+  { id: 3, name: 'Plan Premium', hours: 12, totalMonthly: 3999, price: 3999, period: 'mes', description: 'Contrato a 6 meses. 12 horas dedicadas de ingeniería mensual. Personalización total de marca y desarrollo a medida desde cero.' },
 ];
 
 const DEFAULT_CALCULATOR_ADDONS: CalculatorAddon[] = [
@@ -216,8 +216,8 @@ export default function PricingCalculator({ onOpenScheduler }: { onOpenScheduler
                     <p className="text-xs text-foreground/50">Desarrollo dedicado, DevOps y Soporte Técnico</p>
                   </div>
                   <div className="text-right">
-                    <span className="text-3xl font-black text-nectar-forest dark:text-nectar-cream">{activePlan.hours}h</span>
-                    <span className="text-[9px] font-bold text-foreground/45 block uppercase">Mensuales</span>
+                    <span className="text-3xl font-black text-nectar-forest dark:text-nectar-cream">{activePlan.hours > 0 ? `${activePlan.hours}h` : 'Plantillas'}</span>
+                    <span className="text-[9px] font-bold text-foreground/45 block uppercase">{activePlan.hours > 0 ? 'Bolsa Dedicada' : 'Visual/Autónomo'}</span>
                   </div>
                 </div>
 
@@ -234,9 +234,9 @@ export default function PricingCalculator({ onOpenScheduler }: { onOpenScheduler
                   />
                   {/* Markings */}
                   <div className="flex justify-between mt-4 px-1 text-[9px] font-black uppercase tracking-wider text-foreground/50">
-                    <span className={planIndex === 0 ? 'text-nectar-gold font-black' : ''}>8h Básico</span>
-                    <span className={planIndex === 1 ? 'text-nectar-gold font-black' : ''}>10h Mid</span>
-                    <span className={planIndex === 2 ? 'text-nectar-gold font-black' : ''}>12h Premium</span>
+                    <span className={planIndex === 0 ? 'text-nectar-gold font-black' : ''}>Básico ($2,999)</span>
+                    <span className={planIndex === 1 ? 'text-nectar-gold font-black' : ''}>Mid ($3,499)</span>
+                    <span className={planIndex === 2 ? 'text-nectar-gold font-black' : ''}>12h Premium ($3,999)</span>
                   </div>
                 </div>
 

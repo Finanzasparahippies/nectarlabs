@@ -18,6 +18,19 @@ interface Addon {
   icon: React.ReactNode;
 }
 
+export const ensureArray = (val: any): string[] => {
+  if (Array.isArray(val)) return val;
+  if (typeof val === 'string' && val.trim()) {
+    try {
+      const parsed = JSON.parse(val);
+      if (Array.isArray(parsed)) return parsed;
+    } catch {
+      return val.split('\n').map(s => s.trim()).filter(Boolean);
+    }
+  }
+  return [];
+};
+
 const getAddonIcon = (id: string) => {
   switch (id) {
     case 'pack-ecommerce-lite':
@@ -46,6 +59,7 @@ const getAddonIcon = (id: string) => {
         </svg>
       );
     case 'bot-chat':
+    case 'live-chat':
       return (
         <svg className="w-8 h-8 text-nectar-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
@@ -58,6 +72,8 @@ const getAddonIcon = (id: string) => {
         </svg>
       );
     case 'delivery-tracking':
+    case 'driver-unlimited':
+    case 'logistics-gps':
       return (
         <svg className="w-8 h-8 text-nectar-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
@@ -65,24 +81,28 @@ const getAddonIcon = (id: string) => {
         </svg>
       );
     case 'sponsorship':
+    case 'patreon-sponsorship':
       return (
         <svg className="w-8 h-8 text-nectar-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
       );
     case 'business-analytics':
+    case 'analytics-apm':
       return (
         <svg className="w-8 h-8 text-nectar-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h2a2 2 0 002-2z" />
         </svg>
       );
     case 'campaigner':
+    case 'newsletter-campaigner':
       return (
         <svg className="w-8 h-8 text-nectar-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
         </svg>
       );
     case 'facturacion-cfdi':
+    case 'mexico-invoicing':
       return (
         <svg className="w-8 h-8 text-nectar-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -94,7 +114,9 @@ const getAddonIcon = (id: string) => {
           <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
         </svg>
       );
+    case 'pos-manager':
     case 'ecommerce-combo':
+    case 'ecommerce':
       return (
         <svg className="w-8 h-8 text-nectar-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
@@ -322,19 +344,22 @@ export default function AddonShowcase() {
       try {
         const data = await fetcher('/addons/', { isPublic: true });
         if (Array.isArray(data)) {
-          const mapped: Addon[] = data.map((item: any) => ({
-            id: item.slug,
-            name: item.name,
-            categoryBadge: item.category_badge,
-            description: item.description,
-            detailedDescription: item.detailed_description,
-            monthlyPrice: parseFloat(item.monthly_price),
-            yearlyPrice: parseFloat(item.yearly_price),
-            complexity: item.complexity,
-            serverRequirements: item.server_requirements,
-            technicalDetails: item.technical_details || [],
-            icon: getAddonIcon(item.slug),
-          }));
+          const mapped: Addon[] = data.map((item: any) => {
+            const addonSlug = item.slug || item.id || '';
+            return {
+              id: addonSlug,
+              name: item.name || 'Módulo',
+              categoryBadge: item.category_badge || 'MÓDULO ADICIONAL',
+              description: item.description || '',
+              detailedDescription: item.detailed_description || item.description || '',
+              monthlyPrice: parseFloat(item.monthly_price) || 0,
+              yearlyPrice: parseFloat(item.yearly_price) || 0,
+              complexity: item.complexity || 'Media',
+              serverRequirements: item.server_requirements || 'Infraestructura cloud asistida.',
+              technicalDetails: ensureArray(item.technical_details),
+              icon: getAddonIcon(addonSlug),
+            };
+          });
           setAddonsList(mapped);
         }
       } catch (error) {
@@ -464,19 +489,26 @@ export default function AddonShowcase() {
             </p>
 
             <div className="space-y-6 border-t border-card-border pt-8 mb-8">
-              <div>
-                <h4 className="text-[10px] font-black uppercase tracking-widest text-nectar-gold mb-3">
-                  Funcionalidades Clave
-                </h4>
-                <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {selectedAddon.technicalDetails.map((detail, idx) => (
-                    <li key={idx} className="flex items-center gap-2.5 text-xs text-foreground/80">
-                      <span className="w-1.5 h-1.5 bg-nectar-gold rounded-full shrink-0"></span>
-                      {detail}
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              {(() => {
+                const detailsList = ensureArray(selectedAddon.technicalDetails);
+                if (detailsList.length === 0) return null;
+
+                return (
+                  <div>
+                    <h4 className="text-[10px] font-black uppercase tracking-widest text-nectar-gold mb-3">
+                      Funcionalidades Clave
+                    </h4>
+                    <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {detailsList.map((detail, idx) => (
+                        <li key={idx} className="flex items-center gap-2.5 text-xs text-foreground/80">
+                          <span className="w-1.5 h-1.5 bg-nectar-gold rounded-full shrink-0"></span>
+                          {detail}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                );
+              })()}
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 border-t border-card-border/50 pt-6">
                 <div>

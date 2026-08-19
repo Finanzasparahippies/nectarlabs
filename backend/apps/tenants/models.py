@@ -1,4 +1,4 @@
- """
+"""
 Módulo de Gestión de Inquilinos (Multi-Tenancy) y Configuración Fiscal en Nectar-Labs.
 
 Este módulo define la entidad principal `Tenant`, representando la organización o negocio cliente.

@@ -951,3 +951,17 @@ rest_framework_simplejwt.exceptions.InvalidToken: {'detail': ErrorDetail(string=
 [LOCAL] [2026-08-07 03:31:20] INFO [apps.users.utils]: Verification email sent to contacto@finanzasparahippies.com
 [LOCAL] [2026-08-07 03:38:09] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Finanzasparahippies' automatically generated for Contract #1.
 >>>>>>> Stashed changes
+[LOCAL] [2026-08-17 17:34:01] WARNING [apps]: AddOn delivery-tracking: stripe_price_id price_1TpD3S2dHbXJGYES5j59MhYi has unit_amount 24900 but model has 79900. Clearing to regenerate.
+[LOCAL] [2026-08-17 17:34:02] WARNING [apps]: AddOn delivery-tracking: stripe_yearly_price_id price_1TpD3S2dHbXJGYESPpTzh7eB has unit_amount 249000 but model has 799000. Clearing to regenerate.
+[LOCAL] [2026-08-17 17:34:57] WARNING [apps]: AddOn pack-ecommerce-lite: stripe_price_id price_1TpD2y2dHbXJGYESHIBKDULi has unit_amount 79900 but model has 99900. Clearing to regenerate.
+[LOCAL] [2026-08-17 17:34:57] WARNING [apps]: AddOn pack-ecommerce-lite: stripe_yearly_price_id price_1TpD2y2dHbXJGYES3LDmzwhm has unit_amount 799000 but model has 999000. Clearing to regenerate.
+[LOCAL] [2026-08-17 17:35:55] WARNING [apps]: AddOn pack-blog-sponsors: stripe_price_id price_1TpD382dHbXJGYESmVJpGv3y has unit_amount 49900 but model has 69900. Clearing to regenerate.
+[LOCAL] [2026-08-17 17:35:55] WARNING [apps]: AddOn pack-blog-sponsors: stripe_yearly_price_id price_1TpD382dHbXJGYESYHuPBfmz has unit_amount 499000 but model has 699000. Clearing to regenerate.
+[LOCAL] [2026-08-17 17:39:28] WARNING [apps]: AddOn campaigner: stripe_price_id price_1Tpymc2dHbXJGYESntI4xXUE has unit_amount 9900 but model has 19900. Clearing to regenerate.
+[LOCAL] [2026-08-17 17:39:28] WARNING [apps]: AddOn campaigner: stripe_yearly_price_id price_1Tpymc2dHbXJGYESCAgoMpaa has unit_amount 99000 but model has 199000. Clearing to regenerate.
+[LOCAL] [2026-08-17 17:40:28] WARNING [apps]: AddOn booking: stripe_price_id price_1TpD3I2dHbXJGYESWj4jDcpC has unit_amount 4900 but model has 19900. Clearing to regenerate.
+[LOCAL] [2026-08-17 17:40:28] WARNING [apps]: AddOn booking: stripe_yearly_price_id price_1TpD3J2dHbXJGYESnFSU6MZj has unit_amount 49000 but model has 199000. Clearing to regenerate.
+[LOCAL] [2026-08-17 17:40:59] WARNING [apps]: AddOn bot-chat: stripe_price_id price_1TpD3N2dHbXJGYESeBGgSmcm has unit_amount 9900 but model has 19900. Clearing to regenerate.
+[LOCAL] [2026-08-17 17:41:00] WARNING [apps]: AddOn bot-chat: stripe_yearly_price_id price_1TpD3N2dHbXJGYESAMy1MQt6 has unit_amount 99000 but model has 199000. Clearing to regenerate.
+[LOCAL] [2026-08-17 17:46:40] WARNING [apps]: AddOn pack-pos-ecommerce: stripe_price_id price_1TpD332dHbXJGYESKdGBVKCy has unit_amount 79900 but model has 99900. Clearing to regenerate.
+[LOCAL] [2026-08-17 17:46:41] WARNING [apps]: AddOn pack-pos-ecommerce: stripe_yearly_price_id price_1TpD332dHbXJGYEScPhIsojG has unit_amount 799000 but model has 999000. Clearing to regenerate.
