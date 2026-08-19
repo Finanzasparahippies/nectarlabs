@@ -341,11 +341,13 @@ if DEBUG:
     dev_origins = [
         "http://localhost",
         "http://localhost:3000",
+        "http://localhost:3002",
         "http://localhost:8000",
         "http://localhost:8001",
         "http://localhost:8080",
         "http://127.0.0.1",
         "http://127.0.0.1:3000",
+        "http://127.0.0.1:3002",
         "http://127.0.0.1:8000",
         "http://127.0.0.1:8001",
         "http://127.0.0.1:8080",
@@ -357,6 +359,9 @@ if DEBUG:
     for origin in dev_origins:
         if origin not in CSRF_TRUSTED_ORIGINS:
             CSRF_TRUSTED_ORIGINS.append(origin)
+        if origin not in CORS_ALLOWED_ORIGINS and not origin.startswith("http://*"):
+            CORS_ALLOWED_ORIGINS.append(origin)
+
 
 # CKEditor 5
 CKEDITOR_5_CONFIGS = {

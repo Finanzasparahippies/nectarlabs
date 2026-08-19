@@ -256,18 +256,21 @@ const fallbackAddons: Omit<Addon, 'icon'>[] = [
   }
 ];
 
+import { useLandingData } from '@/context/LandingDataContext';
+
 export default function AddonShowcase() {
+  const { addons: contextAddons } = useLandingData();
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
   const [selectedAddon, setSelectedAddon] = useState<Addon | null>(null);
-  const [addonsList, setAddonsList] = useState<Addon[]>(() =>
-    fallbackAddons.map(a => ({
-      ...a,
-      icon: getAddonIcon(a.id)
-    })) as Addon[]
-  );
+
+  const addonsList: Addon[] = (contextAddons && contextAddons.length > 0 ? contextAddons : fallbackAddons).map(a => ({
+    ...a,
+    icon: getAddonIcon(a.id)
+  })) as Addon[];
 
   const packages = addonsList.filter(addon => addon.id.startsWith('pack-'));
   const modules = addonsList.filter(addon => !addon.id.startsWith('pack-'));
+
 
   const renderAddonCard = (addon: Addon) => {
     const price = billingCycle === 'monthly' ? addon.monthlyPrice : addon.yearlyPrice;
@@ -277,11 +280,9 @@ export default function AddonShowcase() {
         key={addon.id}
         className="bg-card-bg border border-card-border p-6 rounded-[2rem] flex flex-col justify-between min-h-[300px] relative overflow-hidden backdrop-blur-md hover:scale-[1.02] transition-all duration-300 group"
       >
-        {/* Subtle Background Glow */}
         <div className="absolute -top-24 -right-24 w-40 h-40 bg-white/[0.02] blur-[40px] rounded-full group-hover:bg-white/[0.04] transition-all duration-500 pointer-events-none"></div>
 
         <div className="space-y-4">
-          {/* Category Badge & Icon */}
           <div className="flex justify-between items-start">
             <span className="text-3xl">{addon.icon}</span>
             <span className="px-2.5 py-0.5 bg-nectar-gold/10 text-nectar-gold border border-nectar-gold/25 text-[7px] font-black rounded-full uppercase tracking-wider font-mono">
@@ -289,14 +290,12 @@ export default function AddonShowcase() {
             </span>
           </div>
 
-          {/* Title & Description */}
           <div>
             <h3 className="text-sm font-black uppercase text-nectar-forest dark:text-white tracking-wide mt-2">{addon.name}</h3>
             <p className="text-[10px] text-nectar-forest/70 dark:text-white/50 leading-relaxed mt-2 line-clamp-4">{addon.description}</p>
           </div>
         </div>
 
-        {/* Pricing & Call to Action */}
         <div className="border-t border-card-border pt-4 mt-6">
           <div className="flex justify-between items-center mb-4">
             <div>
@@ -338,37 +337,6 @@ export default function AddonShowcase() {
       </div>
     );
   };
-
-  useEffect(() => {
-    const loadAddons = async () => {
-      try {
-        const data = await fetcher('/addons/', { isPublic: true });
-        if (Array.isArray(data)) {
-          const mapped: Addon[] = data.map((item: any) => {
-            const addonSlug = item.slug || item.id || '';
-            return {
-              id: addonSlug,
-              name: item.name || 'Módulo',
-              categoryBadge: item.category_badge || 'MÓDULO ADICIONAL',
-              description: item.description || '',
-              detailedDescription: item.detailed_description || item.description || '',
-              monthlyPrice: parseFloat(item.monthly_price) || 0,
-              yearlyPrice: parseFloat(item.yearly_price) || 0,
-              complexity: item.complexity || 'Media',
-              serverRequirements: item.server_requirements || 'Infraestructura cloud asistida.',
-              technicalDetails: ensureArray(item.technical_details),
-              icon: getAddonIcon(addonSlug),
-            };
-          });
-          setAddonsList(mapped);
-        }
-      } catch (error) {
-        console.error("Error loading addons in showcase, using fallback:", error);
-      }
-    };
-
-    loadAddons();
-  }, []);
 
   return (
     <section className="w-full py-16 sm:py-32 px-6 max-w-7xl mx-auto">

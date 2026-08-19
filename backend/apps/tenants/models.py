@@ -267,6 +267,7 @@ class Tenant(models.Model):
             if is_premium_tier:
                 # Premium gets all packages AND all individual modules
                 addons.update(AddOn.objects.filter(is_active=True).values_list('slug', flat=True).distinct())
+                addons.update(['pack-ecommerce-lite', 'pack-pos-ecommerce', 'pack-blog-sponsors'])
             else:
                 # Basic & Mid tiers get all 3 official packages
                 addons.update(['pack-ecommerce-lite', 'pack-pos-ecommerce', 'pack-blog-sponsors'])

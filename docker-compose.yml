@@ -54,8 +54,9 @@ services:
     env_file:
       - .env.staging
     environment:
-      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-/api}
+      - NEXT_PUBLIC_API_URL=/api
       - API_URL=http://backend:8000/api
+      - INTERNAL_API_URL=http://backend:8000/api
       - NEXT_DISABLE_SOURCEMAPS=0
     depends_on:
       backend:

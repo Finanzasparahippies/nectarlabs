@@ -44,61 +44,41 @@ const BRAND_DESIGN_PRICES = {
   weekly: { name: 'Semanal (Premium)', price: 2000, hours: 12, label: 'Semanal ($500/sem)' },
 };
 
+import { useLandingData } from '@/context/LandingDataContext';
+
 export default function PricingCalculator({ onOpenScheduler }: { onOpenScheduler?: (addonSlug?: string) => void }) {
-  const [partnerPlans, setPartnerPlans] = useState<PartnerPlan[]>(DEFAULT_PARTNER_PLANS);
-  const [calculatorAddons, setCalculatorAddons] = useState<CalculatorAddon[]>(DEFAULT_CALCULATOR_ADDONS);
+  const { plans: contextPlans, addons: contextAddons } = useLandingData();
   const [mode, setMode] = useState<'partner' | 'addons'>('partner');
   const [planIndex, setPlanIndex] = useState(1); // Default to Plan Mid (index 1)
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
   const [brandDesign, setBrandDesign] = useState<'none' | 'monthly' | 'biweekly' | 'weekly'>('none');
   const [selectedAddons, setSelectedAddons] = useState<string[]>([]);
 
-  useEffect(() => {
-    let isMounted = true;
-
-    // Cargar Planes dinámicos de la API REST
-    fetcher('/plans/', { isPublic: true })
-      .then((data: any) => {
-        if (isMounted && Array.isArray(data) && data.length > 0) {
-          const mappedPlans: PartnerPlan[] = data.map((p: any) => {
-            const planPrice = parseFloat(p.price || p.totalMonthly) || 2999;
-            return {
-              id: p.id,
-              name: p.name,
-              hours: p.hours,
-              totalMonthly: planPrice,
-              price: planPrice,
-              period: p.period || 'mes',
-              description: p.description
-            };
-          });
-          setPartnerPlans(mappedPlans);
-        }
+  const partnerPlans: PartnerPlan[] = (contextPlans && contextPlans.length > 0)
+    ? contextPlans.map(p => {
+        const planPrice = parseFloat(p.price) || 2999;
+        return {
+          id: p.id,
+          name: p.name,
+          hours: p.hours,
+          totalMonthly: planPrice,
+          price: planPrice,
+          period: 'mes',
+          description: p.description
+        };
       })
-      .catch(err => {
-        console.warn("PricingCalculator: fallback defensivo para planes activado.", err);
-      });
+    : DEFAULT_PARTNER_PLANS;
 
-    // Cargar Add-ons dinámicos de la API REST
-    fetcher('/addons/', { isPublic: true })
-      .then((data: any) => {
-        if (isMounted && Array.isArray(data) && data.length > 0) {
-          const mappedAddons: CalculatorAddon[] = data.map((a: any) => ({
-            id: a.slug || a.id,
-            name: a.name,
-            monthlyPrice: parseFloat(a.monthly_price) || 99,
-            yearlyPrice: parseFloat(a.yearly_price) || 990,
-            desc: a.description || a.detailed_description || ''
-          }));
-          setCalculatorAddons(mappedAddons);
-        }
-      })
-      .catch(err => {
-        console.warn("PricingCalculator: fallback defensivo para add-ons activado.", err);
-      });
+  const calculatorAddons: CalculatorAddon[] = (contextAddons && contextAddons.length > 0)
+    ? contextAddons.map(a => ({
+        id: a.id,
+        name: a.name,
+        monthlyPrice: a.monthlyPrice,
+        yearlyPrice: a.yearlyPrice,
+        desc: a.description || a.detailedDescription || ''
+      }))
+    : DEFAULT_CALCULATOR_ADDONS;
 
-    return () => { isMounted = false; };
-  }, []);
 
   const agencyRate = 1200; // MXN/h
 

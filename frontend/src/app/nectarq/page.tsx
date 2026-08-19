@@ -26,7 +26,22 @@ export default function NectarQPage() {
     }
   }, []);
 
-  const downloads = {
+interface DownloadAction {
+  label: string;
+  url: string;
+  desc: string;
+  format: string;
+}
+
+interface DownloadOption {
+  title: string;
+  badge: string;
+  icon: React.ReactNode;
+  primary: DownloadAction;
+  secondary?: DownloadAction;
+}
+
+  const downloads: Record<'windows' | 'mac' | 'linux', DownloadOption> = {
     windows: {
       title: 'Windows',
       badge: 'Windows 10 / 11 (64-bit)',

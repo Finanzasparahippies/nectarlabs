@@ -1162,6 +1162,9 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
                 </button>
               </div>
             </div>
+          </div>
+        )}
+
         {/* Modal: Export Widget Embebible & CORS Origin Control */}
         {exportWidgetAddon && (
           <div

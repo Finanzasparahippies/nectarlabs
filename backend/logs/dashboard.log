@@ -965,3 +965,209 @@ rest_framework_simplejwt.exceptions.InvalidToken: {'detail': ErrorDetail(string=
 [LOCAL] [2026-08-17 17:41:00] WARNING [apps]: AddOn bot-chat: stripe_yearly_price_id price_1TpD3N2dHbXJGYESAMy1MQt6 has unit_amount 99000 but model has 199000. Clearing to regenerate.
 [LOCAL] [2026-08-17 17:46:40] WARNING [apps]: AddOn pack-pos-ecommerce: stripe_price_id price_1TpD332dHbXJGYESKdGBVKCy has unit_amount 79900 but model has 99900. Clearing to regenerate.
 [LOCAL] [2026-08-17 17:46:41] WARNING [apps]: AddOn pack-pos-ecommerce: stripe_yearly_price_id price_1TpD332dHbXJGYEScPhIsojG has unit_amount 799000 but model has 999000. Clearing to regenerate.
+[LOCAL] [2026-08-19 08:16:04] INFO [apps.shop.signals]: Project 'Ecosistema Developer Plan - Owner Contract Test' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:16:06] INFO [apps.shop.signals]: Project 'Ecosistema Plan Básico - Owner A' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:16:08] INFO [apps.shop.signals]: Project 'Ecosistema Plan Básico - Owner A' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:16:09] INFO [apps.shop.signals]: Project 'Ecosistema Plan Producción Premium - Owner A Premium' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:16:15] WARNING [apps.tickets.ai_service]: [AI/Limit] Límite de 50 respuestas de IA alcanzado para el tenant Tenant A (tenanta) en periodo de prueba.
+[LOCAL] [2026-08-19 08:16:18] ERROR [apps]: [Logística/Fulfillment] Saldo por debajo del mínimo de $250.00 MXN para Tenant #00642721-8452-4bdb-9d97-b34070656534. Saldo disponible: $0.00 MXN.
+[LOCAL] [2026-08-19 08:16:18] WARNING [apps]: [Logística/Mock] Emisión de guía simulada exitosamente para la orden #1.
+[LOCAL] [2026-08-19 08:16:26] INFO [apps.shop.signals]: Project 'Ecosistema Plan Premium (6 Meses) - Owner A Contract' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:16:53] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:16:53] INFO [apps.shop.signals]: Project 'Ecosistema Plan Embajador Premium - Ambassador Brand Influencer' automatically generated for Contract #2.
+[LOCAL] [2026-08-19 08:16:54] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:16:55] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:16:56] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:16:56] INFO [apps.billing.services]: [MockPAC] Listando clientes de org None
+[LOCAL] [2026-08-19 08:16:56] INFO [apps.billing.services]: [MockPAC] Creando cliente XAXX010101000 en org None
+[LOCAL] [2026-08-19 08:16:56] INFO [apps.billing.services]: [MockPAC] Actualizando cliente cus_mock_2cc8e2321e42 en org None
+[LOCAL] [2026-08-19 08:16:56] INFO [apps.billing.services]: [MockPAC] Eliminando cliente cus_mock_2cc8e2321e42 de org None
+[LOCAL] [2026-08-19 08:16:56] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:16:57] INFO [apps.billing.services]: [MockPAC] Listando clientes de org org_mock_tenant_123
+[LOCAL] [2026-08-19 08:16:57] INFO [apps.billing.services]: [MockPAC] Creando cliente XAXX010101000 en org org_mock_tenant_123
+[LOCAL] [2026-08-19 08:16:57] INFO [apps.billing.services]: [MockPAC] Actualizando cliente cus_mock_001 en org org_mock_tenant_123
+[LOCAL] [2026-08-19 08:16:57] INFO [apps.billing.services]: [MockPAC] Eliminando cliente cus_mock_001 de org org_mock_tenant_123
+[LOCAL] [2026-08-19 08:16:57] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:16:57] INFO [apps.billing.services]: [MockPAC] Listando productos de org None
+[LOCAL] [2026-08-19 08:16:57] INFO [apps.billing.services]: [MockPAC] Creando producto Global Plan Item en org None
+[LOCAL] [2026-08-19 08:16:57] INFO [apps.billing.services]: [MockPAC] Actualizando producto prod_mock_0a7b44a07409 en org None
+[LOCAL] [2026-08-19 08:16:57] INFO [apps.billing.services]: [MockPAC] Eliminando producto prod_mock_0a7b44a07409 de org None
+[LOCAL] [2026-08-19 08:16:58] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:16:58] INFO [apps.billing.services]: [MockPAC] Listando productos de org org_mock_tenant_123
+[LOCAL] [2026-08-19 08:16:58] INFO [apps.billing.services]: [MockPAC] Creando producto Premium Support Hours en org org_mock_tenant_123
+[LOCAL] [2026-08-19 08:16:58] INFO [apps.billing.services]: [MockPAC] Actualizando producto prod_mock_001 en org org_mock_tenant_123
+[LOCAL] [2026-08-19 08:16:58] INFO [apps.billing.services]: [MockPAC] Eliminando producto prod_mock_001 de org org_mock_tenant_123
+[LOCAL] [2026-08-19 08:16:59] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:16:59] INFO [apps.billing.services]: [MockPAC] Creando recibo para org None
+[LOCAL] [2026-08-19 08:17:00] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:17:00] INFO [apps.billing.services]: [MockPAC] Listando recibos de org org_mock_tenant_123
+[LOCAL] [2026-08-19 08:17:00] INFO [apps.billing.services]: [MockPAC] Creando recibo para org org_mock_tenant_123
+[LOCAL] [2026-08-19 08:17:01] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:17:01] INFO [apps.billing.services]: [MockPAC] Creando retención para org None
+[LOCAL] [2026-08-19 08:17:02] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:17:02] INFO [apps.billing.services]: [MockPAC] Listando retenciones de org org_mock_tenant_123
+[LOCAL] [2026-08-19 08:17:02] INFO [apps.billing.services]: [MockPAC] Creando retención para org org_mock_tenant_123
+[LOCAL] [2026-08-19 08:17:03] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:17:03] INFO [apps]: [facturapi_webhook] Received event invoice.created for invoice inv_ext_123
+[LOCAL] [2026-08-19 08:17:03] INFO [apps]: [facturapi_webhook] Created local invoice for external Facturapi invoice inv_ext_123
+[LOCAL] [2026-08-19 08:17:03] INFO [apps]: [facturapi_webhook] Marked invoice inv_ext_123 as PAID
+[LOCAL] [2026-08-19 08:17:03] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:17:03] INFO [apps]: [facturapi_webhook] Received event invoice.cancelled for invoice inv_test_webhook_123
+[LOCAL] [2026-08-19 08:17:03] INFO [apps]: [facturapi_webhook] Marked invoice inv_test_webhook_123 as CANCELLED
+[LOCAL] [2026-08-19 08:17:04] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:17:04] INFO [apps]: [facturapi_webhook] Received event invoice.created for invoice inv_test_webhook_123
+[LOCAL] [2026-08-19 08:17:04] INFO [apps]: [facturapi_webhook] Marked invoice inv_test_webhook_123 as PAID
+[LOCAL] [2026-08-19 08:17:05] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:17:05] INFO [apps]: [facturapi_webhook] Received event invoice.failed for invoice inv_test_webhook_123
+[LOCAL] [2026-08-19 08:17:05] INFO [apps]: [facturapi_webhook] Marked invoice inv_test_webhook_123 as FAILED: RFC RFC123456789 no existe en LCO
+[LOCAL] [2026-08-19 08:17:06] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:17:06] WARNING [apps]: [facturapi_webhook] Missing Facturapi-Signature header.
+[LOCAL] [2026-08-19 08:17:06] WARNING [apps]: [facturapi_webhook] Signature verification failed.
+[LOCAL] [2026-08-19 08:17:06] INFO [apps]: [facturapi_webhook] Received event invoice.cancelled for invoice inv_some_id
+[LOCAL] [2026-08-19 08:17:07] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:17:07] INFO [apps.billing.services]: [MockPAC] Solicitando cancelación para CFDI SAT UUID: a3c428a2-25de-4dfb-90f7-872ab67262ba con motivo 02, sustitución: None
+[LOCAL] [2026-08-19 08:17:07] INFO [apps.billing.services]: [MockPAC] Generando factura por $20000.00 en org parent
+[LOCAL] [2026-08-19 08:17:08] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:17:08] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Client Company B' automatically generated for Contract #2.
+[LOCAL] [2026-08-19 08:17:09] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:17:09] INFO [apps.billing.services]: [MockPAC] Generando factura por $100.0 en org org_mock_tenant_123
+[LOCAL] [2026-08-19 08:17:10] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:17:11] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:17:11] INFO [apps.billing.services]: [MockPAC] Generando factura por $1000.0 en org org_mock_tenant_lco
+[LOCAL] [2026-08-19 08:17:12] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:17:12] INFO [apps.billing.services]: [MockPAC] Generando factura por $20000.00 en org None
+[LOCAL] [2026-08-19 08:17:12] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:17:12] INFO [apps.billing.services]: [MockPAC] Generando factura por $20000.00 en org None
+[LOCAL] [2026-08-19 08:17:13] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:17:13] INFO [apps.billing.services]: [MockPAC] Generando factura por $500.00 en org org_mock_tenant_123
+[LOCAL] [2026-08-19 08:17:14] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:17:14] INFO [apps.billing.services]: [MockPAC] Generando factura por $500.00 en org org_mock_tenant_123
+[LOCAL] [2026-08-19 08:17:15] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:17:15] INFO [apps.billing.services]: [MockPAC] Generando factura por $500.00 en org org_mock_tenant_123
+[LOCAL] [2026-08-19 08:17:16] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:17:16] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:17:17] INFO [apps]: Autofactura email sent to client_a@example.com for invoice 1
+[LOCAL] [2026-08-19 08:17:17] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:17:18] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:17:19] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:17:20] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:17:21] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:17:21] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:17:22] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:17:23] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:17:23] INFO [apps.billing.services]: [MockPAC] Creando organización para RFC: XAXX010101000
+[LOCAL] [2026-08-19 08:17:24] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:17:24] INFO [apps.billing.services]: [MockPAC] Generando factura por $1000.0 en org org_mock_tenant_lco
+[LOCAL] [2026-08-19 08:17:25] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:17:25] INFO [apps.billing.services]: [MockPAC] Generando factura por $1000.0 en org org_mock_tenant_123
+[LOCAL] [2026-08-19 08:26:48] INFO [apps.shop.signals]: Project 'Ecosistema Developer Plan - Owner Contract Test' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:26:50] INFO [apps.shop.signals]: Project 'Ecosistema Plan Básico - Owner A' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:26:52] INFO [apps.shop.signals]: Project 'Ecosistema Plan Básico - Owner A' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:26:53] INFO [apps.shop.signals]: Project 'Ecosistema Plan Producción Premium - Owner A Premium' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:27:00] WARNING [apps.tickets.ai_service]: [AI/Limit] Límite de 50 respuestas de IA alcanzado para el tenant Tenant A (tenanta) en periodo de prueba.
+[LOCAL] [2026-08-19 08:27:03] ERROR [apps]: [Logística/Fulfillment] Saldo por debajo del mínimo de $250.00 MXN para Tenant #682970dc-8e80-435b-b80a-db613f58e23d. Saldo disponible: $0.00 MXN.
+[LOCAL] [2026-08-19 08:27:03] WARNING [apps]: [Logística/Mock] Emisión de guía simulada exitosamente para la orden #1.
+[LOCAL] [2026-08-19 08:27:11] INFO [apps.shop.signals]: Project 'Ecosistema Plan Premium (6 Meses) - Owner A Contract' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:27:59] INFO [apps.shop.signals]: Project 'Ecosistema Developer Plan - Owner Contract Test' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:28:01] INFO [apps.shop.signals]: Project 'Ecosistema Plan Básico - Owner A' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:28:03] INFO [apps.shop.signals]: Project 'Ecosistema Plan Básico - Owner A' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:28:04] INFO [apps.shop.signals]: Project 'Ecosistema Plan Producción Premium - Owner A Premium' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:28:11] WARNING [apps.tickets.ai_service]: [AI/Limit] Límite de 50 respuestas de IA alcanzado para el tenant Tenant A (tenanta) en periodo de prueba.
+[LOCAL] [2026-08-19 08:28:14] ERROR [apps]: [Logística/Fulfillment] Saldo por debajo del mínimo de $250.00 MXN para Tenant #2e031539-7e18-43a9-8f69-e371c1e1b384. Saldo disponible: $0.00 MXN.
+[LOCAL] [2026-08-19 08:28:14] WARNING [apps]: [Logística/Mock] Emisión de guía simulada exitosamente para la orden #1.
+[LOCAL] [2026-08-19 08:28:22] INFO [apps.shop.signals]: Project 'Ecosistema Plan Premium (6 Meses) - Owner A Contract' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:30:00] INFO [apps.shop.signals]: Project 'Ecosistema Developer Plan - Owner Contract Test' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:30:02] INFO [apps.shop.signals]: Project 'Ecosistema Plan Básico - Owner A' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:30:04] INFO [apps.shop.signals]: Project 'Ecosistema Plan Básico - Owner A' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:30:05] INFO [apps.shop.signals]: Project 'Ecosistema Plan Producción Premium - Owner A Premium' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:30:12] WARNING [apps.tickets.ai_service]: [AI/Limit] Límite de 50 respuestas de IA alcanzado para el tenant Tenant A (tenanta) en periodo de prueba.
+[LOCAL] [2026-08-19 08:30:15] ERROR [apps]: [Logística/Fulfillment] Saldo por debajo del mínimo de $250.00 MXN para Tenant #a8a5de23-9229-4c02-83e7-0519342d4a79. Saldo disponible: $0.00 MXN.
+[LOCAL] [2026-08-19 08:30:15] WARNING [apps]: [Logística/Mock] Emisión de guía simulada exitosamente para la orden #1.
+[LOCAL] [2026-08-19 08:30:23] INFO [apps.shop.signals]: Project 'Ecosistema Plan Premium (6 Meses) - Owner A Contract' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:30:52] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:30:52] INFO [apps.shop.signals]: Project 'Ecosistema Plan Embajador Premium - Ambassador Brand Influencer' automatically generated for Contract #2.
+[LOCAL] [2026-08-19 08:30:53] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:30:54] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:30:55] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:30:55] INFO [apps.billing.services]: [MockPAC] Listando clientes de org None
+[LOCAL] [2026-08-19 08:30:55] INFO [apps.billing.services]: [MockPAC] Creando cliente XAXX010101000 en org None
+[LOCAL] [2026-08-19 08:30:55] INFO [apps.billing.services]: [MockPAC] Actualizando cliente cus_mock_868edef61b6b en org None
+[LOCAL] [2026-08-19 08:30:55] INFO [apps.billing.services]: [MockPAC] Eliminando cliente cus_mock_868edef61b6b de org None
+[LOCAL] [2026-08-19 08:30:55] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:30:56] INFO [apps.billing.services]: [MockPAC] Listando clientes de org org_mock_tenant_123
+[LOCAL] [2026-08-19 08:30:56] INFO [apps.billing.services]: [MockPAC] Creando cliente XAXX010101000 en org org_mock_tenant_123
+[LOCAL] [2026-08-19 08:30:56] INFO [apps.billing.services]: [MockPAC] Actualizando cliente cus_mock_001 en org org_mock_tenant_123
+[LOCAL] [2026-08-19 08:30:56] INFO [apps.billing.services]: [MockPAC] Eliminando cliente cus_mock_001 de org org_mock_tenant_123
+[LOCAL] [2026-08-19 08:30:56] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:30:57] INFO [apps.billing.services]: [MockPAC] Listando productos de org None
+[LOCAL] [2026-08-19 08:30:57] INFO [apps.billing.services]: [MockPAC] Creando producto Global Plan Item en org None
+[LOCAL] [2026-08-19 08:30:57] INFO [apps.billing.services]: [MockPAC] Actualizando producto prod_mock_e5da2f6cd6da en org None
+[LOCAL] [2026-08-19 08:30:57] INFO [apps.billing.services]: [MockPAC] Eliminando producto prod_mock_e5da2f6cd6da de org None
+[LOCAL] [2026-08-19 08:30:57] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:30:57] INFO [apps.billing.services]: [MockPAC] Listando productos de org org_mock_tenant_123
+[LOCAL] [2026-08-19 08:30:57] INFO [apps.billing.services]: [MockPAC] Creando producto Premium Support Hours en org org_mock_tenant_123
+[LOCAL] [2026-08-19 08:30:57] INFO [apps.billing.services]: [MockPAC] Actualizando producto prod_mock_001 en org org_mock_tenant_123
+[LOCAL] [2026-08-19 08:30:57] INFO [apps.billing.services]: [MockPAC] Eliminando producto prod_mock_001 de org org_mock_tenant_123
+[LOCAL] [2026-08-19 08:30:58] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:30:58] INFO [apps.billing.services]: [MockPAC] Creando recibo para org None
+[LOCAL] [2026-08-19 08:30:59] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:30:59] INFO [apps.billing.services]: [MockPAC] Listando recibos de org org_mock_tenant_123
+[LOCAL] [2026-08-19 08:30:59] INFO [apps.billing.services]: [MockPAC] Creando recibo para org org_mock_tenant_123
+[LOCAL] [2026-08-19 08:31:00] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:31:00] INFO [apps.billing.services]: [MockPAC] Creando retención para org None
+[LOCAL] [2026-08-19 08:31:01] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:31:01] INFO [apps.billing.services]: [MockPAC] Listando retenciones de org org_mock_tenant_123
+[LOCAL] [2026-08-19 08:31:01] INFO [apps.billing.services]: [MockPAC] Creando retención para org org_mock_tenant_123
+[LOCAL] [2026-08-19 08:31:02] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:31:02] INFO [apps]: [facturapi_webhook] Received event invoice.created for invoice inv_ext_123
+[LOCAL] [2026-08-19 08:31:02] INFO [apps]: [facturapi_webhook] Created local invoice for external Facturapi invoice inv_ext_123
+[LOCAL] [2026-08-19 08:31:02] INFO [apps]: [facturapi_webhook] Marked invoice inv_ext_123 as PAID
+[LOCAL] [2026-08-19 08:31:03] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:31:03] INFO [apps]: [facturapi_webhook] Received event invoice.cancelled for invoice inv_test_webhook_123
+[LOCAL] [2026-08-19 08:31:03] INFO [apps]: [facturapi_webhook] Marked invoice inv_test_webhook_123 as CANCELLED
+[LOCAL] [2026-08-19 08:31:03] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:31:03] INFO [apps]: [facturapi_webhook] Received event invoice.created for invoice inv_test_webhook_123
+[LOCAL] [2026-08-19 08:31:03] INFO [apps]: [facturapi_webhook] Marked invoice inv_test_webhook_123 as PAID
+[LOCAL] [2026-08-19 08:31:04] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:31:04] INFO [apps]: [facturapi_webhook] Received event invoice.failed for invoice inv_test_webhook_123
+[LOCAL] [2026-08-19 08:31:04] INFO [apps]: [facturapi_webhook] Marked invoice inv_test_webhook_123 as FAILED: RFC RFC123456789 no existe en LCO
+[LOCAL] [2026-08-19 08:31:05] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:31:05] WARNING [apps]: [facturapi_webhook] Missing Facturapi-Signature header.
+[LOCAL] [2026-08-19 08:31:05] WARNING [apps]: [facturapi_webhook] Signature verification failed.
+[LOCAL] [2026-08-19 08:31:05] INFO [apps]: [facturapi_webhook] Received event invoice.cancelled for invoice inv_some_id
+[LOCAL] [2026-08-19 08:31:06] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:31:06] INFO [apps.billing.services]: [MockPAC] Solicitando cancelación para CFDI SAT UUID: a3c428a2-25de-4dfb-90f7-872ab67262ba con motivo 02, sustitución: None
+[LOCAL] [2026-08-19 08:31:06] INFO [apps.billing.services]: [MockPAC] Generando factura por $20000.00 en org parent
+[LOCAL] [2026-08-19 08:31:07] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:31:07] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Client Company B' automatically generated for Contract #2.
+[LOCAL] [2026-08-19 08:31:08] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:31:08] INFO [apps.billing.services]: [MockPAC] Generando factura por $100.0 en org org_mock_tenant_123
+[LOCAL] [2026-08-19 08:31:09] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:31:10] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:31:10] INFO [apps.billing.services]: [MockPAC] Generando factura por $1000.0 en org org_mock_tenant_lco
+[LOCAL] [2026-08-19 08:31:11] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:31:11] INFO [apps.billing.services]: [MockPAC] Generando factura por $20000.00 en org None
+[LOCAL] [2026-08-19 08:31:11] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:31:11] INFO [apps.billing.services]: [MockPAC] Generando factura por $20000.00 en org None
+[LOCAL] [2026-08-19 08:31:12] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:31:12] INFO [apps.billing.services]: [MockPAC] Generando factura por $500.00 en org org_mock_tenant_123
+[LOCAL] [2026-08-19 08:31:13] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:31:13] INFO [apps.billing.services]: [MockPAC] Generando factura por $500.00 en org org_mock_tenant_123
+[LOCAL] [2026-08-19 08:31:14] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:31:14] INFO [apps.billing.services]: [MockPAC] Generando factura por $500.00 en org org_mock_tenant_123
+[LOCAL] [2026-08-19 08:31:15] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:31:16] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:31:16] INFO [apps]: Autofactura email sent to client_a@example.com for invoice 1
+[LOCAL] [2026-08-19 08:31:16] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:31:17] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:31:18] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:31:19] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:31:20] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:31:21] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:31:22] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:31:22] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:31:22] INFO [apps.billing.services]: [MockPAC] Creando organización para RFC: XAXX010101000
+[LOCAL] [2026-08-19 08:31:23] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:31:23] INFO [apps.billing.services]: [MockPAC] Generando factura por $1000.0 en org org_mock_tenant_lco
+[LOCAL] [2026-08-19 08:31:24] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-19 08:31:24] INFO [apps.billing.services]: [MockPAC] Generando factura por $1000.0 en org org_mock_tenant_123

@@ -40,29 +40,13 @@ const fallbackPlans: Plan[] = [
   }
 ];
 
+import { useLandingData } from '../../context/LandingDataContext';
+
 export default function SubscriptionCards() {
-  const [plans, setPlans] = useState<Plan[]>(fallbackPlans);
-  const [loading, setLoading] = useState(true);
+  const { plans: contextPlans, loading: contextLoading } = useLandingData();
+  const plans = contextPlans && contextPlans.length > 0 ? contextPlans : fallbackPlans;
+  const loading = contextLoading;
 
-  useEffect(() => {
-    let isMounted = true;
-    fetcher('/plans/', { isPublic: true })
-      .then(data => {
-        if (isMounted && Array.isArray(data) && data.length > 0) {
-          setPlans(data);
-        }
-        if (isMounted) setLoading(false);
-      })
-      .catch(err => {
-        console.warn("API de planes no disponible, activando fallback defensivo:", err);
-        if (isMounted) {
-          setPlans(fallbackPlans);
-          setLoading(false);
-        }
-      });
-
-    return () => { isMounted = false; };
-  }, []);
 
   const getPlanBullets = (plan: Plan) => {
     const name = (plan.name || '').toLowerCase();

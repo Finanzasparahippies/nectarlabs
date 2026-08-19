@@ -114,81 +114,69 @@ const MOCK_PARTNERS = [
   }
 ];
 
+import { useLandingData } from '../../context/LandingDataContext';
+
 export default function PartnersShowcase() {
+  const { tenants, loading: dataLoading } = useLandingData();
   const [partners, setPartners] = useState<PartnerCard[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const loadRealData = async () => {
-      try {
-        const data = await fetcher('/tenants/', {
-          isPublic: true,
-        });
+    if (tenants && tenants.length > 0) {
+      const transformed = tenants.map((t: Tenant) => {
+        const accentColor = t.accent_color || '#C68A1E';
+        const logoNode = t.logo_url ? (
+          <img
+            src={t.logo_url}
+            alt={t.name}
+            className="w-8 h-8 rounded-lg object-contain"
+          />
+        ) : (
+          <div
+            className="w-10 h-10 rounded-lg flex items-center justify-center font-black text-xs border"
+            style={{
+              backgroundColor: `${accentColor}12`,
+              borderColor: `${accentColor}25`,
+              color: accentColor,
+            }}
+          >
+            {t.name.slice(0, 2).toUpperCase()}
+          </div>
+        );
 
-        if (data && Array.isArray(data) && data.length > 0) {
-          const activeTenants = data.filter((t: Tenant) => t.is_active);
+        const getPremiumCategory = (name: string) => {
+          const lower = name.toLowerCase();
+          if (lower.includes('apex') || lower.includes('logistics') || lower.includes('distribucion') || lower.includes('logística')) return 'Logística & Distribución';
+          if (lower.includes('aura') || lower.includes('wellness') || lower.includes('salud') || lower.includes('telemedicina')) return 'Salud & Telemedicina';
+          if (lower.includes('stellar') || lower.includes('cms') || lower.includes('content')) return 'Gestión Headless';
+          if (lower.includes('skyline') || lower.includes('saas') || lower.includes('inmuebles')) return 'PropTech & SaaS';
+          if (lower.includes('prime') || lower.includes('store') || lower.includes('e-commerce') || lower.includes('tienda')) return 'Comercio Electrónico';
+          if (lower.includes('vesta') || lower.includes('properties') || lower.includes('inmobiliario')) return 'CRM Inmobiliario';
+          return 'Plataforma Digital';
+        };
 
-          if (activeTenants.length > 0) {
-            const transformed = activeTenants.map((t: Tenant) => {
-              const accentColor = t.accent_color || '#C68A1E';
-              const logoNode = t.logo_url ? (
-                <img
-                  src={t.logo_url}
-                  alt={t.name}
-                  className="w-8 h-8 rounded-lg object-contain"
-                />
-              ) : (
-                <div
-                  className="w-10 h-10 rounded-lg flex items-center justify-center font-black text-xs border"
-                  style={{
-                    backgroundColor: `${accentColor}12`,
-                    borderColor: `${accentColor}25`,
-                    color: accentColor,
-                  }}
-                >
-                  {t.name.slice(0, 2).toUpperCase()}
-                </div>
-              );
+        const getCustomDesc = (name: string) => {
+          const lower = name.toLowerCase();
+          if (lower.includes('msambar') || lower.includes('artists')) return 'Adquiere boletos, merch y muchoas mas eventos oficiales de tu artista favorito.';
+          if (lower.includes('aura') || lower.includes('wellness')) return 'Plataforma de reservas y consultas virtuales de salud integral.';
+          if (lower.includes('stellar') || lower.includes('cms')) return 'Sistema headless de gestión de contenidos de alta fidelidad.';
+          if (lower.includes('skyline') || lower.includes('saas')) return 'Ecosistema multi-inquilino de alto rendimiento para control de complejos.';
+          return 'Ecosistema de software artesanal a la medida con soporte continuo de infraestructura.';
+        };
 
-              const getPremiumCategory = (name: string) => {
-                const lower = name.toLowerCase();
-                if (lower.includes('apex') || lower.includes('logistics') || lower.includes('distribucion') || lower.includes('logística')) return 'Logística & Distribución';
-                if (lower.includes('aura') || lower.includes('wellness') || lower.includes('salud') || lower.includes('telemedicina')) return 'Salud & Telemedicina';
-                if (lower.includes('stellar') || lower.includes('cms') || lower.includes('content')) return 'Gestión Headless';
-                if (lower.includes('skyline') || lower.includes('saas') || lower.includes('inmuebles')) return 'PropTech & SaaS';
-                if (lower.includes('prime') || lower.includes('store') || lower.includes('e-commerce') || lower.includes('tienda')) return 'Comercio Electrónico';
-                if (lower.includes('vesta') || lower.includes('properties') || lower.includes('inmobiliario')) return 'CRM Inmobiliario';
-                return 'Plataforma Digital';
-              };
-
-              const getCustomDesc = (name: string) => {
-                const lower = name.toLowerCase();
-                if (lower.includes('msambar') || lower.includes('artists')) return 'Adquiere boletos, merch y muchoas mas eventos oficiales de tu artista favorito.';
-                if (lower.includes('aura') || lower.includes('wellness')) return 'Plataforma de reservas y consultas virtuales de salud integral.';
-                if (lower.includes('stellar') || lower.includes('cms')) return 'Sistema headless de gestión de contenidos de alta fidelidad.';
-                if (lower.includes('skyline') || lower.includes('saas')) return 'Ecosistema multi-inquilino de alto rendimiento para control de complejos.';
-                return 'Ecosistema de software artesanal a la medida con soporte continuo de infraestructura.';
-              };
-
-              return {
-                id: t.id,
-                name: t.name,
-                category: getPremiumCategory(t.name),
-                description: getCustomDesc(t.name),
-                domain: (t.use_custom_domain && t.custom_domain) ? t.custom_domain : `${t.subdomain}.nectarlabs.dev`,
-                accentColor: accentColor,
-                logo: logoNode,
-              };
-            });
-            setPartners(transformed);
-            setLoading(false);
-            return;
-          }
-        }
-      } catch (err) {
-        console.warn('Could not load real tenant data, falling back to mockup showcase:', err);
-      }
-
+        return {
+          id: t.id,
+          name: t.name,
+          category: getPremiumCategory(t.name),
+          description: getCustomDesc(t.name),
+          domain: (t.use_custom_domain && t.custom_domain) ? t.custom_domain : `${t.subdomain}.nectarlabs.dev`,
+          accentColor: accentColor,
+          logo: logoNode,
+        };
+      });
+      setPartners(transformed);
+      setLoading(false);
+    } else if (!dataLoading) {
       const mockCards = MOCK_PARTNERS.map(p => ({
         id: p.id,
         name: p.name,
@@ -200,10 +188,8 @@ export default function PartnersShowcase() {
       }));
       setPartners(mockCards);
       setLoading(false);
-    };
-
-    loadRealData();
-  }, []);
+    }
+  }, [tenants, dataLoading]);
 
   if (loading) {
     return (
