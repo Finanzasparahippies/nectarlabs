@@ -978,7 +978,6 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
                     <div className="h-3 bg-foreground/10 rounded w-full"></div>
                   </div>
                 </div>
-                <div className="h-8 bg-foreground/10 rounded-lg w-full mt-6"></div>
               </div>
             ))}
           </section>
