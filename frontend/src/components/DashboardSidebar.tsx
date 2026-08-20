@@ -11,7 +11,7 @@
 import React, { useEffect, useState, Suspense } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { fetcher, getMainDomainUrl } from '@/lib/api';
+import { fetcher, getMainDomainUrl, isTokenExpired } from '@/lib/api';
 import ThemeToggle from './ThemeToggle';
 import { Plan, AddOn, Tenant, User } from '@/lib/types';
 
@@ -95,6 +95,16 @@ function DashboardSidebarContent() {
     const roleLocal = localStorage.getItem('user_role') || '';
     checkAuth(roleLocal, staffLocal);
 
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    const hasToken = token && token !== 'null' && token !== 'undefined';
+
+    if (!hasToken || isTokenExpired(token)) {
+      setContracts([]);
+      setTenants([]);
+      setCurrentUser(null);
+      return;
+    }
+
     const loadData = async () => {
       try {
         const meData = await fetcher('/users/me/');
@@ -112,18 +122,24 @@ function DashboardSidebarContent() {
         const contractsData = await fetcher('/contracts/');
         if (Array.isArray(contractsData)) {
           setContracts(contractsData);
+        } else {
+          setContracts([]);
         }
       } catch (err) {
         console.error("Error loading contracts in sidebar:", err);
+        setContracts([]);
       }
 
       try {
         const tenantsData = await fetcher('/tenants/');
         if (Array.isArray(tenantsData)) {
           setTenants(tenantsData);
+        } else {
+          setTenants([]);
         }
       } catch (err) {
         console.error("Error loading tenants in sidebar:", err);
+        setTenants([]);
       }
     };
 
@@ -580,7 +596,7 @@ function DashboardSidebarContent() {
                 ? `https://${tenant.custom_domain}`
                 : (() => {
                   const host = typeof window !== 'undefined' ? window.location.hostname : '';
-                  if (host.includes('localhost')) return `http://nectarlabs.localhost/tenants/${tenant.subdomain}`;
+                  if (host.includes('localhost') || host.includes('127.0.0.1')) return `/tenants/${tenant.subdomain}`;
                   if (host.includes('staging.nectarlabs.dev')) return `https://${tenant.subdomain}.staging.nectarlabs.dev`;
                   return `https://${tenant.subdomain}.nectarlabs.dev`;
                 })();

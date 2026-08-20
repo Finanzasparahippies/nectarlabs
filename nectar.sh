@@ -203,6 +203,8 @@ show_help() {
     echo "  test                     - Run Django tests (Dev)"
     echo "  pycheck                  - Run Python syntax check (py_compile)"
     echo "  frontend                 - Run Next.js frontend locally (npm run dev)"
+    echo "  test-frontend            - Run Frontend tests (Playwright / npm test)"
+    echo "  install-playwright       - Download Playwright browser binaries"
     echo "  typecheck                - Run TypeScript typecheck (Dev frontend)"
     echo "  buildcheck               - Run Next.js buildcheck (Dev frontend)"
     echo "  seed-addons              - Seed addons table in Dev database"
@@ -321,6 +323,14 @@ case $COMMAND in
         ;;
     frontend)
         cd frontend && npm run dev "$@"
+        ;;
+    install-playwright)
+        echo "Installing Playwright Chromium browser..."
+        (cd frontend && npx playwright install chromium)
+        ;;
+    test-frontend)
+        echo "Running Frontend tests (Playwright Chromium)..."
+        (cd frontend && npx playwright test --project=chromium "$@")
         ;;
     typecheck)
         echo "Running TypeScript type-check in Dev frontend..."

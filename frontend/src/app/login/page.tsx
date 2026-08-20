@@ -26,6 +26,7 @@ function LoginContent() {
 
     try {
       const data = await fetcher('/token/', {
+        isPublic: true,
         method: 'POST',
         body: JSON.stringify(formData),
       });

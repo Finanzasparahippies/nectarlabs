@@ -2,6 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   output: 'standalone',
+  skipTrailingSlashRedirect: true,
   // @ts-ignore - Next.js 16/15 property for allowing dev origins in Docker/Proxies
   allowedDevOrigins: [
     'nectarlabs.dev', 
@@ -14,12 +15,17 @@ const nextConfig: NextConfig = {
     '*.localhost:3002'
   ],
   async rewrites() {
-    const backendUrl = process.env.API_URL || 'http://backend:8000/api';
-    const backendBase = backendUrl.replace(/\/api\/?$/, '');
+    const rawBackendUrl = process.env.INTERNAL_API_URL || process.env.API_URL || 'http://localhost:8000/api';
+    const cleanBackendUrl = rawBackendUrl.replace(/\/+$/, '');
+    const backendBase = cleanBackendUrl.replace(/\/api$/, '');
     return [
       {
+        source: '/api/:path*/',
+        destination: `${cleanBackendUrl}/:path*/`,
+      },
+      {
         source: '/api/:path*',
-        destination: `${backendUrl}/:path*`,
+        destination: `${cleanBackendUrl}/:path*`,
       },
       {
         source: '/media/:path*',

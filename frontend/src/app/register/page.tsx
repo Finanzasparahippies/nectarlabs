@@ -40,6 +40,7 @@ function RegisterContent() {
 
     try {
       await fetcher('/register/', {
+        isPublic: true,
         method: 'POST',
         body: JSON.stringify({
           email: formData.email,

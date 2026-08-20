@@ -1171,3 +1171,1201 @@ rest_framework_simplejwt.exceptions.InvalidToken: {'detail': ErrorDetail(string=
 [LOCAL] [2026-08-19 08:31:23] INFO [apps.billing.services]: [MockPAC] Generando factura por $1000.0 en org org_mock_tenant_lco
 [LOCAL] [2026-08-19 08:31:24] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
 [LOCAL] [2026-08-19 08:31:24] INFO [apps.billing.services]: [MockPAC] Generando factura por $1000.0 en org org_mock_tenant_123
+[LOCAL] [2026-08-20 04:04:11] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:04:11] INFO [apps.shop.signals]: Project 'Ecosistema Plan Embajador Premium - Ambassador Brand Influencer' automatically generated for Contract #2.
+[LOCAL] [2026-08-20 04:04:11] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:04:12] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:04:13] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:04:13] INFO [apps.billing.services]: [MockPAC] Listando clientes de org None
+[LOCAL] [2026-08-20 04:04:13] INFO [apps.billing.services]: [MockPAC] Creando cliente XAXX010101000 en org None
+[LOCAL] [2026-08-20 04:04:13] INFO [apps.billing.services]: [MockPAC] Actualizando cliente cus_mock_feb346050002 en org None
+[LOCAL] [2026-08-20 04:04:13] INFO [apps.billing.services]: [MockPAC] Eliminando cliente cus_mock_feb346050002 de org None
+[LOCAL] [2026-08-20 04:04:14] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:04:14] INFO [apps.billing.services]: [MockPAC] Listando clientes de org org_mock_tenant_123
+[LOCAL] [2026-08-20 04:04:14] INFO [apps.billing.services]: [MockPAC] Creando cliente XAXX010101000 en org org_mock_tenant_123
+[LOCAL] [2026-08-20 04:04:14] INFO [apps.billing.services]: [MockPAC] Actualizando cliente cus_mock_001 en org org_mock_tenant_123
+[LOCAL] [2026-08-20 04:04:14] INFO [apps.billing.services]: [MockPAC] Eliminando cliente cus_mock_001 de org org_mock_tenant_123
+[LOCAL] [2026-08-20 04:04:15] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:04:15] INFO [apps.billing.services]: [MockPAC] Listando productos de org None
+[LOCAL] [2026-08-20 04:04:15] INFO [apps.billing.services]: [MockPAC] Creando producto Global Plan Item en org None
+[LOCAL] [2026-08-20 04:04:15] INFO [apps.billing.services]: [MockPAC] Actualizando producto prod_mock_2681ad223765 en org None
+[LOCAL] [2026-08-20 04:04:15] INFO [apps.billing.services]: [MockPAC] Eliminando producto prod_mock_2681ad223765 de org None
+[LOCAL] [2026-08-20 04:04:16] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:04:16] INFO [apps.billing.services]: [MockPAC] Listando productos de org org_mock_tenant_123
+[LOCAL] [2026-08-20 04:04:16] INFO [apps.billing.services]: [MockPAC] Creando producto Premium Support Hours en org org_mock_tenant_123
+[LOCAL] [2026-08-20 04:04:16] INFO [apps.billing.services]: [MockPAC] Actualizando producto prod_mock_001 en org org_mock_tenant_123
+[LOCAL] [2026-08-20 04:04:16] INFO [apps.billing.services]: [MockPAC] Eliminando producto prod_mock_001 de org org_mock_tenant_123
+[LOCAL] [2026-08-20 04:04:17] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:04:17] INFO [apps.billing.services]: [MockPAC] Creando recibo para org None
+[LOCAL] [2026-08-20 04:04:17] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:04:18] INFO [apps.billing.services]: [MockPAC] Listando recibos de org org_mock_tenant_123
+[LOCAL] [2026-08-20 04:04:18] INFO [apps.billing.services]: [MockPAC] Creando recibo para org org_mock_tenant_123
+[LOCAL] [2026-08-20 04:04:18] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:04:18] INFO [apps.billing.services]: [MockPAC] Creando retención para org None
+[LOCAL] [2026-08-20 04:04:19] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:04:19] INFO [apps.billing.services]: [MockPAC] Listando retenciones de org org_mock_tenant_123
+[LOCAL] [2026-08-20 04:04:19] INFO [apps.billing.services]: [MockPAC] Creando retención para org org_mock_tenant_123
+[LOCAL] [2026-08-20 04:04:20] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:04:20] INFO [apps]: [facturapi_webhook] Received event invoice.created for invoice inv_ext_123
+[LOCAL] [2026-08-20 04:04:20] INFO [apps]: [facturapi_webhook] Created local invoice for external Facturapi invoice inv_ext_123
+[LOCAL] [2026-08-20 04:04:20] INFO [apps]: [facturapi_webhook] Marked invoice inv_ext_123 as PAID
+[LOCAL] [2026-08-20 04:04:21] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:04:21] INFO [apps]: [facturapi_webhook] Received event invoice.cancelled for invoice inv_test_webhook_123
+[LOCAL] [2026-08-20 04:04:21] INFO [apps]: [facturapi_webhook] Marked invoice inv_test_webhook_123 as CANCELLED
+[LOCAL] [2026-08-20 04:04:22] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:04:22] INFO [apps]: [facturapi_webhook] Received event invoice.created for invoice inv_test_webhook_123
+[LOCAL] [2026-08-20 04:04:22] INFO [apps]: [facturapi_webhook] Marked invoice inv_test_webhook_123 as PAID
+[LOCAL] [2026-08-20 04:04:23] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:04:23] INFO [apps]: [facturapi_webhook] Received event invoice.failed for invoice inv_test_webhook_123
+[LOCAL] [2026-08-20 04:04:23] INFO [apps]: [facturapi_webhook] Marked invoice inv_test_webhook_123 as FAILED: RFC RFC123456789 no existe en LCO
+[LOCAL] [2026-08-20 04:04:24] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:04:24] WARNING [apps]: [facturapi_webhook] Missing Facturapi-Signature header.
+[LOCAL] [2026-08-20 04:04:24] WARNING [apps]: [facturapi_webhook] Signature verification failed.
+[LOCAL] [2026-08-20 04:04:24] INFO [apps]: [facturapi_webhook] Received event invoice.cancelled for invoice inv_some_id
+[LOCAL] [2026-08-20 04:04:24] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:04:24] INFO [apps.billing.services]: [MockPAC] Solicitando cancelación para CFDI SAT UUID: a3c428a2-25de-4dfb-90f7-872ab67262ba con motivo 02, sustitución: None
+[LOCAL] [2026-08-20 04:04:24] INFO [apps.billing.services]: [MockPAC] Generando factura por $20000.00 en org parent
+[LOCAL] [2026-08-20 04:04:25] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:04:26] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Client Company B' automatically generated for Contract #2.
+[LOCAL] [2026-08-20 04:04:27] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:04:27] INFO [apps.billing.services]: [MockPAC] Generando factura por $100.0 en org org_mock_tenant_123
+[LOCAL] [2026-08-20 04:04:27] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:04:28] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:04:28] INFO [apps.billing.services]: [MockPAC] Generando factura por $1000.0 en org org_mock_tenant_lco
+[LOCAL] [2026-08-20 04:04:29] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:04:29] INFO [apps.billing.services]: [MockPAC] Generando factura por $20000.00 en org None
+[LOCAL] [2026-08-20 04:04:30] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:04:30] INFO [apps.billing.services]: [MockPAC] Generando factura por $20000.00 en org None
+[LOCAL] [2026-08-20 04:04:31] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:04:31] INFO [apps.billing.services]: [MockPAC] Generando factura por $500.00 en org org_mock_tenant_123
+[LOCAL] [2026-08-20 04:04:32] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:04:32] INFO [apps.billing.services]: [MockPAC] Generando factura por $500.00 en org org_mock_tenant_123
+[LOCAL] [2026-08-20 04:04:32] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:04:33] INFO [apps.billing.services]: [MockPAC] Generando factura por $500.00 en org org_mock_tenant_123
+[LOCAL] [2026-08-20 04:04:33] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:04:34] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:04:34] INFO [apps]: Autofactura email sent to client_a@example.com for invoice 1
+[LOCAL] [2026-08-20 04:04:35] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:04:36] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:04:37] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:04:37] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:04:38] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:04:39] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:04:40] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:04:41] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:04:41] INFO [apps.billing.services]: [MockPAC] Creando organización para RFC: XAXX010101000
+[LOCAL] [2026-08-20 04:04:42] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:04:42] INFO [apps.billing.services]: [MockPAC] Generando factura por $1000.0 en org org_mock_tenant_lco
+[LOCAL] [2026-08-20 04:04:43] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:04:43] INFO [apps.billing.services]: [MockPAC] Generando factura por $1000.0 en org org_mock_tenant_123
+[LOCAL] [2026-08-20 04:04:47] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner A Contract' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:04:47] WARNING [apps]: Error decodificando base64: Invalid base64-encoded string: number of data characters (25) cannot be 1 more than a multiple of 4
+[LOCAL] [2026-08-20 04:04:47] WARNING [apps]: Error decodificando base64: Invalid base64-encoded string: number of data characters (25) cannot be 1 more than a multiple of 4
+[LOCAL] [2026-08-20 04:04:47] WARNING [apps]: Imagen no válida o corrupta: cannot identify image file <_io.BytesIO object at 0x7f6bc28b7e70>
+[LOCAL] [2026-08-20 04:04:51] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner A Contract' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:04:52] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner A Contract' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:04:52] INFO [apps.bookings.views]: Iniciando creación de CustomContract en el ViewSet.
+[LOCAL] [2026-08-20 04:04:52] WARNING [apps]: La plantilla HTML de invitación no existe: bookings/emails/custom_contract_invitation.html. Usando fallback embebido.
+[LOCAL] [2026-08-20 04:04:52] INFO [apps]: Custom contract invitation sent to juan@example.com for token 683198e6-0daa-44ee-8815-7d2cba220e04
+[LOCAL] [2026-08-20 04:04:52] WARNING [apps]: La plantilla HTML de invitación no existe: bookings/emails/custom_contract_invitation.html. Usando fallback embebido.
+[LOCAL] [2026-08-20 04:04:52] INFO [apps]: Custom contract invitation sent to pedro@example.com for token cb82263f-1009-451c-9d62-bac2e08f1e20
+[LOCAL] [2026-08-20 04:04:52] INFO [apps.bookings.views]: CustomContract creado y guardado con éxito.
+[LOCAL] [2026-08-20 04:04:54] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner A Contract' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:04:54] INFO [apps.bookings.views]: Iniciando creación de CustomContract en el ViewSet.
+[LOCAL] [2026-08-20 04:04:54] WARNING [apps]: La plantilla HTML de invitación no existe: bookings/emails/custom_contract_invitation.html. Usando fallback embebido.
+[LOCAL] [2026-08-20 04:04:54] INFO [apps]: Custom contract invitation sent to juan@example.com for token 29e929f1-93ec-4331-8112-fab4b72f38f3
+[LOCAL] [2026-08-20 04:04:54] WARNING [apps]: La plantilla HTML de invitación no existe: bookings/emails/custom_contract_invitation.html. Usando fallback embebido.
+[LOCAL] [2026-08-20 04:04:54] INFO [apps]: Custom contract invitation sent to pedro@example.com for token 19e4ac83-2fe2-4b93-a1a3-87c21dddd97f
+[LOCAL] [2026-08-20 04:04:54] INFO [apps.bookings.views]: CustomContract creado y guardado con éxito.
+[LOCAL] [2026-08-20 04:04:54] WARNING [apps]: Imagen no válida o corrupta: cannot identify image file <_io.BytesIO object at 0x7f6bc2a93d80>
+[LOCAL] [2026-08-20 04:04:54] WARNING [apps]: Imagen no válida o corrupta: cannot identify image file <_io.BytesIO object at 0x7f6bc2a92020>
+[LOCAL] [2026-08-20 04:04:54] WARNING [apps]: Imagen no válida o corrupta: cannot identify image file <_io.BytesIO object at 0x7f6bc2a920c0>
+[LOCAL] [2026-08-20 04:04:54] WARNING [apps]: La plantilla HTML de certificación no existe: bookings/emails/custom_contract_certified.html. Usando fallback embebido.
+[LOCAL] [2026-08-20 04:04:54] INFO [apps]: Custom contract certified PDF sent to juan@example.com
+[LOCAL] [2026-08-20 04:04:54] INFO [apps]: Custom contract certified PDF sent to pedro@example.com
+[LOCAL] [2026-08-20 04:04:57] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner A Contract' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:04:57] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner B Contract' automatically generated for Contract #2.
+[LOCAL] [2026-08-20 04:04:59] INFO [apps]: [SubmitExerciseView] Proxying evaluation to custom backend: https://api.custom-tenant-backend-failed.com/api/courses/submit/
+[LOCAL] [2026-08-20 04:04:59] ERROR [apps]: [SubmitExerciseView] Error proxying to custom backend: Connection Refused
+Traceback (most recent call last):
+  File "/app/apps/courses/views.py", line 67, in post
+    response = requests.post(target_url, json=request.data, headers=headers, timeout=15)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/unittest/mock.py", line 1139, in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/unittest/mock.py", line 1143, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/unittest/mock.py", line 1198, in _execute_mock_call
+    raise effect
+Exception: Connection Refused
+[LOCAL] [2026-08-20 04:04:59] INFO [apps]: [SubmitExerciseView] Proxying evaluation to custom backend: https://api.custom-tenant-backend.com/api/courses/submit/
+[LOCAL] [2026-08-20 04:05:01] INFO [apps.shop.signals]: Project 'Ecosistema Plan Test - Client Stats Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:05:02] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Client Stats Company 2' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:05:32] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner A Contract' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:05:35] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner A Contract' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:05:38] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner A Contract' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:05:40] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner A' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:05:40] INFO [apps.newsletter.models]: Attempting to send newsletter email via Testing locmem to ['sub1@tenant-a.com']
+[LOCAL] [2026-08-20 04:05:40] INFO [apps.newsletter.models]: Successfully sent newsletter email via Testing locmem to ['sub1@tenant-a.com']
+[LOCAL] [2026-08-20 04:05:40] INFO [apps.newsletter.models]: Attempting to send newsletter email via Testing locmem to ['sub2@tenant-a.com']
+[LOCAL] [2026-08-20 04:05:40] INFO [apps.newsletter.models]: Successfully sent newsletter email via Testing locmem to ['sub2@tenant-a.com']
+[LOCAL] [2026-08-20 04:05:41] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner A' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:05:41] INFO [apps.newsletter.views]: [import_csv] Procesando archivo con 3 filas. Encontrados 3 correos únicos.
+[LOCAL] [2026-08-20 04:05:41] INFO [apps.newsletter.views]: [import_csv] Encontrados 0 suscriptores existentes en base de datos.
+[LOCAL] [2026-08-20 04:05:41] INFO [apps.newsletter.views]: [import_csv] Guardando en lote (bulk_create) 3 nuevos suscriptores...
+[LOCAL] [2026-08-20 04:05:41] INFO [apps.newsletter.views]: [import_csv] Vinculados 3 suscriptores a la lista: Lista CSV
+[LOCAL] [2026-08-20 04:05:41] INFO [apps.newsletter.views]: [import_csv] Importación completada con éxito. Creados: 3, Actualizados: 0, Errores: 0
+[LOCAL] [2026-08-20 04:05:43] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner A' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:05:43] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner B' automatically generated for Contract #2.
+[LOCAL] [2026-08-20 04:05:44] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner A Contract' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:05:44] INFO [apps.newsletter.models]: Attempting to send newsletter email via Testing locmem to ['rec1@example.com', 'rec2@example.com']
+[LOCAL] [2026-08-20 04:05:44] INFO [apps.newsletter.models]: Successfully sent newsletter email via Testing locmem to ['rec1@example.com', 'rec2@example.com']
+[LOCAL] [2026-08-20 04:05:44] INFO [apps.newsletter.models]: Attempting to send newsletter email via Testing locmem to ['rec1@example.com', 'rec2@example.com']
+[LOCAL] [2026-08-20 04:05:44] INFO [apps.newsletter.models]: Successfully sent newsletter email via Testing locmem to ['rec1@example.com', 'rec2@example.com']
+[LOCAL] [2026-08-20 04:05:46] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner A Contract' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:05:46] WARNING [apps.newsletter.views]: SubscribeView POST request: User=AnonymousUser, Auth=False, Headers={'Cookie': '', 'Content-Length': '78', 'Content-Type': 'application/json'}
+[LOCAL] [2026-08-20 04:05:46] INFO [apps.newsletter.models]: Attempting to send newsletter email via Testing locmem to ['sub@example.com']
+[LOCAL] [2026-08-20 04:05:46] INFO [apps.newsletter.models]: Successfully sent newsletter email via Testing locmem to ['sub@example.com']
+[LOCAL] [2026-08-20 04:05:46] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner B Contract' automatically generated for Contract #2.
+[LOCAL] [2026-08-20 04:05:46] WARNING [apps.newsletter.views]: SubscribeView POST request: User=AnonymousUser, Auth=False, Headers={'Cookie': '', 'Content-Length': '78', 'Content-Type': 'application/json'}
+[LOCAL] [2026-08-20 04:05:46] INFO [apps.newsletter.models]: Attempting to send newsletter email via Testing locmem to ['sub@example.com']
+[LOCAL] [2026-08-20 04:05:46] INFO [apps.newsletter.models]: Successfully sent newsletter email via Testing locmem to ['sub@example.com']
+[LOCAL] [2026-08-20 04:05:46] WARNING [apps.newsletter.views]: SubscribeView POST request: User=AnonymousUser, Auth=False, Headers={'Cookie': '', 'Content-Length': '78', 'Content-Type': 'application/json'}
+[LOCAL] [2026-08-20 04:05:48] INFO [apps.newsletter.models]: Attempting to send newsletter email via Testing locmem to ['platform_sub1@example.com']
+[LOCAL] [2026-08-20 04:05:48] INFO [apps.newsletter.models]: Successfully sent newsletter email via Testing locmem to ['platform_sub1@example.com']
+[LOCAL] [2026-08-20 04:05:48] INFO [apps.newsletter.models]: Attempting to send newsletter email via Testing locmem to ['platform_sub2@example.com']
+[LOCAL] [2026-08-20 04:05:48] INFO [apps.newsletter.models]: Successfully sent newsletter email via Testing locmem to ['platform_sub2@example.com']
+[LOCAL] [2026-08-20 04:05:48] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:05:48] INFO [apps]: Addon activated email sent to client_addon@example.com for addon 1
+[LOCAL] [2026-08-20 04:05:49] INFO [apps.shop.signals]: Project 'Ecosistema Plan Test - Plan Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:05:49] WARNING [apps.shop.notify]: [notify_support] INICIO — addon='Test Addon' user='client_addon@example.com' tenant='None'
+[LOCAL] [2026-08-20 04:05:49] WARNING [apps.shop.notify]: [notify_support] Enviando email a soporte: soporte@nectarlabs.dev
+[LOCAL] [2026-08-20 04:05:49] WARNING [apps.shop.notify]: [notify_support] ✓ Email enviado a soporte@nectarlabs.dev para addon 'Test Addon'.
+[LOCAL] [2026-08-20 04:05:49] WARNING [apps.shop.notify]: [notify_support] Broadcast realtime → http://realtime:4001/internal/broadcast-admin
+[LOCAL] [2026-08-20 04:05:49] WARNING [apps.shop.notify]: [notify_support] ✓ Realtime broadcast OK: {"ok":true,"admins_online":0}
+[LOCAL] [2026-08-20 04:05:49] WARNING [apps.shop.notify]: [notify_support] FIN — addon='Test Addon'
+[LOCAL] [2026-08-20 04:05:49] INFO [apps]: Addon contracted email sent to client_addon@example.com for addon 1 (activated=False)
+[LOCAL] [2026-08-20 04:05:51] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Auto Project Co' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:05:52] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:05:53] INFO [apps.shop.signals]: Project 'Ecosistema Plan Premium - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:05:53] INFO [apps.shop.signals]: Project 'Ecosistema Plan Basico - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:05:57] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Contract A' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:05:57] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Contract B' automatically generated for Contract #2.
+[LOCAL] [2026-08-20 04:05:58] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Quote Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:06:00] INFO [apps.shop.signals]: Project 'Ecosistema Plan Premium-Dev - Referral Customer Co' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:06:04] INFO [apps.shop.signals]: Project 'Ecosistema Plan Premium-Dev - Retroactive Co' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:06:05] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Quote Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:06:07] INFO [apps.shop.signals]: Project 'Ecosistema Plan Premium-Dev - Salesperson referred client' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:06:08] INFO [apps.shop.signals]: Project 'Ecosistema Plan Premium-Dev - Salesperson referred client' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:06:10] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Quote Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:06:12] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Quote Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:06:13] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Quote Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:06:13] WARNING [apps.dashboard.views]: Invalid or expired JWT token in PDF download: {'detail': ErrorDetail(string='Given token not valid for any token type', code='token_not_valid'), 'code': ErrorDetail(string='token_not_valid', code='token_not_valid'), 'messages': [{'token_class': ErrorDetail(string='AccessToken', code='token_not_valid'), 'token_type': ErrorDetail(string='access', code='token_not_valid'), 'message': ErrorDetail(string='Token is invalid or expired', code='token_not_valid')}]}
+Traceback (most recent call last):
+  File "/app/apps/dashboard/views.py", line 556, in view_pdf
+    validated_token = JWTAuthentication().get_validated_token(token)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework_simplejwt/authentication.py", line 113, in get_validated_token
+    raise InvalidToken(
+rest_framework_simplejwt.exceptions.InvalidToken: {'detail': ErrorDetail(string='Given token not valid for any token type', code='token_not_valid'), 'code': ErrorDetail(string='token_not_valid', code='token_not_valid'), 'messages': [{'token_class': ErrorDetail(string='AccessToken', code='token_not_valid'), 'token_type': ErrorDetail(string='access', code='token_not_valid'), 'message': ErrorDetail(string='Token is invalid or expired', code='token_not_valid')}]}
+[LOCAL] [2026-08-20 04:06:13] WARNING [apps.dashboard.views]: Invalid or expired JWT token in PDF download: {'detail': ErrorDetail(string='Given token not valid for any token type', code='token_not_valid'), 'code': ErrorDetail(string='token_not_valid', code='token_not_valid'), 'messages': [{'token_class': ErrorDetail(string='AccessToken', code='token_not_valid'), 'token_type': ErrorDetail(string='access', code='token_not_valid'), 'message': ErrorDetail(string='Token is invalid or expired', code='token_not_valid')}]}
+Traceback (most recent call last):
+  File "/app/apps/dashboard/views.py", line 556, in view_pdf
+    validated_token = JWTAuthentication().get_validated_token(token)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework_simplejwt/authentication.py", line 113, in get_validated_token
+    raise InvalidToken(
+rest_framework_simplejwt.exceptions.InvalidToken: {'detail': ErrorDetail(string='Given token not valid for any token type', code='token_not_valid'), 'code': ErrorDetail(string='token_not_valid', code='token_not_valid'), 'messages': [{'token_class': ErrorDetail(string='AccessToken', code='token_not_valid'), 'token_type': ErrorDetail(string='access', code='token_not_valid'), 'message': ErrorDetail(string='Token is invalid or expired', code='token_not_valid')}]}
+[LOCAL] [2026-08-20 04:06:14] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Quote Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:06:15] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Quote Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:06:16] WARNING [apps]: [Logística/Mock] Cotización simulada exitosamente.
+[LOCAL] [2026-08-20 04:06:16] WARNING [apps]: [Logística/Mock] Cotización simulada exitosamente.
+[LOCAL] [2026-08-20 04:06:20] INFO [apps.shop.views]: Stripe coupon django_addon50_test not found (No such coupon). Creating new coupon...
+[LOCAL] [2026-08-20 04:06:20] INFO [apps.shop.views]: [stripe_webhook] addon_subscription recibido: user_id=1 addon_id=1 addon_slug=None
+[LOCAL] [2026-08-20 04:06:20] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - addon-client' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:06:20] INFO [apps]: Addon contracted email sent to addon_client@example.com for addon 1 (activated=True)
+[LOCAL] [2026-08-20 04:06:20] INFO [apps.shop.views]: [stripe_webhook] Intentando notify_support: user=addon_client@example.com contract=1
+[LOCAL] [2026-08-20 04:06:20] INFO [apps.shop.views]: [stripe_webhook] Llamando notify_support_addon_subscription addon=Test Live Chat tenant=addon-client
+[LOCAL] [2026-08-20 04:06:20] WARNING [apps.shop.notify]: [notify_support] INICIO — addon='Test Live Chat' user='addon_client@example.com' tenant='addon-client'
+[LOCAL] [2026-08-20 04:06:20] WARNING [apps.shop.notify]: [notify_support] Enviando email a soporte: soporte@nectarlabs.dev
+[LOCAL] [2026-08-20 04:06:20] WARNING [apps.shop.notify]: [notify_support] ✓ Email enviado a soporte@nectarlabs.dev para addon 'Test Live Chat'.
+[LOCAL] [2026-08-20 04:06:20] WARNING [apps.shop.notify]: [notify_support] Broadcast realtime → http://realtime:4001/internal/broadcast-admin
+[LOCAL] [2026-08-20 04:06:20] WARNING [apps.shop.notify]: [notify_support] ✓ Realtime broadcast OK: {"ok":true,"admins_online":0}
+[LOCAL] [2026-08-20 04:06:20] WARNING [apps.shop.notify]: [notify_support] FIN — addon='Test Live Chat'
+[LOCAL] [2026-08-20 04:06:20] INFO [apps.shop.views]: [stripe_webhook] notify_support_addon_subscription completado sin excepción
+[LOCAL] [2026-08-20 04:06:21] INFO [apps.shop.signals]: Project 'Ecosistema Plan Test Stripe - Stripe Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:06:21] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Custom CRM Company' automatically generated for Contract #2.
+[LOCAL] [2026-08-20 04:06:22] INFO [apps.shop.signals]: Project 'Ecosistema Plan Test Stripe - Stripe Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:06:24] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner A Contract' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:06:28] INFO [apps.shop.signals]: Project 'Ecosistema Developer Plan - Owner Contract Test' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:06:30] INFO [apps.shop.signals]: Project 'Ecosistema Plan Básico - Owner A' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:06:32] INFO [apps.shop.signals]: Project 'Ecosistema Plan Básico - Owner A' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:06:34] INFO [apps.shop.signals]: Project 'Ecosistema Plan Producción Premium - Owner A Premium' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:06:40] WARNING [apps.tickets.ai_service]: [AI/Limit] Límite de 50 respuestas de IA alcanzado para el tenant Tenant A (tenanta) en periodo de prueba.
+[LOCAL] [2026-08-20 04:06:43] ERROR [apps]: [Logística/Fulfillment] Saldo por debajo del mínimo de $250.00 MXN para Tenant #8ffe9765-0120-48d3-97c1-466e17633c64. Saldo disponible: $0.00 MXN.
+[LOCAL] [2026-08-20 04:06:43] WARNING [apps]: [Logística/Mock] Emisión de guía simulada exitosamente para la orden #1.
+[LOCAL] [2026-08-20 04:06:52] INFO [apps.shop.signals]: Project 'Ecosistema Plan Premium (6 Meses) - Owner A Contract' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:07:19] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner A Contract' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:07:21] INFO [apps.shop.signals]: Project 'Ecosistema Plan Premium (6 Meses) - Owner A Contract' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:07:42] INFO [apps.users.utils]: Verification email sent to newregistered@example.com
+[LOCAL] [2026-08-20 04:27:57] INFO [apps.users.utils]: Verification email sent to soporte@kores.vip
+[LOCAL] [2026-08-20 04:34:31] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:34:31] INFO [apps.shop.signals]: Project 'Ecosistema Plan Embajador Premium - Ambassador Brand Influencer' automatically generated for Contract #2.
+[LOCAL] [2026-08-20 04:34:32] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:34:33] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:34:33] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:34:34] INFO [apps.billing.services]: [MockPAC] Listando clientes de org None
+[LOCAL] [2026-08-20 04:34:34] INFO [apps.billing.services]: [MockPAC] Creando cliente XAXX010101000 en org None
+[LOCAL] [2026-08-20 04:34:34] INFO [apps.billing.services]: [MockPAC] Actualizando cliente cus_mock_d1922e3067d4 en org None
+[LOCAL] [2026-08-20 04:34:34] INFO [apps.billing.services]: [MockPAC] Eliminando cliente cus_mock_d1922e3067d4 de org None
+[LOCAL] [2026-08-20 04:34:34] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:34:34] INFO [apps.billing.services]: [MockPAC] Listando clientes de org org_mock_tenant_123
+[LOCAL] [2026-08-20 04:34:34] INFO [apps.billing.services]: [MockPAC] Creando cliente XAXX010101000 en org org_mock_tenant_123
+[LOCAL] [2026-08-20 04:34:34] INFO [apps.billing.services]: [MockPAC] Actualizando cliente cus_mock_001 en org org_mock_tenant_123
+[LOCAL] [2026-08-20 04:34:34] INFO [apps.billing.services]: [MockPAC] Eliminando cliente cus_mock_001 de org org_mock_tenant_123
+[LOCAL] [2026-08-20 04:34:35] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:34:35] INFO [apps.billing.services]: [MockPAC] Listando productos de org None
+[LOCAL] [2026-08-20 04:34:35] INFO [apps.billing.services]: [MockPAC] Creando producto Global Plan Item en org None
+[LOCAL] [2026-08-20 04:34:35] INFO [apps.billing.services]: [MockPAC] Actualizando producto prod_mock_395215f1fada en org None
+[LOCAL] [2026-08-20 04:34:35] INFO [apps.billing.services]: [MockPAC] Eliminando producto prod_mock_395215f1fada de org None
+[LOCAL] [2026-08-20 04:34:36] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:34:36] INFO [apps.billing.services]: [MockPAC] Listando productos de org org_mock_tenant_123
+[LOCAL] [2026-08-20 04:34:36] INFO [apps.billing.services]: [MockPAC] Creando producto Premium Support Hours en org org_mock_tenant_123
+[LOCAL] [2026-08-20 04:34:36] INFO [apps.billing.services]: [MockPAC] Actualizando producto prod_mock_001 en org org_mock_tenant_123
+[LOCAL] [2026-08-20 04:34:36] INFO [apps.billing.services]: [MockPAC] Eliminando producto prod_mock_001 de org org_mock_tenant_123
+[LOCAL] [2026-08-20 04:34:37] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:34:37] INFO [apps.billing.services]: [MockPAC] Creando recibo para org None
+[LOCAL] [2026-08-20 04:34:38] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:34:38] INFO [apps.billing.services]: [MockPAC] Listando recibos de org org_mock_tenant_123
+[LOCAL] [2026-08-20 04:34:38] INFO [apps.billing.services]: [MockPAC] Creando recibo para org org_mock_tenant_123
+[LOCAL] [2026-08-20 04:34:39] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:34:39] INFO [apps.billing.services]: [MockPAC] Creando retención para org None
+[LOCAL] [2026-08-20 04:34:39] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:34:40] INFO [apps.billing.services]: [MockPAC] Listando retenciones de org org_mock_tenant_123
+[LOCAL] [2026-08-20 04:34:40] INFO [apps.billing.services]: [MockPAC] Creando retención para org org_mock_tenant_123
+[LOCAL] [2026-08-20 04:34:40] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:34:40] INFO [apps]: [facturapi_webhook] Received event invoice.created for invoice inv_ext_123
+[LOCAL] [2026-08-20 04:34:40] INFO [apps]: [facturapi_webhook] Created local invoice for external Facturapi invoice inv_ext_123
+[LOCAL] [2026-08-20 04:34:40] INFO [apps]: [facturapi_webhook] Marked invoice inv_ext_123 as PAID
+[LOCAL] [2026-08-20 04:34:41] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:34:41] INFO [apps]: [facturapi_webhook] Received event invoice.cancelled for invoice inv_test_webhook_123
+[LOCAL] [2026-08-20 04:34:41] INFO [apps]: [facturapi_webhook] Marked invoice inv_test_webhook_123 as CANCELLED
+[LOCAL] [2026-08-20 04:34:42] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:34:42] INFO [apps]: [facturapi_webhook] Received event invoice.created for invoice inv_test_webhook_123
+[LOCAL] [2026-08-20 04:34:42] INFO [apps]: [facturapi_webhook] Marked invoice inv_test_webhook_123 as PAID
+[LOCAL] [2026-08-20 04:34:43] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:34:43] INFO [apps]: [facturapi_webhook] Received event invoice.failed for invoice inv_test_webhook_123
+[LOCAL] [2026-08-20 04:34:43] INFO [apps]: [facturapi_webhook] Marked invoice inv_test_webhook_123 as FAILED: RFC RFC123456789 no existe en LCO
+[LOCAL] [2026-08-20 04:34:44] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:34:44] WARNING [apps]: [facturapi_webhook] Missing Facturapi-Signature header.
+[LOCAL] [2026-08-20 04:34:44] WARNING [apps]: [facturapi_webhook] Signature verification failed.
+[LOCAL] [2026-08-20 04:34:44] INFO [apps]: [facturapi_webhook] Received event invoice.cancelled for invoice inv_some_id
+[LOCAL] [2026-08-20 04:34:44] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:34:45] INFO [apps.billing.services]: [MockPAC] Solicitando cancelación para CFDI SAT UUID: a3c428a2-25de-4dfb-90f7-872ab67262ba con motivo 02, sustitución: None
+[LOCAL] [2026-08-20 04:34:45] INFO [apps.billing.services]: [MockPAC] Generando factura por $20000.00 en org parent
+[LOCAL] [2026-08-20 04:34:45] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:34:46] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Client Company B' automatically generated for Contract #2.
+[LOCAL] [2026-08-20 04:34:47] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:34:47] INFO [apps.billing.services]: [MockPAC] Generando factura por $100.0 en org org_mock_tenant_123
+[LOCAL] [2026-08-20 04:34:47] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:34:48] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:34:48] INFO [apps.billing.services]: [MockPAC] Generando factura por $1000.0 en org org_mock_tenant_lco
+[LOCAL] [2026-08-20 04:34:49] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:34:49] INFO [apps.billing.services]: [MockPAC] Generando factura por $20000.00 en org None
+[LOCAL] [2026-08-20 04:34:50] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:34:50] INFO [apps.billing.services]: [MockPAC] Generando factura por $20000.00 en org None
+[LOCAL] [2026-08-20 04:34:51] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:34:51] INFO [apps.billing.services]: [MockPAC] Generando factura por $500.00 en org org_mock_tenant_123
+[LOCAL] [2026-08-20 04:34:52] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:34:52] INFO [apps.billing.services]: [MockPAC] Generando factura por $500.00 en org org_mock_tenant_123
+[LOCAL] [2026-08-20 04:34:53] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:34:53] INFO [apps.billing.services]: [MockPAC] Generando factura por $500.00 en org org_mock_tenant_123
+[LOCAL] [2026-08-20 04:34:53] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:34:54] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:34:54] INFO [apps]: Autofactura email sent to client_a@example.com for invoice 1
+[LOCAL] [2026-08-20 04:34:55] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:34:56] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:34:57] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:34:58] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:34:59] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:35:00] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:35:00] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:35:01] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:35:01] INFO [apps.billing.services]: [MockPAC] Creando organización para RFC: XAXX010101000
+[LOCAL] [2026-08-20 04:35:02] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:35:02] INFO [apps.billing.services]: [MockPAC] Generando factura por $1000.0 en org org_mock_tenant_lco
+[LOCAL] [2026-08-20 04:35:03] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:35:03] INFO [apps.billing.services]: [MockPAC] Generando factura por $1000.0 en org org_mock_tenant_123
+[LOCAL] [2026-08-20 04:35:07] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner A Contract' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:35:07] WARNING [apps]: Error decodificando base64: Invalid base64-encoded string: number of data characters (25) cannot be 1 more than a multiple of 4
+[LOCAL] [2026-08-20 04:35:07] WARNING [apps]: Error decodificando base64: Invalid base64-encoded string: number of data characters (25) cannot be 1 more than a multiple of 4
+[LOCAL] [2026-08-20 04:35:08] WARNING [apps]: Imagen no válida o corrupta: cannot identify image file <_io.BytesIO object at 0x7f8856b31a30>
+[LOCAL] [2026-08-20 04:35:11] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner A Contract' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:35:12] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner A Contract' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:35:13] INFO [apps.bookings.views]: Iniciando creación de CustomContract en el ViewSet.
+[LOCAL] [2026-08-20 04:35:13] WARNING [apps]: La plantilla HTML de invitación no existe: bookings/emails/custom_contract_invitation.html. Usando fallback embebido.
+[LOCAL] [2026-08-20 04:35:13] INFO [apps]: Custom contract invitation sent to juan@example.com for token e5bf720d-fca1-4426-aaf1-c051b935fafc
+[LOCAL] [2026-08-20 04:35:13] WARNING [apps]: La plantilla HTML de invitación no existe: bookings/emails/custom_contract_invitation.html. Usando fallback embebido.
+[LOCAL] [2026-08-20 04:35:13] INFO [apps]: Custom contract invitation sent to pedro@example.com for token 1e82f0cc-f6dc-4c54-8749-0b67bfa6cd82
+[LOCAL] [2026-08-20 04:35:13] INFO [apps.bookings.views]: CustomContract creado y guardado con éxito.
+[LOCAL] [2026-08-20 04:35:14] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner A Contract' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:35:14] INFO [apps.bookings.views]: Iniciando creación de CustomContract en el ViewSet.
+[LOCAL] [2026-08-20 04:35:14] WARNING [apps]: La plantilla HTML de invitación no existe: bookings/emails/custom_contract_invitation.html. Usando fallback embebido.
+[LOCAL] [2026-08-20 04:35:14] INFO [apps]: Custom contract invitation sent to juan@example.com for token ca0d10fd-6e3c-40f6-8884-92c10f3016ee
+[LOCAL] [2026-08-20 04:35:14] WARNING [apps]: La plantilla HTML de invitación no existe: bookings/emails/custom_contract_invitation.html. Usando fallback embebido.
+[LOCAL] [2026-08-20 04:35:14] INFO [apps]: Custom contract invitation sent to pedro@example.com for token c773fffb-2109-4950-9962-5cca18de6cc2
+[LOCAL] [2026-08-20 04:35:14] INFO [apps.bookings.views]: CustomContract creado y guardado con éxito.
+[LOCAL] [2026-08-20 04:35:14] WARNING [apps]: Imagen no válida o corrupta: cannot identify image file <_io.BytesIO object at 0x7f8857213b50>
+[LOCAL] [2026-08-20 04:35:14] WARNING [apps]: Imagen no válida o corrupta: cannot identify image file <_io.BytesIO object at 0x7f88572120c0>
+[LOCAL] [2026-08-20 04:35:14] WARNING [apps]: Imagen no válida o corrupta: cannot identify image file <_io.BytesIO object at 0x7f8857211b70>
+[LOCAL] [2026-08-20 04:35:14] WARNING [apps]: La plantilla HTML de certificación no existe: bookings/emails/custom_contract_certified.html. Usando fallback embebido.
+[LOCAL] [2026-08-20 04:35:14] INFO [apps]: Custom contract certified PDF sent to juan@example.com
+[LOCAL] [2026-08-20 04:35:14] INFO [apps]: Custom contract certified PDF sent to pedro@example.com
+[LOCAL] [2026-08-20 04:35:17] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner A Contract' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:35:17] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner B Contract' automatically generated for Contract #2.
+[LOCAL] [2026-08-20 04:35:19] INFO [apps]: [SubmitExerciseView] Proxying evaluation to custom backend: https://api.custom-tenant-backend-failed.com/api/courses/submit/
+[LOCAL] [2026-08-20 04:35:19] ERROR [apps]: [SubmitExerciseView] Error proxying to custom backend: Connection Refused
+Traceback (most recent call last):
+  File "/app/apps/courses/views.py", line 67, in post
+    response = requests.post(target_url, json=request.data, headers=headers, timeout=15)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/unittest/mock.py", line 1139, in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/unittest/mock.py", line 1143, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/unittest/mock.py", line 1198, in _execute_mock_call
+    raise effect
+Exception: Connection Refused
+[LOCAL] [2026-08-20 04:35:19] INFO [apps]: [SubmitExerciseView] Proxying evaluation to custom backend: https://api.custom-tenant-backend.com/api/courses/submit/
+[LOCAL] [2026-08-20 04:35:21] INFO [apps.shop.signals]: Project 'Ecosistema Plan Test - Client Stats Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:35:22] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Client Stats Company 2' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:35:52] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner A Contract' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:35:55] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner A Contract' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:35:59] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner A Contract' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:36:00] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner A' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:36:00] INFO [apps.newsletter.models]: Attempting to send newsletter email via Testing locmem to ['sub1@tenant-a.com']
+[LOCAL] [2026-08-20 04:36:00] INFO [apps.newsletter.models]: Successfully sent newsletter email via Testing locmem to ['sub1@tenant-a.com']
+[LOCAL] [2026-08-20 04:36:00] INFO [apps.newsletter.models]: Attempting to send newsletter email via Testing locmem to ['sub2@tenant-a.com']
+[LOCAL] [2026-08-20 04:36:00] INFO [apps.newsletter.models]: Successfully sent newsletter email via Testing locmem to ['sub2@tenant-a.com']
+[LOCAL] [2026-08-20 04:36:02] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner A' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:36:02] INFO [apps.newsletter.views]: [import_csv] Procesando archivo con 3 filas. Encontrados 3 correos únicos.
+[LOCAL] [2026-08-20 04:36:02] INFO [apps.newsletter.views]: [import_csv] Encontrados 0 suscriptores existentes en base de datos.
+[LOCAL] [2026-08-20 04:36:02] INFO [apps.newsletter.views]: [import_csv] Guardando en lote (bulk_create) 3 nuevos suscriptores...
+[LOCAL] [2026-08-20 04:36:02] INFO [apps.newsletter.views]: [import_csv] Vinculados 3 suscriptores a la lista: Lista CSV
+[LOCAL] [2026-08-20 04:36:02] INFO [apps.newsletter.views]: [import_csv] Importación completada con éxito. Creados: 3, Actualizados: 0, Errores: 0
+[LOCAL] [2026-08-20 04:36:03] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner A' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:36:03] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner B' automatically generated for Contract #2.
+[LOCAL] [2026-08-20 04:36:05] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner A Contract' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:36:05] INFO [apps.newsletter.models]: Attempting to send newsletter email via Testing locmem to ['rec1@example.com', 'rec2@example.com']
+[LOCAL] [2026-08-20 04:36:05] INFO [apps.newsletter.models]: Successfully sent newsletter email via Testing locmem to ['rec1@example.com', 'rec2@example.com']
+[LOCAL] [2026-08-20 04:36:05] INFO [apps.newsletter.models]: Attempting to send newsletter email via Testing locmem to ['rec1@example.com', 'rec2@example.com']
+[LOCAL] [2026-08-20 04:36:05] INFO [apps.newsletter.models]: Successfully sent newsletter email via Testing locmem to ['rec1@example.com', 'rec2@example.com']
+[LOCAL] [2026-08-20 04:36:07] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner A Contract' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:36:07] WARNING [apps.newsletter.views]: SubscribeView POST request: User=AnonymousUser, Auth=False, Headers={'Cookie': '', 'Content-Length': '78', 'Content-Type': 'application/json'}
+[LOCAL] [2026-08-20 04:36:07] INFO [apps.newsletter.models]: Attempting to send newsletter email via Testing locmem to ['sub@example.com']
+[LOCAL] [2026-08-20 04:36:07] INFO [apps.newsletter.models]: Successfully sent newsletter email via Testing locmem to ['sub@example.com']
+[LOCAL] [2026-08-20 04:36:07] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner B Contract' automatically generated for Contract #2.
+[LOCAL] [2026-08-20 04:36:07] WARNING [apps.newsletter.views]: SubscribeView POST request: User=AnonymousUser, Auth=False, Headers={'Cookie': '', 'Content-Length': '78', 'Content-Type': 'application/json'}
+[LOCAL] [2026-08-20 04:36:07] INFO [apps.newsletter.models]: Attempting to send newsletter email via Testing locmem to ['sub@example.com']
+[LOCAL] [2026-08-20 04:36:07] INFO [apps.newsletter.models]: Successfully sent newsletter email via Testing locmem to ['sub@example.com']
+[LOCAL] [2026-08-20 04:36:07] WARNING [apps.newsletter.views]: SubscribeView POST request: User=AnonymousUser, Auth=False, Headers={'Cookie': '', 'Content-Length': '78', 'Content-Type': 'application/json'}
+[LOCAL] [2026-08-20 04:36:09] INFO [apps.newsletter.models]: Attempting to send newsletter email via Testing locmem to ['platform_sub1@example.com']
+[LOCAL] [2026-08-20 04:36:09] INFO [apps.newsletter.models]: Successfully sent newsletter email via Testing locmem to ['platform_sub1@example.com']
+[LOCAL] [2026-08-20 04:36:09] INFO [apps.newsletter.models]: Attempting to send newsletter email via Testing locmem to ['platform_sub2@example.com']
+[LOCAL] [2026-08-20 04:36:09] INFO [apps.newsletter.models]: Successfully sent newsletter email via Testing locmem to ['platform_sub2@example.com']
+[LOCAL] [2026-08-20 04:36:10] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:36:10] INFO [apps]: Addon activated email sent to client_addon@example.com for addon 1
+[LOCAL] [2026-08-20 04:36:10] INFO [apps.shop.signals]: Project 'Ecosistema Plan Test - Plan Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:36:11] WARNING [apps.shop.notify]: [notify_support] INICIO — addon='Test Addon' user='client_addon@example.com' tenant='None'
+[LOCAL] [2026-08-20 04:36:11] WARNING [apps.shop.notify]: [notify_support] Enviando email a soporte: soporte@nectarlabs.dev
+[LOCAL] [2026-08-20 04:36:11] WARNING [apps.shop.notify]: [notify_support] ✓ Email enviado a soporte@nectarlabs.dev para addon 'Test Addon'.
+[LOCAL] [2026-08-20 04:36:11] WARNING [apps.shop.notify]: [notify_support] Broadcast realtime → http://realtime:4001/internal/broadcast-admin
+[LOCAL] [2026-08-20 04:36:11] WARNING [apps.shop.notify]: [notify_support] ✓ Realtime broadcast OK: {"ok":true,"admins_online":0}
+[LOCAL] [2026-08-20 04:36:11] WARNING [apps.shop.notify]: [notify_support] FIN — addon='Test Addon'
+[LOCAL] [2026-08-20 04:36:11] INFO [apps]: Addon contracted email sent to client_addon@example.com for addon 1 (activated=False)
+[LOCAL] [2026-08-20 04:36:12] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Auto Project Co' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:36:13] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:36:14] INFO [apps.shop.signals]: Project 'Ecosistema Plan Premium - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:36:15] INFO [apps.shop.signals]: Project 'Ecosistema Plan Basico - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:36:19] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Contract A' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:36:19] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Contract B' automatically generated for Contract #2.
+[LOCAL] [2026-08-20 04:36:21] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Quote Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:36:23] INFO [apps.shop.signals]: Project 'Ecosistema Plan Premium-Dev - Referral Customer Co' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:36:28] INFO [apps.shop.signals]: Project 'Ecosistema Plan Premium-Dev - Retroactive Co' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:36:29] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Quote Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:36:31] INFO [apps.shop.signals]: Project 'Ecosistema Plan Premium-Dev - Salesperson referred client' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:36:32] INFO [apps.shop.signals]: Project 'Ecosistema Plan Premium-Dev - Salesperson referred client' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:36:34] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Quote Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:36:36] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Quote Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:36:37] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Quote Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:36:37] WARNING [apps.dashboard.views]: Invalid or expired JWT token in PDF download: {'detail': ErrorDetail(string='Given token not valid for any token type', code='token_not_valid'), 'code': ErrorDetail(string='token_not_valid', code='token_not_valid'), 'messages': [{'token_class': ErrorDetail(string='AccessToken', code='token_not_valid'), 'token_type': ErrorDetail(string='access', code='token_not_valid'), 'message': ErrorDetail(string='Token is invalid or expired', code='token_not_valid')}]}
+Traceback (most recent call last):
+  File "/app/apps/dashboard/views.py", line 556, in view_pdf
+    validated_token = JWTAuthentication().get_validated_token(token)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework_simplejwt/authentication.py", line 113, in get_validated_token
+    raise InvalidToken(
+rest_framework_simplejwt.exceptions.InvalidToken: {'detail': ErrorDetail(string='Given token not valid for any token type', code='token_not_valid'), 'code': ErrorDetail(string='token_not_valid', code='token_not_valid'), 'messages': [{'token_class': ErrorDetail(string='AccessToken', code='token_not_valid'), 'token_type': ErrorDetail(string='access', code='token_not_valid'), 'message': ErrorDetail(string='Token is invalid or expired', code='token_not_valid')}]}
+[LOCAL] [2026-08-20 04:36:37] WARNING [apps.dashboard.views]: Invalid or expired JWT token in PDF download: {'detail': ErrorDetail(string='Given token not valid for any token type', code='token_not_valid'), 'code': ErrorDetail(string='token_not_valid', code='token_not_valid'), 'messages': [{'token_class': ErrorDetail(string='AccessToken', code='token_not_valid'), 'token_type': ErrorDetail(string='access', code='token_not_valid'), 'message': ErrorDetail(string='Token is invalid or expired', code='token_not_valid')}]}
+Traceback (most recent call last):
+  File "/app/apps/dashboard/views.py", line 556, in view_pdf
+    validated_token = JWTAuthentication().get_validated_token(token)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework_simplejwt/authentication.py", line 113, in get_validated_token
+    raise InvalidToken(
+rest_framework_simplejwt.exceptions.InvalidToken: {'detail': ErrorDetail(string='Given token not valid for any token type', code='token_not_valid'), 'code': ErrorDetail(string='token_not_valid', code='token_not_valid'), 'messages': [{'token_class': ErrorDetail(string='AccessToken', code='token_not_valid'), 'token_type': ErrorDetail(string='access', code='token_not_valid'), 'message': ErrorDetail(string='Token is invalid or expired', code='token_not_valid')}]}
+[LOCAL] [2026-08-20 04:36:38] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Quote Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:36:39] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Quote Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:36:40] WARNING [apps]: [Logística/Mock] Cotización simulada exitosamente.
+[LOCAL] [2026-08-20 04:36:40] WARNING [apps]: [Logística/Mock] Cotización simulada exitosamente.
+[LOCAL] [2026-08-20 04:36:44] INFO [apps.shop.views]: Stripe coupon django_addon50_test not found (No such coupon). Creating new coupon...
+[LOCAL] [2026-08-20 04:36:45] INFO [apps.shop.views]: [stripe_webhook] addon_subscription recibido: user_id=1 addon_id=1 addon_slug=None
+[LOCAL] [2026-08-20 04:36:45] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - addon-client' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:36:45] INFO [apps]: Addon contracted email sent to addon_client@example.com for addon 1 (activated=True)
+[LOCAL] [2026-08-20 04:36:45] INFO [apps.shop.views]: [stripe_webhook] Intentando notify_support: user=addon_client@example.com contract=1
+[LOCAL] [2026-08-20 04:36:45] INFO [apps.shop.views]: [stripe_webhook] Llamando notify_support_addon_subscription addon=Test Live Chat tenant=addon-client
+[LOCAL] [2026-08-20 04:36:45] WARNING [apps.shop.notify]: [notify_support] INICIO — addon='Test Live Chat' user='addon_client@example.com' tenant='addon-client'
+[LOCAL] [2026-08-20 04:36:45] WARNING [apps.shop.notify]: [notify_support] Enviando email a soporte: soporte@nectarlabs.dev
+[LOCAL] [2026-08-20 04:36:45] WARNING [apps.shop.notify]: [notify_support] ✓ Email enviado a soporte@nectarlabs.dev para addon 'Test Live Chat'.
+[LOCAL] [2026-08-20 04:36:45] WARNING [apps.shop.notify]: [notify_support] Broadcast realtime → http://realtime:4001/internal/broadcast-admin
+[LOCAL] [2026-08-20 04:36:45] WARNING [apps.shop.notify]: [notify_support] ✓ Realtime broadcast OK: {"ok":true,"admins_online":0}
+[LOCAL] [2026-08-20 04:36:45] WARNING [apps.shop.notify]: [notify_support] FIN — addon='Test Live Chat'
+[LOCAL] [2026-08-20 04:36:45] INFO [apps.shop.views]: [stripe_webhook] notify_support_addon_subscription completado sin excepción
+[LOCAL] [2026-08-20 04:36:45] INFO [apps.shop.signals]: Project 'Ecosistema Plan Test Stripe - Stripe Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:36:45] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Custom CRM Company' automatically generated for Contract #2.
+[LOCAL] [2026-08-20 04:36:46] INFO [apps.shop.signals]: Project 'Ecosistema Plan Test Stripe - Stripe Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:36:48] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner A Contract' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:36:52] INFO [apps.shop.signals]: Project 'Ecosistema Developer Plan - Owner Contract Test' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:36:54] INFO [apps.shop.signals]: Project 'Ecosistema Plan Básico - Owner A' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:36:56] INFO [apps.shop.signals]: Project 'Ecosistema Plan Básico - Owner A' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:36:57] INFO [apps.shop.signals]: Project 'Ecosistema Plan Producción Premium - Owner A Premium' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:37:04] WARNING [apps.tickets.ai_service]: [AI/Limit] Límite de 50 respuestas de IA alcanzado para el tenant Tenant A (tenanta) en periodo de prueba.
+[LOCAL] [2026-08-20 04:37:07] ERROR [apps]: [Logística/Fulfillment] Saldo por debajo del mínimo de $250.00 MXN para Tenant #97791a7d-27a5-46d0-8ca6-a3b034d6f446. Saldo disponible: $0.00 MXN.
+[LOCAL] [2026-08-20 04:37:07] WARNING [apps]: [Logística/Mock] Emisión de guía simulada exitosamente para la orden #1.
+[LOCAL] [2026-08-20 04:37:15] INFO [apps.shop.signals]: Project 'Ecosistema Plan Premium (6 Meses) - Owner A Contract' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:37:45] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner A Contract' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:37:47] INFO [apps.shop.signals]: Project 'Ecosistema Plan Premium (6 Meses) - Owner A Contract' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:38:08] INFO [apps.users.utils]: Verification email sent to newregistered@example.com
+[LOCAL] [2026-08-20 04:38:42] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:38:42] INFO [apps.shop.signals]: Project 'Ecosistema Plan Embajador Premium - Ambassador Brand Influencer' automatically generated for Contract #2.
+[LOCAL] [2026-08-20 04:38:42] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:38:43] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:38:44] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:38:44] INFO [apps.billing.services]: [MockPAC] Listando clientes de org None
+[LOCAL] [2026-08-20 04:38:44] INFO [apps.billing.services]: [MockPAC] Creando cliente XAXX010101000 en org None
+[LOCAL] [2026-08-20 04:38:44] INFO [apps.billing.services]: [MockPAC] Actualizando cliente cus_mock_7b7622e6ebd5 en org None
+[LOCAL] [2026-08-20 04:38:44] INFO [apps.billing.services]: [MockPAC] Eliminando cliente cus_mock_7b7622e6ebd5 de org None
+[LOCAL] [2026-08-20 04:38:45] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:38:45] INFO [apps.billing.services]: [MockPAC] Listando clientes de org org_mock_tenant_123
+[LOCAL] [2026-08-20 04:38:45] INFO [apps.billing.services]: [MockPAC] Creando cliente XAXX010101000 en org org_mock_tenant_123
+[LOCAL] [2026-08-20 04:38:45] INFO [apps.billing.services]: [MockPAC] Actualizando cliente cus_mock_001 en org org_mock_tenant_123
+[LOCAL] [2026-08-20 04:38:45] INFO [apps.billing.services]: [MockPAC] Eliminando cliente cus_mock_001 de org org_mock_tenant_123
+[LOCAL] [2026-08-20 04:38:46] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:38:46] INFO [apps.billing.services]: [MockPAC] Listando productos de org None
+[LOCAL] [2026-08-20 04:38:46] INFO [apps.billing.services]: [MockPAC] Creando producto Global Plan Item en org None
+[LOCAL] [2026-08-20 04:38:46] INFO [apps.billing.services]: [MockPAC] Actualizando producto prod_mock_1518dd057d79 en org None
+[LOCAL] [2026-08-20 04:38:46] INFO [apps.billing.services]: [MockPAC] Eliminando producto prod_mock_1518dd057d79 de org None
+[LOCAL] [2026-08-20 04:38:47] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:38:47] INFO [apps.billing.services]: [MockPAC] Listando productos de org org_mock_tenant_123
+[LOCAL] [2026-08-20 04:38:47] INFO [apps.billing.services]: [MockPAC] Creando producto Premium Support Hours en org org_mock_tenant_123
+[LOCAL] [2026-08-20 04:38:47] INFO [apps.billing.services]: [MockPAC] Actualizando producto prod_mock_001 en org org_mock_tenant_123
+[LOCAL] [2026-08-20 04:38:47] INFO [apps.billing.services]: [MockPAC] Eliminando producto prod_mock_001 de org org_mock_tenant_123
+[LOCAL] [2026-08-20 04:38:48] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:38:48] INFO [apps.billing.services]: [MockPAC] Creando recibo para org None
+[LOCAL] [2026-08-20 04:38:49] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:38:49] INFO [apps.billing.services]: [MockPAC] Listando recibos de org org_mock_tenant_123
+[LOCAL] [2026-08-20 04:38:49] INFO [apps.billing.services]: [MockPAC] Creando recibo para org org_mock_tenant_123
+[LOCAL] [2026-08-20 04:38:50] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:38:50] INFO [apps.billing.services]: [MockPAC] Creando retención para org None
+[LOCAL] [2026-08-20 04:38:51] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:38:51] INFO [apps.billing.services]: [MockPAC] Listando retenciones de org org_mock_tenant_123
+[LOCAL] [2026-08-20 04:38:51] INFO [apps.billing.services]: [MockPAC] Creando retención para org org_mock_tenant_123
+[LOCAL] [2026-08-20 04:38:51] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:38:52] INFO [apps]: [facturapi_webhook] Received event invoice.created for invoice inv_ext_123
+[LOCAL] [2026-08-20 04:38:52] INFO [apps]: [facturapi_webhook] Created local invoice for external Facturapi invoice inv_ext_123
+[LOCAL] [2026-08-20 04:38:52] INFO [apps]: [facturapi_webhook] Marked invoice inv_ext_123 as PAID
+[LOCAL] [2026-08-20 04:38:52] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:38:52] INFO [apps]: [facturapi_webhook] Received event invoice.cancelled for invoice inv_test_webhook_123
+[LOCAL] [2026-08-20 04:38:52] INFO [apps]: [facturapi_webhook] Marked invoice inv_test_webhook_123 as CANCELLED
+[LOCAL] [2026-08-20 04:38:53] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:38:53] INFO [apps]: [facturapi_webhook] Received event invoice.created for invoice inv_test_webhook_123
+[LOCAL] [2026-08-20 04:38:53] INFO [apps]: [facturapi_webhook] Marked invoice inv_test_webhook_123 as PAID
+[LOCAL] [2026-08-20 04:38:54] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:38:54] INFO [apps]: [facturapi_webhook] Received event invoice.failed for invoice inv_test_webhook_123
+[LOCAL] [2026-08-20 04:38:54] INFO [apps]: [facturapi_webhook] Marked invoice inv_test_webhook_123 as FAILED: RFC RFC123456789 no existe en LCO
+[LOCAL] [2026-08-20 04:38:55] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:38:55] WARNING [apps]: [facturapi_webhook] Missing Facturapi-Signature header.
+[LOCAL] [2026-08-20 04:38:55] WARNING [apps]: [facturapi_webhook] Signature verification failed.
+[LOCAL] [2026-08-20 04:38:55] INFO [apps]: [facturapi_webhook] Received event invoice.cancelled for invoice inv_some_id
+[LOCAL] [2026-08-20 04:38:56] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:38:56] INFO [apps.billing.services]: [MockPAC] Solicitando cancelación para CFDI SAT UUID: a3c428a2-25de-4dfb-90f7-872ab67262ba con motivo 02, sustitución: None
+[LOCAL] [2026-08-20 04:38:56] INFO [apps.billing.services]: [MockPAC] Generando factura por $20000.00 en org parent
+[LOCAL] [2026-08-20 04:38:57] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:38:57] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Client Company B' automatically generated for Contract #2.
+[LOCAL] [2026-08-20 04:38:58] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:38:58] INFO [apps.billing.services]: [MockPAC] Generando factura por $100.0 en org org_mock_tenant_123
+[LOCAL] [2026-08-20 04:38:59] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:39:00] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:39:00] INFO [apps.billing.services]: [MockPAC] Generando factura por $1000.0 en org org_mock_tenant_lco
+[LOCAL] [2026-08-20 04:39:01] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:39:01] INFO [apps.billing.services]: [MockPAC] Generando factura por $20000.00 en org None
+[LOCAL] [2026-08-20 04:39:01] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:39:01] INFO [apps.billing.services]: [MockPAC] Generando factura por $20000.00 en org None
+[LOCAL] [2026-08-20 04:39:02] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:39:02] INFO [apps.billing.services]: [MockPAC] Generando factura por $500.00 en org org_mock_tenant_123
+[LOCAL] [2026-08-20 04:39:03] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:39:03] INFO [apps.billing.services]: [MockPAC] Generando factura por $500.00 en org org_mock_tenant_123
+[LOCAL] [2026-08-20 04:39:04] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:39:04] INFO [apps.billing.services]: [MockPAC] Generando factura por $500.00 en org org_mock_tenant_123
+[LOCAL] [2026-08-20 04:39:05] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:39:06] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:39:06] INFO [apps]: Autofactura email sent to client_a@example.com for invoice 1
+[LOCAL] [2026-08-20 04:39:06] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:39:07] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:39:08] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:39:09] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:39:10] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:39:11] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:39:12] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:39:12] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:39:13] INFO [apps.billing.services]: [MockPAC] Creando organización para RFC: XAXX010101000
+[LOCAL] [2026-08-20 04:39:13] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:39:13] INFO [apps.billing.services]: [MockPAC] Generando factura por $1000.0 en org org_mock_tenant_lco
+[LOCAL] [2026-08-20 04:39:14] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:39:14] INFO [apps.billing.services]: [MockPAC] Generando factura por $1000.0 en org org_mock_tenant_123
+[LOCAL] [2026-08-20 04:39:19] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner A Contract' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:39:19] WARNING [apps]: Error decodificando base64: Invalid base64-encoded string: number of data characters (25) cannot be 1 more than a multiple of 4
+[LOCAL] [2026-08-20 04:39:19] WARNING [apps]: Error decodificando base64: Invalid base64-encoded string: number of data characters (25) cannot be 1 more than a multiple of 4
+[LOCAL] [2026-08-20 04:39:19] WARNING [apps]: Imagen no válida o corrupta: cannot identify image file <_io.BytesIO object at 0x7f1ceadd0b30>
+[LOCAL] [2026-08-20 04:39:22] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner A Contract' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:39:23] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner A Contract' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:39:24] INFO [apps.bookings.views]: Iniciando creación de CustomContract en el ViewSet.
+[LOCAL] [2026-08-20 04:39:24] WARNING [apps]: La plantilla HTML de invitación no existe: bookings/emails/custom_contract_invitation.html. Usando fallback embebido.
+[LOCAL] [2026-08-20 04:39:24] INFO [apps]: Custom contract invitation sent to juan@example.com for token 197289e2-02a8-4b86-9dc4-0a0a90528888
+[LOCAL] [2026-08-20 04:39:24] WARNING [apps]: La plantilla HTML de invitación no existe: bookings/emails/custom_contract_invitation.html. Usando fallback embebido.
+[LOCAL] [2026-08-20 04:39:24] INFO [apps]: Custom contract invitation sent to pedro@example.com for token 3ce2982d-0055-4b0c-bfc8-57f394897d14
+[LOCAL] [2026-08-20 04:39:24] INFO [apps.bookings.views]: CustomContract creado y guardado con éxito.
+[LOCAL] [2026-08-20 04:39:25] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner A Contract' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:39:25] INFO [apps.bookings.views]: Iniciando creación de CustomContract en el ViewSet.
+[LOCAL] [2026-08-20 04:39:25] WARNING [apps]: La plantilla HTML de invitación no existe: bookings/emails/custom_contract_invitation.html. Usando fallback embebido.
+[LOCAL] [2026-08-20 04:39:25] INFO [apps]: Custom contract invitation sent to juan@example.com for token 46ff99f3-20a5-4444-a7aa-e64ff8ea0993
+[LOCAL] [2026-08-20 04:39:25] WARNING [apps]: La plantilla HTML de invitación no existe: bookings/emails/custom_contract_invitation.html. Usando fallback embebido.
+[LOCAL] [2026-08-20 04:39:25] INFO [apps]: Custom contract invitation sent to pedro@example.com for token 9419c20b-9774-4936-a65d-849ff28d1feb
+[LOCAL] [2026-08-20 04:39:25] INFO [apps.bookings.views]: CustomContract creado y guardado con éxito.
+[LOCAL] [2026-08-20 04:39:25] WARNING [apps]: Imagen no válida o corrupta: cannot identify image file <_io.BytesIO object at 0x7f1ceb0d9030>
+[LOCAL] [2026-08-20 04:39:25] WARNING [apps]: Imagen no válida o corrupta: cannot identify image file <_io.BytesIO object at 0x7f1ceb0da0c0>
+[LOCAL] [2026-08-20 04:39:25] WARNING [apps]: Imagen no válida o corrupta: cannot identify image file <_io.BytesIO object at 0x7f1ceb0d9a80>
+[LOCAL] [2026-08-20 04:39:25] WARNING [apps]: La plantilla HTML de certificación no existe: bookings/emails/custom_contract_certified.html. Usando fallback embebido.
+[LOCAL] [2026-08-20 04:39:25] INFO [apps]: Custom contract certified PDF sent to juan@example.com
+[LOCAL] [2026-08-20 04:39:25] INFO [apps]: Custom contract certified PDF sent to pedro@example.com
+[LOCAL] [2026-08-20 04:39:28] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner A Contract' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:39:28] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner B Contract' automatically generated for Contract #2.
+[LOCAL] [2026-08-20 04:39:30] INFO [apps]: [SubmitExerciseView] Proxying evaluation to custom backend: https://api.custom-tenant-backend-failed.com/api/courses/submit/
+[LOCAL] [2026-08-20 04:39:30] ERROR [apps]: [SubmitExerciseView] Error proxying to custom backend: Connection Refused
+Traceback (most recent call last):
+  File "/app/apps/courses/views.py", line 67, in post
+    response = requests.post(target_url, json=request.data, headers=headers, timeout=15)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/unittest/mock.py", line 1139, in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/unittest/mock.py", line 1143, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/unittest/mock.py", line 1198, in _execute_mock_call
+    raise effect
+Exception: Connection Refused
+[LOCAL] [2026-08-20 04:39:30] INFO [apps]: [SubmitExerciseView] Proxying evaluation to custom backend: https://api.custom-tenant-backend.com/api/courses/submit/
+[LOCAL] [2026-08-20 04:39:32] INFO [apps.shop.signals]: Project 'Ecosistema Plan Test - Client Stats Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:39:33] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Client Stats Company 2' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:40:04] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner A Contract' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:40:07] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner A Contract' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:40:11] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner A Contract' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:40:12] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner A' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:40:12] INFO [apps.newsletter.models]: Attempting to send newsletter email via Testing locmem to ['sub1@tenant-a.com']
+[LOCAL] [2026-08-20 04:40:12] INFO [apps.newsletter.models]: Successfully sent newsletter email via Testing locmem to ['sub1@tenant-a.com']
+[LOCAL] [2026-08-20 04:40:12] INFO [apps.newsletter.models]: Attempting to send newsletter email via Testing locmem to ['sub2@tenant-a.com']
+[LOCAL] [2026-08-20 04:40:12] INFO [apps.newsletter.models]: Successfully sent newsletter email via Testing locmem to ['sub2@tenant-a.com']
+[LOCAL] [2026-08-20 04:40:14] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner A' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:40:14] INFO [apps.newsletter.views]: [import_csv] Procesando archivo con 3 filas. Encontrados 3 correos únicos.
+[LOCAL] [2026-08-20 04:40:14] INFO [apps.newsletter.views]: [import_csv] Encontrados 0 suscriptores existentes en base de datos.
+[LOCAL] [2026-08-20 04:40:14] INFO [apps.newsletter.views]: [import_csv] Guardando en lote (bulk_create) 3 nuevos suscriptores...
+[LOCAL] [2026-08-20 04:40:14] INFO [apps.newsletter.views]: [import_csv] Vinculados 3 suscriptores a la lista: Lista CSV
+[LOCAL] [2026-08-20 04:40:14] INFO [apps.newsletter.views]: [import_csv] Importación completada con éxito. Creados: 3, Actualizados: 0, Errores: 0
+[LOCAL] [2026-08-20 04:40:16] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner A' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:40:16] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner B' automatically generated for Contract #2.
+[LOCAL] [2026-08-20 04:40:18] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner A Contract' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:40:18] INFO [apps.newsletter.models]: Attempting to send newsletter email via Testing locmem to ['rec1@example.com', 'rec2@example.com']
+[LOCAL] [2026-08-20 04:40:18] INFO [apps.newsletter.models]: Successfully sent newsletter email via Testing locmem to ['rec1@example.com', 'rec2@example.com']
+[LOCAL] [2026-08-20 04:40:18] INFO [apps.newsletter.models]: Attempting to send newsletter email via Testing locmem to ['rec1@example.com', 'rec2@example.com']
+[LOCAL] [2026-08-20 04:40:18] INFO [apps.newsletter.models]: Successfully sent newsletter email via Testing locmem to ['rec1@example.com', 'rec2@example.com']
+[LOCAL] [2026-08-20 04:40:19] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner A Contract' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:40:19] WARNING [apps.newsletter.views]: SubscribeView POST request: User=AnonymousUser, Auth=False, Headers={'Cookie': '', 'Content-Length': '78', 'Content-Type': 'application/json'}
+[LOCAL] [2026-08-20 04:40:19] INFO [apps.newsletter.models]: Attempting to send newsletter email via Testing locmem to ['sub@example.com']
+[LOCAL] [2026-08-20 04:40:19] INFO [apps.newsletter.models]: Successfully sent newsletter email via Testing locmem to ['sub@example.com']
+[LOCAL] [2026-08-20 04:40:19] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner B Contract' automatically generated for Contract #2.
+[LOCAL] [2026-08-20 04:40:19] WARNING [apps.newsletter.views]: SubscribeView POST request: User=AnonymousUser, Auth=False, Headers={'Cookie': '', 'Content-Length': '78', 'Content-Type': 'application/json'}
+[LOCAL] [2026-08-20 04:40:19] INFO [apps.newsletter.models]: Attempting to send newsletter email via Testing locmem to ['sub@example.com']
+[LOCAL] [2026-08-20 04:40:19] INFO [apps.newsletter.models]: Successfully sent newsletter email via Testing locmem to ['sub@example.com']
+[LOCAL] [2026-08-20 04:40:19] WARNING [apps.newsletter.views]: SubscribeView POST request: User=AnonymousUser, Auth=False, Headers={'Cookie': '', 'Content-Length': '78', 'Content-Type': 'application/json'}
+[LOCAL] [2026-08-20 04:40:21] INFO [apps.newsletter.models]: Attempting to send newsletter email via Testing locmem to ['platform_sub1@example.com']
+[LOCAL] [2026-08-20 04:40:21] INFO [apps.newsletter.models]: Successfully sent newsletter email via Testing locmem to ['platform_sub1@example.com']
+[LOCAL] [2026-08-20 04:40:21] INFO [apps.newsletter.models]: Attempting to send newsletter email via Testing locmem to ['platform_sub2@example.com']
+[LOCAL] [2026-08-20 04:40:21] INFO [apps.newsletter.models]: Successfully sent newsletter email via Testing locmem to ['platform_sub2@example.com']
+[LOCAL] [2026-08-20 04:40:22] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:40:22] INFO [apps]: Addon activated email sent to client_addon@example.com for addon 1
+[LOCAL] [2026-08-20 04:40:23] INFO [apps.shop.signals]: Project 'Ecosistema Plan Test - Plan Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:40:23] WARNING [apps.shop.notify]: [notify_support] INICIO — addon='Test Addon' user='client_addon@example.com' tenant='None'
+[LOCAL] [2026-08-20 04:40:23] WARNING [apps.shop.notify]: [notify_support] Enviando email a soporte: soporte@nectarlabs.dev
+[LOCAL] [2026-08-20 04:40:23] WARNING [apps.shop.notify]: [notify_support] ✓ Email enviado a soporte@nectarlabs.dev para addon 'Test Addon'.
+[LOCAL] [2026-08-20 04:40:23] WARNING [apps.shop.notify]: [notify_support] Broadcast realtime → http://realtime:4001/internal/broadcast-admin
+[LOCAL] [2026-08-20 04:40:23] WARNING [apps.shop.notify]: [notify_support] ✓ Realtime broadcast OK: {"ok":true,"admins_online":0}
+[LOCAL] [2026-08-20 04:40:23] WARNING [apps.shop.notify]: [notify_support] FIN — addon='Test Addon'
+[LOCAL] [2026-08-20 04:40:23] INFO [apps]: Addon contracted email sent to client_addon@example.com for addon 1 (activated=False)
+[LOCAL] [2026-08-20 04:40:25] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Auto Project Co' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:40:26] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:40:26] INFO [apps.shop.signals]: Project 'Ecosistema Plan Premium - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:40:27] INFO [apps.shop.signals]: Project 'Ecosistema Plan Basico - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:40:31] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Contract A' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:40:31] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Contract B' automatically generated for Contract #2.
+[LOCAL] [2026-08-20 04:40:32] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Quote Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:40:34] INFO [apps.shop.signals]: Project 'Ecosistema Plan Premium-Dev - Referral Customer Co' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:40:39] INFO [apps.shop.signals]: Project 'Ecosistema Plan Premium-Dev - Retroactive Co' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:40:40] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Quote Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:40:42] INFO [apps.shop.signals]: Project 'Ecosistema Plan Premium-Dev - Salesperson referred client' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:40:43] INFO [apps.shop.signals]: Project 'Ecosistema Plan Premium-Dev - Salesperson referred client' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:40:45] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Quote Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:40:47] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Quote Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:40:48] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Quote Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:40:48] WARNING [apps.dashboard.views]: Invalid or expired JWT token in PDF download: {'detail': ErrorDetail(string='Given token not valid for any token type', code='token_not_valid'), 'code': ErrorDetail(string='token_not_valid', code='token_not_valid'), 'messages': [{'token_class': ErrorDetail(string='AccessToken', code='token_not_valid'), 'token_type': ErrorDetail(string='access', code='token_not_valid'), 'message': ErrorDetail(string='Token is invalid or expired', code='token_not_valid')}]}
+Traceback (most recent call last):
+  File "/app/apps/dashboard/views.py", line 556, in view_pdf
+    validated_token = JWTAuthentication().get_validated_token(token)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework_simplejwt/authentication.py", line 113, in get_validated_token
+    raise InvalidToken(
+rest_framework_simplejwt.exceptions.InvalidToken: {'detail': ErrorDetail(string='Given token not valid for any token type', code='token_not_valid'), 'code': ErrorDetail(string='token_not_valid', code='token_not_valid'), 'messages': [{'token_class': ErrorDetail(string='AccessToken', code='token_not_valid'), 'token_type': ErrorDetail(string='access', code='token_not_valid'), 'message': ErrorDetail(string='Token is invalid or expired', code='token_not_valid')}]}
+[LOCAL] [2026-08-20 04:40:48] WARNING [apps.dashboard.views]: Invalid or expired JWT token in PDF download: {'detail': ErrorDetail(string='Given token not valid for any token type', code='token_not_valid'), 'code': ErrorDetail(string='token_not_valid', code='token_not_valid'), 'messages': [{'token_class': ErrorDetail(string='AccessToken', code='token_not_valid'), 'token_type': ErrorDetail(string='access', code='token_not_valid'), 'message': ErrorDetail(string='Token is invalid or expired', code='token_not_valid')}]}
+Traceback (most recent call last):
+  File "/app/apps/dashboard/views.py", line 556, in view_pdf
+    validated_token = JWTAuthentication().get_validated_token(token)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework_simplejwt/authentication.py", line 113, in get_validated_token
+    raise InvalidToken(
+rest_framework_simplejwt.exceptions.InvalidToken: {'detail': ErrorDetail(string='Given token not valid for any token type', code='token_not_valid'), 'code': ErrorDetail(string='token_not_valid', code='token_not_valid'), 'messages': [{'token_class': ErrorDetail(string='AccessToken', code='token_not_valid'), 'token_type': ErrorDetail(string='access', code='token_not_valid'), 'message': ErrorDetail(string='Token is invalid or expired', code='token_not_valid')}]}
+[LOCAL] [2026-08-20 04:40:49] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Quote Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:40:50] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Quote Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:40:51] WARNING [apps]: [Logística/Mock] Cotización simulada exitosamente.
+[LOCAL] [2026-08-20 04:40:51] WARNING [apps]: [Logística/Mock] Cotización simulada exitosamente.
+[LOCAL] [2026-08-20 04:40:55] INFO [apps.shop.views]: Stripe coupon django_addon50_test not found (No such coupon). Creating new coupon...
+[LOCAL] [2026-08-20 04:40:56] INFO [apps.shop.views]: [stripe_webhook] addon_subscription recibido: user_id=1 addon_id=1 addon_slug=None
+[LOCAL] [2026-08-20 04:40:56] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - addon-client' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:40:56] INFO [apps]: Addon contracted email sent to addon_client@example.com for addon 1 (activated=True)
+[LOCAL] [2026-08-20 04:40:56] INFO [apps.shop.views]: [stripe_webhook] Intentando notify_support: user=addon_client@example.com contract=1
+[LOCAL] [2026-08-20 04:40:56] INFO [apps.shop.views]: [stripe_webhook] Llamando notify_support_addon_subscription addon=Test Live Chat tenant=addon-client
+[LOCAL] [2026-08-20 04:40:56] WARNING [apps.shop.notify]: [notify_support] INICIO — addon='Test Live Chat' user='addon_client@example.com' tenant='addon-client'
+[LOCAL] [2026-08-20 04:40:56] WARNING [apps.shop.notify]: [notify_support] Enviando email a soporte: soporte@nectarlabs.dev
+[LOCAL] [2026-08-20 04:40:56] WARNING [apps.shop.notify]: [notify_support] ✓ Email enviado a soporte@nectarlabs.dev para addon 'Test Live Chat'.
+[LOCAL] [2026-08-20 04:40:56] WARNING [apps.shop.notify]: [notify_support] Broadcast realtime → http://realtime:4001/internal/broadcast-admin
+[LOCAL] [2026-08-20 04:40:56] WARNING [apps.shop.notify]: [notify_support] ✓ Realtime broadcast OK: {"ok":true,"admins_online":0}
+[LOCAL] [2026-08-20 04:40:56] WARNING [apps.shop.notify]: [notify_support] FIN — addon='Test Live Chat'
+[LOCAL] [2026-08-20 04:40:56] INFO [apps.shop.views]: [stripe_webhook] notify_support_addon_subscription completado sin excepción
+[LOCAL] [2026-08-20 04:40:57] INFO [apps.shop.signals]: Project 'Ecosistema Plan Test Stripe - Stripe Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:40:57] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Custom CRM Company' automatically generated for Contract #2.
+[LOCAL] [2026-08-20 04:40:58] INFO [apps.shop.signals]: Project 'Ecosistema Plan Test Stripe - Stripe Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:40:59] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner A Contract' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:41:04] INFO [apps.shop.signals]: Project 'Ecosistema Developer Plan - Owner Contract Test' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:41:06] INFO [apps.shop.signals]: Project 'Ecosistema Plan Básico - Owner A' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:41:07] INFO [apps.shop.signals]: Project 'Ecosistema Plan Básico - Owner A' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:41:09] INFO [apps.shop.signals]: Project 'Ecosistema Plan Producción Premium - Owner A Premium' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:41:16] WARNING [apps.tickets.ai_service]: [AI/Limit] Límite de 50 respuestas de IA alcanzado para el tenant Tenant A (tenanta) en periodo de prueba.
+[LOCAL] [2026-08-20 04:41:19] ERROR [apps]: [Logística/Fulfillment] Saldo por debajo del mínimo de $250.00 MXN para Tenant #47d4f39b-8b63-42f4-8bd0-3c40aa7f9638. Saldo disponible: $0.00 MXN.
+[LOCAL] [2026-08-20 04:41:19] WARNING [apps]: [Logística/Mock] Emisión de guía simulada exitosamente para la orden #1.
+[LOCAL] [2026-08-20 04:41:27] INFO [apps.shop.signals]: Project 'Ecosistema Plan Premium (6 Meses) - Owner A Contract' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:41:56] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner A Contract' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:41:57] INFO [apps.shop.signals]: Project 'Ecosistema Plan Premium (6 Meses) - Owner A Contract' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 04:42:19] INFO [apps.users.utils]: Verification email sent to newregistered@example.com
+[LOCAL] [2026-08-20 06:06:19] INFO [apps.users.utils]: Verification email sent to soporte@kores.vip
+[LOCAL] [2026-08-20 06:46:33] INFO [apps.users.utils]: Verification email sent to soporte@kores.vip
+[LOCAL] [2026-08-20 06:49:55] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:49:55] INFO [apps.shop.signals]: Project 'Ecosistema Plan Embajador Premium - Ambassador Brand Influencer' automatically generated for Contract #2.
+[LOCAL] [2026-08-20 06:49:56] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:49:57] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:49:57] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:49:57] INFO [apps.billing.services]: [MockPAC] Listando clientes de org None
+[LOCAL] [2026-08-20 06:49:57] INFO [apps.billing.services]: [MockPAC] Creando cliente XAXX010101000 en org None
+[LOCAL] [2026-08-20 06:49:57] INFO [apps.billing.services]: [MockPAC] Actualizando cliente cus_mock_320c4796ee63 en org None
+[LOCAL] [2026-08-20 06:49:57] INFO [apps.billing.services]: [MockPAC] Eliminando cliente cus_mock_320c4796ee63 de org None
+[LOCAL] [2026-08-20 06:49:58] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:49:58] INFO [apps.billing.services]: [MockPAC] Listando clientes de org org_mock_tenant_123
+[LOCAL] [2026-08-20 06:49:58] INFO [apps.billing.services]: [MockPAC] Creando cliente XAXX010101000 en org org_mock_tenant_123
+[LOCAL] [2026-08-20 06:49:58] INFO [apps.billing.services]: [MockPAC] Actualizando cliente cus_mock_001 en org org_mock_tenant_123
+[LOCAL] [2026-08-20 06:49:58] INFO [apps.billing.services]: [MockPAC] Eliminando cliente cus_mock_001 de org org_mock_tenant_123
+[LOCAL] [2026-08-20 06:49:59] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:49:59] INFO [apps.billing.services]: [MockPAC] Listando productos de org None
+[LOCAL] [2026-08-20 06:49:59] INFO [apps.billing.services]: [MockPAC] Creando producto Global Plan Item en org None
+[LOCAL] [2026-08-20 06:49:59] INFO [apps.billing.services]: [MockPAC] Actualizando producto prod_mock_0007da1e713c en org None
+[LOCAL] [2026-08-20 06:49:59] INFO [apps.billing.services]: [MockPAC] Eliminando producto prod_mock_0007da1e713c de org None
+[LOCAL] [2026-08-20 06:50:00] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:50:00] INFO [apps.billing.services]: [MockPAC] Listando productos de org org_mock_tenant_123
+[LOCAL] [2026-08-20 06:50:00] INFO [apps.billing.services]: [MockPAC] Creando producto Premium Support Hours en org org_mock_tenant_123
+[LOCAL] [2026-08-20 06:50:00] INFO [apps.billing.services]: [MockPAC] Actualizando producto prod_mock_001 en org org_mock_tenant_123
+[LOCAL] [2026-08-20 06:50:00] INFO [apps.billing.services]: [MockPAC] Eliminando producto prod_mock_001 de org org_mock_tenant_123
+[LOCAL] [2026-08-20 06:50:01] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:50:01] INFO [apps.billing.services]: [MockPAC] Creando recibo para org None
+[LOCAL] [2026-08-20 06:50:02] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:50:02] INFO [apps.billing.services]: [MockPAC] Listando recibos de org org_mock_tenant_123
+[LOCAL] [2026-08-20 06:50:02] INFO [apps.billing.services]: [MockPAC] Creando recibo para org org_mock_tenant_123
+[LOCAL] [2026-08-20 06:50:03] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:50:03] INFO [apps.billing.services]: [MockPAC] Creando retención para org None
+[LOCAL] [2026-08-20 06:50:04] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:50:04] INFO [apps.billing.services]: [MockPAC] Listando retenciones de org org_mock_tenant_123
+[LOCAL] [2026-08-20 06:50:04] INFO [apps.billing.services]: [MockPAC] Creando retención para org org_mock_tenant_123
+[LOCAL] [2026-08-20 06:50:04] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:50:05] INFO [apps]: [facturapi_webhook] Received event invoice.created for invoice inv_ext_123
+[LOCAL] [2026-08-20 06:50:05] INFO [apps]: [facturapi_webhook] Created local invoice for external Facturapi invoice inv_ext_123
+[LOCAL] [2026-08-20 06:50:05] INFO [apps]: [facturapi_webhook] Marked invoice inv_ext_123 as PAID
+[LOCAL] [2026-08-20 06:50:05] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:50:05] INFO [apps]: [facturapi_webhook] Received event invoice.cancelled for invoice inv_test_webhook_123
+[LOCAL] [2026-08-20 06:50:05] INFO [apps]: [facturapi_webhook] Marked invoice inv_test_webhook_123 as CANCELLED
+[LOCAL] [2026-08-20 06:50:06] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:50:06] INFO [apps]: [facturapi_webhook] Received event invoice.created for invoice inv_test_webhook_123
+[LOCAL] [2026-08-20 06:50:06] INFO [apps]: [facturapi_webhook] Marked invoice inv_test_webhook_123 as PAID
+[LOCAL] [2026-08-20 06:50:07] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:50:07] INFO [apps]: [facturapi_webhook] Received event invoice.failed for invoice inv_test_webhook_123
+[LOCAL] [2026-08-20 06:50:07] INFO [apps]: [facturapi_webhook] Marked invoice inv_test_webhook_123 as FAILED: RFC RFC123456789 no existe en LCO
+[LOCAL] [2026-08-20 06:50:08] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:50:08] WARNING [apps]: [facturapi_webhook] Missing Facturapi-Signature header.
+[LOCAL] [2026-08-20 06:50:08] WARNING [apps]: [facturapi_webhook] Signature verification failed.
+[LOCAL] [2026-08-20 06:50:08] INFO [apps]: [facturapi_webhook] Received event invoice.cancelled for invoice inv_some_id
+[LOCAL] [2026-08-20 06:50:09] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:50:09] INFO [apps.billing.services]: [MockPAC] Solicitando cancelación para CFDI SAT UUID: a3c428a2-25de-4dfb-90f7-872ab67262ba con motivo 02, sustitución: None
+[LOCAL] [2026-08-20 06:50:09] INFO [apps.billing.services]: [MockPAC] Generando factura por $20000.00 en org parent
+[LOCAL] [2026-08-20 06:50:10] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:50:10] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Client Company B' automatically generated for Contract #2.
+[LOCAL] [2026-08-20 06:50:11] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:50:11] INFO [apps.billing.services]: [MockPAC] Generando factura por $100.0 en org org_mock_tenant_123
+[LOCAL] [2026-08-20 06:50:12] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:50:13] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:50:13] INFO [apps.billing.services]: [MockPAC] Generando factura por $1000.0 en org org_mock_tenant_lco
+[LOCAL] [2026-08-20 06:50:14] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:50:14] INFO [apps.billing.services]: [MockPAC] Generando factura por $20000.00 en org None
+[LOCAL] [2026-08-20 06:50:15] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:50:15] INFO [apps.billing.services]: [MockPAC] Generando factura por $20000.00 en org None
+[LOCAL] [2026-08-20 06:50:16] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:50:16] INFO [apps.billing.services]: [MockPAC] Generando factura por $500.00 en org org_mock_tenant_123
+[LOCAL] [2026-08-20 06:50:17] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:50:17] INFO [apps.billing.services]: [MockPAC] Generando factura por $500.00 en org org_mock_tenant_123
+[LOCAL] [2026-08-20 06:50:17] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:50:18] INFO [apps.billing.services]: [MockPAC] Generando factura por $500.00 en org org_mock_tenant_123
+[LOCAL] [2026-08-20 06:50:18] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:50:19] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:50:19] INFO [apps]: Autofactura email sent to client_a@example.com for invoice 1
+[LOCAL] [2026-08-20 06:50:20] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:50:21] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:50:22] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:50:23] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:50:24] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:50:25] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:50:26] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:50:27] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:50:27] INFO [apps.billing.services]: [MockPAC] Creando organización para RFC: XAXX010101000
+[LOCAL] [2026-08-20 06:50:28] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:50:28] INFO [apps.billing.services]: [MockPAC] Generando factura por $1000.0 en org org_mock_tenant_lco
+[LOCAL] [2026-08-20 06:50:29] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:50:29] INFO [apps.billing.services]: [MockPAC] Generando factura por $1000.0 en org org_mock_tenant_123
+[LOCAL] [2026-08-20 06:50:34] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner A Contract' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:50:34] WARNING [apps]: Error decodificando base64: Invalid base64-encoded string: number of data characters (25) cannot be 1 more than a multiple of 4
+[LOCAL] [2026-08-20 06:50:34] WARNING [apps]: Error decodificando base64: Invalid base64-encoded string: number of data characters (25) cannot be 1 more than a multiple of 4
+[LOCAL] [2026-08-20 06:50:34] WARNING [apps]: Imagen no válida o corrupta: cannot identify image file <_io.BytesIO object at 0x7f5461fd1e90>
+[LOCAL] [2026-08-20 06:50:38] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner A Contract' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:50:39] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner A Contract' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:50:40] INFO [apps.bookings.views]: Iniciando creación de CustomContract en el ViewSet.
+[LOCAL] [2026-08-20 06:50:40] WARNING [apps]: La plantilla HTML de invitación no existe: bookings/emails/custom_contract_invitation.html. Usando fallback embebido.
+[LOCAL] [2026-08-20 06:50:40] INFO [apps]: Custom contract invitation sent to juan@example.com for token 0ae429ba-7661-421c-a17b-e2aa5cb325e7
+[LOCAL] [2026-08-20 06:50:40] WARNING [apps]: La plantilla HTML de invitación no existe: bookings/emails/custom_contract_invitation.html. Usando fallback embebido.
+[LOCAL] [2026-08-20 06:50:40] INFO [apps]: Custom contract invitation sent to pedro@example.com for token a2cf2289-8dd6-4507-9cb6-2250d3b4a356
+[LOCAL] [2026-08-20 06:50:40] INFO [apps.bookings.views]: CustomContract creado y guardado con éxito.
+[LOCAL] [2026-08-20 06:50:41] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner A Contract' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:50:41] INFO [apps.bookings.views]: Iniciando creación de CustomContract en el ViewSet.
+[LOCAL] [2026-08-20 06:50:41] WARNING [apps]: La plantilla HTML de invitación no existe: bookings/emails/custom_contract_invitation.html. Usando fallback embebido.
+[LOCAL] [2026-08-20 06:50:41] INFO [apps]: Custom contract invitation sent to juan@example.com for token 6cf4f61d-0a87-4245-a428-eb72ba684fd0
+[LOCAL] [2026-08-20 06:50:41] WARNING [apps]: La plantilla HTML de invitación no existe: bookings/emails/custom_contract_invitation.html. Usando fallback embebido.
+[LOCAL] [2026-08-20 06:50:41] INFO [apps]: Custom contract invitation sent to pedro@example.com for token b83be143-4173-496b-a3d0-1c1b16d2d852
+[LOCAL] [2026-08-20 06:50:41] INFO [apps.bookings.views]: CustomContract creado y guardado con éxito.
+[LOCAL] [2026-08-20 06:50:41] WARNING [apps]: Imagen no válida o corrupta: cannot identify image file <_io.BytesIO object at 0x7f5479b17290>
+[LOCAL] [2026-08-20 06:50:41] WARNING [apps]: Imagen no válida o corrupta: cannot identify image file <_io.BytesIO object at 0x7f54630e4cc0>
+[LOCAL] [2026-08-20 06:50:41] WARNING [apps]: Imagen no válida o corrupta: cannot identify image file <_io.BytesIO object at 0x7f54630e4cc0>
+[LOCAL] [2026-08-20 06:50:41] WARNING [apps]: La plantilla HTML de certificación no existe: bookings/emails/custom_contract_certified.html. Usando fallback embebido.
+[LOCAL] [2026-08-20 06:50:41] INFO [apps]: Custom contract certified PDF sent to juan@example.com
+[LOCAL] [2026-08-20 06:50:41] INFO [apps]: Custom contract certified PDF sent to pedro@example.com
+[LOCAL] [2026-08-20 06:50:45] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner A Contract' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:50:45] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner B Contract' automatically generated for Contract #2.
+[LOCAL] [2026-08-20 06:50:47] INFO [apps]: [SubmitExerciseView] Proxying evaluation to custom backend: https://api.custom-tenant-backend-failed.com/api/courses/submit/
+[LOCAL] [2026-08-20 06:50:47] ERROR [apps]: [SubmitExerciseView] Error proxying to custom backend: Connection Refused
+Traceback (most recent call last):
+  File "/app/apps/courses/views.py", line 67, in post
+    response = requests.post(target_url, json=request.data, headers=headers, timeout=15)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/unittest/mock.py", line 1139, in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/unittest/mock.py", line 1143, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/unittest/mock.py", line 1198, in _execute_mock_call
+    raise effect
+Exception: Connection Refused
+[LOCAL] [2026-08-20 06:50:47] INFO [apps]: [SubmitExerciseView] Proxying evaluation to custom backend: https://api.custom-tenant-backend.com/api/courses/submit/
+[LOCAL] [2026-08-20 06:50:49] INFO [apps.shop.signals]: Project 'Ecosistema Plan Test - Client Stats Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:50:50] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Client Stats Company 2' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:51:21] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner A Contract' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:51:24] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner A Contract' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:51:28] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner A Contract' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:51:30] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner A' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:51:30] INFO [apps.newsletter.models]: Attempting to send newsletter email via Testing locmem to ['sub1@tenant-a.com']
+[LOCAL] [2026-08-20 06:51:30] INFO [apps.newsletter.models]: Successfully sent newsletter email via Testing locmem to ['sub1@tenant-a.com']
+[LOCAL] [2026-08-20 06:51:30] INFO [apps.newsletter.models]: Attempting to send newsletter email via Testing locmem to ['sub2@tenant-a.com']
+[LOCAL] [2026-08-20 06:51:30] INFO [apps.newsletter.models]: Successfully sent newsletter email via Testing locmem to ['sub2@tenant-a.com']
+[LOCAL] [2026-08-20 06:51:31] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner A' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:51:32] INFO [apps.newsletter.views]: [import_csv] Procesando archivo con 3 filas. Encontrados 3 correos únicos.
+[LOCAL] [2026-08-20 06:51:32] INFO [apps.newsletter.views]: [import_csv] Encontrados 0 suscriptores existentes en base de datos.
+[LOCAL] [2026-08-20 06:51:32] INFO [apps.newsletter.views]: [import_csv] Guardando en lote (bulk_create) 3 nuevos suscriptores...
+[LOCAL] [2026-08-20 06:51:32] INFO [apps.newsletter.views]: [import_csv] Vinculados 3 suscriptores a la lista: Lista CSV
+[LOCAL] [2026-08-20 06:51:32] INFO [apps.newsletter.views]: [import_csv] Importación completada con éxito. Creados: 3, Actualizados: 0, Errores: 0
+[LOCAL] [2026-08-20 06:51:33] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner A' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:51:33] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner B' automatically generated for Contract #2.
+[LOCAL] [2026-08-20 06:51:35] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner A Contract' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:51:35] INFO [apps.newsletter.models]: Attempting to send newsletter email via Testing locmem to ['rec1@example.com', 'rec2@example.com']
+[LOCAL] [2026-08-20 06:51:35] INFO [apps.newsletter.models]: Successfully sent newsletter email via Testing locmem to ['rec1@example.com', 'rec2@example.com']
+[LOCAL] [2026-08-20 06:51:35] INFO [apps.newsletter.models]: Attempting to send newsletter email via Testing locmem to ['rec1@example.com', 'rec2@example.com']
+[LOCAL] [2026-08-20 06:51:35] INFO [apps.newsletter.models]: Successfully sent newsletter email via Testing locmem to ['rec1@example.com', 'rec2@example.com']
+[LOCAL] [2026-08-20 06:51:37] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner A Contract' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:51:37] WARNING [apps.newsletter.views]: SubscribeView POST request: User=AnonymousUser, Auth=False, Headers={'Cookie': '', 'Content-Length': '78', 'Content-Type': 'application/json'}
+[LOCAL] [2026-08-20 06:51:37] INFO [apps.newsletter.models]: Attempting to send newsletter email via Testing locmem to ['sub@example.com']
+[LOCAL] [2026-08-20 06:51:37] INFO [apps.newsletter.models]: Successfully sent newsletter email via Testing locmem to ['sub@example.com']
+[LOCAL] [2026-08-20 06:51:37] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner B Contract' automatically generated for Contract #2.
+[LOCAL] [2026-08-20 06:51:37] WARNING [apps.newsletter.views]: SubscribeView POST request: User=AnonymousUser, Auth=False, Headers={'Cookie': '', 'Content-Length': '78', 'Content-Type': 'application/json'}
+[LOCAL] [2026-08-20 06:51:37] INFO [apps.newsletter.models]: Attempting to send newsletter email via Testing locmem to ['sub@example.com']
+[LOCAL] [2026-08-20 06:51:37] INFO [apps.newsletter.models]: Successfully sent newsletter email via Testing locmem to ['sub@example.com']
+[LOCAL] [2026-08-20 06:51:37] WARNING [apps.newsletter.views]: SubscribeView POST request: User=AnonymousUser, Auth=False, Headers={'Cookie': '', 'Content-Length': '78', 'Content-Type': 'application/json'}
+[LOCAL] [2026-08-20 06:51:39] INFO [apps.newsletter.models]: Attempting to send newsletter email via Testing locmem to ['platform_sub1@example.com']
+[LOCAL] [2026-08-20 06:51:39] INFO [apps.newsletter.models]: Successfully sent newsletter email via Testing locmem to ['platform_sub1@example.com']
+[LOCAL] [2026-08-20 06:51:39] INFO [apps.newsletter.models]: Attempting to send newsletter email via Testing locmem to ['platform_sub2@example.com']
+[LOCAL] [2026-08-20 06:51:39] INFO [apps.newsletter.models]: Successfully sent newsletter email via Testing locmem to ['platform_sub2@example.com']
+[LOCAL] [2026-08-20 06:51:40] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:51:40] INFO [apps]: Addon activated email sent to client_addon@example.com for addon 1
+[LOCAL] [2026-08-20 06:51:41] INFO [apps.shop.signals]: Project 'Ecosistema Plan Test - Plan Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:51:41] WARNING [apps.shop.notify]: [notify_support] INICIO — addon='Test Addon' user='client_addon@example.com' tenant='None'
+[LOCAL] [2026-08-20 06:51:41] WARNING [apps.shop.notify]: [notify_support] Enviando email a soporte: soporte@nectarlabs.dev
+[LOCAL] [2026-08-20 06:51:41] WARNING [apps.shop.notify]: [notify_support] ✓ Email enviado a soporte@nectarlabs.dev para addon 'Test Addon'.
+[LOCAL] [2026-08-20 06:51:41] WARNING [apps.shop.notify]: [notify_support] Broadcast realtime → http://realtime:4001/internal/broadcast-admin
+[LOCAL] [2026-08-20 06:51:41] WARNING [apps.shop.notify]: [notify_support] ✓ Realtime broadcast OK: {"ok":true,"admins_online":0}
+[LOCAL] [2026-08-20 06:51:41] WARNING [apps.shop.notify]: [notify_support] FIN — addon='Test Addon'
+[LOCAL] [2026-08-20 06:51:41] INFO [apps]: Addon contracted email sent to client_addon@example.com for addon 1 (activated=False)
+[LOCAL] [2026-08-20 06:51:43] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Auto Project Co' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:51:44] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:51:45] INFO [apps.shop.signals]: Project 'Ecosistema Plan Premium - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:51:46] INFO [apps.shop.signals]: Project 'Ecosistema Plan Basico - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:51:50] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Contract A' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:51:50] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Contract B' automatically generated for Contract #2.
+[LOCAL] [2026-08-20 06:51:52] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Quote Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:51:53] INFO [apps.shop.signals]: Project 'Ecosistema Plan Premium-Dev - Referral Customer Co' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:51:59] INFO [apps.shop.signals]: Project 'Ecosistema Plan Premium-Dev - Retroactive Co' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:52:00] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Quote Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:52:02] INFO [apps.shop.signals]: Project 'Ecosistema Plan Premium-Dev - Salesperson referred client' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:52:03] INFO [apps.shop.signals]: Project 'Ecosistema Plan Premium-Dev - Salesperson referred client' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:52:06] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Quote Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:52:08] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Quote Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:52:09] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Quote Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:52:09] WARNING [apps.dashboard.views]: Invalid or expired JWT token in PDF download: {'detail': ErrorDetail(string='Given token not valid for any token type', code='token_not_valid'), 'code': ErrorDetail(string='token_not_valid', code='token_not_valid'), 'messages': [{'token_class': ErrorDetail(string='AccessToken', code='token_not_valid'), 'token_type': ErrorDetail(string='access', code='token_not_valid'), 'message': ErrorDetail(string='Token is invalid or expired', code='token_not_valid')}]}
+Traceback (most recent call last):
+  File "/app/apps/dashboard/views.py", line 556, in view_pdf
+    validated_token = JWTAuthentication().get_validated_token(token)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework_simplejwt/authentication.py", line 113, in get_validated_token
+    raise InvalidToken(
+rest_framework_simplejwt.exceptions.InvalidToken: {'detail': ErrorDetail(string='Given token not valid for any token type', code='token_not_valid'), 'code': ErrorDetail(string='token_not_valid', code='token_not_valid'), 'messages': [{'token_class': ErrorDetail(string='AccessToken', code='token_not_valid'), 'token_type': ErrorDetail(string='access', code='token_not_valid'), 'message': ErrorDetail(string='Token is invalid or expired', code='token_not_valid')}]}
+[LOCAL] [2026-08-20 06:52:09] WARNING [apps.dashboard.views]: Invalid or expired JWT token in PDF download: {'detail': ErrorDetail(string='Given token not valid for any token type', code='token_not_valid'), 'code': ErrorDetail(string='token_not_valid', code='token_not_valid'), 'messages': [{'token_class': ErrorDetail(string='AccessToken', code='token_not_valid'), 'token_type': ErrorDetail(string='access', code='token_not_valid'), 'message': ErrorDetail(string='Token is invalid or expired', code='token_not_valid')}]}
+Traceback (most recent call last):
+  File "/app/apps/dashboard/views.py", line 556, in view_pdf
+    validated_token = JWTAuthentication().get_validated_token(token)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework_simplejwt/authentication.py", line 113, in get_validated_token
+    raise InvalidToken(
+rest_framework_simplejwt.exceptions.InvalidToken: {'detail': ErrorDetail(string='Given token not valid for any token type', code='token_not_valid'), 'code': ErrorDetail(string='token_not_valid', code='token_not_valid'), 'messages': [{'token_class': ErrorDetail(string='AccessToken', code='token_not_valid'), 'token_type': ErrorDetail(string='access', code='token_not_valid'), 'message': ErrorDetail(string='Token is invalid or expired', code='token_not_valid')}]}
+[LOCAL] [2026-08-20 06:52:11] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Quote Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:52:12] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Quote Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:52:13] WARNING [apps]: [Logística/Mock] Cotización simulada exitosamente.
+[LOCAL] [2026-08-20 06:52:13] WARNING [apps]: [Logística/Mock] Cotización simulada exitosamente.
+[LOCAL] [2026-08-20 06:52:17] INFO [apps.shop.views]: Stripe coupon django_addon50_test not found (No such coupon). Creating new coupon...
+[LOCAL] [2026-08-20 06:52:17] INFO [apps.shop.views]: [stripe_webhook] addon_subscription recibido: user_id=1 addon_id=1 addon_slug=None
+[LOCAL] [2026-08-20 06:52:17] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - addon-client' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:52:17] INFO [apps]: Addon contracted email sent to addon_client@example.com for addon 1 (activated=True)
+[LOCAL] [2026-08-20 06:52:17] INFO [apps.shop.views]: [stripe_webhook] Intentando notify_support: user=addon_client@example.com contract=1
+[LOCAL] [2026-08-20 06:52:17] INFO [apps.shop.views]: [stripe_webhook] Llamando notify_support_addon_subscription addon=Test Live Chat tenant=addon-client
+[LOCAL] [2026-08-20 06:52:17] WARNING [apps.shop.notify]: [notify_support] INICIO — addon='Test Live Chat' user='addon_client@example.com' tenant='addon-client'
+[LOCAL] [2026-08-20 06:52:17] WARNING [apps.shop.notify]: [notify_support] Enviando email a soporte: soporte@nectarlabs.dev
+[LOCAL] [2026-08-20 06:52:17] WARNING [apps.shop.notify]: [notify_support] ✓ Email enviado a soporte@nectarlabs.dev para addon 'Test Live Chat'.
+[LOCAL] [2026-08-20 06:52:17] WARNING [apps.shop.notify]: [notify_support] Broadcast realtime → http://realtime:4001/internal/broadcast-admin
+[LOCAL] [2026-08-20 06:52:17] WARNING [apps.shop.notify]: [notify_support] ✓ Realtime broadcast OK: {"ok":true,"admins_online":0}
+[LOCAL] [2026-08-20 06:52:17] WARNING [apps.shop.notify]: [notify_support] FIN — addon='Test Live Chat'
+[LOCAL] [2026-08-20 06:52:17] INFO [apps.shop.views]: [stripe_webhook] notify_support_addon_subscription completado sin excepción
+[LOCAL] [2026-08-20 06:52:18] INFO [apps.shop.signals]: Project 'Ecosistema Plan Test Stripe - Stripe Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:52:18] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Custom CRM Company' automatically generated for Contract #2.
+[LOCAL] [2026-08-20 06:52:19] INFO [apps.shop.signals]: Project 'Ecosistema Plan Test Stripe - Stripe Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:52:21] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner A Contract' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:52:25] INFO [apps.shop.signals]: Project 'Ecosistema Developer Plan - Owner Contract Test' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:52:27] INFO [apps.shop.signals]: Project 'Ecosistema Plan Básico - Owner A' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:52:29] INFO [apps.shop.signals]: Project 'Ecosistema Plan Básico - Owner A' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:52:30] INFO [apps.shop.signals]: Project 'Ecosistema Plan Producción Premium - Owner A Premium' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:52:37] WARNING [apps.tickets.ai_service]: [AI/Limit] Límite de 50 respuestas de IA alcanzado para el tenant Tenant A (tenanta) en periodo de prueba.
+[LOCAL] [2026-08-20 06:52:40] ERROR [apps]: [Logística/Fulfillment] Saldo por debajo del mínimo de $250.00 MXN para Tenant #8ae6ed40-f030-4d53-ba10-37c0ea8e02a8. Saldo disponible: $0.00 MXN.
+[LOCAL] [2026-08-20 06:52:40] WARNING [apps]: [Logística/Mock] Emisión de guía simulada exitosamente para la orden #1.
+[LOCAL] [2026-08-20 06:52:49] INFO [apps.shop.signals]: Project 'Ecosistema Plan Premium (6 Meses) - Owner A Contract' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:53:17] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner A Contract' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:53:19] INFO [apps.shop.signals]: Project 'Ecosistema Plan Premium (6 Meses) - Owner A Contract' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:53:41] INFO [apps.users.utils]: Verification email sent to newregistered@example.com
+[LOCAL] [2026-08-20 06:57:13] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:57:13] INFO [apps.shop.signals]: Project 'Ecosistema Plan Embajador Premium - Ambassador Brand Influencer' automatically generated for Contract #2.
+[LOCAL] [2026-08-20 06:57:14] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:57:15] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:57:16] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:57:16] INFO [apps.billing.services]: [MockPAC] Listando clientes de org None
+[LOCAL] [2026-08-20 06:57:16] INFO [apps.billing.services]: [MockPAC] Creando cliente XAXX010101000 en org None
+[LOCAL] [2026-08-20 06:57:16] INFO [apps.billing.services]: [MockPAC] Actualizando cliente cus_mock_f75148b5847d en org None
+[LOCAL] [2026-08-20 06:57:16] INFO [apps.billing.services]: [MockPAC] Eliminando cliente cus_mock_f75148b5847d de org None
+[LOCAL] [2026-08-20 06:57:17] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:57:17] INFO [apps.billing.services]: [MockPAC] Listando clientes de org org_mock_tenant_123
+[LOCAL] [2026-08-20 06:57:17] INFO [apps.billing.services]: [MockPAC] Creando cliente XAXX010101000 en org org_mock_tenant_123
+[LOCAL] [2026-08-20 06:57:17] INFO [apps.billing.services]: [MockPAC] Actualizando cliente cus_mock_001 en org org_mock_tenant_123
+[LOCAL] [2026-08-20 06:57:17] INFO [apps.billing.services]: [MockPAC] Eliminando cliente cus_mock_001 de org org_mock_tenant_123
+[LOCAL] [2026-08-20 06:57:18] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:57:18] INFO [apps.billing.services]: [MockPAC] Listando productos de org None
+[LOCAL] [2026-08-20 06:57:18] INFO [apps.billing.services]: [MockPAC] Creando producto Global Plan Item en org None
+[LOCAL] [2026-08-20 06:57:18] INFO [apps.billing.services]: [MockPAC] Actualizando producto prod_mock_d438e1632474 en org None
+[LOCAL] [2026-08-20 06:57:18] INFO [apps.billing.services]: [MockPAC] Eliminando producto prod_mock_d438e1632474 de org None
+[LOCAL] [2026-08-20 06:57:19] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:57:19] INFO [apps.billing.services]: [MockPAC] Listando productos de org org_mock_tenant_123
+[LOCAL] [2026-08-20 06:57:19] INFO [apps.billing.services]: [MockPAC] Creando producto Premium Support Hours en org org_mock_tenant_123
+[LOCAL] [2026-08-20 06:57:19] INFO [apps.billing.services]: [MockPAC] Actualizando producto prod_mock_001 en org org_mock_tenant_123
+[LOCAL] [2026-08-20 06:57:19] INFO [apps.billing.services]: [MockPAC] Eliminando producto prod_mock_001 de org org_mock_tenant_123
+[LOCAL] [2026-08-20 06:57:20] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:57:20] INFO [apps.billing.services]: [MockPAC] Creando recibo para org None
+[LOCAL] [2026-08-20 06:57:21] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:57:21] INFO [apps.billing.services]: [MockPAC] Listando recibos de org org_mock_tenant_123
+[LOCAL] [2026-08-20 06:57:21] INFO [apps.billing.services]: [MockPAC] Creando recibo para org org_mock_tenant_123
+[LOCAL] [2026-08-20 06:57:22] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:57:22] INFO [apps.billing.services]: [MockPAC] Creando retención para org None
+[LOCAL] [2026-08-20 06:57:23] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:57:23] INFO [apps.billing.services]: [MockPAC] Listando retenciones de org org_mock_tenant_123
+[LOCAL] [2026-08-20 06:57:23] INFO [apps.billing.services]: [MockPAC] Creando retención para org org_mock_tenant_123
+[LOCAL] [2026-08-20 06:57:24] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:57:24] INFO [apps]: [facturapi_webhook] Received event invoice.created for invoice inv_ext_123
+[LOCAL] [2026-08-20 06:57:24] INFO [apps]: [facturapi_webhook] Created local invoice for external Facturapi invoice inv_ext_123
+[LOCAL] [2026-08-20 06:57:24] INFO [apps]: [facturapi_webhook] Marked invoice inv_ext_123 as PAID
+[LOCAL] [2026-08-20 06:57:24] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:57:25] INFO [apps]: [facturapi_webhook] Received event invoice.cancelled for invoice inv_test_webhook_123
+[LOCAL] [2026-08-20 06:57:25] INFO [apps]: [facturapi_webhook] Marked invoice inv_test_webhook_123 as CANCELLED
+[LOCAL] [2026-08-20 06:57:25] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:57:26] INFO [apps]: [facturapi_webhook] Received event invoice.created for invoice inv_test_webhook_123
+[LOCAL] [2026-08-20 06:57:26] INFO [apps]: [facturapi_webhook] Marked invoice inv_test_webhook_123 as PAID
+[LOCAL] [2026-08-20 06:57:26] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:57:26] INFO [apps]: [facturapi_webhook] Received event invoice.failed for invoice inv_test_webhook_123
+[LOCAL] [2026-08-20 06:57:26] INFO [apps]: [facturapi_webhook] Marked invoice inv_test_webhook_123 as FAILED: RFC RFC123456789 no existe en LCO
+[LOCAL] [2026-08-20 06:57:27] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:57:27] WARNING [apps]: [facturapi_webhook] Missing Facturapi-Signature header.
+[LOCAL] [2026-08-20 06:57:27] WARNING [apps]: [facturapi_webhook] Signature verification failed.
+[LOCAL] [2026-08-20 06:57:27] INFO [apps]: [facturapi_webhook] Received event invoice.cancelled for invoice inv_some_id
+[LOCAL] [2026-08-20 06:57:28] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:57:28] INFO [apps.billing.services]: [MockPAC] Solicitando cancelación para CFDI SAT UUID: a3c428a2-25de-4dfb-90f7-872ab67262ba con motivo 02, sustitución: None
+[LOCAL] [2026-08-20 06:57:28] INFO [apps.billing.services]: [MockPAC] Generando factura por $20000.00 en org parent
+[LOCAL] [2026-08-20 06:57:29] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:57:30] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Client Company B' automatically generated for Contract #2.
+[LOCAL] [2026-08-20 06:57:31] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:57:31] INFO [apps.billing.services]: [MockPAC] Generando factura por $100.0 en org org_mock_tenant_123
+[LOCAL] [2026-08-20 06:57:32] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:57:32] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:57:33] INFO [apps.billing.services]: [MockPAC] Generando factura por $1000.0 en org org_mock_tenant_lco
+[LOCAL] [2026-08-20 06:57:33] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:57:33] INFO [apps.billing.services]: [MockPAC] Generando factura por $20000.00 en org None
+[LOCAL] [2026-08-20 06:57:34] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:57:34] INFO [apps.billing.services]: [MockPAC] Generando factura por $20000.00 en org None
+[LOCAL] [2026-08-20 06:57:35] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:57:35] INFO [apps.billing.services]: [MockPAC] Generando factura por $500.00 en org org_mock_tenant_123
+[LOCAL] [2026-08-20 06:57:36] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:57:36] INFO [apps.billing.services]: [MockPAC] Generando factura por $500.00 en org org_mock_tenant_123
+[LOCAL] [2026-08-20 06:57:37] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:57:37] INFO [apps.billing.services]: [MockPAC] Generando factura por $500.00 en org org_mock_tenant_123
+[LOCAL] [2026-08-20 06:57:38] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:57:39] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:57:39] INFO [apps]: Autofactura email sent to client_a@example.com for invoice 1
+[LOCAL] [2026-08-20 06:57:40] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:57:41] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:57:42] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:57:43] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:57:44] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:57:45] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:57:46] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:57:47] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:57:47] INFO [apps.billing.services]: [MockPAC] Creando organización para RFC: XAXX010101000
+[LOCAL] [2026-08-20 06:57:47] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:57:48] INFO [apps.billing.services]: [MockPAC] Generando factura por $1000.0 en org org_mock_tenant_lco
+[LOCAL] [2026-08-20 06:57:48] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:57:49] INFO [apps.billing.services]: [MockPAC] Generando factura por $1000.0 en org org_mock_tenant_123
+[LOCAL] [2026-08-20 06:57:53] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner A Contract' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:57:53] WARNING [apps]: Error decodificando base64: Invalid base64-encoded string: number of data characters (25) cannot be 1 more than a multiple of 4
+[LOCAL] [2026-08-20 06:57:53] WARNING [apps]: Error decodificando base64: Invalid base64-encoded string: number of data characters (25) cannot be 1 more than a multiple of 4
+[LOCAL] [2026-08-20 06:57:53] WARNING [apps]: Imagen no válida o corrupta: cannot identify image file <_io.BytesIO object at 0x7f4bac0b6e30>
+[LOCAL] [2026-08-20 06:57:57] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner A Contract' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:57:59] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner A Contract' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:57:59] INFO [apps.bookings.views]: Iniciando creación de CustomContract en el ViewSet.
+[LOCAL] [2026-08-20 06:57:59] WARNING [apps]: La plantilla HTML de invitación no existe: bookings/emails/custom_contract_invitation.html. Usando fallback embebido.
+[LOCAL] [2026-08-20 06:57:59] INFO [apps]: Custom contract invitation sent to juan@example.com for token 347d6c67-07c3-42cd-944f-f090db426bd8
+[LOCAL] [2026-08-20 06:57:59] WARNING [apps]: La plantilla HTML de invitación no existe: bookings/emails/custom_contract_invitation.html. Usando fallback embebido.
+[LOCAL] [2026-08-20 06:57:59] INFO [apps]: Custom contract invitation sent to pedro@example.com for token a5a1f6d4-1eaa-40ff-acc8-1e71fe2d4373
+[LOCAL] [2026-08-20 06:57:59] INFO [apps.bookings.views]: CustomContract creado y guardado con éxito.
+[LOCAL] [2026-08-20 06:58:00] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner A Contract' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:58:00] INFO [apps.bookings.views]: Iniciando creación de CustomContract en el ViewSet.
+[LOCAL] [2026-08-20 06:58:00] WARNING [apps]: La plantilla HTML de invitación no existe: bookings/emails/custom_contract_invitation.html. Usando fallback embebido.
+[LOCAL] [2026-08-20 06:58:00] INFO [apps]: Custom contract invitation sent to juan@example.com for token 729910a3-b763-4df1-a6ed-6e4558e28a37
+[LOCAL] [2026-08-20 06:58:00] WARNING [apps]: La plantilla HTML de invitación no existe: bookings/emails/custom_contract_invitation.html. Usando fallback embebido.
+[LOCAL] [2026-08-20 06:58:00] INFO [apps]: Custom contract invitation sent to pedro@example.com for token 34678b9c-947f-4db6-b1a8-5ebac64027b4
+[LOCAL] [2026-08-20 06:58:00] INFO [apps.bookings.views]: CustomContract creado y guardado con éxito.
+[LOCAL] [2026-08-20 06:58:00] WARNING [apps]: Imagen no válida o corrupta: cannot identify image file <_io.BytesIO object at 0x7f4bac8a1080>
+[LOCAL] [2026-08-20 06:58:00] WARNING [apps]: Imagen no válida o corrupta: cannot identify image file <_io.BytesIO object at 0x7f4bac8a3970>
+[LOCAL] [2026-08-20 06:58:00] WARNING [apps]: Imagen no válida o corrupta: cannot identify image file <_io.BytesIO object at 0x7f4bac8a3510>
+[LOCAL] [2026-08-20 06:58:00] WARNING [apps]: La plantilla HTML de certificación no existe: bookings/emails/custom_contract_certified.html. Usando fallback embebido.
+[LOCAL] [2026-08-20 06:58:00] INFO [apps]: Custom contract certified PDF sent to juan@example.com
+[LOCAL] [2026-08-20 06:58:00] INFO [apps]: Custom contract certified PDF sent to pedro@example.com
+[LOCAL] [2026-08-20 06:58:04] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner A Contract' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:58:04] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner B Contract' automatically generated for Contract #2.
+[LOCAL] [2026-08-20 06:58:05] INFO [apps]: [SubmitExerciseView] Proxying evaluation to custom backend: https://api.custom-tenant-backend-failed.com/api/courses/submit/
+[LOCAL] [2026-08-20 06:58:05] ERROR [apps]: [SubmitExerciseView] Error proxying to custom backend: Connection Refused
+Traceback (most recent call last):
+  File "/app/apps/courses/views.py", line 67, in post
+    response = requests.post(target_url, json=request.data, headers=headers, timeout=15)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/unittest/mock.py", line 1139, in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/unittest/mock.py", line 1143, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/unittest/mock.py", line 1198, in _execute_mock_call
+    raise effect
+Exception: Connection Refused
+[LOCAL] [2026-08-20 06:58:06] INFO [apps]: [SubmitExerciseView] Proxying evaluation to custom backend: https://api.custom-tenant-backend.com/api/courses/submit/
+[LOCAL] [2026-08-20 06:58:08] INFO [apps.shop.signals]: Project 'Ecosistema Plan Test - Client Stats Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:58:09] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Client Stats Company 2' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:58:39] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner A Contract' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:58:42] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner A Contract' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:58:45] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner A Contract' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:58:47] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner A' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:58:47] INFO [apps.newsletter.models]: Attempting to send newsletter email via Testing locmem to ['sub1@tenant-a.com']
+[LOCAL] [2026-08-20 06:58:47] INFO [apps.newsletter.models]: Successfully sent newsletter email via Testing locmem to ['sub1@tenant-a.com']
+[LOCAL] [2026-08-20 06:58:47] INFO [apps.newsletter.models]: Attempting to send newsletter email via Testing locmem to ['sub2@tenant-a.com']
+[LOCAL] [2026-08-20 06:58:47] INFO [apps.newsletter.models]: Successfully sent newsletter email via Testing locmem to ['sub2@tenant-a.com']
+[LOCAL] [2026-08-20 06:58:48] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner A' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:58:48] INFO [apps.newsletter.views]: [import_csv] Procesando archivo con 3 filas. Encontrados 3 correos únicos.
+[LOCAL] [2026-08-20 06:58:48] INFO [apps.newsletter.views]: [import_csv] Encontrados 0 suscriptores existentes en base de datos.
+[LOCAL] [2026-08-20 06:58:48] INFO [apps.newsletter.views]: [import_csv] Guardando en lote (bulk_create) 3 nuevos suscriptores...
+[LOCAL] [2026-08-20 06:58:48] INFO [apps.newsletter.views]: [import_csv] Vinculados 3 suscriptores a la lista: Lista CSV
+[LOCAL] [2026-08-20 06:58:48] INFO [apps.newsletter.views]: [import_csv] Importación completada con éxito. Creados: 3, Actualizados: 0, Errores: 0
+[LOCAL] [2026-08-20 06:58:50] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner A' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:58:50] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner B' automatically generated for Contract #2.
+[LOCAL] [2026-08-20 06:58:52] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner A Contract' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:58:52] INFO [apps.newsletter.models]: Attempting to send newsletter email via Testing locmem to ['rec1@example.com', 'rec2@example.com']
+[LOCAL] [2026-08-20 06:58:52] INFO [apps.newsletter.models]: Successfully sent newsletter email via Testing locmem to ['rec1@example.com', 'rec2@example.com']
+[LOCAL] [2026-08-20 06:58:52] INFO [apps.newsletter.models]: Attempting to send newsletter email via Testing locmem to ['rec1@example.com', 'rec2@example.com']
+[LOCAL] [2026-08-20 06:58:52] INFO [apps.newsletter.models]: Successfully sent newsletter email via Testing locmem to ['rec1@example.com', 'rec2@example.com']
+[LOCAL] [2026-08-20 06:58:53] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner A Contract' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:58:53] WARNING [apps.newsletter.views]: SubscribeView POST request: User=AnonymousUser, Auth=False, Headers={'Cookie': '', 'Content-Length': '78', 'Content-Type': 'application/json'}
+[LOCAL] [2026-08-20 06:58:53] INFO [apps.newsletter.models]: Attempting to send newsletter email via Testing locmem to ['sub@example.com']
+[LOCAL] [2026-08-20 06:58:53] INFO [apps.newsletter.models]: Successfully sent newsletter email via Testing locmem to ['sub@example.com']
+[LOCAL] [2026-08-20 06:58:53] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner B Contract' automatically generated for Contract #2.
+[LOCAL] [2026-08-20 06:58:53] WARNING [apps.newsletter.views]: SubscribeView POST request: User=AnonymousUser, Auth=False, Headers={'Cookie': '', 'Content-Length': '78', 'Content-Type': 'application/json'}
+[LOCAL] [2026-08-20 06:58:53] INFO [apps.newsletter.models]: Attempting to send newsletter email via Testing locmem to ['sub@example.com']
+[LOCAL] [2026-08-20 06:58:53] INFO [apps.newsletter.models]: Successfully sent newsletter email via Testing locmem to ['sub@example.com']
+[LOCAL] [2026-08-20 06:58:53] WARNING [apps.newsletter.views]: SubscribeView POST request: User=AnonymousUser, Auth=False, Headers={'Cookie': '', 'Content-Length': '78', 'Content-Type': 'application/json'}
+[LOCAL] [2026-08-20 06:58:55] INFO [apps.newsletter.models]: Attempting to send newsletter email via Testing locmem to ['platform_sub1@example.com']
+[LOCAL] [2026-08-20 06:58:55] INFO [apps.newsletter.models]: Successfully sent newsletter email via Testing locmem to ['platform_sub1@example.com']
+[LOCAL] [2026-08-20 06:58:55] INFO [apps.newsletter.models]: Attempting to send newsletter email via Testing locmem to ['platform_sub2@example.com']
+[LOCAL] [2026-08-20 06:58:55] INFO [apps.newsletter.models]: Successfully sent newsletter email via Testing locmem to ['platform_sub2@example.com']
+[LOCAL] [2026-08-20 06:58:56] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:58:56] INFO [apps]: Addon activated email sent to client_addon@example.com for addon 1
+[LOCAL] [2026-08-20 06:58:57] INFO [apps.shop.signals]: Project 'Ecosistema Plan Test - Plan Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:58:57] WARNING [apps.shop.notify]: [notify_support] INICIO — addon='Test Addon' user='client_addon@example.com' tenant='None'
+[LOCAL] [2026-08-20 06:58:57] WARNING [apps.shop.notify]: [notify_support] Enviando email a soporte: soporte@nectarlabs.dev
+[LOCAL] [2026-08-20 06:58:57] WARNING [apps.shop.notify]: [notify_support] ✓ Email enviado a soporte@nectarlabs.dev para addon 'Test Addon'.
+[LOCAL] [2026-08-20 06:58:57] WARNING [apps.shop.notify]: [notify_support] Broadcast realtime → http://realtime:4001/internal/broadcast-admin
+[LOCAL] [2026-08-20 06:58:57] WARNING [apps.shop.notify]: [notify_support] ✓ Realtime broadcast OK: {"ok":true,"admins_online":0}
+[LOCAL] [2026-08-20 06:58:57] WARNING [apps.shop.notify]: [notify_support] FIN — addon='Test Addon'
+[LOCAL] [2026-08-20 06:58:57] INFO [apps]: Addon contracted email sent to client_addon@example.com for addon 1 (activated=False)
+[LOCAL] [2026-08-20 06:58:59] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Auto Project Co' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:59:00] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:59:01] INFO [apps.shop.signals]: Project 'Ecosistema Plan Premium - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:59:01] INFO [apps.shop.signals]: Project 'Ecosistema Plan Basico - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:59:05] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Contract A' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:59:05] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Contract B' automatically generated for Contract #2.
+[LOCAL] [2026-08-20 06:59:06] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Quote Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:59:08] INFO [apps.shop.signals]: Project 'Ecosistema Plan Premium-Dev - Referral Customer Co' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:59:13] INFO [apps.shop.signals]: Project 'Ecosistema Plan Premium-Dev - Retroactive Co' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:59:14] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Quote Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:59:15] INFO [apps.shop.signals]: Project 'Ecosistema Plan Premium-Dev - Salesperson referred client' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:59:17] INFO [apps.shop.signals]: Project 'Ecosistema Plan Premium-Dev - Salesperson referred client' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:59:19] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Quote Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:59:20] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Quote Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:59:22] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Quote Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:59:22] WARNING [apps.dashboard.views]: Invalid or expired JWT token in PDF download: {'detail': ErrorDetail(string='Given token not valid for any token type', code='token_not_valid'), 'code': ErrorDetail(string='token_not_valid', code='token_not_valid'), 'messages': [{'token_class': ErrorDetail(string='AccessToken', code='token_not_valid'), 'token_type': ErrorDetail(string='access', code='token_not_valid'), 'message': ErrorDetail(string='Token is invalid or expired', code='token_not_valid')}]}
+Traceback (most recent call last):
+  File "/app/apps/dashboard/views.py", line 556, in view_pdf
+    validated_token = JWTAuthentication().get_validated_token(token)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework_simplejwt/authentication.py", line 113, in get_validated_token
+    raise InvalidToken(
+rest_framework_simplejwt.exceptions.InvalidToken: {'detail': ErrorDetail(string='Given token not valid for any token type', code='token_not_valid'), 'code': ErrorDetail(string='token_not_valid', code='token_not_valid'), 'messages': [{'token_class': ErrorDetail(string='AccessToken', code='token_not_valid'), 'token_type': ErrorDetail(string='access', code='token_not_valid'), 'message': ErrorDetail(string='Token is invalid or expired', code='token_not_valid')}]}
+[LOCAL] [2026-08-20 06:59:22] WARNING [apps.dashboard.views]: Invalid or expired JWT token in PDF download: {'detail': ErrorDetail(string='Given token not valid for any token type', code='token_not_valid'), 'code': ErrorDetail(string='token_not_valid', code='token_not_valid'), 'messages': [{'token_class': ErrorDetail(string='AccessToken', code='token_not_valid'), 'token_type': ErrorDetail(string='access', code='token_not_valid'), 'message': ErrorDetail(string='Token is invalid or expired', code='token_not_valid')}]}
+Traceback (most recent call last):
+  File "/app/apps/dashboard/views.py", line 556, in view_pdf
+    validated_token = JWTAuthentication().get_validated_token(token)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework_simplejwt/authentication.py", line 113, in get_validated_token
+    raise InvalidToken(
+rest_framework_simplejwt.exceptions.InvalidToken: {'detail': ErrorDetail(string='Given token not valid for any token type', code='token_not_valid'), 'code': ErrorDetail(string='token_not_valid', code='token_not_valid'), 'messages': [{'token_class': ErrorDetail(string='AccessToken', code='token_not_valid'), 'token_type': ErrorDetail(string='access', code='token_not_valid'), 'message': ErrorDetail(string='Token is invalid or expired', code='token_not_valid')}]}
+[LOCAL] [2026-08-20 06:59:23] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Quote Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:59:24] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Quote Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:59:25] WARNING [apps]: [Logística/Mock] Cotización simulada exitosamente.
+[LOCAL] [2026-08-20 06:59:25] WARNING [apps]: [Logística/Mock] Cotización simulada exitosamente.
+[LOCAL] [2026-08-20 06:59:29] INFO [apps.shop.views]: Stripe coupon django_addon50_test not found (No such coupon). Creating new coupon...
+[LOCAL] [2026-08-20 06:59:29] INFO [apps.shop.views]: [stripe_webhook] addon_subscription recibido: user_id=1 addon_id=1 addon_slug=None
+[LOCAL] [2026-08-20 06:59:29] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - addon-client' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:59:29] INFO [apps]: Addon contracted email sent to addon_client@example.com for addon 1 (activated=True)
+[LOCAL] [2026-08-20 06:59:29] INFO [apps.shop.views]: [stripe_webhook] Intentando notify_support: user=addon_client@example.com contract=1
+[LOCAL] [2026-08-20 06:59:29] INFO [apps.shop.views]: [stripe_webhook] Llamando notify_support_addon_subscription addon=Test Live Chat tenant=addon-client
+[LOCAL] [2026-08-20 06:59:29] WARNING [apps.shop.notify]: [notify_support] INICIO — addon='Test Live Chat' user='addon_client@example.com' tenant='addon-client'
+[LOCAL] [2026-08-20 06:59:29] WARNING [apps.shop.notify]: [notify_support] Enviando email a soporte: soporte@nectarlabs.dev
+[LOCAL] [2026-08-20 06:59:29] WARNING [apps.shop.notify]: [notify_support] ✓ Email enviado a soporte@nectarlabs.dev para addon 'Test Live Chat'.
+[LOCAL] [2026-08-20 06:59:29] WARNING [apps.shop.notify]: [notify_support] Broadcast realtime → http://realtime:4001/internal/broadcast-admin
+[LOCAL] [2026-08-20 06:59:29] WARNING [apps.shop.notify]: [notify_support] ✓ Realtime broadcast OK: {"ok":true,"admins_online":0}
+[LOCAL] [2026-08-20 06:59:29] WARNING [apps.shop.notify]: [notify_support] FIN — addon='Test Live Chat'
+[LOCAL] [2026-08-20 06:59:29] INFO [apps.shop.views]: [stripe_webhook] notify_support_addon_subscription completado sin excepción
+[LOCAL] [2026-08-20 06:59:30] INFO [apps.shop.signals]: Project 'Ecosistema Plan Test Stripe - Stripe Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:59:30] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Custom CRM Company' automatically generated for Contract #2.
+[LOCAL] [2026-08-20 06:59:31] INFO [apps.shop.signals]: Project 'Ecosistema Plan Test Stripe - Stripe Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:59:33] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner A Contract' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:59:37] INFO [apps.shop.signals]: Project 'Ecosistema Developer Plan - Owner Contract Test' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:59:39] INFO [apps.shop.signals]: Project 'Ecosistema Plan Básico - Owner A' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:59:41] INFO [apps.shop.signals]: Project 'Ecosistema Plan Básico - Owner A' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:59:42] INFO [apps.shop.signals]: Project 'Ecosistema Plan Producción Premium - Owner A Premium' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 06:59:49] WARNING [apps.tickets.ai_service]: [AI/Limit] Límite de 50 respuestas de IA alcanzado para el tenant Tenant A (tenanta) en periodo de prueba.
+[LOCAL] [2026-08-20 06:59:52] ERROR [apps]: [Logística/Fulfillment] Saldo por debajo del mínimo de $250.00 MXN para Tenant #9b7deb57-087f-4c08-8cc0-4c94a472b94f. Saldo disponible: $0.00 MXN.
+[LOCAL] [2026-08-20 06:59:52] WARNING [apps]: [Logística/Mock] Emisión de guía simulada exitosamente para la orden #1.
+[LOCAL] [2026-08-20 07:00:00] INFO [apps.shop.signals]: Project 'Ecosistema Plan Premium (6 Meses) - Owner A Contract' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 07:00:29] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner A Contract' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 07:00:31] INFO [apps.shop.signals]: Project 'Ecosistema Plan Premium (6 Meses) - Owner A Contract' automatically generated for Contract #1.
+[LOCAL] [2026-08-20 07:00:55] INFO [apps.users.utils]: Verification email sent to newregistered@example.com

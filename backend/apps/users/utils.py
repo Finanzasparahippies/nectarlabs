@@ -10,19 +10,52 @@ from apps.tenants.utils import get_platform_sender
 
 logger = logging.getLogger(__name__)
 
-def send_verification_email(user, request):
+from urllib.parse import urlparse
+
+ALLOWED_ORIGIN_PATTERNS = [
+    "localhost",
+    "127.0.0.1",
+    "nectarlabs.dev",
+    "staging.nectarlabs.dev",
+    "nectarlabs.localhost",
+]
+
+def get_request_frontend_origin(request=None):
+    """
+    Safely extracts the frontend origin from HTTP_ORIGIN or HTTP_REFERER if present,
+    validating against a strict domain whitelist to prevent Host Header Injection.
+    Falls back to settings.FRONTEND_URL cleanly.
+    """
+    default_frontend = getattr(settings, 'FRONTEND_URL', 'http://localhost:3000').rstrip('/')
+    if not request:
+        return default_frontend
+
+    raw_origin = request.META.get('HTTP_ORIGIN') or request.META.get('HTTP_REFERER')
+    if raw_origin:
+        try:
+            parsed = urlparse(raw_origin)
+            hostname = parsed.hostname or ""
+            if any(pattern in hostname.lower() for pattern in ALLOWED_ORIGIN_PATTERNS):
+                scheme = parsed.scheme or "http"
+                netloc = parsed.netloc
+                return f"{scheme}://{netloc}".rstrip('/')
+        except Exception:
+            pass
+
+    return default_frontend
+
+def send_verification_email(user, request=None):
     """
     Generates a secure verification token and sends a confirmation email to the user.
-    Uses request.build_absolute_uri to dynamically construct the backend callback URL.
+    Constructs the verification URL pointing directly to the Frontend verification route,
+    dynamically matching the client origin (host + port) when safe.
     """
     try:
         token = default_token_generator.make_token(user)
         uid = urlsafe_base64_encode(force_bytes(user.pk))
         
-        # Build absolute URL pointing to the backend's verification endpoint
-        verify_url = request.build_absolute_uri(
-            f"/api/users/verify-email/?uid={uid}&token={token}"
-        )
+        frontend_url = get_request_frontend_origin(request)
+        verify_url = f"{frontend_url}/verify-email?uid={uid}&token={token}"
         
         subject = "Verifica tu cuenta - Néctar Labs"
         

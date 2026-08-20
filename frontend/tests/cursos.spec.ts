@@ -1,8 +1,10 @@
 import { test, expect } from '@playwright/test';
+import { setupApiMocks } from './mocks/apiMockHandler';
 
 test.describe('Curso de Python - Dashboard Interactivo (Enfoque A)', () => {
   
   test.beforeEach(async ({ page }) => {
+    await setupApiMocks(page);
     // Navegar directamente a la ruta pública del curso embebido con index.html para evitar ruteos 404 del dev server de Next.js
     await page.goto('/cursos/ingeniero-python/index.html');
   });

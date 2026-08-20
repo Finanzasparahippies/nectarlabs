@@ -342,12 +342,14 @@ if DEBUG:
         "http://localhost",
         "http://localhost:3000",
         "http://localhost:3002",
+        "http://localhost:3005",
         "http://localhost:8000",
         "http://localhost:8001",
         "http://localhost:8080",
         "http://127.0.0.1",
         "http://127.0.0.1:3000",
         "http://127.0.0.1:3002",
+        "http://127.0.0.1:3005",
         "http://127.0.0.1:8000",
         "http://127.0.0.1:8001",
         "http://127.0.0.1:8080",
@@ -361,6 +363,14 @@ if DEBUG:
             CSRF_TRUSTED_ORIGINS.append(origin)
         if origin not in CORS_ALLOWED_ORIGINS and not origin.startswith("http://*"):
             CORS_ALLOWED_ORIGINS.append(origin)
+
+# Dynamic FRONTEND_URL inclusion in CORS/CSRF
+if FRONTEND_URL:
+    clean_frontend_origin = FRONTEND_URL.rstrip('/')
+    if clean_frontend_origin not in CSRF_TRUSTED_ORIGINS:
+        CSRF_TRUSTED_ORIGINS.append(clean_frontend_origin)
+    if clean_frontend_origin not in CORS_ALLOWED_ORIGINS:
+        CORS_ALLOWED_ORIGINS.append(clean_frontend_origin)
 
 
 # CKEditor 5

@@ -12,7 +12,7 @@ from django.conf import settings
 
 from .serializers import UserSerializer, RegisterSerializer
 from .models import User
-from .utils import send_verification_email
+from .utils import send_verification_email, get_request_frontend_origin
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
@@ -61,13 +61,7 @@ class VerifyEmailView(APIView):
         uidb64 = request.query_params.get('uid')
         token = request.query_params.get('token')
         
-        frontend_url = settings.FRONTEND_URL
-        # Dynamic environment redirect
-        request_host = request.get_host()
-        if request_host and not any(h in request_host.lower() for h in ["localhost", "127.0.0.1", "testserver", "backend"]):
-            if any(h in frontend_url.lower() for h in ["localhost", "127.0.0.1"]):
-                scheme = "https" if request.is_secure() or request.META.get('HTTP_X_FORWARDED_PROTO') == 'https' else "http"
-                frontend_url = f"{scheme}://{request_host}"
+        frontend_url = get_request_frontend_origin(request)
 
         if not uidb64 or not token:
             return redirect(f"{frontend_url}/login?verified=false&error=missing_params")

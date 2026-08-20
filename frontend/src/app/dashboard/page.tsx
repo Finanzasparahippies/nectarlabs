@@ -1440,9 +1440,9 @@ function DashboardPageOriginal() {
                                       : `${contract.tenant_subdomain}.nectarlabs.dev`;
 
                                     if (!hasCustomDomainActive) {
-                                      if (host.includes('localhost')) {
-                                        activeDomain = `http://nectarlabs.localhost/tenants/${contract.tenant_subdomain}`;
-                                        activeDisplay = `nectarlabs.localhost/tenants/${contract.tenant_subdomain}`;
+                                      if (host.includes('localhost') || host.includes('127.0.0.1')) {
+                                        activeDomain = `/tenants/${contract.tenant_subdomain}`;
+                                        activeDisplay = `${host}/tenants/${contract.tenant_subdomain}`;
                                       } else if (host.includes('staging.nectarlabs.dev')) {
                                         activeDomain = `https://${contract.tenant_subdomain}.staging.nectarlabs.dev`;
                                         activeDisplay = `${contract.tenant_subdomain}.staging.nectarlabs.dev`;
@@ -2875,7 +2875,7 @@ function DashboardPageOriginal() {
                                   href={(() => {
                                     const tenant = tenants[0];
                                     const host = typeof window !== 'undefined' ? window.location.hostname : '';
-                                    if (host.includes('localhost')) return `http://nectarlabs.localhost/tenants/${tenant.subdomain}`;
+                                    if (host.includes('localhost') || host.includes('127.0.0.1')) return `/tenants/${tenant.subdomain}`;
                                     if (host.includes('staging.nectarlabs.dev')) return `https://${tenant.subdomain}.staging.nectarlabs.dev`;
                                     return `https://${tenant.subdomain}.nectarlabs.dev`;
                                   })()}
@@ -2940,12 +2940,12 @@ function DashboardPageOriginal() {
                   </h2>
                   <div className="space-y-4">
                     {tenants.map(tenant => {
-                      const host = typeof window !== 'undefined' ? window.location.hostname : '';
+                      const host = typeof window !== 'undefined' ? window.location.host : '';
                       let domain = `https://${tenant.subdomain}.nectarlabs.dev`;
                       let urlDisplay = `${tenant.subdomain}.nectarlabs.dev`;
-                      if (host.includes('localhost')) {
-                        domain = `http://nectarlabs.localhost/tenants/${tenant.subdomain}`;
-                        urlDisplay = `nectarlabs.localhost/tenants/${tenant.subdomain}`;
+                      if (host.includes('localhost') || host.includes('127.0.0.1')) {
+                        domain = `/tenants/${tenant.subdomain}`;
+                        urlDisplay = `${host}/tenants/${tenant.subdomain}`;
                       } else if (host.includes('staging.nectarlabs.dev')) {
                         domain = `https://${tenant.subdomain}.staging.nectarlabs.dev`;
                         urlDisplay = `${tenant.subdomain}.staging.nectarlabs.dev`;

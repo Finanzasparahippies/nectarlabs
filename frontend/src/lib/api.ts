@@ -29,21 +29,36 @@ export interface FetcherOptions extends RequestInit {
 }
 
 /**
+ * Decodifica la sección payload de un token JWT para verificar si ya expiró (exp).
+ */
+export function isTokenExpired(token: string | null): boolean {
+  if (!token || token === 'null' || token === 'undefined') return true;
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return true;
+    const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+    if (payload && typeof payload.exp === 'number') {
+      const nowInSeconds = Math.floor(Date.now() / 1000);
+      return payload.exp <= nowInSeconds;
+    }
+    return false;
+  } catch {
+    return true;
+  }
+}
+
+/**
  * Resuelve la URL absoluta del dominio principal del sistema de forma limpia.
  * Se utiliza para redirigir fuera de las Colmenas de los clientes (ej: mandar al /login central).
  */
 export function getMainDomainUrl(path: string): string {
   if (typeof window === 'undefined') return path;
   const host = window.location.host;
-  let mainDomain = 'nectarlabs.dev';
+  let mainDomain = host;
   if (host.includes('staging.nectarlabs.dev')) {
     mainDomain = 'staging.nectarlabs.dev';
   } else if (host.includes('nectarlabs.dev')) {
     mainDomain = 'nectarlabs.dev';
-  } else if (host.includes('localhost')) {
-    mainDomain = host.includes(':3002') ? 'localhost:3002' : 'localhost:3000';
-  } else if (host.includes('127.0.0.1')) {
-    mainDomain = host.includes(':3002') ? '127.0.0.1:3002' : '127.0.0.1:3000';
   }
   return `${window.location.protocol}//${mainDomain}${path.startsWith('/') ? path : '/' + path}`;
 }
@@ -56,10 +71,36 @@ export function getMainDomainUrl(path: string): string {
  */
 export async function fetcher(endpoint: string, options: FetcherOptions = {}): Promise<any> {
   const { isPublic, retries = 0, retryDelay = 500, ...fetchOptions } = options;
-  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+  const rawToken = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+  const hasToken = rawToken && rawToken !== 'null' && rawToken !== 'undefined';
 
-  if (typeof window !== 'undefined') {
-    console.log(`[API/fetcher] endpoint: ${endpoint}, isPublic: ${!!isPublic}, retries: ${retries}`);
+  let cleanEndpoint = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
+  if (cleanEndpoint.startsWith("/api/")) {
+    cleanEndpoint = cleanEndpoint.replace(/^\/api\//, "/");
+  }
+
+  const cleanEndpointLower = cleanEndpoint.toLowerCase();
+  const isKnownPublic = isPublic || 
+    cleanEndpointLower.includes('/register') || 
+    cleanEndpointLower.includes('/token') || 
+    cleanEndpointLower.includes('/confirm-email') || 
+    cleanEndpointLower.includes('/public-config') || 
+    cleanEndpointLower.includes('/guest-auth') || 
+    cleanEndpointLower.includes('/subscribe') || 
+    cleanEndpointLower.includes('/unsubscribe') || 
+    cleanEndpointLower.includes('/verify-email');
+
+  // 1. Guardia previa contra solicitudes no autenticadas o tokens expirados en cliente (solo endpoints protegidos)
+  if (!isKnownPublic && typeof window !== 'undefined') {
+    if (!hasToken) {
+      return null;
+    }
+    if (isTokenExpired(rawToken)) {
+      console.warn(`[API/fetcher] Token JWT expirado para endpoint protegido ${endpoint}. Limpiando sesión...`);
+      localStorage.clear();
+      window.location.href = getMainDomainUrl('/login');
+      return null;
+    }
   }
 
   const headers: Record<string, string> = {};
@@ -68,12 +109,19 @@ export async function fetcher(endpoint: string, options: FetcherOptions = {}): P
     headers["Content-Type"] = "application/json";
   }
 
-  if (!isPublic && token && token !== 'null' && token !== 'undefined') {
-    headers["Authorization"] = `Bearer ${token}`;
+  if (!isKnownPublic && hasToken) {
+    headers["Authorization"] = `Bearer ${rawToken}`;
   }
 
-  const cleanEndpoint = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
-  const fullUrl = `${API_URL}${cleanEndpoint}`;
+  // Normalización estricta de trailing slashes respetando Query Parameters (?) y Hashes (#)
+  const [basePath, ...rest] = cleanEndpoint.split(/(?=[?#])/);
+  const searchAndHash = rest.join('');
+  const normalizedPath = (!basePath.endsWith('/') && !basePath.match(/\.[a-z0-9]+$/i))
+    ? `${basePath}/`
+    : basePath;
+  const finalEndpoint = `${normalizedPath}${searchAndHash}`;
+
+  const fullUrl = `${API_URL}${finalEndpoint}`;
 
   let attempt = 0;
   while (true) {
@@ -86,11 +134,13 @@ export async function fetcher(endpoint: string, options: FetcherOptions = {}): P
         },
       });
 
-      // Interceptor global de expiración de sesión (JWT inválido/caducado)
-      if (res.status === 401 && !isPublic && typeof window !== 'undefined') {
-        localStorage.clear();
-        window.location.href = getMainDomainUrl('/login');
-        throw new Error("Session expired. Please login again.");
+      // Interceptor global de expiración de sesión (JWT rechazado por backend)
+      if (res.status === 401 && !isKnownPublic && typeof window !== 'undefined') {
+        if (hasToken) {
+          localStorage.clear();
+          window.location.href = getMainDomainUrl('/login');
+        }
+        return null;
       }
 
       // Manejo de códigos de respuesta con error (>= 400)
