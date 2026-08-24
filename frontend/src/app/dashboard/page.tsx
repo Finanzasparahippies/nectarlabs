@@ -2843,8 +2843,8 @@ function DashboardPageOriginal() {
                                   <span className="font-mono text-nectar-gold font-bold select-all">
                                     {(() => {
                                       const tenant = tenants[0];
-                                      const host = typeof window !== 'undefined' ? window.location.hostname : '';
-                                      if (host.includes('localhost')) return `nectarlabs.localhost/tenants/${tenant.subdomain}`;
+                                      const host = typeof window !== 'undefined' ? window.location.host : '';
+                                      if (host.includes('localhost') || host.includes('127.0.0.1')) return `${host}/tenants/${tenant.subdomain}`;
                                       if (host.includes('staging.nectarlabs.dev')) return `${tenant.subdomain}.staging.nectarlabs.dev`;
                                       return `${tenant.subdomain}.nectarlabs.dev`;
                                     })()}

@@ -73,13 +73,10 @@ export default function StoresDirectory() {
     if (typeof window !== 'undefined') {
       const host = window.location.host;
       const protocol = window.location.protocol;
-      if (host.includes('localhost')) {
-        const port = host.split(':')[1] || '3000';
+      if (host.includes('localhost') || host.includes('127.0.0.1')) {
+        const port = host.split(':')[1];
+        if (port) return `${protocol}//${host}/tenants/${tenant.subdomain}`;
         return `${protocol}//${tenant.subdomain}.localhost`;
-      }
-      if (host.includes('127.0.0.1')) {
-        const port = host.split(':')[1] || '3000';
-        return `${protocol}//${tenant.subdomain}.127.0.0.1`;
       }
       let baseDomain = 'nectarlabs.dev';
       if (host.includes('staging.nectarlabs.dev')) {
