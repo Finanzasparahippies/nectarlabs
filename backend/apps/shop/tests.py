@@ -49,6 +49,7 @@ class ContractInstallmentGenerationTests(APITestCase):
         contract = Contract.objects.create(
             user=self.client_user,
             plan=weekly_plan,
+            payment_day=Contract.PaymentDay.WEEKLY_MONDAY,
             full_name="Client Company SA",
             tax_id="RFC123456789",
             address="Av. Juarez 123",
@@ -90,6 +91,7 @@ class ContractInstallmentGenerationTests(APITestCase):
         contract = Contract.objects.create(
             user=self.client_user,
             plan=self.plan,
+            payment_day=Contract.PaymentDay.FORTNIGHTLY_1ST_15TH,
             full_name="Client Company SA",
             tax_id="RFC123456789",
             address="Av. Juarez 123",

@@ -88,6 +88,27 @@ class ContractSerializer(serializers.ModelSerializer):
         tenant = obj.user.owned_tenants.first()
         return tenant.use_custom_domain if tenant else False
 
+    def validate(self, data):
+        plan = data.get('plan')
+        payment_day = data.get('payment_day', 'MONTHLY_1ST')
+        
+        if plan and payment_day:
+            from decimal import Decimal
+            price = Decimal(str(plan.price))
+            if payment_day == 'WEEKLY_MONDAY':
+                installment = price / Decimal('4')
+            elif payment_day == 'FORTNIGHTLY_1ST_15TH':
+                installment = price / Decimal('2')
+            else:
+                installment = price
+                
+            MIN_AMOUNT = Decimal('50.00')
+            if installment < MIN_AMOUNT:
+                raise serializers.ValidationError({
+                    'payment_day': f'La cuota resultante (${installment:.2f} MXN) es inferior al límite mínimo permitido por la pasarela ($50.00 MXN).'
+                })
+        return data
+
 class PaymentInstallmentSerializer(serializers.ModelSerializer):
     client_name = serializers.CharField(source='contract.full_name', read_only=True)
     client_email = serializers.CharField(source='contract.user.email', read_only=True)

@@ -3,7 +3,7 @@ import sys
 import django
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings.development")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
 django.setup()
 
 from apps.tenants.models import Tenant
@@ -47,11 +47,8 @@ def seed_kores_tenant():
             "border_color_light": "#E8E5DF",
             "portal_title": "Kōres | Minimalist Luxury Hair Ties",
             "welcome_message": "Descubre la elegancia sin esfuerzo con nuestras ligas de seda Mulberry y acabados prémium.",
-            "deployment_mode": Tenant.DeploymentMode.INTEGRATED,
-            "external_frontend_url": "http://localhost:3005",
-            "external_backend_url": "http://localhost:8000/api",
-            "supabase_url": "https://kores-standalone.supabase.co",
-            "supabase_anon_key": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.kores_demo_key"
+            "custom_frontend_url": "http://localhost:3005",
+            "custom_backend_url": "http://localhost:8000/api",
         }
     )
 

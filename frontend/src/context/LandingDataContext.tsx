@@ -254,7 +254,7 @@ export const LandingDataProvider: React.FC<{ children: ReactNode }> = ({ childre
       let newAddons: Addon[] = DEFAULT_ADDONS;
 
       if (tenantsRes.status === 'fulfilled' && Array.isArray(tenantsRes.value)) {
-        newTenants = tenantsRes.value.filter((t: Tenant) => t.is_active);
+        newTenants = tenantsRes.value.filter((t: Tenant) => t.is_active !== false);
       }
 
       if (plansRes.status === 'fulfilled' && Array.isArray(plansRes.value) && plansRes.value.length > 0) {

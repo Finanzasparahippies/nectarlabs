@@ -59,37 +59,82 @@ function OnboardingContent() {
   const [promoError, setPromoError] = useState('');
   const [validatingPromo, setValidatingPromo] = useState(false);
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    plan: string;
+    payment_day: 'WEEKLY_MONDAY' | 'FORTNIGHTLY_1ST_15TH' | 'MONTHLY_1ST';
+    full_name: string;
+    tax_id: string;
+    address: string;
+    project_idea: string;
+    brand_design_tier: string;
+    brand_design_price: number;
+  }>({
     plan: '',
+    payment_day: 'MONTHLY_1ST',
     full_name: '',
     tax_id: '',
     address: '',
     project_idea: '',
     brand_design_tier: 'NONE',
     brand_design_price: 0,
-    payment_day: 'MONTHLY_1ST',
   });
 
   const selectedPlanObj = plans.find(p => p.id.toString() === formData.plan.toString());
 
-  const getPlanPaymentSchedule = (planObj?: Plan) => {
-    if (!planObj) return { value: 'MONTHLY_1ST', label: 'Mensual', desc: 'Día 1ero de cada mes (Mensual)' };
-    const name = planObj.name.toLowerCase();
-    if (name.includes('basico') || name.includes('básico') || name.includes('basic')) {
-      return { value: 'WEEKLY_MONDAY', label: 'Semanal', desc: 'Lunes de cada semana (Semanal)' };
-    } else if (name.includes('mid') || name.includes('pro') || name.includes('medio')) {
-      return { value: 'FORTNIGHTLY_1ST_15TH', label: 'Quincenal', desc: 'Días 1 y 15 de cada mes (Quincenal)' };
-    } else {
-      return { value: 'MONTHLY_1ST', label: 'Mensual', desc: 'Día 1ero de cada mes (Mensual)' };
-    }
+  const roundCurrency = (num: number): number => {
+    return Math.round((num + Number.EPSILON) * 100) / 100;
   };
 
-  useEffect(() => {
-    if (selectedPlanObj) {
-      const schedule = getPlanPaymentSchedule(selectedPlanObj);
-      setFormData(prev => ({ ...prev, payment_day: schedule.value }));
+  const getFrequencyBreakdown = (frequency: 'WEEKLY_MONDAY' | 'FORTNIGHTLY_1ST_15TH' | 'MONTHLY_1ST') => {
+    if (!selectedPlanObj) return null;
+    const baseMonthly = parseFloat(selectedPlanObj.price) || 0;
+    const planDisc = parseFloat(selectedPlanObj.discount_percentage || '0');
+    const promoDisc = appliedPromo ? parseFloat(appliedPromo.discount_percentage || '0') : 0;
+
+    let installmentsPerMonth = 1;
+    let label = 'Mensual';
+    let shortLabel = 'mes';
+    let totalInstallments = 6;
+    let desc = 'Abonos mensuales (Día 1ero de cada mes)';
+
+    if (frequency === 'WEEKLY_MONDAY') {
+      installmentsPerMonth = 4;
+      label = 'Semanal';
+      shortLabel = 'semana';
+      totalInstallments = 24;
+      desc = 'Abonos semanales (Lunes de cada semana)';
+    } else if (frequency === 'FORTNIGHTLY_1ST_15TH') {
+      installmentsPerMonth = 2;
+      label = 'Quincenal';
+      shortLabel = 'quincena';
+      totalInstallments = 12;
+      desc = 'Abonos quincenales (Días 1 y 15 de cada mes)';
     }
-  }, [formData.plan, plans]);
+
+    const rawInstallment = baseMonthly / installmentsPerMonth;
+    const baseInstallment = roundCurrency(rawInstallment);
+    const planDiscountedInstallment = roundCurrency(baseInstallment * (1 - planDisc / 100));
+    const promoDiscountedInstallment = promoDisc > 0 ? roundCurrency(baseInstallment * (1 - promoDisc / 100)) : planDiscountedInstallment;
+
+    const MIN_AMOUNT = 50.0;
+    const isValid = baseInstallment >= MIN_AMOUNT;
+
+    return {
+      frequency,
+      label,
+      shortLabel,
+      totalInstallments,
+      installmentsPerMonth,
+      desc,
+      baseMonthly,
+      baseInstallment,
+      planDiscountedInstallment,
+      promoDiscountedInstallment,
+      planDisc,
+      promoDisc,
+      isValid,
+    };
+  };
 
   useEffect(() => {
     setIsMounted(true);
@@ -250,18 +295,94 @@ function OnboardingContent() {
                 );
               })()}
 
-              <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-1">Esquema y Plazo de Pago (Definido por el Plan)</label>
-                <div className="w-full bg-card-bg/60 border-2 border-card-border/80 rounded-2xl p-6 font-bold flex justify-between items-center text-sm transition-all duration-300">
-                  <span className="opacity-70 text-xs">Frecuencia de Abonos:</span>
-                  <span className={`${formData.plan ? 'text-nectar-gold' : 'opacity-30'} font-black uppercase tracking-wider text-xs`}>
-                    {formData.plan ? getPlanPaymentSchedule(selectedPlanObj).desc : 'Selecciona un plan para ver el plazo'}
-                  </span>
+              {/* Selector Interactivo de Frecuencia de Cobro Desacoplado */}
+              {selectedPlanObj && (
+                <div className="space-y-3 p-6 rounded-3xl bg-card-bg/60 border-2 border-card-border/80 animate-in fade-in slide-in-from-bottom-3 duration-300">
+                  <div className="flex items-center justify-between">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-nectar-gold">
+                      Frecuencia de Pago Desacoplada (Elige tu ritmo)
+                    </label>
+                    <span className="text-[9px] uppercase font-bold opacity-50">6 meses de compromiso</span>
+                  </div>
+                  <p className="text-xs text-foreground/70 font-semibold">
+                    Divide el monto total mensual de tu plan en el periodo que mejor se adapte al flujo de tu negocio.
+                  </p>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2">
+                    {(['WEEKLY_MONDAY', 'FORTNIGHTLY_1ST_15TH', 'MONTHLY_1ST'] as const).map((freq) => {
+                      const breakdown = getFrequencyBreakdown(freq);
+                      if (!breakdown) return null;
+                      const isSelected = formData.payment_day === freq;
+
+                      return (
+                        <button
+                          key={freq}
+                          type="button"
+                          disabled={!breakdown.isValid}
+                          onClick={() => setFormData(prev => ({ ...prev, payment_day: freq }))}
+                          className={`relative p-5 rounded-2xl border-2 transition-all duration-300 text-left flex flex-col justify-between ${
+                            isSelected
+                              ? 'border-nectar-gold bg-nectar-gold/10 shadow-[0_0_25px_rgba(198,138,30,0.15)] scale-[1.02]'
+                              : breakdown.isValid
+                              ? 'border-card-border hover:border-nectar-gold/40 hover:bg-card-bg'
+                              : 'border-red-500/20 bg-red-500/5 opacity-50 cursor-not-allowed'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between mb-3">
+                            <span className="text-xs font-black uppercase tracking-wider text-foreground">
+                              {breakdown.label}
+                            </span>
+                            <span className={`text-[8px] font-black px-2 py-0.5 rounded-full uppercase ${
+                              isSelected ? 'bg-nectar-gold text-background' : 'bg-card-border text-foreground/60'
+                            }`}>
+                              {breakdown.installmentsPerMonth} / mes
+                            </span>
+                          </div>
+
+                          <div className="space-y-1 mb-3">
+                            {appliedPromo ? (
+                              <>
+                                <span className="text-[10px] line-through opacity-40 font-mono block">
+                                  ${breakdown.baseInstallment.toLocaleString('es-MX', { minimumFractionDigits: 2 })} / {breakdown.shortLabel}
+                                </span>
+                                <span className="text-lg font-black font-mono text-green-400 block">
+                                  ${breakdown.promoDiscountedInstallment.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                                  <span className="text-[10px] font-bold text-foreground/60"> / {breakdown.shortLabel}</span>
+                                </span>
+                              </>
+                            ) : breakdown.planDisc > 0 ? (
+                              <>
+                                <span className="text-[10px] line-through opacity-40 font-mono block">
+                                  ${breakdown.baseInstallment.toLocaleString('es-MX', { minimumFractionDigits: 2 })} / {breakdown.shortLabel}
+                                </span>
+                                <span className="text-lg font-black font-mono text-green-400 block">
+                                  ${breakdown.planDiscountedInstallment.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                                  <span className="text-[10px] font-bold text-foreground/60"> / {breakdown.shortLabel}</span>
+                                </span>
+                              </>
+                            ) : (
+                              <span className="text-lg font-black font-mono text-nectar-gold block">
+                                ${breakdown.baseInstallment.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                                <span className="text-[10px] font-bold text-foreground/60"> / {breakdown.shortLabel}</span>
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="text-[9px] opacity-60 font-medium border-t border-card-border/40 pt-2">
+                            Total: {breakdown.totalInstallments} exhibiciones
+                          </div>
+
+                          {!breakdown.isValid && (
+                            <div className="text-[8px] font-bold text-red-400 mt-2">
+                              ⚠ Inferior al mínimo permitido por pasarela ($50.00 MXN)
+                            </div>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
-                <p className="text-[9px] text-foreground/40 mt-1 uppercase font-bold">
-                  El esquema de pagos está establecido según el nivel de ingeniería de tu plan para asegurar el flujo del desarrollo.
-                </p>
-              </div>
+              )}
 
               {/* Promo Code Input Block */}
               {formData.plan && (
@@ -472,60 +593,51 @@ function OnboardingContent() {
                   <section className="space-y-3">
                     <h3 className="text-lg font-black uppercase tracking-tight text-foreground">3. ESQUEMA DE INVERSIÓN SELECCIONADO</h3>
                     {selectedPlanObj && (() => {
-                      const discount = parseFloat(selectedPlanObj.discount_percentage || '0');
-                      const origPrice = parseFloat(selectedPlanObj.price);
-                      const discPrice = discount > 0 ? origPrice * (1 - discount / 100) : origPrice;
+                      const currentBreakdown = getFrequencyBreakdown(formData.payment_day);
+                      if (!currentBreakdown) return null;
 
                       return (
                         <div className="space-y-3">
-                          {appliedPromo ? (() => {
-                            const promoDisc = appliedPromo.discount_percentage;
-                            const promoPrice = origPrice * (1 - promoDisc / 100);
-                            return (
-                              <div className="p-5 border-2 border-green-500/30 bg-green-500/5 rounded-xl font-black text-foreground space-y-2 animate-fadeIn">
-                                <div className="flex justify-between items-center text-xs opacity-60">
-                                  <span>Inversión Base del Plan ({selectedPlanObj.name}):</span>
-                                  <span className="font-mono">${origPrice.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN / Mes</span>
-                                </div>
-                                <div className="flex justify-between items-center text-[10px] text-green-400">
-                                  <span>Descuento de Referido/Promo ({appliedPromo.code}) en primer pago:</span>
-                                  <span>-{promoDisc}%</span>
-                                </div>
-                                <div className="flex justify-between items-center text-[10px] opacity-60">
-                                  <span>Descuento Promocional Temporada meses 2-6:</span>
-                                  <span>-{discount}%</span>
-                                </div>
-                                <div className="h-[1px] bg-card-border/40 my-2" />
-                                <div className="flex justify-between items-center text-nectar-gold">
-                                  <span>Primer Pago con Código:</span>
-                                  <span className="font-mono text-base">${promoPrice.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN</span>
-                                </div>
-                                <div className="flex justify-between items-center text-foreground/80 text-[11px] pt-1">
-                                  <span>Mensualidades Restantes (Mes 2-6):</span>
-                                  <span className="font-mono">${discPrice.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN / Mes</span>
-                                </div>
-                              </div>
-                            );
-                          })() : discount > 0 ? (
-                            <div className="p-5 border-2 border-green-500/30 bg-green-500/5 rounded-xl font-black text-foreground space-y-2">
+                          {appliedPromo ? (
+                            <div className="p-5 border-2 border-green-500/30 bg-green-500/5 rounded-xl font-black text-foreground space-y-2 animate-fadeIn">
                               <div className="flex justify-between items-center text-xs opacity-60">
-                                <span>Inversión Normal del Plan ({selectedPlanObj.name}):</span>
-                                <span className="line-through font-mono">${origPrice.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN / Mes</span>
+                                <span>Inversión Base del Plan ({selectedPlanObj.name}):</span>
+                                <span className="font-mono">${currentBreakdown.baseMonthly.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN / Mes</span>
                               </div>
                               <div className="flex justify-between items-center text-[10px] text-green-400">
-                                <span>Descuento Promocional Aplicado:</span>
-                                <span>-{discount}%</span>
+                                <span>Descuento de Referido/Promo ({appliedPromo.code}) en primer pago:</span>
+                                <span>-{appliedPromo.discount_percentage}%</span>
                               </div>
                               <div className="h-[1px] bg-card-border/40 my-2" />
                               <div className="flex justify-between items-center text-nectar-gold">
-                                <span>Inversión Mensual con Descuento:</span>
-                                <span className="font-mono">${discPrice.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN / Mes</span>
+                                <span>Primer Pago con Código ({currentBreakdown.label}):</span>
+                                <span className="font-mono text-base">${currentBreakdown.promoDiscountedInstallment.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN / {currentBreakdown.shortLabel}</span>
+                              </div>
+                              <div className="flex justify-between items-center text-foreground/80 text-[11px] pt-1">
+                                <span>Cuotas Subsecuentes ({currentBreakdown.totalInstallments - 1} abonos):</span>
+                                <span className="font-mono">${currentBreakdown.planDiscountedInstallment.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN / {currentBreakdown.shortLabel}</span>
+                              </div>
+                            </div>
+                          ) : currentBreakdown.planDisc > 0 ? (
+                            <div className="p-5 border-2 border-green-500/30 bg-green-500/5 rounded-xl font-black text-foreground space-y-2">
+                              <div className="flex justify-between items-center text-xs opacity-60">
+                                <span>Inversión Normal del Plan ({selectedPlanObj.name}):</span>
+                                <span className="line-through font-mono">${currentBreakdown.baseMonthly.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN / Mes</span>
+                              </div>
+                              <div className="flex justify-between items-center text-[10px] text-green-400">
+                                <span>Descuento Promocional Aplicado:</span>
+                                <span>-{currentBreakdown.planDisc}%</span>
+                              </div>
+                              <div className="h-[1px] bg-card-border/40 my-2" />
+                              <div className="flex justify-between items-center text-nectar-gold">
+                                <span>Inversión por Cuota ({currentBreakdown.label}):</span>
+                                <span className="font-mono">${currentBreakdown.planDiscountedInstallment.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN / {currentBreakdown.shortLabel}</span>
                               </div>
                             </div>
                           ) : (
                             <div className="p-4 border-2 border-nectar-gold bg-nectar-gold/5 rounded-xl font-black text-nectar-gold flex justify-between items-center">
-                              <span>Plan de Ingeniería: {selectedPlanObj.name}</span>
-                              <span className="font-mono">${origPrice.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN / Mes</span>
+                              <span>Plan de Ingeniería: {selectedPlanObj.name} ({currentBreakdown.label})</span>
+                              <span className="font-mono">${currentBreakdown.baseInstallment.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN / {currentBreakdown.shortLabel}</span>
                             </div>
                           )}
                         </div>

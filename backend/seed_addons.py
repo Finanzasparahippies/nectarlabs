@@ -438,3 +438,8 @@ if __name__ == '__main__':
     seed_addons()
     seed_plans()
     seed_stamp_packages_to_stripe()
+    try:
+        from seed_kores_tenant import seed_kores_tenant
+        seed_kores_tenant()
+    except Exception as e:
+        print(f"Error al sembrar tenant demo Kōres: {e}")

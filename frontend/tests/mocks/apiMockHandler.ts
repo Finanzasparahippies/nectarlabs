@@ -46,8 +46,8 @@ export async function setupApiMocks(page: Page) {
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify({
-          access: 'mock_jwt_access_token_xyz123',
-          refresh: 'mock_jwt_refresh_token_abc456',
+          access: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxLCJleHAiOjI1MjQ2MDgwMDB9.mock_signature',
+          refresh: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxLCJleHAiOjI1MjQ2MDgwMDB9.mock_refresh_signature',
         }),
       });
     }

@@ -372,3 +372,37 @@
 [LOCAL] [2026-08-20 06:57:47] INFO [apps.billing.services]: [MockPAC] Creando organización para RFC: XAXX010101000
 [LOCAL] [2026-08-20 06:57:48] INFO [apps.billing.services]: [MockPAC] Generando factura por $1000.0 en org org_mock_tenant_lco
 [LOCAL] [2026-08-20 06:57:49] INFO [apps.billing.services]: [MockPAC] Generando factura por $1000.0 en org org_mock_tenant_123
+[LOCAL] [2026-08-24 04:40:24] INFO [apps.billing.services]: [MockPAC] Listando clientes de org None
+[LOCAL] [2026-08-24 04:40:24] INFO [apps.billing.services]: [MockPAC] Creando cliente XAXX010101000 en org None
+[LOCAL] [2026-08-24 04:40:24] INFO [apps.billing.services]: [MockPAC] Actualizando cliente cus_mock_6f3e6c0584ab en org None
+[LOCAL] [2026-08-24 04:40:24] INFO [apps.billing.services]: [MockPAC] Eliminando cliente cus_mock_6f3e6c0584ab de org None
+[LOCAL] [2026-08-24 04:40:25] INFO [apps.billing.services]: [MockPAC] Listando clientes de org org_mock_tenant_123
+[LOCAL] [2026-08-24 04:40:25] INFO [apps.billing.services]: [MockPAC] Creando cliente XAXX010101000 en org org_mock_tenant_123
+[LOCAL] [2026-08-24 04:40:25] INFO [apps.billing.services]: [MockPAC] Actualizando cliente cus_mock_001 en org org_mock_tenant_123
+[LOCAL] [2026-08-24 04:40:25] INFO [apps.billing.services]: [MockPAC] Eliminando cliente cus_mock_001 de org org_mock_tenant_123
+[LOCAL] [2026-08-24 04:40:26] INFO [apps.billing.services]: [MockPAC] Listando productos de org None
+[LOCAL] [2026-08-24 04:40:26] INFO [apps.billing.services]: [MockPAC] Creando producto Global Plan Item en org None
+[LOCAL] [2026-08-24 04:40:26] INFO [apps.billing.services]: [MockPAC] Actualizando producto prod_mock_f85f70c49758 en org None
+[LOCAL] [2026-08-24 04:40:26] INFO [apps.billing.services]: [MockPAC] Eliminando producto prod_mock_f85f70c49758 de org None
+[LOCAL] [2026-08-24 04:40:27] INFO [apps.billing.services]: [MockPAC] Listando productos de org org_mock_tenant_123
+[LOCAL] [2026-08-24 04:40:27] INFO [apps.billing.services]: [MockPAC] Creando producto Premium Support Hours en org org_mock_tenant_123
+[LOCAL] [2026-08-24 04:40:27] INFO [apps.billing.services]: [MockPAC] Actualizando producto prod_mock_001 en org org_mock_tenant_123
+[LOCAL] [2026-08-24 04:40:27] INFO [apps.billing.services]: [MockPAC] Eliminando producto prod_mock_001 de org org_mock_tenant_123
+[LOCAL] [2026-08-24 04:40:28] INFO [apps.billing.services]: [MockPAC] Creando recibo para org None
+[LOCAL] [2026-08-24 04:40:29] INFO [apps.billing.services]: [MockPAC] Listando recibos de org org_mock_tenant_123
+[LOCAL] [2026-08-24 04:40:29] INFO [apps.billing.services]: [MockPAC] Creando recibo para org org_mock_tenant_123
+[LOCAL] [2026-08-24 04:40:30] INFO [apps.billing.services]: [MockPAC] Creando retención para org None
+[LOCAL] [2026-08-24 04:40:31] INFO [apps.billing.services]: [MockPAC] Listando retenciones de org org_mock_tenant_123
+[LOCAL] [2026-08-24 04:40:31] INFO [apps.billing.services]: [MockPAC] Creando retención para org org_mock_tenant_123
+[LOCAL] [2026-08-24 04:40:36] INFO [apps.billing.services]: [MockPAC] Solicitando cancelación para CFDI SAT UUID: a3c428a2-25de-4dfb-90f7-872ab67262ba con motivo 02, sustitución: None
+[LOCAL] [2026-08-24 04:40:36] INFO [apps.billing.services]: [MockPAC] Generando factura por $20000.00 en org parent
+[LOCAL] [2026-08-24 04:40:38] INFO [apps.billing.services]: [MockPAC] Generando factura por $100.0 en org org_mock_tenant_123
+[LOCAL] [2026-08-24 04:40:40] INFO [apps.billing.services]: [MockPAC] Generando factura por $1000.0 en org org_mock_tenant_lco
+[LOCAL] [2026-08-24 04:40:41] INFO [apps.billing.services]: [MockPAC] Generando factura por $20000.00 en org None
+[LOCAL] [2026-08-24 04:40:42] INFO [apps.billing.services]: [MockPAC] Generando factura por $20000.00 en org None
+[LOCAL] [2026-08-24 04:40:43] INFO [apps.billing.services]: [MockPAC] Generando factura por $500.00 en org org_mock_tenant_123
+[LOCAL] [2026-08-24 04:40:44] INFO [apps.billing.services]: [MockPAC] Generando factura por $500.00 en org org_mock_tenant_123
+[LOCAL] [2026-08-24 04:40:45] INFO [apps.billing.services]: [MockPAC] Generando factura por $500.00 en org org_mock_tenant_123
+[LOCAL] [2026-08-24 04:40:53] INFO [apps.billing.services]: [MockPAC] Creando organización para RFC: XAXX010101000
+[LOCAL] [2026-08-24 04:40:54] INFO [apps.billing.services]: [MockPAC] Generando factura por $1000.0 en org org_mock_tenant_lco
+[LOCAL] [2026-08-24 04:40:55] INFO [apps.billing.services]: [MockPAC] Generando factura por $1000.0 en org org_mock_tenant_123

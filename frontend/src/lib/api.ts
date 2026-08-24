@@ -4,23 +4,35 @@
 // de Django, inyectando tokens JWT de autenticación y manejando errores globales.
 // ==============================================================================
 
-let resolvedApiUrl = "/api";
-
-if (typeof window !== "undefined") {
-  const origin = window.location.origin;
-  if (origin.includes("github.dev")) {
-    resolvedApiUrl = origin.replace("-3000", "-8080").replace("-3002", "-8080") + "/api";
-  } else {
-    // En el navegador, siempre usamos la ruta relativa /api para aprovechar los
-    // rewrites de Next.js / Nginx sin incurrir en bloqueos CORS cross-origin.
-    resolvedApiUrl = "/api";
+/**
+ * Resuelve dinámicamente la URL base de la API REST respetando el contexto (SSR vs Browser),
+ * variables de entorno (NEXT_PUBLIC_API_URL, INTERNAL_API_URL) y entornos en la nube / proxy.
+ */
+export function getApiBaseUrl(): string {
+  // 1. Contexto SSR (Server-Side Rendering dentro de Node.js / Docker)
+  if (typeof window === 'undefined') {
+    const ssrUrl = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || "http://backend:8000/api";
+    return ssrUrl.replace(/\/+$/, '');
   }
-} else {
-  // En SSR (Server-Side Rendering dentro de Node/Docker), usamos la URL de red interna
-  resolvedApiUrl = process.env.INTERNAL_API_URL || process.env.API_URL || "http://backend:8000/api";
+
+  // 2. Variable explícita de entorno para el cliente
+  const envUrl = process.env.NEXT_PUBLIC_API_URL;
+  if (envUrl && envUrl.trim() !== '') {
+    const cleanEnv = envUrl.trim().replace(/\/+$/, '');
+    if (cleanEnv.startsWith('http://') || cleanEnv.startsWith('https://')) {
+      return cleanEnv;
+    }
+    if (cleanEnv.startsWith('/')) {
+      return cleanEnv;
+    }
+  }
+
+  // 3. Navegador (Local, Staging, Producción, Codespaces):
+  // Usar la ruta relativa /api para aprovechar el proxy perimetral del origen activo (Next.js rewrites / Nginx)
+  return "/api";
 }
 
-export const API_URL = resolvedApiUrl;
+export const API_URL = getApiBaseUrl();
 
 export interface FetcherOptions extends RequestInit {
   isPublic?: boolean;           // Indica si el endpoint se debe llamar sin cabecera Authorization
@@ -29,10 +41,33 @@ export interface FetcherOptions extends RequestInit {
 }
 
 /**
+ * Obtiene el token de autenticación JWT desde localStorage o cookies en el cliente de forma segura.
+ */
+export function getStoredToken(): string | null {
+  if (typeof window === 'undefined') return null;
+
+  try {
+    const localToken = localStorage.getItem('token');
+    if (localToken && localToken !== 'null' && localToken !== 'undefined' && localToken.trim() !== '') {
+      return localToken;
+    }
+  } catch { }
+
+  try {
+    const match = document.cookie.match(/(?:^|; )\s*token\s*=\s*([^;]+)/);
+    if (match && match[1] && match[1] !== 'null' && match[1] !== 'undefined' && match[1].trim() !== '') {
+      return decodeURIComponent(match[1]);
+    }
+  } catch { }
+
+  return null;
+}
+
+/**
  * Decodifica la sección payload de un token JWT para verificar si ya expiró (exp).
  */
 export function isTokenExpired(token: string | null): boolean {
-  if (!token || token === 'null' || token === 'undefined') return true;
+  if (!token || token === 'null' || token === 'undefined' || token.trim() === '') return true;
   try {
     const parts = token.split('.');
     if (parts.length !== 3) return true;
@@ -65,40 +100,50 @@ export function getMainDomainUrl(path: string): string {
 
 /**
  * Envoltorio (wrapper) de la API Fetch nativa.
- * Agrega automáticamente las cabeceras requeridas, token JWT de localStorage,
+ * Agrega automáticamente las cabeceras requeridas, token JWT de localStorage/cookies,
  * intercepta códigos HTTP 401 (sesión expirada), formatea errores y soporta
  * reintentos exponenciales configurables ante fallos de red.
  */
 export async function fetcher(endpoint: string, options: FetcherOptions = {}): Promise<any> {
   const { isPublic, retries = 0, retryDelay = 500, ...fetchOptions } = options;
-  const rawToken = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-  const hasToken = rawToken && rawToken !== 'null' && rawToken !== 'undefined';
+  const rawToken = typeof window !== 'undefined' ? getStoredToken() : null;
+  const hasToken = rawToken && !isTokenExpired(rawToken);
 
-  let cleanEndpoint = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
-  if (cleanEndpoint.startsWith("/api/")) {
-    cleanEndpoint = cleanEndpoint.replace(/^\/api\//, "/");
+  const isAbsoluteUrl = /^https?:\/\//i.test(endpoint);
+
+  let cleanEndpoint = endpoint;
+  if (!isAbsoluteUrl) {
+    cleanEndpoint = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
+    if (cleanEndpoint.startsWith("/api/")) {
+      cleanEndpoint = cleanEndpoint.replace(/^\/api\//, "/");
+    }
   }
 
   const cleanEndpointLower = cleanEndpoint.toLowerCase();
-  const isKnownPublic = isPublic || 
-    cleanEndpointLower.includes('/register') || 
-    cleanEndpointLower.includes('/token') || 
-    cleanEndpointLower.includes('/confirm-email') || 
-    cleanEndpointLower.includes('/public-config') || 
-    cleanEndpointLower.includes('/guest-auth') || 
-    cleanEndpointLower.includes('/subscribe') || 
-    cleanEndpointLower.includes('/unsubscribe') || 
-    cleanEndpointLower.includes('/verify-email');
+  const isKnownPublic = isPublic ||
+    cleanEndpointLower.includes('/register') ||
+    cleanEndpointLower.includes('/token') ||
+    cleanEndpointLower.includes('/confirm-email') ||
+    cleanEndpointLower.includes('/public-config') ||
+    cleanEndpointLower.includes('/guest-auth') ||
+    cleanEndpointLower.includes('/subscribe') ||
+    cleanEndpointLower.includes('/unsubscribe') ||
+    cleanEndpointLower.includes('/verify-email') ||
+    cleanEndpointLower.includes('/tenants') ||
+    cleanEndpointLower.includes('/plans') ||
+    cleanEndpointLower.includes('/addons');
 
   // 1. Guardia previa contra solicitudes no autenticadas o tokens expirados en cliente (solo endpoints protegidos)
   if (!isKnownPublic && typeof window !== 'undefined') {
-    if (!hasToken) {
-      return null;
-    }
-    if (isTokenExpired(rawToken)) {
-      console.warn(`[API/fetcher] Token JWT expirado para endpoint protegido ${endpoint}. Limpiando sesión...`);
-      localStorage.clear();
-      window.location.href = getMainDomainUrl('/login');
+    if (!rawToken || !hasToken) {
+      if (rawToken && isTokenExpired(rawToken)) {
+        console.warn(`[API/fetcher] Token JWT expirado para endpoint protegido ${endpoint}. Limpiando sesión...`);
+        try {
+          localStorage.clear();
+          document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        } catch { }
+        window.location.href = getMainDomainUrl('/login');
+      }
       return null;
     }
   }
@@ -109,19 +154,35 @@ export async function fetcher(endpoint: string, options: FetcherOptions = {}): P
     headers["Content-Type"] = "application/json";
   }
 
-  if (!isKnownPublic && hasToken) {
+  if (hasToken && rawToken) {
     headers["Authorization"] = `Bearer ${rawToken}`;
   }
 
-  // Normalización estricta de trailing slashes respetando Query Parameters (?) y Hashes (#)
-  const [basePath, ...rest] = cleanEndpoint.split(/(?=[?#])/);
-  const searchAndHash = rest.join('');
-  const normalizedPath = (!basePath.endsWith('/') && !basePath.match(/\.[a-z0-9]+$/i))
-    ? `${basePath}/`
-    : basePath;
-  const finalEndpoint = `${normalizedPath}${searchAndHash}`;
+  let fullUrl = '';
+  if (isAbsoluteUrl) {
+    fullUrl = cleanEndpoint;
+  } else {
+    // Normalización estricta de trailing slashes respetando Query Parameters (?) y Hashes (#)
+    const [basePath, ...rest] = cleanEndpoint.split(/(?=[?#])/);
+    const searchAndHash = rest.join('');
+    const hasFileExtension = /\.[a-z0-9]+$/i.test(basePath);
+    const normalizedPath = (!basePath.endsWith('/') && !hasFileExtension)
+      ? `${basePath}/`
+      : basePath;
+    const finalEndpoint = `${normalizedPath}${searchAndHash}`;
 
-  const fullUrl = `${API_URL}${finalEndpoint}`;
+    // Resolución dinámica de la URL base
+    const baseUrl = getApiBaseUrl();
+    const cleanBase = baseUrl.replace(/\/+$/, '');
+    const cleanPath = finalEndpoint.startsWith('/') ? finalEndpoint : `/${finalEndpoint}`;
+
+    // Prevenir duplicación de prefijo /api si la URL base y el endpoint ambos lo contienen
+    if (cleanBase.endsWith('/api') && cleanPath.startsWith('/api/')) {
+      fullUrl = `${cleanBase}${cleanPath.slice(4)}`;
+    } else {
+      fullUrl = `${cleanBase}${cleanPath}`;
+    }
+  }
 
   let attempt = 0;
   while (true) {
@@ -137,7 +198,10 @@ export async function fetcher(endpoint: string, options: FetcherOptions = {}): P
       // Interceptor global de expiración de sesión (JWT rechazado por backend)
       if (res.status === 401 && !isKnownPublic && typeof window !== 'undefined') {
         if (hasToken) {
-          localStorage.clear();
+          try {
+            localStorage.clear();
+            document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+          } catch { }
           window.location.href = getMainDomainUrl('/login');
         }
         return null;
@@ -145,7 +209,6 @@ export async function fetcher(endpoint: string, options: FetcherOptions = {}): P
 
       // Manejo de códigos de respuesta con error (>= 400)
       if (!res.ok) {
-        // Para errores 5xx del servidor y si quedan reintentos, reintentar con backoff
         if (res.status >= 500 && attempt < retries) {
           attempt++;
           const backoff = retryDelay * Math.pow(2, attempt - 1);
@@ -170,7 +233,7 @@ export async function fetcher(endpoint: string, options: FetcherOptions = {}): P
       if (res.status === 204) return null;
       return await res.json();
     } catch (err: any) {
-      if (attempt < retries && (err.name === 'TypeError' || err.message.includes('fetch'))) {
+      if (attempt < retries && (err.name === 'TypeError' || err.message?.includes('fetch'))) {
         attempt++;
         const backoff = retryDelay * Math.pow(2, attempt - 1);
         console.warn(`[API/fetcher] Fallo de red en ${cleanEndpoint}. Reintento ${attempt}/${retries} en ${backoff}ms...`);
@@ -181,4 +244,3 @@ export async function fetcher(endpoint: string, options: FetcherOptions = {}): P
     }
   }
 }
-

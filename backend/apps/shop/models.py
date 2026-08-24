@@ -214,16 +214,10 @@ class Contract(models.Model):
                     import logging
                     logging.error(f"Error rewarding referrer in contract save: {e}", exc_info=True)
 
-            # Auto-select payment_day from plan name only on initial creation
-            # AND only when the caller did not explicitly set a payment_day
-            # (i.e., it's still at the model's default value MONTHLY_1ST).
-            if self.plan and self.payment_day == Contract.PaymentDay.MONTHLY_1ST:
-                plan_name_lower = self.plan.name.lower()
-                if any(kw in plan_name_lower for kw in ['basico', 'básico', 'basic']):
-                    self.payment_day = Contract.PaymentDay.WEEKLY_MONDAY
-                elif any(kw in plan_name_lower for kw in ['mid', 'pro', 'medio', 'quincenal']):
-                    self.payment_day = Contract.PaymentDay.FORTNIGHTLY_1ST_15TH
-                # else: keep MONTHLY_1ST (already at default)
+            # Respect explicitly selected payment_day from user / API request
+            # (Decoupled from plan name to allow Weekly, Biweekly, or Monthly for any plan)
+            if not self.payment_day:
+                self.payment_day = Contract.PaymentDay.MONTHLY_1ST
         super().save(*args, **kwargs)
 
     def __str__(self):

@@ -11,7 +11,7 @@
 import React, { useEffect, useState, Suspense } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { fetcher, getMainDomainUrl, isTokenExpired } from '@/lib/api';
+import { fetcher, getMainDomainUrl, isTokenExpired, getStoredToken } from '@/lib/api';
 import ThemeToggle from './ThemeToggle';
 import { Plan, AddOn, Tenant, User } from '@/lib/types';
 
@@ -39,6 +39,7 @@ function DashboardSidebarContent() {
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   // Responsive navigation and mobile drawer state
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -91,55 +92,73 @@ function DashboardSidebarContent() {
       setIsClient(client);
     };
 
-    const staffLocal = localStorage.getItem('is_staff') === 'true';
-    const roleLocal = localStorage.getItem('user_role') || '';
+    const staffLocal = typeof window !== 'undefined' ? localStorage.getItem('is_staff') === 'true' : false;
+    const roleLocal = typeof window !== 'undefined' ? (localStorage.getItem('user_role') || '') : '';
     checkAuth(roleLocal, staffLocal);
 
-    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-    const hasToken = token && token !== 'null' && token !== 'undefined';
+    const token = getStoredToken();
+    const hasToken = token && !isTokenExpired(token);
 
-    if (!hasToken || isTokenExpired(token)) {
+    if (!hasToken) {
       setContracts([]);
       setTenants([]);
       setCurrentUser(null);
+      setIsLoading(false);
       return;
     }
 
     const loadData = async () => {
+      setIsLoading(true);
       try {
-        const meData = await fetcher('/users/me/');
+        const meData = await fetcher('/users/me/').catch((err) => {
+          console.warn("[Sidebar] No se pudo obtener el usuario actual de la API:", err?.message || err);
+          return null;
+        });
+
         if (meData) {
           setCurrentUser(meData);
-          localStorage.setItem('user_role', meData.role || '');
-          localStorage.setItem('is_staff', meData.is_staff ? 'true' : 'false');
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('user_role', meData.role || '');
+            localStorage.setItem('is_staff', meData.is_staff ? 'true' : 'false');
+          }
           checkAuth(meData.role || '', meData.is_staff);
+        } else {
+          setCurrentUser(null);
         }
       } catch (err) {
-        console.error("Error loading user me in sidebar:", err);
+        setCurrentUser(null);
       }
 
       try {
-        const contractsData = await fetcher('/contracts/');
+        const contractsData = await fetcher('/contracts/').catch((err) => {
+          console.warn("[Sidebar] No se pudieron obtener contratos de la API:", err?.message || err);
+          return [];
+        });
+
         if (Array.isArray(contractsData)) {
           setContracts(contractsData);
         } else {
           setContracts([]);
         }
       } catch (err) {
-        console.error("Error loading contracts in sidebar:", err);
         setContracts([]);
       }
 
       try {
-        const tenantsData = await fetcher('/tenants/');
+        const tenantsData = await fetcher('/tenants/').catch((err) => {
+          console.warn("[Sidebar] No se pudieron obtener tenants de la API:", err?.message || err);
+          return [];
+        });
+
         if (Array.isArray(tenantsData)) {
           setTenants(tenantsData);
         } else {
           setTenants([]);
         }
       } catch (err) {
-        console.error("Error loading tenants in sidebar:", err);
         setTenants([]);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -263,8 +282,8 @@ function DashboardSidebarContent() {
     {
       label: 'Contratos Digitales',
       href: '/dashboard?tab=custom-contracts',
-      show: (userRole === 'ADMIN' || userRole === 'STAFF') || 
-            (userRole === 'BUSINESS' && tenants.some(t => t.is_active && t.active_addons?.includes('booking-signature'))),
+      show: (userRole === 'ADMIN' || userRole === 'STAFF') ||
+        (userRole === 'BUSINESS' && tenants.some(t => t.is_active && t.active_addons?.includes('booking-signature'))),
       active: pathname === '/dashboard' && activeTab === 'custom-contracts',
       id: 'tour-sidebar-custom-contracts',
       icon: (active: boolean) => (
@@ -340,8 +359,8 @@ function DashboardSidebarContent() {
       ),
       badge: tenants[0] && (
         <span className={`px-2 py-0.5 text-[7px] font-black uppercase tracking-widest rounded-full shrink-0 ${tenants[0].is_active
-            ? 'bg-green-500/10 text-green-400 border border-green-500/20'
-            : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+          ? 'bg-green-500/10 text-green-400 border border-green-500/20'
+          : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
           }`}>
           {tenants[0].is_active ? 'Activo' : 'Reservado'}
         </span>
@@ -609,8 +628,8 @@ function DashboardSidebarContent() {
                   <button
                     onClick={() => toggleTenant(tenant.id)}
                     className={`flex items-center gap-3.5 px-6 py-3 w-full text-left rounded-2xl font-black uppercase tracking-widest text-[9px] transition-all duration-300 group ${isOpen
-                        ? 'bg-foreground/[0.02] text-foreground'
-                        : 'text-foreground/60 hover:text-foreground hover:bg-foreground/[0.02]'
+                      ? 'bg-foreground/[0.02] text-foreground'
+                      : 'text-foreground/60 hover:text-foreground hover:bg-foreground/[0.02]'
                       }`}
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5" className="w-4 h-4 text-nectar-gold shrink-0 transition-transform duration-300 group-hover:rotate-12">
@@ -708,9 +727,8 @@ function DashboardSidebarContent() {
                 onClick={link.onClick}
                 title={link.label}
                 id={link.id}
-                className={`flex items-center gap-4 rounded-2xl font-black uppercase tracking-widest text-[9px] transition-all duration-300 group ${
-                  isCollapsed ? 'justify-center px-0 py-3.5 w-full' : 'px-6 py-3.5 w-full text-left'
-                } ${link.active
+                className={`flex items-center gap-4 rounded-2xl font-black uppercase tracking-widest text-[9px] transition-all duration-300 group ${isCollapsed ? 'justify-center px-0 py-3.5 w-full' : 'px-6 py-3.5 w-full text-left'
+                  } ${link.active
                     ? 'bg-nectar-gold/10 text-nectar-gold'
                     : 'hover:bg-foreground/[0.04] text-foreground/60 hover:text-foreground'
                   }`}
@@ -741,9 +759,8 @@ function DashboardSidebarContent() {
                 onClick={link.onClick}
                 title={link.label}
                 id={link.id}
-                className={`flex items-center gap-4 rounded-2xl font-black uppercase tracking-widest text-[9px] transition-all duration-300 group ${
-                  isCollapsed ? 'justify-center px-0 py-3.5 w-full' : 'px-6 py-3.5 w-full text-left'
-                } ${link.active
+                className={`flex items-center gap-4 rounded-2xl font-black uppercase tracking-widest text-[9px] transition-all duration-300 group ${isCollapsed ? 'justify-center px-0 py-3.5 w-full' : 'px-6 py-3.5 w-full text-left'
+                  } ${link.active
                     ? 'bg-nectar-gold/10 text-nectar-gold'
                     : 'hover:bg-foreground/[0.04] text-foreground/60 hover:text-foreground'
                   }`}
@@ -818,7 +835,7 @@ function DashboardSidebarContent() {
           {currentUser && (
             <div className="p-4 rounded-3xl bg-foreground/[0.02] border border-card-border/40 flex items-center gap-3.5 w-full hover:bg-foreground/[0.04] transition-all duration-300 relative overflow-hidden group">
               <div className="absolute -right-8 -bottom-8 w-16 h-16 bg-nectar-gold/5 blur-xl rounded-full pointer-events-none"></div>
-              
+
               <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-nectar-gold to-yellow-600/30 flex items-center justify-center border border-nectar-gold/20 relative shrink-0 shadow-lg shadow-nectar-gold/5">
                 <span className="text-background font-black text-xs font-mono tracking-wider">
                   {currentUser.username?.substring(0, 2).toUpperCase() || currentUser.email?.substring(0, 2).toUpperCase() || 'US'}
@@ -894,7 +911,7 @@ function DashboardSidebarContent() {
           <nav className="flex-1">
             {renderNavLinks()}
           </nav>
-          
+
           {/* Profile Widget */}
           {currentUser && (
             <div className="w-full transition-all duration-300">
@@ -910,7 +927,7 @@ function DashboardSidebarContent() {
               ) : (
                 <div className="p-4 rounded-3xl bg-foreground/[0.02] border border-card-border/40 flex items-center gap-3.5 w-full hover:bg-foreground/[0.04] transition-all duration-300 relative overflow-hidden group">
                   <div className="absolute -right-8 -bottom-8 w-16 h-16 bg-nectar-gold/5 blur-xl rounded-full pointer-events-none group-hover:bg-nectar-gold/10 transition-all duration-500"></div>
-                  
+
                   <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-nectar-gold to-yellow-600/30 flex items-center justify-center border border-nectar-gold/20 relative shrink-0 shadow-lg shadow-nectar-gold/5">
                     <span className="text-background font-black text-xs font-mono tracking-wider">
                       {currentUser.username?.substring(0, 2).toUpperCase() || currentUser.email?.substring(0, 2).toUpperCase() || 'US'}
@@ -933,7 +950,7 @@ function DashboardSidebarContent() {
               )}
             </div>
           )}
-          
+
           <div className={`pt-6 border-t border-card-border/60 flex ${isCollapsed ? 'flex-col items-center gap-4' : 'items-center justify-between gap-2'} w-full`}>
             {!isCollapsed ? (
               <button
@@ -971,7 +988,7 @@ function DashboardSidebarContent() {
               </svg>
             </button>
 
-            <ThemeToggle />
+            {/* <ThemeToggle /> */}
           </div>
         </div>
       </aside>

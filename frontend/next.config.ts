@@ -15,17 +15,16 @@ const nextConfig: NextConfig = {
     '*.localhost:3002'
   ],
   async rewrites() {
-    const rawBackendUrl = process.env.INTERNAL_API_URL || process.env.API_URL || 'http://localhost:8000/api';
-    const cleanBackendUrl = rawBackendUrl.replace(/\/+$/, '');
+    const rawBackendUrl = process.env.INTERNAL_API_URL || process.env.API_URL || 'http://backend:8000/api';
+    let cleanBackendUrl = rawBackendUrl.replace(/\/+$/, '');
+    if (!cleanBackendUrl.endsWith('/api')) {
+      cleanBackendUrl = `${cleanBackendUrl}/api`;
+    }
     const backendBase = cleanBackendUrl.replace(/\/api$/, '');
     return [
       {
-        source: '/api/:path*/',
-        destination: `${cleanBackendUrl}/:path*/`,
-      },
-      {
         source: '/api/:path*',
-        destination: `${cleanBackendUrl}/:path*`,
+        destination: `${cleanBackendUrl}/:path*/`,
       },
       {
         source: '/media/:path*',

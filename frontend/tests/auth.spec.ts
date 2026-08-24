@@ -63,8 +63,10 @@ test.describe('Autenticación y Registro de Usuarios (E2E)', () => {
 
     await page.click('button[type="submit"]');
 
-    // Verificar que se guarde el JWT token en localStorage tras la autenticación
-    await page.waitForTimeout(500);
+    // Esperar a que se complete la redirección post-login a /dashboard
+    await page.waitForURL(/\/dashboard/);
+
+    // Verificar que se guardó el JWT token en localStorage tras la autenticación
     const token = await page.evaluate(() => localStorage.getItem('token'));
     expect(token).toBeTruthy();
   });

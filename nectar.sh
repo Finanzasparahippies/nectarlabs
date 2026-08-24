@@ -8,37 +8,30 @@ if [ $# -gt 0 ]; then
     shift
 fi
 
-# Detect Container runtime (docker or podman)
-if command -v docker &> /dev/null; then
+# Detect Container runtime and compose provider (docker or podman)
+if command -v podman &> /dev/null && command -v podman-compose &> /dev/null; then
+    DOCKER_BIN="podman"
+    COMPOSE_BIN="podman-compose"
+elif command -v docker &> /dev/null; then
     DOCKER_BIN="docker"
+    if docker compose version &> /dev/null 2>&1; then
+        COMPOSE_BIN="docker compose"
+    elif command -v docker-compose &> /dev/null; then
+        COMPOSE_BIN="docker-compose"
+    fi
 elif command -v podman &> /dev/null; then
     DOCKER_BIN="podman"
+    if command -v podman-compose &> /dev/null; then
+        COMPOSE_BIN="podman-compose"
+    elif podman compose version &> /dev/null 2>&1; then
+        COMPOSE_BIN="podman compose"
+    fi
 else
     echo "==========================================="
     echo "  [ERROR] No container runtime detected!   "
     echo "==========================================="
     echo "No se encontró ni 'docker' ni 'podman' en el PATH del sistema."
     exit 1
-fi
-
-# Detect Compose provider
-COMPOSE_BIN=""
-if [ "$DOCKER_BIN" = "docker" ]; then
-    if docker compose version &> /dev/null; then
-        COMPOSE_BIN="docker compose"
-    elif command -v docker-compose &> /dev/null; then
-        COMPOSE_BIN="docker-compose"
-    fi
-elif [ "$DOCKER_BIN" = "podman" ]; then
-    if command -v podman-compose &> /dev/null; then
-        COMPOSE_BIN="podman-compose"
-    elif podman compose version &> /dev/null 2>&1; then
-        COMPOSE_BIN="podman compose"
-    fi
-fi
-
-if [ -z "$COMPOSE_BIN" ]; then
-    COMPOSE_BIN="docker compose"
 fi
 
 # Detect rootless Podman socket and export DOCKER_SOCK if not set

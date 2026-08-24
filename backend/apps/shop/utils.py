@@ -486,8 +486,11 @@ def generate_installments_for_contract(contract):
             )
         return
         
-    plan_price = contract.plan.price
-    plan_discount = contract.plan.discount_percentage if contract.plan else 0
+    from decimal import Decimal, ROUND_HALF_UP
+    TWOPLACES = Decimal('0.01')
+
+    plan_price = Decimal(str(contract.plan.price))
+    plan_discount = Decimal(str(contract.plan.discount_percentage)) if contract.plan else Decimal('0')
     promo = contract.promo_code if (contract.promo_code and contract.promo_code.is_valid()) else None
     
     start_date = contract.signed_at.date() if contract.signed_at else timezone.now().date()
@@ -499,7 +502,7 @@ def generate_installments_for_contract(contract):
     
     # 1. Development Installments
     if contract.payment_day == 'WEEKLY_MONDAY':
-        base_inst_amount = plan_price / 4
+        base_inst_amount = (plan_price / Decimal('4')).quantize(TWOPLACES, rounding=ROUND_HALF_UP)
         days_ahead = 0 - start_date.weekday()
         if days_ahead <= 0:
             days_ahead += 7
@@ -508,10 +511,10 @@ def generate_installments_for_contract(contract):
         for i in range(1, 25):
             due_date = start_date if i == 1 else (next_monday + timedelta(weeks=i - 2))
             is_promo = (i == 1 and promo is not None)
-            discount = promo.discount_percentage if is_promo else plan_discount
+            discount = Decimal(str(promo.discount_percentage)) if is_promo else plan_discount
             promo_obj = promo if is_promo else None
             
-            inst_amount = base_inst_amount * (1 - discount / 100)
+            inst_amount = (base_inst_amount * (Decimal('1') - discount / Decimal('100'))).quantize(TWOPLACES, rounding=ROUND_HALF_UP)
             
             installments_to_create.append(
                 PaymentInstallment(
@@ -528,7 +531,7 @@ def generate_installments_for_contract(contract):
                 )
             )
     elif contract.payment_day == 'FORTNIGHTLY_1ST_15TH':
-        base_inst_amount = plan_price / 2
+        base_inst_amount = (plan_price / Decimal('2')).quantize(TWOPLACES, rounding=ROUND_HALF_UP)
         due_dates = [start_date]
         candidate_m = start_date.month
         candidate_y = start_date.year
@@ -548,10 +551,10 @@ def generate_installments_for_contract(contract):
         
         for i, due_date in enumerate(due_dates, 1):
             is_promo = (i == 1 and promo is not None)
-            discount = promo.discount_percentage if is_promo else plan_discount
+            discount = Decimal(str(promo.discount_percentage)) if is_promo else plan_discount
             promo_obj = promo if is_promo else None
             
-            inst_amount = base_inst_amount * (1 - discount / 100)
+            inst_amount = (base_inst_amount * (Decimal('1') - discount / Decimal('100'))).quantize(TWOPLACES, rounding=ROUND_HALF_UP)
             
             installments_to_create.append(
                 PaymentInstallment(
@@ -569,7 +572,7 @@ def generate_installments_for_contract(contract):
             )
     else:
         # Monthly
-        base_inst_amount = plan_price
+        base_inst_amount = plan_price.quantize(TWOPLACES, rounding=ROUND_HALF_UP)
         due_dates = [start_date]
         candidate_m = start_date.month + 1
         candidate_y = start_date.year
@@ -586,10 +589,10 @@ def generate_installments_for_contract(contract):
         
         for i, due_date in enumerate(due_dates, 1):
             is_promo = (i == 1 and promo is not None)
-            discount = promo.discount_percentage if is_promo else plan_discount
+            discount = Decimal(str(promo.discount_percentage)) if is_promo else plan_discount
             promo_obj = promo if is_promo else None
             
-            inst_amount = base_inst_amount * (1 - discount / 100)
+            inst_amount = (base_inst_amount * (Decimal('1') - discount / Decimal('100'))).quantize(TWOPLACES, rounding=ROUND_HALF_UP)
             
             installments_to_create.append(
                 PaymentInstallment(
