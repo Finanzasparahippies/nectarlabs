@@ -88,14 +88,29 @@ export function isTokenExpired(token: string | null): boolean {
  */
 export function getMainDomainUrl(path: string): string {
   if (typeof window === 'undefined') return path;
-  const host = window.location.host;
-  let mainDomain = host;
-  if (host.includes('staging.nectarlabs.dev')) {
-    mainDomain = 'staging.nectarlabs.dev';
-  } else if (host.includes('nectarlabs.dev')) {
-    mainDomain = 'nectarlabs.dev';
+  const protocol = window.location.protocol;
+  const host = window.location.host; // Preserva el host y puerto activo (ej: localhost:3002, nectarlabs.localhost:3002)
+  const normalizedPath = path.startsWith('/') ? path : '/' + path;
+
+  // Entornos de desarrollo local (localhost, 127.0.0.1, nectarlabs.localhost o subdominios *.localhost)
+  if (host.includes('localhost') || host.includes('127.0.0.1')) {
+    const port = window.location.port ? `:${window.location.port}` : '';
+    const baseHost = host.includes('nectarlabs.localhost') ? `nectarlabs.localhost${port}` : `localhost${port}`;
+    return `${protocol}//${baseHost}${normalizedPath}`;
   }
-  return `${window.location.protocol}//${mainDomain}${path.startsWith('/') ? path : '/' + path}`;
+
+  // Entorno de Staging (subdominios colmena redirigen a staging principal)
+  if (host.includes('staging.nectarlabs.dev')) {
+    return `${protocol}//staging.nectarlabs.dev${normalizedPath}`;
+  }
+
+  // Entorno de Producción (subdominios colmena redirigen a producción principal)
+  if (host.includes('nectarlabs.dev')) {
+    return `${protocol}//nectarlabs.dev${normalizedPath}`;
+  }
+
+  // Fallback dinámico para proxies o dominios personalizados
+  return `${protocol}//${host}${normalizedPath}`;
 }
 
 /**

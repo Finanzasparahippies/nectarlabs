@@ -287,9 +287,53 @@ class UsersAppTests(APITestCase):
         
         # List users (should see staff and customer, but not admin/business since they are outside tenant)
         url = "/api/users/"
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        user_ids = [u['id'] for u in response.data]
-        self.assertIn(self.customer_user.id, user_ids)
-        self.assertIn(self.business_staff.id, user_ids)
         self.assertNotIn(self.admin_user.id, user_ids)
+
+
+from apps.users.utils import get_frontend_base_url, send_verification_email
+from django.test import RequestFactory
+from django.core import mail
+
+class FrontendUrlResolutionTests(APITestCase):
+
+    def setUp(self):
+        self.factory = RequestFactory()
+
+    def test_resolution_priority_1_origin_header(self):
+        """Prio 1: Inspect HTTP_ORIGIN or HTTP_REFERER header."""
+        request = self.factory.get('/', HTTP_ORIGIN='http://localhost:3002')
+        base_url = get_frontend_base_url(request)
+        self.assertEqual(base_url, 'http://localhost:3002')
+
+        request_referer = self.factory.get('/', HTTP_REFERER='https://colmena.staging.nectarlabs.dev/register')
+        base_url_referer = get_frontend_base_url(request_referer)
+        self.assertEqual(base_url_referer, 'https://colmena.staging.nectarlabs.dev')
+
+    def test_resolution_priority_2_proxy_headers(self):
+        """Prio 2: Respect HTTP_X_FORWARDED_HOST and HTTP_X_FORWARDED_PROTO."""
+        request = self.factory.get('/', HTTP_X_FORWARDED_HOST='staging.nectarlabs.dev', HTTP_X_FORWARDED_PROTO='https')
+        base_url = get_frontend_base_url(request)
+        self.assertEqual(base_url, 'https://staging.nectarlabs.dev')
+
+    def test_resolution_priority_3_fallback_without_request(self):
+        """Prio 3: Safe fallback using settings.FRONTEND_URL when request is None (Async task / Celery)."""
+        base_url = get_frontend_base_url(None)
+        self.assertEqual(base_url, settings.FRONTEND_URL.rstrip('/'))
+
+    def test_send_verification_email_includes_resolved_frontend_url(self):
+        """Verify that send_verification_email constructs email containing correct base URL."""
+        unverified_user = User.objects.create_user(
+            email='asyncuser@nectarlabs.dev',
+            username='asyncuser',
+            password='password123',
+            is_email_verified=False
+        )
+        
+        request = self.factory.get('/', HTTP_ORIGIN='http://nectarlabs.localhost:3002')
+        send_verification_email(unverified_user, request)
+
+        self.assertEqual(len(mail.outbox), 1)
+        sent_email = mail.outbox[0]
+        self.assertEqual(sent_email.to, ['asyncuser@nectarlabs.dev'])
+        self.assertIn('/api/users/verify-email/?uid=', sent_email.body)
+

@@ -12,7 +12,7 @@ from django.conf import settings
 
 from .serializers import UserSerializer, RegisterSerializer
 from .models import User
-from .utils import send_verification_email, get_request_frontend_origin
+from .utils import send_verification_email, get_frontend_base_url
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
@@ -61,7 +61,7 @@ class VerifyEmailView(APIView):
         uidb64 = request.query_params.get('uid')
         token = request.query_params.get('token')
         
-        frontend_url = get_request_frontend_origin(request)
+        frontend_url = get_frontend_base_url(request)
 
         if not uidb64 or not token:
             return redirect(f"{frontend_url}/login?verified=false&error=missing_params")
