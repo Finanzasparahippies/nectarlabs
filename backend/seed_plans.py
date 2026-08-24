@@ -27,8 +27,8 @@ def seed_database():
         defaults={
             "name": "Plan Mid",
             "price": 3499.00,
-            "hours": 0,
-            "description": "Contrato a 6 meses. Soporte para todos los add-ons de Nectar Labs personalizados a la marca del cliente. Restringido exclusivamente al uso y customización visual de plantillas oficiales (no incluye desarrollo a medida ni diseño desde cero).",
+            "hours": 5,
+            "description": "Contrato a 6 meses. Incluye 5 horas de desarrollo mensual dedicadas a la personalización de add-ons de Nectar Labs (bolsa mensual no acumulable). Transferencia de propiedad intelectual al mes 6.",
             "is_recommended": False,
             "is_active": True
         }

@@ -202,7 +202,26 @@ function OnboardingContent() {
     sigCanvas.current?.clear();
   };
 
+  const [termsAccepted, setTermsAccepted] = useState(false);
+
+  const generateContractHash = async (contentStr: string): Promise<string> => {
+    try {
+      const encoder = new TextEncoder();
+      const data = encoder.encode(contentStr);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    } catch {
+      return 'hash_v2_onboarding_nectar';
+    }
+  };
+
   const handleSubmit = async () => {
+    if (!termsAccepted) {
+      showToast("Por favor, confirma la lectura y aceptación del alcance y propiedad intelectual.", "warning");
+      return;
+    }
+
     if (sigCanvas.current?.isEmpty()) {
       showToast("Por favor, firma el contrato antes de continuar.", "warning");
       return;
@@ -211,6 +230,9 @@ function OnboardingContent() {
     setSubmitting(true);
     const signatureBase64 = sigCanvas.current?.getTrimmedCanvas().toDataURL('image/png');
 
+    const contractRawText = `CONTRACT_v2:${formData.plan}:${formData.payment_day}:${formData.full_name}:${formData.tax_id}:${formData.address}:${formData.project_idea}`;
+    const contractHash = await generateContractHash(contractRawText);
+
     try {
       await fetcher('/contracts/', {
         method: 'POST',
@@ -218,6 +240,8 @@ function OnboardingContent() {
           ...formData,
           signature_base64: signatureBase64,
           promo_code: appliedPromo ? appliedPromo.code : null,
+          contract_version_hash: contractHash,
+          accepted_terms_at: new Date().toISOString(),
         }),
       });
       setStep(4);
@@ -300,12 +324,12 @@ function OnboardingContent() {
                 <div className="space-y-3 p-6 rounded-3xl bg-card-bg/60 border-2 border-card-border/80 animate-in fade-in slide-in-from-bottom-3 duration-300">
                   <div className="flex items-center justify-between">
                     <label className="text-[10px] font-black uppercase tracking-widest text-nectar-gold">
-                      Frecuencia de Pago Desacoplada (Elige tu ritmo)
+                      Elige la frecuencia de pagos de tu plan.
                     </label>
                     <span className="text-[9px] uppercase font-bold opacity-50">6 meses de compromiso</span>
                   </div>
                   <p className="text-xs text-foreground/70 font-semibold">
-                    Divide el monto total mensual de tu plan en el periodo que mejor se adapte al flujo de tu negocio.
+                    Divide el monto total de tu plan en el periodo que mejor se adapte al flujo de tu negocio.
                   </p>
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2">
@@ -320,21 +344,19 @@ function OnboardingContent() {
                           type="button"
                           disabled={!breakdown.isValid}
                           onClick={() => setFormData(prev => ({ ...prev, payment_day: freq }))}
-                          className={`relative p-5 rounded-2xl border-2 transition-all duration-300 text-left flex flex-col justify-between ${
-                            isSelected
-                              ? 'border-nectar-gold bg-nectar-gold/10 shadow-[0_0_25px_rgba(198,138,30,0.15)] scale-[1.02]'
-                              : breakdown.isValid
+                          className={`relative p-5 rounded-2xl border-2 transition-all duration-300 text-left flex flex-col justify-between ${isSelected
+                            ? 'border-nectar-gold bg-nectar-gold/10 shadow-[0_0_25px_rgba(198,138,30,0.15)] scale-[1.02]'
+                            : breakdown.isValid
                               ? 'border-card-border hover:border-nectar-gold/40 hover:bg-card-bg'
                               : 'border-red-500/20 bg-red-500/5 opacity-50 cursor-not-allowed'
-                          }`}
+                            }`}
                         >
                           <div className="flex items-center justify-between mb-3">
                             <span className="text-xs font-black uppercase tracking-wider text-foreground">
                               {breakdown.label}
                             </span>
-                            <span className={`text-[8px] font-black px-2 py-0.5 rounded-full uppercase ${
-                              isSelected ? 'bg-nectar-gold text-background' : 'bg-card-border text-foreground/60'
-                            }`}>
+                            <span className={`text-[8px] font-black px-2 py-0.5 rounded-full uppercase ${isSelected ? 'bg-nectar-gold text-background' : 'bg-card-border text-foreground/60'
+                              }`}>
                               {breakdown.installmentsPerMonth} / mes
                             </span>
                           </div>
@@ -545,7 +567,7 @@ function OnboardingContent() {
                   background: rgba(198, 138, 30, 0.5);
                 }
               `}</style>
-              
+
               {/* Contract Preview Document */}
               <div className="p-8 md:p-12 overflow-y-auto custom-contract-scrollbar flex-1 bg-background/30 selection:bg-nectar-gold selection:text-background">
                 <header className="mb-12 border-b border-card-border/60 pb-8">
@@ -647,8 +669,8 @@ function OnboardingContent() {
                       <span>Frecuencia y Día de Pago:</span>
                       <span className="text-nectar-gold font-black">
                         {formData.payment_day === 'WEEKLY_MONDAY' ? 'Abonos semanales (Lunes de cada semana)' :
-                         formData.payment_day === 'FORTNIGHTLY_1ST_15TH' ? 'Abonos quincenales (Días 1 y 15 de cada mes)' :
-                         'Abonos mensuales (Día 1ero de cada mes)'}
+                          formData.payment_day === 'FORTNIGHTLY_1ST_15TH' ? 'Abonos quincenales (Días 1 y 15 de cada mes)' :
+                            'Abonos mensuales (Día 1ero de cada mes)'}
                       </span>
                     </div>
                     {formData.brand_design_tier !== 'NONE' && (
@@ -670,31 +692,15 @@ function OnboardingContent() {
                   </section>
 
                   <section className="space-y-3">
-                    <h3 className="text-lg font-black uppercase tracking-tight text-foreground">5. GESTIÓN DE ALCANCE Y PROPIEDAD DE CÓDIGO (CONTRATO A 6 MESES)</h3>
-                    <p><strong>Periodo Obligatorio:</strong> El presente contrato contempla una duración mínima de 6 meses.</p>
-                    <p><strong>Alcance del Plan Seleccionado ({selectedPlanObj?.name || 'Seleccionado'}):</strong></p>
-                    <ul className="list-disc pl-5 space-y-1 text-xs">
-                      {selectedPlanObj?.name?.toLowerCase().includes('premium') ? (
-                        <>
-                          <li><strong>Bolsa de Desarrollo:</strong> Incluye 12 horas dedicadas de desarrollo e ingeniería mensual.</li>
-                          <li><strong>Desarrollo a Medida:</strong> Creación de funcionalidades desde cero o adaptación de plantillas oficiales.</li>
-                          <li><strong>Add-ons & Marca:</strong> Soporte completo para todos los add-ons personalizados a la marca de EL CLIENTE.</li>
-                        </>
-                      ) : selectedPlanObj?.name?.toLowerCase().includes('mid') ? (
-                        <>
-                          <li><strong>Personalización de Marca:</strong> Soporte para todos los add-ons personalizados a la marca por el equipo de Nectar Labs.</li>
-                          <li><strong>Restricción de Desarrollo:</strong> Uso exclusivo y customización de plantillas oficiales. No incluye desarrollo de funcionalidades a medida desde cero.</li>
-                        </>
-                      ) : (
-                        <>
-                          <li><strong>Add-ons y Plantillas:</strong> Acceso a todos los add-ons utilizables dentro de plantillas oficiales.</li>
-                          <li><strong>Restricción de Marca:</strong> Personalización autónoma por EL CLIENTE utilizando herramientas nativas de la plataforma (sin intervención directa de diseño/desarrollo a medida).</li>
-                        </>
-                      )}
-                    </ul>
-                    <p><strong>Propiedad Intelectual:</strong> La propiedad de los activos digitales configurados y el código se consolida a favor de EL CLIENTE al cumplir los 6 meses de contrato.</p>
+                    <h3 className="text-lg font-black uppercase tracking-tight text-foreground">5. GESTIÓN DE ALCANCE, CADUCIDAD DE HORAS Y PROPIEDAD DE CÓDIGO</h3>
+                    <p><strong>Periodo Obligatorio:</strong> El presente contrato contempla una duración mínima obligatoria de 6 meses de compromiso.</p>
+                    <p><strong>Bolsa de Horas Técnica:</strong> El plan <strong>{selectedPlanObj?.name || 'seleccionado'}</strong> contempla una asignación de <strong>{selectedPlanObj?.hours || 0} horas mensuales</strong> de ingeniería.</p>
+                    <p><strong>Política de Caducidad de Horas (Use-It-Or-Lose-It):</strong> Las horas de desarrollo asignadas vencen automáticamente al término de cada periodo mensual de facturación y <strong>no son acumulables ni transferibles</strong> para meses posteriores.</p>
+                    <p><strong>Propiedad Intelectual:</strong> {selectedPlanObj?.name?.toLowerCase().includes('premium')
+                      ? 'La propiedad intelectual de los desarrollos a medida y del código fuente se consolidará a favor de EL CLIENTE únicamente al cumplir satisfactoriamente los 6 meses de contrato.'
+                      : 'El presente plan otorga un derecho exclusivo de uso licenciado sobre los add-ons, sistemas y plantillas. No contempla la transferencia de propiedad intelectual del código fuente.'}</p>
                   </section>
-                  
+
                   <section className="space-y-3 font-semibold text-foreground/80">
                     <h3 className="text-lg font-black uppercase tracking-tight text-foreground">6. CONTINUIDAD POST-COMPROMISO (MES 7+)</h3>
                     <p>Al finalizar el periodo obligatorio de 6 meses, EL CLIENTE podrá renovar su suscripción de Partner Tecnológico o migrar a mantenimiento autónomo de la colmena digital.</p>
@@ -702,8 +708,82 @@ function OnboardingContent() {
                 </div>
               </div>
 
+              {/* Tech-Organic Scope Card & Feature Inclusion Summary */}
+              {selectedPlanObj && (
+                <div className="px-8 pt-6 pb-2 bg-[#361542] text-[#f2ecdc] border-t border-nectar-gold/30">
+                  <div className="flex items-center justify-between mb-4 border-b border-white/10 pb-3">
+                    <div>
+                      <span className="text-[9px] font-black uppercase tracking-widest text-[#0de5a8] block mb-0.5">
+                        Resumen de Alcance Técnico & Propiedad Intelectual
+                      </span>
+                      <h4 className="text-lg font-black text-white tracking-tight">
+                        {selectedPlanObj.name}
+                      </h4>
+                    </div>
+                    <div className="px-3 py-1.5 rounded-xl bg-nectar-gold/20 border border-nectar-gold/40 text-nectar-gold font-mono font-black text-xs">
+                      {selectedPlanObj.hours ? `${selectedPlanObj.hours} hrs / mes` : '0 hrs / mes'}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs mb-4">
+                    <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10 space-y-1.5">
+                      <div className="flex items-center gap-2 font-black text-[#0de5a8] text-[11px]">
+                        <span>⚡</span>
+                        <span>Bolsa de Horas de Ingeniería</span>
+                      </div>
+                      <p className="opacity-80 text-[11px] leading-relaxed">
+                        {selectedPlanObj.name.toLowerCase().includes('premium')
+                          ? '12 hrs/mes para desarrollos a medida desde cero o adaptación de plantillas.'
+                          : selectedPlanObj.name.toLowerCase().includes('mid')
+                          ? '5 hrs/mes dedicadas a la personalización de add-ons existentes de Nectar Labs.'
+                          : 'Sin horas de desarrollo a medida. Uso autónomo mediante herramientas nativas.'}
+                      </p>
+                      {selectedPlanObj.hours > 0 ? (
+                        <span className="inline-block text-[8px] font-black uppercase tracking-wider text-amber-300 bg-amber-400/10 px-2 py-0.5 rounded-full">
+                          ⚠ Bolsa mensual no acumulable (Use-it-or-lose-it)
+                        </span>
+                      ) : (
+                        <span className="inline-block text-[8px] font-black uppercase tracking-wider text-white/50 bg-white/5 px-2 py-0.5 rounded-full">
+                          Personalización autónoma por el usuario
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10 space-y-1.5">
+                      <div className="flex items-center gap-2 font-black text-[#0de5a8] text-[11px]">
+                        <span>🛡️</span>
+                        <span>Propiedad Intelectual (IP)</span>
+                      </div>
+                      <p className="opacity-80 text-[11px] leading-relaxed">
+                        {selectedPlanObj.name.toLowerCase().includes('premium')
+                          ? 'Transferencia y consolidación total de propiedad del código al cumplir 6 meses.'
+                          : 'Derecho de uso licenciado de add-ons y plantillas oficiales. No incluye propiedad de código fuente.'}
+                      </p>
+                      <span className="inline-block text-[8px] font-black uppercase tracking-wider text-[#0de5a8] bg-[#0de5a8]/10 px-2 py-0.5 rounded-full">
+                        {selectedPlanObj.name.toLowerCase().includes('premium')
+                          ? '✓ Consolidación IP de Código al Mes 6'
+                          : '✓ Derecho de Uso Licenciado (Software)'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Signature Area */}
               <div className="p-8 bg-card-bg/95 border-t border-card-border/60 space-y-6">
+                {/* Defensiva de Aceptación Consciente */}
+                <label className="flex items-start gap-3 p-4 rounded-2xl bg-background/80 border border-card-border/80 cursor-pointer hover:border-nectar-gold transition-all select-none">
+                  <input
+                    type="checkbox"
+                    checked={termsAccepted}
+                    onChange={(e) => setTermsAccepted(e.target.checked)}
+                    className="mt-0.5 w-4 h-4 accent-nectar-gold rounded cursor-pointer"
+                  />
+                  <span className="text-xs text-foreground/90 font-bold leading-relaxed">
+                    Confirmación explícita: He leído, comprendo y acepto las condiciones de alcance técnico (<strong>{selectedPlanObj?.hours || 0} hrs/mes no acumulables</strong>) y los términos de propiedad intelectual descritos para el <strong>{selectedPlanObj?.name || 'plan seleccionado'}</strong>.
+                  </span>
+                </label>
+
                 <div className="bg-white rounded-2xl overflow-hidden border border-nectar-gold/20 shadow-[0_4px_25px_rgba(0,0,0,0.3)] relative group">
                   <SignatureCanvas
                     ref={sigCanvas}
@@ -731,8 +811,8 @@ function OnboardingContent() {
               </button>
               <button
                 onClick={handleSubmit}
-                disabled={submitting}
-                className="flex-[2] py-6 bg-nectar-forest text-nectar-cream font-black uppercase tracking-widest rounded-2xl hover:bg-nectar-gold transition-all shadow-xl shadow-nectar-forest/20 disabled:opacity-50"
+                disabled={submitting || !termsAccepted}
+                className="flex-[2] py-6 bg-nectar-forest text-nectar-cream font-black uppercase tracking-widest rounded-2xl hover:bg-nectar-gold transition-all shadow-xl shadow-nectar-forest/20 disabled:opacity-30 disabled:cursor-not-allowed"
               >
                 {submitting ? 'GENERANDO CONTRATO...' : 'FIRMAR Y FINALIZAR'}
               </button>

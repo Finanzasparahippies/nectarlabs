@@ -55,15 +55,15 @@ const DEFAULT_PLANS: Plan[] = [
     name: "Plan Básico",
     price: "2999.00",
     hours: 0,
-    description: "Contrato a 6 meses. Acceso completo a todos los add-ons utilizables dentro de las plantillas oficiales de Nectar Labs. Personalización autónoma mediante herramientas nativas.",
+    description: "Contrato a 6 meses. Licenciamiento de uso de add-ons y plantillas oficiales. Personalización autónoma mediante herramientas nativas (sin código fuente).",
     is_recommended: false
   },
   {
     id: 2,
     name: "Plan Mid",
     price: "3499.00",
-    hours: 0,
-    description: "Contrato a 6 meses. Soporte para todos los add-ons personalizados a la marca del cliente. Restringido exclusivamente al uso y customización de plantillas oficiales.",
+    hours: 5,
+    description: "Contrato a 6 meses. Incluye 5 horas de desarrollo mensual dedicadas a la personalización de add-ons existentes (bolsa mensual no acumulable). Propiedad de código al mes 6.",
     is_recommended: false
   },
   {
@@ -71,7 +71,7 @@ const DEFAULT_PLANS: Plan[] = [
     name: "Plan Premium",
     price: "3999.00",
     hours: 12,
-    description: "Contrato a 6 meses. 12 horas dedicadas de ingeniería mensual. Personalización total de marca y creación de funcionalidades a medida desde cero o sobre plantillas.",
+    description: "Contrato a 6 meses. 12 horas dedicadas de ingeniería mensual para desarrollos a medida o sobre plantillas (bolsa mensual no acumulable). Propiedad de código al mes 6.",
     is_recommended: true
   }
 ];

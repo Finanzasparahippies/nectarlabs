@@ -124,11 +124,24 @@ def generate_contract_pdf(contract):
             pdf.multi_cell(0, 6, f'EL CLIENTE ha optado por el servicio de {tier_label}. Este servicio incluye el diseño de identidad visual y activos digitales con un costo adicional de ${contract.brand_design_price} MXN mensuales.')
             pdf.ln(5)
 
-        # Cláusulas
+        # Cláusulas Principales
         pdf.set_font('helvetica', 'B', 11)
         pdf.cell(0, 10, '5. CLÁUSULAS PRINCIPALES', new_x="LMARGIN", new_y="NEXT")
         pdf.set_font('helvetica', '', 10)
-        pdf.multi_cell(0, 6, "1. INFRAESTRUCTURA: EL CLIENTE cubrirá costos de servidores y dominios.\n2. PROPIEDAD: Los derechos se transfieren tras 6 meses de compromiso.\n3. CADUCIDAD: Las horas mensuales no son acumulables.\n4. CONTINUIDAD: Al finalizar la etapa activa, se activará un plan de mantenimiento base.")
+        
+        plan_name_lower = (contract.plan.name.lower() if contract.plan else '')
+        if 'basico' in plan_name_lower or 'básico' in plan_name_lower:
+            ip_clause = "2. PROPIEDAD INTELECTUAL: Otorga derecho de uso licenciado sobre add-ons y plantillas. No contempla transferencia de propiedad intelectual del código fuente."
+            hours_clause = "3. BOLSA DE HORAS: Este plan no incluye bolsa de horas de desarrollo."
+        elif 'mid' in plan_name_lower:
+            ip_clause = "2. PROPIEDAD INTELECTUAL: Otorga derecho de uso licenciado sobre add-ons y plantillas oficiales. No contempla la transferencia de propiedad intelectual del código fuente."
+            hours_clause = "3. CADUCIDAD DE HORAS (USE-IT-OR-LOSE-IT): Incluye 5h mensuales para personalización de add-ons. Las horas son asignaciones mensuales NO acumulables que vencen al cierre del ciclo."
+        else:
+            ip_clause = "2. PROPIEDAD INTELECTUAL: Los derechos de propiedad intelectual del código fuente se consolidan a favor de EL CLIENTE al cumplir los 6 meses de compromiso."
+            hours_clause = "3. CADUCIDAD DE HORAS (USE-IT-OR-LOSE-IT): Incluye 12h mensuales para desarrollo a medida. Las horas son asignaciones mensuales NO acumulables que vencen al cierre del ciclo."
+
+        clauses_text = f"1. INFRAESTRUCTURA: EL CLIENTE cubrirá costos de infraestructura cloud y dominios.\n{ip_clause}\n{hours_clause}\n4. CONTINUIDAD: Al cumplir los 6 meses, EL CLIENTE podrá renovar su modalidad o pasar a mantenimiento autónomo."
+        pdf.multi_cell(0, 6, clauses_text)
         pdf.ln(10)
 
         # Área de Firmas

@@ -184,6 +184,8 @@ class Contract(models.Model):
         default=0.00,
         help_text="Porcentaje de descuento especial (0 a 100)"
     )
+    contract_version_hash = models.CharField(max_length=64, blank=True, null=True, help_text="Hash SHA-256 del texto del contrato firmado")
+    accepted_terms_at = models.DateTimeField(blank=True, null=True, help_text="Timestamp explícito de aceptación de términos y alcance")
  
     def save(self, *args, **kwargs):
         if not self.pk:
@@ -218,6 +220,13 @@ class Contract(models.Model):
             # (Decoupled from plan name to allow Weekly, Biweekly, or Monthly for any plan)
             if not self.payment_day:
                 self.payment_day = Contract.PaymentDay.MONTHLY_1ST
+            if not self.accepted_terms_at:
+                from django.utils import timezone
+                self.accepted_terms_at = timezone.now()
+            if not self.contract_version_hash:
+                import hashlib
+                raw_payload = f"{self.user_id}:{self.full_name}:{self.tax_id}:{self.address}:{self.project_idea}:{self.signature_base64}".encode('utf-8')
+                self.contract_version_hash = hashlib.sha256(raw_payload).hexdigest()
         super().save(*args, **kwargs)
 
     def __str__(self):

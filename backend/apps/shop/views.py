@@ -679,8 +679,21 @@ class ContractViewSet(viewsets.ModelViewSet):
         return qs.filter(user=user)
 
     def perform_create(self, serializer):
-        # Asignar el usuario actual al contrato
-        contract = serializer.save(user=self.request.user)
+        x_forwarded_for = self.request.META.get('HTTP_X_FORWARDED_FOR')
+        if x_forwarded_for:
+            client_ip = x_forwarded_for.split(',')[0].strip()
+        else:
+            client_ip = self.request.META.get('REMOTE_ADDR')
+
+        save_kwargs = {'user': self.request.user}
+        if client_ip:
+            save_kwargs['ip_address'] = client_ip
+        if not serializer.validated_data.get('signed_at'):
+            save_kwargs['signed_at'] = timezone.now()
+        if not serializer.validated_data.get('accepted_terms_at'):
+            save_kwargs['accepted_terms_at'] = timezone.now()
+
+        contract = serializer.save(**save_kwargs)
         
         # Generar el PDF Parcial e iniciar flujo de firmas
         try:

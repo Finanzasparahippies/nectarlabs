@@ -2730,3 +2730,249 @@ rest_framework_simplejwt.exceptions.InvalidToken: {'detail': ErrorDetail(string=
 [LOCAL] [2026-08-24 04:43:44] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Owner A Contract' automatically generated for Contract #1.
 [LOCAL] [2026-08-24 04:43:45] INFO [apps.shop.signals]: Project 'Ecosistema Plan Premium (6 Meses) - Owner A Contract' automatically generated for Contract #1.
 [LOCAL] [2026-08-24 04:44:09] INFO [apps.users.utils]: Verification email sent to newregistered@example.com
+[LOCAL] [2026-08-24 06:37:54] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:37:54] INFO [apps]: Addon activated email sent to client_addon@example.com for addon 1
+[LOCAL] [2026-08-24 06:37:55] INFO [apps.shop.signals]: Project 'Ecosistema Plan Test - Plan Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:37:55] WARNING [apps.shop.notify]: [notify_support] INICIO — addon='Test Addon' user='client_addon@example.com' tenant='None'
+[LOCAL] [2026-08-24 06:37:55] WARNING [apps.shop.notify]: [notify_support] Enviando email a soporte: soporte@nectarlabs.dev
+[LOCAL] [2026-08-24 06:37:55] WARNING [apps.shop.notify]: [notify_support] ✓ Email enviado a soporte@nectarlabs.dev para addon 'Test Addon'.
+[LOCAL] [2026-08-24 06:37:55] WARNING [apps.shop.notify]: [notify_support] Broadcast realtime → http://realtime:4001/internal/broadcast-admin
+[LOCAL] [2026-08-24 06:37:55] WARNING [apps.shop.notify]: [notify_support] ✓ Realtime broadcast OK: {"ok":true,"admins_online":0}
+[LOCAL] [2026-08-24 06:37:55] WARNING [apps.shop.notify]: [notify_support] FIN — addon='Test Addon'
+[LOCAL] [2026-08-24 06:37:55] INFO [apps]: Addon contracted email sent to client_addon@example.com for addon 1 (activated=False)
+[LOCAL] [2026-08-24 06:37:57] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Auto Project Co' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:37:57] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:37:58] INFO [apps.shop.signals]: Project 'Ecosistema Plan Premium - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:37:59] INFO [apps.shop.signals]: Project 'Ecosistema Plan Basico - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:38:03] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Contract A' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:38:03] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Contract B' automatically generated for Contract #2.
+[LOCAL] [2026-08-24 06:38:06] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Quote Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:38:07] INFO [apps.shop.signals]: Project 'Ecosistema Plan Premium-Dev - Referral Customer Co' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:38:13] INFO [apps.shop.signals]: Project 'Ecosistema Plan Premium-Dev - Retroactive Co' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:38:14] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Quote Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:38:15] INFO [apps.shop.signals]: Project 'Ecosistema Plan Premium-Dev - Salesperson referred client' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:38:17] INFO [apps.shop.signals]: Project 'Ecosistema Plan Premium-Dev - Salesperson referred client' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:38:19] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Quote Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:38:21] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Quote Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:38:22] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Quote Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:38:22] WARNING [apps.dashboard.views]: Invalid or expired JWT token in PDF download: {'detail': ErrorDetail(string='Given token not valid for any token type', code='token_not_valid'), 'code': ErrorDetail(string='token_not_valid', code='token_not_valid'), 'messages': [{'token_class': ErrorDetail(string='AccessToken', code='token_not_valid'), 'token_type': ErrorDetail(string='access', code='token_not_valid'), 'message': ErrorDetail(string='Token is invalid or expired', code='token_not_valid')}]}
+Traceback (most recent call last):
+  File "/app/apps/dashboard/views.py", line 556, in view_pdf
+    validated_token = JWTAuthentication().get_validated_token(token)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework_simplejwt/authentication.py", line 113, in get_validated_token
+    raise InvalidToken(
+rest_framework_simplejwt.exceptions.InvalidToken: {'detail': ErrorDetail(string='Given token not valid for any token type', code='token_not_valid'), 'code': ErrorDetail(string='token_not_valid', code='token_not_valid'), 'messages': [{'token_class': ErrorDetail(string='AccessToken', code='token_not_valid'), 'token_type': ErrorDetail(string='access', code='token_not_valid'), 'message': ErrorDetail(string='Token is invalid or expired', code='token_not_valid')}]}
+[LOCAL] [2026-08-24 06:38:22] WARNING [apps.dashboard.views]: Invalid or expired JWT token in PDF download: {'detail': ErrorDetail(string='Given token not valid for any token type', code='token_not_valid'), 'code': ErrorDetail(string='token_not_valid', code='token_not_valid'), 'messages': [{'token_class': ErrorDetail(string='AccessToken', code='token_not_valid'), 'token_type': ErrorDetail(string='access', code='token_not_valid'), 'message': ErrorDetail(string='Token is invalid or expired', code='token_not_valid')}]}
+Traceback (most recent call last):
+  File "/app/apps/dashboard/views.py", line 556, in view_pdf
+    validated_token = JWTAuthentication().get_validated_token(token)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework_simplejwt/authentication.py", line 113, in get_validated_token
+    raise InvalidToken(
+rest_framework_simplejwt.exceptions.InvalidToken: {'detail': ErrorDetail(string='Given token not valid for any token type', code='token_not_valid'), 'code': ErrorDetail(string='token_not_valid', code='token_not_valid'), 'messages': [{'token_class': ErrorDetail(string='AccessToken', code='token_not_valid'), 'token_type': ErrorDetail(string='access', code='token_not_valid'), 'message': ErrorDetail(string='Token is invalid or expired', code='token_not_valid')}]}
+[LOCAL] [2026-08-24 06:38:23] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Quote Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:38:25] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Quote Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:38:25] WARNING [apps]: [Logística/Mock] Cotización simulada exitosamente.
+[LOCAL] [2026-08-24 06:38:25] WARNING [apps]: [Logística/Mock] Cotización simulada exitosamente.
+[LOCAL] [2026-08-24 06:38:29] INFO [apps.shop.views]: Stripe coupon django_addon50_test not found (No such coupon). Creating new coupon...
+[LOCAL] [2026-08-24 06:38:30] INFO [apps.shop.views]: [stripe_webhook] addon_subscription recibido: user_id=1 addon_id=1 addon_slug=None
+[LOCAL] [2026-08-24 06:38:30] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - addon-client' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:38:30] INFO [apps]: Addon contracted email sent to addon_client@example.com for addon 1 (activated=True)
+[LOCAL] [2026-08-24 06:38:30] INFO [apps.shop.views]: [stripe_webhook] Intentando notify_support: user=addon_client@example.com contract=1
+[LOCAL] [2026-08-24 06:38:30] INFO [apps.shop.views]: [stripe_webhook] Llamando notify_support_addon_subscription addon=Test Live Chat tenant=addon-client
+[LOCAL] [2026-08-24 06:38:30] WARNING [apps.shop.notify]: [notify_support] INICIO — addon='Test Live Chat' user='addon_client@example.com' tenant='addon-client'
+[LOCAL] [2026-08-24 06:38:30] WARNING [apps.shop.notify]: [notify_support] Enviando email a soporte: soporte@nectarlabs.dev
+[LOCAL] [2026-08-24 06:38:30] WARNING [apps.shop.notify]: [notify_support] ✓ Email enviado a soporte@nectarlabs.dev para addon 'Test Live Chat'.
+[LOCAL] [2026-08-24 06:38:30] WARNING [apps.shop.notify]: [notify_support] Broadcast realtime → http://realtime:4001/internal/broadcast-admin
+[LOCAL] [2026-08-24 06:38:30] WARNING [apps.shop.notify]: [notify_support] ✓ Realtime broadcast OK: {"ok":true,"admins_online":0}
+[LOCAL] [2026-08-24 06:38:30] WARNING [apps.shop.notify]: [notify_support] FIN — addon='Test Live Chat'
+[LOCAL] [2026-08-24 06:38:30] INFO [apps.shop.views]: [stripe_webhook] notify_support_addon_subscription completado sin excepción
+[LOCAL] [2026-08-24 06:38:31] INFO [apps.shop.signals]: Project 'Ecosistema Plan Test Stripe - Stripe Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:38:31] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Custom CRM Company' automatically generated for Contract #2.
+[LOCAL] [2026-08-24 06:38:32] INFO [apps.shop.signals]: Project 'Ecosistema Plan Test Stripe - Stripe Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:39:34] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:39:34] INFO [apps]: Addon activated email sent to client_addon@example.com for addon 1
+[LOCAL] [2026-08-24 06:39:35] INFO [apps.shop.signals]: Project 'Ecosistema Plan Test - Plan Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:39:35] WARNING [apps.shop.notify]: [notify_support] INICIO — addon='Test Addon' user='client_addon@example.com' tenant='None'
+[LOCAL] [2026-08-24 06:39:35] WARNING [apps.shop.notify]: [notify_support] Enviando email a soporte: soporte@nectarlabs.dev
+[LOCAL] [2026-08-24 06:39:35] WARNING [apps.shop.notify]: [notify_support] ✓ Email enviado a soporte@nectarlabs.dev para addon 'Test Addon'.
+[LOCAL] [2026-08-24 06:39:35] WARNING [apps.shop.notify]: [notify_support] Broadcast realtime → http://realtime:4001/internal/broadcast-admin
+[LOCAL] [2026-08-24 06:39:35] WARNING [apps.shop.notify]: [notify_support] ✓ Realtime broadcast OK: {"ok":true,"admins_online":0}
+[LOCAL] [2026-08-24 06:39:35] WARNING [apps.shop.notify]: [notify_support] FIN — addon='Test Addon'
+[LOCAL] [2026-08-24 06:39:35] INFO [apps]: Addon contracted email sent to client_addon@example.com for addon 1 (activated=False)
+[LOCAL] [2026-08-24 06:39:37] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Auto Project Co' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:39:38] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:39:39] INFO [apps.shop.signals]: Project 'Ecosistema Plan Premium - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:39:40] INFO [apps.shop.signals]: Project 'Ecosistema Plan Basico - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:39:45] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Contract A' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:39:45] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Contract B' automatically generated for Contract #2.
+[LOCAL] [2026-08-24 06:39:48] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Quote Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:39:50] INFO [apps.shop.signals]: Project 'Ecosistema Plan Premium-Dev - Referral Customer Co' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:39:55] INFO [apps.shop.signals]: Project 'Ecosistema Plan Premium-Dev - Retroactive Co' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:39:57] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Quote Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:39:58] INFO [apps.shop.signals]: Project 'Ecosistema Plan Premium-Dev - Salesperson referred client' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:39:59] INFO [apps.shop.signals]: Project 'Ecosistema Plan Premium-Dev - Salesperson referred client' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:40:02] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Quote Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:40:03] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Quote Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:40:05] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Quote Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:40:05] WARNING [apps.dashboard.views]: Invalid or expired JWT token in PDF download: {'detail': ErrorDetail(string='Given token not valid for any token type', code='token_not_valid'), 'code': ErrorDetail(string='token_not_valid', code='token_not_valid'), 'messages': [{'token_class': ErrorDetail(string='AccessToken', code='token_not_valid'), 'token_type': ErrorDetail(string='access', code='token_not_valid'), 'message': ErrorDetail(string='Token is invalid or expired', code='token_not_valid')}]}
+Traceback (most recent call last):
+  File "/app/apps/dashboard/views.py", line 556, in view_pdf
+    validated_token = JWTAuthentication().get_validated_token(token)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework_simplejwt/authentication.py", line 113, in get_validated_token
+    raise InvalidToken(
+rest_framework_simplejwt.exceptions.InvalidToken: {'detail': ErrorDetail(string='Given token not valid for any token type', code='token_not_valid'), 'code': ErrorDetail(string='token_not_valid', code='token_not_valid'), 'messages': [{'token_class': ErrorDetail(string='AccessToken', code='token_not_valid'), 'token_type': ErrorDetail(string='access', code='token_not_valid'), 'message': ErrorDetail(string='Token is invalid or expired', code='token_not_valid')}]}
+[LOCAL] [2026-08-24 06:40:05] WARNING [apps.dashboard.views]: Invalid or expired JWT token in PDF download: {'detail': ErrorDetail(string='Given token not valid for any token type', code='token_not_valid'), 'code': ErrorDetail(string='token_not_valid', code='token_not_valid'), 'messages': [{'token_class': ErrorDetail(string='AccessToken', code='token_not_valid'), 'token_type': ErrorDetail(string='access', code='token_not_valid'), 'message': ErrorDetail(string='Token is invalid or expired', code='token_not_valid')}]}
+Traceback (most recent call last):
+  File "/app/apps/dashboard/views.py", line 556, in view_pdf
+    validated_token = JWTAuthentication().get_validated_token(token)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework_simplejwt/authentication.py", line 113, in get_validated_token
+    raise InvalidToken(
+rest_framework_simplejwt.exceptions.InvalidToken: {'detail': ErrorDetail(string='Given token not valid for any token type', code='token_not_valid'), 'code': ErrorDetail(string='token_not_valid', code='token_not_valid'), 'messages': [{'token_class': ErrorDetail(string='AccessToken', code='token_not_valid'), 'token_type': ErrorDetail(string='access', code='token_not_valid'), 'message': ErrorDetail(string='Token is invalid or expired', code='token_not_valid')}]}
+[LOCAL] [2026-08-24 06:40:06] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Quote Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:40:07] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Quote Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:40:08] WARNING [apps]: [Logística/Mock] Cotización simulada exitosamente.
+[LOCAL] [2026-08-24 06:40:08] WARNING [apps]: [Logística/Mock] Cotización simulada exitosamente.
+[LOCAL] [2026-08-24 06:40:13] INFO [apps.shop.views]: Stripe coupon django_addon50_test not found (No such coupon). Creating new coupon...
+[LOCAL] [2026-08-24 06:40:13] INFO [apps.shop.views]: [stripe_webhook] addon_subscription recibido: user_id=1 addon_id=1 addon_slug=None
+[LOCAL] [2026-08-24 06:40:13] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - addon-client' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:40:13] INFO [apps]: Addon contracted email sent to addon_client@example.com for addon 1 (activated=True)
+[LOCAL] [2026-08-24 06:40:13] INFO [apps.shop.views]: [stripe_webhook] Intentando notify_support: user=addon_client@example.com contract=1
+[LOCAL] [2026-08-24 06:40:13] INFO [apps.shop.views]: [stripe_webhook] Llamando notify_support_addon_subscription addon=Test Live Chat tenant=addon-client
+[LOCAL] [2026-08-24 06:40:13] WARNING [apps.shop.notify]: [notify_support] INICIO — addon='Test Live Chat' user='addon_client@example.com' tenant='addon-client'
+[LOCAL] [2026-08-24 06:40:13] WARNING [apps.shop.notify]: [notify_support] Enviando email a soporte: soporte@nectarlabs.dev
+[LOCAL] [2026-08-24 06:40:13] WARNING [apps.shop.notify]: [notify_support] ✓ Email enviado a soporte@nectarlabs.dev para addon 'Test Live Chat'.
+[LOCAL] [2026-08-24 06:40:13] WARNING [apps.shop.notify]: [notify_support] Broadcast realtime → http://realtime:4001/internal/broadcast-admin
+[LOCAL] [2026-08-24 06:40:13] WARNING [apps.shop.notify]: [notify_support] ✓ Realtime broadcast OK: {"ok":true,"admins_online":0}
+[LOCAL] [2026-08-24 06:40:13] WARNING [apps.shop.notify]: [notify_support] FIN — addon='Test Live Chat'
+[LOCAL] [2026-08-24 06:40:13] INFO [apps.shop.views]: [stripe_webhook] notify_support_addon_subscription completado sin excepción
+[LOCAL] [2026-08-24 06:40:14] INFO [apps.shop.signals]: Project 'Ecosistema Plan Test Stripe - Stripe Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:40:14] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Custom CRM Company' automatically generated for Contract #2.
+[LOCAL] [2026-08-24 06:40:15] INFO [apps.shop.signals]: Project 'Ecosistema Plan Test Stripe - Stripe Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:41:11] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:41:11] INFO [apps]: Addon activated email sent to client_addon@example.com for addon 1
+[LOCAL] [2026-08-24 06:41:12] INFO [apps.shop.signals]: Project 'Ecosistema Plan Test - Plan Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:41:12] WARNING [apps.shop.notify]: [notify_support] INICIO — addon='Test Addon' user='client_addon@example.com' tenant='None'
+[LOCAL] [2026-08-24 06:41:12] WARNING [apps.shop.notify]: [notify_support] Enviando email a soporte: soporte@nectarlabs.dev
+[LOCAL] [2026-08-24 06:41:12] WARNING [apps.shop.notify]: [notify_support] ✓ Email enviado a soporte@nectarlabs.dev para addon 'Test Addon'.
+[LOCAL] [2026-08-24 06:41:12] WARNING [apps.shop.notify]: [notify_support] Broadcast realtime → http://realtime:4001/internal/broadcast-admin
+[LOCAL] [2026-08-24 06:41:12] WARNING [apps.shop.notify]: [notify_support] ✓ Realtime broadcast OK: {"ok":true,"admins_online":0}
+[LOCAL] [2026-08-24 06:41:12] WARNING [apps.shop.notify]: [notify_support] FIN — addon='Test Addon'
+[LOCAL] [2026-08-24 06:41:12] INFO [apps]: Addon contracted email sent to client_addon@example.com for addon 1 (activated=False)
+[LOCAL] [2026-08-24 06:41:14] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Auto Project Co' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:41:15] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:41:16] INFO [apps.shop.signals]: Project 'Ecosistema Plan Premium - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:41:17] INFO [apps.shop.signals]: Project 'Ecosistema Plan Basico - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:41:21] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Contract A' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:41:21] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Contract B' automatically generated for Contract #2.
+[LOCAL] [2026-08-24 06:41:22] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev Test - Test Client Legal Name' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:41:24] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Quote Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:41:25] INFO [apps.shop.signals]: Project 'Ecosistema Plan Premium-Dev - Referral Customer Co' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:41:30] INFO [apps.shop.signals]: Project 'Ecosistema Plan Premium-Dev - Retroactive Co' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:41:32] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Quote Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:41:33] INFO [apps.shop.signals]: Project 'Ecosistema Plan Premium-Dev - Salesperson referred client' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:41:34] INFO [apps.shop.signals]: Project 'Ecosistema Plan Premium-Dev - Salesperson referred client' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:41:36] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Quote Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:41:37] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Quote Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:41:39] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Quote Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:41:39] WARNING [apps.dashboard.views]: Invalid or expired JWT token in PDF download: {'detail': ErrorDetail(string='Given token not valid for any token type', code='token_not_valid'), 'code': ErrorDetail(string='token_not_valid', code='token_not_valid'), 'messages': [{'token_class': ErrorDetail(string='AccessToken', code='token_not_valid'), 'token_type': ErrorDetail(string='access', code='token_not_valid'), 'message': ErrorDetail(string='Token is invalid or expired', code='token_not_valid')}]}
+Traceback (most recent call last):
+  File "/app/apps/dashboard/views.py", line 556, in view_pdf
+    validated_token = JWTAuthentication().get_validated_token(token)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework_simplejwt/authentication.py", line 113, in get_validated_token
+    raise InvalidToken(
+rest_framework_simplejwt.exceptions.InvalidToken: {'detail': ErrorDetail(string='Given token not valid for any token type', code='token_not_valid'), 'code': ErrorDetail(string='token_not_valid', code='token_not_valid'), 'messages': [{'token_class': ErrorDetail(string='AccessToken', code='token_not_valid'), 'token_type': ErrorDetail(string='access', code='token_not_valid'), 'message': ErrorDetail(string='Token is invalid or expired', code='token_not_valid')}]}
+[LOCAL] [2026-08-24 06:41:39] WARNING [apps.dashboard.views]: Invalid or expired JWT token in PDF download: {'detail': ErrorDetail(string='Given token not valid for any token type', code='token_not_valid'), 'code': ErrorDetail(string='token_not_valid', code='token_not_valid'), 'messages': [{'token_class': ErrorDetail(string='AccessToken', code='token_not_valid'), 'token_type': ErrorDetail(string='access', code='token_not_valid'), 'message': ErrorDetail(string='Token is invalid or expired', code='token_not_valid')}]}
+Traceback (most recent call last):
+  File "/app/apps/dashboard/views.py", line 556, in view_pdf
+    validated_token = JWTAuthentication().get_validated_token(token)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework_simplejwt/authentication.py", line 113, in get_validated_token
+    raise InvalidToken(
+rest_framework_simplejwt.exceptions.InvalidToken: {'detail': ErrorDetail(string='Given token not valid for any token type', code='token_not_valid'), 'code': ErrorDetail(string='token_not_valid', code='token_not_valid'), 'messages': [{'token_class': ErrorDetail(string='AccessToken', code='token_not_valid'), 'token_type': ErrorDetail(string='access', code='token_not_valid'), 'message': ErrorDetail(string='Token is invalid or expired', code='token_not_valid')}]}
+[LOCAL] [2026-08-24 06:41:40] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Quote Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:41:41] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Quote Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:41:42] WARNING [apps]: [Logística/Mock] Cotización simulada exitosamente.
+[LOCAL] [2026-08-24 06:41:42] WARNING [apps]: [Logística/Mock] Cotización simulada exitosamente.
+[LOCAL] [2026-08-24 06:41:46] INFO [apps.shop.views]: Stripe coupon django_addon50_test not found (No such coupon). Creating new coupon...
+[LOCAL] [2026-08-24 06:41:47] INFO [apps.shop.views]: [stripe_webhook] addon_subscription recibido: user_id=1 addon_id=1 addon_slug=None
+[LOCAL] [2026-08-24 06:41:47] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - addon-client' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:41:47] INFO [apps]: Addon contracted email sent to addon_client@example.com for addon 1 (activated=True)
+[LOCAL] [2026-08-24 06:41:47] INFO [apps.shop.views]: [stripe_webhook] Intentando notify_support: user=addon_client@example.com contract=1
+[LOCAL] [2026-08-24 06:41:47] INFO [apps.shop.views]: [stripe_webhook] Llamando notify_support_addon_subscription addon=Test Live Chat tenant=addon-client
+[LOCAL] [2026-08-24 06:41:47] WARNING [apps.shop.notify]: [notify_support] INICIO — addon='Test Live Chat' user='addon_client@example.com' tenant='addon-client'
+[LOCAL] [2026-08-24 06:41:47] WARNING [apps.shop.notify]: [notify_support] Enviando email a soporte: soporte@nectarlabs.dev
+[LOCAL] [2026-08-24 06:41:47] WARNING [apps.shop.notify]: [notify_support] ✓ Email enviado a soporte@nectarlabs.dev para addon 'Test Live Chat'.
+[LOCAL] [2026-08-24 06:41:47] WARNING [apps.shop.notify]: [notify_support] Broadcast realtime → http://realtime:4001/internal/broadcast-admin
+[LOCAL] [2026-08-24 06:41:47] WARNING [apps.shop.notify]: [notify_support] ✓ Realtime broadcast OK: {"ok":true,"admins_online":0}
+[LOCAL] [2026-08-24 06:41:47] WARNING [apps.shop.notify]: [notify_support] FIN — addon='Test Live Chat'
+[LOCAL] [2026-08-24 06:41:47] INFO [apps.shop.views]: [stripe_webhook] notify_support_addon_subscription completado sin excepción
+[LOCAL] [2026-08-24 06:41:48] INFO [apps.shop.signals]: Project 'Ecosistema Plan Test Stripe - Stripe Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:41:48] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Custom CRM Company' automatically generated for Contract #2.
+[LOCAL] [2026-08-24 06:41:48] INFO [apps.shop.signals]: Project 'Ecosistema Plan Test Stripe - Stripe Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:47:48] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:47:48] INFO [apps]: Addon activated email sent to client_addon@example.com for addon 1
+[LOCAL] [2026-08-24 06:47:49] INFO [apps.shop.signals]: Project 'Ecosistema Plan Test - Plan Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:47:49] WARNING [apps.shop.notify]: [notify_support] INICIO — addon='Test Addon' user='client_addon@example.com' tenant='None'
+[LOCAL] [2026-08-24 06:47:49] WARNING [apps.shop.notify]: [notify_support] Enviando email a soporte: soporte@nectarlabs.dev
+[LOCAL] [2026-08-24 06:47:49] WARNING [apps.shop.notify]: [notify_support] ✓ Email enviado a soporte@nectarlabs.dev para addon 'Test Addon'.
+[LOCAL] [2026-08-24 06:47:49] WARNING [apps.shop.notify]: [notify_support] Broadcast realtime → http://realtime:4001/internal/broadcast-admin
+[LOCAL] [2026-08-24 06:47:49] WARNING [apps.shop.notify]: [notify_support] ✓ Realtime broadcast OK: {"ok":true,"admins_online":0}
+[LOCAL] [2026-08-24 06:47:49] WARNING [apps.shop.notify]: [notify_support] FIN — addon='Test Addon'
+[LOCAL] [2026-08-24 06:47:49] INFO [apps]: Addon contracted email sent to client_addon@example.com for addon 1 (activated=False)
+[LOCAL] [2026-08-24 06:47:51] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Auto Project Co' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:47:51] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:47:52] INFO [apps.shop.signals]: Project 'Ecosistema Plan Premium - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:47:53] INFO [apps.shop.signals]: Project 'Ecosistema Plan Basico - Client Company SA' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:47:57] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Contract A' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:47:57] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Contract B' automatically generated for Contract #2.
+[LOCAL] [2026-08-24 06:47:59] INFO [apps.shop.signals]: Project 'Ecosistema Plan Pro-Dev Test - Test Client Legal Name' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:48:01] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Quote Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:48:02] INFO [apps.shop.signals]: Project 'Ecosistema Plan Premium-Dev - Referral Customer Co' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:48:08] INFO [apps.shop.signals]: Project 'Ecosistema Plan Premium-Dev - Retroactive Co' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:48:10] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Quote Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:48:11] INFO [apps.shop.signals]: Project 'Ecosistema Plan Premium-Dev - Salesperson referred client' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:48:12] INFO [apps.shop.signals]: Project 'Ecosistema Plan Premium-Dev - Salesperson referred client' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:48:15] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Quote Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:48:16] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Quote Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:48:18] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Quote Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:48:18] WARNING [apps.dashboard.views]: Invalid or expired JWT token in PDF download: {'detail': ErrorDetail(string='Given token not valid for any token type', code='token_not_valid'), 'code': ErrorDetail(string='token_not_valid', code='token_not_valid'), 'messages': [{'token_class': ErrorDetail(string='AccessToken', code='token_not_valid'), 'token_type': ErrorDetail(string='access', code='token_not_valid'), 'message': ErrorDetail(string='Token is invalid or expired', code='token_not_valid')}]}
+Traceback (most recent call last):
+  File "/app/apps/dashboard/views.py", line 556, in view_pdf
+    validated_token = JWTAuthentication().get_validated_token(token)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework_simplejwt/authentication.py", line 113, in get_validated_token
+    raise InvalidToken(
+rest_framework_simplejwt.exceptions.InvalidToken: {'detail': ErrorDetail(string='Given token not valid for any token type', code='token_not_valid'), 'code': ErrorDetail(string='token_not_valid', code='token_not_valid'), 'messages': [{'token_class': ErrorDetail(string='AccessToken', code='token_not_valid'), 'token_type': ErrorDetail(string='access', code='token_not_valid'), 'message': ErrorDetail(string='Token is invalid or expired', code='token_not_valid')}]}
+[LOCAL] [2026-08-24 06:48:18] WARNING [apps.dashboard.views]: Invalid or expired JWT token in PDF download: {'detail': ErrorDetail(string='Given token not valid for any token type', code='token_not_valid'), 'code': ErrorDetail(string='token_not_valid', code='token_not_valid'), 'messages': [{'token_class': ErrorDetail(string='AccessToken', code='token_not_valid'), 'token_type': ErrorDetail(string='access', code='token_not_valid'), 'message': ErrorDetail(string='Token is invalid or expired', code='token_not_valid')}]}
+Traceback (most recent call last):
+  File "/app/apps/dashboard/views.py", line 556, in view_pdf
+    validated_token = JWTAuthentication().get_validated_token(token)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/rest_framework_simplejwt/authentication.py", line 113, in get_validated_token
+    raise InvalidToken(
+rest_framework_simplejwt.exceptions.InvalidToken: {'detail': ErrorDetail(string='Given token not valid for any token type', code='token_not_valid'), 'code': ErrorDetail(string='token_not_valid', code='token_not_valid'), 'messages': [{'token_class': ErrorDetail(string='AccessToken', code='token_not_valid'), 'token_type': ErrorDetail(string='access', code='token_not_valid'), 'message': ErrorDetail(string='Token is invalid or expired', code='token_not_valid')}]}
+[LOCAL] [2026-08-24 06:48:19] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Quote Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:48:21] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Quote Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:48:22] WARNING [apps]: [Logística/Mock] Cotización simulada exitosamente.
+[LOCAL] [2026-08-24 06:48:22] WARNING [apps]: [Logística/Mock] Cotización simulada exitosamente.
+[LOCAL] [2026-08-24 06:48:26] INFO [apps.shop.views]: Stripe coupon django_addon50_test not found (No such coupon). Creating new coupon...
+[LOCAL] [2026-08-24 06:48:26] INFO [apps.shop.views]: [stripe_webhook] addon_subscription recibido: user_id=1 addon_id=1 addon_slug=None
+[LOCAL] [2026-08-24 06:48:26] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - addon-client' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:48:26] INFO [apps]: Addon contracted email sent to addon_client@example.com for addon 1 (activated=True)
+[LOCAL] [2026-08-24 06:48:26] INFO [apps.shop.views]: [stripe_webhook] Intentando notify_support: user=addon_client@example.com contract=1
+[LOCAL] [2026-08-24 06:48:26] INFO [apps.shop.views]: [stripe_webhook] Llamando notify_support_addon_subscription addon=Test Live Chat tenant=addon-client
+[LOCAL] [2026-08-24 06:48:26] WARNING [apps.shop.notify]: [notify_support] INICIO — addon='Test Live Chat' user='addon_client@example.com' tenant='addon-client'
+[LOCAL] [2026-08-24 06:48:26] WARNING [apps.shop.notify]: [notify_support] Enviando email a soporte: soporte@nectarlabs.dev
+[LOCAL] [2026-08-24 06:48:26] WARNING [apps.shop.notify]: [notify_support] ✓ Email enviado a soporte@nectarlabs.dev para addon 'Test Live Chat'.
+[LOCAL] [2026-08-24 06:48:26] WARNING [apps.shop.notify]: [notify_support] Broadcast realtime → http://realtime:4001/internal/broadcast-admin
+[LOCAL] [2026-08-24 06:48:26] WARNING [apps.shop.notify]: [notify_support] ✓ Realtime broadcast OK: {"ok":true,"admins_online":0}
+[LOCAL] [2026-08-24 06:48:26] WARNING [apps.shop.notify]: [notify_support] FIN — addon='Test Live Chat'
+[LOCAL] [2026-08-24 06:48:26] INFO [apps.shop.views]: [stripe_webhook] notify_support_addon_subscription completado sin excepción
+[LOCAL] [2026-08-24 06:48:27] INFO [apps.shop.signals]: Project 'Ecosistema Plan Test Stripe - Stripe Client Company' automatically generated for Contract #1.
+[LOCAL] [2026-08-24 06:48:27] INFO [apps.shop.signals]: Project 'Ecosistema Ecosistema - Custom CRM Company' automatically generated for Contract #2.
+[LOCAL] [2026-08-24 06:48:28] INFO [apps.shop.signals]: Project 'Ecosistema Plan Test Stripe - Stripe Client Company' automatically generated for Contract #1.

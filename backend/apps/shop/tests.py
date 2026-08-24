@@ -742,6 +742,60 @@ class ContractSignatureTests(APITestCase):
         due_diff = inst2.due_date - inst1.due_date
         self.assertEqual(due_diff.days, 12 * 7)
 
+    def test_create_contract_with_audit_trail(self):
+        """
+        Validate:
+        - Successful contract creation via POST /api/contracts/
+        - Persistence of audit fields (contract_version_hash, accepted_terms_at, ip_address)
+        - PaymentInstallment generation with 2-decimal rounding and minimum amount ($50.00 MXN)
+        """
+        plan = Plan.objects.create(
+            name="Plan Pro-Dev Test",
+            price=20000.00,
+            hours=40,
+            description="Dedicated developer plan"
+        )
+        self.client.force_authenticate(user=self.client_user)
+        url = reverse('contract-list')
+        payload = {
+            'plan': plan.id,
+            'full_name': 'Test Client Legal Name',
+            'tax_id': 'TLN900101XXX',
+            'address': 'Av. Insurgentes Sur 123',
+            'project_idea': 'Plataforma E-commerce Multi-tenant',
+            'signature_base64': 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+            'brand_design_tier': Contract.BrandDesignTier.MONTHLY,
+            'payment_commitment_method': Contract.PaymentMethod.SPEI,
+            'payment_day': Contract.PaymentDay.MONTHLY_1ST
+        }
+
+        response = self.client.post(url, payload, format='json', REMOTE_ADDR='203.0.113.195')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        contract = Contract.objects.get(id=response.data['id'])
+        self.assertEqual(contract.user, self.client_user)
+        self.assertEqual(contract.full_name, 'Test Client Legal Name')
+        self.assertIsNotNone(contract.accepted_terms_at)
+        self.assertIsNotNone(contract.contract_version_hash)
+        self.assertEqual(len(contract.contract_version_hash), 64)
+        self.assertEqual(contract.ip_address, '203.0.113.195')
+
+        # Dev signature to generate installments
+        self.client.force_authenticate(user=self.ceo)
+        dev_sign_url = reverse('contract-dev-sign', kwargs={'pk': contract.id})
+        dev_response = self.client.post(dev_sign_url, {'signature': 'data:image/png;base64,DevSig'}, format='json')
+        self.assertEqual(dev_response.status_code, status.HTTP_200_OK)
+
+        contract.refresh_from_db()
+        installments = contract.installments.all()
+        self.assertTrue(installments.exists())
+        from decimal import Decimal
+        for inst in installments:
+            # Validate 2 decimals rounding
+            self.assertEqual(inst.amount, inst.amount.quantize(Decimal('0.01')))
+            # Validate minimum amount threshold ($50.00 MXN)
+            self.assertGreaterEqual(inst.amount, Decimal('50.00'))
+
     def test_contract_list_and_retrieve_isolation(self):
         # Create a contract for client_user
         contract_a = Contract.objects.create(
