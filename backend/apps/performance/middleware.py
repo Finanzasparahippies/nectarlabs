@@ -34,15 +34,22 @@ class PerformanceMiddleware:
                 elif getattr(request.user, 'role', None) == 'BUSINESS':
                     tenant = request.user.owned_tenants.first()
 
-            # 2. Resolve tenant from host header
+            # 2. Resolve tenant from host header (X-Forwarded-Host or Host)
             if not tenant:
-                host = request.get_host().lower()
-                host_parts = host.split('.')
-                if len(host_parts) >= 3:
-                    potential_sub = host_parts[0]
-                    if potential_sub not in ['www', 'api', 'admin', 'staging']:
-                        from apps.tenants.models import Tenant
-                        tenant = Tenant.objects.filter(subdomain=potential_sub, is_active=True).first()
+                host_header = request.META.get('HTTP_X_FORWARDED_HOST') or request.get_host()
+                clean_host = host_header.split(':')[0].lower()
+                
+                from apps.tenants.models import Tenant
+                # Priority 1: Match custom domain
+                tenant = Tenant.objects.filter(custom_domain=clean_host, use_custom_domain=True, is_active=True).first()
+                
+                # Priority 2: Fallback to subdomain matching
+                if not tenant:
+                    host_parts = clean_host.split('.')
+                    if len(host_parts) >= 3:
+                        potential_sub = host_parts[0]
+                        if potential_sub not in ['www', 'api', 'admin', 'staging']:
+                            tenant = Tenant.objects.filter(subdomain=potential_sub, is_active=True).first()
 
             # 3. Resolve from query parameters
             if not tenant:
