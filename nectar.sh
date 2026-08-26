@@ -248,6 +248,7 @@ show_help() {
     echo "  install-frontend-prod    - Install npm packages in Production container"
     echo ""
     echo "=== UTILITIES ==="
+    echo "  reload-nginx / reload-nginx-staging - Reload Nginx reverse proxy configuration in real-time"
     echo "  clean [--all|-a]        - Safe Docker cleanup (cache, networks, volumes)"
     echo "  help                     - Show this help screen"
 }
@@ -479,6 +480,16 @@ case $COMMAND in
     install-frontend-staging)
         echo "Installing frontend dependencies in Staging (via Docker Compose)..."
         run_npm_cmd_staging install "$@"
+        ;;
+    reload-nginx|reload-nginx-staging)
+        echo "Reloading Nginx Reverse Proxy (prod_nginx)..."
+        if is_container_running "prod_nginx"; then
+            $DOCKER_BIN exec prod_nginx nginx -s reload
+            echo "Nginx reloaded successfully!"
+        else
+            echo "Container 'prod_nginx' is not running. Attempting container restart..."
+            $COMPOSE_BIN --env-file .env.prod -f docker-compose.prod.yml restart nginx 2>/dev/null || $DOCKER_BIN restart prod_nginx 2>/dev/null || true
+        fi
         ;;
 
     # ── PRODUCTION ENV ──
