@@ -10,6 +10,8 @@ const nextConfig: NextConfig = {
     'staging.nectarlabs.dev', 
     'www.staging.nectarlabs.dev',
     '*.staging.nectarlabs.dev',
+    'kores.vip',
+    '*.kores.vip',
     '*.localhost',
     '*.localhost:3000',
     '*.localhost:3002'

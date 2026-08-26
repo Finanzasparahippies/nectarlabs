@@ -399,11 +399,13 @@ case $COMMAND in
         $COMPOSE_BIN -f docker-compose.staging.yml ps "$@"
         ;;
     logs-staging)
-        local nginx_c=""
+        nginx_c=""
         if is_container_running "nectar_nginx_staging"; then
             nginx_c="nectar_nginx_staging"
         elif is_container_running "prod_nginx"; then
             nginx_c="prod_nginx"
+        elif is_container_running "prod-nginx"; then
+            nginx_c="prod-nginx"
         elif is_container_running "nectar_nginx"; then
             nginx_c="nectar_nginx"
         fi
@@ -533,7 +535,7 @@ case $COMMAND in
     pycheck-prod)
         echo "Running Python syntax check (py_compile) in Production..."
         if is_container_running "nectar_backend_prod" || is_container_running "nectar_backend"; then
-            local c_name="nectar_backend"
+            c_name="nectar_backend"
             if is_container_running "nectar_backend_prod"; then c_name="nectar_backend_prod"; fi
             $DOCKER_BIN exec $c_name python -m py_compile config/settings.py apps/performance/views.py
         else
@@ -551,7 +553,7 @@ case $COMMAND in
     seed-addons-prod)
         echo "Seeding addons in Production..."
         if is_container_running "nectar_backend_prod" || is_container_running "nectar_backend"; then
-            local c_name="nectar_backend"
+            c_name="nectar_backend"
             if is_container_running "nectar_backend_prod"; then c_name="nectar_backend_prod"; fi
             $DOCKER_BIN exec $c_name python seed_addons.py "$@"
         else
@@ -561,7 +563,7 @@ case $COMMAND in
     seed-plans-prod)
         echo "Seeding plans in Production..."
         if is_container_running "nectar_backend_prod" || is_container_running "nectar_backend"; then
-            local c_name="nectar_backend"
+            c_name="nectar_backend"
             if is_container_running "nectar_backend_prod"; then c_name="nectar_backend_prod"; fi
             $DOCKER_BIN exec $c_name python seed_plans.py "$@"
         else
