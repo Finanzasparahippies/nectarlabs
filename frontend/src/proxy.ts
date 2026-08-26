@@ -15,6 +15,14 @@ export function middleware(request: NextRequest) {
   const url = request.nextUrl.clone();
   const hostname = request.headers.get('host') || '';
 
+  // 0. SANITIZACIÓN DE RUTAS HUÉRFANAS DE SISTEMA DE ARCHIVOS (/var/www/...)
+  // Si la URL entrante contiene una ruta física de servidor inyectada por error
+  if (url.pathname.includes('/var/www/')) {
+    const sanitizedPath = url.pathname.replace(/^\/var\/www\/[^\/]+\/frontend/, '');
+    url.pathname = sanitizedPath || '/';
+    return NextResponse.redirect(url);
+  }
+
   // 1. FILTRADO DE RUTAS DEL SISTEMA (EXCLUSIONES)
   // Ignora llamadas a la API de Django, archivos estáticos o compilaciones internas de Next.js
   if (
@@ -86,7 +94,7 @@ export function middleware(request: NextRequest) {
   // 3. ENRUTAMIENTO DINÁMICO DE SUBDOMINIOS (COLMENAS DE SOCIOS)
   // Si no es un dominio del sistema principal, extrae el identificador (subdominio o subdominio en staging)
   if (!isSystemDomain) {
-    let identifier = hostname.toLowerCase();
+    let identifier = hostname.toLowerCase().split(':')[0];
 
     // Extrae la parte izquierda del subdominio de acuerdo al entorno de ejecución
     if (hostname.includes('.staging.nectarlabs.dev')) {
@@ -99,6 +107,17 @@ export function middleware(request: NextRequest) {
       identifier = hostname.split('.localhost:3002')[0];
     } else if (hostname.includes('.localhost')) {
       identifier = hostname.split('.localhost')[0];
+    }
+
+    // Limpiar prefijos de staging o www en dominios personalizados (ej: staging.kores.vip -> kores)
+    if (identifier.startsWith('www.')) {
+      identifier = identifier.substring(4);
+    }
+    if (identifier.startsWith('staging.') && identifier.includes('.')) {
+      identifier = identifier.substring(8);
+    }
+    if (identifier.includes('.')) {
+      identifier = identifier.split('.')[0];
     }
 
     // Filtra palabras reservadas para evitar colisiones
