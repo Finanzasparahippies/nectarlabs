@@ -89,6 +89,8 @@ def seed_production_tenants():
             "portal_title": "Kōres | Minimalist Luxury Hair Ties",
             "welcome_message": "Descubre la elegancia sin esfuerzo con nuestras ligas de seda Mulberry y acabados prémium.",
             "store_category": "Moda & Accesorios",
+            "custom_backend_url": "http://premium_ties_backend_prod:8000/api",
+            "custom_frontend_url": "https://kores.vip",
         }
     )
 
@@ -97,6 +99,8 @@ def seed_production_tenants():
         tenant_kores.custom_domain = "kores.vip"
         tenant_kores.use_custom_domain = True
         tenant_kores.is_active = True
+        tenant_kores.custom_backend_url = "http://premium_ties_backend_prod:8000/api"
+        tenant_kores.custom_frontend_url = "https://kores.vip"
         tenant_kores.theme_color = "#C5A880"
         tenant_kores.accent_color = "#EADCD6"
         tenant_kores.save()
