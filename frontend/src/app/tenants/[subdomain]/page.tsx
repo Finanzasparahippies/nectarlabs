@@ -599,11 +599,11 @@ export default function TenantPortalPage() {
   const pollenColor = tenantConfig.pollen_color || primaryColor;
   const pollenIcon = tenantConfig.pollen_icon || '•';
 
-  // Masked Reverse Proxy: Servir frontend externo preservando la URL en el cliente
+  // Masked Reverse Proxy: Servir frontend externo o estático aislado preservando la URL en el cliente
   const isValidExternalFrontendUrl = (url?: string | null): boolean => {
     if (!url) return false;
     if (url.startsWith('/var/www/') || url.includes('/frontend/')) return false;
-    return url.startsWith('http://') || url.startsWith('https://');
+    return url.startsWith('http://') || url.startsWith('https://') || url.startsWith('/');
   };
 
   if (tenantConfig.custom_frontend_url && isValidExternalFrontendUrl(tenantConfig.custom_frontend_url)) {

@@ -124,6 +124,11 @@ export function middleware(request: NextRequest) {
 
     // Filtra palabras reservadas para evitar colisiones
     if (identifier !== 'www' && identifier !== 'api' && identifier !== 'admin' && identifier !== 'staging') {
+      // Enrutamiento especial aislado para el curso-python SPA en frontend/public/cursos/ingeniero-python
+      if (identifier === 'curso-python') {
+        url.pathname = `/cursos/ingeniero-python/index.html`;
+        return NextResponse.rewrite(url);
+      }
       // REESCRITURA INTERNA: Redirige la petición a la carpeta `/tenants/[subdomain]/...`
       url.pathname = `/tenants/${identifier}${url.pathname}`;
       return NextResponse.rewrite(url);
