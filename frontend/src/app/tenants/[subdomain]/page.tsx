@@ -188,22 +188,28 @@ export default function TenantPortalPage() {
 
   useEffect(() => {
     if (tenantConfig?.active_addons) {
-      const otherAddons = tenantConfig.active_addons.filter(slug => slug !== 'bot-chat');
+      const activeList = tenantConfig.active_addons;
+      const otherAddons = activeList.filter(slug => slug !== 'bot-chat');
+
+      const hasShopDelivery = activeList.includes('delivery-tracking') || activeList.includes('ecommerce') || activeList.includes('logistics-gps') || activeList.includes('shop-delivery');
 
       // Auto-healer: Primero revisar si viene especificado por query param de la URL
       if (typeof window !== 'undefined') {
         const params = new URLSearchParams(window.location.search);
         const urlAddon = params.get('addon');
-        const slugResolved = urlAddon === 'logistics-gps' ? 'delivery-tracking' : urlAddon; // resolve alias mapping
-        if (slugResolved && otherAddons.includes(slugResolved)) {
+        const slugResolved = (urlAddon === 'logistics-gps' || urlAddon === 'ecommerce' || urlAddon === 'delivery-tracking') ? 'shop-delivery' : urlAddon; // resolve alias mapping
+        if (slugResolved && (otherAddons.includes(slugResolved) || (slugResolved === 'shop-delivery' && hasShopDelivery))) {
           setActiveAddonTab(slugResolved);
           return;
         }
       }
 
-      if (otherAddons.length > 0) {
+      if (hasShopDelivery && (!activeAddonTab || activeAddonTab === null)) {
+        setActiveAddonTab('shop-delivery');
+      } else if (otherAddons.length > 0) {
         if (!activeAddonTab || !otherAddons.includes(activeAddonTab)) {
-          setActiveAddonTab(otherAddons[0]);
+          const firstAddon = (otherAddons[0] === 'logistics-gps' || otherAddons[0] === 'delivery-tracking' || otherAddons[0] === 'ecommerce') ? 'shop-delivery' : otherAddons[0];
+          setActiveAddonTab(firstAddon);
         }
       } else {
         setActiveAddonTab(null);
@@ -955,8 +961,8 @@ export default function TenantPortalPage() {
                 <div id="tour-tenant-tabs" className="border-b pb-5 mb-8 tenant-border">
                   <div className="flex gap-2.5 overflow-x-auto pb-2.5 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
                     {(() => {
-                      // Build tab list — merge delivery-tracking + ecommerce into one immersive tab
-                      const hasShopDelivery = activeAddonsList.includes('delivery-tracking') || activeAddonsList.includes('ecommerce');
+                      // Build tab list — merge delivery-tracking + ecommerce + logistics-gps into one immersive tab
+                      const hasShopDelivery = activeAddonsList.includes('delivery-tracking') || activeAddonsList.includes('ecommerce') || activeAddonsList.includes('logistics-gps') || activeAddonsList.includes('shop-delivery');
                       const baseTabs = [
                         { slug: 'booking-signature', label: 'Reservas', icon: '📅' },
                         { slug: 'shop-delivery', label: 'Tienda + Entrega', icon: '🛍️', virtual: true, show: hasShopDelivery },
