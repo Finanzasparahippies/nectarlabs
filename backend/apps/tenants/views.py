@@ -242,34 +242,36 @@ def public_config(request):
             tenant = Tenant.objects.filter(api_key=uuid.UUID(api_key)).first()
         except ValueError:
             return Response({'error': 'Invalid API Key format'}, status=status.HTTP_400_BAD_REQUEST)
-    elif subdomain:
-        sub_clean = subdomain.lower().strip()
-        tenant = Tenant.objects.filter(subdomain=sub_clean).first()
-        if not tenant:
-            # Fallback: si 'subdomain' fue enviado con un dominio personalizado (ej. staging.kores.vip)
-            tenant = Tenant.objects.filter(custom_domain=sub_clean, use_custom_domain=True).first()
-        if not tenant and '.' in sub_clean:
-            # Intentar limpiar www. o protocolo si venía incluido
-            clean_host = sub_clean.replace('http://', '').replace('https://', '').replace('www.', '').rstrip('/')
-            tenant = Tenant.objects.filter(custom_domain=clean_host, use_custom_domain=True).first()
-    elif host:
-        host_clean = host.lower().strip().replace('http://', '').replace('https://', '').replace('www.', '').rstrip('/')
-        # Check custom domain first
-        tenant = Tenant.objects.filter(custom_domain=host_clean, use_custom_domain=True).first()
+    elif subdomain or host:
+        raw_val = (subdomain or host).lower().strip()
+        clean_host = raw_val.replace('http://', '').replace('https://', '').replace('www.', '').rstrip('/')
         
-        # If not found, check direct custom_domain match with exact host
+        # 1. Búsqueda directa por subdominio slug (ej. 'kores')
+        tenant = Tenant.objects.filter(subdomain=clean_host).first()
+        
+        # 2. Búsqueda exacta por dominio personalizado (ej. 'staging.kores.vip' o 'kores.vip')
         if not tenant:
-            tenant = Tenant.objects.filter(custom_domain=host.lower().strip(), use_custom_domain=True).first()
-
-        # If not found and it's a *.nectarlabs.dev or staging.nectarlabs.dev subdomain, parse it
+            tenant = Tenant.objects.filter(custom_domain=clean_host).first()
         if not tenant:
-            host_parts = host_clean.split('.')
-            if len(host_parts) >= 3:
-                # e.g. client.nectarlabs.dev or client.localhost:3000
-                potential_sub = host_parts[0]
-                # Filter out system subdomains
-                if potential_sub not in ['www', 'api', 'admin', 'staging']:
-                    tenant = Tenant.objects.filter(subdomain=potential_sub.lower()).first()
+            tenant = Tenant.objects.filter(custom_domain=raw_val).first()
+            
+        # 3. Remover prefijo 'staging.' si la petición vino desde un subdominio de staging (ej. 'staging.kores.vip' -> 'kores.vip')
+        if not tenant and clean_host.startswith('staging.'):
+            bare_domain = clean_host[8:]
+            tenant = Tenant.objects.filter(custom_domain=bare_domain).first()
+            
+        # 4. Descomponer el host por puntos para extraer el identificador del tenant (ej. 'kores.staging.nectarlabs.dev' -> 'kores')
+        if not tenant and '.' in clean_host:
+            parts = clean_host.split('.')
+            ignored_tokens = {'www', 'api', 'admin', 'staging', 'nectarlabs', 'dev', 'localhost', 'com', 'vip', 'mx', 'org', 'net'}
+            for part in parts:
+                if part and part not in ignored_tokens:
+                    tenant = Tenant.objects.filter(subdomain=part).first()
+                    if tenant:
+                        break
+                    tenant = Tenant.objects.filter(custom_domain__icontains=part).first()
+                    if tenant:
+                        break
 
     if not tenant:
         return Response({'error': 'Tenant not found or inactive'}, status=status.HTTP_404_NOT_FOUND)

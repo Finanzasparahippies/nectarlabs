@@ -412,10 +412,12 @@ case $COMMAND in
 
         if [ $# -eq 0 ]; then
             if [ -n "$nginx_c" ]; then
-                $DOCKER_BIN logs -f --tail=100 nectar_backend_staging nectar_frontend_staging nectar_realtime_staging "$nginx_c" 2>/dev/null || $COMPOSE_BIN -f docker-compose.staging.yml logs -f --tail=100
-            else
-                $COMPOSE_BIN -f docker-compose.staging.yml logs -f --tail=100
+                echo "🌐 Transmitiendo logs del proxy de Nginx ($nginx_c)..."
+                $DOCKER_BIN logs -f --tail=50 "$nginx_c" 2>/dev/null &
+                NGINX_LOG_PID=$!
+                trap 'kill $NGINX_LOG_PID 2>/dev/null' EXIT INT TERM
             fi
+            $COMPOSE_BIN -f docker-compose.staging.yml logs -f --tail=100
         else
             $COMPOSE_BIN -f docker-compose.staging.yml logs "$@"
         fi
