@@ -253,19 +253,19 @@ def public_config(request):
         raw_val = (subdomain or host).lower().strip()
         clean_host = raw_val.replace('http://', '').replace('https://', '').replace('www.', '').rstrip('/')
         
-        # 1. Búsqueda directa por subdominio slug (ej. 'kores')
-        tenant = Tenant.objects.filter(subdomain=clean_host).first()
+        # 1. Búsqueda directa por subdominio slug (ej. 'kores' o 'curso-python')
+        tenant = Tenant.objects.filter(subdomain__iexact=clean_host, is_active=True).first()
         
         # 2. Búsqueda exacta por dominio personalizado (ej. 'staging.kores.vip' o 'kores.vip')
         if not tenant:
-            tenant = Tenant.objects.filter(custom_domain=clean_host).first()
+            tenant = Tenant.objects.filter(custom_domain__iexact=clean_host, is_active=True).first()
         if not tenant:
-            tenant = Tenant.objects.filter(custom_domain=raw_val).first()
+            tenant = Tenant.objects.filter(custom_domain__iexact=raw_val, is_active=True).first()
             
         # 3. Remover prefijo 'staging.' si la petición vino desde un subdominio de staging (ej. 'staging.kores.vip' -> 'kores.vip')
         if not tenant and clean_host.startswith('staging.'):
             bare_domain = clean_host[8:]
-            tenant = Tenant.objects.filter(custom_domain=bare_domain).first()
+            tenant = Tenant.objects.filter(custom_domain__iexact=bare_domain, is_active=True).first()
             
         # 4. Descomponer el host por puntos para extraer el identificador del tenant (ej. 'kores.staging.nectarlabs.dev' -> 'kores')
         if not tenant and '.' in clean_host:
@@ -273,14 +273,14 @@ def public_config(request):
             ignored_tokens = {'www', 'api', 'admin', 'staging', 'nectarlabs', 'dev', 'localhost', 'com', 'vip', 'mx', 'org', 'net'}
             for part in parts:
                 if part and part not in ignored_tokens:
-                    tenant = Tenant.objects.filter(subdomain=part).first()
+                    tenant = Tenant.objects.filter(subdomain__iexact=part, is_active=True).first()
                     if tenant:
                         break
-                    tenant = Tenant.objects.filter(custom_domain__icontains=part).first()
+                    tenant = Tenant.objects.filter(custom_domain__icontains=part, is_active=True).first()
                     if tenant:
                         break
 
-    if not tenant:
+    if not tenant or not tenant.is_active:
         return Response({'error': 'Tenant not found or inactive'}, status=status.HTTP_404_NOT_FOUND)
         
     serializer = TenantPublicSerializer(tenant)

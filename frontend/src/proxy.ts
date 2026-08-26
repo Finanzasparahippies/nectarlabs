@@ -108,12 +108,15 @@ export function middleware(request: NextRequest) {
       identifier = hostname.split('.localhost')[0];
     }
 
-    // Limpiar prefijos de staging o www en dominios personalizados (ej: staging.kores.vip -> kores)
+    // Limpiar prefijos de staging, prod o www en dominios personalizados (ej: staging.kores.vip -> kores)
     if (identifier.startsWith('www.')) {
       identifier = identifier.substring(4);
     }
     if (identifier.startsWith('staging.') && identifier.includes('.')) {
       identifier = identifier.substring(8);
+    }
+    if (identifier.startsWith('prod.') && identifier.includes('.')) {
+      identifier = identifier.substring(5);
     }
     if (identifier.includes('.')) {
       identifier = identifier.split('.')[0];
