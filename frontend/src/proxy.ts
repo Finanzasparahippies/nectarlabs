@@ -16,11 +16,9 @@ export function middleware(request: NextRequest) {
   const hostname = request.headers.get('host') || '';
 
   // 0. SANITIZACIÓN DE RUTAS HUÉRFANAS DE SISTEMA DE ARCHIVOS (/var/www/...)
-  // Si la URL entrante contiene una ruta física de servidor inyectada por error
+  // Si la URL entrante contiene una ruta física de servidor, retornar 404 directo para evitar loops de redirección 307
   if (url.pathname.includes('/var/www/')) {
-    const sanitizedPath = url.pathname.replace(/^\/var\/www\/[^\/]+\/frontend/, '');
-    url.pathname = sanitizedPath || '/';
-    return NextResponse.redirect(url);
+    return new NextResponse('Not Found', { status: 404 });
   }
 
   // 1. FILTRADO DE RUTAS DEL SISTEMA (EXCLUSIONES)
