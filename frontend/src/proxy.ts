@@ -13,7 +13,8 @@ export function proxy(request: NextRequest) {
 
 export function middleware(request: NextRequest) {
   const url = request.nextUrl.clone();
-  const hostname = request.headers.get('host') || '';
+  const rawHost = request.headers.get('x-forwarded-host') || request.headers.get('host') || '';
+  const hostname = rawHost.split(',')[0].trim();
 
   // 0. SANITIZACIÓN DE RUTAS HUÉRFANAS DE SISTEMA DE ARCHIVOS (/var/www/...)
   // Si la URL entrante contiene una ruta física de servidor, retornar 404 directo para evitar loops de redirección 307

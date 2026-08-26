@@ -33,6 +33,8 @@ def seed_kores_tenant():
         defaults={
             "name": "Kōres Premium Hair Ties",
             "owner": owner,
+            "custom_domain": "kores.vip",
+            "use_custom_domain": True,
             "theme_color": "#C5A880",       # Champagne Gold Primary
             "accent_color": "#EADCD6",      # Nude Velvet Accent
             "bg_color": "#121110",          # Dark Canvas
@@ -54,6 +56,8 @@ def seed_kores_tenant():
 
     if not created:
         tenant.name = "Kōres Premium Hair Ties"
+        tenant.custom_domain = "kores.vip"
+        tenant.use_custom_domain = True
         tenant.theme_color = "#C5A880"
         tenant.accent_color = "#EADCD6"
         tenant.bg_color_light = "#FDFBF7"
