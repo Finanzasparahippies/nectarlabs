@@ -399,8 +399,21 @@ case $COMMAND in
         $COMPOSE_BIN -f docker-compose.staging.yml ps "$@"
         ;;
     logs-staging)
+        local nginx_c=""
+        if is_container_running "nectar_nginx_staging"; then
+            nginx_c="nectar_nginx_staging"
+        elif is_container_running "prod_nginx"; then
+            nginx_c="prod_nginx"
+        elif is_container_running "nectar_nginx"; then
+            nginx_c="nectar_nginx"
+        fi
+
         if [ $# -eq 0 ]; then
-            $COMPOSE_BIN -f docker-compose.staging.yml logs -f --tail=100
+            if [ -n "$nginx_c" ]; then
+                $DOCKER_BIN logs -f --tail=100 nectar_backend_staging nectar_frontend_staging nectar_realtime_staging "$nginx_c" 2>/dev/null || $COMPOSE_BIN -f docker-compose.staging.yml logs -f --tail=100
+            else
+                $COMPOSE_BIN -f docker-compose.staging.yml logs -f --tail=100
+            fi
         else
             $COMPOSE_BIN -f docker-compose.staging.yml logs "$@"
         fi
