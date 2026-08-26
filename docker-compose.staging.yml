@@ -35,10 +35,11 @@ services:
       dockerfile: Dockerfile
       args:
         NEXT_PUBLIC_API_URL: https://staging.nectarlabs.dev/api
-    command: npm run dev -- --webpack
+    command: sh -c "npm run build && npm run start"
     volumes:
       - ./frontend:/app:Z
       - /app/node_modules
+      - /app/.next
     env_file:
       - .env.staging
     environment:
@@ -70,6 +71,7 @@ services:
     build:
       context: ./realtime
       dockerfile: Dockerfile
+    command: sh -c "npm run build && npm run start"
     volumes:
       - ./realtime:/app:Z
       - /app/node_modules

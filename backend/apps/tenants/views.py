@@ -218,18 +218,25 @@ class TenantViewSet(viewsets.ModelViewSet):
             )
 
 
+from django.core.cache import cache
+
 @api_view(['GET'])
 @permission_classes([permissions.AllowAny])
 def public_config(request):
     """
     Public endpoint to fetch tenant styling configuration by subdomain, custom domain, or API key.
-    Useful for iframe embedding and dynamic host routing.
+    Useful for iframe embedding and dynamic host routing. High-performance Redis cached.
     """
     subdomain = request.query_params.get('subdomain')
     api_key = request.query_params.get('api_key')
     tenant_id = request.query_params.get('tenant_id')
     host = request.query_params.get('host')
     
+    cache_key = f"tenant_pubcfg_{subdomain}_{host}_{api_key}_{tenant_id}".lower()
+    cached_data = cache.get(cache_key)
+    if cached_data:
+        return Response(cached_data)
+
     tenant = None
     
     if tenant_id:
@@ -277,7 +284,9 @@ def public_config(request):
         return Response({'error': 'Tenant not found or inactive'}, status=status.HTTP_404_NOT_FOUND)
         
     serializer = TenantPublicSerializer(tenant)
-    return Response(serializer.data)
+    data = serializer.data
+    cache.set(cache_key, data, 600)
+    return Response(data)
 
 
 @api_view(['POST'])
