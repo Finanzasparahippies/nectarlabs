@@ -243,14 +243,27 @@ def public_config(request):
         except ValueError:
             return Response({'error': 'Invalid API Key format'}, status=status.HTTP_400_BAD_REQUEST)
     elif subdomain:
-        tenant = Tenant.objects.filter(subdomain=subdomain.lower()).first()
+        sub_clean = subdomain.lower().strip()
+        tenant = Tenant.objects.filter(subdomain=sub_clean).first()
+        if not tenant:
+            # Fallback: si 'subdomain' fue enviado con un dominio personalizado (ej. staging.kores.vip)
+            tenant = Tenant.objects.filter(custom_domain=sub_clean, use_custom_domain=True).first()
+        if not tenant and '.' in sub_clean:
+            # Intentar limpiar www. o protocolo si venía incluido
+            clean_host = sub_clean.replace('http://', '').replace('https://', '').replace('www.', '').rstrip('/')
+            tenant = Tenant.objects.filter(custom_domain=clean_host, use_custom_domain=True).first()
     elif host:
+        host_clean = host.lower().strip().replace('http://', '').replace('https://', '').replace('www.', '').rstrip('/')
         # Check custom domain first
-        tenant = Tenant.objects.filter(custom_domain=host.lower(), use_custom_domain=True).first()
+        tenant = Tenant.objects.filter(custom_domain=host_clean, use_custom_domain=True).first()
         
+        # If not found, check direct custom_domain match with exact host
+        if not tenant:
+            tenant = Tenant.objects.filter(custom_domain=host.lower().strip(), use_custom_domain=True).first()
+
         # If not found and it's a *.nectarlabs.dev or staging.nectarlabs.dev subdomain, parse it
         if not tenant:
-            host_parts = host.split('.')
+            host_parts = host_clean.split('.')
             if len(host_parts) >= 3:
                 # e.g. client.nectarlabs.dev or client.localhost:3000
                 potential_sub = host_parts[0]
