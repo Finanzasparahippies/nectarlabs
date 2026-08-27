@@ -6,7 +6,8 @@ from django.shortcuts import get_object_or_404
 from rest_framework_simplejwt.tokens import RefreshToken
 import uuid
 
-from .models import Tenant
+from django.core.cache import cache
+from .models import Tenant, TenantPage, TenantNavItem
 from .serializers import TenantSerializer, TenantPublicSerializer
 
 User = get_user_model()
@@ -218,75 +219,65 @@ class TenantViewSet(viewsets.ModelViewSet):
             )
 
 
-from django.core.cache import cache
+from .models import Tenant, TenantPage, TenantNavItem
+from .serializers import TenantSerializer, TenantPublicSerializer, TenantPageSerializer, TenantNavItemSerializer
+from .utils import get_tenant_from_request
+
+User = get_user_model()
+
+class TenantPageViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet para listar y gestionar páginas dinámicas de un Tenant.
+    Soporta consulta pública sin autenticación por subdomain/host y slug.
+    """
+    serializer_class = TenantPageSerializer
+    permission_classes = [permissions.AllowAny]
+
+    def get_queryset(self):
+        tenant = get_tenant_from_request(self.request)
+        if tenant:
+            queryset = TenantPage.objects.filter(tenant=tenant, is_published=True)
+            slug = self.request.query_params.get('slug')
+            if slug:
+                queryset = queryset.filter(slug=slug)
+            return queryset.order_by('order', 'created_at')
+        
+        user = self.request.user
+        if user and user.is_authenticated:
+            if user.is_staff or user.role == 'ADMIN':
+                return TenantPage.objects.all().order_by('order', 'created_at')
+            return TenantPage.objects.filter(tenant__owner=user).order_by('order', 'created_at')
+            
+        return TenantPage.objects.none()
+
 
 @api_view(['GET'])
 @permission_classes([permissions.AllowAny])
 def public_config(request):
     """
-    Public endpoint to fetch tenant styling configuration by subdomain, custom domain, or API key.
+    Public endpoint to fetch tenant styling, pages, and navigation configuration by subdomain, custom domain, host, or API key.
     Useful for iframe embedding and dynamic host routing. High-performance Redis cached.
     """
     subdomain = request.query_params.get('subdomain')
     api_key = request.query_params.get('api_key')
     tenant_id = request.query_params.get('tenant_id')
-    host = request.query_params.get('host')
+    host = request.query_params.get('host') or request.META.get('HTTP_HOST')
     
     cache_key = f"tenant_pubcfg_{subdomain}_{host}_{api_key}_{tenant_id}".lower()
     cached_data = cache.get(cache_key)
     if cached_data:
         return Response(cached_data)
 
-    tenant = None
-    
-    if tenant_id:
-        try:
-            tenant = Tenant.objects.filter(id=uuid.UUID(tenant_id)).first()
-        except ValueError:
-            return Response({'error': 'Invalid tenant_id format'}, status=status.HTTP_400_BAD_REQUEST)
-    elif api_key:
-        try:
-            tenant = Tenant.objects.filter(api_key=uuid.UUID(api_key)).first()
-        except ValueError:
-            return Response({'error': 'Invalid API Key format'}, status=status.HTTP_400_BAD_REQUEST)
-    elif subdomain or host:
-        raw_val = (subdomain or host).lower().strip()
-        clean_host = raw_val.replace('http://', '').replace('https://', '').replace('www.', '').rstrip('/')
-        
-        # 1. Búsqueda directa por subdominio slug (ej. 'kores' o 'curso-python')
-        tenant = Tenant.objects.filter(subdomain__iexact=clean_host, is_active=True).first()
-        
-        # 2. Búsqueda exacta por dominio personalizado (ej. 'staging.kores.vip' o 'kores.vip')
-        if not tenant:
-            tenant = Tenant.objects.filter(custom_domain__iexact=clean_host, is_active=True).first()
-        if not tenant:
-            tenant = Tenant.objects.filter(custom_domain__iexact=raw_val, is_active=True).first()
-            
-        # 3. Remover prefijo 'staging.' si la petición vino desde un subdominio de staging (ej. 'staging.kores.vip' -> 'kores.vip')
-        if not tenant and clean_host.startswith('staging.'):
-            bare_domain = clean_host[8:]
-            tenant = Tenant.objects.filter(custom_domain__iexact=bare_domain, is_active=True).first()
-            
-        # 4. Descomponer el host por puntos para extraer el identificador del tenant (ej. 'kores.staging.nectarlabs.dev' -> 'kores')
-        if not tenant and '.' in clean_host:
-            parts = clean_host.split('.')
-            ignored_tokens = {'www', 'api', 'admin', 'staging', 'nectarlabs', 'dev', 'localhost', 'com', 'vip', 'mx', 'org', 'net'}
-            for part in parts:
-                if part and part not in ignored_tokens:
-                    tenant = Tenant.objects.filter(subdomain__iexact=part, is_active=True).first()
-                    if tenant:
-                        break
-                    tenant = Tenant.objects.filter(custom_domain__icontains=part, is_active=True).first()
-                    if tenant:
-                        break
+    tenant = get_tenant_from_request(request)
 
     if not tenant or not tenant.is_active:
         return Response({'error': 'Tenant not found or inactive'}, status=status.HTTP_404_NOT_FOUND)
         
-    serializer = TenantPublicSerializer(tenant)
+    serializer = TenantPublicSerializer(tenant, context={'request': request})
     data = serializer.data
     cache.set(cache_key, data, 600)
     return Response(data)
+
 
 
 @api_view(['POST'])

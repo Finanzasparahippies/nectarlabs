@@ -43,44 +43,35 @@ class ProductViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         queryset = Product.objects.all()
         
-        # Filter by tenant parameter if present
-        tenant_id = self.request.query_params.get('tenant_id')
-        subdomain = self.request.query_params.get('subdomain')
         is_global = self.request.query_params.get('global') == 'true'
-        
-        from apps.tenants.models import Tenant
-        import uuid
+        from apps.tenants.utils import get_tenant_from_request
         from apps.users.models import User
 
-        if tenant_id:
-            try:
-                queryset = queryset.filter(tenant_id=uuid.UUID(str(tenant_id)))
-            except (ValueError, TypeError):
-                queryset = queryset.none()
-        elif subdomain:
-            queryset = queryset.filter(tenant__subdomain=subdomain.lower())
-        elif is_global:
+        if is_global:
             # Global listing for store directory
-            queryset = queryset.filter(tenant__is_active=True)
-        else:
-            # Fallback to user context if authenticated
-            user = self.request.user
-            if user and user.is_authenticated:
-                if user.is_staff or user.role == User.Role.ADMIN:
-                    # Admins see everything
-                    pass
-                elif user.role == User.Role.BUSINESS:
-                    # Business owner sees products of their owned tenants
-                    queryset = queryset.filter(tenant__in=user.owned_tenants.all())
-                elif user.tenant:
-                    queryset = queryset.filter(tenant=user.tenant)
-                else:
-                    queryset = queryset.none()
+            return queryset.filter(tenant__is_active=True)
+
+        # Resolver tenant dinámicamente mediante query params, headers (Host/Custom Domain) o Referer
+        tenant = get_tenant_from_request(self.request)
+        if tenant:
+            return queryset.filter(tenant=tenant)
+
+        # Fallback a contexto de usuario autenticado
+        user = self.request.user
+        if user and user.is_authenticated:
+            if user.is_staff or user.role == User.Role.ADMIN:
+                pass
+            elif user.role == User.Role.BUSINESS:
+                queryset = queryset.filter(tenant__in=user.owned_tenants.all())
+            elif user.tenant:
+                queryset = queryset.filter(tenant=user.tenant)
             else:
-                # If anonymous and no tenant context is provided, return empty
                 queryset = queryset.none()
-                
+        else:
+            queryset = queryset.none()
+            
         return queryset
+
 
     @transaction.atomic
     def create(self, request, *args, **kwargs):

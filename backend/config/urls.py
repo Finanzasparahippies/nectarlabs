@@ -24,7 +24,7 @@ from apps.dashboard.views import ProjectViewSet, FAQViewSet, TimeLogViewSet, Pro
 from apps.blog.views import PostViewSet
 from apps.tickets.views import TicketViewSet, SupportChatViewSet
 from apps.users.views import UserViewSet
-from apps.tenants.views import TenantViewSet, public_config, guest_auth
+from apps.tenants.views import TenantViewSet, TenantPageViewSet, public_config, guest_auth
 from apps.billing.views import (
     TaxProfileView, InvoiceViewSet, BillingInfoView, BuyStampsView,
     BuyEmailCreditsView, SATProductKeySearchView, SATUnitKeySearchView,
@@ -69,6 +69,7 @@ router.register(r'support-chats', SupportChatViewSet, basename='support-chat')
 # Gestión de Usuarios y Multi-tenant (Colmenas)
 router.register(r'users', UserViewSet, basename='user')
 router.register(r'tenants', TenantViewSet, basename='tenant')
+router.register(r'tenant-pages', TenantPageViewSet, basename='tenant-page')
 
 # Facturación y SAT
 router.register(r'billing/invoices', InvoiceViewSet, basename='billing-invoice')

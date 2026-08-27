@@ -50,7 +50,33 @@ interface TenantConfig {
   custom_css?: string;
   custom_js?: string;
   custom_frontend_url?: string | null;
+  pages?: Array<{
+    id: string;
+    title: string;
+    slug: string;
+    page_type: string;
+    is_homepage: boolean;
+    is_standalone_isolated: boolean;
+    hero_title?: string;
+    hero_subtitle?: string;
+    hero_image_url?: string;
+    cta_text?: string;
+    cta_url?: string;
+    content_json?: any;
+    custom_html?: string;
+  }>;
+  navigation_menu?: Array<{
+    id: string;
+    label: string;
+    url?: string;
+    page_slug?: string;
+    position: string;
+    order: number;
+    is_visible: boolean;
+    open_in_new_tab?: boolean;
+  }>;
 }
+
 
 
 interface Ticket {
@@ -618,6 +644,18 @@ export default function TenantPortalPage() {
       </div>
     );
   }
+
+  // Soporte para Código 100% Aislado (Standalone / Fuera de Plantillas Nectar-Labs)
+  const homePage = tenantConfig.pages?.find((p) => p.is_homepage || p.slug === 'home') || tenantConfig.pages?.[0];
+  if (homePage && (homePage.is_standalone_isolated || homePage.page_type === 'ISOLATED_CODE') && homePage.custom_html) {
+    return (
+      <div 
+        className="w-screen h-screen overflow-auto bg-[#020403]"
+        dangerouslySetInnerHTML={{ __html: homePage.custom_html }}
+      />
+    );
+  }
+
 
   return (
     <div id="tenant-portal-root" className="min-h-screen flex flex-col font-sans relative overflow-hidden">

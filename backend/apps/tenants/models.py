@@ -338,3 +338,91 @@ class Tenant(models.Model):
 
         return list(addons)
 
+
+class TenantPage(models.Model):
+    """
+    Página dinámica o personalizada administrable por Inquilino (Tenant).
+    Soporta diseño basado en plantillas Nectar-Labs o código 100% aislado (standalone/iframe) para salirse de las plantillas por defecto.
+    """
+    class PageType(models.TextChoices):
+        LANDING = 'LANDING', 'Landing Page Estándar Nectar'
+        CUSTOM_HTML = 'CUSTOM_HTML', 'HTML Personalizado (Incrustado)'
+        ISOLATED_CODE = 'ISOLATED_CODE', 'Código Aislado 100% Standalone (Sin Plantilla)'
+        MARKDOWN = 'MARKDOWN', 'Documento Markdown'
+        FORM = 'FORM', 'Formulario / Captura de Clientes'
+        EXTERNAL_LINK = 'EXTERNAL_LINK', 'Enlace Externo / Máscara'
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name='pages', verbose_name="Inquilino")
+    title = models.CharField(max_length=200, verbose_name="Título de la Página")
+    slug = models.SlugField(max_length=100, db_index=True, verbose_name="Slug / Ruta (ej: inicio, nosotros, ofertas)")
+    page_type = models.CharField(max_length=30, choices=PageType.choices, default=PageType.LANDING, verbose_name="Tipo de Página")
+    
+    is_homepage = models.BooleanField(default=False, verbose_name="¿Es la página principal del Tenant?")
+    is_standalone_isolated = models.BooleanField(
+        default=False, 
+        help_text="Si está activo, la página renderizará su código HTML/JS/CSS de forma 100% aislada sin cargar la plantilla ni layout predeterminado de Nectar-Labs."
+    )
+
+    # Hero Banner / Landing Section Fields
+    hero_title = models.CharField(max_length=255, blank=True, null=True, verbose_name="Título Principal (Hero)")
+    hero_subtitle = models.TextField(blank=True, null=True, verbose_name="Subtítulo Principal")
+    hero_image_url = models.URLField(max_length=500, blank=True, null=True, verbose_name="URL de Imagen / Banner Hero")
+    cta_text = models.CharField(max_length=100, blank=True, null=True, verbose_name="Texto del Botón Acción (CTA)")
+    cta_url = models.CharField(max_length=500, blank=True, null=True, verbose_name="Enlace del Botón Acción")
+
+    # Contenido estructurado y código aislado
+    content_json = models.JSONField(default=dict, blank=True, verbose_name="Secciones Dinámicas (JSON)")
+    custom_html = models.TextField(blank=True, null=True, help_text="Código HTML/JS/CSS libre o aislado. Si la página es Aislada Standalone, se mostrará tal cual sin plantillas.")
+
+    # SEO Metadata
+    meta_title = models.CharField(max_length=200, blank=True, null=True, verbose_name="Título SEO (Meta Title)")
+    meta_description = models.TextField(blank=True, null=True, verbose_name="Descripción SEO (Meta Description)")
+    og_image_url = models.URLField(max_length=500, blank=True, null=True, verbose_name="Imagen para redes sociales (OG Image)")
+
+    is_published = models.BooleanField(default=True, verbose_name="¿Publicada?")
+    order = models.IntegerField(default=0, verbose_name="Orden de despliegue")
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Página de Inquilino"
+        verbose_name_plural = "Páginas de Inquilinos"
+        unique_together = ('tenant', 'slug')
+        ordering = ['order', 'created_at']
+
+    def __str__(self):
+        return f"{self.title} (/{self.slug}) - {self.tenant.subdomain}"
+
+
+class TenantNavItem(models.Model):
+    """
+    Elemento del menú de navegación (Header/Footer) para un Tenant.
+    """
+    class Position(models.TextChoices):
+        HEADER = 'HEADER', 'Encabezado (Menú Principal)'
+        FOOTER = 'FOOTER', 'Pie de Página (Footer)'
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name='nav_items', verbose_name="Inquilino")
+    label = models.CharField(max_length=100, verbose_name="Etiqueta / Nombre en Menú")
+    url = models.CharField(max_length=500, blank=True, null=True, help_text="URL destino relativa (ej: /productos) o externa (https://...)")
+    page = models.ForeignKey(TenantPage, on_delete=models.SET_NULL, null=True, blank=True, related_name='nav_links', verbose_name="Página Vinculada")
+    position = models.CharField(max_length=20, choices=Position.choices, default=Position.HEADER, verbose_name="Ubicación")
+    order = models.IntegerField(default=0, verbose_name="Orden de aparición")
+    is_visible = models.BooleanField(default=True, verbose_name="¿Visible?")
+    open_in_new_tab = models.BooleanField(default=False, verbose_name="¿Abrir en nueva pestaña?")
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Elemento de Navegación"
+        verbose_name_plural = "Elementos de Navegación"
+        ordering = ['position', 'order', 'created_at']
+
+    def __str__(self):
+        return f"{self.label} ({self.position}) - {self.tenant.subdomain}"
+
+

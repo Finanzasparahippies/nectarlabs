@@ -209,12 +209,38 @@ class TenantSerializer(serializers.ModelSerializer):
         return ret
 
 
+from rest_framework import serializers
+from .models import Tenant, TenantPage, TenantNavItem
+
+class TenantPageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TenantPage
+        fields = [
+            'id', 'title', 'slug', 'page_type', 'is_homepage', 'is_standalone_isolated',
+            'hero_title', 'hero_subtitle', 'hero_image_url', 'cta_text', 'cta_url',
+            'content_json', 'custom_html', 'meta_title', 'meta_description', 'og_image_url',
+            'is_published', 'order', 'created_at', 'updated_at'
+        ]
+
+
+class TenantNavItemSerializer(serializers.ModelSerializer):
+    page_slug = serializers.ReadOnlyField(source='page.slug')
+
+    class Meta:
+        model = TenantNavItem
+        fields = [
+            'id', 'label', 'url', 'page', 'page_slug', 'position', 'order', 'is_visible', 'open_in_new_tab'
+        ]
+
+
 class TenantPublicSerializer(serializers.ModelSerializer):
     active_addons = serializers.ReadOnlyField()
     logo_url = serializers.SerializerMethodField()
     has_active_plan_contract = serializers.ReadOnlyField()
     is_addons_only = serializers.ReadOnlyField()
     server_time = serializers.SerializerMethodField()
+    pages = serializers.SerializerMethodField()
+    navigation_menu = serializers.SerializerMethodField()
 
     class Meta:
         model = Tenant
@@ -230,7 +256,9 @@ class TenantPublicSerializer(serializers.ModelSerializer):
             # Pollen/Nectar Falling settings
             'pollen_active', 'pollen_icon', 'pollen_color', 'pollen_count', 'pollen_blur',
             # Custom CSS/JS
-            'custom_css', 'custom_js', 'custom_frontend_url', 'custom_backend_url'
+            'custom_css', 'custom_js', 'custom_frontend_url', 'custom_backend_url',
+            # Páginas y Navegación
+            'pages', 'navigation_menu'
         ]
 
     def get_logo_url(self, obj):
@@ -244,4 +272,13 @@ class TenantPublicSerializer(serializers.ModelSerializer):
     def get_server_time(self, obj):
         from django.utils import timezone
         return timezone.now().isoformat()
+
+    def get_pages(self, obj):
+        pages = obj.pages.filter(is_published=True).order_by('order', 'created_at')
+        return TenantPageSerializer(pages, many=True).data
+
+    def get_navigation_menu(self, obj):
+        nav_items = obj.nav_items.filter(is_visible=True).order_by('position', 'order', 'created_at')
+        return TenantNavItemSerializer(nav_items, many=True).data
+
 
