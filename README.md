@@ -42,12 +42,18 @@ Para una documentación detallada de la arquitectura, configuración de variable
 
 ---
 
-## ⚡ Flujos Principales de Negocio
+## ⚡ Flujos Principales de Negocio & Multi-Tenancy
 
-1. **Módulo de Add-ons Independientes**: Permite la contratación de módulos sin compromiso forzoso a 6 meses con auto-aprovisionamiento de subdominios (`Tenant`).
-2. **Cotizaciones Modulares y Firma Digital Doble**: Propuestas comerciales en PDF con firma digital del cliente y desarrollador, estructurando el esquema de pago en **50% Anticipo / 50% Liquidación**.
-3. **Facturación Electrónica CFDI 4.0**: Emisión asíncrona de comprobantes fiscales digitales para México con timbrado SAT, folios UUID, soporte de retenciones y notas de venta.
-4. **Chat de Soporte IA Realtime**: Asistencia asíncrona en tiempo real conectada a Groq Cloud y respaldada por caché en Redis.
+1. **Arquitectura Multi-Tenant (4 Niveles)**:
+   - **Nativo Estándar**: Portal Glassmorphism con selección de color y catálogo.
+   - **CMS Standalone Aislado**: Páginas dinámicas creadas en Django Admin con HTML/JS propio (`is_standalone_isolated=True`), libre de plantillas y respaldado por caché Redis con invalidación por señales.
+   - **SPA Estático Aislado**: Alojado directamente en `frontend/public/<subdominio>/index.html`.
+   - **Proyecto Autónomo Aislado (BYO Stack)**: Microservicio dedicado en Staging (`staging_network`) y Producción (`prod_network`) que consume Addons centrales vía API Key. Ver [Guía de Proyectos Aislados](file:///home/saulvillecruz/proyectos/repositorios/Documentacion-Nectar/backend/multi-tenant-custom-apps.md).
+2. **Módulo de Add-ons Independientes**: Permite la contratación de módulos sin compromiso forzoso a 6 meses con auto-aprovisionamiento de subdominios (`Tenant`).
+3. **Cotizaciones Modulares y Firma Digital Doble**: Propuestas comerciales en PDF con firma digital del cliente y desarrollador, estructurando el esquema de pago en **50% Anticipo / 50% Liquidación**.
+4. **Facturación Electrónica CFDI 4.0**: Emisión asíncrona de comprobantes fiscales digitales para México con timbrado SAT, folios UUID, soporte de retenciones y notas de venta.
+5. **Chat de Soporte IA Realtime**: Asistencia asíncrona en tiempo real conectada a Groq Cloud y respaldada por caché en Redis.
+
 
 ---
 

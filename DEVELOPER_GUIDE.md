@@ -36,7 +36,7 @@ Nectar-Labs/
 │   ├── config/               # Ajustes globales, middleware de performance, rutas URL y WSGI/ASGI
 │   ├── apps/                 # Módulos Django desacoplados
 │   │   ├── users/            # Autenticación JWT y gestión de roles (ADMIN, BUSINESS, ANALYST, CUSTOMER)
-│   │   ├── tenants/          # Multi-Tenancy (subdominios, dominios BYO, branding Glassmorphism, timbres)
+│   │   ├── tenants/          # Multi-Tenancy (subdominios, dominios BYO, CMS de páginas aisladas TenantPage, menús TenantNavItem)
 │   │   ├── billing/          # Facturación CFDI 4.0 (TaxProfile, Invoice, SATProductKey, SalesNotes)
 │   │   ├── dashboard/        # Analítica ejecutiva BI, seguimiento de proyectos, TimeLogs y Pandas
 │   │   ├── shop/             # Contratos, add-ons, planes de suscripción y pasarela Stripe
