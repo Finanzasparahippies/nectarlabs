@@ -49,6 +49,7 @@ interface TenantConfig {
   owner?: number;
   custom_css?: string;
   custom_js?: string;
+  frontend_mode?: string | null;
   custom_frontend_url?: string | null;
   pages?: Array<{
     id: string;
