@@ -98,8 +98,6 @@ services:
     build:
       context: /var/www/premium-ties/frontend
       dockerfile: Dockerfile
-    volumes:
-      - /var/www/premium-ties/frontend:/app:z
     env_file:
       - /var/www/premium-ties/.env.prod
     restart: always
