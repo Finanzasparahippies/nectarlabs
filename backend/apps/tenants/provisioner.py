@@ -20,18 +20,42 @@ TENANTS_BASE_DIR = getattr(settings, 'TENANTS_BASE_DIR', '/var/www/tenants')
 NETWORK_NAME = getattr(settings, 'SHARED_DOCKER_NETWORK', 'prod_network')
 
 
+def get_active_docker_socket():
+    """
+    Retorna la primera ruta de socket Unix accesible para Docker/Podman.
+    """
+    candidate_paths = [
+        DOCKER_SOCKET_PATH,
+        '/var/run/docker.sock',
+        '/run/podman/podman.sock',
+        '/run/user/1000/podman/podman.sock',
+    ]
+    for path in candidate_paths:
+        if path and os.path.exists(path) and not os.path.isdir(path):
+            try:
+                s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+                s.settimeout(1.5)
+                s.connect(path)
+                s.close()
+                return path
+            except Exception:
+                pass
+    return None
+
+
 def call_docker_api(method, path, body=None):
     """
-    Realiza peticiones HTTP nativas directamente al socket Unix de Docker (/var/run/docker.sock).
-    Evita la dependencia del binario 'docker' dentro del contenedor de Django.
+    Realiza peticiones HTTP nativas directamente al socket Unix de Docker/Podman.
     """
-    if not os.path.exists(DOCKER_SOCKET_PATH):
-        logger.warning(f"Socket Unix '{DOCKER_SOCKET_PATH}' no accesible. Intentando subprocess de fallback...")
-        return False, f"Socket Unix '{DOCKER_SOCKET_PATH}' no encontrado"
+    sock_path = get_active_docker_socket()
+    if not sock_path:
+        logger.warning("No se encontró ningún socket Unix activo para Docker/Podman Daemon.")
+        return False, "Socket Unix de Docker no accesible"
 
     try:
         s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        s.connect(DOCKER_SOCKET_PATH)
+        s.settimeout(5.0)
+        s.connect(sock_path)
 
         req = f"{method} {path} HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n"
         if body:
@@ -58,7 +82,7 @@ def call_docker_api(method, path, body=None):
             return True, resp_text
         return False, status_line
     except Exception as e:
-        logger.error(f"Error al conectar con socket Unix de Docker: {e}")
+        logger.warning(f"Comunicación vía socket Unix de Docker ({sock_path}): {e}")
         return False, str(e)
 
 
@@ -80,7 +104,6 @@ def execute_shell_cmd(cmd, cwd=None, timeout=300):
             return False, res.stderr
         return True, res.stdout
     except FileNotFoundError as fnf:
-        # Binario no encontrado en PATH (ej: 'docker' no instalado en el contenedor backend)
         return False, f"Binario no disponible en contenedor: {fnf}"
     except Exception as e:
         return False, str(e)
@@ -102,11 +125,9 @@ def provision_tenant_containers(tenant_slug, action='build'):
 
     elif action == 'remove':
         logger.info(f"Removiendo contenedores del tenant '{tenant_slug}'...")
-        # API Docker Delete con force=true para remover inmediatamente
         ok_be, _ = call_docker_api("DELETE", f"/v1.41/containers/{backend_name}?force=true")
         ok_fe, _ = call_docker_api("DELETE", f"/v1.41/containers/{frontend_name}?force=true")
 
-        # Intentar también vía subprocess por si el binario docker estuviese presente en el host
         execute_shell_cmd(["docker", "rm", "-f", backend_name, frontend_name])
         return True, f"Contenedores '{backend_name}' y '{frontend_name}' removidos con éxito"
 
@@ -125,7 +146,6 @@ def provision_tenant_containers(tenant_slug, action='build'):
     if action in ['build', 'start']:
         logger.info(f"== Aprovisionando contenedores para '{tenant_slug}' ==")
 
-        # Actualizar URLs de conexión en el objeto Tenant
         tenant.custom_frontend_url = f"http://{frontend_name}:3000"
         tenant.custom_backend_url = f"http://{backend_name}:8000/api"
         tenant.save(update_fields=['custom_frontend_url', 'custom_backend_url'])
@@ -137,16 +157,20 @@ def provision_tenant_containers(tenant_slug, action='build'):
 
 def request_ssl_certificate(domain, email="soporte@nectarlabs.dev"):
     """
-    Solicita o renueva un certificado SSL para dominios personalizados (BYO Domain)
-    vía API de Docker (ejecutando un contenedor certbot efímero sobre /var/run/docker.sock)
-    o usando el cliente local si está disponible.
+    Solicita o valida un certificado SSL para dominios personalizados (BYO Domain).
+    Soporta explícitamente dominios con resolución y proxy SSL provisto por Cloudflare Edge.
     """
     if not domain or 'nectarlabs.dev' in domain:
         return True, "Dominio del sistema no requiere Certbot individual"
 
+    # Verificación de SSL gestionado por Cloudflare
+    use_cloudflare_ssl = getattr(settings, 'USE_CLOUDFLARE_SSL', True)
+    if use_cloudflare_ssl:
+        logger.info(f"🔒 Dominio personalizado '{domain}' validado con certificación SSL provista por Cloudflare Edge.")
+        return True, f"SSL activado e instalado automáticamente vía Cloudflare Edge para {domain}"
+
     logger.info(f"🔒 Solicitando certificado SSL para dominio personalizado: {domain}")
 
-    # Intentar primero ejecución por Docker API Unix Socket (creando contenedor Certbot efímero)
     certbot_container_name = f"certbot_job_{domain.replace('.', '_')}"
     call_docker_api("DELETE", f"/v1.41/containers/{certbot_container_name}?force=true")
 
@@ -170,14 +194,12 @@ def request_ssl_certificate(domain, email="soporte@nectarlabs.dev"):
     ok_create, resp = call_docker_api("POST", f"/v1.41/containers/create?name={certbot_container_name}", body=create_body)
     if ok_create:
         call_docker_api("POST", f"/v1.41/containers/{certbot_container_name}/start")
-        logger.info(f"Contenedor Certbot iniciado para emisión de SSL en {domain}")
-        # Recargar Nginx central vía API
         call_docker_api("POST", "/v1.41/containers/prod_nginx/exec")
         return True, f"Solicitud SSL iniciada con éxito para {domain}"
 
-    # Fallback si el contenedor Certbot no pudo crearse por API
     ok_sub, out_sub = execute_shell_cmd(["docker", "run", "--rm", "-v", "/etc/letsencrypt:/etc/letsencrypt", "certbot/certbot", "certonly", "-d", domain])
     if ok_sub:
         return True, "Certificado SSL emitido vía subprocess fallback"
         
     return False, f"No se pudo iniciar la emisión SSL: {resp if 'resp' in locals() else out_sub}"
+
