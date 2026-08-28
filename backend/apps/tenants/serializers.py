@@ -52,8 +52,8 @@ class TenantSerializer(serializers.ModelSerializer):
             # Newsletter
             'subscriber_count',
 
-            # Custom CSS/JS
-            'custom_css', 'custom_js', 'custom_backend_url', 'custom_frontend_url'
+            # Custom CSS/JS & Frontend Mode
+            'frontend_mode', 'custom_css', 'custom_js', 'custom_backend_url', 'custom_frontend_url'
         ]
         read_only_fields = [
             'id', 'owner', 'api_key', 'created_at', 'updated_at', 
@@ -255,10 +255,8 @@ class TenantPublicSerializer(serializers.ModelSerializer):
             'theme_color_light', 'accent_color_light', 'bg_color_light', 'card_bg_color_light', 'text_color_light', 'border_color_light',
             # Pollen/Nectar Falling settings
             'pollen_active', 'pollen_icon', 'pollen_color', 'pollen_count', 'pollen_blur',
-            # Custom CSS/JS
-            'custom_css', 'custom_js', 'custom_frontend_url', 'custom_backend_url',
-            # Páginas y Navegación
-            'pages', 'navigation_menu'
+            # Custom CSS/JS & Frontend Mode
+            'frontend_mode', 'custom_css', 'custom_js', 'custom_backend_url', 'custom_frontend_url'
         ]
 
     def get_logo_url(self, obj):

@@ -625,14 +625,17 @@ export default function TenantPortalPage() {
   const pollenColor = tenantConfig.pollen_color || primaryColor;
   const pollenIcon = tenantConfig.pollen_icon || '•';
 
-  // Masked Reverse Proxy: Servir frontend externo o estático aislado preservando la URL en el cliente
+  // Masked Reverse Proxy / Custom Frontend: Servir frontend externo o estático aislado preservando la URL en el cliente
   const isValidExternalFrontendUrl = (url?: string | null): boolean => {
     if (!url) return false;
     if (url.startsWith('/var/www/') || url.includes('/frontend/')) return false;
     return url.startsWith('http://') || url.startsWith('https://') || url.startsWith('/');
   };
 
-  if (tenantConfig.custom_frontend_url && isValidExternalFrontendUrl(tenantConfig.custom_frontend_url)) {
+  const isCustomFrontendMode = tenantConfig.frontend_mode === 'CUSTOM_STANDALONE' ||
+    (!tenantConfig.frontend_mode && tenantConfig.custom_frontend_url && isValidExternalFrontendUrl(tenantConfig.custom_frontend_url));
+
+  if (tenantConfig.frontend_mode !== 'NATIVE' && isCustomFrontendMode && tenantConfig.custom_frontend_url && isValidExternalFrontendUrl(tenantConfig.custom_frontend_url)) {
     return (
       <div className="w-screen h-screen overflow-hidden bg-[#020403]">
         <iframe

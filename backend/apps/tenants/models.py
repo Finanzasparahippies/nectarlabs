@@ -165,6 +165,17 @@ class Tenant(models.Model):
     stripe_publishable_key = models.CharField(max_length=255, blank=True, null=True, help_text="Clave pública de Stripe del Tenant")
     stripe_secret_key = models.CharField(max_length=255, blank=True, null=True, help_text="Clave secreta de Stripe del Tenant")
 
+    class FrontendMode(models.TextChoices):
+        NATIVE = 'NATIVE', 'Plantilla Nativa (Nectar Labs Glassmorphism)'
+        CUSTOM_STANDALONE = 'CUSTOM_STANDALONE', 'Plantilla Personalizada (BYO Frontend / Proxy)'
+
+    frontend_mode = models.CharField(
+        max_length=25,
+        choices=FrontendMode.choices,
+        default=FrontendMode.NATIVE,
+        help_text="Modo de renderizado del frontend para este Tenant (Nativa Glassmorphism vs Personalizada BYO)"
+    )
+
     custom_css = models.TextField(blank=True, null=True, help_text="Código CSS personalizado para el portal público del Tenant")
     custom_js = models.TextField(blank=True, null=True, help_text="Código JS personalizado para el portal público del Tenant")
     custom_backend_url = models.CharField(max_length=500, blank=True, null=True, help_text="URL de backend personalizada (acepta rutas relativas o URLs absolutas) para redirigir peticiones API")
