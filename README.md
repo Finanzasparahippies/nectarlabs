@@ -97,23 +97,35 @@ curl -H "Host: kores-mexico.staging.nectarlabs.dev" -I http://localhost/
 
 ---
 
-### 3. Protocolo de Descomisión y Limpieza Segura del Directorio Legacy (`/var/www/premium-ties/`)
+## 🏗️ Arquitectura de Orquestación Dual: Proyecto Dedicado (`/var/www/premium-ties/`) vs. Multi-Tenant Unificado (`kores-mexico`)
 
-Dado que el tenant `kores-mexico` opera **100% de manera unificada y dinámica** bajo el motor de Next.js (`/src/app/tenants/[subdomain]/page.tsx`), la carpeta física `/var/www/premium-ties/` en el servidor remoto queda completamente **deprecada**.
+La plataforma de **Nectar Labs** soporta una arquitectura híbrida de 4 niveles que permite la convivencia limpia entre portales multi-tenant dinámicos y aplicaciones totalmente personalizadas e independientes (BYO Stack):
 
-#### Pasos para DevOps:
-1. **Respaldar y Renombrar el Directorio Legacy:**
-   ```bash
-   sudo mv /var/www/premium-ties /var/www/premium-ties.deprecated_2026
-   ```
-2. **Desactivar Contenedores Heredados (si existen):**
-   ```bash
-   docker stop premium_ties_backend_staging premium_ties_frontend_staging || true
-   docker rm premium_ties_backend_staging premium_ties_frontend_staging || true
-   ```
-3. **Confirmación:** Toda la lógica, catálogo y plantillas de Kōres México quedan alojadas y respaldadas dentro del monorepo central de Nectar Labs en `/home/saul/nectarlabs/`.
+### 1. Enrutamiento y Aislamiento por Proyecto
+- **Multi-Tenant Unificado (`kores-mexico`):** Servido dinámicamente por el motor de Next.js (`nectar_frontend`) bajo los subdominios `kores-mexico.nectarlabs.dev` y `kores-mexico.staging.nectarlabs.dev`.
+- **Proyecto Dedicado Autónomo (`kores.vip` / `/var/www/premium-ties/`):**
+  - **Orquestación Centralizada:** Los servicios `premium_ties_backend_staging`, `premium_ties_frontend_staging`, `premium_ties_backend_prod` y `premium_ties_frontend_prod` están integrados en `docker-compose.staging.yml` y `docker-compose.prod.yml` en la red compartida `prod_network`.
+  - **Persistencia de Base de Datos:** Se utilizan volúmenes declarados con nombre (`premium_ties_db_staging_data` y `premium_ties_db_prod_data`) para prevenir pérdida accidental de datos durante tareas de mantenimiento o despliegues.
+  - **Resolución Dinámica DNS en Nginx:** Todas las reglas de upstream utilizan evaluación perezosa (`set $premium_ties_fe_staging ...`) con `resolver 127.0.0.11 valid=10s ipv6=off;`, evitando bloqueos 502 por actualización de IPs internas de contenedores.
+
+---
+
+### 2. Comandos de Control y Despliegue (`./nectar.sh`)
+
+```bash
+# Iniciar todo el ecosistema de Staging (incluyendo Nectar Core + Premium Ties dedicado)
+./nectar.sh up-staging
+
+# Iniciar todo el ecosistema de Producción
+./nectar.sh up-prod
+
+# Monitorear estado de contenedores en la red compartida
+docker compose -f docker-compose.staging.yml ps
+docker exec prod_nginx nginx -s reload
+```
 
 ---
 
 **Nectar Labs** — *Tener un negocio local no significa tener límites globales.* 🚀
+
 

@@ -72,11 +72,52 @@ services:
     networks:
       - prod_network
 
+  premium_ties_backend_prod:
+    container_name: premium_ties_backend_prod
+    image: premium-ties-backend:prod
+    build:
+      context: /var/www/premium-ties/backend
+      dockerfile: Dockerfile
+    volumes:
+      - /var/www/premium-ties/backend:/app:z
+      - premium_ties_db_prod_data:/var/lib/postgresql/data
+    env_file:
+      - /var/www/premium-ties/backend/.env.prod
+    restart: always
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - prod_network
+
+  premium_ties_frontend_prod:
+    container_name: premium_ties_frontend_prod
+    image: premium-ties-frontend:prod
+    build:
+      context: /var/www/premium-ties/frontend
+      dockerfile: Dockerfile
+    volumes:
+      - /var/www/premium-ties/frontend:/app:z
+    env_file:
+      - /var/www/premium-ties/frontend/.env.prod
+    restart: always
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - prod_network
+
 volumes:
   static_volume:
   media_volume:
   logs_volume:
+  premium_ties_db_prod_data:
 
 networks:
   prod_network:
     external: true
+
