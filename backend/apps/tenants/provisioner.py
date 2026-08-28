@@ -49,10 +49,25 @@ def provision_tenant_containers(tenant_slug, action='build'):
     o en la ubicación configurada.
     Acciones soportadas: 'build', 'start', 'stop', 'remove'
     """
+    backend_name = f"tenant_{tenant_slug}_backend"
+    frontend_name = f"tenant_{tenant_slug}_frontend"
+    backend_img = f"tenant-{tenant_slug}-backend:latest"
+    frontend_img = f"tenant-{tenant_slug}-frontend:latest"
+
+    if action == 'stop':
+        logger.info(f"Deteniendo contenedores del tenant '{tenant_slug}'...")
+        execute_shell_cmd(["docker", "stop", backend_name, frontend_name])
+        return True, "Contenedores detenidos"
+
+    elif action == 'remove':
+        logger.info(f"Removiendo contenedores del tenant '{tenant_slug}'...")
+        execute_shell_cmd(["docker", "rm", "-f", backend_name, frontend_name])
+        return True, f"Contenedores '{backend_name}' y '{frontend_name}' removidos con éxito"
+
     tenant = Tenant.objects.filter(subdomain=tenant_slug).first()
     if not tenant:
         logger.error(f"No se encontró el tenant con subdominio '{tenant_slug}' en la base de datos.")
-        return False, "Tenant no encontrado"
+        return False, "Tenant no encontrado en la base de datos"
 
     tenant_dir = os.path.join(TENANTS_BASE_DIR, tenant_slug)
     if not os.path.exists(tenant_dir):
@@ -62,11 +77,6 @@ def provision_tenant_containers(tenant_slug, action='build'):
         else:
             logger.warning(f"Directorio de tenant '{tenant_dir}' no existe. Se creará la estructura base.")
             os.makedirs(tenant_dir, exist_ok=True)
-
-    backend_name = f"tenant_{tenant_slug}_backend"
-    frontend_name = f"tenant_{tenant_slug}_frontend"
-    backend_img = f"tenant-{tenant_slug}-backend:latest"
-    frontend_img = f"tenant-{tenant_slug}-frontend:latest"
 
     if action in ['build', 'start']:
         logger.info(f"== Iniciando aprovisionamiento dinámico de contenedores para '{tenant_slug}' ==")
@@ -121,16 +131,6 @@ def provision_tenant_containers(tenant_slug, action='build'):
         logger.info(f"[✓] Contenedores aprovisionados e integrados para tenant '{tenant_slug}'")
         return True, "Aprovisionamiento completado con éxito"
 
-    elif action == 'stop':
-        logger.info(f"Deteniendo contenedores del tenant '{tenant_slug}'...")
-        execute_shell_cmd(["docker", "stop", backend_name, frontend_name])
-        return True, "Contenedores detenidos"
-
-    elif action == 'remove':
-        logger.info(f"Removiendo contenedores del tenant '{tenant_slug}'...")
-        execute_shell_cmd(["docker", "rm", "-f", backend_name, frontend_name])
-        return True, "Contenedores removidos"
-
     return False, "Acción desconocida"
 
 
@@ -138,18 +138,37 @@ def request_ssl_certificate(domain, email="soporte@nectarlabs.dev"):
     """
     Solicita o renueva un certificado SSL dinámico con Let's Encrypt / Certbot
     para dominios personalizados de Tenants (BYO Domain).
+    Utiliza el binario 'certbot' si está presente, o ejecuta el contenedor certbot/certbot vía Docker.
     """
     if not domain or 'nectarlabs.dev' in domain:
         return True, "Dominio del sistema no requiere Certbot individual"
 
-    logger.info(f"🔒 Solicitando certificado SSL con Certbot para dominio personalizado: {domain}")
-    certbot_cmd = [
-        "certbot", "certonly", "--nginx",
-        "--non-interactive", "--agree-tos",
-        "-m", email,
-        "-d", domain,
-        "-d", f"www.{domain}"
-    ]
+    logger.info(f"🔒 Solicitando certificado SSL para dominio personalizado: {domain}")
+
+    # Verificar si certbot binario local existe
+    import shutil
+    if shutil.which("certbot"):
+        certbot_cmd = [
+            "certbot", "certonly", "--nginx",
+            "--non-interactive", "--agree-tos",
+            "-m", email,
+            "-d", domain,
+            "-d", f"www.{domain}"
+        ]
+    else:
+        # Fallback ejecutando contenedor certbot/certbot vía Docker socket
+        certbot_cmd = [
+            "docker", "run", "--rm",
+            "-v", "/etc/letsencrypt:/etc/letsencrypt",
+            "-v", "/var/www/certbot:/var/www/certbot",
+            "certbot/certbot", "certonly",
+            "--webroot", "--webroot-path=/var/www/certbot",
+            "--non-interactive", "--agree-tos",
+            "-m", email,
+            "-d", domain,
+            "-d", f"www.{domain}"
+        ]
+
     ok, out = execute_shell_cmd(certbot_cmd)
     if ok:
         logger.info(f"Certificado SSL emitido e instalado con éxito para {domain}")
@@ -157,5 +176,5 @@ def request_ssl_certificate(domain, email="soporte@nectarlabs.dev"):
         subprocess.run(["docker", "exec", "prod_nginx", "nginx", "-s", "reload"], capture_output=True)
         return True, "Certificado SSL emitido correctamente"
     else:
-        logger.warning(f"Falla al solicitar certificado SSL vía Certbot para {domain}: {out}")
+        logger.warning(f"Falla al solicitar certificado SSL para {domain}: {out}")
         return False, out
