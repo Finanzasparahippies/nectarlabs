@@ -57,4 +57,63 @@ Para una documentación detallada de la arquitectura, configuración de variable
 
 ---
 
+## 🔍 Guía de Diagnóstico y Despliegue Multi-Tenant: Tenant Kōres México (`kores-mexico`)
+
+### 1. Diagnóstico de Causa Raíz & Desfase de Identificador
+- **Causa Raíz del Error 404 / Portal Inactivo:** En la base de datos de Staging, el tenant estaba registrado bajo el subdominio `kores`, mientras que las peticiones entraban hacia `kores-mexico.staging.nectarlabs.dev`. Al solicitar la API `GET /api/tenants/public-config/?subdomain=kores-mexico`, Django retornaba 404 al no encontrar el subdominio exacto `kores-mexico`.
+- **Mapeo de Alias en Backend (`apps.tenants.utils`):** Se implementó una resolución flexible en `get_tenant_from_request` que intenta coincidencia exacta y, si falla, realiza normalización de sufijos (`-mexico`, `-mx`, `-latam`) para evitar duplicación de datos o caídas cuando se accede indistintamente vía `kores` o `kores-mexico`.
+- **Enrutamiento Perimetral Nginx:** Las peticiones a `kores-mexico.staging.nectarlabs.dev` son capturadas por el comodín `*.staging.nectarlabs.dev` (Sección 4 de Nginx), enviándolas a `nectar_frontend_staging:3000`. El proxy de Next.js (`proxy.ts`) reescribe internamente la URL hacia `/tenants/kores-mexico/` y la renderiza de forma 100% dinámica mediante el motor unificado.
+
+---
+
+### 2. Comandos de Diagnóstico, Siembra y Verificación en Staging
+
+#### Paso A: Ejecutar Siembra e Inspección en Django Shell (Servidor Remoto `/home/saul/nectarlabs/`)
+```bash
+# 1. Ejecutar el script de siembra idempotente para kores-mexico
+docker exec -it nectar_backend_staging python seed_kores_mexico_tenant.py
+
+# 2. Inspeccionar estado exacto en Django Shell
+docker exec -it nectar_backend_staging python manage.py shell -c "from apps.tenants.models import Tenant; t = Tenant.objects.filter(subdomain__in=['kores', 'kores-mexico']); print([(x.subdomain, x.is_active, x.custom_domain) for x in t])"
+```
+
+#### Paso B: Inspección de Contenedores y Logs de Nginx
+```bash
+# Validar estado de contenedores en Staging
+docker compose -f docker-compose.staging.yml ps
+
+# Monitorear logs de Nginx para verificar que la petición entra al frontend unificado
+docker logs prod_nginx --tail 50 -f
+```
+
+#### Paso C: Verificación Remota de Endpoints Públicos
+```bash
+# 1. Probar resolución directa del endpoint de configuración pública
+curl -s http://localhost:8000/api/tenants/public-config/?subdomain=kores-mexico | jq .
+
+# 2. Probar enrutamiento por Host Header simulado
+curl -H "Host: kores-mexico.staging.nectarlabs.dev" -I http://localhost/
+```
+
+---
+
+### 3. Protocolo de Descomisión y Limpieza Segura del Directorio Legacy (`/var/www/premium-ties/`)
+
+Dado que el tenant `kores-mexico` opera **100% de manera unificada y dinámica** bajo el motor de Next.js (`/src/app/tenants/[subdomain]/page.tsx`), la carpeta física `/var/www/premium-ties/` en el servidor remoto queda completamente **deprecada**.
+
+#### Pasos para DevOps:
+1. **Respaldar y Renombrar el Directorio Legacy:**
+   ```bash
+   sudo mv /var/www/premium-ties /var/www/premium-ties.deprecated_2026
+   ```
+2. **Desactivar Contenedores Heredados (si existen):**
+   ```bash
+   docker stop premium_ties_backend_staging premium_ties_frontend_staging || true
+   docker rm premium_ties_backend_staging premium_ties_frontend_staging || true
+   ```
+3. **Confirmación:** Toda la lógica, catálogo y plantillas de Kōres México quedan alojadas y respaldadas dentro del monorepo central de Nectar Labs en `/home/saul/nectarlabs/`.
+
+---
+
 **Nectar Labs** — *Tener un negocio local no significa tener límites globales.* 🚀
+

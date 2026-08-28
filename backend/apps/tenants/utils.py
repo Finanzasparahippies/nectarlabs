@@ -124,12 +124,24 @@ def get_tenant_from_request(request):
         except (ValueError, TypeError):
             pass
 
-    # 3. Búsqueda por parámetro subdomain
+    # 3. Búsqueda por parámetro subdomain (con resolución flexible de alias)
     if subdomain:
         clean_subdomain = str(subdomain).lower().strip()
         tenant = Tenant.objects.filter(subdomain__iexact=clean_subdomain, is_active=True).first()
         if tenant:
             return tenant
+
+        # Fallback 3b: Mapeo de alias y variaciones de sufijos (-mexico, -mx, -latam)
+        alias_tokens = [
+            clean_subdomain.replace('-mexico', '').replace('-mx', '').replace('-latam', ''),
+            f"{clean_subdomain}-mexico",
+            clean_subdomain.split('-')[0]
+        ]
+        for candidate in alias_tokens:
+            if candidate and candidate != clean_subdomain:
+                tenant = Tenant.objects.filter(subdomain__iexact=candidate, is_active=True).first()
+                if tenant:
+                    return tenant
 
     # 4. Resolución por host (parámetro query u Host header)
     raw_host = host_param or request.META.get('HTTP_X_FORWARDED_HOST') or request.META.get('HTTP_HOST') or ''
