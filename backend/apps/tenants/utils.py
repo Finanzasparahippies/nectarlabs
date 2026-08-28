@@ -124,18 +124,20 @@ def get_tenant_from_request(request):
         except (ValueError, TypeError):
             pass
 
-    # 3. Búsqueda por parámetro subdomain (con resolución flexible de alias)
+    # 3. Búsqueda por parámetro subdomain (con resolución flexible de alias y ambientes)
     if subdomain:
         clean_subdomain = str(subdomain).lower().strip()
         tenant = Tenant.objects.filter(subdomain__iexact=clean_subdomain, is_active=True).first()
         if tenant:
             return tenant
 
-        # Fallback 3b: Mapeo de alias y variaciones de sufijos (-mexico, -mx, -latam)
+        # Fallback 3b: Mapeo de alias y variaciones de sufijos (-staging, -dev, -prod, -mexico, -mx, -latam)
+        base_sub = clean_subdomain.replace('-staging', '').replace('-dev', '').replace('-prod', '')
         alias_tokens = [
-            clean_subdomain.replace('-mexico', '').replace('-mx', '').replace('-latam', ''),
-            f"{clean_subdomain}-mexico",
-            clean_subdomain.split('-')[0]
+            base_sub,
+            base_sub.replace('-mexico', '').replace('-mx', '').replace('-latam', ''),
+            f"{base_sub}-mexico",
+            base_sub.split('-')[0]
         ]
         for candidate in alias_tokens:
             if candidate and candidate != clean_subdomain:
