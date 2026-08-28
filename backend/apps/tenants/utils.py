@@ -220,30 +220,7 @@ def invalidate_tenant_cache(tenant):
         return
         
     try:
-        keys_to_delete = []
-        identifiers = [
-            str(tenant.id).lower(),
-            str(tenant.subdomain).lower(),
-        ]
-        if tenant.custom_domain:
-            identifiers.append(str(tenant.custom_domain).lower())
-            
-        for ident in identifiers:
-            keys_to_delete.extend([
-                f"tenant_pubcfg_{ident}_none_none_none",
-                f"tenant_pubcfg_none_{ident}_none_none",
-                f"tenant_pubcfg_{ident}_*",
-                f"tenant_pages_{ident}",
-            ])
-            
-        if hasattr(cache, 'delete_pattern'):
-            for ident in identifiers:
-                cache.delete_pattern(f"*tenant_pubcfg_{ident}*")
-                cache.delete_pattern(f"*tenant_pages_{ident}*")
-        else:
-            for k in keys_to_delete:
-                cache.delete(k)
-                
+        cache.clear()
         logger.info(f"Caché de Redis invalidada correctamente para el tenant '{tenant.subdomain}'")
     except Exception as e:
         logger.warning(f"Falla al invalidar caché para tenant {tenant.subdomain}: {e}")
