@@ -124,7 +124,27 @@ El script `./nectar.sh` verifica automáticamente la existencia de la red `prod_
 | `./nectar.sh test` | Ejecuta la suite de pruebas unitarias de Django |
 | `./nectar.sh up-staging` | Inicia el entorno de Staging |
 | `./nectar.sh up-prod` | Inicia el entorno de Producción |
+| `./nectar.sh provision-tenant <slug>` | Aprovisiona y levanta contenedores dinámicos dedicados por Tenant (BYO Stack) |
+| `./nectar.sh deprovision-tenant <slug>` | Detiene y remueve los contenedores del Tenant especificado |
 | `./nectar.sh clean` | Limpia de forma segura caché y redes e imágenes huérfanas |
+
+---
+
+## ⚡ Arquitectura SaaS Factory & PaaS Interna
+
+Nectar Labs opera como una plataforma PaaS autogestionada para aprovisionamiento dinámico de tenants:
+
+1. **Aprovisionador Asíncrono con Celery (`apps.tenants.tasks`):**
+   - La construcción de imágenes Docker (`docker build`) y orquestación de contenedores se delega a tareas de Celery (`async_provision_tenant_task`) para evitar el bloqueo del servidor web Gunicorn.
+
+2. **Seguridad y Control del Socket Docker (`/var/run/docker.sock`):**
+   - Las llamadas a la API de Docker se canalizan a través de comandos parametrizados y restringidos desde `apps.tenants.provisioner`, previniendo inyecciones de comandos o accesos no autorizados al host.
+
+3. **Emisión Dinámica de Certificados SSL (Let's Encrypt / Certbot):**
+   - Al registrar un dominio personalizado (BYO Domain, ej. `cliente-vip.com`), `request_ssl_certificate` ejecuta Certbot de forma automatizada y recarga las reglas perimetrales de Nginx.
+
+4. **Nginx Dynamic Upstream Resolution:**
+   - Enrutamiento dinámico mediante `resolver 127.0.0.11 valid=10s;` para resolver automáticamente la IP del contenedor dedicado `tenant_{slug}_frontend:3000` con fallback transparente al motor unificado.
 
 ---
 
@@ -138,3 +158,4 @@ El script `./nectar.sh` verifica automáticamente la existencia de la red `prod_
    - Sistema de diseño **Glassmorphism** con Tailwind CSS.
    - Manejo de estados de carga con esqueletos/shimmer y notificaciones interactivas.
    - Adaptabilidad móvil completa (menú móvil responsivo y drawer de navegación).
+

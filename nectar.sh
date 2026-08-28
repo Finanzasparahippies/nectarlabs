@@ -588,6 +588,24 @@ case $COMMAND in
         run_npm_cmd_prod install "$@"
         ;;
 
+    provision-tenant)
+        SLUG=$1
+        if [ -z "$SLUG" ]; then
+            echo "Uso: ./nectar.sh provision-tenant <subdominio_slug> [--action=build]"
+            exit 1
+        fi
+        shift
+        run_django_cmd_staging provision_tenant --slug="$SLUG" "$@"
+        ;;
+    deprovision-tenant)
+        SLUG=$1
+        if [ -z "$SLUG" ]; then
+            echo "Uso: ./nectar.sh deprovision-tenant <subdominio_slug>"
+            exit 1
+        fi
+        run_django_cmd_staging provision_tenant --slug="$SLUG" --action=remove
+        ;;
+
     # ── UTILITIES ──
     clean)
         echo "Starting comprehensive and safe VPS cleanup..."
