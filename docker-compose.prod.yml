@@ -82,7 +82,7 @@ services:
       - /var/www/premium-ties/backend:/app:z
       - premium_ties_db_prod_data:/var/lib/postgresql/data
     env_file:
-      - /var/www/premium-ties/backend/.env.prod
+      - /var/www/premium-ties/.env.prod
     restart: always
     logging:
       driver: "json-file"
@@ -101,7 +101,7 @@ services:
     volumes:
       - /var/www/premium-ties/frontend:/app:z
     env_file:
-      - /var/www/premium-ties/frontend/.env.prod
+      - /var/www/premium-ties/.env.prod
     restart: always
     logging:
       driver: "json-file"
