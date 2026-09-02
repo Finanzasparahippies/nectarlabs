@@ -88,7 +88,7 @@ function UnsubscribeContentInner() {
             <p className="text-xs text-red-400/90 leading-relaxed bg-red-500/5 border border-red-500/10 p-3.5 rounded-xl">
               {message}
             </p>
-            <p className="text-[10px] text-foreground/45 uppercase tracking-widest font-black pt-2">
+            <p className="text-2xs text-foreground/45 uppercase tracking-widest font-black pt-2">
               Néctar Labs Ecosystem
             </p>
           </div>

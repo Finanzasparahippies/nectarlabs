@@ -280,7 +280,7 @@ export default function DriverPortal() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px]">
         <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-nectar-gold mb-4"></div>
-        <div className="text-[10px] font-black uppercase tracking-[0.4em] opacity-40">Cargando Consola Repartidor...</div>
+        <div className="text-2xs font-black uppercase tracking-[0.4em] opacity-40">Cargando Consola Repartidor...</div>
       </div>
     );
   }
@@ -301,34 +301,34 @@ export default function DriverPortal() {
             </div>
 
             <div className="space-y-1">
-              <span className="text-[9px] font-black uppercase tracking-[0.4em] text-nectar-gold animate-pulse">
+              <span className="text-2xs font-black uppercase tracking-[0.4em] text-nectar-gold animate-pulse">
                 Nuevo Pedido Entrante
               </span>
               <h2 className="text-2xl font-black text-white uppercase tracking-tight">
                 ¿Aceptar Entrega?
               </h2>
-              <p className="text-[10px] text-white/40 font-mono mt-1">Pedido ID: #{pendingAcceptanceOrder.id}</p>
+              <p className="text-2xs text-white/40 font-mono mt-1">Pedido ID: #{pendingAcceptanceOrder.id}</p>
             </div>
 
             <div className="w-full bg-background border border-card-border rounded-2xl p-5 text-left space-y-4">
               <div>
-                <span className="text-[8px] font-black uppercase tracking-widest text-nectar-gold/70 block">Origen / Restaurant</span>
+                <span className="text-2xs font-black uppercase tracking-widest text-nectar-gold/70 block">Origen / Restaurant</span>
                 <span className="text-xs font-black text-white">{pendingAcceptanceOrder.restaurant_name || 'Restaurante Néctar'}</span>
               </div>
               <div className="border-t border-card-border/40 pt-3">
-                <span className="text-[8px] font-black uppercase tracking-widest text-nectar-gold/70 block">Destino</span>
+                <span className="text-2xs font-black uppercase tracking-widest text-nectar-gold/70 block">Destino</span>
                 <span className="text-xs font-black text-white">{pendingAcceptanceOrder.recipient_name}</span>
-                <p className="text-[10px] text-white/60 leading-normal mt-0.5">{pendingAcceptanceOrder.delivery_address}</p>
+                <p className="text-2xs text-white/60 leading-normal mt-0.5">{pendingAcceptanceOrder.delivery_address}</p>
               </div>
               <div className="grid grid-cols-2 gap-4 border-t border-card-border/40 pt-3">
                 <div>
-                  <span className="text-[8px] font-black uppercase tracking-widest text-nectar-gold/70 block">Método de Pago</span>
-                  <span className="text-[10px] font-black text-emerald-400 mt-1 inline-block bg-emerald-400/10 px-2 py-0.5 rounded border border-emerald-400/25">
+                  <span className="text-2xs font-black uppercase tracking-widest text-nectar-gold/70 block">Método de Pago</span>
+                  <span className="text-2xs font-black text-emerald-400 mt-1 inline-block bg-emerald-400/10 px-2 py-0.5 rounded border border-emerald-400/25">
                     {pendingAcceptanceOrder.payment_method === 'CASH' ? '💵 Efectivo' : pendingAcceptanceOrder.payment_method === 'CODI' ? '📲 CoDi' : '💳 Tarjeta (Stripe)'}
                   </span>
                 </div>
                 <div>
-                  <span className="text-[8px] font-black uppercase tracking-widest text-nectar-gold/70 block">Monto a Cobrar</span>
+                  <span className="text-2xs font-black uppercase tracking-widest text-nectar-gold/70 block">Monto a Cobrar</span>
                   <span className="text-sm font-mono font-black text-[#C68A1E]">${(pendingAcceptanceOrder.total_amount || 0).toLocaleString('es-MX')} MXN</span>
                 </div>
               </div>
@@ -363,11 +363,11 @@ export default function DriverPortal() {
             <h2 className="text-sm font-black uppercase tracking-wider text-foreground">
               {driver?.name || 'Repartidor'}
             </h2>
-            <p className="text-[9px] uppercase tracking-widest text-white/40">
+            <p className="text-2xs uppercase tracking-widest text-white/40">
               {driver?.vehicle_type === 'MOTORCYCLE' ? '🚴 Motocicleta' : driver?.vehicle_type === 'BICYCLE' ? '🚲 Bicicleta' : '🚗 Vehículo'} • {driver?.plate_number || 'Sin placas'}
             </p>
             {!driver?.is_verified && (
-              <span className="inline-block text-[8px] font-black uppercase tracking-widest px-2.5 py-1 bg-red-500/10 text-red-400 border border-red-500/20 rounded-full mt-2">
+              <span className="inline-block text-2xs font-black uppercase tracking-widest px-2.5 py-1 bg-red-500/10 text-red-400 border border-red-500/20 rounded-full mt-2">
                 Documentos Pendientes
               </span>
             )}
@@ -378,7 +378,7 @@ export default function DriverPortal() {
               id="driver-availability-toggle"
               onClick={handleToggleAvailability}
               disabled={updatingAvailability}
-              className={`px-4 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-wider border transition-all hover:scale-105 active:scale-95 flex items-center space-x-2 ${
+              className={`px-4 py-2.5 rounded-xl text-2xs font-black uppercase tracking-wider border transition-all hover:scale-105 active:scale-95 flex items-center space-x-2 ${
                 driver?.is_available
                   ? 'bg-green-500/10 text-green-400 border-green-500/25'
                   : 'bg-red-500/10 text-red-400 border-red-500/25'
@@ -412,7 +412,7 @@ export default function DriverPortal() {
             <div className="flex-1 flex flex-col items-center justify-center p-12 text-center text-white/30 space-y-4">
               <span className="text-3xl">💤</span>
               <p className="text-xs font-bold uppercase tracking-wider">No tienes entregas activas en este momento</p>
-              <p className="text-[10px] leading-relaxed">Ponte en estado disponible para empezar a recibir pedidos de los restaurantes del área.</p>
+              <p className="text-2xs leading-relaxed">Ponte en estado disponible para empezar a recibir pedidos de los restaurantes del área.</p>
             </div>
           ) : (
             <div className="space-y-4 overflow-y-auto max-h-[450px] pr-2">
@@ -427,16 +427,16 @@ export default function DriverPortal() {
                   }`}
                 >
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-[9px] font-black uppercase tracking-widest text-white/50">Pedido #{o.id}</span>
-                    <span className={`text-[8px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full ${getStatusBadge(o.status).class}`}>
+                    <span className="text-2xs font-black uppercase tracking-widest text-white/50">Pedido #{o.id}</span>
+                    <span className={`text-2xs font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full ${getStatusBadge(o.status).class}`}>
                       {getStatusBadge(o.status).label}
                     </span>
                   </div>
                   <h4 className="text-xs font-black text-white">{o.recipient_name}</h4>
-                  <p className="text-[10px] text-white/60 line-clamp-2 mt-1">{o.delivery_address}</p>
+                  <p className="text-2xs text-white/60 line-clamp-2 mt-1">{o.delivery_address}</p>
                   
                   {/* Payment Mode Indicator */}
-                  <div className="mt-3 flex items-center justify-between text-[8px] font-black uppercase tracking-widest border-t border-card-border/40 pt-2.5">
+                  <div className="mt-3 flex items-center justify-between text-2xs font-black uppercase tracking-widest border-t border-card-border/40 pt-2.5">
                     <span className="text-white/40">Pago al recibir:</span>
                     <span className={`px-2 py-0.5 rounded ${
                       o.payment_method === 'CASH'
@@ -466,14 +466,14 @@ export default function DriverPortal() {
           <div id="active-order-card" className="bg-card-bg border border-card-border rounded-[2.5rem] p-6 space-y-6 shadow-xl animate-in fade-in duration-300">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-card-border">
               <div>
-                <span className="text-[9px] font-black uppercase tracking-widest text-nectar-gold">Ruta Activa</span>
+                <span className="text-2xs font-black uppercase tracking-widest text-nectar-gold">Ruta Activa</span>
                 <h3 className="text-sm font-black text-white">{selectedOrder.recipient_name}</h3>
                 <p className="text-xs text-white/60">{selectedOrder.delivery_address}</p>
               </div>
               <div className="flex items-center space-x-3">
                 <a
                   href={`tel:${selectedOrder.recipient_phone}`}
-                  className="px-4 py-2.5 bg-background border border-card-border hover:border-white/20 text-white text-[10px] font-black uppercase tracking-wider rounded-xl transition-all"
+                  className="px-4 py-2.5 bg-background border border-card-border hover:border-white/20 text-white text-2xs font-black uppercase tracking-wider rounded-xl transition-all"
                 >
                   📞 Llamar Cliente
                 </a>
@@ -481,7 +481,7 @@ export default function DriverPortal() {
                   href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selectedOrder.delivery_address)}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="px-4 py-2.5 bg-background border border-card-border hover:border-white/20 text-white text-[10px] font-black uppercase tracking-wider rounded-xl transition-all"
+                  className="px-4 py-2.5 bg-background border border-card-border hover:border-white/20 text-white text-2xs font-black uppercase tracking-wider rounded-xl transition-all"
                 >
                   🗺️ Google Maps
                 </a>
@@ -493,7 +493,7 @@ export default function DriverPortal() {
               <button
                 onClick={() => handleUpdateOrderStatus(selectedOrder.id, 'PICKED_UP')}
                 disabled={selectedOrder.status !== 'ASSIGNED'}
-                className="flex-1 py-3 px-4 rounded-xl text-[9px] font-black uppercase tracking-wider bg-indigo-600 hover:bg-indigo-500 disabled:opacity-35 transition-all text-background"
+                className="flex-1 py-3 px-4 rounded-xl text-2xs font-black uppercase tracking-wider bg-indigo-600 hover:bg-indigo-500 disabled:opacity-35 transition-all text-background"
               >
                 📦 Recoger Pedido
               </button>
@@ -501,7 +501,7 @@ export default function DriverPortal() {
               <button
                 onClick={() => handleUpdateOrderStatus(selectedOrder.id, 'IN_TRANSIT')}
                 disabled={selectedOrder.status !== 'PICKED_UP'}
-                className="flex-1 py-3 px-4 rounded-xl text-[9px] font-black uppercase tracking-wider bg-yellow-500 hover:bg-yellow-400 disabled:opacity-35 transition-all text-background"
+                className="flex-1 py-3 px-4 rounded-xl text-2xs font-black uppercase tracking-wider bg-yellow-500 hover:bg-yellow-400 disabled:opacity-35 transition-all text-background"
               >
                 🏍️ Iniciar Viaje
               </button>
@@ -509,7 +509,7 @@ export default function DriverPortal() {
               <button
                 onClick={() => handleUpdateOrderStatus(selectedOrder.id, 'DELIVERED')}
                 disabled={selectedOrder.status !== 'IN_TRANSIT'}
-                className="flex-1 py-3 px-4 rounded-xl text-[9px] font-black uppercase tracking-wider bg-green-500 hover:bg-green-400 disabled:opacity-35 transition-all text-background animate-pulse"
+                className="flex-1 py-3 px-4 rounded-xl text-2xs font-black uppercase tracking-wider bg-green-500 hover:bg-green-400 disabled:opacity-35 transition-all text-background animate-pulse"
               >
                 ✅ Entregado
               </button>

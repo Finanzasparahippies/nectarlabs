@@ -42,7 +42,7 @@ export default function BlogPostDetail({ params }: { params: Promise<{ slug: str
   if (loading) return (
     <div className="min-h-screen bg-background text-foreground flex flex-col items-center justify-center">
       <div className="w-12 h-12 border-4 border-nectar-gold border-t-transparent rounded-full animate-spin mb-4"></div>
-      <p className="font-black uppercase tracking-[0.4em] opacity-20 text-[10px]">Cargando Diarios...</p>
+      <p className="font-black uppercase tracking-[0.4em] opacity-20 text-2xs">Cargando Diarios...</p>
     </div>
   );
 
@@ -50,7 +50,7 @@ export default function BlogPostDetail({ params }: { params: Promise<{ slug: str
     <div className="min-h-screen bg-background text-foreground flex flex-col items-center justify-center p-6 text-center">
       <h2 className="text-3xl font-black tracking-tight mb-4 text-red-500">404 - Artículo No Encontrado</h2>
       <p className="text-sm opacity-60 mb-8 max-w-sm">{error || "El artículo que buscas ha sido movido o no existe."}</p>
-      <Link href="/blog" className="px-6 py-3 bg-nectar-gold text-background text-[9px] font-black uppercase tracking-widest rounded-xl hover:scale-105 transition-all">
+      <Link href="/blog" className="px-6 py-3 bg-nectar-gold text-background text-2xs font-black uppercase tracking-widest rounded-xl hover:scale-105 transition-all">
         Volver al Blog
       </Link>
     </div>
@@ -61,7 +61,7 @@ export default function BlogPostDetail({ params }: { params: Promise<{ slug: str
       {/* Top Navbar */}
       <header className="border-b border-card-border/40 backdrop-blur-md sticky top-0 z-50 bg-background/80">
         <div className="max-w-4xl mx-auto px-6 py-6 flex justify-between items-center">
-          <Link href="/blog" className="text-[10px] font-black uppercase tracking-widest text-nectar-gold hover:underline flex items-center gap-2">
+          <Link href="/blog" className="text-2xs font-black uppercase tracking-widest text-nectar-gold hover:underline flex items-center gap-2">
             <span>←</span> Volver al Blog
           </Link>
           <Link href="/" className="text-sm font-black tracking-tighter">
@@ -75,13 +75,13 @@ export default function BlogPostDetail({ params }: { params: Promise<{ slug: str
         <article className="space-y-12">
           {/* Header Metadata */}
           <div className="space-y-6 text-center md:text-left">
-            <span className="px-4 py-1.5 bg-nectar-gold/10 text-nectar-gold text-[9px] font-black uppercase tracking-widest rounded-full">
+            <span className="px-4 py-1.5 bg-nectar-gold/10 text-nectar-gold text-2xs font-black uppercase tracking-widest rounded-full">
               {post.category_name || "Tecnología"}
             </span>
             <h1 className="text-4xl md:text-6xl font-black tracking-tighter leading-none mt-4">
               {post.title}
             </h1>
-            <div className="flex justify-center md:justify-start gap-4 text-[10px] font-bold opacity-45 uppercase tracking-wider pt-2">
+            <div className="flex justify-center md:justify-start gap-4 text-2xs font-bold opacity-45 uppercase tracking-wider pt-2">
               <span>Por Néctar Labs</span>
               <span>•</span>
               <time>{new Date(post.created_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}</time>
@@ -102,7 +102,7 @@ export default function BlogPostDetail({ params }: { params: Promise<{ slug: str
           {/* Tech Stack Pills */}
           <div className="flex flex-wrap gap-2 justify-center md:justify-start">
             {post.tech_stack.map((tech, idx) => (
-              <span key={idx} className="px-4 py-2 bg-card-bg border border-card-border text-foreground/75 text-[9px] font-bold rounded-xl uppercase tracking-wider">
+              <span key={idx} className="px-4 py-2 bg-card-bg border border-card-border text-foreground/75 text-2xs font-bold rounded-xl uppercase tracking-wider">
                 {tech}
               </span>
             ))}
@@ -110,7 +110,7 @@ export default function BlogPostDetail({ params }: { params: Promise<{ slug: str
 
           {/* AdSense Top Ad */}
           <div className="border-y border-card-border/40 py-6 my-10 flex flex-col items-center justify-center">
-            <span className="text-[6px] font-black tracking-[0.4em] uppercase opacity-25 mb-2">Publicidad</span>
+            <span className="text-2xs font-black tracking-[0.4em] uppercase opacity-25 mb-2">Publicidad</span>
             <ins className="adsbygoogle"
                  style={{ display: 'block', textAlign: 'center' }}
                  data-ad-layout="in-article"
@@ -127,7 +127,7 @@ export default function BlogPostDetail({ params }: { params: Promise<{ slug: str
 
           {/* AdSense Bottom Ad */}
           <div className="border-t border-card-border/40 pt-12 mt-16 flex flex-col items-center justify-center">
-            <span className="text-[6px] font-black tracking-[0.4em] uppercase opacity-25 mb-4">Publicidad</span>
+            <span className="text-2xs font-black tracking-[0.4em] uppercase opacity-25 mb-4">Publicidad</span>
             <ins className="adsbygoogle"
                  style={{ display: 'block' }}
                  data-ad-client="ca-pub-2582703158474486"
@@ -139,7 +139,7 @@ export default function BlogPostDetail({ params }: { params: Promise<{ slug: str
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-card-border/30 bg-card-bg/10 py-12 text-center text-[9px] font-black uppercase tracking-[0.2em] opacity-45">
+      <footer className="border-t border-card-border/30 bg-card-bg/10 py-12 text-center text-2xs font-black uppercase tracking-[0.2em] opacity-45">
         &copy; {new Date().getFullYear()} Néctar Labs. Todos los derechos reservados.
       </footer>
     </div>

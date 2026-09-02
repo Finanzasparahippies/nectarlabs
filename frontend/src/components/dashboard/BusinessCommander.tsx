@@ -1150,7 +1150,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
   if (!stats) return (
     <div className="py-20 flex flex-col items-center justify-center">
       <div className="w-12 h-12 border-4 border-nectar-gold border-t-transparent rounded-full animate-spin mb-4"></div>
-      <p className="font-black uppercase tracking-[0.4em] opacity-20 text-[10px]">Cargando Analíticas Consolidadas...</p>
+      <p className="font-black uppercase tracking-[0.4em] opacity-20 text-2xs">Cargando Analíticas Consolidadas...</p>
     </div>
   );
 
@@ -1159,7 +1159,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
 
   // Helper for empty column render
   const EmptyColumn = () => (
-    <div className="h-40 flex items-center justify-center text-center text-[9px] font-black uppercase tracking-widest opacity-25 border border-dashed border-card-border/40 rounded-2xl">
+    <div className="h-40 flex items-center justify-center text-center text-2xs font-black uppercase tracking-widest opacity-25 border border-dashed border-card-border/40 rounded-2xl">
       Vacío
     </div>
   );
@@ -1180,7 +1180,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
       <div className="bg-card-bg/60 border border-card-border p-5 rounded-2xl hover:border-nectar-gold/40 transition-all duration-300 flex flex-col gap-3 relative group shadow-sm hover:shadow-md text-left">
         <div className="flex justify-between items-start gap-2 w-full min-w-0">
           <span className="font-black text-xs text-foreground uppercase tracking-wide truncate max-w-[170px]">{lead.name}</span>
-          <span className="text-[8px] font-bold text-foreground/40 font-mono shrink-0">{createdDate}</span>
+          <span className="text-2xs font-bold text-foreground/40 font-mono shrink-0">{createdDate}</span>
         </div>
 
         {lead.email && (
@@ -1203,7 +1203,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
 
           <div className="text-right shrink-0">
             <span className="text-[7.5px] font-black uppercase tracking-wider text-foreground/35 block">Vendedor</span>
-            <span className="px-2 py-0.5 bg-foreground/5 rounded text-[8px] font-black text-foreground/60 border border-card-border/50 truncate max-w-[100px] inline-block">
+            <span className="px-2 py-0.5 bg-foreground/5 rounded text-2xs font-black text-foreground/60 border border-card-border/50 truncate max-w-[100px] inline-block">
               {spUser ? spUser.username : 'Sin Asignar'}
             </span>
           </div>
@@ -1214,7 +1214,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
           {canMoveLeft && (
             <button
               onClick={() => handleMoveLeadStatus(lead.id, STATUS_ORDER[statusIdx - 1])}
-              className="p-1.5 bg-foreground/5 hover:bg-foreground/10 text-foreground/60 hover:text-foreground rounded-lg border border-card-border text-[9px] font-bold transition-all hover:scale-105 active:scale-95"
+              className="p-1.5 bg-foreground/5 hover:bg-foreground/10 text-foreground/60 hover:text-foreground rounded-lg border border-card-border text-2xs font-bold transition-all hover:scale-105 active:scale-95"
               title={`Mover a ${STATUS_ORDER[statusIdx - 1]}`}
             >
               ←
@@ -1225,14 +1225,14 @@ export default function BusinessCommander({ stats, installments, setInstallments
             <>
               <button
                 onClick={() => handleMoveLeadStatus(lead.id, 'LOST')}
-                className="px-2.5 py-1 bg-red-950/40 border border-red-500/30 hover:bg-red-900/40 text-red-400 rounded-lg text-[8px] font-black uppercase tracking-wider transition-all hover:scale-105 active:scale-95"
+                className="px-2.5 py-1 bg-red-950/40 border border-red-500/30 hover:bg-red-900/40 text-red-400 rounded-lg text-2xs font-black uppercase tracking-wider transition-all hover:scale-105 active:scale-95"
                 title="Marcar como Perdido"
               >
                 Perder ✗
               </button>
               <button
                 onClick={() => handleMoveLeadStatus(lead.id, 'WON')}
-                className="px-2.5 py-1 bg-green-950/40 border border-green-500/30 hover:bg-green-900/40 text-green-400 rounded-lg text-[8px] font-black uppercase tracking-wider transition-all hover:scale-105 active:scale-95 font-bold"
+                className="px-2.5 py-1 bg-green-950/40 border border-green-500/30 hover:bg-green-900/40 text-green-400 rounded-lg text-2xs font-black uppercase tracking-wider transition-all hover:scale-105 active:scale-95 font-bold"
                 title="Marcar como Ganado"
               >
                 Ganar ✓
@@ -1242,7 +1242,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
             canMoveRight && (
               <button
                 onClick={() => handleMoveLeadStatus(lead.id, STATUS_ORDER[statusIdx + 1])}
-                className="p-1.5 bg-nectar-gold/10 hover:bg-nectar-gold hover:text-background text-nectar-gold rounded-lg border border-nectar-gold/20 text-[9px] font-black transition-all hover:scale-105 active:scale-95"
+                className="p-1.5 bg-nectar-gold/10 hover:bg-nectar-gold hover:text-background text-nectar-gold rounded-lg border border-nectar-gold/20 text-2xs font-black transition-all hover:scale-105 active:scale-95"
                 title={`Mover a ${STATUS_ORDER[statusIdx + 1]}`}
               >
                 →
@@ -1273,7 +1273,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
       <div className="bg-nectar-gold/5 border border-nectar-gold/25 p-5 rounded-2xl relative shadow-md transition-all duration-300 hover:border-nectar-gold/50 flex flex-col gap-3 text-left">
         <div className="flex justify-between items-start gap-2 w-full min-w-0">
           <span className="font-black text-xs text-foreground uppercase tracking-wide truncate max-w-[180px]">{contract.full_name}</span>
-          <span className="text-[8px] font-bold text-nectar-gold/60 font-mono shrink-0">{signedDate}</span>
+          <span className="text-2xs font-bold text-nectar-gold/60 font-mono shrink-0">{signedDate}</span>
         </div>
 
         <p className="text-[8.5px] text-foreground/50 font-mono truncate" title={clientEmail}>{clientEmail}</p>
@@ -1308,7 +1308,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
 
           <div className="text-right shrink-0">
             <span className="text-[7.5px] font-black uppercase tracking-wider text-foreground/35 block">Vendedor</span>
-            <span className="px-2 py-0.5 bg-nectar-gold/10 rounded text-[8px] font-black text-nectar-gold/80 border border-nectar-gold/20 truncate max-w-[100px] inline-block">
+            <span className="px-2 py-0.5 bg-nectar-gold/10 rounded text-2xs font-black text-nectar-gold/80 border border-nectar-gold/20 truncate max-w-[100px] inline-block">
               {spUser ? spUser.username : 'Sin Asignar'}
             </span>
           </div>
@@ -1319,7 +1319,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
             href={getInlineViewUrl(contract.pdf_file, 'contract', contract.id)}
             target="_blank"
             rel="noreferrer"
-            className="w-full text-center py-2 bg-nectar-gold hover:bg-nectar-gold/90 text-background text-[9px] font-black uppercase tracking-widest rounded-xl transition-all font-bold mt-1 shadow-sm hover:scale-[1.02]"
+            className="w-full text-center py-2 bg-nectar-gold hover:bg-nectar-gold/90 text-background text-2xs font-black uppercase tracking-widest rounded-xl transition-all font-bold mt-1 shadow-sm hover:scale-[1.02]"
           >
             Ver Contrato Firmado
           </a>
@@ -1450,7 +1450,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
         >
           Suscripciones Add-ons
           {addonNotifCount > 0 && (
-            <span className="ml-2 px-1.5 py-0.5 text-[8px] font-black bg-amber-500 text-white rounded-full animate-pulse flex items-center justify-center min-w-[14px] h-[14px]">
+            <span className="ml-2 px-1.5 py-0.5 text-2xs font-black bg-amber-500 text-white rounded-full animate-pulse flex items-center justify-center min-w-[14px] h-[14px]">
               {addonNotifCount}
             </span>
           )}
@@ -1477,7 +1477,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
               <div className="absolute top-0 right-0 w-24 h-24 bg-nectar-gold/5 blur-2xl rounded-full"></div>
               <div>
                 <div className="flex justify-between items-start mb-6">
-                  <span className="text-[9px] font-black uppercase tracking-widest opacity-40">Ventas Consolidadas</span>
+                  <span className="text-2xs font-black uppercase tracking-widest opacity-40">Ventas Consolidadas</span>
                   <div className="w-8 h-8 rounded-xl bg-nectar-gold/10 text-nectar-gold flex items-center justify-center">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
                       <line x1="12" y1="1" x2="12" y2="23"></line>
@@ -1488,13 +1488,13 @@ export default function BusinessCommander({ stats, installments, setInstallments
                 <h3 className="text-3xl font-black tracking-tight mb-2">
                   ${financials.gross_sales.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
                 </h3>
-                <p className="text-[9px] font-bold text-foreground/40 uppercase tracking-wider mb-6">
+                <p className="text-2xs font-bold text-foreground/40 uppercase tracking-wider mb-6">
                   Ingresos Consolidados de Néctar Labs
                 </p>
               </div>
 
               {/* Desglose de Ventas */}
-              <div className="pt-4 border-t border-card-border/40 grid grid-cols-3 gap-2 text-[8px] font-black uppercase tracking-wider">
+              <div className="pt-4 border-t border-card-border/40 grid grid-cols-3 gap-2 text-2xs font-black uppercase tracking-wider">
                 <div>
                   <p className="opacity-30 mb-1">Contratos MRR</p>
                   <p className="text-foreground/90 font-black">${(financials.contracts_mrr || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}</p>
@@ -1515,7 +1515,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
               <div className="absolute top-0 right-0 w-24 h-24 bg-foreground/5 blur-2xl rounded-full"></div>
               <div>
                 <div className="flex justify-between items-start mb-6">
-                  <span className="text-[9px] font-black uppercase tracking-widest opacity-40">Costos Operativos</span>
+                  <span className="text-2xs font-black uppercase tracking-widest opacity-40">Costos Operativos</span>
                   <div className="w-8 h-8 rounded-xl bg-foreground/5 text-foreground opacity-60 flex items-center justify-center">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
                       <rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect>
@@ -1534,13 +1534,13 @@ export default function BusinessCommander({ stats, installments, setInstallments
                 <h3 className="text-3xl font-black tracking-tight mb-2">
                   ${financials.total_costs.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
                 </h3>
-                <p className="text-[9px] font-bold text-foreground/40 uppercase tracking-wider mb-6">
+                <p className="text-2xs font-bold text-foreground/40 uppercase tracking-wider mb-6">
                   Costos Operativos Mensualizados
                 </p>
               </div>
 
               {/* Desglose de Costos */}
-              <div className="pt-4 border-t border-card-border/40 grid grid-cols-2 gap-4 text-[9px] font-bold uppercase tracking-wider">
+              <div className="pt-4 border-t border-card-border/40 grid grid-cols-2 gap-4 text-2xs font-bold uppercase tracking-wider">
                 <div>
                   <p className="opacity-30 mb-1">Servidores</p>
                   <p className="text-foreground/90 font-black">${(financials.servers_total || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}</p>
@@ -1557,7 +1557,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
               <div className="absolute top-0 right-0 w-24 h-24 bg-green-500/5 blur-2xl rounded-full"></div>
               <div>
                 <div className="flex justify-between items-start mb-6">
-                  <span className="text-[9px] font-black uppercase tracking-widest opacity-40">Utilidad Neta</span>
+                  <span className="text-2xs font-black uppercase tracking-widest opacity-40">Utilidad Neta</span>
                   <div className="w-8 h-8 rounded-xl bg-green-500/10 text-green-400 flex items-center justify-center">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
                       <line x1="7" y1="17" x2="17" y2="7"></line>
@@ -1568,11 +1568,11 @@ export default function BusinessCommander({ stats, installments, setInstallments
                 <h3 className="text-3xl font-black tracking-tight mb-2 text-green-400">
                   ${financials.net_profit.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
                 </h3>
-                <p className="text-[9px] font-bold text-foreground/40 uppercase tracking-wider">
+                <p className="text-2xs font-bold text-foreground/40 uppercase tracking-wider">
                   Margen Neto Mensual Consolidado
                 </p>
               </div>
-              <div className="text-[9px] font-bold text-foreground/25 uppercase tracking-wider pt-4 border-t border-card-border/20">
+              <div className="text-2xs font-bold text-foreground/25 uppercase tracking-wider pt-4 border-t border-card-border/20">
                 Fórmula: Ingresos - Costos
               </div>
             </div>
@@ -1582,7 +1582,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
               <div className="absolute top-0 right-0 w-24 h-24 bg-nectar-gold/5 blur-2xl rounded-full"></div>
               <div>
                 <div className="flex justify-between items-start mb-6">
-                  <span className="text-[9px] font-black uppercase tracking-widest opacity-40">Eficiencia Operativa</span>
+                  <span className="text-2xs font-black uppercase tracking-widest opacity-40">Eficiencia Operativa</span>
                   <div className="w-8 h-8 rounded-xl bg-nectar-gold/15 text-nectar-gold flex items-center justify-center">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
                       <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
@@ -1593,11 +1593,11 @@ export default function BusinessCommander({ stats, installments, setInstallments
                 <h3 className="text-3xl font-black tracking-tight mb-2 text-nectar-gold">
                   {financials.margin.toFixed(1)}%
                 </h3>
-                <p className="text-[9px] font-bold text-foreground/40 uppercase tracking-wider">
+                <p className="text-2xs font-bold text-foreground/40 uppercase tracking-wider">
                   Retorno de Ganancia por cada Dólar Cobrado
                 </p>
               </div>
-              <div className="text-[9px] font-bold text-foreground/25 uppercase tracking-wider pt-4 border-t border-card-border/20">
+              <div className="text-2xs font-bold text-foreground/25 uppercase tracking-wider pt-4 border-t border-card-border/20">
                 Fórmula: (Utilidad / Ingresos) * 100
               </div>
             </div>
@@ -1609,7 +1609,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
               <h3 className="text-xs font-black uppercase tracking-[0.3em] opacity-30">Tendencia Financiera Trimestral</h3>
 
               {/* Instrucción visual */}
-              <span className="text-[8px] font-black text-nectar-gold uppercase tracking-widest bg-nectar-gold/5 px-3 py-1 rounded-full">
+              <span className="text-2xs font-black text-nectar-gold uppercase tracking-widest bg-nectar-gold/5 px-3 py-1 rounded-full">
                 Desliza el cursor para explorar
               </span>
             </div>
@@ -1699,7 +1699,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
                         textAnchor="middle"
                         fill="var(--foreground)"
                         fillOpacity={isActive ? 0.9 : 0.3}
-                        className="text-[8px] font-black uppercase tracking-wider transition-all duration-300"
+                        className="text-2xs font-black uppercase tracking-wider transition-all duration-300"
                       >
                         {point.month}
                       </text>
@@ -1729,7 +1729,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
               </svg>
 
               {/* Chart Legend */}
-              <div className="flex gap-8 justify-center mt-6 text-[8px] font-black uppercase tracking-widest">
+              <div className="flex gap-8 justify-center mt-6 text-2xs font-black uppercase tracking-widest">
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-0.5 bg-[#E2B355]"></div>
                   <span className="opacity-80">Ingresos</span>
@@ -1742,7 +1742,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
 
               {/* Unified Hover Tooltip Card */}
               {activePoint !== null && (
-                <div className="absolute top-4 right-4 bg-card-bg/95 backdrop-blur-md border border-card-border p-5 rounded-3xl shadow-2xl text-[9px] font-black uppercase tracking-widest space-y-2.5 z-30 pointer-events-none animate-fadeIn border-nectar-gold/30">
+                <div className="absolute top-4 right-4 bg-card-bg/95 backdrop-blur-md border border-card-border p-5 rounded-3xl shadow-2xl text-2xs font-black uppercase tracking-widest space-y-2.5 z-30 pointer-events-none animate-fadeIn border-nectar-gold/30">
                   <div className="flex justify-between items-center gap-6 border-b border-card-border/50 pb-2">
                     <span className="text-nectar-gold font-black">Periodo</span>
                     <span className="text-foreground">{monthly_trend[activePoint].month}</span>
@@ -1770,13 +1770,13 @@ export default function BusinessCommander({ stats, installments, setInstallments
             <section className="bg-card-bg border border-card-border rounded-[2.5rem] p-8 md:p-10 shadow-lg">
               <div className="mb-8">
                 <h3 className="text-xs font-black uppercase tracking-[0.3em] opacity-30">Facturación Contractual</h3>
-                <p className="text-[9px] font-bold text-foreground/40 mt-1 uppercase tracking-wider">Próximos cobros a clientes por planes activos</p>
+                <p className="text-2xs font-bold text-foreground/40 mt-1 uppercase tracking-wider">Próximos cobros a clientes por planes activos</p>
               </div>
 
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="border-b border-card-border/50 text-[8px] font-black uppercase tracking-widest opacity-40">
+                    <tr className="border-b border-card-border/50 text-2xs font-black uppercase tracking-widest opacity-40">
                       <th className="pb-4">Cliente</th>
                       <th className="pb-4 text-right">Monto</th>
                       <th className="pb-4 text-center">Vence</th>
@@ -1788,28 +1788,28 @@ export default function BusinessCommander({ stats, installments, setInstallments
                       <tr key={billing.id} className="border-b border-card-border/30 last:border-0 hover:bg-foreground/[0.02] transition-colors">
                         <td className="py-4 pr-4">
                           <h4 className="font-black text-sm">{billing.client}</h4>
-                          <p className="text-[7px] font-bold text-nectar-gold uppercase tracking-wider mt-0.5">{billing.plan}</p>
+                          <p className="text-2xs font-bold text-nectar-gold uppercase tracking-wider mt-0.5">{billing.plan}</p>
                         </td>
                         <td className="py-4 text-right font-bold text-sm">
                           ${billing.amount.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
                         </td>
-                        <td className="py-4 text-center text-[10px] font-bold opacity-60">
+                        <td className="py-4 text-center text-2xs font-bold opacity-60">
                           {new Date(billing.next_payment_date).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' })}
                         </td>
                         <td className="py-4 text-right">
                           {billing.status === 'overdue' ? (
-                            <span className="px-3 py-1.5 bg-red-500/10 text-red-500 text-[7px] font-black uppercase tracking-widest rounded-full animate-pulse">Vencido</span>
+                            <span className="px-3 py-1.5 bg-red-500/10 text-red-500 text-2xs font-black uppercase tracking-widest rounded-full animate-pulse">Vencido</span>
                           ) : billing.status === 'upcoming' ? (
-                            <span className="px-3 py-1.5 bg-amber-500/10 text-amber-500 text-[7px] font-black uppercase tracking-widest rounded-full">En {billing.days_remaining} días</span>
+                            <span className="px-3 py-1.5 bg-amber-500/10 text-amber-500 text-2xs font-black uppercase tracking-widest rounded-full">En {billing.days_remaining} días</span>
                           ) : (
-                            <span className="px-3 py-1.5 bg-green-500/10 text-green-500 text-[7px] font-black uppercase tracking-widest rounded-full">Al día</span>
+                            <span className="px-3 py-1.5 bg-green-500/10 text-green-500 text-2xs font-black uppercase tracking-widest rounded-full">Al día</span>
                           )}
                         </td>
                       </tr>
                     ))}
                     {client_billing.length === 0 && (
                       <tr>
-                        <td colSpan={4} className="py-12 text-center text-[9px] font-black uppercase tracking-widest opacity-25">
+                        <td colSpan={4} className="py-12 text-center text-2xs font-black uppercase tracking-widest opacity-25">
                           Sin cobros contractuales pendientes
                         </td>
                       </tr>
@@ -1823,13 +1823,13 @@ export default function BusinessCommander({ stats, installments, setInstallments
             <section className="bg-card-bg border border-card-border rounded-[2.5rem] p-8 md:p-10 shadow-lg">
               <div className="mb-8">
                 <h3 className="text-xs font-black uppercase tracking-[0.3em] opacity-30">Vencimiento de Infraestructura</h3>
-                <p className="text-[9px] font-bold text-foreground/40 mt-1 uppercase tracking-wider">Fechas límites de pago para servidores y servicios</p>
+                <p className="text-2xs font-bold text-foreground/40 mt-1 uppercase tracking-wider">Fechas límites de pago para servidores y servicios</p>
               </div>
 
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="border-b border-card-border/50 text-[8px] font-black uppercase tracking-widest opacity-40">
+                    <tr className="border-b border-card-border/50 text-2xs font-black uppercase tracking-widest opacity-40">
                       <th className="pb-4">Infraestructura</th>
                       <th className="pb-4 text-right">Costo</th>
                       <th className="pb-4 text-center">Vence</th>
@@ -1841,28 +1841,28 @@ export default function BusinessCommander({ stats, installments, setInstallments
                       <tr key={billing.id} className="border-b border-card-border/30 last:border-0 hover:bg-foreground/[0.02] transition-colors">
                         <td className="py-4 pr-4">
                           <h4 className="font-black text-sm">{billing.name}</h4>
-                          <p className="text-[7px] font-bold text-nectar-gold uppercase tracking-wider mt-0.5">{billing.provider}</p>
+                          <p className="text-2xs font-bold text-nectar-gold uppercase tracking-wider mt-0.5">{billing.provider}</p>
                         </td>
                         <td className="py-4 text-right font-bold text-sm">
                           ${billing.amount.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
                         </td>
-                        <td className="py-4 text-center text-[10px] font-bold opacity-60">
+                        <td className="py-4 text-center text-2xs font-bold opacity-60">
                           {new Date(billing.next_payment_date).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' })}
                         </td>
                         <td className="py-4 text-right">
                           {billing.status === 'overdue' ? (
-                            <span className="px-3 py-1.5 bg-red-500/10 text-red-500 text-[7px] font-black uppercase tracking-widest rounded-full animate-pulse">Expirado</span>
+                            <span className="px-3 py-1.5 bg-red-500/10 text-red-500 text-2xs font-black uppercase tracking-widest rounded-full animate-pulse">Expirado</span>
                           ) : billing.status === 'upcoming' ? (
-                            <span className="px-3 py-1.5 bg-amber-500/10 text-amber-500 text-[7px] font-black uppercase tracking-widest rounded-full">Por pagar</span>
+                            <span className="px-3 py-1.5 bg-amber-500/10 text-amber-500 text-2xs font-black uppercase tracking-widest rounded-full">Por pagar</span>
                           ) : (
-                            <span className="px-3 py-1.5 bg-green-500/10 text-green-500 text-[7px] font-black uppercase tracking-widest rounded-full">Al día</span>
+                            <span className="px-3 py-1.5 bg-green-500/10 text-green-500 text-2xs font-black uppercase tracking-widest rounded-full">Al día</span>
                           )}
                         </td>
                       </tr>
                     ))}
                     {server_billing.length === 0 && (
                       <tr>
-                        <td colSpan={4} className="py-12 text-center text-[9px] font-black uppercase tracking-widest opacity-25">
+                        <td colSpan={4} className="py-12 text-center text-2xs font-black uppercase tracking-widest opacity-25">
                           Sin vencimientos de servidores registrados
                         </td>
                       </tr>
@@ -1877,13 +1877,13 @@ export default function BusinessCommander({ stats, installments, setInstallments
           <section className="bg-card-bg border border-card-border rounded-[2.5rem] p-8 md:p-10 shadow-lg mt-12">
             <div className="mb-8">
               <h3 className="text-xs font-black uppercase tracking-[0.3em] opacity-30">Control de Mensualidades y Emisión de CFDI (SAT)</h3>
-              <p className="text-[9px] font-bold text-foreground/40 mt-1 uppercase tracking-wider">Validación de comprobantes SPEI/Depósitos y registro de Facturas timbradas</p>
+              <p className="text-2xs font-bold text-foreground/40 mt-1 uppercase tracking-wider">Validación de comprobantes SPEI/Depósitos y registro de Facturas timbradas</p>
             </div>
 
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b border-card-border/50 text-[8px] font-black uppercase tracking-widest opacity-40">
+                  <tr className="border-b border-card-border/50 text-2xs font-black uppercase tracking-widest opacity-40">
                     <th className="pb-4">Contrato / Mes</th>
                     <th className="pb-4 text-right">Monto</th>
                     <th className="pb-4 text-center">Vencimiento</th>
@@ -1898,17 +1898,17 @@ export default function BusinessCommander({ stats, installments, setInstallments
                       <td className="py-4 pr-4">
                         <h4 className="font-black text-sm">Contrato #{inst.contract}</h4>
                         {inst.client_name && (
-                          <p className="text-[9px] font-black text-foreground mt-0.5">{inst.client_name}</p>
+                          <p className="text-2xs font-black text-foreground mt-0.5">{inst.client_name}</p>
                         )}
                         {inst.project_name && (
-                          <p className="text-[8px] font-bold text-nectar-gold opacity-80 mt-0.5">{inst.project_name}</p>
+                          <p className="text-2xs font-bold text-nectar-gold opacity-80 mt-0.5">{inst.project_name}</p>
                         )}
-                        <p className="text-[7px] font-bold text-foreground/40 uppercase tracking-wider mt-1">Mensualidad {inst.installment_number} de 6</p>
+                        <p className="text-2xs font-bold text-foreground/40 uppercase tracking-wider mt-1">Mensualidad {inst.installment_number} de 6</p>
                       </td>
                       <td className="py-4 text-right font-bold text-sm">
                         ${parseFloat(inst.amount).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
                       </td>
-                      <td className="py-4 text-center text-[10px] font-bold opacity-60">
+                      <td className="py-4 text-center text-2xs font-bold opacity-60">
                         {inst.due_date}
                       </td>
                       <td className="py-4 text-center">
@@ -1917,12 +1917,12 @@ export default function BusinessCommander({ stats, installments, setInstallments
                             href={getInlineViewUrl(inst.receipt_file, 'receipt', inst.id)}
                             target="_blank"
                             rel="noreferrer"
-                            className="px-2.5 py-1 bg-nectar-gold/10 text-nectar-gold hover:bg-nectar-gold hover:text-background text-[8px] font-black uppercase tracking-widest rounded-full transition-all inline-block font-bold border border-nectar-gold/20"
+                            className="px-2.5 py-1 bg-nectar-gold/10 text-nectar-gold hover:bg-nectar-gold hover:text-background text-2xs font-black uppercase tracking-widest rounded-full transition-all inline-block font-bold border border-nectar-gold/20"
                           >
                             Ver Comprobante
                           </a>
                         ) : (
-                          <span className="text-[8px] opacity-35 font-bold uppercase">No cargado</span>
+                          <span className="text-2xs opacity-35 font-bold uppercase">No cargado</span>
                         )}
                       </td>
                       <td className="py-4 text-center">
@@ -1930,7 +1930,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
                           <select
                             value={inst.status}
                             onChange={(e) => handleUpdateInstallmentStatus(inst.id, e.target.value)}
-                            className={`px-2.5 py-1 text-[7px] font-black uppercase tracking-wider rounded-full bg-background border focus:outline-none cursor-pointer transition-colors ${inst.status === 'PAID'
+                            className={`px-2.5 py-1 text-2xs font-black uppercase tracking-wider rounded-full bg-background border focus:outline-none cursor-pointer transition-colors ${inst.status === 'PAID'
                               ? 'border-green-500/30 text-green-500 bg-green-500/5'
                               : inst.status === 'CANCELLED'
                                 ? 'border-red-500/30 text-red-500 bg-red-500/5'
@@ -1946,7 +1946,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
                           {inst.status !== 'PAID' && inst.receipt_file && (
                             <button
                               onClick={() => handleUpdateInstallmentStatus(inst.id, 'PAID')}
-                              className="mt-1 px-2 py-0.5 bg-green-600 hover:bg-green-500 text-white text-[7px] font-black uppercase tracking-widest rounded-md hover:scale-105 active:scale-95 transition-all shadow-sm"
+                              className="mt-1 px-2 py-0.5 bg-green-600 hover:bg-green-500 text-white text-2xs font-black uppercase tracking-widest rounded-md hover:scale-105 active:scale-95 transition-all shadow-sm"
                             >
                               Aprobar Pago
                             </button>
@@ -1956,8 +1956,8 @@ export default function BusinessCommander({ stats, installments, setInstallments
                       <td className="py-4 text-right">
                         {inst.cfdi_uuid ? (
                           <div className="text-right">
-                            <span className="px-2.5 py-1 bg-green-500/10 text-green-400 text-[7px] font-black uppercase tracking-widest rounded-full">Timbrada</span>
-                            <p className="text-[7px] font-mono text-foreground/45 mt-1 select-all">{inst.cfdi_uuid}</p>
+                            <span className="px-2.5 py-1 bg-green-500/10 text-green-400 text-2xs font-black uppercase tracking-widest rounded-full">Timbrada</span>
+                            <p className="text-2xs font-mono text-foreground/45 mt-1 select-all">{inst.cfdi_uuid}</p>
                           </div>
                         ) : (
                           <div className="flex justify-end items-center gap-2">
@@ -1965,7 +1965,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
                               <button
                                 onClick={() => handleStampInvoice(inst.id)}
                                 disabled={stampingInvoice === inst.id}
-                                className="px-3 py-1.5 bg-green-600 hover:bg-green-500 text-white text-[7px] font-black uppercase tracking-widest rounded-lg hover:scale-105 active:scale-95 transition-all disabled:opacity-50 font-bold shrink-0"
+                                className="px-3 py-1.5 bg-green-600 hover:bg-green-500 text-white text-2xs font-black uppercase tracking-widest rounded-lg hover:scale-105 active:scale-95 transition-all disabled:opacity-50 font-bold shrink-0"
                               >
                                 {stampingInvoice === inst.id ? 'Timbrando...' : 'Timbrar Factura (PAC)'}
                               </button>
@@ -1975,11 +1975,11 @@ export default function BusinessCommander({ stats, installments, setInstallments
                               placeholder="UUID CFDI 4.0"
                               value={cfdiInputs[inst.id] || ""}
                               onChange={(e) => setCfdiInputs(prev => ({ ...prev, [inst.id]: e.target.value }))}
-                              className="bg-background border border-card-border rounded-lg px-3 py-1.5 text-[8px] font-mono focus:outline-none focus:border-nectar-gold w-32 text-foreground"
+                              className="bg-background border border-card-border rounded-lg px-3 py-1.5 text-2xs font-mono focus:outline-none focus:border-nectar-gold w-32 text-foreground"
                             />
                             <button
                               onClick={() => handleSaveCFDI(inst.id)}
-                              className="px-3 py-1.5 bg-nectar-gold text-background text-[7px] font-black uppercase tracking-widest rounded-lg hover:scale-105 active:scale-95 transition-all"
+                              className="px-3 py-1.5 bg-nectar-gold text-background text-2xs font-black uppercase tracking-widest rounded-lg hover:scale-105 active:scale-95 transition-all"
                             >
                               Guardar
                             </button>
@@ -1990,7 +1990,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
                   ))}
                   {installments.length === 0 && (
                     <tr>
-                      <td colSpan={6} className="py-12 text-center text-[9px] font-black uppercase tracking-widest opacity-25">
+                      <td colSpan={6} className="py-12 text-center text-2xs font-black uppercase tracking-widest opacity-25">
                         Sin mensualidades generadas en el sistema
                       </td>
                     </tr>
@@ -2009,7 +2009,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-card-bg border border-card-border p-6 rounded-[2rem] shadow-lg">
             <div>
               <h2 className="text-xs font-black uppercase tracking-[0.4em] opacity-30 mb-1">Pipeline de Ventas</h2>
-              <p className="text-[9px] font-bold text-foreground/30 uppercase tracking-wider">Monitoreo y administración de prospectos y contratos en tiempo real</p>
+              <p className="text-2xs font-bold text-foreground/30 uppercase tracking-wider">Monitoreo y administración de prospectos y contratos en tiempo real</p>
             </div>
 
             {/* Filters */}
@@ -2062,7 +2062,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
             {/* Column 1: Prospectos */}
             <div className="flex-1 min-w-[290px] max-w-[340px] bg-card-bg/25 border border-card-border/40 p-5 rounded-[2.5rem] flex flex-col gap-4 snap-start">
               <div className="flex justify-between items-center pb-2 border-b border-card-border/20">
-                <span className="text-[10px] font-black uppercase tracking-widest opacity-70 flex items-center gap-1.5">
+                <span className="text-2xs font-black uppercase tracking-widest opacity-70 flex items-center gap-1.5">
                   🔍 Prospectos
                 </span>
                 <span className="px-2 py-0.5 bg-foreground/5 rounded-full text-[8.5px] font-bold opacity-50 font-mono">
@@ -2080,7 +2080,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
             {/* Column 2: Contactados */}
             <div className="flex-1 min-w-[290px] max-w-[340px] bg-card-bg/25 border border-card-border/40 p-5 rounded-[2.5rem] flex flex-col gap-4 snap-start">
               <div className="flex justify-between items-center pb-2 border-b border-card-border/20">
-                <span className="text-[10px] font-black uppercase tracking-widest opacity-70 flex items-center gap-1.5 text-blue-400">
+                <span className="text-2xs font-black uppercase tracking-widest opacity-70 flex items-center gap-1.5 text-blue-400">
                   📞 Contactados
                 </span>
                 <span className="px-2 py-0.5 bg-blue-500/10 text-blue-400 rounded-full text-[8.5px] font-bold font-mono">
@@ -2098,7 +2098,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
             {/* Column 3: Propuesta */}
             <div className="flex-1 min-w-[290px] max-w-[340px] bg-card-bg/25 border border-card-border/40 p-5 rounded-[2.5rem] flex flex-col gap-4 snap-start">
               <div className="flex justify-between items-center pb-2 border-b border-card-border/20">
-                <span className="text-[10px] font-black uppercase tracking-widest opacity-70 flex items-center gap-1.5 text-amber-400">
+                <span className="text-2xs font-black uppercase tracking-widest opacity-70 flex items-center gap-1.5 text-amber-400">
                   📋 Propuesta
                 </span>
                 <span className="px-2 py-0.5 bg-amber-500/10 text-amber-400 rounded-full text-[8.5px] font-bold font-mono">
@@ -2116,7 +2116,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
             {/* Column 4: Perdidos */}
             <div className="flex-1 min-w-[290px] max-w-[340px] bg-card-bg/25 border border-card-border/40 p-5 rounded-[2.5rem] flex flex-col gap-4 snap-start">
               <div className="flex justify-between items-center pb-2 border-b border-card-border/20">
-                <span className="text-[10px] font-black uppercase tracking-widest opacity-70 flex items-center gap-1.5 text-red-400">
+                <span className="text-2xs font-black uppercase tracking-widest opacity-70 flex items-center gap-1.5 text-red-400">
                   ❌ Perdidos
                 </span>
                 <span className="px-2 py-0.5 bg-red-500/10 text-red-400 rounded-full text-[8.5px] font-bold font-mono">
@@ -2134,7 +2134,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
             {/* Column 5: Ganados */}
             <div className="flex-1 min-w-[290px] max-w-[340px] bg-card-bg/25 border border-card-border/40 p-5 rounded-[2.5rem] flex flex-col gap-4 snap-start">
               <div className="flex justify-between items-center pb-2 border-b border-card-border/20">
-                <span className="text-[10px] font-black uppercase tracking-widest opacity-70 flex items-center gap-1.5 text-green-400">
+                <span className="text-2xs font-black uppercase tracking-widest opacity-70 flex items-center gap-1.5 text-green-400">
                   ✅ Ganados
                 </span>
                 <span className="px-2 py-0.5 bg-green-500/10 text-green-400 rounded-full text-[8.5px] font-bold font-mono">
@@ -2152,7 +2152,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
             {/* Column 6: Contratos Activos */}
             <div className="flex-1 min-w-[310px] max-w-[360px] bg-nectar-gold/5 border border-nectar-gold/20 p-5 rounded-[2.5rem] flex flex-col gap-4 shadow-[0_0_20px_rgba(198,138,30,0.02)] snap-start">
               <div className="flex justify-between items-center pb-2 border-b border-nectar-gold/20">
-                <span className="text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 text-nectar-gold animate-pulse">
+                <span className="text-2xs font-black uppercase tracking-widest flex items-center gap-1.5 text-nectar-gold animate-pulse">
                   📄 Contratos Activos
                 </span>
                 <span className="px-2 py-0.5 bg-nectar-gold/10 text-nectar-gold rounded-full text-[8.5px] font-bold font-mono border border-nectar-gold/15">
@@ -2164,7 +2164,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
                   <KanbanContractCard key={contract.id} contract={contract} />
                 ))}
                 {filteredContracts.filter((c: any) => c.is_fully_signed && c.is_active).length === 0 && (
-                  <div className="h-full flex items-center justify-center py-20 text-center text-[9px] font-black uppercase tracking-widest opacity-20 border border-dashed border-nectar-gold/25 rounded-2xl">
+                  <div className="h-full flex items-center justify-center py-20 text-center text-2xs font-black uppercase tracking-widest opacity-20 border border-dashed border-nectar-gold/25 rounded-2xl">
                     Sin contratos activos
                   </div>
                 )}
@@ -2180,7 +2180,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
             <div>
               <h2 className="text-xs font-black uppercase tracking-[0.4em] opacity-30 mb-1">Cotizaciones Modulares</h2>
-              <p className="text-[9px] font-bold text-foreground/30 uppercase tracking-wider">Historial de cotizaciones modularizadas emitidas en el sistema</p>
+              <p className="text-2xs font-bold text-foreground/30 uppercase tracking-wider">Historial de cotizaciones modularizadas emitidas en el sistema</p>
             </div>
             <button
               onClick={() => {
@@ -2195,7 +2195,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
                 setQuoteClientType('prospect');
                 setShowQuoteModal(true);
               }}
-              className="px-5 py-2.5 bg-nectar-gold text-background text-[9px] font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 transition-all shadow-md font-bold"
+              className="px-5 py-2.5 bg-nectar-gold text-background text-2xs font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 transition-all shadow-md font-bold"
             >
               + Nueva Cotización
             </button>
@@ -2210,7 +2210,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="border-b border-card-border/50 text-[8px] font-black uppercase tracking-widest opacity-40">
+                    <tr className="border-b border-card-border/50 text-2xs font-black uppercase tracking-widest opacity-40">
                       <th className="pb-4">Cliente / Razón Social</th>
                       <th className="pb-4">Proyecto</th>
                       <th className="pb-4">Vendedor</th>
@@ -2232,24 +2232,24 @@ export default function BusinessCommander({ stats, installments, setInstallments
                           <td className="py-4 font-bold text-xs">
                             {quote.project_name}
                           </td>
-                          <td className="py-4 text-[10px] font-bold text-foreground/60">
+                          <td className="py-4 text-2xs font-bold text-foreground/60">
                             {spUser ? spUser.username : 'Sin Asignar'}
                           </td>
                           <td className="py-4 text-right font-mono font-bold text-xs text-nectar-gold">
                             ${parseFloat(quote.total_price || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
                           </td>
-                          <td className="py-4 text-center text-[10px] font-bold opacity-60">
+                          <td className="py-4 text-center text-2xs font-bold opacity-60">
                             {quote.estimated_delivery_weeks} Semanas
                           </td>
                           <td className="py-4 text-center">
                             {quote.status === 'APPROVED' ? (
-                              <span className="px-3 py-1 bg-green-500/10 text-green-500 text-[7px] font-black uppercase tracking-widest rounded-full border border-green-500/20">Aprobado</span>
+                              <span className="px-3 py-1 bg-green-500/10 text-green-500 text-2xs font-black uppercase tracking-widest rounded-full border border-green-500/20">Aprobado</span>
                             ) : quote.status === 'REJECTED' ? (
-                              <span className="px-3 py-1 bg-red-500/10 text-red-500 text-[7px] font-black uppercase tracking-widest rounded-full border border-red-500/20">Rechazado</span>
+                              <span className="px-3 py-1 bg-red-500/10 text-red-500 text-2xs font-black uppercase tracking-widest rounded-full border border-red-500/20">Rechazado</span>
                             ) : quote.status === 'SENT' ? (
-                              <span className="px-3 py-1 bg-blue-500/10 text-blue-500 text-[7px] font-black uppercase tracking-widest rounded-full border border-blue-500/20">Enviado</span>
+                              <span className="px-3 py-1 bg-blue-500/10 text-blue-500 text-2xs font-black uppercase tracking-widest rounded-full border border-blue-500/20">Enviado</span>
                             ) : (
-                              <span className="px-3 py-1 bg-yellow-500/10 text-yellow-500 text-[7px] font-black uppercase tracking-widest rounded-full border border-yellow-500/20">Borrador</span>
+                              <span className="px-3 py-1 bg-yellow-500/10 text-yellow-500 text-2xs font-black uppercase tracking-widest rounded-full border border-yellow-500/20">Borrador</span>
                             )}
                           </td>
                           <td className="py-4 text-right">
@@ -2257,7 +2257,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
                               {quote.status === 'DRAFT' && (
                                 <button
                                   onClick={() => handleUpdateQuoteStatus(quote.id, 'SENT')}
-                                  className="px-2.5 py-1.5 bg-blue-500/10 hover:bg-blue-500 text-blue-400 hover:text-white text-[8px] font-black uppercase tracking-widest rounded-lg transition-all border border-blue-500/25"
+                                  className="px-2.5 py-1.5 bg-blue-500/10 hover:bg-blue-500 text-blue-400 hover:text-white text-2xs font-black uppercase tracking-widest rounded-lg transition-all border border-blue-500/25"
                                 >
                                   Enviar
                                 </button>
@@ -2267,13 +2267,13 @@ export default function BusinessCommander({ stats, installments, setInstallments
                                 <>
                                   <button
                                     onClick={() => handleUpdateQuoteStatus(quote.id, 'APPROVED')}
-                                    className="px-2.5 py-1.5 bg-green-500/10 hover:bg-green-500 text-green-400 hover:text-white text-[8px] font-black uppercase tracking-widest rounded-lg transition-all border border-green-500/25"
+                                    className="px-2.5 py-1.5 bg-green-500/10 hover:bg-green-500 text-green-400 hover:text-white text-2xs font-black uppercase tracking-widest rounded-lg transition-all border border-green-500/25"
                                   >
                                     Aprobar
                                   </button>
                                   <button
                                     onClick={() => handleUpdateQuoteStatus(quote.id, 'REJECTED')}
-                                    className="px-2.5 py-1.5 bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white text-[8px] font-black uppercase tracking-widest rounded-lg transition-all border border-red-500/25"
+                                    className="px-2.5 py-1.5 bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white text-2xs font-black uppercase tracking-widest rounded-lg transition-all border border-red-500/25"
                                   >
                                     Rechazar
                                   </button>
@@ -2282,7 +2282,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
 
                               <button
                                 onClick={() => handleRegenerateQuotePDF(quote.id)}
-                                className="px-2.5 py-1.5 bg-card-border hover:bg-white hover:text-background text-[8px] font-black uppercase tracking-widest rounded-lg transition-all"
+                                className="px-2.5 py-1.5 bg-card-border hover:bg-white hover:text-background text-2xs font-black uppercase tracking-widest rounded-lg transition-all"
                                 title="Regenerar PDF"
                               >
                                 🔄 PDF
@@ -2293,12 +2293,12 @@ export default function BusinessCommander({ stats, installments, setInstallments
                                   href={getInlineViewUrl(quote.pdf_file, 'quote', quote.id)}
                                   target="_blank"
                                   rel="noreferrer"
-                                  className="px-2.5 py-1.5 bg-nectar-gold hover:bg-nectar-gold/90 text-background text-[8px] font-black uppercase tracking-widest rounded-lg transition-all inline-block font-bold"
+                                  className="px-2.5 py-1.5 bg-nectar-gold hover:bg-nectar-gold/90 text-background text-2xs font-black uppercase tracking-widest rounded-lg transition-all inline-block font-bold"
                                 >
                                   Ver PDF
                                 </a>
                               ) : (
-                                <span className="text-[8px] opacity-35 font-bold uppercase py-1.5 inline-block pr-2">Sin PDF</span>
+                                <span className="text-2xs opacity-35 font-bold uppercase py-1.5 inline-block pr-2">Sin PDF</span>
                               )}
 
                               <button
@@ -2324,7 +2324,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
                     })}
                     {quotes.length === 0 && (
                       <tr>
-                        <td colSpan={7} className="py-12 text-center text-[9px] font-black uppercase tracking-widest opacity-25">
+                        <td colSpan={7} className="py-12 text-center text-2xs font-black uppercase tracking-widest opacity-25">
                           Sin cotizaciones modularizadas registradas
                         </td>
                       </tr>
@@ -2342,46 +2342,46 @@ export default function BusinessCommander({ stats, installments, setInstallments
         <section id="ventas-section" className="space-y-10 animate-fadeIn">
           <div>
             <h2 className="text-xs font-black uppercase tracking-[0.4em] opacity-30 mb-1">Panel de Ventas</h2>
-            <p className="text-[9px] font-bold text-foreground/30 uppercase tracking-wider">Control global de vendedores, comisiones y códigos de referido</p>
+            <p className="text-2xs font-bold text-foreground/30 uppercase tracking-wider">Control global de vendedores, comisiones y códigos de referido</p>
           </div>
 
           {/* Sales KPI Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
             <div className="p-6 rounded-[2rem] bg-card-bg border border-card-border relative overflow-hidden">
               <div className="absolute top-0 right-0 w-24 h-24 bg-green-500/5 blur-3xl rounded-full" />
-              <span className="text-[8px] font-black uppercase tracking-widest opacity-40">Comisiones Pagadas</span>
+              <span className="text-2xs font-black uppercase tracking-widest opacity-40">Comisiones Pagadas</span>
               <h3 className="text-2xl font-black tracking-tight mt-2 text-green-400 font-mono">
                 ${((commissionSummary?.paid_total) || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
-                <span className="text-[9px] font-bold opacity-50 ml-1">MXN</span>
+                <span className="text-2xs font-bold opacity-50 ml-1">MXN</span>
               </h3>
-              <p className="text-[9px] text-foreground/40 mt-1 uppercase tracking-wider font-bold">Liquidadas a vendedores</p>
+              <p className="text-2xs text-foreground/40 mt-1 uppercase tracking-wider font-bold">Liquidadas a vendedores</p>
             </div>
             <div className="p-6 rounded-[2rem] bg-card-bg border border-card-border relative overflow-hidden">
               <div className="absolute top-0 right-0 w-24 h-24 bg-yellow-500/5 blur-3xl rounded-full" />
-              <span className="text-[8px] font-black uppercase tracking-widest opacity-40">Comisiones Pendientes</span>
+              <span className="text-2xs font-black uppercase tracking-widest opacity-40">Comisiones Pendientes</span>
               <h3 className="text-2xl font-black tracking-tight mt-2 text-yellow-400 font-mono">
                 ${((commissionSummary?.pending_total) || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
-                <span className="text-[9px] font-bold opacity-50 ml-1">MXN</span>
+                <span className="text-2xs font-bold opacity-50 ml-1">MXN</span>
               </h3>
-              <p className="text-[9px] text-foreground/40 mt-1 uppercase tracking-wider font-bold">Por liquidar a vendedores</p>
+              <p className="text-2xs text-foreground/40 mt-1 uppercase tracking-wider font-bold">Por liquidar a vendedores</p>
             </div>
             <div className="p-6 rounded-[2rem] bg-card-bg border border-card-border relative overflow-hidden">
               <div className="absolute top-0 right-0 w-24 h-24 bg-nectar-gold/5 blur-3xl rounded-full" />
-              <span className="text-[8px] font-black uppercase tracking-widest opacity-40">Contratos Referidos</span>
+              <span className="text-2xs font-black uppercase tracking-widest opacity-40">Contratos Referidos</span>
               <h3 className="text-2xl font-black tracking-tight mt-2 text-nectar-gold font-mono">
                 {commissionSummary?.referred_contracts_count ?? 0}
-                <span className="text-[9px] font-bold opacity-50 ml-1">Contratos</span>
+                <span className="text-2xs font-bold opacity-50 ml-1">Contratos</span>
               </h3>
-              <p className="text-[9px] text-foreground/40 mt-1 uppercase tracking-wider font-bold">Adquiridos por vendedores</p>
+              <p className="text-2xs text-foreground/40 mt-1 uppercase tracking-wider font-bold">Adquiridos por vendedores</p>
             </div>
             <div className="p-6 rounded-[2rem] bg-card-bg border border-card-border relative overflow-hidden">
               <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 blur-3xl rounded-full" />
-              <span className="text-[8px] font-black uppercase tracking-widest opacity-40">Vendedores Activos</span>
+              <span className="text-2xs font-black uppercase tracking-widest opacity-40">Vendedores Activos</span>
               <h3 className="text-2xl font-black tracking-tight mt-2 text-blue-400 font-mono">
                 {commissionSummary?.active_sellers ?? 0}
-                <span className="text-[9px] font-bold opacity-50 ml-1">SALES</span>
+                <span className="text-2xs font-bold opacity-50 ml-1">SALES</span>
               </h3>
-              <p className="text-[9px] text-foreground/40 mt-1 uppercase tracking-wider font-bold">Usuarios con rol vendedor</p>
+              <p className="text-2xs text-foreground/40 mt-1 uppercase tracking-wider font-bold">Usuarios con rol vendedor</p>
             </div>
           </div>
 
@@ -2390,9 +2390,9 @@ export default function BusinessCommander({ stats, installments, setInstallments
             <div className="mb-8 flex items-center justify-between flex-wrap gap-4 text-left">
               <div>
                 <h3 className="text-xs font-black uppercase tracking-[0.3em] opacity-30">Gestión de Vendedores</h3>
-                <p className="text-[9px] font-bold text-foreground/30 mt-1 uppercase tracking-wider">Aprobación y métricas de desempeño de vendedores</p>
+                <p className="text-2xs font-bold text-foreground/30 mt-1 uppercase tracking-wider">Aprobación y métricas de desempeño de vendedores</p>
               </div>
-              <span className="px-4 py-1.5 bg-foreground/5 rounded-full text-[8px] font-black uppercase tracking-widest opacity-50 font-bold">
+              <span className="px-4 py-1.5 bg-foreground/5 rounded-full text-2xs font-black uppercase tracking-widest opacity-50 font-bold">
                 {salesPeople.length} vendedores registrados
               </span>
             </div>
@@ -2400,7 +2400,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b border-card-border/50 text-[8px] font-black uppercase tracking-widest opacity-40">
+                  <tr className="border-b border-card-border/50 text-2xs font-black uppercase tracking-widest opacity-40">
                     <th className="pb-4">Email Vendedor</th>
                     <th className="pb-4 text-center">Código Referido</th>
                     <th className="pb-4 text-center">Usos / Referidos</th>
@@ -2422,8 +2422,8 @@ export default function BusinessCommander({ stats, installments, setInstallments
                     return (
                       <tr key={u.id} className="border-b border-card-border/30 last:border-0 hover:bg-foreground/[0.02] transition-colors">
                         <td className="py-3.5">
-                          <span className="font-black text-[10px] text-foreground">{u.username}</span>
-                          <p className="text-[8px] text-foreground/45 font-mono">{u.email}</p>
+                          <span className="font-black text-2xs text-foreground">{u.username}</span>
+                          <p className="text-2xs text-foreground/45 font-mono">{u.email}</p>
                         </td>
                         <td className="py-3.5 text-center">
                           {userCode ? (
@@ -2463,31 +2463,31 @@ export default function BusinessCommander({ stats, installments, setInstallments
                                 setPromoError('');
                                 setShowPromoModal(true);
                               }}
-                              className="px-3 py-1 bg-nectar-gold/10 hover:bg-nectar-gold hover:text-background text-[7px] font-black uppercase tracking-widest rounded-xl border border-nectar-gold/20 transition-all font-bold"
+                              className="px-3 py-1 bg-nectar-gold/10 hover:bg-nectar-gold hover:text-background text-2xs font-black uppercase tracking-widest rounded-xl border border-nectar-gold/20 transition-all font-bold"
                             >
                               + Crear Código
                             </button>
                           )}
                         </td>
                         <td className="py-3.5 text-center font-mono font-bold text-xs">{referredCount}</td>
-                        <td className="py-3.5 text-right font-mono font-bold text-[11px] text-yellow-500">
+                        <td className="py-3.5 text-right font-mono font-bold text-xs text-yellow-500">
                           ${pendingTotal.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
                         </td>
-                        <td className="py-3.5 text-right font-mono font-bold text-[11px] text-green-400">
+                        <td className="py-3.5 text-right font-mono font-bold text-xs text-green-400">
                           ${paidTotal.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
                         </td>
                         <td className="py-3.5 text-center">
                           {isApproved ? (
-                            <span className="px-3 py-1 bg-green-500/10 text-green-500 text-[7px] font-black uppercase tracking-widest rounded-full border border-green-500/20">Aprobado</span>
+                            <span className="px-3 py-1 bg-green-500/10 text-green-500 text-2xs font-black uppercase tracking-widest rounded-full border border-green-500/20">Aprobado</span>
                           ) : (
-                            <span className="px-3 py-1 bg-red-500/10 text-red-400 text-[7px] font-black uppercase tracking-widest rounded-full border border-red-500/20">Pendiente</span>
+                            <span className="px-3 py-1 bg-red-500/10 text-red-400 text-2xs font-black uppercase tracking-widest rounded-full border border-red-500/20">Pendiente</span>
                           )}
                         </td>
                         <td className="py-3.5 text-center">
                           <button
                             onClick={() => handleToggleApproval(u.id, isApproved)}
                             disabled={togglingUser === u.id}
-                            className={`px-4 py-1.5 text-[7px] font-black uppercase tracking-widest rounded-xl transition-all hover:scale-105 active:scale-95 disabled:opacity-40 font-bold ${isApproved
+                            className={`px-4 py-1.5 text-2xs font-black uppercase tracking-widest rounded-xl transition-all hover:scale-105 active:scale-95 disabled:opacity-40 font-bold ${isApproved
                               ? 'bg-red-950/40 border border-red-500/30 hover:bg-red-900/40 text-red-400'
                               : 'bg-green-950/40 border border-green-500/30 hover:bg-green-900/40 text-green-400'
                               }`}
@@ -2500,7 +2500,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
                   })}
                   {salesPeople.length === 0 && (
                     <tr>
-                      <td colSpan={7} className="py-12 text-center text-[9px] font-black uppercase tracking-widest opacity-25">
+                      <td colSpan={7} className="py-12 text-center text-2xs font-black uppercase tracking-widest opacity-25">
                         No hay vendedores registrados en el sistema
                       </td>
                     </tr>
@@ -2515,9 +2515,9 @@ export default function BusinessCommander({ stats, installments, setInstallments
             <div className="mb-8 flex items-center justify-between">
               <div>
                 <h3 className="text-xs font-black uppercase tracking-[0.3em] opacity-30">Historial de Comisiones</h3>
-                <p className="text-[9px] font-bold text-foreground/30 mt-1 uppercase tracking-wider">Todas las comisiones generadas por ventas referidas</p>
+                <p className="text-2xs font-bold text-foreground/30 mt-1 uppercase tracking-wider">Todas las comisiones generadas por ventas referidas</p>
               </div>
-              <span className="px-4 py-1.5 bg-foreground/5 rounded-full text-[8px] font-black uppercase tracking-widest opacity-50 font-bold">
+              <span className="px-4 py-1.5 bg-foreground/5 rounded-full text-2xs font-black uppercase tracking-widest opacity-50 font-bold">
                 {commissions.length} registros
               </span>
             </div>
@@ -2529,7 +2529,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="border-b border-card-border/50 text-[8px] font-black uppercase tracking-widest opacity-40">
+                    <tr className="border-b border-card-border/50 text-2xs font-black uppercase tracking-widest opacity-40">
                       <th className="pb-4">Vendedor</th>
                       <th className="pb-4">Cliente</th>
                       <th className="pb-4 text-center">Plan</th>
@@ -2547,19 +2547,19 @@ export default function BusinessCommander({ stats, installments, setInstallments
                       <tr key={comm.id} className="border-b border-card-border/30 last:border-0 hover:bg-foreground/[0.02] transition-colors">
                         <td className="py-3.5">
                           <div>
-                            <span className="font-black text-[10px] text-foreground">{comm.salesperson_email?.split('@')[0]}</span>
-                            <p className="text-[8px] text-foreground/40 font-mono">{comm.salesperson_email}</p>
+                            <span className="font-black text-2xs text-foreground">{comm.salesperson_email?.split('@')[0]}</span>
+                            <p className="text-2xs text-foreground/40 font-mono">{comm.salesperson_email}</p>
                           </div>
                         </td>
-                        <td className="py-3.5 font-bold text-[11px] text-foreground/80">{comm.client_name}</td>
+                        <td className="py-3.5 font-bold text-xs text-foreground/80">{comm.client_name}</td>
                         <td className="py-3.5 text-center">
-                          <span className="px-2 py-0.5 bg-foreground/5 rounded-full text-[8px] font-black uppercase tracking-wider text-foreground/50">{comm.plan_name}</span>
+                          <span className="px-2 py-0.5 bg-foreground/5 rounded-full text-2xs font-black uppercase tracking-wider text-foreground/50">{comm.plan_name}</span>
                         </td>
                         <td className="py-3.5 text-center font-mono font-bold text-xs text-foreground/70">#{comm.installment_number}</td>
-                        <td className="py-3.5 text-center text-[10px] font-bold text-foreground/50">
+                        <td className="py-3.5 text-center text-2xs font-bold text-foreground/50">
                           {comm.due_date ? new Date(comm.due_date + 'T00:00:00').toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: '2-digit' }) : '—'}
                         </td>
-                        <td className="py-3.5 text-right font-mono font-bold text-[11px]">
+                        <td className="py-3.5 text-right font-mono font-bold text-xs">
                           ${parseFloat(comm.installment_amount || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
                         </td>
                         <td className="py-3.5 text-center font-mono font-black text-sm text-nectar-gold">
@@ -2570,9 +2570,9 @@ export default function BusinessCommander({ stats, installments, setInstallments
                         </td>
                         <td className="py-3.5 text-center">
                           {comm.status === 'PAID' ? (
-                            <span className="px-3 py-1 bg-green-500/10 text-green-500 text-[7px] font-black uppercase tracking-widest rounded-full border border-green-500/20">Pagada</span>
+                            <span className="px-3 py-1 bg-green-500/10 text-green-500 text-2xs font-black uppercase tracking-widest rounded-full border border-green-500/20">Pagada</span>
                           ) : (
-                            <span className="px-3 py-1 bg-yellow-500/10 text-yellow-500 text-[7px] font-black uppercase tracking-widest rounded-full border border-yellow-500/20">Pendiente</span>
+                            <span className="px-3 py-1 bg-yellow-500/10 text-yellow-500 text-2xs font-black uppercase tracking-widest rounded-full border border-yellow-500/20">Pendiente</span>
                           )}
                         </td>
                         <td className="py-3.5 text-center">
@@ -2580,19 +2580,19 @@ export default function BusinessCommander({ stats, installments, setInstallments
                             <button
                               onClick={() => handleMarkCommissionPaid(comm.id)}
                               disabled={markingPaid === comm.id}
-                              className="px-4 py-1.5 bg-green-600 hover:bg-green-500 text-white text-[7px] font-black uppercase tracking-widest rounded-xl transition-all hover:scale-105 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
+                              className="px-4 py-1.5 bg-green-600 hover:bg-green-500 text-white text-2xs font-black uppercase tracking-widest rounded-xl transition-all hover:scale-105 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
                             >
                               {markingPaid === comm.id ? '...' : 'Marcar Pagada'}
                             </button>
                           ) : (
-                            <span className="text-[8px] text-foreground/20 font-black">—</span>
+                            <span className="text-2xs text-foreground/20 font-black">—</span>
                           )}
                         </td>
                       </tr>
                     ))}
                     {commissions.length === 0 && (
                       <tr>
-                        <td colSpan={10} className="py-12 text-center text-[9px] font-black uppercase tracking-widest opacity-25">
+                        <td colSpan={10} className="py-12 text-center text-2xs font-black uppercase tracking-widest opacity-25">
                           Sin comisiones registradas en el sistema
                         </td>
                       </tr>
@@ -2608,7 +2608,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
             <div className="mb-8 flex items-center justify-between flex-wrap gap-4 text-left">
               <div>
                 <h3 className="text-xs font-black uppercase tracking-[0.3em] opacity-30">Códigos de Descuento y Referido</h3>
-                <p className="text-[9px] font-bold text-foreground/30 mt-1 uppercase tracking-wider">Todos los códigos del sistema — SELLER y CLIENT</p>
+                <p className="text-2xs font-bold text-foreground/30 mt-1 uppercase tracking-wider">Todos los códigos del sistema — SELLER y CLIENT</p>
               </div>
               <div className="flex gap-4 items-center">
                 <button
@@ -2623,11 +2623,11 @@ export default function BusinessCommander({ stats, installments, setInstallments
                     setEditingPromoId(null);
                     setShowPromoModal(true);
                   }}
-                  className="px-5 py-2.5 bg-nectar-gold text-background text-[8px] font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 transition-all shadow-md font-bold"
+                  className="px-5 py-2.5 bg-nectar-gold text-background text-2xs font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 transition-all shadow-md font-bold"
                 >
                   + Crear Código
                 </button>
-                <span className="px-4 py-1.5 bg-foreground/5 rounded-full text-[8px] font-black uppercase tracking-widest opacity-50 font-bold">
+                <span className="px-4 py-1.5 bg-foreground/5 rounded-full text-2xs font-black uppercase tracking-widest opacity-50 font-bold">
                   {promoCodes.length} códigos
                 </span>
               </div>
@@ -2635,7 +2635,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b border-card-border/50 text-[8px] font-black uppercase tracking-widest opacity-40">
+                  <tr className="border-b border-card-border/50 text-2xs font-black uppercase tracking-widest opacity-40">
                     <th className="pb-4">Código</th>
                     <th className="pb-4 text-center">Tipo</th>
                     <th className="pb-4">Referidor</th>
@@ -2654,21 +2654,21 @@ export default function BusinessCommander({ stats, installments, setInstallments
                         <span className="font-mono font-black text-sm text-nectar-gold tracking-widest">{code.code}</span>
                       </td>
                       <td className="py-3.5 text-center">
-                        <span className={`px-3 py-1 text-[7px] font-black uppercase tracking-widest rounded-full border ${code.code_type === 'SELLER'
+                        <span className={`px-3 py-1 text-2xs font-black uppercase tracking-widest rounded-full border ${code.code_type === 'SELLER'
                           ? 'bg-blue-500/10 text-blue-400 border-blue-500/20'
                           : 'bg-purple-500/10 text-purple-400 border-purple-500/20'
                           }`}>
                           {code.code_type === 'SELLER' ? '🏷️ Vendedor' : '👥 Cliente'}
                         </span>
                       </td>
-                      <td className="py-3.5 text-[10px] font-bold text-foreground/60">{code.referrer_email || '—'}</td>
+                      <td className="py-3.5 text-2xs font-bold text-foreground/60">{code.referrer_email || '—'}</td>
                       <td className="py-3.5 text-center font-mono font-black text-sm text-nectar-gold">{parseFloat(code.discount_percentage)}%</td>
                       <td className="py-3.5 text-center font-mono font-bold text-sm">{code.used_count}</td>
-                      <td className="py-3.5 text-center text-[10px] font-bold text-foreground/50">{code.max_uses ?? '∞'}</td>
+                      <td className="py-3.5 text-center text-2xs font-bold text-foreground/50">{code.max_uses ?? '∞'}</td>
                       <td className="py-3.5 text-center">
                         <button
                           onClick={() => handleTogglePromoCodeActive(code.id, code.is_active)}
-                          className={`px-3 py-1 text-[7px] font-black uppercase tracking-widest rounded-full border hover:scale-105 active:scale-95 transition-all ${code.is_active
+                          className={`px-3 py-1 text-2xs font-black uppercase tracking-widest rounded-full border hover:scale-105 active:scale-95 transition-all ${code.is_active
                             ? 'bg-green-500/10 text-green-500 border-green-500/20'
                             : 'bg-red-500/10 text-red-400 border-red-500/20'
                             }`}
@@ -2676,7 +2676,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
                           {code.is_active ? 'Activo' : 'Inactivo'}
                         </button>
                       </td>
-                      <td className="py-3.5 text-center text-[9px] font-bold text-foreground/45">
+                      <td className="py-3.5 text-center text-2xs font-bold text-foreground/45">
                         {new Date(code.created_at).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: '2-digit' })}
                       </td>
                       <td className="py-3.5 text-right space-x-2">
@@ -2692,7 +2692,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
                             setPromoError('');
                             setShowPromoModal(true);
                           }}
-                          className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold hover:bg-nectar-gold hover:text-background rounded-xl text-[7px] font-black uppercase tracking-widest transition-all border border-nectar-gold/20 font-bold"
+                          className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold hover:bg-nectar-gold hover:text-background rounded-xl text-2xs font-black uppercase tracking-widest transition-all border border-nectar-gold/20 font-bold"
                         >
                           Editar
                         </button>
@@ -2708,7 +2708,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
                               }
                             });
                           }}
-                          className="px-3 py-1 bg-red-500/10 text-red-500 hover:bg-red-600 hover:text-white rounded-xl text-[7px] font-black uppercase tracking-widest transition-all border border-red-500/20 font-bold"
+                          className="px-3 py-1 bg-red-500/10 text-red-500 hover:bg-red-600 hover:text-white rounded-xl text-2xs font-black uppercase tracking-widest transition-all border border-red-500/20 font-bold"
                         >
                           Eliminar
                         </button>
@@ -2717,7 +2717,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
                   ))}
                   {promoCodes.length === 0 && (
                     <tr>
-                      <td colSpan={9} className="py-12 text-center text-[9px] font-black uppercase tracking-widest opacity-25">
+                      <td colSpan={9} className="py-12 text-center text-2xs font-black uppercase tracking-widest opacity-25">
                         Sin códigos de referido registrados
                       </td>
                     </tr>
@@ -2735,7 +2735,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-card-bg border border-card-border p-6 rounded-[2rem] shadow-lg">
             <div>
               <h2 className="text-xs font-black uppercase tracking-[0.4em] opacity-30 mb-1">Facturas del Sistema</h2>
-              <p className="text-[9px] font-bold text-foreground/30 uppercase tracking-wider">Historial completo de timbrado de CFDIs (SAT) de Néctar Labs</p>
+              <p className="text-2xs font-bold text-foreground/30 uppercase tracking-wider">Historial completo de timbrado de CFDIs (SAT) de Néctar Labs</p>
             </div>
             <div className="flex flex-col sm:flex-row items-end sm:items-center gap-4 w-full md:w-auto">
               <button
@@ -2756,7 +2756,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
                   }]);
                   setShowManualInvoiceModal(true);
                 }}
-                className="px-5 py-2.5 bg-nectar-gold text-background text-[9px] font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 transition-all shadow-md font-bold whitespace-nowrap"
+                className="px-5 py-2.5 bg-nectar-gold text-background text-2xs font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 transition-all shadow-md font-bold whitespace-nowrap"
               >
                 + Factura Manual (Cotizaciones)
               </button>
@@ -2770,7 +2770,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
                   setNewUserEmailVerified(true);
                   setShowNewUserModal(true);
                 }}
-                className="px-5 py-2.5 bg-foreground/10 hover:bg-foreground hover:text-background text-[9px] font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 transition-all shadow-md font-bold whitespace-nowrap"
+                className="px-5 py-2.5 bg-foreground/10 hover:bg-foreground hover:text-background text-2xs font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 transition-all shadow-md font-bold whitespace-nowrap"
               >
                 + Nuevo Usuario / Cliente
               </button>
@@ -2801,7 +2801,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b border-card-border/50 text-[8px] font-black uppercase tracking-widest opacity-40">
+                  <tr className="border-b border-card-border/50 text-2xs font-black uppercase tracking-widest opacity-40">
                     <th className="pb-4">Fecha</th>
                     <th className="pb-4">Inquilino</th>
                     <th className="pb-4">Monto (MXN)</th>
@@ -2835,7 +2835,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
                     if (filtered.length === 0) {
                       return (
                         <tr>
-                          <td colSpan={6} className="py-12 text-center text-[9px] font-black uppercase tracking-widest opacity-25">
+                          <td colSpan={6} className="py-12 text-center text-2xs font-black uppercase tracking-widest opacity-25">
                             Sin facturas encontradas
                           </td>
                         </tr>
@@ -2869,15 +2869,15 @@ export default function BusinessCommander({ stats, installments, setInstallments
                           <td className="py-4 font-black text-xs">
                             ${parseFloat(inv.total).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
                           </td>
-                          <td className="py-4 font-mono text-[9px] opacity-70 select-all max-w-[200px] truncate" title={inv.uuid_sat || 'No asignado'}>
+                          <td className="py-4 font-mono text-2xs opacity-70 select-all max-w-[200px] truncate" title={inv.uuid_sat || 'No asignado'}>
                             {inv.uuid_sat || '—'}
                           </td>
                           <td className="py-4 text-center">
-                            <span className={`px-2.5 py-1 text-[7px] font-black uppercase tracking-widest rounded-full border ${badgeClass}`}>
+                            <span className={`px-2.5 py-1 text-2xs font-black uppercase tracking-widest rounded-full border ${badgeClass}`}>
                               {inv.status_display}
                             </span>
                             {inv.error_message && (
-                              <p className="text-[7px] text-red-400 mt-1 max-w-[150px] truncate mx-auto" title={inv.error_message}>
+                              <p className="text-2xs text-red-400 mt-1 max-w-[150px] truncate mx-auto" title={inv.error_message}>
                                 {inv.error_message}
                               </p>
                             )}
@@ -2889,7 +2889,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
                                   href={inv.pdf_url}
                                   target="_blank"
                                   rel="noreferrer"
-                                  className="px-2 py-1 bg-card-border hover:bg-foreground hover:text-background text-[7px] font-black uppercase tracking-widest rounded-lg transition-all"
+                                  className="px-2 py-1 bg-card-border hover:bg-foreground hover:text-background text-2xs font-black uppercase tracking-widest rounded-lg transition-all"
                                 >
                                   PDF
                                 </a>
@@ -2899,7 +2899,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
                                   href={inv.xml_url}
                                   target="_blank"
                                   rel="noreferrer"
-                                  className="px-2 py-1 bg-card-border hover:bg-foreground hover:text-background text-[7px] font-black uppercase tracking-widest rounded-lg transition-all"
+                                  className="px-2 py-1 bg-card-border hover:bg-foreground hover:text-background text-2xs font-black uppercase tracking-widest rounded-lg transition-all"
                                 >
                                   XML
                                 </a>
@@ -2907,7 +2907,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
                               {(isFailed || isLco || isPending) && (
                                 <button
                                   onClick={() => handleRetryInvoice(inv.id)}
-                                  className="px-2 py-1 bg-nectar-gold text-background hover:scale-105 text-[7px] font-black uppercase tracking-widest rounded-lg transition-all font-bold"
+                                  className="px-2 py-1 bg-nectar-gold text-background hover:scale-105 text-2xs font-black uppercase tracking-widest rounded-lg transition-all font-bold"
                                 >
                                   Reintentar
                                 </button>
@@ -2920,7 +2920,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
                                     setCancelSubstitution('');
                                     setShowCancelModal(true);
                                   }}
-                                  className="px-2 py-1 bg-red-500/10 text-red-500 hover:bg-red-600 hover:text-white text-[7px] font-black uppercase tracking-widest rounded-lg transition-all border border-red-500/20 font-bold"
+                                  className="px-2 py-1 bg-red-500/10 text-red-500 hover:bg-red-600 hover:text-white text-2xs font-black uppercase tracking-widest rounded-lg transition-all border border-red-500/20 font-bold"
                                 >
                                   Cancelar
                                 </button>
@@ -2943,19 +2943,19 @@ export default function BusinessCommander({ stats, installments, setInstallments
         <section className="space-y-10 animate-fadeIn text-left">
           <div>
             <h2 className="text-xs font-black uppercase tracking-[0.4em] opacity-30 mb-1">Campañas de Boletín Informativo</h2>
-            <p className="text-[9px] font-bold text-foreground/30 uppercase tracking-wider">Crea y envía campañas de email masivas a todos los suscriptores principales</p>
+            <p className="text-2xs font-bold text-foreground/30 uppercase tracking-wider">Crea y envía campañas de email masivas a todos los suscriptores principales</p>
           </div>
 
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
             {/* Form Column */}
             <div className="bg-card-bg border border-card-border rounded-[2.5rem] p-8 md:p-10 shadow-lg text-left">
-              <span className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold text-[8px] font-black uppercase tracking-widest rounded-full border border-nectar-gold/20">
+              <span className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold text-2xs font-black uppercase tracking-widest rounded-full border border-nectar-gold/20">
                 Redactar Campaña
               </span>
 
               <form onSubmit={handleSendCampaign} className="space-y-6 mt-6">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-4">Importar Post del Blog (Opcional)</label>
+                  <label className="text-2xs font-black uppercase tracking-widest opacity-40 ml-4">Importar Post del Blog (Opcional)</label>
                   <select
                     value={selectedPostId}
                     onChange={(e) => {
@@ -2986,7 +2986,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-4">Asunto del Email</label>
+                  <label className="text-2xs font-black uppercase tracking-widest opacity-40 ml-4">Asunto del Email</label>
                   <input
                     type="text"
                     required
@@ -2998,7 +2998,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-4">Título del Boletín (Opcional)</label>
+                  <label className="text-2xs font-black uppercase tracking-widest opacity-40 ml-4">Título del Boletín (Opcional)</label>
                   <input
                     type="text"
                     value={campaignTitle}
@@ -3009,7 +3009,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-4">Contenido (HTML Soportado)</label>
+                  <label className="text-2xs font-black uppercase tracking-widest opacity-40 ml-4">Contenido (HTML Soportado)</label>
                   <textarea
                     required
                     rows={8}
@@ -3022,12 +3022,12 @@ export default function BusinessCommander({ stats, installments, setInstallments
 
                 {/* Estilo y Tipografía */}
                 <div className="bg-background/40 border border-card-border/60 p-5 rounded-2xl space-y-4 text-left">
-                  <h3 className="text-[9px] font-black uppercase tracking-widest opacity-50 border-b border-card-border/30 pb-2">
+                  <h3 className="text-2xs font-black uppercase tracking-widest opacity-50 border-b border-card-border/30 pb-2">
                     Diseño & Tipografía
                   </h3>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                      <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Plantilla de Estilo</label>
+                      <label className="text-2xs font-black uppercase tracking-widest opacity-40">Plantilla de Estilo</label>
                       <select
                         value={templateType}
                         onChange={(e) => setTemplateType(e.target.value)}
@@ -3041,7 +3041,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
                       </select>
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Tipografía de Título</label>
+                      <label className="text-2xs font-black uppercase tracking-widest opacity-40">Tipografía de Título</label>
                       <select
                         value={titleFontFamily}
                         onChange={(e) => setTitleFontFamily(e.target.value)}
@@ -3056,7 +3056,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                      <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Tipografía de Cuerpo</label>
+                      <label className="text-2xs font-black uppercase tracking-widest opacity-40">Tipografía de Cuerpo</label>
                       <select
                         value={fontFamily}
                         onChange={(e) => setFontFamily(e.target.value)}
@@ -3068,7 +3068,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
                       </select>
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Tipografía del Footer</label>
+                      <label className="text-2xs font-black uppercase tracking-widest opacity-40">Tipografía del Footer</label>
                       <select
                         value={footerFontFamily}
                         onChange={(e) => setFooterFontFamily(e.target.value)}
@@ -3084,12 +3084,12 @@ export default function BusinessCommander({ stats, installments, setInstallments
 
                 {/* Llamado a la Acción (CTA) */}
                 <div className="bg-background/40 border border-card-border/60 p-5 rounded-2xl space-y-4 text-left">
-                  <h3 className="text-[9px] font-black uppercase tracking-widest opacity-50 border-b border-card-border/30 pb-2">
+                  <h3 className="text-2xs font-black uppercase tracking-widest opacity-50 border-b border-card-border/30 pb-2">
                     Llamado a la Acción (CTA)
                   </h3>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                      <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Texto del Botón</label>
+                      <label className="text-2xs font-black uppercase tracking-widest opacity-40">Texto del Botón</label>
                       <input
                         type="text"
                         placeholder="ej: Visitar Tienda"
@@ -3099,7 +3099,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Enlace del Botón (URL)</label>
+                      <label className="text-2xs font-black uppercase tracking-widest opacity-40">Enlace del Botón (URL)</label>
                       <input
                         type="url"
                         placeholder="https://..."
@@ -3113,11 +3113,11 @@ export default function BusinessCommander({ stats, installments, setInstallments
 
                 {/* Fondo Personalizado */}
                 <div className="bg-background/40 border border-card-border/60 p-5 rounded-2xl space-y-4 text-left">
-                  <h3 className="text-[9px] font-black uppercase tracking-widest opacity-50 border-b border-card-border/30 pb-2">
+                  <h3 className="text-2xs font-black uppercase tracking-widest opacity-50 border-b border-card-border/30 pb-2">
                     Imagen de Portada & Fondo de Email
                   </h3>
                   <div className="space-y-2">
-                    <label className="text-[8px] font-black uppercase tracking-widest opacity-40">URL de Imagen de Portada (Encabezado)</label>
+                    <label className="text-2xs font-black uppercase tracking-widest opacity-40">URL de Imagen de Portada (Encabezado)</label>
                     <input
                       type="url"
                       placeholder="https://..."
@@ -3127,7 +3127,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[8px] font-black uppercase tracking-widest opacity-40">URL de Imagen de Fondo (Fondo del Cuerpo)</label>
+                    <label className="text-2xs font-black uppercase tracking-widest opacity-40">URL de Imagen de Fondo (Fondo del Cuerpo)</label>
                     <input
                       type="url"
                       placeholder="https://..."
@@ -3139,7 +3139,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
 
                   <div className="grid grid-cols-3 gap-2">
                     <div className="space-y-1.5">
-                      <label className="text-[7px] font-black uppercase tracking-widest opacity-40">Opacidad Fondo</label>
+                      <label className="text-2xs font-black uppercase tracking-widest opacity-40">Opacidad Fondo</label>
                       <input
                         type="number"
                         min="0.1"
@@ -3151,7 +3151,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-[7px] font-black uppercase tracking-widest opacity-40">Saturación Fondo %</label>
+                      <label className="text-2xs font-black uppercase tracking-widest opacity-40">Saturación Fondo %</label>
                       <input
                         type="number"
                         min="0"
@@ -3162,7 +3162,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-[7px] font-black uppercase tracking-widest opacity-40">Posición Fondo</label>
+                      <label className="text-2xs font-black uppercase tracking-widest opacity-40">Posición Fondo</label>
                       <select
                         value={bgPosition}
                         onChange={(e) => setBgPosition(e.target.value)}
@@ -3180,11 +3180,11 @@ export default function BusinessCommander({ stats, installments, setInstallments
 
                 {/* Pie de Página Personalizado */}
                 <div className="bg-background/40 border border-card-border/60 p-5 rounded-2xl space-y-4 text-left">
-                  <h3 className="text-[9px] font-black uppercase tracking-widest opacity-50 border-b border-card-border/30 pb-2">
+                  <h3 className="text-2xs font-black uppercase tracking-widest opacity-50 border-b border-card-border/30 pb-2">
                     Pie de Página (Footer)
                   </h3>
                   <div className="space-y-2">
-                    <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Texto Adicional del Footer</label>
+                    <label className="text-2xs font-black uppercase tracking-widest opacity-40">Texto Adicional del Footer</label>
                     <input
                       type="text"
                       placeholder="ej: Visita nuestras oficinas en CDMX o llámanos."
@@ -3198,7 +3198,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
                 <button
                   type="submit"
                   disabled={isSendingCampaign || !campaignSubject.trim() || !campaignContent.trim()}
-                  className="w-full py-4 bg-nectar-gold text-background text-[10px] font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 disabled:opacity-40 disabled:scale-100 transition-all font-bold shadow-lg shadow-nectar-gold/20"
+                  className="w-full py-4 bg-nectar-gold text-background text-2xs font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 disabled:opacity-40 disabled:scale-100 transition-all font-bold shadow-lg shadow-nectar-gold/20"
                 >
                   {isSendingCampaign ? 'Enviando Campaña...' : 'Enviar Campaña Masiva 🚀'}
                 </button>
@@ -3207,7 +3207,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
 
             {/* Live Preview Column */}
             <div className="bg-card-bg border border-card-border rounded-[2.5rem] p-8 md:p-10 shadow-lg flex flex-col">
-              <span className="px-3 py-1 bg-foreground/5 text-foreground/60 text-[8px] font-black uppercase tracking-widest rounded-full border border-card-border/60 self-start">
+              <span className="px-3 py-1 bg-foreground/5 text-foreground/60 text-2xs font-black uppercase tracking-widest rounded-full border border-card-border/60 self-start">
                 Vista Previa del Correo
               </span>
 
@@ -3288,7 +3288,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
                           <img src={imageUrl} alt="Campaña" className="max-h-24 mx-auto mb-2 rounded object-cover" />
                         )}
                         <h1 style={{ color: selectedTheme.headerText }} className="text-xl font-extrabold tracking-tight">Néctar Labs</h1>
-                        <p className="text-[8px] uppercase tracking-widest opacity-60">Boletín Informativo</p>
+                        <p className="text-2xs uppercase tracking-widest opacity-60">Boletín Informativo</p>
                       </div>
 
                       <h2 style={{ fontFamily: titleFontFamily === 'serif' ? 'Georgia, serif' : titleFontFamily === 'sans-serif' ? 'sans-serif' : 'monospace' }} className="text-base font-bold mb-4">{campaignTitle || campaignSubject || 'Título del Correo'}</h2>
@@ -3323,7 +3323,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
                         borderColor: selectedTheme.border,
                         fontFamily: footerFontFamily === 'serif' ? 'Georgia, serif' : footerFontFamily === 'sans-serif' ? 'sans-serif' : 'monospace'
                       }}
-                      className="border-t pt-6 mt-8 text-center text-[8px] opacity-50 space-y-1"
+                      className="border-t pt-6 mt-8 text-center text-2xs opacity-50 space-y-1"
                     >
                       <p>© {new Date().getFullYear()} Néctar Labs. Todos los derechos reservados.</p>
                       {footerText && <p>{footerText}</p>}
@@ -3343,7 +3343,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-card-bg border border-card-border p-6 rounded-[2rem] shadow-lg">
             <div>
               <h2 className="text-xs font-black uppercase tracking-[0.4em] opacity-30 mb-1">Suscripciones de Add-ons</h2>
-              <p className="text-[9px] font-bold text-foreground/30 uppercase tracking-wider">Historial y control de módulos activos en inquilinos de Néctar Labs</p>
+              <p className="text-2xs font-bold text-foreground/30 uppercase tracking-wider">Historial y control de módulos activos en inquilinos de Néctar Labs</p>
             </div>
             <div className="flex flex-col sm:flex-row items-end sm:items-center gap-4 w-full md:w-auto">
               <div className="flex flex-col gap-1 min-w-[250px] w-full sm:w-auto">
@@ -3373,7 +3373,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b border-card-border/50 text-[8px] font-black uppercase tracking-widest opacity-40">
+                  <tr className="border-b border-card-border/50 text-2xs font-black uppercase tracking-widest opacity-40">
                     <th className="pb-4">Fecha</th>
                     <th className="pb-4">Inquilino / Cliente</th>
                     <th className="pb-4">Add-on / Módulo</th>
@@ -3410,7 +3410,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
                     if (filtered.length === 0) {
                       return (
                         <tr>
-                          <td colSpan={8} className="py-12 text-center text-[9px] font-black uppercase tracking-widest opacity-25">
+                          <td colSpan={8} className="py-12 text-center text-2xs font-black uppercase tracking-widest opacity-25">
                             Sin suscripciones encontradas
                           </td>
                         </tr>
@@ -3479,11 +3479,11 @@ export default function BusinessCommander({ stats, installments, setInstallments
                             ${parseFloat(sub.price_paid).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
                           </td>
                           <td className="py-4 text-center">
-                            <span className={`px-2.5 py-1 text-[7px] font-black uppercase tracking-widest rounded-full border ${badgeClass}`}>
+                            <span className={`px-2.5 py-1 text-2xs font-black uppercase tracking-widest rounded-full border ${badgeClass}`}>
                               {statusText}
                             </span>
                           </td>
-                          <td className="py-4 text-right font-mono text-[9px] opacity-70 select-all" title={sub.stripe_subscription_id || 'Sin Stripe ID'}>
+                          <td className="py-4 text-right font-mono text-2xs opacity-70 select-all" title={sub.stripe_subscription_id || 'Sin Stripe ID'}>
                             {sub.stripe_subscription_id || '—'}
                           </td>
                           <td className="py-4 text-center">
@@ -3492,7 +3492,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
                                 <select
                                   value={selectedTenantIdForSub}
                                   onChange={(e) => setSelectedTenantIdForSub(e.target.value)}
-                                  className="bg-background border border-card-border rounded-xl px-2 py-1 text-[9px] text-foreground focus:outline-none focus:border-nectar-gold font-bold cursor-pointer max-w-[180px]"
+                                  className="bg-background border border-card-border rounded-xl px-2 py-1 text-2xs text-foreground focus:outline-none focus:border-nectar-gold font-bold cursor-pointer max-w-[180px]"
                                 >
                                   <option value="none">-- Sin Inquilino --</option>
                                   {allTenants.map((t: any) => (
@@ -3504,13 +3504,13 @@ export default function BusinessCommander({ stats, installments, setInstallments
                                 <button
                                   onClick={() => handleAssignTenant(sub.id, selectedTenantIdForSub)}
                                   disabled={isSubmittingAssign}
-                                  className="px-2 py-1 bg-green-500/10 text-green-500 hover:bg-green-500 hover:text-white rounded-lg text-[8px] font-black uppercase tracking-widest transition-all border border-green-500/20 font-bold disabled:opacity-50"
+                                  className="px-2 py-1 bg-green-500/10 text-green-500 hover:bg-green-500 hover:text-white rounded-lg text-2xs font-black uppercase tracking-widest transition-all border border-green-500/20 font-bold disabled:opacity-50"
                                 >
                                   {isSubmittingAssign ? '...' : '✓'}
                                 </button>
                                 <button
                                   onClick={() => setEditingSubId(null)}
-                                  className="px-2 py-1 bg-red-500/10 text-red-400 hover:bg-red-600 hover:text-white rounded-lg text-[8px] font-black uppercase tracking-widest transition-all border border-red-500/20 font-bold"
+                                  className="px-2 py-1 bg-red-500/10 text-red-400 hover:bg-red-600 hover:text-white rounded-lg text-2xs font-black uppercase tracking-widest transition-all border border-red-500/20 font-bold"
                                 >
                                   ✗
                                 </button>
@@ -3521,7 +3521,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
                                   setEditingSubId(sub.id);
                                   setSelectedTenantIdForSub(sub.tenant || 'none');
                                 }}
-                                className={`px-3 py-1 text-[8px] font-black uppercase tracking-widest transition-all border rounded-xl font-bold hover:scale-105 ${sub.tenant
+                                className={`px-3 py-1 text-2xs font-black uppercase tracking-widest transition-all border rounded-xl font-bold hover:scale-105 ${sub.tenant
                                   ? 'bg-foreground/5 text-foreground/60 border-card-border hover:bg-foreground/10 hover:text-foreground'
                                   : 'bg-nectar-gold/10 text-nectar-gold border-nectar-gold/20 hover:bg-nectar-gold hover:text-background'
                                   }`}
@@ -3546,7 +3546,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-card-bg border border-card-border p-6 rounded-[2rem] shadow-lg">
             <div>
               <h2 className="text-xs font-black uppercase tracking-[0.4em] opacity-30 mb-1">Contratos Digitales Personalizados</h2>
-              <p className="text-[9px] font-bold text-foreground/30 uppercase tracking-wider">Crea y administra plantillas y contratos digitales para Néctar Labs a nivel global</p>
+              <p className="text-2xs font-bold text-foreground/30 uppercase tracking-wider">Crea y administra plantillas y contratos digitales para Néctar Labs a nivel global</p>
             </div>
           </div>
           <div className="bg-card-bg border border-card-border rounded-[2.5rem] p-8 md:p-10 shadow-lg">
@@ -3574,7 +3574,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
             </button>
 
             <div>
-              <span className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold text-[8px] font-black uppercase tracking-widest rounded-full border border-nectar-gold/20">
+              <span className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold text-2xs font-black uppercase tracking-widest rounded-full border border-nectar-gold/20">
                 Néctar Labs Cotizador
               </span>
               <h2 className="text-3xl font-black tracking-tighter mt-4 leading-none">Nueva Cotización Modular</h2>
@@ -3591,12 +3591,12 @@ export default function BusinessCommander({ stats, installments, setInstallments
               {/* Left Side: General Info */}
               <div className="space-y-6">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-4">Tipo de Cliente</label>
+                  <label className="text-2xs font-black uppercase tracking-widest opacity-40 ml-4">Tipo de Cliente</label>
                   <div className="grid grid-cols-2 gap-3">
                     <button
                       type="button"
                       onClick={() => setQuoteClientType('prospect')}
-                      className={`py-3 rounded-2xl border font-black text-[9px] uppercase tracking-wider transition-all ${quoteClientType === 'prospect'
+                      className={`py-3 rounded-2xl border font-black text-2xs uppercase tracking-wider transition-all ${quoteClientType === 'prospect'
                         ? 'border-nectar-gold bg-nectar-gold/10 text-nectar-gold'
                         : 'border-card-border text-foreground/50 hover:border-card-border/80 bg-background/50'
                         }`}
@@ -3606,7 +3606,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
                     <button
                       type="button"
                       onClick={() => setQuoteClientType('registered')}
-                      className={`py-3 rounded-2xl border font-black text-[9px] uppercase tracking-wider transition-all ${quoteClientType === 'registered'
+                      className={`py-3 rounded-2xl border font-black text-2xs uppercase tracking-wider transition-all ${quoteClientType === 'registered'
                         ? 'border-nectar-gold bg-nectar-gold/10 text-nectar-gold'
                         : 'border-card-border text-foreground/50 hover:border-card-border/80 bg-background/50'
                         }`}
@@ -3618,7 +3618,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
 
                 {quoteClientType === 'registered' ? (
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-4">Seleccionar Usuario</label>
+                    <label className="text-2xs font-black uppercase tracking-widest opacity-40 ml-4">Seleccionar Usuario</label>
                     <select
                       required
                       value={selectedClientId}
@@ -3636,7 +3636,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
                 ) : (
                   <>
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-4">Nombre / Razón Social</label>
+                      <label className="text-2xs font-black uppercase tracking-widest opacity-40 ml-4">Nombre / Razón Social</label>
                       <input
                         type="text"
                         required
@@ -3647,7 +3647,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-4">Email de Contacto</label>
+                      <label className="text-2xs font-black uppercase tracking-widest opacity-40 ml-4">Email de Contacto</label>
                       <input
                         type="email"
                         required
@@ -3661,7 +3661,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
                 )}
 
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-4">Nombre del Proyecto</label>
+                  <label className="text-2xs font-black uppercase tracking-widest opacity-40 ml-4">Nombre del Proyecto</label>
                   <input
                     type="text"
                     required
@@ -3673,7 +3673,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-4">Semanas Estimadas de Entrega</label>
+                  <label className="text-2xs font-black uppercase tracking-widest opacity-40 ml-4">Semanas Estimadas de Entrega</label>
                   <input
                     type="number"
                     required
@@ -3685,7 +3685,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-4">Alcance General (Opcional)</label>
+                  <label className="text-2xs font-black uppercase tracking-widest opacity-40 ml-4">Alcance General (Opcional)</label>
                   <textarea
                     rows={4}
                     className="w-full px-6 py-4 bg-background border border-card-border rounded-2xl focus:border-nectar-gold outline-none transition-all font-bold text-xs text-foreground"
@@ -3700,11 +3700,11 @@ export default function BusinessCommander({ stats, installments, setInstallments
               <div className="space-y-6 flex flex-col justify-between">
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
-                    <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-4">Módulos de Funcionalidad</label>
+                    <label className="text-2xs font-black uppercase tracking-widest opacity-40 ml-4">Módulos de Funcionalidad</label>
                     <button
                       type="button"
                       onClick={handleAddCustomModule}
-                      className="text-[9px] font-black text-nectar-gold hover:underline uppercase tracking-widest font-bold"
+                      className="text-2xs font-black text-nectar-gold hover:underline uppercase tracking-widest font-bold"
                     >
                       + Agregar Personalizado
                     </button>
@@ -3724,8 +3724,8 @@ export default function BusinessCommander({ stats, installments, setInstallments
                           />
                           <div className="flex-1 space-y-1">
                             <h4 className="text-xs font-black">{m.name}</h4>
-                            <p className="text-[8px] opacity-50 leading-relaxed">{m.description}</p>
-                            <span className="text-[9px] font-black text-nectar-gold block mt-1">${m.price.toLocaleString('es-MX')} MXN</span>
+                            <p className="text-2xs opacity-50 leading-relaxed">{m.description}</p>
+                            <span className="text-2xs font-black text-nectar-gold block mt-1">${m.price.toLocaleString('es-MX')} MXN</span>
                           </div>
                         </div>
                       );
@@ -3735,7 +3735,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
                   {/* Customized / Custom Modules Inputs */}
                   {selectedModules.length > 0 && (
                     <div className="space-y-4 pt-4 border-t border-card-border/40 text-left">
-                      <label className="text-[9px] font-black uppercase tracking-widest opacity-40 block">Editar Costos y Descripciones:</label>
+                      <label className="text-2xs font-black uppercase tracking-widest opacity-40 block">Editar Costos y Descripciones:</label>
                       <div className="space-y-3 max-h-[250px] overflow-y-auto pr-2">
                         {selectedModules.map((sm, index) => (
                           <div key={sm.key} className="p-4 bg-background border border-card-border/60 rounded-xl space-y-3 relative text-left">
@@ -3749,14 +3749,14 @@ export default function BusinessCommander({ stats, installments, setInstallments
                             <div className="grid grid-cols-3 gap-2">
                               <input
                                 type="text"
-                                className="col-span-2 px-3 py-1.5 bg-background border border-card-border rounded-lg text-[9px] font-bold text-foreground"
+                                className="col-span-2 px-3 py-1.5 bg-background border border-card-border rounded-lg text-2xs font-bold text-foreground"
                                 placeholder="Nombre del Módulo"
                                 value={sm.name}
                                 onChange={(e) => handleEditSelectedModule(index, 'name', e.target.value)}
                               />
                               <input
                                 type="number"
-                                className="px-3 py-1.5 bg-background border border-card-border rounded-lg text-[9px] font-bold text-right text-foreground font-mono"
+                                className="px-3 py-1.5 bg-background border border-card-border rounded-lg text-2xs font-bold text-right text-foreground font-mono"
                                 placeholder="Precio"
                                 value={sm.price}
                                 onChange={(e) => handleEditSelectedModule(index, 'price', parseFloat(e.target.value) || 0)}
@@ -3764,7 +3764,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
                             </div>
                             <textarea
                               rows={2}
-                              className="w-full px-3 py-1.5 bg-background border border-card-border rounded-lg text-[8px] text-foreground"
+                              className="w-full px-3 py-1.5 bg-background border border-card-border rounded-lg text-2xs text-foreground"
                               placeholder="Descripción detallada de la entrega..."
                               value={sm.description}
                               onChange={(e) => handleEditSelectedModule(index, 'description', e.target.value)}
@@ -3779,21 +3779,21 @@ export default function BusinessCommander({ stats, installments, setInstallments
                 {/* Total & Submit */}
                 <div className="pt-6 border-t border-card-border/60 flex items-center justify-between text-left">
                   <div>
-                    <span className="text-[8px] font-black uppercase tracking-widest opacity-40 block">Precio Total Estimado</span>
+                    <span className="text-2xs font-black uppercase tracking-widest opacity-40 block">Precio Total Estimado</span>
                     <span className="text-2xl font-black text-nectar-gold font-mono">${selectedModules.reduce((sum, m) => sum + (parseFloat(m.price as any) || 0), 0).toLocaleString('es-MX')} MXN</span>
                   </div>
                   <div className="flex gap-4">
                     <button
                       type="button"
                       onClick={() => setShowQuoteModal(false)}
-                      className="px-6 py-3 bg-card-border hover:bg-card-border/80 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all"
+                      className="px-6 py-3 bg-card-border hover:bg-card-border/80 text-2xs font-black uppercase tracking-widest rounded-xl transition-all"
                     >
                       Cancelar
                     </button>
                     <button
                       type="submit"
                       disabled={isSubmittingQuote || selectedModules.length === 0}
-                      className="px-8 py-3 bg-nectar-gold text-background text-[10px] font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 disabled:opacity-40 disabled:scale-100 transition-all shadow-lg shadow-nectar-gold/20 font-bold"
+                      className="px-8 py-3 bg-nectar-gold text-background text-2xs font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 disabled:opacity-40 disabled:scale-100 transition-all shadow-lg shadow-nectar-gold/20 font-bold"
                     >
                       {isSubmittingQuote ? 'Generando...' : 'Guardar y Generar PDF'}
                     </button>
@@ -3822,26 +3822,26 @@ export default function BusinessCommander({ stats, installments, setInstallments
             </button>
 
             <div>
-              <span className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold text-[8px] font-black uppercase tracking-widest rounded-full border border-nectar-gold/20">
+              <span className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold text-2xs font-black uppercase tracking-widest rounded-full border border-nectar-gold/20">
                 Administración
               </span>
               <h2 className="text-2xl font-black tracking-tighter mt-4 leading-none">
                 {editingPromoId !== null ? 'Editar Código Promocional' : 'Nuevo Código Promocional'}
               </h2>
-              <p className="text-[10px] opacity-40 uppercase tracking-widest mt-1">
+              <p className="text-2xs opacity-40 uppercase tracking-widest mt-1">
                 {editingPromoId !== null ? 'Modifica los valores del código seleccionado' : 'Crea códigos de referidos o de descuento general'}
               </p>
             </div>
 
             {promoError && (
-              <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-500 text-[10px] font-bold rounded-xl text-center uppercase tracking-wider">
+              <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-500 text-2xs font-bold rounded-xl text-center uppercase tracking-wider">
                 {promoError}
               </div>
             )}
 
             <form onSubmit={handleCreatePromoCode} className="space-y-5">
               <div className="space-y-1.5">
-                <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Código promocional</label>
+                <label className="text-2xs font-black uppercase tracking-widest opacity-40">Código promocional</label>
                 <input
                   type="text"
                   required
@@ -3854,7 +3854,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Tipo de Código</label>
+                  <label className="text-2xs font-black uppercase tracking-widest opacity-40">Tipo de Código</label>
                   <select
                     value={promoCodeType}
                     onChange={(e) => setPromoCodeType(e.target.value as any)}
@@ -3866,7 +3866,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Descuento (%)</label>
+                  <label className="text-2xs font-black uppercase tracking-widest opacity-40">Descuento (%)</label>
                   <input
                     type="number"
                     min="0"
@@ -3881,7 +3881,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Usuario Referidor (Opcional)</label>
+                <label className="text-2xs font-black uppercase tracking-widest opacity-40">Usuario Referidor (Opcional)</label>
                 <select
                   value={promoReferrer}
                   onChange={(e) => setPromoReferrer(e.target.value)}
@@ -3898,7 +3898,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Límite de Usos (Opcional)</label>
+                  <label className="text-2xs font-black uppercase tracking-widest opacity-40">Límite de Usos (Opcional)</label>
                   <input
                     type="number"
                     placeholder="Sin límite"
@@ -3909,7 +3909,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Vence El (Opcional)</label>
+                  <label className="text-2xs font-black uppercase tracking-widest opacity-40">Vence El (Opcional)</label>
                   <input
                     type="date"
                     value={promoValidUntil}
@@ -3923,14 +3923,14 @@ export default function BusinessCommander({ stats, installments, setInstallments
                 <button
                   type="button"
                   onClick={() => setShowPromoModal(false)}
-                  className="px-5 py-3 border border-card-border hover:bg-foreground hover:text-background text-[9px] font-black uppercase tracking-widest rounded-xl transition-all"
+                  className="px-5 py-3 border border-card-border hover:bg-foreground hover:text-background text-2xs font-black uppercase tracking-widest rounded-xl transition-all"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmittingPromo}
-                  className="px-6 py-3 bg-nectar-gold text-background text-[9px] font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 disabled:opacity-40 disabled:scale-100 transition-all font-bold shadow-lg shadow-nectar-gold/25"
+                  className="px-6 py-3 bg-nectar-gold text-background text-2xs font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 disabled:opacity-40 disabled:scale-100 transition-all font-bold shadow-lg shadow-nectar-gold/25"
                 >
                   {isSubmittingPromo
                     ? (editingPromoId !== null ? 'Guardando...' : 'Creando...')
@@ -3960,21 +3960,21 @@ export default function BusinessCommander({ stats, installments, setInstallments
             </button>
 
             <form onSubmit={handleCreateManualInvoice} className="space-y-6">
-              <span className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold text-[8px] font-black uppercase tracking-widest rounded-full border border-nectar-gold/20">
+              <span className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold text-2xs font-black uppercase tracking-widest rounded-full border border-nectar-gold/20">
                 Facturación SAT
               </span>
               {/* Seleccionar Inquilino */}
               <div className="space-y-1.5">
-                <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Seleccionar Inquilino (Tenant)</label>
+                <label className="text-2xs font-black uppercase tracking-widest opacity-40">Seleccionar Inquilino (Tenant)</label>
                 {(() => {
                   const selectedTenant = allTenants.find(t => String(t.id) === String(selectedTenantId));
                   if (selectedTenant) {
                     return (
                       <div className="flex items-center justify-between p-4 bg-[#C68A1E]/10 border border-[#C68A1E]/30 rounded-2xl animate-in fade-in zoom-in-95 duration-150">
                         <div>
-                          <span className="text-[8px] font-black uppercase tracking-widest text-[#C68A1E]">Inquilino Seleccionado ✓</span>
+                          <span className="text-2xs font-black uppercase tracking-widest text-[#C68A1E]">Inquilino Seleccionado ✓</span>
                           <h4 className="text-xs font-bold text-white mt-1">{selectedTenant.brand_name || selectedTenant.subdomain}</h4>
-                          <p className="text-[9px] text-white/50">{selectedTenant.owner_email || 'Sin correo'}</p>
+                          <p className="text-2xs text-white/50">{selectedTenant.owner_email || 'Sin correo'}</p>
                         </div>
                         <button
                           type="button"
@@ -3985,7 +3985,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
                             setManualRazonSocial('');
                             setManualCodigoPostal('');
                           }}
-                          className="px-3 py-1.5 bg-white/5 hover:bg-red-500/10 text-white/60 hover:text-red-400 border border-white/10 hover:border-red-500/20 rounded-xl text-[8px] font-black uppercase tracking-wider transition-all cursor-pointer font-bold"
+                          className="px-3 py-1.5 bg-white/5 hover:bg-red-500/10 text-white/60 hover:text-red-400 border border-white/10 hover:border-red-500/20 rounded-xl text-2xs font-black uppercase tracking-wider transition-all cursor-pointer font-bold"
                         >
                           Quitar
                         </button>
@@ -4003,7 +4003,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
                           placeholder="Buscar inquilino por nombre o subdominio..."
                           className="w-full bg-background border border-card-border rounded-xl px-4 py-3 pl-10 text-xs focus:outline-none focus:border-nectar-gold text-foreground placeholder:text-white/20 font-bold"
                         />
-                        <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/30 select-none text-[10px]">🔍</div>
+                        <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/30 select-none text-2xs">🔍</div>
                         {tenantSearchQuery && (
                           <button
                             type="button"
@@ -4025,7 +4025,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
 
                               if (filtered.length === 0) {
                                 return (
-                                  <div className="p-3 text-center text-white/30 text-[8px] uppercase tracking-wider font-bold">
+                                  <div className="p-3 text-center text-white/30 text-2xs uppercase tracking-wider font-bold">
                                     Sin inquilinos coincidentes
                                   </div>
                                 );
@@ -4060,7 +4060,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
                           setNewUserEmailVerified(true);
                           setShowNewUserModal(true);
                         }}
-                        className="px-4 py-3 bg-white/10 hover:bg-white/20 border border-white/10 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all text-white cursor-pointer font-bold whitespace-nowrap shrink-0"
+                        className="px-4 py-3 bg-white/10 hover:bg-white/20 border border-white/10 rounded-xl text-2xs font-black uppercase tracking-wider transition-all text-white cursor-pointer font-bold whitespace-nowrap shrink-0"
                       >
                         + Nuevo
                       </button>
@@ -4071,13 +4071,13 @@ export default function BusinessCommander({ stats, installments, setInstallments
 
               {/* Datos Fiscales */}
               <div className="bg-background/40 border border-card-border/60 p-5 rounded-2xl space-y-4">
-                <h3 className="text-[9px] font-black uppercase tracking-widest opacity-50 border-b border-card-border/30 pb-2">
+                <h3 className="text-2xs font-black uppercase tracking-widest opacity-50 border-b border-card-border/30 pb-2">
                   Datos de Facturación del Cliente
                 </h3>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <label className="text-[8px] font-black uppercase tracking-widest opacity-40">RFC</label>
+                    <label className="text-2xs font-black uppercase tracking-widest opacity-40">RFC</label>
                     <input
                       type="text"
                       required
@@ -4088,7 +4088,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Razón Social</label>
+                    <label className="text-2xs font-black uppercase tracking-widest opacity-40">Razón Social</label>
                     <input
                       type="text"
                       required
@@ -4102,7 +4102,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Régimen Fiscal</label>
+                    <label className="text-2xs font-black uppercase tracking-widest opacity-40">Régimen Fiscal</label>
                     <select
                       value={manualRegimenFiscal}
                       onChange={(e) => setManualRegimenFiscal(e.target.value)}
@@ -4121,7 +4121,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
                     </select>
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Código Postal</label>
+                    <label className="text-2xs font-black uppercase tracking-widest opacity-40">Código Postal</label>
                     <input
                       type="text"
                       required
@@ -4134,7 +4134,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Email de Envío de Factura</label>
+                  <label className="text-2xs font-black uppercase tracking-widest opacity-40">Email de Envío de Factura</label>
                   <input
                     type="email"
                     required
@@ -4149,7 +4149,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
               {/* Conceptos (Items) */}
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <label className="text-[9px] font-black uppercase tracking-widest opacity-50">Conceptos / Ítems de la Factura</label>
+                  <label className="text-2xs font-black uppercase tracking-widest opacity-50">Conceptos / Ítems de la Factura</label>
                   <button
                     type="button"
                     onClick={() => {
@@ -4162,7 +4162,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
                         unit_name: 'Unidad de servicio'
                       }]);
                     }}
-                    className="text-[8px] font-black text-nectar-gold hover:underline uppercase tracking-widest font-bold"
+                    className="text-2xs font-black text-nectar-gold hover:underline uppercase tracking-widest font-bold"
                   >
                     + Agregar Concepto
                   </button>
@@ -4177,7 +4177,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
                           onClick={() => {
                             setManualItems(prev => prev.filter((_, i) => i !== idx));
                           }}
-                          className="absolute top-2 right-3 text-red-500 hover:text-red-700 text-[8px] font-black uppercase tracking-wider"
+                          className="absolute top-2 right-3 text-red-500 hover:text-red-700 text-2xs font-black uppercase tracking-wider"
                         >
                           remover
                         </button>
@@ -4185,11 +4185,11 @@ export default function BusinessCommander({ stats, installments, setInstallments
 
                       <div className="grid grid-cols-4 gap-2">
                         <div className="col-span-2 space-y-1 relative concept-search-container">
-                          <label className="text-[7px] font-black uppercase tracking-widest opacity-40">Descripción</label>
+                          <label className="text-2xs font-black uppercase tracking-widest opacity-40">Descripción</label>
                           <input
                             type="text"
                             required
-                            className="w-full px-3 py-1.5 bg-background border border-card-border rounded-lg text-[9px] font-bold text-foreground"
+                            className="w-full px-3 py-1.5 bg-background border border-card-border rounded-lg text-2xs font-bold text-foreground"
                             placeholder="ej. Licencia Software o Ajuste de Cotización"
                             value={item.description}
                             onChange={(e) => handleDescriptionChange(idx, e.target.value)}
@@ -4202,7 +4202,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
                           {activeSuggestionIdx === idx && (loadingSuggestions || suggestedProducts.length > 0) && (
                             <div className="absolute left-0 right-0 mt-1 z-50 max-h-48 overflow-y-auto rounded-xl border border-white/10 bg-[#050a06]/95 backdrop-blur-md shadow-2xl py-1.5 custom-scrollbar">
                               {loadingSuggestions ? (
-                                <div className="flex items-center justify-center py-3 text-[8px] font-black uppercase tracking-wider text-white/40">
+                                <div className="flex items-center justify-center py-3 text-2xs font-black uppercase tracking-wider text-white/40">
                                   <span className="w-3 h-3 rounded-full border-2 border-t-white border-white/10 animate-spin mr-2"></span>
                                   Buscando catálogo SAT...
                                 </div>
@@ -4223,7 +4223,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
                                     className="w-full text-left px-3 py-1.5 hover:bg-white/5 transition-colors flex flex-col gap-0.5 border-b border-white/[0.02] last:border-0 cursor-pointer"
                                   >
                                     <div className="flex justify-between items-center w-full">
-                                      <span className="text-[8px] font-black font-mono tracking-wider text-nectar-gold">
+                                      <span className="text-2xs font-black font-mono tracking-wider text-nectar-gold">
                                         {prod.code}
                                       </span>
                                     </div>
@@ -4237,12 +4237,12 @@ export default function BusinessCommander({ stats, installments, setInstallments
                           )}
                         </div>
                         <div className="space-y-1">
-                          <label className="text-[7px] font-black uppercase tracking-widest opacity-40">Cant.</label>
+                          <label className="text-2xs font-black uppercase tracking-widest opacity-40">Cant.</label>
                           <input
                             type="number"
                             required
                             min="1"
-                            className="w-full px-3 py-1.5 bg-background border border-card-border rounded-lg text-[9px] font-bold text-center text-foreground font-mono"
+                            className="w-full px-3 py-1.5 bg-background border border-card-border rounded-lg text-2xs font-bold text-center text-foreground font-mono"
                             value={item.quantity}
                             onChange={(e) => {
                               const newQty = parseInt(e.target.value) || 1;
@@ -4251,13 +4251,13 @@ export default function BusinessCommander({ stats, installments, setInstallments
                           />
                         </div>
                         <div className="space-y-1">
-                          <label className="text-[7px] font-black uppercase tracking-widest opacity-40">Precio Unit. (MXN)</label>
+                          <label className="text-2xs font-black uppercase tracking-widest opacity-40">Precio Unit. (MXN)</label>
                           <input
                             type="number"
                             required
                             min="0.01"
                             step="0.01"
-                            className="w-full px-3 py-1.5 bg-background border border-card-border rounded-lg text-[9px] font-bold text-right text-foreground font-mono"
+                            className="w-full px-3 py-1.5 bg-background border border-card-border rounded-lg text-2xs font-bold text-right text-foreground font-mono"
                             placeholder="0.00"
                             value={item.unit_price || ''}
                             onChange={(e) => {
@@ -4270,7 +4270,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
 
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-3 border-t border-white/5 pt-3 mt-2">
                         <div className="space-y-1">
-                          <label className="text-[7px] font-black uppercase tracking-widest opacity-40 block">Clave Producto SAT</label>
+                          <label className="text-2xs font-black uppercase tracking-widest opacity-40 block">Clave Producto SAT</label>
                           <SATAutocomplete
                             mode="product"
                             value={item.product_key}
@@ -4284,7 +4284,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
                           />
                         </div>
                         <div className="space-y-1">
-                          <label className="text-[7px] font-black uppercase tracking-widest opacity-40 block">Clave Unidad SAT</label>
+                          <label className="text-2xs font-black uppercase tracking-widest opacity-40 block">Clave Unidad SAT</label>
                           <SATAutocomplete
                             mode="unit"
                             value={item.unit_key}
@@ -4298,11 +4298,11 @@ export default function BusinessCommander({ stats, installments, setInstallments
                           />
                         </div>
                         <div className="space-y-1">
-                          <label className="text-[7px] font-black uppercase tracking-widest opacity-40 block">Nombre Unidad</label>
+                          <label className="text-2xs font-black uppercase tracking-widest opacity-40 block">Nombre Unidad</label>
                           <input
                             type="text"
                             required
-                            className="w-full px-3 py-1.5 bg-background border border-card-border rounded-lg text-[9px] font-bold text-foreground font-mono"
+                            className="w-full px-3 py-1.5 bg-background border border-card-border rounded-lg text-2xs font-bold text-foreground font-mono"
                             placeholder="ej. Unidad de servicio"
                             value={item.unit_name}
                             onChange={(e) => {
@@ -4325,7 +4325,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
                   const total = parseFloat((subtotal + iva).toFixed(2));
 
                   return (
-                    <div className="grid grid-cols-3 gap-6 text-[9px] font-black uppercase tracking-widest">
+                    <div className="grid grid-cols-3 gap-6 text-2xs font-black uppercase tracking-widest">
                       <div>
                         <span className="opacity-40 block">Subtotal</span>
                         <span className="text-xs font-mono font-bold text-foreground/80">${subtotal.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</span>
@@ -4346,14 +4346,14 @@ export default function BusinessCommander({ stats, installments, setInstallments
                   <button
                     type="button"
                     onClick={() => setShowManualInvoiceModal(false)}
-                    className="px-5 py-3 border border-card-border hover:bg-foreground hover:text-background text-[9px] font-black uppercase tracking-widest rounded-xl transition-all"
+                    className="px-5 py-3 border border-card-border hover:bg-foreground hover:text-background text-2xs font-black uppercase tracking-widest rounded-xl transition-all"
                   >
                     Cancelar
                   </button>
                   <button
                     type="submit"
                     disabled={isSubmittingManualInvoice || !selectedTenantId}
-                    className="px-6 py-3 bg-green-600 hover:bg-green-500 text-white text-[9px] font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 disabled:opacity-40 disabled:scale-100 transition-all font-bold shadow-lg shadow-green-950/20"
+                    className="px-6 py-3 bg-green-600 hover:bg-green-500 text-white text-2xs font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 disabled:opacity-40 disabled:scale-100 transition-all font-bold shadow-lg shadow-green-950/20"
                   >
                     {isSubmittingManualInvoice ? 'Emitiendo y Timbrando...' : 'Timbrar Factura (PAC)'}
                   </button>
@@ -4405,13 +4405,13 @@ export default function BusinessCommander({ stats, installments, setInstallments
             </button>
 
             <div>
-              <span className="px-3 py-1 bg-red-500/10 text-red-500 text-[8px] font-black uppercase tracking-widest rounded-full border border-red-500/20">
+              <span className="px-3 py-1 bg-red-500/10 text-red-500 text-2xs font-black uppercase tracking-widest rounded-full border border-red-500/20">
                 Cancelación SAT
               </span>
               <h2 className="text-2xl font-black tracking-tighter mt-4 leading-none text-foreground">
                 Cancelar Factura CFDI
               </h2>
-              <p className="text-[10px] opacity-40 uppercase tracking-widest mt-1">
+              <p className="text-2xs opacity-40 uppercase tracking-widest mt-1">
                 Selecciona el motivo de cancelación ante el SAT.
               </p>
             </div>
@@ -4435,7 +4435,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
               className="space-y-4"
             >
               <div className="space-y-1.5">
-                <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Motivo de Cancelación *</label>
+                <label className="text-2xs font-black uppercase tracking-widest opacity-40">Motivo de Cancelación *</label>
                 <select
                   value={cancelMotive}
                   onChange={(e) => {
@@ -4453,7 +4453,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
 
               {cancelMotive === '01' && (
                 <div className="space-y-1.5 animate-fadeIn">
-                  <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Folio Sustituto (UUID o ID de Facturapi) *</label>
+                  <label className="text-2xs font-black uppercase tracking-widest opacity-40">Folio Sustituto (UUID o ID de Facturapi) *</label>
                   <input
                     type="text"
                     required
@@ -4462,7 +4462,7 @@ export default function BusinessCommander({ stats, installments, setInstallments
                     onChange={(e) => setCancelSubstitution(e.target.value)}
                     className="w-full bg-background border border-card-border rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-nectar-gold text-foreground font-mono"
                   />
-                  <p className="text-[8px] opacity-40 uppercase tracking-widest">
+                  <p className="text-2xs opacity-40 uppercase tracking-widest">
                     Especifica el UUID de la factura que reemplaza a la factura actual.
                   </p>
                 </div>
@@ -4472,14 +4472,14 @@ export default function BusinessCommander({ stats, installments, setInstallments
                 <button
                   type="button"
                   onClick={() => setShowCancelModal(false)}
-                  className="px-5 py-3 border border-card-border hover:bg-foreground hover:text-background text-[9px] font-black uppercase tracking-widest rounded-xl transition-all cursor-pointer"
+                  className="px-5 py-3 border border-card-border hover:bg-foreground hover:text-background text-2xs font-black uppercase tracking-widest rounded-xl transition-all cursor-pointer"
                 >
                   Regresar
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmittingCancel}
-                  className="px-6 py-3 bg-red-600 hover:bg-red-500 text-white text-[9px] font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 disabled:opacity-40 disabled:scale-100 transition-all font-bold shadow-lg shadow-red-950/25 cursor-pointer"
+                  className="px-6 py-3 bg-red-600 hover:bg-red-500 text-white text-2xs font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 disabled:opacity-40 disabled:scale-100 transition-all font-bold shadow-lg shadow-red-950/25 cursor-pointer"
                 >
                   {isSubmittingCancel ? 'Cancelando...' : 'Confirmar Cancelación'}
                 </button>

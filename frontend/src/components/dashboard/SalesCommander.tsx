@@ -525,7 +525,7 @@ export default function SalesCommander() {
     return (
       <div className="py-20 flex flex-col items-center justify-center">
         <div className="w-12 h-12 border-4 border-nectar-gold border-t-transparent rounded-full animate-spin mb-4"></div>
-        <p className="font-black uppercase tracking-[0.4em] opacity-20 text-[10px]">Cargando Consola de Ventas...</p>
+        <p className="font-black uppercase tracking-[0.4em] opacity-20 text-2xs">Cargando Consola de Ventas...</p>
       </div>
     );
   }
@@ -545,22 +545,22 @@ export default function SalesCommander() {
         <div className="p-8 rounded-[2.5rem] bg-card-bg border border-card-border flex flex-col justify-between gap-4 relative overflow-hidden group shadow-lg min-h-[160px]">
           <div className="absolute top-0 right-0 w-32 h-32 bg-green-500/5 rounded-full blur-2xl -mr-10 -mt-10"></div>
           <div className="relative z-10">
-            <span className="text-[8px] font-black uppercase tracking-widest opacity-40">Néctar Cosechado (Comisiones)</span>
+            <span className="text-2xs font-black uppercase tracking-widest opacity-40">Néctar Cosechado (Comisiones)</span>
             <h3 className="text-3xl font-black tracking-tight mt-2 text-green-400 font-mono">
               ${calculateTotalSalesWon().toLocaleString('es-MX', { minimumFractionDigits: 2 })} <span className="text-xs font-bold text-foreground/50">MXN</span>
             </h3>
-            <p className="text-[9px] text-foreground/50 mt-1 uppercase tracking-wider font-bold">Porcentaje de ganancia correspondiente sobre miel en panal</p>
+            <p className="text-2xs text-foreground/50 mt-1 uppercase tracking-wider font-bold">Porcentaje de ganancia correspondiente sobre miel en panal</p>
           </div>
         </div>
 
         <div className="p-8 rounded-[2.5rem] bg-card-bg border border-card-border flex flex-col justify-between gap-4 relative overflow-hidden group shadow-lg min-h-[160px]">
           <div className="absolute top-0 right-0 w-32 h-32 bg-nectar-gold/5 rounded-full blur-2xl -mr-10 -mt-10"></div>
           <div className="relative z-10">
-            <span className="text-[8px] font-black uppercase tracking-widest opacity-40">Flores en Monitoreo (Prospectos)</span>
+            <span className="text-2xs font-black uppercase tracking-widest opacity-40">Flores en Monitoreo (Prospectos)</span>
             <h3 className="text-3xl font-black tracking-tight mt-2 text-nectar-gold font-mono">
               {calculateActiveProspects()} <span className="text-xs font-bold text-foreground/50">Flores activas</span>
             </h3>
-            <p className="text-[9px] text-foreground/50 mt-1 uppercase tracking-wider font-bold">Prospectos en la ruta de recolección</p>
+            <p className="text-2xs text-foreground/50 mt-1 uppercase tracking-wider font-bold">Prospectos en la ruta de recolección</p>
           </div>
         </div>
 
@@ -568,12 +568,12 @@ export default function SalesCommander() {
           <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full blur-2xl -mr-10 -mt-10"></div>
           <div className="relative z-10 flex flex-col justify-between h-full">
             <div>
-              <span className="text-[8px] font-black uppercase tracking-widest opacity-40">Ruta del Néctar</span>
+              <span className="text-2xs font-black uppercase tracking-widest opacity-40">Ruta del Néctar</span>
               <h3 className="text-xl font-black tracking-tight mt-2 text-foreground">
                 Sembrar Nueva Flor
               </h3>
             </div>
-            <span className="text-[9px] text-nectar-gold uppercase tracking-wider font-black flex items-center gap-1 mt-4">
+            <span className="text-2xs text-nectar-gold uppercase tracking-wider font-black flex items-center gap-1 mt-4">
               INICIAR RUTA DE POLINIZACIÓN ➔
             </span>
           </div>
@@ -585,11 +585,11 @@ export default function SalesCommander() {
         <div className="flex justify-between items-center">
           <div>
             <h2 className="text-xs font-black uppercase tracking-[0.3em] opacity-30">Ruta del Néctar (Pipeline)</h2>
-            <p className="text-[9px] font-bold text-foreground/40 mt-1 uppercase tracking-wider">Arrastra las tarjetas para polinizar o extraer el néctar de las flores</p>
+            <p className="text-2xs font-bold text-foreground/40 mt-1 uppercase tracking-wider">Arrastra las tarjetas para polinizar o extraer el néctar de las flores</p>
           </div>
           <button
             onClick={handleOpenCreateLead}
-            className="px-5 py-2.5 bg-nectar-gold hover:bg-nectar-gold/90 text-background text-[9px] font-black uppercase tracking-widest rounded-xl transition-all font-bold hover:scale-[1.02]"
+            className="px-5 py-2.5 bg-nectar-gold hover:bg-nectar-gold/90 text-background text-2xs font-black uppercase tracking-widest rounded-xl transition-all font-bold hover:scale-[1.02]"
           >
             + Sembrar Flor
           </button>
@@ -614,10 +614,10 @@ export default function SalesCommander() {
                 >
                   {/* Column Header */}
                   <div className="flex justify-between items-center mb-4 pb-2 border-b border-card-border/35">
-                    <span className={`text-[10px] font-black uppercase tracking-widest ${col.color}`}>
+                    <span className={`text-2xs font-black uppercase tracking-widest ${col.color}`}>
                       {col.title}
                     </span>
-                    <span className="px-2 py-0.5 bg-background/50 rounded-full text-[9px] font-bold opacity-60 font-mono">
+                    <span className="px-2 py-0.5 bg-background/50 rounded-full text-2xs font-bold opacity-60 font-mono">
                       {colLeads.length}
                     </span>
                   </div>
@@ -649,7 +649,7 @@ export default function SalesCommander() {
                                   </h4>
                                   <div className="flex flex-col items-end text-right shrink-0">
                                     <span 
-                                      className="text-[9px] font-bold text-nectar-gold font-mono" 
+                                      className="text-2xs font-bold text-nectar-gold font-mono" 
                                       title={hasQuote ? "Comisión Única del 20% por Proyecto Custom" : "Comisión Estimada (10% Mes 1, 5% Mes 2, 2% Meses 3-6)"}
                                     >
                                       ${commission.toLocaleString('es-MX', { maximumFractionDigits: 0 })}
@@ -677,7 +677,7 @@ export default function SalesCommander() {
                               <div className="flex justify-between items-center gap-2 mt-4 pt-2 border-t border-card-border/20">
                                 <button
                                   onClick={() => handleOpenNotes(lead)}
-                                  className="text-[8px] font-bold uppercase tracking-wider text-foreground/50 hover:text-nectar-gold"
+                                  className="text-2xs font-bold uppercase tracking-wider text-foreground/50 hover:text-nectar-gold"
                                   title="Notas de seguimiento"
                                 >
                                   📝 Notas
@@ -694,13 +694,13 @@ export default function SalesCommander() {
                                   )}
                                   <button
                                     onClick={() => handleOpenEditLead(lead)}
-                                    className="text-[8px] font-bold uppercase tracking-wider text-foreground/30 hover:text-nectar-gold"
+                                    className="text-2xs font-bold uppercase tracking-wider text-foreground/30 hover:text-nectar-gold"
                                   >
                                     Editar
                                   </button>
                                   <button
                                     onClick={() => handleDeleteLead(lead.id)}
-                                    className="text-[8px] font-bold uppercase tracking-wider text-red-500/50 hover:text-red-500"
+                                    className="text-2xs font-bold uppercase tracking-wider text-red-500/50 hover:text-red-500"
                                   >
                                     ✖
                                   </button>
@@ -713,7 +713,7 @@ export default function SalesCommander() {
                     ))}
 
                     {colLeads.length === 0 && (
-                      <div className="h-full flex items-center justify-center py-20 text-center text-[9px] font-black uppercase tracking-widest opacity-20 border border-dashed border-card-border/40 rounded-2xl">
+                      <div className="h-full flex items-center justify-center py-20 text-center text-2xs font-black uppercase tracking-widest opacity-20 border border-dashed border-card-border/40 rounded-2xl">
                         Arrastrar aquí
                       </div>
                     )}
@@ -730,7 +730,7 @@ export default function SalesCommander() {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
           <div>
             <h3 className="text-xs font-black uppercase tracking-[0.3em] opacity-30">Tus Cotizaciones Generadas</h3>
-            <p className="text-[9px] font-bold text-foreground/40 mt-1 uppercase tracking-wider">Registro de propuestas modulares emitidas e historial de descargas</p>
+            <p className="text-2xs font-bold text-foreground/40 mt-1 uppercase tracking-wider">Registro de propuestas modulares emitidas e historial de descargas</p>
           </div>
           <button
             onClick={() => {
@@ -745,7 +745,7 @@ export default function SalesCommander() {
               setSelectedModules([]);
               setShowQuoteModal(true);
             }}
-            className="px-5 py-2.5 bg-nectar-gold hover:bg-nectar-gold/90 text-background text-[9px] font-black uppercase tracking-widest rounded-xl transition-all font-bold hover:scale-[1.02] shadow-lg shadow-nectar-gold/15"
+            className="px-5 py-2.5 bg-nectar-gold hover:bg-nectar-gold/90 text-background text-2xs font-black uppercase tracking-widest rounded-xl transition-all font-bold hover:scale-[1.02] shadow-lg shadow-nectar-gold/15"
           >
             + Nueva Cotización
           </button>
@@ -754,7 +754,7 @@ export default function SalesCommander() {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-card-border/50 text-[8px] font-black uppercase tracking-widest opacity-40">
+              <tr className="border-b border-card-border/50 text-2xs font-black uppercase tracking-widest opacity-40">
                 <th className="pb-4">Cliente / Razón Social</th>
                 <th className="pb-4">Proyecto</th>
                 <th className="pb-4 text-right">Monto Estimado</th>
@@ -776,18 +776,18 @@ export default function SalesCommander() {
                   <td className="py-4 text-right font-mono font-bold text-xs text-nectar-gold">
                     ${parseFloat(quote.total_price).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
                   </td>
-                  <td className="py-4 text-center text-[10px] font-bold opacity-60">
+                  <td className="py-4 text-center text-2xs font-bold opacity-60">
                     {quote.estimated_delivery_weeks} Semanas
                   </td>
                   <td className="py-4 text-center">
                     {quote.status === 'APPROVED' ? (
-                      <span className="px-3 py-1 bg-green-500/10 text-green-500 text-[7px] font-black uppercase tracking-widest rounded-full border border-green-500/20">Aprobado</span>
+                      <span className="px-3 py-1 bg-green-500/10 text-green-500 text-2xs font-black uppercase tracking-widest rounded-full border border-green-500/20">Aprobado</span>
                     ) : quote.status === 'REJECTED' ? (
-                      <span className="px-3 py-1 bg-red-500/10 text-red-500 text-[7px] font-black uppercase tracking-widest rounded-full border border-red-500/20">Rechazado</span>
+                      <span className="px-3 py-1 bg-red-500/10 text-red-500 text-2xs font-black uppercase tracking-widest rounded-full border border-red-500/20">Rechazado</span>
                     ) : quote.status === 'SENT' ? (
-                      <span className="px-3 py-1 bg-blue-500/10 text-blue-500 text-[7px] font-black uppercase tracking-widest rounded-full border border-blue-500/20">Enviado</span>
+                      <span className="px-3 py-1 bg-blue-500/10 text-blue-500 text-2xs font-black uppercase tracking-widest rounded-full border border-blue-500/20">Enviado</span>
                     ) : (
-                      <span className="px-3 py-1 bg-yellow-500/10 text-yellow-500 text-[7px] font-black uppercase tracking-widest rounded-full border border-yellow-500/20">Borrador</span>
+                      <span className="px-3 py-1 bg-yellow-500/10 text-yellow-500 text-2xs font-black uppercase tracking-widest rounded-full border border-yellow-500/20">Borrador</span>
                     )}
                   </td>
                   <td className="py-4 text-right">
@@ -795,7 +795,7 @@ export default function SalesCommander() {
                       {quote.status === 'DRAFT' && (
                         <button
                           onClick={() => handleUpdateQuoteStatus(quote.id, 'SENT')}
-                          className="px-2.5 py-1.5 bg-blue-500/10 hover:bg-blue-500 text-blue-400 hover:text-white text-[8px] font-black uppercase tracking-widest rounded-lg transition-all border border-blue-500/25"
+                          className="px-2.5 py-1.5 bg-blue-500/10 hover:bg-blue-500 text-blue-400 hover:text-white text-2xs font-black uppercase tracking-widest rounded-lg transition-all border border-blue-500/25"
                         >
                           Enviar
                         </button>
@@ -805,13 +805,13 @@ export default function SalesCommander() {
                         <>
                           <button
                             onClick={() => handleUpdateQuoteStatus(quote.id, 'APPROVED')}
-                            className="px-2.5 py-1.5 bg-green-500/10 hover:bg-green-500 text-green-400 hover:text-white text-[8px] font-black uppercase tracking-widest rounded-lg transition-all border border-green-500/25"
+                            className="px-2.5 py-1.5 bg-green-500/10 hover:bg-green-500 text-green-400 hover:text-white text-2xs font-black uppercase tracking-widest rounded-lg transition-all border border-green-500/25"
                           >
                             Aprobar
                           </button>
                           <button
                             onClick={() => handleUpdateQuoteStatus(quote.id, 'REJECTED')}
-                            className="px-2.5 py-1.5 bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white text-[8px] font-black uppercase tracking-widest rounded-lg transition-all border border-red-500/25"
+                            className="px-2.5 py-1.5 bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white text-2xs font-black uppercase tracking-widest rounded-lg transition-all border border-red-500/25"
                           >
                             Rechazar
                           </button>
@@ -820,7 +820,7 @@ export default function SalesCommander() {
 
                       <button
                         onClick={() => handleRegenerateQuotePDF(quote.id)}
-                        className="px-2.5 py-1.5 bg-card-border hover:bg-white hover:text-background text-[8px] font-black uppercase tracking-widest rounded-lg transition-all"
+                        className="px-2.5 py-1.5 bg-card-border hover:bg-white hover:text-background text-2xs font-black uppercase tracking-widest rounded-lg transition-all"
                         title="Regenerar PDF"
                       >
                         🔄 PDF
@@ -831,12 +831,12 @@ export default function SalesCommander() {
                           href={getInlineViewUrl(quote.pdf_file, 'quote', quote.id)}
                           target="_blank"
                           rel="noreferrer"
-                          className="px-2.5 py-1.5 bg-nectar-gold hover:bg-nectar-gold/90 text-background text-[8px] font-black uppercase tracking-widest rounded-lg transition-all inline-block font-bold"
+                          className="px-2.5 py-1.5 bg-nectar-gold hover:bg-nectar-gold/90 text-background text-2xs font-black uppercase tracking-widest rounded-lg transition-all inline-block font-bold"
                         >
                           Ver PDF
                         </a>
                       ) : (
-                        <span className="text-[8px] opacity-35 font-bold uppercase py-1.5 inline-block pr-2">Sin PDF</span>
+                        <span className="text-2xs opacity-35 font-bold uppercase py-1.5 inline-block pr-2">Sin PDF</span>
                       )}
 
                       <button
@@ -852,7 +852,7 @@ export default function SalesCommander() {
 
               {quotes.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="py-12 text-center text-[9px] font-black uppercase tracking-widest opacity-25">
+                  <td colSpan={6} className="py-12 text-center text-2xs font-black uppercase tracking-widest opacity-25">
                     Aún no has generado cotizaciones para tus prospectos
                   </td>
                 </tr>
@@ -875,7 +875,7 @@ export default function SalesCommander() {
             <form onSubmit={handleSaveLead} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[8px] font-black uppercase tracking-wider text-foreground/50 mb-2">
+                  <label className="block text-2xs font-black uppercase tracking-wider text-foreground/50 mb-2">
                     Nombre o Razón Social *
                   </label>
                   <input
@@ -888,7 +888,7 @@ export default function SalesCommander() {
                   />
                 </div>
                 <div>
-                  <label className="block text-[8px] font-black uppercase tracking-wider text-foreground/50 mb-2">
+                  <label className="block text-2xs font-black uppercase tracking-wider text-foreground/50 mb-2">
                     Valor Estimado (MXN)
                   </label>
                   <input
@@ -903,7 +903,7 @@ export default function SalesCommander() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[8px] font-black uppercase tracking-wider text-foreground/50 mb-2">
+                  <label className="block text-2xs font-black uppercase tracking-wider text-foreground/50 mb-2">
                     Correo de Contacto
                   </label>
                   <input
@@ -915,7 +915,7 @@ export default function SalesCommander() {
                   />
                 </div>
                 <div>
-                  <label className="block text-[8px] font-black uppercase tracking-wider text-foreground/50 mb-2">
+                  <label className="block text-2xs font-black uppercase tracking-wider text-foreground/50 mb-2">
                     Teléfono
                   </label>
                   <input
@@ -929,7 +929,7 @@ export default function SalesCommander() {
               </div>
 
               <div>
-                <label className="block text-[8px] font-black uppercase tracking-wider text-foreground/50 mb-2">
+                <label className="block text-2xs font-black uppercase tracking-wider text-foreground/50 mb-2">
                   Idea del Proyecto / Necesidad
                 </label>
                 <textarea
@@ -943,7 +943,7 @@ export default function SalesCommander() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[8px] font-black uppercase tracking-wider text-foreground/50 mb-2">
+                  <label className="block text-2xs font-black uppercase tracking-wider text-foreground/50 mb-2">
                     Etapa / Estatus del Pipeline
                   </label>
                   <select
@@ -961,7 +961,7 @@ export default function SalesCommander() {
               </div>
 
               <div>
-                <label className="block text-[8px] font-black uppercase tracking-wider text-foreground/50 mb-2">
+                <label className="block text-2xs font-black uppercase tracking-wider text-foreground/50 mb-2">
                   Notas de Seguimiento Privadas
                 </label>
                 <textarea
@@ -977,13 +977,13 @@ export default function SalesCommander() {
                 <button
                   type="button"
                   onClick={() => setShowLeadModal(false)}
-                  className="flex-1 py-4 border border-card-border hover:bg-foreground hover:text-background text-[10px] font-black uppercase tracking-widest rounded-xl transition-all"
+                  className="flex-1 py-4 border border-card-border hover:bg-foreground hover:text-background text-2xs font-black uppercase tracking-widest rounded-xl transition-all"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-4 bg-nectar-gold hover:bg-nectar-gold/90 text-background text-[10px] font-black uppercase tracking-widest rounded-xl transition-all font-bold hover:scale-[1.02]"
+                  className="flex-1 py-4 bg-nectar-gold hover:bg-nectar-gold/90 text-background text-2xs font-black uppercase tracking-widest rounded-xl transition-all font-bold hover:scale-[1.02]"
                 >
                   Guardar
                 </button>
@@ -1002,7 +1002,7 @@ export default function SalesCommander() {
             <h3 className="text-xl font-black tracking-tight text-foreground mb-2">
               Notas de Seguimiento
             </h3>
-            <p className="text-[8px] font-black uppercase tracking-widest text-nectar-gold mb-6">{notesLead.name}</p>
+            <p className="text-2xs font-black uppercase tracking-widest text-nectar-gold mb-6">{notesLead.name}</p>
 
             <div className="space-y-6">
               <div>
@@ -1019,14 +1019,14 @@ export default function SalesCommander() {
                 <button
                   type="button"
                   onClick={() => setShowNotesModal(false)}
-                  className="flex-1 py-3 border border-card-border hover:bg-foreground hover:text-background text-[9px] font-black uppercase tracking-widest rounded-xl transition-all"
+                  className="flex-1 py-3 border border-card-border hover:bg-foreground hover:text-background text-2xs font-black uppercase tracking-widest rounded-xl transition-all"
                 >
                   Cerrar
                 </button>
                 <button
                   type="button"
                   onClick={handleSaveQuickNotes}
-                  className="flex-1 py-3 bg-nectar-gold hover:bg-nectar-gold/90 text-background text-[9px] font-black uppercase tracking-widest rounded-xl transition-all font-bold"
+                  className="flex-1 py-3 bg-nectar-gold hover:bg-nectar-gold/90 text-background text-2xs font-black uppercase tracking-widest rounded-xl transition-all font-bold"
                 >
                   Guardar Notas
                 </button>
@@ -1046,7 +1046,7 @@ export default function SalesCommander() {
               <div>
                 <span className="px-2 py-0.5 bg-nectar-gold/10 text-nectar-gold text-[7.5px] font-black uppercase tracking-widest rounded-full">Consola de Vendedor</span>
                 <h3 className="text-3xl font-black tracking-tighter mt-2 text-foreground">Cotizador Modular Rápido</h3>
-                <p className="text-[9px] text-foreground/45 uppercase tracking-wider mt-1">Generando propuesta para el prospecto: <strong>{quoteLead.name}</strong></p>
+                <p className="text-2xs text-foreground/45 uppercase tracking-wider mt-1">Generando propuesta para el prospecto: <strong>{quoteLead.name}</strong></p>
               </div>
               <button
                 onClick={() => setShowQuoteModal(false)}
@@ -1066,10 +1066,10 @@ export default function SalesCommander() {
               {/* Form Row 1: Client Data */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-background/20 p-5 rounded-2xl border border-card-border/30">
                 <div className="space-y-4">
-                  <h4 className="text-[10px] font-black uppercase tracking-widest text-nectar-gold border-b border-card-border/25 pb-1">Seleccionar Cliente / Prospecto</h4>
+                  <h4 className="text-2xs font-black uppercase tracking-widest text-nectar-gold border-b border-card-border/25 pb-1">Seleccionar Cliente / Prospecto</h4>
                   <div className="space-y-3">
                     <div>
-                      <label className="block text-[8px] font-black uppercase tracking-wider text-foreground/50 mb-1">Prospecto a Cotizar *</label>
+                      <label className="block text-2xs font-black uppercase tracking-wider text-foreground/50 mb-1">Prospecto a Cotizar *</label>
                       <select
                         value={quoteLead.id}
                         onChange={(e) => {
@@ -1093,10 +1093,10 @@ export default function SalesCommander() {
                 </div>
 
                 <div className="space-y-4">
-                  <h4 className="text-[10px] font-black uppercase tracking-widest text-nectar-gold border-b border-card-border/25 pb-1">Configuración General</h4>
+                  <h4 className="text-2xs font-black uppercase tracking-widest text-nectar-gold border-b border-card-border/25 pb-1">Configuración General</h4>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-[8px] font-black uppercase tracking-wider text-foreground/50 mb-1.5">Nombre del Proyecto *</label>
+                      <label className="block text-2xs font-black uppercase tracking-wider text-foreground/50 mb-1.5">Nombre del Proyecto *</label>
                       <input
                         type="text"
                         required
@@ -1107,7 +1107,7 @@ export default function SalesCommander() {
                       />
                     </div>
                     <div>
-                      <label className="block text-[8px] font-black uppercase tracking-wider text-foreground/50 mb-1.5">Tiempo de Entrega (Semanas) *</label>
+                      <label className="block text-2xs font-black uppercase tracking-wider text-foreground/50 mb-1.5">Tiempo de Entrega (Semanas) *</label>
                       <input
                         type="number"
                         required
@@ -1122,7 +1122,7 @@ export default function SalesCommander() {
               </div>
 
               <div>
-                <label className="block text-[8px] font-black uppercase tracking-wider text-foreground/50 mb-2">Descripción General del Alcance</label>
+                <label className="block text-2xs font-black uppercase tracking-wider text-foreground/50 mb-2">Descripción General del Alcance</label>
                 <textarea
                   rows={2}
                   value={quoteDescription}
@@ -1135,11 +1135,11 @@ export default function SalesCommander() {
               {/* Modules Selector */}
               <div className="space-y-4">
                 <div className="flex justify-between items-end border-b border-card-border/40 pb-2">
-                  <h4 className="text-[10px] font-black uppercase tracking-widest text-nectar-gold">Selecciona Módulos para Cotizar</h4>
+                  <h4 className="text-2xs font-black uppercase tracking-widest text-nectar-gold">Selecciona Módulos para Cotizar</h4>
                   <button
                     type="button"
                     onClick={handleAddCustomModule}
-                    className="text-[9px] font-black text-nectar-gold uppercase tracking-wider hover:underline"
+                    className="text-2xs font-black text-nectar-gold uppercase tracking-wider hover:underline"
                   >
                     + Agregar Módulo Personalizado
                   </button>
@@ -1166,7 +1166,7 @@ export default function SalesCommander() {
                         <div className="min-w-0">
                           <div className="flex justify-between items-start gap-1">
                             <span className="font-black text-xs text-foreground truncate">{mod.name}</span>
-                            <span className="text-[10px] font-bold text-nectar-gold font-mono shrink-0">${mod.price.toLocaleString()}</span>
+                            <span className="text-2xs font-bold text-nectar-gold font-mono shrink-0">${mod.price.toLocaleString()}</span>
                           </div>
                           <p className="text-[8.5px] text-foreground/50 mt-1 line-clamp-2 leading-relaxed">{mod.description}</p>
                         </div>
@@ -1179,7 +1179,7 @@ export default function SalesCommander() {
               {/* Selected Modules Adjustments List */}
               {selectedModules.length > 0 && (
                 <div className="space-y-4 bg-background/30 p-5 rounded-3xl border border-card-border/40">
-                  <h4 className="text-[10px] font-black uppercase tracking-widest text-foreground border-b border-card-border/25 pb-2">Desglose de Cotización (Edición en Tiempo Real)</h4>
+                  <h4 className="text-2xs font-black uppercase tracking-widest text-foreground border-b border-card-border/25 pb-2">Desglose de Cotización (Edición en Tiempo Real)</h4>
                   <div className="space-y-4 max-h-[220px] overflow-y-auto pr-1">
                     {selectedModules.map((mod, idx) => (
                       <div key={mod.key} className="flex gap-4 items-start bg-background/50 border border-card-border/50 p-4 rounded-2xl">
@@ -1194,13 +1194,13 @@ export default function SalesCommander() {
                             rows={1}
                             value={mod.description}
                             onChange={(e) => handleEditSelectedModule(idx, 'description', e.target.value)}
-                            className="bg-transparent text-[9px] text-foreground/60 w-full focus:outline-none resize-none leading-relaxed"
+                            className="bg-transparent text-2xs text-foreground/60 w-full focus:outline-none resize-none leading-relaxed"
                           />
                         </div>
                         
                         <div className="flex items-center gap-3 shrink-0">
                           <div className="flex items-center bg-background border border-card-border/80 rounded-lg px-2 py-1">
-                            <span className="text-[10px] opacity-40 font-mono pr-1">$</span>
+                            <span className="text-2xs opacity-40 font-mono pr-1">$</span>
                             <input
                               type="number"
                               value={mod.price}
@@ -1225,7 +1225,7 @@ export default function SalesCommander() {
               {/* Total Calculation Footer */}
               <div className="flex justify-between items-center border-t border-card-border/60 pt-6">
                 <div>
-                  <span className="text-[8px] font-black uppercase tracking-widest opacity-40">Monto Final Acumulado</span>
+                  <span className="text-2xs font-black uppercase tracking-widest opacity-40">Monto Final Acumulado</span>
                   <h3 className="text-3xl font-black text-nectar-gold font-mono mt-1">
                     ${selectedModules.reduce((sum, m) => sum + (m.price || 0), 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })} <span className="text-xs font-bold text-foreground/50">MXN</span>
                   </h3>
@@ -1235,14 +1235,14 @@ export default function SalesCommander() {
                   <button
                     type="button"
                     onClick={() => setShowQuoteModal(false)}
-                    className="px-6 py-4 border border-card-border hover:bg-foreground hover:text-background text-[10px] font-black uppercase tracking-widest rounded-xl transition-all"
+                    className="px-6 py-4 border border-card-border hover:bg-foreground hover:text-background text-2xs font-black uppercase tracking-widest rounded-xl transition-all"
                   >
                     Cerrar
                   </button>
                   <button
                     type="submit"
                     disabled={isSubmittingQuote || selectedModules.length === 0}
-                    className="px-8 py-4 bg-nectar-gold hover:bg-nectar-gold/90 text-background text-[10px] font-black uppercase tracking-widest rounded-xl transition-all font-bold hover:scale-[1.02] disabled:opacity-50"
+                    className="px-8 py-4 bg-nectar-gold hover:bg-nectar-gold/90 text-background text-2xs font-black uppercase tracking-widest rounded-xl transition-all font-bold hover:scale-[1.02] disabled:opacity-50"
                   >
                     {isSubmittingQuote ? 'Generando PDF...' : 'Guardar y Generar PDF'}
                   </button>

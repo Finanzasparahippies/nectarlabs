@@ -236,7 +236,7 @@ export default function PublicSelfBillingPage() {
     return (
       <div className="min-h-screen bg-[#020403] flex flex-col items-center justify-center gap-3">
         <div className="w-8 h-8 rounded-full border-2 border-t-white border-white/10 animate-spin"></div>
-        <span className="text-[10px] font-black uppercase tracking-widest text-white/40">Cargando Portal...</span>
+        <span className="text-2xs font-black uppercase tracking-widest text-white/40">Cargando Portal...</span>
       </div>
     );
   }
@@ -252,7 +252,7 @@ export default function PublicSelfBillingPage() {
           </p>
           <button
             onClick={() => router.push('/')}
-            className="px-6 py-2.5 bg-white/5 border border-white/10 text-white rounded-xl text-[10px] uppercase font-black tracking-wider hover:bg-white/10 transition-all cursor-pointer"
+            className="px-6 py-2.5 bg-white/5 border border-white/10 text-white rounded-xl text-2xs uppercase font-black tracking-wider hover:bg-white/10 transition-all cursor-pointer"
           >
             Ir a Inicio
           </button>
@@ -288,7 +288,7 @@ export default function PublicSelfBillingPage() {
         <h1 className="text-xl font-black uppercase tracking-tight text-center">
           Portal de Autofacturación
         </h1>
-        <p className="text-[9px] uppercase tracking-widest text-white/45 mt-1">
+        <p className="text-2xs uppercase tracking-widest text-white/45 mt-1">
           {tenantConfig.name}
         </p>
       </div>
@@ -331,7 +331,7 @@ export default function PublicSelfBillingPage() {
                 <button
                   type="submit"
                   disabled={loadingNote}
-                  className="w-full py-4 text-background text-[10px] font-black uppercase tracking-widest rounded-2xl hover:scale-[1.02] active:scale-[0.98] disabled:opacity-40 disabled:scale-100 transition-all font-bold shadow-lg cursor-pointer"
+                  className="w-full py-4 text-background text-2xs font-black uppercase tracking-widest rounded-2xl hover:scale-[1.02] active:scale-[0.98] disabled:opacity-40 disabled:scale-100 transition-all font-bold shadow-lg cursor-pointer"
                   style={{ backgroundColor: primaryColor }}
                 >
                   {loadingNote ? 'Buscando Nota...' : 'Validar Nota'}
@@ -350,7 +350,7 @@ export default function PublicSelfBillingPage() {
                   setSalesNote(null);
                   setInvoiceResult(null);
                 }}
-                className="text-[8px] uppercase font-black tracking-widest text-white/40 hover:text-white flex items-center gap-1.5 cursor-pointer font-mono"
+                className="text-2xs uppercase font-black tracking-widest text-white/40 hover:text-white flex items-center gap-1.5 cursor-pointer font-mono"
               >
                 ← Regresar a la búsqueda
               </button>
@@ -359,19 +359,19 @@ export default function PublicSelfBillingPage() {
               <div className="bg-black/20 border border-white/5 rounded-3xl p-5 space-y-4 font-mono text-xs">
                 <div className="flex justify-between border-b border-dashed border-white/10 pb-3">
                   <div>
-                    <p className="text-[10px] font-bold text-white/40 uppercase">Folio de Nota</p>
+                    <p className="text-2xs font-bold text-white/40 uppercase">Folio de Nota</p>
                     <p className="text-sm font-black text-white">{salesNote.folio}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-[10px] font-bold text-white/40 uppercase">Fecha de Compra</p>
+                    <p className="text-2xs font-bold text-white/40 uppercase">Fecha de Compra</p>
                     <p className="text-white/80">{new Date(salesNote.created_at).toLocaleDateString()}</p>
                   </div>
                 </div>
 
                 <div className="space-y-2 py-2">
-                  <p className="text-[9px] uppercase font-bold text-white/40">Conceptos:</p>
+                  <p className="text-2xs uppercase font-bold text-white/40">Conceptos:</p>
                   {salesNote.items?.map((item, idx) => (
-                    <div key={idx} className="flex justify-between text-[11px]">
+                    <div key={idx} className="flex justify-between text-xs">
                       <span>{item.quantity}x {item.description}</span>
                       <span>${(parseFloat(item.unit_price) * item.quantity).toFixed(2)}</span>
                     </div>
@@ -385,7 +385,7 @@ export default function PublicSelfBillingPage() {
 
                 {salesNote.status === 'INVOICED' && (
                   <div className="border-t border-dashed border-white/10 pt-3 text-center space-y-3">
-                    <span className="px-3 py-1 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20 text-[9px] font-black uppercase tracking-wider block font-mono">
+                    <span className="px-3 py-1 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20 text-2xs font-black uppercase tracking-wider block font-mono">
                       Esta nota ya fue facturada anteriormente
                     </span>
                     {invoiceResult && (
@@ -395,7 +395,7 @@ export default function PublicSelfBillingPage() {
                             href={invoiceResult.pdf_url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex-1 py-2.5 bg-white/5 border border-white/10 hover:bg-white/10 text-white rounded-xl text-[9px] font-black uppercase tracking-widest text-center transition-all"
+                            className="flex-1 py-2.5 bg-white/5 border border-white/10 hover:bg-white/10 text-white rounded-xl text-2xs font-black uppercase tracking-widest text-center transition-all"
                           >
                             Descargar PDF
                           </a>
@@ -405,7 +405,7 @@ export default function PublicSelfBillingPage() {
                             href={invoiceResult.xml_url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex-1 py-2.5 bg-white/5 border border-white/10 hover:bg-white/10 text-white rounded-xl text-[9px] font-black uppercase tracking-widest text-center transition-all"
+                            className="flex-1 py-2.5 bg-white/5 border border-white/10 hover:bg-white/10 text-white rounded-xl text-2xs font-black uppercase tracking-widest text-center transition-all"
                           >
                             Descargar XML
                           </a>
@@ -435,7 +435,7 @@ export default function PublicSelfBillingPage() {
                         value={rfc}
                         onChange={(e) => setRfc(e.target.value.toUpperCase())}
                         maxLength={13}
-                        className="w-full bg-background border border-white/10 rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold text-foreground admin-input font-bold font-mono"
+                        className="w-full bg-background border border-white/10 rounded-xl px-3 py-2 text-2xs focus:outline-none focus:border-nectar-gold text-foreground admin-input font-bold font-mono"
                       />
                     </div>
 
@@ -448,7 +448,7 @@ export default function PublicSelfBillingPage() {
                         placeholder="Ej. JUAN PEREZ LOPEZ, MI EMPRESA SA DE CV"
                         value={razonSocial}
                         onChange={(e) => setRazonSocial(e.target.value.toUpperCase())}
-                        className="w-full bg-background border border-white/10 rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold text-foreground admin-input font-bold uppercase"
+                        className="w-full bg-background border border-white/10 rounded-xl px-3 py-2 text-2xs focus:outline-none focus:border-nectar-gold text-foreground admin-input font-bold uppercase"
                       />
                     </div>
 
@@ -462,7 +462,7 @@ export default function PublicSelfBillingPage() {
                         maxLength={5}
                         value={codigoPostal}
                         onChange={(e) => setCodigoPostal(e.target.value.replace(/\D/g, ''))}
-                        className="w-full bg-background border border-white/10 rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold text-foreground admin-input font-bold font-mono"
+                        className="w-full bg-background border border-white/10 rounded-xl px-3 py-2 text-2xs focus:outline-none focus:border-nectar-gold text-foreground admin-input font-bold font-mono"
                       />
                     </div>
 
@@ -475,7 +475,7 @@ export default function PublicSelfBillingPage() {
                         placeholder="correo@ejemplo.com"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="w-full bg-background border border-white/10 rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold text-foreground admin-input font-bold"
+                        className="w-full bg-background border border-white/10 rounded-xl px-3 py-2 text-2xs focus:outline-none focus:border-nectar-gold text-foreground admin-input font-bold"
                       />
                     </div>
 
@@ -485,7 +485,7 @@ export default function PublicSelfBillingPage() {
                       <select
                         value={regimenFiscal}
                         onChange={(e) => setRegimenFiscal(e.target.value)}
-                        className="w-full bg-background border border-white/10 rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold text-foreground admin-input font-bold uppercase"
+                        className="w-full bg-background border border-white/10 rounded-xl px-3 py-2 text-2xs focus:outline-none focus:border-nectar-gold text-foreground admin-input font-bold uppercase"
                       >
                         <option value="601">601 - General de Ley Personas Morales</option>
                         <option value="603">603 - Personas Morales con Fines no Lucrativos</option>
@@ -504,7 +504,7 @@ export default function PublicSelfBillingPage() {
                       <select
                         value={usoCfdi}
                         onChange={(e) => setUsoCfdi(e.target.value)}
-                        className="w-full bg-background border border-white/10 rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold text-foreground admin-input font-bold uppercase"
+                        className="w-full bg-background border border-white/10 rounded-xl px-3 py-2 text-2xs focus:outline-none focus:border-nectar-gold text-foreground admin-input font-bold uppercase"
                       >
                         <option value="G01">G01 - Adquisición de mercancías</option>
                         <option value="G03">G03 - Gastos en general</option>
@@ -523,7 +523,7 @@ export default function PublicSelfBillingPage() {
                   <button
                     type="submit"
                     disabled={submittingInvoice}
-                    className="w-full py-4 text-background text-[10px] font-black uppercase tracking-widest rounded-2xl hover:scale-[1.02] active:scale-[0.98] disabled:opacity-40 disabled:scale-100 transition-all font-bold shadow-lg cursor-pointer"
+                    className="w-full py-4 text-background text-2xs font-black uppercase tracking-widest rounded-2xl hover:scale-[1.02] active:scale-[0.98] disabled:opacity-40 disabled:scale-100 transition-all font-bold shadow-lg cursor-pointer"
                     style={{ backgroundColor: primaryColor }}
                   >
                     {submittingInvoice ? 'Timbrando CFDI ante el SAT...' : 'Generar Factura (CFDI 4.0)'}
@@ -545,7 +545,7 @@ export default function PublicSelfBillingPage() {
               </p>
 
               {/* Fiscal Stamp Info */}
-              <div className="bg-black/20 border border-white/5 rounded-3xl p-5 space-y-2 text-left font-mono text-[10px]">
+              <div className="bg-black/20 border border-white/5 rounded-3xl p-5 space-y-2 text-left font-mono text-2xs">
                 <p className="flex justify-between">
                   <span className="text-white/40">UUID SAT:</span>
                   <span className="text-white font-bold select-all">{invoiceResult.uuid_sat}</span>
@@ -567,7 +567,7 @@ export default function PublicSelfBillingPage() {
                     href={invoiceResult.pdf_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex-1 py-3 bg-white/5 border border-white/10 hover:bg-white/10 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest text-center transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
+                    className="flex-1 py-3 bg-white/5 border border-white/10 hover:bg-white/10 text-white rounded-2xl text-2xs font-black uppercase tracking-widest text-center transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
                   >
                     Descargar PDF
                   </a>
@@ -577,7 +577,7 @@ export default function PublicSelfBillingPage() {
                     href={invoiceResult.xml_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex-1 py-3 bg-white/5 border border-white/10 hover:bg-white/10 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest text-center transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
+                    className="flex-1 py-3 bg-white/5 border border-white/10 hover:bg-white/10 text-white rounded-2xl text-2xs font-black uppercase tracking-widest text-center transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
                   >
                     Descargar XML
                   </a>
@@ -591,7 +591,7 @@ export default function PublicSelfBillingPage() {
                   setSalesNote(null);
                   setInvoiceResult(null);
                 }}
-                className="w-full mt-4 py-4 text-background text-[10px] font-black uppercase tracking-widest rounded-2xl hover:scale-[1.02] active:scale-[0.98] transition-all font-bold shadow-lg cursor-pointer"
+                className="w-full mt-4 py-4 text-background text-2xs font-black uppercase tracking-widest rounded-2xl hover:scale-[1.02] active:scale-[0.98] transition-all font-bold shadow-lg cursor-pointer"
                 style={{ backgroundColor: primaryColor }}
               >
                 Facturar otra nota
@@ -603,10 +603,10 @@ export default function PublicSelfBillingPage() {
 
       {/* Footer copyright */}
       <footer className="max-w-2xl mx-auto w-full text-center mt-12">
-        <p className="text-[8px] font-bold text-white/30 uppercase tracking-widest leading-relaxed">
+        <p className="text-2xs font-bold text-white/30 uppercase tracking-widest leading-relaxed">
           {tenantConfig.footer_text || `© ${new Date().getFullYear()} ${tenantConfig.name}. Todos los derechos reservados.`}
         </p>
-        <p className="text-[7px] font-bold text-white/20 uppercase tracking-widest mt-1">
+        <p className="text-2xs font-bold text-white/20 uppercase tracking-widest mt-1">
           Tecnología de Facturación Provista por Néctar Labs
         </p>
       </footer>

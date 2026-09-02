@@ -67,14 +67,14 @@ export default function DevSignPage() {
         </svg>
       </div>
       <h2 className="text-4xl font-black text-foreground mb-4">Contrato Cerrado</h2>
-      <p className="text-muted font-bold uppercase tracking-widest text-[10px]">Redirigiendo a tu Centro de Control...</p>
+      <p className="text-muted font-bold uppercase tracking-widest text-2xs">Redirigiendo a tu Centro de Control...</p>
     </div>
   );
 
   if (loading) return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-background">
       <div className="w-12 h-12 border-4 border-nectar-gold border-t-transparent rounded-full animate-spin mb-4"></div>
-      <p className="text-nectar-gold font-black text-[10px] uppercase tracking-widest animate-pulse">Sincronizando Contrato...</p>
+      <p className="text-nectar-gold font-black text-2xs uppercase tracking-widest animate-pulse">Sincronizando Contrato...</p>
     </div>
   );
 
@@ -83,7 +83,7 @@ export default function DevSignPage() {
       <div className="text-red-500 font-black text-xs uppercase tracking-widest bg-red-500/10 px-6 py-3 rounded-xl border border-red-500/20 max-w-md w-full">
         {error}
       </div>
-      <Link href="/login" className="text-[10px] font-black uppercase tracking-[0.3em] text-nectar-gold hover:underline">Reintentar con nueva sesión</Link>
+      <Link href="/login" className="text-2xs font-black uppercase tracking-[0.3em] text-nectar-gold hover:underline">Reintentar con nueva sesión</Link>
     </div>
   );
 
@@ -103,18 +103,18 @@ export default function DevSignPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-card-bg/85 backdrop-blur-md p-8 rounded-[3rem] border border-nectar-gold/25 shadow-[0_0_50px_rgba(198,138,30,0.08)] relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-nectar-gold/5 rounded-full blur-3xl"></div>
             <div className="space-y-6 border-r border-card-border/50 pr-8">
-              <h3 className="text-nectar-gold font-black uppercase text-[10px] tracking-[0.3em]">Detalles del Proyecto</h3>
+              <h3 className="text-nectar-gold font-black uppercase text-2xs tracking-[0.3em]">Detalles del Proyecto</h3>
               <div className="space-y-2">
-                <p className="text-[9px] text-muted uppercase font-black tracking-widest">Cliente</p>
+                <p className="text-2xs text-muted uppercase font-black tracking-widest">Cliente</p>
                 <p className="text-xl font-black text-foreground">{contract.full_name}</p>
               </div>
               <div className="space-y-2">
-                <p className="text-[9px] text-muted uppercase font-black tracking-widest">Plan Seleccionado</p>
+                <p className="text-2xs text-muted uppercase font-black tracking-widest">Plan Seleccionado</p>
                 <p className="text-xl font-black text-nectar-gold">{contract.plan_name || 'Partner Tecnológico'}</p>
               </div>
             </div>
             <div className="space-y-6">
-              <h3 className="text-nectar-gold font-black uppercase text-[10px] tracking-[0.3em]">Idea de Negocio</h3>
+              <h3 className="text-nectar-gold font-black uppercase text-2xs tracking-[0.3em]">Idea de Negocio</h3>
               <p className="text-foreground/80 text-sm leading-relaxed italic border-l-2 border-nectar-gold pl-4 py-2 bg-background/50 rounded-r-2xl">
                 "{contract.project_idea}"
               </p>
@@ -126,7 +126,7 @@ export default function DevSignPage() {
         <div className="space-y-8">
           <div className="text-center">
             <h2 className="text-2xl font-black text-foreground">Firma del Desarrollador</h2>
-            <p className="text-[10px] text-muted font-bold uppercase tracking-widest mt-2">Dibuja tu firma para formalizar el acuerdo</p>
+            <p className="text-2xs text-muted font-bold uppercase tracking-widest mt-2">Dibuja tu firma para formalizar el acuerdo</p>
           </div>
           
           <div className="bg-white rounded-[2rem] border border-nectar-gold/20 overflow-hidden shadow-[0_4px_25px_rgba(0,0,0,0.3)] h-64 md:h-80 relative group">
@@ -141,14 +141,14 @@ export default function DevSignPage() {
           <div className="flex flex-col md:flex-row gap-4 justify-center pt-4">
             <button
               onClick={() => sigPad.current?.clear()}
-              className="px-8 py-4 border border-card-border rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-red-50 hover:text-red-600 transition-all active:scale-95"
+              className="px-8 py-4 border border-card-border rounded-full text-2xs font-black uppercase tracking-widest hover:bg-red-50 hover:text-red-600 transition-all active:scale-95"
             >
               Limpiar Lienzo
             </button>
             <button
               onClick={handleSign}
               disabled={saving}
-              className={`px-12 py-4 bg-nectar-forest text-nectar-cream rounded-full text-[10px] font-black uppercase tracking-widest shadow-xl hover:bg-nectar-gold hover:scale-105 active:scale-95 transition-all ${saving ? 'opacity-50 cursor-wait' : ''}`}
+              className={`px-12 py-4 bg-nectar-forest text-nectar-cream rounded-full text-2xs font-black uppercase tracking-widest shadow-xl hover:bg-nectar-gold hover:scale-105 active:scale-95 transition-all ${saving ? 'opacity-50 cursor-wait' : ''}`}
             >
               {saving ? "Sellando Contrato..." : "Firmar y Activar Proyecto"}
             </button>

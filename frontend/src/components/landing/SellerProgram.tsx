@@ -109,7 +109,7 @@ export default function SellerProgram() {
 
         {/* ── HERO HEADER ── */}
         <div className={`text-center mb-16 sm:mb-20 transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-          <span className="inline-block px-6 py-2.5 sm:px-8 sm:py-3 mb-6 sm:mb-8 text-[9px] font-black tracking-[0.4em] sm:tracking-[0.6em] text-nectar-gold uppercase border border-nectar-gold/25 rounded-full bg-nectar-gold/5 backdrop-blur-sm">
+          <span className="inline-block px-6 py-2.5 sm:px-8 sm:py-3 mb-6 sm:mb-8 text-2xs font-black tracking-[0.4em] sm:tracking-[0.6em] text-nectar-gold uppercase border border-nectar-gold/25 rounded-full bg-nectar-gold/5 backdrop-blur-sm">
             ✦ Programa de Afiliados Néctar Labs ✦
           </span>
           <h2 className="text-3xl sm:text-5xl md:text-8xl font-black tracking-tighter leading-[0.9] sm:leading-[0.85] mb-6 sm:mb-8 text-foreground">
@@ -145,7 +145,7 @@ export default function SellerProgram() {
 
                 <div className="relative z-10">
                   <div className="flex items-center justify-between mb-4 sm:mb-6">
-                    <span className="text-[9px] font-black uppercase tracking-widest text-foreground/40">{tier.month}</span>
+                    <span className="text-2xs font-black uppercase tracking-widest text-foreground/40">{tier.month}</span>
                     <div className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-gradient-to-br ${tier.color} text-background flex items-center justify-center shadow-lg`}>
                       {tier.icon}
                     </div>
@@ -154,7 +154,7 @@ export default function SellerProgram() {
                   <div className={`text-5xl sm:text-6xl md:text-7xl font-black tracking-tighter bg-gradient-to-r ${tier.color} bg-clip-text text-transparent mb-2 font-mono`}>
                     {tier.pct}
                   </div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-foreground/50 mb-4">{tier.label}</p>
+                  <p className="text-2xs font-black uppercase tracking-widest text-foreground/50 mb-4">{tier.label}</p>
                   <p className="text-xs text-foreground/60 leading-relaxed">{tier.desc}</p>
                 </div>
               </div>
@@ -164,7 +164,7 @@ export default function SellerProgram() {
           {/* Disclaimer */}
           <div className="mt-6 p-4 sm:p-5 rounded-2xl bg-foreground/[0.03] border border-card-border/50 flex items-start gap-4 max-w-3xl mx-auto">
             <span className="text-nectar-gold text-lg shrink-0 mt-0.5">ℹ️</span>
-            <p className="text-[10px] text-foreground/50 leading-relaxed font-medium">
+            <p className="text-2xs text-foreground/50 leading-relaxed font-medium">
               <strong className="text-foreground/70">Nota:</strong> La comisión se genera automáticamente con cada pago confirmado del cliente referido.
               Para activar tu rol de vendedor es mandatorio agendar una sesión previa con Néctar Labs.
               Este es el único beneficio para vendedores en esta modalidad — sin seguros ni prestaciones adicionales.
@@ -214,7 +214,7 @@ export default function SellerProgram() {
                 </div>
                 <div>
                   <h4 className="font-black text-sm text-foreground mb-1">{b.title}</h4>
-                  <p className="text-[11px] text-foreground/50 leading-relaxed">{b.desc}</p>
+                  <p className="text-xs text-foreground/50 leading-relaxed">{b.desc}</p>
                 </div>
               </div>
             ))}
@@ -229,7 +229,7 @@ export default function SellerProgram() {
 
             <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
               <div>
-                <span className="inline-block px-4 py-1.5 mb-6 text-[9px] font-black tracking-[0.4em] text-nectar-gold uppercase border border-nectar-gold/20 rounded-full bg-nectar-gold/5">
+                <span className="inline-block px-4 py-1.5 mb-6 text-2xs font-black tracking-[0.4em] text-nectar-gold uppercase border border-nectar-gold/20 rounded-full bg-nectar-gold/5">
                   Ejemplo Real de Ganancias
                 </span>
                 <h3 className="text-xl sm:text-3xl md:text-5xl font-black tracking-tighter leading-tight mb-4 text-foreground">
@@ -259,19 +259,19 @@ export default function SellerProgram() {
                         : 'bg-foreground/[0.03] border border-card-border/50'
                     }`}
                   >
-                    <span className={`text-[11px] font-black uppercase tracking-wider ${row.highlight ? 'text-nectar-gold' : 'text-foreground/60'}`}>
+                    <span className={`text-xs font-black uppercase tracking-wider ${row.highlight ? 'text-nectar-gold' : 'text-foreground/60'}`}>
                       {row.label}
                     </span>
                     <span className={`font-mono font-black text-xs sm:text-sm ${row.highlight ? 'text-nectar-gold' : 'text-foreground/80'}`}>
-                      {row.amount} <span className="text-[9px] font-bold opacity-50">MXN</span>
+                      {row.amount} <span className="text-2xs font-bold opacity-50">MXN</span>
                     </span>
                   </div>
                 ))}
                 <div className="flex justify-between items-center p-3 sm:p-4 rounded-2xl bg-nectar-gold text-background mt-2">
-                  <span className="text-[11px] font-black uppercase tracking-wider">Total 6 Meses</span>
-                  <span className="font-mono font-black text-sm sm:text-base">$2,300.00 <span className="text-[9px] opacity-70">MXN</span></span>
+                  <span className="text-xs font-black uppercase tracking-wider">Total 6 Meses</span>
+                  <span className="font-mono font-black text-sm sm:text-base">$2,300.00 <span className="text-2xs opacity-70">MXN</span></span>
                 </div>
-                <p className="text-[9px] text-foreground/40 leading-relaxed px-1">
+                <p className="text-2xs text-foreground/40 leading-relaxed px-1">
                   * Basado en plan de $10,000 MXN/mes. El ingreso residual del 2% continúa indefinidamente después del mes 3.
                   Con 5 clientes activos, el residual mensual sería de $1,000 MXN automatizados.
                 </p>
@@ -284,7 +284,7 @@ export default function SellerProgram() {
         <div className={`text-center transition-all duration-1000 delay-600 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
           <div className="inline-flex flex-col items-center w-full sm:w-auto px-4 sm:px-0">
             <div className="w-px h-16 bg-gradient-to-b from-transparent to-nectar-gold/40 mb-8" />
-            <span className="text-[9px] font-black uppercase tracking-[0.5em] text-foreground/30 mb-6">
+            <span className="text-2xs font-black uppercase tracking-[0.5em] text-foreground/30 mb-6">
               Empieza hoy — es gratis
             </span>
             <div className="flex flex-col sm:flex-row gap-4 items-center w-full sm:w-auto">
@@ -303,7 +303,7 @@ export default function SellerProgram() {
                 Ver Planes Primero
               </a>
             </div>
-            <p className="mt-6 text-[10px] text-foreground/30 font-bold uppercase tracking-widest max-w-sm">
+            <p className="mt-6 text-2xs text-foreground/30 font-bold uppercase tracking-widest max-w-sm">
               Sin contratos de exclusividad • Sin mínimos de venta • Cancelación libre
             </p>
           </div>

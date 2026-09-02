@@ -78,7 +78,7 @@ export default function ProcessFlow({ onOpenScheduler }: { onOpenScheduler?: () 
             </div>
 
             <div className="space-y-3 sm:space-y-4 px-4">
-              <span className="text-[10px] font-black uppercase tracking-[0.4em] text-nectar-gold bg-nectar-gold/5 px-4 py-1.5 rounded-full">
+              <span className="text-2xs font-black uppercase tracking-[0.4em] text-nectar-gold bg-nectar-gold/5 px-4 py-1.5 rounded-full">
                 {step.label}
               </span>
               <h3 className="text-2xl font-black text-foreground tracking-tight leading-none group-hover:text-nectar-gold transition-colors duration-500">

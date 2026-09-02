@@ -192,7 +192,7 @@ export default function BookingCanvas({ tenantId, subdomain, primaryColor }: Boo
         </div>
         <div>
           <h3 className="text-sm font-black uppercase tracking-wider text-white">Reserva de Consultoría y Propuesta</h3>
-          <p className="text-[9px] uppercase tracking-widest font-black text-white/40">Add-on: Booking & Signature</p>
+          <p className="text-2xs uppercase tracking-widest font-black text-white/40">Add-on: Booking & Signature</p>
         </div>
       </div>
 
@@ -204,7 +204,7 @@ export default function BookingCanvas({ tenantId, subdomain, primaryColor }: Boo
             </svg>
           </div>
           <h4 className="font-black text-xs text-white uppercase tracking-wider mb-2">¡Reserva y Firma Confirmadas!</h4>
-          <p className="text-[10px] text-white/50 leading-relaxed max-w-xs mx-auto">
+          <p className="text-2xs text-white/50 leading-relaxed max-w-xs mx-auto">
             Hemos registrado tu cita para el <strong>{selectedDate}</strong> a las <strong>{selectedTime}</strong>. 
             Se ha generado una copia en PDF del acuerdo con tu firma criptográfica y enviado a tu correo <strong>{email}</strong>.
           </p>
@@ -221,7 +221,7 @@ export default function BookingCanvas({ tenantId, subdomain, primaryColor }: Boo
               setMessage('');
               setIsSigned(false);
             }}
-            className="mt-6 px-4 py-2 border border-white/10 hover:bg-white/5 rounded-xl text-[9px] font-black uppercase tracking-widest text-white/60 transition-all cursor-pointer"
+            className="mt-6 px-4 py-2 border border-white/10 hover:bg-white/5 rounded-xl text-2xs font-black uppercase tracking-widest text-white/60 transition-all cursor-pointer"
           >
             Nueva Reserva
           </button>
@@ -343,7 +343,7 @@ export default function BookingCanvas({ tenantId, subdomain, primaryColor }: Boo
                 <button
                   type="button"
                   onClick={clearCanvas}
-                  className="text-[8px] font-black uppercase text-red-400 hover:text-red-500 transition-colors cursor-pointer"
+                  className="text-2xs font-black uppercase text-red-400 hover:text-red-500 transition-colors cursor-pointer"
                 >
                   Limpiar Lienzo
                 </button>
@@ -372,7 +372,7 @@ export default function BookingCanvas({ tenantId, subdomain, primaryColor }: Boo
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-4 text-black font-black uppercase tracking-widest text-[9px] rounded-xl hover:scale-102 active:scale-95 disabled:opacity-55 transition-all shadow-md cursor-pointer"
+            className="w-full py-4 text-black font-black uppercase tracking-widest text-2xs rounded-xl hover:scale-102 active:scale-95 disabled:opacity-55 transition-all shadow-md cursor-pointer"
             style={{ backgroundColor: primaryColor }}
           >
             {loading ? 'Procesando Cita...' : 'Reservar Cita y Firmar Propuesta'}

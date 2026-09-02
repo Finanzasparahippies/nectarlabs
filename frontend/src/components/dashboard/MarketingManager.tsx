@@ -981,7 +981,7 @@ export default function MarketingManager({ primaryColor = '#C68A1E', showToast }
             key={tab.id}
             type="button"
             onClick={() => setActiveSubTab(tab.id as any)}
-            className={`flex-1 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all duration-200 ${
+            className={`flex-1 py-2.5 rounded-xl text-2xs font-black uppercase tracking-wider transition-all duration-200 ${
               activeSubTab === tab.id
                 ? 'bg-nectar-gold text-background shadow-md'
                 : 'text-white/60 hover:text-white hover:bg-white/5'
@@ -1006,7 +1006,7 @@ export default function MarketingManager({ primaryColor = '#C68A1E', showToast }
               <div className="flex justify-between items-center">
                 <div>
                   <h3 className="text-xs font-black uppercase tracking-[0.3em] opacity-30">Boletines & Campañas</h3>
-                  <p className="text-[9px] font-bold text-foreground/45 mt-1 uppercase">Historial de correos enviados y campañas activas</p>
+                  <p className="text-2xs font-bold text-foreground/45 mt-1 uppercase">Historial de correos enviados y campañas activas</p>
                 </div>
                 <button
                   onClick={() => {
@@ -1019,7 +1019,7 @@ export default function MarketingManager({ primaryColor = '#C68A1E', showToast }
                     setBgImageUrl('');
                     setShowCampaignModal(true);
                   }}
-                  className="px-6 py-2.5 bg-nectar-gold hover:bg-nectar-gold/90 text-background rounded-xl text-[8px] font-black uppercase tracking-widest transition-all font-bold"
+                  className="px-6 py-2.5 bg-nectar-gold hover:bg-nectar-gold/90 text-background rounded-xl text-2xs font-black uppercase tracking-widest transition-all font-bold"
                 >
                   🚀 Crear Campaña
                 </button>
@@ -1028,7 +1028,7 @@ export default function MarketingManager({ primaryColor = '#C68A1E', showToast }
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="border-b border-card-border/50 text-[8px] font-black uppercase tracking-widest opacity-40">
+                    <tr className="border-b border-card-border/50 text-2xs font-black uppercase tracking-widest opacity-40">
                       <th className="pb-4">Asunto / Campaña</th>
                       <th className="pb-4">Lista Destino</th>
                       <th className="pb-4">Diseño</th>
@@ -1042,7 +1042,7 @@ export default function MarketingManager({ primaryColor = '#C68A1E', showToast }
                       <tr key={camp.id} className="border-b border-card-border/30 last:border-0 hover:bg-foreground/[0.01] transition-colors">
                         <td className="py-4">
                           <p className="font-bold text-sm text-white">{camp.subject}</p>
-                          <p className="text-[8px] font-bold text-white/30 uppercase mt-0.5">ID: {camp.id}</p>
+                          <p className="text-2xs font-bold text-white/30 uppercase mt-0.5">ID: {camp.id}</p>
                         </td>
                         <td className="py-4 text-xs font-bold opacity-80">
                           {camp.marketing_list_detail?.name || 'Toda la Plataforma'}
@@ -1052,9 +1052,9 @@ export default function MarketingManager({ primaryColor = '#C68A1E', showToast }
                         </td>
                         <td className="py-4">
                           {camp.is_sent ? (
-                            <span className="px-2.5 py-1 bg-green-500/10 text-green-500 border border-green-500/20 text-[7px] font-black uppercase tracking-widest rounded-full">Enviado</span>
+                            <span className="px-2.5 py-1 bg-green-500/10 text-green-500 border border-green-500/20 text-2xs font-black uppercase tracking-widest rounded-full">Enviado</span>
                           ) : (
-                            <span className="px-2.5 py-1 bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 text-[7px] font-black uppercase tracking-widest rounded-full">Borrador</span>
+                            <span className="px-2.5 py-1 bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 text-2xs font-black uppercase tracking-widest rounded-full">Borrador</span>
                           )}
                         </td>
                         <td className="py-4 text-right text-xs font-bold opacity-60">
@@ -1063,7 +1063,7 @@ export default function MarketingManager({ primaryColor = '#C68A1E', showToast }
                         <td className="py-4 text-right">
                           <button
                             onClick={() => handleDeleteCampaign(camp.id)}
-                            className="px-3 py-1.5 bg-red-950/40 hover:bg-red-900 border border-red-900/30 text-red-400 rounded-lg text-[8px] font-black uppercase tracking-wider transition-all"
+                            className="px-3 py-1.5 bg-red-950/40 hover:bg-red-900 border border-red-900/30 text-red-400 rounded-lg text-2xs font-black uppercase tracking-wider transition-all"
                           >
                             Eliminar
                           </button>
@@ -1072,7 +1072,7 @@ export default function MarketingManager({ primaryColor = '#C68A1E', showToast }
                     ))}
                     {campaigns.length === 0 && (
                       <tr>
-                        <td colSpan={6} className="py-12 text-center text-[9px] font-black uppercase tracking-widest opacity-25">
+                        <td colSpan={6} className="py-12 text-center text-2xs font-black uppercase tracking-widest opacity-25">
                           No hay campañas creadas aún
                         </td>
                       </tr>
@@ -1089,7 +1089,7 @@ export default function MarketingManager({ primaryColor = '#C68A1E', showToast }
               <div className="flex justify-between items-center">
                 <div>
                   <h3 className="text-xs font-black uppercase tracking-[0.3em] opacity-30">Listas de Contactos</h3>
-                  <p className="text-[9px] font-bold text-foreground/45 mt-1 uppercase">Segmenta tus usuarios en listas de envíos específicas</p>
+                  <p className="text-2xs font-bold text-foreground/45 mt-1 uppercase">Segmenta tus usuarios en listas de envíos específicas</p>
                 </div>
                 <button
                   onClick={() => {
@@ -1098,7 +1098,7 @@ export default function MarketingManager({ primaryColor = '#C68A1E', showToast }
                     setEditingListId(null);
                     setShowListModal(true);
                   }}
-                  className="px-6 py-2.5 bg-nectar-gold hover:bg-nectar-gold/90 text-background rounded-xl text-[8px] font-black uppercase tracking-widest transition-all font-bold"
+                  className="px-6 py-2.5 bg-nectar-gold hover:bg-nectar-gold/90 text-background rounded-xl text-2xs font-black uppercase tracking-widest transition-all font-bold"
                 >
                   + Nueva Lista
                 </button>
@@ -1110,11 +1110,11 @@ export default function MarketingManager({ primaryColor = '#C68A1E', showToast }
                     <div>
                       <div className="flex justify-between items-start">
                         <h4 className="text-sm font-black text-white">{list.name}</h4>
-                        <span className="px-2 py-0.5 bg-nectar-gold/10 text-nectar-gold text-[7px] font-black uppercase tracking-widest rounded-full border border-nectar-gold/25 font-bold">
+                        <span className="px-2 py-0.5 bg-nectar-gold/10 text-nectar-gold text-2xs font-black uppercase tracking-widest rounded-full border border-nectar-gold/25 font-bold">
                           {list.subscriber_count ?? 0} contactos
                         </span>
                       </div>
-                      <p className="text-[10px] text-white/50 mt-2 font-medium line-clamp-3 leading-relaxed">
+                      <p className="text-2xs text-white/50 mt-2 font-medium line-clamp-3 leading-relaxed">
                         {list.description || 'Sin descripción adicional.'}
                       </p>
                     </div>
@@ -1127,13 +1127,13 @@ export default function MarketingManager({ primaryColor = '#C68A1E', showToast }
                           setEditingListId(list.id);
                           setShowListModal(true);
                         }}
-                        className="px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-lg text-[8px] font-black uppercase tracking-wider transition-all"
+                        className="px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-lg text-2xs font-black uppercase tracking-wider transition-all"
                       >
                         Editar
                       </button>
                       <button
                         onClick={() => handleDeleteList(list.id)}
-                        className="px-3 py-1.5 bg-red-950/40 hover:bg-red-900 border border-red-900/30 text-red-400 rounded-lg text-[8px] font-black uppercase tracking-wider transition-all"
+                        className="px-3 py-1.5 bg-red-950/40 hover:bg-red-900 border border-red-900/30 text-red-400 rounded-lg text-2xs font-black uppercase tracking-wider transition-all"
                       >
                         Eliminar
                       </button>
@@ -1141,7 +1141,7 @@ export default function MarketingManager({ primaryColor = '#C68A1E', showToast }
                   </div>
                 ))}
                 {lists.length === 0 && (
-                  <div className="col-span-full py-16 text-center text-[9px] font-black uppercase tracking-widest opacity-25">
+                  <div className="col-span-full py-16 text-center text-2xs font-black uppercase tracking-widest opacity-25">
                     No has creado listas de contactos aún
                   </div>
                 )}
@@ -1155,7 +1155,7 @@ export default function MarketingManager({ primaryColor = '#C68A1E', showToast }
               <div className="flex justify-between items-center flex-wrap gap-4">
                 <div>
                   <h3 className="text-xs font-black uppercase tracking-[0.3em] opacity-30">Directorio de Suscriptores</h3>
-                  <p className="text-[9px] font-bold text-foreground/45 mt-1 uppercase">Visualiza y gestiona los contactos registrados en Néctar Labs</p>
+                  <p className="text-2xs font-bold text-foreground/45 mt-1 uppercase">Visualiza y gestiona los contactos registrados en Néctar Labs</p>
                 </div>
                 <div className="flex gap-2">
                   <button
@@ -1164,7 +1164,7 @@ export default function MarketingManager({ primaryColor = '#C68A1E', showToast }
                       setImportListId(null);
                       setShowImportModal(true);
                     }}
-                    className="px-6 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[8px] font-black uppercase tracking-widest transition-all text-white font-bold"
+                    className="px-6 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-2xs font-black uppercase tracking-widest transition-all text-white font-bold"
                   >
                     📥 Importar CSV
                   </button>
@@ -1178,7 +1178,7 @@ export default function MarketingManager({ primaryColor = '#C68A1E', showToast }
                       setEditingSubId(null);
                       setShowSubModal(true);
                     }}
-                    className="px-6 py-2.5 bg-nectar-gold hover:bg-nectar-gold/90 text-background rounded-xl text-[8px] font-black uppercase tracking-widest transition-all font-bold"
+                    className="px-6 py-2.5 bg-nectar-gold hover:bg-nectar-gold/90 text-background rounded-xl text-2xs font-black uppercase tracking-widest transition-all font-bold"
                   >
                     + Añadir Suscriptor
                   </button>
@@ -1188,7 +1188,7 @@ export default function MarketingManager({ primaryColor = '#C68A1E', showToast }
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="border-b border-card-border/50 text-[8px] font-black uppercase tracking-widest opacity-40">
+                    <tr className="border-b border-card-border/50 text-2xs font-black uppercase tracking-widest opacity-40">
                       <th className="pb-4">Nombre / Correo</th>
                       <th className="pb-4">Tags</th>
                       <th className="pb-4">Plan Premium</th>
@@ -1207,26 +1207,26 @@ export default function MarketingManager({ primaryColor = '#C68A1E', showToast }
                         <td className="py-4">
                           {sub.tags ? (
                             sub.tags.split(',').map((tag, idx) => (
-                              <span key={idx} className="mr-1.5 px-2 py-0.5 bg-white/5 border border-white/10 text-white/60 text-[7px] font-black uppercase tracking-wider rounded-md font-mono">
+                              <span key={idx} className="mr-1.5 px-2 py-0.5 bg-white/5 border border-white/10 text-white/60 text-2xs font-black uppercase tracking-wider rounded-md font-mono">
                                 {tag.trim()}
                               </span>
                             ))
                           ) : (
-                            <span className="text-[10px] text-white/20 italic font-bold">Sin tags</span>
+                            <span className="text-2xs text-white/20 italic font-bold">Sin tags</span>
                           )}
                         </td>
                         <td className="py-4">
                           {sub.is_premium ? (
-                            <span className="px-2 py-0.5 bg-[#C68A1E]/10 text-[#C68A1E] text-[7px] font-black uppercase tracking-widest rounded-full border border-[#C68A1E]/20 font-bold">Premium VIP</span>
+                            <span className="px-2 py-0.5 bg-[#C68A1E]/10 text-[#C68A1E] text-2xs font-black uppercase tracking-widest rounded-full border border-[#C68A1E]/20 font-bold">Premium VIP</span>
                           ) : (
                             <span className="text-xs text-white/30 font-bold">Estándar</span>
                           )}
                         </td>
                         <td className="py-4">
                           {sub.is_active ? (
-                            <span className="px-2 py-0.5 bg-green-500/10 text-green-500 border border-green-500/20 text-[7px] font-black uppercase tracking-widest rounded-full">Activo</span>
+                            <span className="px-2 py-0.5 bg-green-500/10 text-green-500 border border-green-500/20 text-2xs font-black uppercase tracking-widest rounded-full">Activo</span>
                           ) : (
-                            <span className="px-2 py-0.5 bg-red-500/10 text-red-500 border border-red-500/20 text-[7px] font-black uppercase tracking-widest rounded-full">Inactivo</span>
+                            <span className="px-2 py-0.5 bg-red-500/10 text-red-500 border border-red-500/20 text-2xs font-black uppercase tracking-widest rounded-full">Inactivo</span>
                           )}
                         </td>
                         <td className="py-4 text-right text-xs font-bold opacity-60">
@@ -1243,13 +1243,13 @@ export default function MarketingManager({ primaryColor = '#C68A1E', showToast }
                               setSubListId(null);
                               setShowSubModal(true);
                             }}
-                            className="px-2.5 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-lg text-[8px] font-black uppercase tracking-wider transition-all"
+                            className="px-2.5 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-lg text-2xs font-black uppercase tracking-wider transition-all"
                           >
                             Editar
                           </button>
                           <button
                             onClick={() => handleDeleteSub(sub.id)}
-                            className="px-2.5 py-1.5 bg-red-950/40 hover:bg-red-900 border border-red-900/30 text-red-400 rounded-lg text-[8px] font-black uppercase tracking-wider transition-all"
+                            className="px-2.5 py-1.5 bg-red-950/40 hover:bg-red-900 border border-red-900/30 text-red-400 rounded-lg text-2xs font-black uppercase tracking-wider transition-all"
                           >
                             Eliminar
                           </button>
@@ -1258,7 +1258,7 @@ export default function MarketingManager({ primaryColor = '#C68A1E', showToast }
                     ))}
                     {subscribers.length === 0 && (
                       <tr>
-                        <td colSpan={6} className="py-12 text-center text-[9px] font-black uppercase tracking-widest opacity-25">
+                        <td colSpan={6} className="py-12 text-center text-2xs font-black uppercase tracking-widest opacity-25">
                           No hay suscriptores añadidos aún
                         </td>
                       </tr>
@@ -1282,7 +1282,7 @@ export default function MarketingManager({ primaryColor = '#C68A1E', showToast }
               ×
             </button>
             <div>
-              <span className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold text-[8px] font-black uppercase tracking-widest rounded-full border border-nectar-gold/20">
+              <span className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold text-2xs font-black uppercase tracking-widest rounded-full border border-nectar-gold/20">
                 Segmentación
               </span>
               <h2 className="text-xl font-black tracking-tighter mt-4 leading-none text-white">
@@ -1291,7 +1291,7 @@ export default function MarketingManager({ primaryColor = '#C68A1E', showToast }
             </div>
             <form onSubmit={handleSaveList} className="space-y-4 text-left">
               <div className="space-y-1.5">
-                <label className="text-[8px] font-black uppercase tracking-widest opacity-40 block text-white">Nombre de la Lista</label>
+                <label className="text-2xs font-black uppercase tracking-widest opacity-40 block text-white">Nombre de la Lista</label>
                 <input
                   type="text"
                   required
@@ -1302,7 +1302,7 @@ export default function MarketingManager({ primaryColor = '#C68A1E', showToast }
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="text-[8px] font-black uppercase tracking-widest opacity-40 block text-white">Descripción</label>
+                <label className="text-2xs font-black uppercase tracking-widest opacity-40 block text-white">Descripción</label>
                 <textarea
                   placeholder="Notas internas sobre esta lista..."
                   value={listDescription}
@@ -1315,13 +1315,13 @@ export default function MarketingManager({ primaryColor = '#C68A1E', showToast }
                 <button
                   type="button"
                   onClick={() => setShowListModal(false)}
-                  className="px-4 py-2 border border-white/10 hover:bg-white/5 rounded-xl text-[8px] font-black uppercase tracking-wider transition-all text-white/80"
+                  className="px-4 py-2 border border-white/10 hover:bg-white/5 rounded-xl text-2xs font-black uppercase tracking-wider transition-all text-white/80"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2 bg-nectar-gold text-background hover:bg-nectar-gold/90 rounded-xl text-[8px] font-black uppercase tracking-wider transition-all font-bold"
+                  className="px-6 py-2 bg-nectar-gold text-background hover:bg-nectar-gold/90 rounded-xl text-2xs font-black uppercase tracking-wider transition-all font-bold"
                 >
                   {editingListId ? 'Actualizar' : 'Crear Lista'}
                 </button>
@@ -1342,7 +1342,7 @@ export default function MarketingManager({ primaryColor = '#C68A1E', showToast }
               ×
             </button>
             <div>
-              <span className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold text-[8px] font-black uppercase tracking-widest rounded-full border border-nectar-gold/20">
+              <span className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold text-2xs font-black uppercase tracking-widest rounded-full border border-nectar-gold/20">
                 Contactos
               </span>
               <h2 className="text-xl font-black tracking-tighter mt-4 leading-none text-white">
@@ -1351,7 +1351,7 @@ export default function MarketingManager({ primaryColor = '#C68A1E', showToast }
             </div>
             <form onSubmit={handleSaveSub} className="space-y-4 text-left">
               <div className="space-y-1.5">
-                <label className="text-[8px] font-black uppercase tracking-widest opacity-40 block text-white">Nombre Completo</label>
+                <label className="text-2xs font-black uppercase tracking-widest opacity-40 block text-white">Nombre Completo</label>
                 <input
                   type="text"
                   placeholder="Nombre..."
@@ -1361,7 +1361,7 @@ export default function MarketingManager({ primaryColor = '#C68A1E', showToast }
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="text-[8px] font-black uppercase tracking-widest opacity-40 block text-white">Correo Electrónico</label>
+                <label className="text-2xs font-black uppercase tracking-widest opacity-40 block text-white">Correo Electrónico</label>
                 <input
                   type="email"
                   required
@@ -1372,18 +1372,18 @@ export default function MarketingManager({ primaryColor = '#C68A1E', showToast }
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="text-[8px] font-black uppercase tracking-widest opacity-40 block text-white">Etiquetas (Separadas por comas)</label>
+                <label className="text-2xs font-black uppercase tracking-widest opacity-40 block text-white">Etiquetas (Separadas por comas)</label>
                 <input
                   type="text"
                   placeholder="ej: cliente, newsletter, lead"
                   value={subTags}
                   onChange={e => setSubTags(e.target.value)}
-                  className="w-full border rounded-xl px-4 py-3 text-xs bg-white/5 border-white/10 focus:outline-none focus:border-nectar-gold text-white font-mono text-[10px]"
+                  className="w-full border rounded-xl px-4 py-3 text-xs bg-white/5 border-white/10 focus:outline-none focus:border-nectar-gold text-white font-mono text-2xs"
                 />
               </div>
               {!editingSubId && (
                 <div className="space-y-1.5">
-                  <label className="text-[8px] font-black uppercase tracking-widest opacity-40 block text-white">Vincular a Lista de Envío</label>
+                  <label className="text-2xs font-black uppercase tracking-widest opacity-40 block text-white">Vincular a Lista de Envío</label>
                   <select
                     value={subListId || ''}
                     onChange={e => setSubListId(e.target.value ? parseInt(e.target.value) : null)}
@@ -1413,13 +1413,13 @@ export default function MarketingManager({ primaryColor = '#C68A1E', showToast }
                 <button
                   type="button"
                   onClick={() => setShowSubModal(false)}
-                  className="px-4 py-2 border border-white/10 hover:bg-white/5 rounded-xl text-[8px] font-black uppercase tracking-wider transition-all text-white/80"
+                  className="px-4 py-2 border border-white/10 hover:bg-white/5 rounded-xl text-2xs font-black uppercase tracking-wider transition-all text-white/80"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2 bg-nectar-gold text-background hover:bg-nectar-gold/90 rounded-xl text-[8px] font-black uppercase tracking-wider transition-all font-bold"
+                  className="px-6 py-2 bg-nectar-gold text-background hover:bg-nectar-gold/90 rounded-xl text-2xs font-black uppercase tracking-wider transition-all font-bold"
                 >
                   {editingSubId ? 'Actualizar' : 'Guardar Contacto'}
                 </button>
@@ -1440,19 +1440,19 @@ export default function MarketingManager({ primaryColor = '#C68A1E', showToast }
               ×
             </button>
             <div>
-              <span className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold text-[8px] font-black uppercase tracking-widest rounded-full border border-nectar-gold/20">
+              <span className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold text-2xs font-black uppercase tracking-widest rounded-full border border-nectar-gold/20">
                 Importación Masiva
               </span>
               <h2 className="text-xl font-black tracking-tighter mt-4 leading-none text-white">
                 Importar Contactos por CSV
               </h2>
-              <p className="text-[10px] text-white/40 uppercase tracking-wider mt-1.5">
+              <p className="text-2xs text-white/40 uppercase tracking-wider mt-1.5">
                 Carga un archivo delimitado por comas (.csv). Debe contener al menos la columna `email`.
               </p>
             </div>
             <form onSubmit={handleImportCSV} className="space-y-4 text-left">
               <div className="space-y-1.5">
-                <label className="text-[8px] font-black uppercase tracking-widest opacity-40 block text-white">Vincular a la Lista (Opcional)</label>
+                <label className="text-2xs font-black uppercase tracking-widest opacity-40 block text-white">Vincular a la Lista (Opcional)</label>
                 <select
                   value={importListId || ''}
                   onChange={e => setImportListId(e.target.value ? parseInt(e.target.value) : null)}
@@ -1465,7 +1465,7 @@ export default function MarketingManager({ primaryColor = '#C68A1E', showToast }
                 </select>
               </div>
               <div className="space-y-1.5">
-                <label className="text-[8px] font-black uppercase tracking-widest opacity-40 block text-white">Archivo CSV</label>
+                <label className="text-2xs font-black uppercase tracking-widest opacity-40 block text-white">Archivo CSV</label>
                 <input
                   type="file"
                   required
@@ -1479,14 +1479,14 @@ export default function MarketingManager({ primaryColor = '#C68A1E', showToast }
                 <button
                   type="button"
                   onClick={() => setShowImportModal(false)}
-                  className="px-4 py-2 border border-white/10 hover:bg-white/5 rounded-xl text-[8px] font-black uppercase tracking-wider transition-all text-white/80"
+                  className="px-4 py-2 border border-white/10 hover:bg-white/5 rounded-xl text-2xs font-black uppercase tracking-wider transition-all text-white/80"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={isImporting}
-                  className="px-6 py-2 bg-nectar-gold text-background hover:bg-nectar-gold/90 rounded-xl text-[8px] font-black uppercase tracking-wider transition-all font-bold"
+                  className="px-6 py-2 bg-nectar-gold text-background hover:bg-nectar-gold/90 rounded-xl text-2xs font-black uppercase tracking-wider transition-all font-bold"
                 >
                   {isImporting ? 'Importando...' : '📥 Iniciar Importación'}
                 </button>
@@ -1511,7 +1511,7 @@ export default function MarketingManager({ primaryColor = '#C68A1E', showToast }
             {/* Column 1: Editor Form */}
             <div className={`${isPreviewExpanded ? 'hidden' : 'flex-1'} overflow-y-auto pr-2 custom-scrollbar space-y-6 lg:max-h-[76vh]`}>
               <div>
-                <span className="px-2 py-0.5 bg-nectar-gold/10 text-nectar-gold text-[7px] font-black uppercase tracking-widest rounded-full border border-nectar-gold/20">
+                <span className="px-2 py-0.5 bg-nectar-gold/10 text-nectar-gold text-2xs font-black uppercase tracking-widest rounded-full border border-nectar-gold/20">
                   Email Campaigner
                 </span>
                 <h3 className="text-lg font-black uppercase tracking-tight text-white mt-2">Nueva Campaña de Boletín</h3>
@@ -1522,20 +1522,20 @@ export default function MarketingManager({ primaryColor = '#C68A1E', showToast }
                 <div className="bg-nectar-gold/10 border border-nectar-gold/30 p-4 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                   <div>
                     <p className="text-xs font-bold text-nectar-gold uppercase tracking-wider font-bold">Borrador Detectado</p>
-                    <p className="text-[10px] text-white/70 mt-0.5">Se encontró progreso no guardado de tu última sesión de edición.</p>
+                    <p className="text-2xs text-white/70 mt-0.5">Se encontró progreso no guardado de tu última sesión de edición.</p>
                   </div>
                   <div className="flex gap-2 shrink-0">
                     <button
                       type="button"
                       onClick={restoreDraft}
-                      className="bg-nectar-gold text-background font-black uppercase tracking-widest text-[9px] px-3.5 py-2 rounded-lg hover:scale-105 transition-all font-bold"
+                      className="bg-nectar-gold text-background font-black uppercase tracking-widest text-2xs px-3.5 py-2 rounded-lg hover:scale-105 transition-all font-bold"
                     >
                       Restaurar
                     </button>
                     <button
                       type="button"
                       onClick={discardDraft}
-                      className="border border-white/10 hover:bg-white/5 text-white/65 hover:text-white font-black uppercase tracking-widest text-[9px] px-3.5 py-2 rounded-lg transition-all font-bold"
+                      className="border border-white/10 hover:bg-white/5 text-white/65 hover:text-white font-black uppercase tracking-widest text-2xs px-3.5 py-2 rounded-lg transition-all font-bold"
                     >
                       Descartar
                     </button>
@@ -1560,7 +1560,7 @@ export default function MarketingManager({ primaryColor = '#C68A1E', showToast }
                       syncEditorState();
                       setSettingsTab(tab.id as any);
                     }}
-                    className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all duration-200 whitespace-nowrap ${
+                    className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-2xs font-black uppercase tracking-wider transition-all duration-200 whitespace-nowrap ${
                       settingsTab === tab.id
                         ? 'bg-nectar-gold text-background shadow-md scale-[1.02]'
                         : 'text-white/60 hover:text-white hover:bg-white/5'
@@ -1575,7 +1575,7 @@ export default function MarketingManager({ primaryColor = '#C68A1E', showToast }
                 {/* Viewport switcher */}
                 {['cover', 'sections', 'ctas'].includes(settingsTab) && (
                   <div className="flex justify-between items-center bg-white/5 border border-white/5 p-3 rounded-2xl">
-                    <span className="text-[9px] text-white/65 uppercase tracking-widest font-black">Vista previa activa:</span>
+                    <span className="text-2xs text-white/65 uppercase tracking-widest font-black">Vista previa activa:</span>
                     <div className="flex bg-neutral-950 border border-white/10 rounded-xl p-0.5 gap-0.5">
                       {[
                         { id: 'desktop', label: 'Escritorio' },
@@ -1586,7 +1586,7 @@ export default function MarketingManager({ primaryColor = '#C68A1E', showToast }
                           key={vp.id}
                           type="button"
                           onClick={() => setPreviewViewport(vp.id as any)}
-                          className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all duration-200 ${
+                          className={`px-3 py-1.5 rounded-lg text-2xs font-black uppercase tracking-wider transition-all duration-200 ${
                             previewViewport === vp.id
                               ? 'bg-nectar-gold text-background shadow-md font-bold'
                               : 'text-white/65 hover:text-white hover:bg-white/5 font-medium'
@@ -1607,7 +1607,7 @@ export default function MarketingManager({ primaryColor = '#C68A1E', showToast }
                       <select
                         value={selectedListId}
                         onChange={e => setSelectedListId(e.target.value)}
-                        className="w-full border rounded-xl px-3 py-2.5 text-[10px] bg-white/5 border-white/10 focus:outline-none focus:border-nectar-gold text-white font-bold"
+                        className="w-full border rounded-xl px-3 py-2.5 text-2xs bg-white/5 border-white/10 focus:outline-none focus:border-nectar-gold text-white font-bold"
                       >
                         <option value="" className="bg-neutral-900 text-white">Toda la Plataforma (Todos los Suscriptores)</option>
                         {lists.map(l => (
@@ -1622,7 +1622,7 @@ export default function MarketingManager({ primaryColor = '#C68A1E', showToast }
                         <button
                           type="button"
                           onClick={() => setEmojiPopoverTarget(emojiPopoverTarget === 'subject' ? null : 'subject')}
-                          className="text-[8px] text-nectar-gold hover:underline flex items-center gap-1 font-black uppercase"
+                          className="text-2xs text-nectar-gold hover:underline flex items-center gap-1 font-black uppercase"
                         >
                           😀 Emojis
                         </button>
@@ -1634,10 +1634,10 @@ export default function MarketingManager({ primaryColor = '#C68A1E', showToast }
                         placeholder="Ej. ¡Novedades de la plataforma!"
                         value={campaignSubject}
                         onChange={(e) => setCampaignSubject(e.target.value)}
-                        className="w-full border rounded-xl px-3 py-2.5 text-[10px] bg-white/5 border-white/10 focus:outline-none focus:border-nectar-gold text-white font-bold"
+                        className="w-full border rounded-xl px-3 py-2.5 text-2xs bg-white/5 border-white/10 focus:outline-none focus:border-nectar-gold text-white font-bold"
                       />
                       {emojiPopoverTarget === 'subject' && (
-                        <div className="absolute right-0 top-[55px] z-[100] bg-neutral-950 border border-white/10 rounded-2xl p-3 shadow-2xl w-60 grid grid-cols-6 gap-2">
+                        <div className="absolute right-0 top-[3.4375rem] z-[100] bg-neutral-950 border border-white/10 rounded-2xl p-3 shadow-2xl w-60 grid grid-cols-6 gap-2">
                           {CURATED_EMOJIS.map(em => (
                             <button
                               key={em}
@@ -1666,7 +1666,7 @@ export default function MarketingManager({ primaryColor = '#C68A1E', showToast }
                             key={mode.id}
                             type="button"
                             onClick={() => setCampTextMode(mode.id as any)}
-                            className={`px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all duration-200 ${
+                            className={`px-3 py-1.5 rounded-xl text-2xs font-black uppercase tracking-wider transition-all duration-200 ${
                               campTextMode === mode.id
                                 ? 'bg-nectar-gold text-background shadow-md font-bold'
                                 : 'text-white/60 hover:text-white hover:bg-white/5'
@@ -1681,7 +1681,7 @@ export default function MarketingManager({ primaryColor = '#C68A1E', showToast }
                     <div className="space-y-3">
                       <div className="flex justify-between items-center">
                         <label className="text-[7.5px] uppercase tracking-wider font-black text-white/50 block">Contenido del Correo</label>
-                        <span className="text-[8px] bg-nectar-gold/10 text-nectar-gold border border-nectar-gold/20 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
+                        <span className="text-2xs bg-nectar-gold/10 text-nectar-gold border border-nectar-gold/20 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
                           Editando: {editorActiveTab === 'title' ? 'Título' : editorActiveTab === 'footer' ? 'Pie' : 'Cuerpo'}
                         </span>
                       </div>
@@ -1705,7 +1705,7 @@ export default function MarketingManager({ primaryColor = '#C68A1E', showToast }
                               }
                               setEditorActiveTab(tab.id as any);
                             }}
-                            className={`flex-1 py-2 text-center rounded-xl text-[9px] font-black uppercase tracking-wider transition-all duration-200 ${
+                            className={`flex-1 py-2 text-center rounded-xl text-2xs font-black uppercase tracking-wider transition-all duration-200 ${
                               editorActiveTab === tab.id
                                 ? 'bg-nectar-gold text-background shadow-md font-bold'
                                 : 'text-white/60 hover:text-white hover:bg-white/5'
@@ -1909,7 +1909,7 @@ export default function MarketingManager({ primaryColor = '#C68A1E', showToast }
                 {settingsTab === 'theme' && (
                   <div className="space-y-6">
                     <div className="space-y-2">
-                      <label className="text-[8px] text-white/60 uppercase tracking-widest font-black block">Diseño Premium de Plantilla</label>
+                      <label className="text-2xs text-white/60 uppercase tracking-widest font-black block">Diseño Premium de Plantilla</label>
                       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
                         {[
                           { id: 'minimalist', name: 'Carbon', desc: 'Negro & Ámbar', class: 'bg-[#0c0d13] border-nectar-gold/40 text-nectar-gold' },
@@ -1923,16 +1923,16 @@ export default function MarketingManager({ primaryColor = '#C68A1E', showToast }
                             onClick={() => setTemplateType(t.id)}
                             className={`p-3 rounded-2xl border cursor-pointer text-center transition-all hover:scale-102 flex flex-col justify-center items-center gap-1 ${t.class} ${templateType === t.id ? 'ring-2 ring-nectar-gold border-transparent' : 'opacity-65 hover:opacity-100'}`}
                           >
-                            <span className="text-[10px] font-black uppercase tracking-wider">{t.name}</span>
-                            <span className="text-[7px] font-bold uppercase tracking-widest opacity-60">{t.desc}</span>
+                            <span className="text-2xs font-black uppercase tracking-wider">{t.name}</span>
+                            <span className="text-2xs font-bold uppercase tracking-widest opacity-60">{t.desc}</span>
                           </div>
                         ))}
                       </div>
                     </div>
 
                     <div className="space-y-3">
-                      <label className="text-[8px] text-white/60 uppercase tracking-widest font-black block">Tipografía Global de Sección</label>
-                      <p className="text-[8px] text-white/40 uppercase tracking-widest font-bold">
+                      <label className="text-2xs text-white/60 uppercase tracking-widest font-black block">Tipografía Global de Sección</label>
+                      <p className="text-2xs text-white/40 uppercase tracking-widest font-bold">
                         Sección activa seleccionada: <span className="text-nectar-gold underline italic">{editorActiveTab === 'title' ? 'Título' : editorActiveTab === 'footer' ? 'Pie' : 'Cuerpo'}</span>
                       </p>
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -1965,7 +1965,7 @@ export default function MarketingManager({ primaryColor = '#C68A1E', showToast }
                               }`}
                             >
                               <span className="text-xs font-black">{f.name}</span>
-                              <span className="text-[7px] font-bold uppercase tracking-widest opacity-60">{f.desc}</span>
+                              <span className="text-2xs font-bold uppercase tracking-widest opacity-60">{f.desc}</span>
                             </div>
                           );
                         })}
@@ -1973,21 +1973,21 @@ export default function MarketingManager({ primaryColor = '#C68A1E', showToast }
                     </div>
 
                     <div className="space-y-4 border-t border-white/5 pt-4">
-                      <label className="text-[8px] text-white/60 uppercase tracking-widest font-black block">Fondo del Correo</label>
+                      <label className="text-2xs text-white/60 uppercase tracking-widest font-black block">Fondo del Correo</label>
                       <div className="space-y-3">
                         <div className="space-y-1">
-                          <label className="text-[7px] uppercase tracking-wider font-black text-white/50 block">URL de Imagen de Fondo</label>
+                          <label className="text-2xs uppercase tracking-wider font-black text-white/50 block">URL de Imagen de Fondo</label>
                           <input
                             type="url"
                             placeholder="https://..."
                             value={bgImageUrl}
                             onChange={(e) => setBgImageUrl(e.target.value)}
-                            className="w-full border rounded-xl px-3 py-2 text-[9px] bg-white/5 border-white/10 focus:outline-none focus:border-nectar-gold text-white font-bold"
+                            className="w-full border rounded-xl px-3 py-2 text-2xs bg-white/5 border-white/10 focus:outline-none focus:border-nectar-gold text-white font-bold"
                           />
                         </div>
                         <div className="grid grid-cols-3 gap-2">
                           <div className="space-y-1">
-                            <label className="text-[6px] uppercase tracking-wider font-black text-white/40 block">Opacidad</label>
+                            <label className="text-2xs uppercase tracking-wider font-black text-white/40 block">Opacidad</label>
                             <input
                               type="number"
                               min="0.1"
@@ -1995,26 +1995,26 @@ export default function MarketingManager({ primaryColor = '#C68A1E', showToast }
                               step="0.1"
                               value={bgOpacity}
                               onChange={(e) => setBgOpacity(e.target.value)}
-                              className="w-full border rounded-xl px-2 py-1.5 text-[9px] bg-white/5 border-white/10 focus:outline-none focus:border-nectar-gold text-white font-mono"
+                              className="w-full border rounded-xl px-2 py-1.5 text-2xs bg-white/5 border-white/10 focus:outline-none focus:border-nectar-gold text-white font-mono"
                             />
                           </div>
                           <div className="space-y-1">
-                            <label className="text-[6px] uppercase tracking-wider font-black text-white/40 block">Saturación %</label>
+                            <label className="text-2xs uppercase tracking-wider font-black text-white/40 block">Saturación %</label>
                             <input
                               type="number"
                               min="0"
                               max="200"
                               value={bgSaturation}
                               onChange={(e) => setBgSaturation(e.target.value)}
-                              className="w-full border rounded-xl px-2 py-1.5 text-[9px] bg-white/5 border-white/10 focus:outline-none focus:border-nectar-gold text-white font-mono"
+                              className="w-full border rounded-xl px-2 py-1.5 text-2xs bg-white/5 border-white/10 focus:outline-none focus:border-nectar-gold text-white font-mono"
                             />
                           </div>
                           <div className="space-y-1">
-                            <label className="text-[6px] uppercase tracking-wider font-black text-white/40 block">Posición</label>
+                            <label className="text-2xs uppercase tracking-wider font-black text-white/40 block">Posición</label>
                             <select
                               value={bgPosition}
                               onChange={(e) => setBgPosition(e.target.value)}
-                              className="w-full border rounded-xl px-2 py-1.5 text-[9px] bg-white/5 border-white/10 focus:outline-none focus:border-nectar-gold text-white font-bold"
+                              className="w-full border rounded-xl px-2 py-1.5 text-2xs bg-white/5 border-white/10 focus:outline-none focus:border-nectar-gold text-white font-bold"
                             >
                               <option value="center">Centro</option>
                               <option value="top">Arriba</option>
@@ -2039,26 +2039,26 @@ export default function MarketingManager({ primaryColor = '#C68A1E', showToast }
                         placeholder="https://..."
                         value={imageUrl}
                         onChange={(e) => setImageUrl(e.target.value)}
-                        className="w-full border rounded-xl px-3 py-2 text-[9px] bg-white/5 border-white/10 focus:outline-none focus:border-nectar-gold text-white font-bold"
+                        className="w-full border rounded-xl px-3 py-2 text-2xs bg-white/5 border-white/10 focus:outline-none focus:border-nectar-gold text-white font-bold"
                       />
                     </div>
                     <div className="grid grid-cols-3 gap-3 pt-3 border-t border-white/5">
                       <div className="space-y-1">
-                        <label className="text-[7px] uppercase tracking-wider font-black text-white/40 block">Ancho Portada</label>
+                        <label className="text-2xs uppercase tracking-wider font-black text-white/40 block">Ancho Portada</label>
                         <input
                           type="text"
                           value={campImageWidth}
                           onChange={(e) => setCampImageWidth(e.target.value)}
                           placeholder="100%"
-                          className="w-full border rounded-xl px-3 py-2 text-[9px] bg-white/5 border-white/10 focus:outline-none text-white font-mono"
+                          className="w-full border rounded-xl px-3 py-2 text-2xs bg-white/5 border-white/10 focus:outline-none text-white font-mono"
                         />
                       </div>
                       <div className="space-y-1">
-                        <label className="text-[7px] uppercase tracking-wider font-black text-white/40 block">Alineación</label>
+                        <label className="text-2xs uppercase tracking-wider font-black text-white/40 block">Alineación</label>
                         <select
                           value={campImageAlign}
                           onChange={(e) => setCampImageAlign(e.target.value)}
-                          className="w-full border rounded-xl px-3 py-2 text-[9px] bg-white/5 border-white/10 focus:outline-none text-white font-bold"
+                          className="w-full border rounded-xl px-3 py-2 text-2xs bg-white/5 border-white/10 focus:outline-none text-white font-bold"
                         >
                           <option value="center">Centro</option>
                           <option value="left">Izquierda</option>
@@ -2066,35 +2066,35 @@ export default function MarketingManager({ primaryColor = '#C68A1E', showToast }
                         </select>
                       </div>
                       <div className="space-y-1">
-                        <label className="text-[7px] uppercase tracking-wider font-black text-white/40 block">Bordes Redondeados</label>
+                        <label className="text-2xs uppercase tracking-wider font-black text-white/40 block">Bordes Redondeados</label>
                         <input
                           type="text"
                           value={campImageRadius}
                           onChange={(e) => setCampImageRadius(e.target.value)}
-                          className="w-full border rounded-xl px-3 py-2 text-[9px] bg-white/5 border-white/10 focus:outline-none text-white font-mono"
+                          className="w-full border rounded-xl px-3 py-2 text-2xs bg-white/5 border-white/10 focus:outline-none text-white font-mono"
                         />
                       </div>
                     </div>
                     {/* Viewport adjustments */}
                     <div className="space-y-3 pt-3 border-t border-white/5">
-                      <h4 className="text-[8px] font-black uppercase tracking-widest text-nectar-gold font-bold">Ajustes según pantalla:</h4>
+                      <h4 className="text-2xs font-black uppercase tracking-widest text-nectar-gold font-bold">Ajustes según pantalla:</h4>
                       <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-1">
-                          <label className="text-[7px] uppercase tracking-wider font-black text-white/40 block">Ancho Tablet</label>
+                          <label className="text-2xs uppercase tracking-wider font-black text-white/40 block">Ancho Tablet</label>
                           <input
                             type="text"
                             value={campImageWidthTablet}
                             onChange={(e) => setCampImageWidthTablet(e.target.value)}
-                            className="w-full border rounded-xl px-3 py-2 text-[9px] bg-white/5 border-white/10 text-white font-mono"
+                            className="w-full border rounded-xl px-3 py-2 text-2xs bg-white/5 border-white/10 text-white font-mono"
                           />
                         </div>
                         <div className="space-y-1">
-                          <label className="text-[7px] uppercase tracking-wider font-black text-white/40 block">Ancho Móvil</label>
+                          <label className="text-2xs uppercase tracking-wider font-black text-white/40 block">Ancho Móvil</label>
                           <input
                             type="text"
                             value={campImageWidthMobile}
                             onChange={(e) => setCampImageWidthMobile(e.target.value)}
-                            className="w-full border rounded-xl px-3 py-2 text-[9px] bg-white/5 border-white/10 text-white font-mono"
+                            className="w-full border rounded-xl px-3 py-2 text-2xs bg-white/5 border-white/10 text-white font-mono"
                           />
                         </div>
                       </div>
@@ -2114,7 +2114,7 @@ export default function MarketingManager({ primaryColor = '#C68A1E', showToast }
                             type="text"
                             value={campCardMaxWidthDesktop}
                             onChange={(e) => setCampCardMaxWidthDesktop(e.target.value)}
-                            className="w-full border rounded-xl px-3 py-2.5 text-[9px] bg-white/5 border-white/10 text-white font-mono"
+                            className="w-full border rounded-xl px-3 py-2.5 text-2xs bg-white/5 border-white/10 text-white font-mono"
                           />
                         </div>
                         <div className="space-y-1">
@@ -2123,7 +2123,7 @@ export default function MarketingManager({ primaryColor = '#C68A1E', showToast }
                             type="text"
                             value={campCardPaddingDesktop}
                             onChange={(e) => setCampCardPaddingDesktop(e.target.value)}
-                            className="w-full border rounded-xl px-3 py-2.5 text-[9px] bg-white/5 border-white/10 text-white font-mono"
+                            className="w-full border rounded-xl px-3 py-2.5 text-2xs bg-white/5 border-white/10 text-white font-mono"
                           />
                         </div>
                       </div>
@@ -2134,7 +2134,7 @@ export default function MarketingManager({ primaryColor = '#C68A1E', showToast }
                             type="text"
                             value={campCardPaddingTablet}
                             onChange={(e) => setCampCardPaddingTablet(e.target.value)}
-                            className="w-full border rounded-xl px-3 py-2.5 text-[9px] bg-white/5 border-white/10 text-white font-mono"
+                            className="w-full border rounded-xl px-3 py-2.5 text-2xs bg-white/5 border-white/10 text-white font-mono"
                           />
                         </div>
                         <div className="space-y-1">
@@ -2143,7 +2143,7 @@ export default function MarketingManager({ primaryColor = '#C68A1E', showToast }
                             type="text"
                             value={campCardPaddingMobile}
                             onChange={(e) => setCampCardPaddingMobile(e.target.value)}
-                            className="w-full border rounded-xl px-3 py-2.5 text-[9px] bg-white/5 border-white/10 text-white font-mono"
+                            className="w-full border rounded-xl px-3 py-2.5 text-2xs bg-white/5 border-white/10 text-white font-mono"
                           />
                         </div>
                       </div>
@@ -2153,30 +2153,30 @@ export default function MarketingManager({ primaryColor = '#C68A1E', showToast }
                       <h4 className="text-[8.5px] font-black uppercase tracking-widest text-nectar-gold pb-1.5 border-b border-white/5 font-bold">Personalización de Textos</h4>
                       <div className="grid grid-cols-3 gap-3">
                         <div className="space-y-1">
-                          <label className="text-[7px] uppercase tracking-wider font-black text-white/40 block">Tamaño Título (PC)</label>
-                          <input type="text" value={campTitleFontSizeDesktop} onChange={(e) => setCampTitleFontSizeDesktop(e.target.value)} className="w-full border rounded-xl px-2 py-2 text-[9px] bg-white/5 border-white/10 text-white font-mono" />
+                          <label className="text-2xs uppercase tracking-wider font-black text-white/40 block">Tamaño Título (PC)</label>
+                          <input type="text" value={campTitleFontSizeDesktop} onChange={(e) => setCampTitleFontSizeDesktop(e.target.value)} className="w-full border rounded-xl px-2 py-2 text-2xs bg-white/5 border-white/10 text-white font-mono" />
                         </div>
                         <div className="space-y-1">
-                          <label className="text-[7px] uppercase tracking-wider font-black text-white/40 block">Título (Tab)</label>
-                          <input type="text" value={campTitleFontSizeTablet} onChange={(e) => setCampTitleFontSizeTablet(e.target.value)} className="w-full border rounded-xl px-2 py-2 text-[9px] bg-white/5 border-white/10 text-white font-mono" />
+                          <label className="text-2xs uppercase tracking-wider font-black text-white/40 block">Título (Tab)</label>
+                          <input type="text" value={campTitleFontSizeTablet} onChange={(e) => setCampTitleFontSizeTablet(e.target.value)} className="w-full border rounded-xl px-2 py-2 text-2xs bg-white/5 border-white/10 text-white font-mono" />
                         </div>
                         <div className="space-y-1">
-                          <label className="text-[7px] uppercase tracking-wider font-black text-white/40 block">Título (Móvil)</label>
-                          <input type="text" value={campTitleFontSizeMobile} onChange={(e) => setCampTitleFontSizeMobile(e.target.value)} className="w-full border rounded-xl px-2 py-2 text-[9px] bg-white/5 border-white/10 text-white font-mono" />
+                          <label className="text-2xs uppercase tracking-wider font-black text-white/40 block">Título (Móvil)</label>
+                          <input type="text" value={campTitleFontSizeMobile} onChange={(e) => setCampTitleFontSizeMobile(e.target.value)} className="w-full border rounded-xl px-2 py-2 text-2xs bg-white/5 border-white/10 text-white font-mono" />
                         </div>
                       </div>
                       <div className="grid grid-cols-3 gap-3">
                         <div className="space-y-1">
-                          <label className="text-[7px] uppercase tracking-wider font-black text-white/40 block">Tamaño Cuerpo (PC)</label>
-                          <input type="text" value={campBodyFontSizeDesktop} onChange={(e) => setCampBodyFontSizeDesktop(e.target.value)} className="w-full border rounded-xl px-2 py-2 text-[9px] bg-white/5 border-white/10 text-white font-mono" />
+                          <label className="text-2xs uppercase tracking-wider font-black text-white/40 block">Tamaño Cuerpo (PC)</label>
+                          <input type="text" value={campBodyFontSizeDesktop} onChange={(e) => setCampBodyFontSizeDesktop(e.target.value)} className="w-full border rounded-xl px-2 py-2 text-2xs bg-white/5 border-white/10 text-white font-mono" />
                         </div>
                         <div className="space-y-1">
-                          <label className="text-[7px] uppercase tracking-wider font-black text-white/40 block">Cuerpo (Tab)</label>
-                          <input type="text" value={campBodyFontSizeTablet} onChange={(e) => setCampBodyFontSizeTablet(e.target.value)} className="w-full border rounded-xl px-2 py-2 text-[9px] bg-white/5 border-white/10 text-white font-mono" />
+                          <label className="text-2xs uppercase tracking-wider font-black text-white/40 block">Cuerpo (Tab)</label>
+                          <input type="text" value={campBodyFontSizeTablet} onChange={(e) => setCampBodyFontSizeTablet(e.target.value)} className="w-full border rounded-xl px-2 py-2 text-2xs bg-white/5 border-white/10 text-white font-mono" />
                         </div>
                         <div className="space-y-1">
-                          <label className="text-[7px] uppercase tracking-wider font-black text-white/40 block">Cuerpo (Móvil)</label>
-                          <input type="text" value={campBodyFontSizeMobile} onChange={(e) => setCampBodyFontSizeMobile(e.target.value)} className="w-full border rounded-xl px-2 py-2 text-[9px] bg-white/5 border-white/10 text-white font-mono" />
+                          <label className="text-2xs uppercase tracking-wider font-black text-white/40 block">Cuerpo (Móvil)</label>
+                          <input type="text" value={campBodyFontSizeMobile} onChange={(e) => setCampBodyFontSizeMobile(e.target.value)} className="w-full border rounded-xl px-2 py-2 text-2xs bg-white/5 border-white/10 text-white font-mono" />
                         </div>
                       </div>
                       <div className="space-y-1.5 pt-2">
@@ -2184,7 +2184,7 @@ export default function MarketingManager({ primaryColor = '#C68A1E', showToast }
                         <select
                           value={campBodyAlignment}
                           onChange={(e) => setCampBodyAlignment(e.target.value)}
-                          className="w-full border rounded-xl px-3 py-2 text-[9px] bg-white/5 border-white/10 text-white font-bold"
+                          className="w-full border rounded-xl px-3 py-2 text-2xs bg-white/5 border-white/10 text-white font-bold"
                         >
                           <option value="center">Centro</option>
                           <option value="left">Izquierda</option>
@@ -2245,7 +2245,7 @@ export default function MarketingManager({ primaryColor = '#C68A1E', showToast }
                             placeholder="ej: Registrarme"
                             value={ctaText}
                             onChange={(e) => setCtaText(e.target.value)}
-                            className="w-full border rounded-xl px-3 py-2.5 text-[9px] bg-white/5 border-white/10 focus:outline-none focus:border-nectar-gold text-white font-bold"
+                            className="w-full border rounded-xl px-3 py-2.5 text-2xs bg-white/5 border-white/10 focus:outline-none focus:border-nectar-gold text-white font-bold"
                           />
                         </div>
                         <div className="space-y-1.5">
@@ -2255,17 +2255,17 @@ export default function MarketingManager({ primaryColor = '#C68A1E', showToast }
                             placeholder="https://..."
                             value={ctaLink}
                             onChange={(e) => setCtaLink(e.target.value)}
-                            className="w-full border rounded-xl px-3 py-2.5 text-[9px] bg-white/5 border-white/10 focus:outline-none focus:border-nectar-gold text-white font-bold"
+                            className="w-full border rounded-xl px-3 py-2.5 text-2xs bg-white/5 border-white/10 focus:outline-none focus:border-nectar-gold text-white font-bold"
                           />
                         </div>
                       </div>
                       <div className="grid grid-cols-3 gap-3 pt-2">
                         <div className="space-y-1">
-                          <label className="text-[7px] uppercase tracking-wider font-black text-white/40 block">Alineación Botón</label>
+                          <label className="text-2xs uppercase tracking-wider font-black text-white/40 block">Alineación Botón</label>
                           <select
                             value={campCtaAlignment}
                             onChange={(e) => setCampCtaAlignment(e.target.value)}
-                            className="w-full border rounded-xl px-3 py-2.5 text-[9px] bg-white/5 border-white/10 text-white font-bold"
+                            className="w-full border rounded-xl px-3 py-2.5 text-2xs bg-white/5 border-white/10 text-white font-bold"
                           >
                             <option value="center">Centro</option>
                             <option value="left">Izquierda</option>
@@ -2273,12 +2273,12 @@ export default function MarketingManager({ primaryColor = '#C68A1E', showToast }
                           </select>
                         </div>
                         <div className="space-y-1">
-                          <label className="text-[7px] uppercase tracking-wider font-black text-white/40 block">Margen Superior</label>
-                          <input type="text" value={campCtaMarginTop} onChange={(e) => setCampCtaMarginTop(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-[9px] bg-white/5 border-white/10 text-white font-mono" />
+                          <label className="text-2xs uppercase tracking-wider font-black text-white/40 block">Margen Superior</label>
+                          <input type="text" value={campCtaMarginTop} onChange={(e) => setCampCtaMarginTop(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-2xs bg-white/5 border-white/10 text-white font-mono" />
                         </div>
                         <div className="space-y-1">
-                          <label className="text-[7px] uppercase tracking-wider font-black text-white/40 block">Margen Inferior</label>
-                          <input type="text" value={campCtaMarginBottom} onChange={(e) => setCampCtaMarginBottom(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-[9px] bg-white/5 border-white/10 text-white font-mono" />
+                          <label className="text-2xs uppercase tracking-wider font-black text-white/40 block">Margen Inferior</label>
+                          <input type="text" value={campCtaMarginBottom} onChange={(e) => setCampCtaMarginBottom(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-2xs bg-white/5 border-white/10 text-white font-mono" />
                         </div>
                       </div>
                     </div>
@@ -2291,7 +2291,7 @@ export default function MarketingManager({ primaryColor = '#C68A1E', showToast }
                           onClick={() => {
                             setExtraCtas(prev => prev.filter((_, i) => i !== idx));
                           }}
-                          className="absolute top-4 right-4 text-red-500/60 hover:text-red-500 text-[8px] font-black uppercase tracking-widest cursor-pointer"
+                          className="absolute top-4 right-4 text-red-500/60 hover:text-red-500 text-2xs font-black uppercase tracking-widest cursor-pointer"
                         >
                           Eliminar Botón
                         </button>
@@ -2310,7 +2310,7 @@ export default function MarketingManager({ primaryColor = '#C68A1E', showToast }
                                 const newText = e.target.value;
                                 setExtraCtas(prev => prev.map((b, i) => i === idx ? { ...b, text: newText } : b));
                               }}
-                              className="w-full border rounded-xl px-3 py-2.5 text-[9px] bg-white/5 border-white/10 focus:outline-none focus:border-nectar-gold text-white font-bold"
+                              className="w-full border rounded-xl px-3 py-2.5 text-2xs bg-white/5 border-white/10 focus:outline-none focus:border-nectar-gold text-white font-bold"
                             />
                           </div>
                           <div className="space-y-1.5">
@@ -2324,13 +2324,13 @@ export default function MarketingManager({ primaryColor = '#C68A1E', showToast }
                                 const newLink = e.target.value;
                                 setExtraCtas(prev => prev.map((b, i) => i === idx ? { ...b, link: newLink } : b));
                               }}
-                              className="w-full border rounded-xl px-3 py-2.5 text-[9px] bg-white/5 border-white/10 focus:outline-none focus:border-nectar-gold text-white font-bold"
+                              className="w-full border rounded-xl px-3 py-2.5 text-2xs bg-white/5 border-white/10 focus:outline-none focus:border-nectar-gold text-white font-bold"
                             />
                           </div>
                         </div>
                         <div className="grid grid-cols-4 gap-3 pt-2">
                           <div className="space-y-1">
-                            <label className="text-[7px] uppercase tracking-wider font-black text-white/40 block">Color de Fondo</label>
+                            <label className="text-2xs uppercase tracking-wider font-black text-white/40 block">Color de Fondo</label>
                             <div className="flex gap-2 items-center">
                               <input
                                 type="color"
@@ -2345,7 +2345,7 @@ export default function MarketingManager({ primaryColor = '#C68A1E', showToast }
                             </div>
                           </div>
                           <div className="space-y-1">
-                            <label className="text-[7px] uppercase tracking-wider font-black text-white/40 block">Color de Texto</label>
+                            <label className="text-2xs uppercase tracking-wider font-black text-white/40 block">Color de Texto</label>
                             <div className="flex gap-2 items-center">
                               <input
                                 type="color"
@@ -2360,7 +2360,7 @@ export default function MarketingManager({ primaryColor = '#C68A1E', showToast }
                             </div>
                           </div>
                           <div className="space-y-1">
-                            <label className="text-[7px] uppercase tracking-wider font-black text-white/40 block">Radio de Borde</label>
+                            <label className="text-2xs uppercase tracking-wider font-black text-white/40 block">Radio de Borde</label>
                             <input
                               type="text"
                               value={btn.radius || '10px'}
@@ -2368,7 +2368,7 @@ export default function MarketingManager({ primaryColor = '#C68A1E', showToast }
                                 const newRadius = e.target.value;
                                 setExtraCtas(prev => prev.map((b, i) => i === idx ? { ...b, radius: newRadius } : b));
                               }}
-                              className="w-full border rounded-xl px-3 py-2.5 text-[9px] bg-white/5 border-white/10 text-white font-mono"
+                              className="w-full border rounded-xl px-3 py-2.5 text-2xs bg-white/5 border-white/10 text-white font-mono"
                             />
                           </div>
                           <div className="space-y-1 flex flex-col justify-end pb-2">
@@ -2397,7 +2397,7 @@ export default function MarketingManager({ primaryColor = '#C68A1E', showToast }
                       onClick={() => {
                         setExtraCtas(prev => [...prev, { text: '', link: '', bg_color: selectedTheme.accent, text_color: '#000000', radius: '10px', is_full_width: false }]);
                       }}
-                      className="w-full py-4 border border-dashed border-white/10 hover:border-nectar-gold/60 text-white/50 hover:text-nectar-gold hover:bg-nectar-gold/[0.02] rounded-[2rem] text-[9px] font-black uppercase tracking-widest transition-all cursor-pointer text-center font-bold flex items-center justify-center gap-2"
+                      className="w-full py-4 border border-dashed border-white/10 hover:border-nectar-gold/60 text-white/50 hover:text-nectar-gold hover:bg-nectar-gold/[0.02] rounded-[2rem] text-2xs font-black uppercase tracking-widest transition-all cursor-pointer text-center font-bold flex items-center justify-center gap-2"
                     >
                       <span>+ Añadir Otro Botón</span>
                     </button>
@@ -2408,8 +2408,8 @@ export default function MarketingManager({ primaryColor = '#C68A1E', showToast }
                 {settingsTab === 'library' && (
                   <div className="space-y-4">
                     <div className="flex justify-between items-center pb-2 border-b border-white/5">
-                      <span className="text-[10px] text-white/40 uppercase tracking-widest font-black">Biblioteca de Imágenes</span>
-                      <label className="px-3.5 py-2 bg-nectar-gold/10 border border-nectar-gold/20 hover:bg-nectar-gold/20 rounded-xl text-[9px] font-black uppercase tracking-widest text-nectar-gold flex items-center gap-1 cursor-pointer transition-all font-bold">
+                      <span className="text-2xs text-white/40 uppercase tracking-widest font-black">Biblioteca de Imágenes</span>
+                      <label className="px-3.5 py-2 bg-nectar-gold/10 border border-nectar-gold/20 hover:bg-nectar-gold/20 rounded-xl text-2xs font-black uppercase tracking-widest text-nectar-gold flex items-center gap-1 cursor-pointer transition-all font-bold">
                         {libraryUploadLoading ? 'Subiendo...' : '+ Subir Imagen'}
                         <input
                           type="file"
@@ -2427,8 +2427,8 @@ export default function MarketingManager({ primaryColor = '#C68A1E', showToast }
                     {templateImages.length === 0 ? (
                       <div className="text-center py-12 border border-dashed border-white/10 rounded-[2rem] space-y-2">
                         <span className="text-2xl opacity-30 block">📁</span>
-                        <p className="text-[10px] text-white/40 uppercase tracking-widest font-black font-bold">Tu biblioteca está vacía</p>
-                        <p className="text-[9px] text-white/30 max-w-xs mx-auto leading-normal">Sube imágenes para utilizarlas como portada, fondo o insertarlas directamente en el cuerpo del correo.</p>
+                        <p className="text-2xs text-white/40 uppercase tracking-widest font-black font-bold">Tu biblioteca está vacía</p>
+                        <p className="text-2xs text-white/30 max-w-xs mx-auto leading-normal">Sube imágenes para utilizarlas como portada, fondo o insertarlas directamente en el cuerpo del correo.</p>
                       </div>
                     ) : (
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 max-h-[46vh] overflow-y-auto pr-1 custom-scrollbar">
@@ -2439,7 +2439,7 @@ export default function MarketingManager({ primaryColor = '#C68A1E', showToast }
                               <button
                                 type="button"
                                 onClick={() => insertImageAtCursor(img.image)}
-                                className="w-full py-1.5 bg-nectar-gold hover:bg-yellow-500 text-background rounded-lg text-[8px] font-black uppercase tracking-wider flex items-center justify-center gap-1 transition-all font-bold"
+                                className="w-full py-1.5 bg-nectar-gold hover:bg-yellow-500 text-background rounded-lg text-2xs font-black uppercase tracking-wider flex items-center justify-center gap-1 transition-all font-bold"
                               >
                                 Insertar en Editor
                               </button>
@@ -2447,14 +2447,14 @@ export default function MarketingManager({ primaryColor = '#C68A1E', showToast }
                                 <button
                                   type="button"
                                   onClick={() => handleUseTemplateAsCover(img.image)}
-                                  className="py-1 bg-white/10 hover:bg-white/20 text-white rounded-lg text-[7px] font-black uppercase tracking-wider transition-all font-bold"
+                                  className="py-1 bg-white/10 hover:bg-white/20 text-white rounded-lg text-2xs font-black uppercase tracking-wider transition-all font-bold"
                                 >
                                   Portada
                                 </button>
                                 <button
                                   type="button"
                                   onClick={() => handleUseTemplateAsBg(img.image)}
-                                  className="py-1 bg-white/10 hover:bg-white/20 text-white rounded-lg text-[7px] font-black uppercase tracking-wider transition-all font-bold"
+                                  className="py-1 bg-white/10 hover:bg-white/20 text-white rounded-lg text-2xs font-black uppercase tracking-wider transition-all font-bold"
                                 >
                                   Fondo
                                 </button>
@@ -2462,7 +2462,7 @@ export default function MarketingManager({ primaryColor = '#C68A1E', showToast }
                               <button
                                 type="button"
                                 onClick={() => handleTemplateImageDelete(img.id)}
-                                className="w-full py-1 bg-red-950/80 hover:bg-red-900 border border-red-800/40 text-red-300 rounded-lg text-[7px] font-black uppercase tracking-wider transition-all font-bold"
+                                className="w-full py-1 bg-red-950/80 hover:bg-red-900 border border-red-800/40 text-red-300 rounded-lg text-2xs font-black uppercase tracking-wider transition-all font-bold"
                               >
                                 Eliminar
                               </button>
@@ -2484,7 +2484,7 @@ export default function MarketingManager({ primaryColor = '#C68A1E', showToast }
                   <button
                     type="button"
                     onClick={() => setIsPreviewExpanded(!isPreviewExpanded)}
-                    className="px-2 py-1 bg-white/5 border border-white/10 text-[7px] text-white/50 hover:text-white rounded-lg font-black uppercase"
+                    className="px-2 py-1 bg-white/5 border border-white/10 text-2xs text-white/50 hover:text-white rounded-lg font-black uppercase"
                   >
                     {isPreviewExpanded ? '⇐ Editar' : 'Expandir 🗖'}
                   </button>
@@ -2498,7 +2498,7 @@ export default function MarketingManager({ primaryColor = '#C68A1E', showToast }
                         key={vp.id}
                         type="button"
                         onClick={() => setPreviewViewport(vp.id as any)}
-                        className={`px-2 py-0.5 rounded text-[8px] transition-all ${
+                        className={`px-2 py-0.5 rounded text-2xs transition-all ${
                           previewViewport === vp.id ? 'bg-nectar-gold text-background font-bold' : 'text-white/40'
                         }`}
                       >
@@ -2700,7 +2700,7 @@ export default function MarketingManager({ primaryColor = '#C68A1E', showToast }
                 <button
                   type="button"
                   onClick={() => setShowCampaignModal(false)}
-                  className="px-4 py-2 border border-white/10 hover:bg-white/5 rounded-xl text-[8px] font-black uppercase tracking-wider transition-all text-white/80 font-bold"
+                  className="px-4 py-2 border border-white/10 hover:bg-white/5 rounded-xl text-2xs font-black uppercase tracking-wider transition-all text-white/80 font-bold"
                 >
                   Cancelar
                 </button>
@@ -2708,7 +2708,7 @@ export default function MarketingManager({ primaryColor = '#C68A1E', showToast }
                   type="button"
                   onClick={handleSendCampaign}
                   disabled={isSendingCampaign || !campaignSubject.trim() || !campaignContent.trim()}
-                  className="px-6 py-2 bg-nectar-gold text-background hover:bg-nectar-gold/90 rounded-xl text-[8px] font-black uppercase tracking-wider transition-all font-bold shadow-md"
+                  className="px-6 py-2 bg-nectar-gold text-background hover:bg-nectar-gold/90 rounded-xl text-2xs font-black uppercase tracking-wider transition-all font-bold shadow-md"
                 >
                   {isSendingCampaign ? 'Enviando...' : '🚀 Enviar Campaña'}
                 </button>

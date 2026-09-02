@@ -127,7 +127,7 @@ const PdfPageCanvas = ({ page, pageIndex, onDropSignature, signatureBoxes }: any
             onDragStart={(e) => {
               e.dataTransfer.setData('signatoryIndex', String(box.signatoryIndex));
             }}
-            className="absolute border-2 border-[#C68A1E] bg-[#C68A1E]/20 flex flex-col items-center justify-center p-1 text-[8px] font-black uppercase text-[#C68A1E] rounded cursor-move animate-fadeIn"
+            className="absolute border-2 border-[#C68A1E] bg-[#C68A1E]/20 flex flex-col items-center justify-center p-1 text-2xs font-black uppercase text-[#C68A1E] rounded cursor-move animate-fadeIn"
             style={{
               left: `${leftCss}px`,
               top: `${topCss}px`,
@@ -215,7 +215,7 @@ const PdfPreviewPageCanvas = ({ page, pageIndex, signatories }: any) => {
         return (
           <div
             key={bIdx}
-            className={`absolute border-2 flex flex-col items-center justify-center p-1 text-[8px] font-black uppercase rounded ${
+            className={`absolute border-2 flex flex-col items-center justify-center p-1 text-2xs font-black uppercase rounded ${
               box.signature_base64
                 ? 'border-emerald-500 bg-emerald-500/25 text-emerald-400'
                 : 'border-white/15 bg-white/5 text-white/40'
@@ -230,12 +230,12 @@ const PdfPreviewPageCanvas = ({ page, pageIndex, signatories }: any) => {
             {box.signature_base64 ? (
               <>
                 <img src={box.signature_base64} className="h-[25px] w-auto object-contain pointer-events-none" alt="Firma" />
-                <span className="truncate max-w-full font-mono mt-0.5 text-[7px]">{box.name}</span>
+                <span className="truncate max-w-full font-mono mt-0.5 text-2xs">{box.name}</span>
               </>
             ) : (
               <>
                 <span>⏰ Pendiente</span>
-                <span className="truncate max-w-full font-mono mt-0.5 text-[7px]">{box.name}</span>
+                <span className="truncate max-w-full font-mono mt-0.5 text-2xs">{box.name}</span>
               </>
             )}
           </div>
@@ -619,7 +619,7 @@ export default function CustomContractsManager({
           <h2 className="text-lg font-black uppercase tracking-wider flex items-center gap-2" style={{ color: primaryColor }}>
             📝 Firmas y Contratos Digitales
           </h2>
-          <p className="text-[9px] text-foreground/45 uppercase tracking-widest mt-0.5">
+          <p className="text-2xs text-foreground/45 uppercase tracking-widest mt-0.5">
             Crea, firma y gestiona contratos legalmente válidos y membretados.
           </p>
         </div>
@@ -636,7 +636,7 @@ export default function CustomContractsManager({
                 setActiveSubTab(tab.id as any);
                 setIsCreatingTemplate(false);
               }}
-              className={`px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all duration-300 whitespace-nowrap cursor-pointer ${
+              className={`px-4 py-2 rounded-xl text-2xs font-black uppercase tracking-widest transition-all duration-300 whitespace-nowrap cursor-pointer ${
                 activeSubTab === tab.id ? 'text-black' : 'text-foreground/60 hover:text-foreground'
               }`}
               style={{
@@ -653,14 +653,14 @@ export default function CustomContractsManager({
       {loading ? (
         <div className="py-20 flex flex-col items-center justify-center gap-3">
           <div className="w-8 h-8 rounded-full border-2 border-t-foreground border-foreground/10 animate-spin" style={{ borderTopColor: primaryColor }}></div>
-          <span className="text-[9px] font-black uppercase tracking-widest text-foreground/45">Cargando contratos...</span>
+          <span className="text-2xs font-black uppercase tracking-widest text-foreground/45">Cargando contratos...</span>
         </div>
       ) : activeSubTab === 'list' ? (
         /* HISTORIAL */
         <div className="bg-foreground/[0.02] dark:bg-white/[0.02] border border-card-border rounded-3xl p-6 space-y-6">
           <div className="flex justify-between items-center">
             <h3 className="text-xs font-black uppercase tracking-widest">Contratos Emitidos</h3>
-            <span className="text-[8px] bg-foreground/5 border border-card-border px-3 py-1 rounded-full text-foreground/60">
+            <span className="text-2xs bg-foreground/5 border border-card-border px-3 py-1 rounded-full text-foreground/60">
               Total: {contracts.length}
             </span>
           </div>
@@ -668,13 +668,13 @@ export default function CustomContractsManager({
           {contracts.length === 0 ? (
             <div className="py-20 text-center border border-dashed border-card-border rounded-2xl">
               <span className="text-3xl block mb-3">📄</span>
-              <span className="text-[9px] font-black uppercase tracking-widest text-foreground/40">No se han emitido contratos digitales aún.</span>
+              <span className="text-2xs font-black uppercase tracking-widest text-foreground/40">No se han emitido contratos digitales aún.</span>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse min-w-[700px]">
                 <thead>
-                  <tr className="border-b border-card-border text-[8px] uppercase font-black tracking-widest text-foreground/45">
+                  <tr className="border-b border-card-border text-2xs uppercase font-black tracking-widest text-foreground/45">
                     <th className="pb-3 pl-2">Contrato</th>
                     <th className="pb-3">Involucrados</th>
                     <th className="pb-3">Estatus</th>
@@ -684,7 +684,7 @@ export default function CustomContractsManager({
                 </thead>
                 <tbody className="divide-y divide-card-border/50">
                   {contracts.map((contract) => (
-                    <tr key={contract.id} className="text-[10px] hover:bg-foreground/[0.02] transition-colors">
+                    <tr key={contract.id} className="text-2xs hover:bg-foreground/[0.02] transition-colors">
                       <td className="py-4 pl-2 font-bold max-w-[200px] truncate">
                         <button
                           type="button"
@@ -713,7 +713,7 @@ export default function CustomContractsManager({
                         </div>
                       </td>
                       <td className="py-4">
-                        <span className={`text-[8px] px-2.5 py-1 rounded-full font-black uppercase tracking-wider ${
+                        <span className={`text-2xs px-2.5 py-1 rounded-full font-black uppercase tracking-wider ${
                           contract.is_fully_signed
                             ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-300 border border-emerald-500/20'
                             : 'bg-foreground/5 text-foreground/50 border border-card-border'
@@ -728,7 +728,7 @@ export default function CustomContractsManager({
                             <button
                               type="button"
                               onClick={() => setPreviewContract(contract)}
-                              className="bg-[#C68A1E]/10 hover:bg-[#C68A1E]/20 border border-[#C68A1E]/30 text-[#C68A1E] text-[8px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl transition-all inline-block cursor-pointer"
+                              className="bg-[#C68A1E]/10 hover:bg-[#C68A1E]/20 border border-[#C68A1E]/30 text-[#C68A1E] text-2xs font-black uppercase tracking-widest px-3 py-1.5 rounded-xl transition-all inline-block cursor-pointer"
                             >
                               👁️ Vista Previa
                             </button>
@@ -736,7 +736,7 @@ export default function CustomContractsManager({
                               href={contract.pdf_file}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="bg-foreground/5 hover:bg-foreground/10 border border-card-border text-foreground text-[8px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl transition-all inline-block"
+                              className="bg-foreground/5 hover:bg-foreground/10 border border-card-border text-foreground text-2xs font-black uppercase tracking-widest px-3 py-1.5 rounded-xl transition-all inline-block"
                             >
                               Descargar PDF
                             </a>
@@ -752,7 +752,7 @@ export default function CustomContractsManager({
                                 showToast(`Enlace de firma de ${pending.name} copiado al portapapeles.`, 'info');
                               }
                             }}
-                            className="text-[8px] bg-yellow-500/10 border border-yellow-500/20 text-yellow-600 dark:text-yellow-400 font-black uppercase tracking-widest px-3 py-1.5 rounded-xl hover:bg-yellow-500/20 active:scale-95 transition-all cursor-pointer inline-block"
+                            className="text-2xs bg-yellow-500/10 border border-yellow-500/20 text-yellow-600 dark:text-yellow-400 font-black uppercase tracking-widest px-3 py-1.5 rounded-xl hover:bg-yellow-500/20 active:scale-95 transition-all cursor-pointer inline-block"
                           >
                             Copiar Liga
                           </button>
@@ -760,7 +760,7 @@ export default function CustomContractsManager({
                         <button
                           disabled={resendingId === contract.id}
                           onClick={() => handleResendEmail(contract.id)}
-                          className="text-[8px] bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 font-black uppercase tracking-widest px-3 py-1.5 rounded-xl hover:bg-blue-500/20 active:scale-95 transition-all cursor-pointer disabled:opacity-50 inline-block"
+                          className="text-2xs bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 font-black uppercase tracking-widest px-3 py-1.5 rounded-xl hover:bg-blue-500/20 active:scale-95 transition-all cursor-pointer disabled:opacity-50 inline-block"
                         >
                           {resendingId === contract.id ? 'Reenviando...' : 'Reenviar Correo'}
                         </button>
@@ -777,19 +777,19 @@ export default function CustomContractsManager({
         <form onSubmit={handleSubmitContract} className="bg-foreground/[0.02] dark:bg-white/[0.02] border border-card-border rounded-3xl p-6 space-y-6">
           <div className="flex justify-between items-center border-b border-card-border pb-4">
             <h3 className="text-xs font-black uppercase tracking-widest text-foreground">Crear Contrato en Caliente</h3>
-            <span className="text-[8px] text-foreground/45">Puedes cargar una plantilla de la pestaña de plantillas para rellenar este editor</span>
+            <span className="text-2xs text-foreground/45">Puedes cargar una plantilla de la pestaña de plantillas para rellenar este editor</span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-4">
               {/* Toggle Creation Mode */}
               <div className="space-y-1">
-                <label className="text-[8px] uppercase tracking-wider font-black text-foreground/60 block">Método de Creación</label>
+                <label className="text-2xs uppercase tracking-wider font-black text-foreground/60 block">Método de Creación</label>
                 <div className="flex bg-background border border-card-border rounded-2xl p-1 gap-1 w-full sm:w-fit">
                   <button
                     type="button"
                     onClick={() => setCreationMode('editor')}
-                    className={`px-3 py-1.5 rounded-xl text-[8px] font-black uppercase tracking-wider transition-all flex-1 sm:flex-initial cursor-pointer ${
+                    className={`px-3 py-1.5 rounded-xl text-2xs font-black uppercase tracking-wider transition-all flex-1 sm:flex-initial cursor-pointer ${
                       creationMode === 'editor' ? 'bg-[#C68A1E] text-black' : 'text-foreground/60 hover:text-foreground'
                     }`}
                   >
@@ -798,7 +798,7 @@ export default function CustomContractsManager({
                   <button
                     type="button"
                     onClick={() => setCreationMode('pdf')}
-                    className={`px-3 py-1.5 rounded-xl text-[8px] font-black uppercase tracking-wider transition-all flex-1 sm:flex-initial cursor-pointer ${
+                    className={`px-3 py-1.5 rounded-xl text-2xs font-black uppercase tracking-wider transition-all flex-1 sm:flex-initial cursor-pointer ${
                       creationMode === 'pdf' ? 'bg-[#C68A1E] text-black' : 'text-foreground/60 hover:text-foreground'
                     }`}
                   >
@@ -808,59 +808,59 @@ export default function CustomContractsManager({
               </div>
 
               <div className="space-y-1">
-                <label className="text-[8px] uppercase tracking-wider font-black text-foreground/60 block">Título del Contrato</label>
+                <label className="text-2xs uppercase tracking-wider font-black text-foreground/60 block">Título del Contrato</label>
                 <input
                   type="text"
                   required
                   placeholder="Ej. Contrato de Prestación de Servicios de Consultoría"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  className="w-full bg-background border border-card-border rounded-2xl px-4 py-3 text-[10px] text-foreground focus:outline-none focus:border-foreground/35 transition-all font-mono"
+                  className="w-full bg-background border border-card-border rounded-2xl px-4 py-3 text-2xs text-foreground focus:outline-none focus:border-foreground/35 transition-all font-mono"
                 />
               </div>
 
               {creationMode === 'editor' ? (
                 <>
                   <div className="space-y-1">
-                    <label className="text-[8px] uppercase tracking-wider font-black text-foreground/60 block">Proemio (Introducción Legal)</label>
+                    <label className="text-2xs uppercase tracking-wider font-black text-foreground/60 block">Proemio (Introducción Legal)</label>
                     <textarea
                       required={creationMode === 'editor'}
                       rows={4}
                       placeholder="Ej. Contrato que celebran por una parte..."
                       value={proemio}
                       onChange={(e) => setProemio(e.target.value)}
-                      className="w-full bg-background border border-card-border rounded-2xl p-4 text-[10px] text-foreground focus:outline-none focus:border-foreground/35 transition-all font-mono resize-none"
+                      className="w-full bg-background border border-card-border rounded-2xl p-4 text-2xs text-foreground focus:outline-none focus:border-foreground/35 transition-all font-mono resize-none"
                     />
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[8px] uppercase tracking-wider font-black text-foreground/60 block">Declaraciones</label>
+                    <label className="text-2xs uppercase tracking-wider font-black text-foreground/60 block">Declaraciones</label>
                     <textarea
                       required={creationMode === 'editor'}
                       rows={6}
                       placeholder="Ej. I. Declara el Prestador que es una persona física...\nII. Declara el Cliente que..."
                       value={declarations}
                       onChange={(e) => setDeclarations(e.target.value)}
-                      className="w-full bg-background border border-card-border rounded-2xl p-4 text-[10px] text-foreground focus:outline-none focus:border-foreground/35 transition-all font-mono resize-none"
+                      className="w-full bg-background border border-card-border rounded-2xl p-4 text-2xs text-foreground focus:outline-none focus:border-foreground/35 transition-all font-mono resize-none"
                     />
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[8px] uppercase tracking-wider font-black text-foreground/60 block">Cláusulas del Contrato</label>
+                    <label className="text-2xs uppercase tracking-wider font-black text-foreground/60 block">Cláusulas del Contrato</label>
                     <textarea
                       required={creationMode === 'editor'}
                       rows={8}
                       placeholder="Ej. PRIMERA. OBJETO: ...\nSEGUNDA. HONORARIOS: ..."
                       value={clauses}
                       onChange={(e) => setClauses(e.target.value)}
-                      className="w-full bg-background border border-card-border rounded-2xl p-4 text-[10px] text-foreground focus:outline-none focus:border-foreground/35 transition-all font-mono resize-none"
+                      className="w-full bg-background border border-card-border rounded-2xl p-4 text-2xs text-foreground focus:outline-none focus:border-foreground/35 transition-all font-mono resize-none"
                     />
                   </div>
                 </>
               ) : (
                 <div className="space-y-4">
                   <div className="space-y-1">
-                    <label className="text-[8px] uppercase tracking-wider font-black text-foreground/60 block">Archivo PDF del Contrato</label>
+                    <label className="text-2xs uppercase tracking-wider font-black text-foreground/60 block">Archivo PDF del Contrato</label>
                     <div className="border border-dashed border-card-border/80 hover:border-[#C68A1E]/50 rounded-2xl p-6 text-center cursor-pointer transition-colors relative bg-background/20">
                       <input
                         type="file"
@@ -873,9 +873,9 @@ export default function CustomContractsManager({
                       />
                       <span className="text-2xl block mb-2">📁</span>
                       {pdfFile ? (
-                        <p className="text-[9px] font-bold text-foreground font-mono">{pdfFile.name} ({(pdfFile.size / 1024 / 1024).toFixed(2)} MB)</p>
+                        <p className="text-2xs font-bold text-foreground font-mono">{pdfFile.name} ({(pdfFile.size / 1024 / 1024).toFixed(2)} MB)</p>
                       ) : (
-                        <p className="text-[8px] uppercase tracking-widest text-foreground/50 font-black">Selecciona o suelta tu archivo PDF aquí</p>
+                        <p className="text-2xs uppercase tracking-widest text-foreground/50 font-black">Selecciona o suelta tu archivo PDF aquí</p>
                       )}
                     </div>
                   </div>
@@ -887,7 +887,7 @@ export default function CustomContractsManager({
                       </span>
                       {pdfPages.map((page, idx) => (
                         <div key={idx} className="relative">
-                          <span className="text-[7px] font-black font-mono text-foreground/35 block text-center mb-1">
+                          <span className="text-2xs font-black font-mono text-foreground/35 block text-center mb-1">
                             PÁGINA {idx + 1} DE {pdfPages.length}
                           </span>
                           <PdfPageCanvas
@@ -910,11 +910,11 @@ export default function CustomContractsManager({
             {/* Firmantes e Involucrados */}
             <div className="space-y-4 bg-foreground/[0.01] dark:bg-white/[0.01] border border-card-border p-6 rounded-3xl h-fit">
               <div className="flex justify-between items-center">
-                <label className="text-[8px] uppercase tracking-wider font-black text-foreground/60 block">Personas Involucradas (Firmantes)</label>
+                <label className="text-2xs uppercase tracking-wider font-black text-foreground/60 block">Personas Involucradas (Firmantes)</label>
                 <button
                   type="button"
                   onClick={addSignatory}
-                  className="text-[8px] font-black uppercase tracking-widest bg-foreground/5 border border-card-border px-3 py-1.5 rounded-xl hover:bg-foreground/10 active:scale-95 transition-all cursor-pointer text-foreground"
+                  className="text-2xs font-black uppercase tracking-widest bg-foreground/5 border border-card-border px-3 py-1.5 rounded-xl hover:bg-foreground/10 active:scale-95 transition-all cursor-pointer text-foreground"
                 >
                   + Agregar Firmante
                 </button>
@@ -933,7 +933,7 @@ export default function CustomContractsManager({
                         ✕
                       </button>
                     )}
-                    <span className="text-[8px] bg-foreground/5 px-2 py-0.5 rounded text-foreground/45 font-bold uppercase">
+                    <span className="text-2xs bg-foreground/5 px-2 py-0.5 rounded text-foreground/45 font-bold uppercase">
                       Firmante #{idx + 1}
                     </span>
 
@@ -946,7 +946,7 @@ export default function CustomContractsManager({
                           placeholder="Nombre"
                           value={sig.name}
                           onChange={(e) => handleSignatoryChange(idx, 'name', e.target.value)}
-                          className="w-full bg-background border border-card-border rounded-xl px-3 py-2 text-[9px] text-foreground focus:outline-none focus:border-foreground/35"
+                          className="w-full bg-background border border-card-border rounded-xl px-3 py-2 text-2xs text-foreground focus:outline-none focus:border-foreground/35"
                         />
                       </div>
                       <div className="space-y-1">
@@ -957,7 +957,7 @@ export default function CustomContractsManager({
                           placeholder="Ej. Arrendador, Aval, Testigo"
                           value={sig.role}
                           onChange={(e) => handleSignatoryChange(idx, 'role', e.target.value)}
-                          className="w-full bg-background border border-card-border rounded-xl px-3 py-2 text-[9px] text-foreground focus:outline-none focus:border-foreground/35"
+                          className="w-full bg-background border border-card-border rounded-xl px-3 py-2 text-2xs text-foreground focus:outline-none focus:border-foreground/35"
                         />
                       </div>
                     </div>
@@ -970,7 +970,7 @@ export default function CustomContractsManager({
                         placeholder="destinatario@correo.com"
                         value={sig.email}
                         onChange={(e) => handleSignatoryChange(idx, 'email', e.target.value)}
-                        className="w-full bg-background border border-card-border rounded-xl px-3 py-2 text-[9px] text-foreground focus:outline-none focus:border-foreground/35"
+                        className="w-full bg-background border border-card-border rounded-xl px-3 py-2 text-2xs text-foreground focus:outline-none focus:border-foreground/35"
                       />
                     </div>
                   </div>
@@ -998,12 +998,12 @@ export default function CustomContractsManager({
                         title={!(sig.name && sig.email) ? "Completa el nombre y correo del firmante para poder ubicar su firma." : "Arrastra al PDF"}
                       >
                         <div className="truncate max-w-[70%]">
-                          <span className="text-[7px] bg-[#C68A1E]/20 text-[#C68A1E] px-1.5 py-0.5 rounded font-black uppercase mr-1.5">{sig.role || 'Firmante'}</span>
-                          <span className="font-bold text-[9px] text-foreground">{sig.name || `Firmante #${idx + 1}`}</span>
+                          <span className="text-2xs bg-[#C68A1E]/20 text-[#C68A1E] px-1.5 py-0.5 rounded font-black uppercase mr-1.5">{sig.role || 'Firmante'}</span>
+                          <span className="font-bold text-2xs text-foreground">{sig.name || `Firmante #${idx + 1}`}</span>
                         </div>
                         {sig.sig_page ? (
                           <div className="flex items-center gap-1.5">
-                            <span className="text-[7px] bg-green-500/10 text-green-400 border border-green-500/25 px-2 py-0.5 rounded-full font-black font-mono">
+                            <span className="text-2xs bg-green-500/10 text-green-400 border border-green-500/25 px-2 py-0.5 rounded-full font-black font-mono">
                               Pág. {sig.sig_page}
                             </span>
                             <button
@@ -1017,14 +1017,14 @@ export default function CustomContractsManager({
                                   return s;
                                 }));
                               }}
-                              className="text-[7px] text-red-400 hover:text-red-500 font-bold px-1.5 py-0.5 bg-red-500/10 border border-red-500/20 rounded cursor-pointer"
+                              className="text-2xs text-red-400 hover:text-red-500 font-bold px-1.5 py-0.5 bg-red-500/10 border border-red-500/20 rounded cursor-pointer"
                               title="Retirar firma del PDF"
                             >
                               Retirar
                             </button>
                           </div>
                         ) : (
-                          <span className="text-[7px] bg-red-500/10 text-red-400 border border-red-500/25 px-2 py-0.5 rounded-full font-black font-mono">
+                          <span className="text-2xs bg-red-500/10 text-red-400 border border-red-500/25 px-2 py-0.5 rounded-full font-black font-mono">
                             Sin ubicar
                           </span>
                         )}
@@ -1038,7 +1038,7 @@ export default function CustomContractsManager({
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="w-full py-4 text-black text-[10px] font-black uppercase tracking-widest rounded-2xl hover:scale-[1.02] active:scale-95 disabled:opacity-40 disabled:scale-100 transition-all font-bold cursor-pointer"
+                  className="w-full py-4 text-black text-2xs font-black uppercase tracking-widest rounded-2xl hover:scale-[1.02] active:scale-95 disabled:opacity-40 disabled:scale-100 transition-all font-bold cursor-pointer"
                   style={{ backgroundColor: primaryColor }}
                 >
                   {submitting ? 'Generando Contrato y Enviando...' : 'Emitir Contrato y Notificar 🚀'}
@@ -1058,7 +1058,7 @@ export default function CustomContractsManager({
                 <button
                   type="button"
                   onClick={() => setIsCreatingTemplate(false)}
-                  className="text-[8px] font-black uppercase tracking-widest bg-foreground/5 border border-card-border px-3 py-1.5 rounded-xl hover:bg-foreground/10 cursor-pointer text-foreground"
+                  className="text-2xs font-black uppercase tracking-widest bg-foreground/5 border border-card-border px-3 py-1.5 rounded-xl hover:bg-foreground/10 cursor-pointer text-foreground"
                 >
                   Volver a Plantillas
                 </button>
@@ -1067,54 +1067,54 @@ export default function CustomContractsManager({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
                   <div className="space-y-1">
-                    <label className="text-[8px] uppercase tracking-wider font-black text-foreground/60 block">Nombre de la Plantilla</label>
+                    <label className="text-2xs uppercase tracking-wider font-black text-foreground/60 block">Nombre de la Plantilla</label>
                     <input
                       type="text"
                       required
                       placeholder="Ej. Plantilla Arrendamiento Base"
                       value={tplTitle}
                       onChange={(e) => setTplTitle(e.target.value)}
-                      className="w-full bg-background border border-card-border rounded-2xl px-4 py-3 text-[10px] text-foreground focus:outline-none focus:border-foreground/35 transition-all font-mono"
+                      className="w-full bg-background border border-card-border rounded-2xl px-4 py-3 text-2xs text-foreground focus:outline-none focus:border-foreground/35 transition-all font-mono"
                     />
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[8px] uppercase tracking-wider font-black text-foreground/60 block">Proemio Predeterminado</label>
+                    <label className="text-2xs uppercase tracking-wider font-black text-foreground/60 block">Proemio Predeterminado</label>
                     <textarea
                       required
                       rows={4}
                       value={tplProemio}
                       onChange={(e) => setTplProemio(e.target.value)}
-                      className="w-full bg-background border border-card-border rounded-2xl p-4 text-[10px] text-foreground focus:outline-none focus:border-foreground/35"
+                      className="w-full bg-background border border-card-border rounded-2xl p-4 text-2xs text-foreground focus:outline-none focus:border-foreground/35"
                     />
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[8px] uppercase tracking-wider font-black text-foreground/60 block">Declaraciones Predeterminadas</label>
+                    <label className="text-2xs uppercase tracking-wider font-black text-foreground/60 block">Declaraciones Predeterminadas</label>
                     <textarea
                       required
                       rows={5}
                       value={tplDeclarations}
                       onChange={(e) => setTplDeclarations(e.target.value)}
-                      className="w-full bg-background border border-card-border rounded-2xl p-4 text-[10px] text-foreground focus:outline-none focus:border-foreground/35"
+                      className="w-full bg-background border border-card-border rounded-2xl p-4 text-2xs text-foreground focus:outline-none focus:border-foreground/35"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-4">
                   <div className="space-y-1">
-                    <label className="text-[8px] uppercase tracking-wider font-black text-foreground/60 block">Cláusulas Predeterminadas</label>
+                    <label className="text-2xs uppercase tracking-wider font-black text-foreground/60 block">Cláusulas Predeterminadas</label>
                     <textarea
                       required
                       rows={10}
                       value={tplClauses}
                       onChange={(e) => setTplClauses(e.target.value)}
-                      className="w-full bg-background border border-card-border rounded-2xl p-4 text-[10px] text-foreground focus:outline-none focus:border-foreground/35"
+                      className="w-full bg-background border border-card-border rounded-2xl p-4 text-2xs text-foreground focus:outline-none focus:border-foreground/35"
                     />
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[8px] uppercase tracking-wider font-black text-foreground/60 block">Número de Firmantes Requeridos</label>
+                    <label className="text-2xs uppercase tracking-wider font-black text-foreground/60 block">Número de Firmantes Requeridos</label>
                     <input
                       type="number"
                       required
@@ -1122,14 +1122,14 @@ export default function CustomContractsManager({
                       max={10}
                       value={tplSignatoriesCount}
                       onChange={(e) => setTplSignatoriesCount(parseInt(e.target.value) || 2)}
-                      className="w-full bg-background border border-card-border rounded-2xl px-4 py-3 text-[10px] text-foreground focus:outline-none focus:border-foreground/35"
+                      className="w-full bg-background border border-card-border rounded-2xl px-4 py-3 text-2xs text-foreground focus:outline-none focus:border-foreground/35"
                     />
                   </div>
 
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="w-full mt-6 py-4 text-black text-[10px] font-black uppercase tracking-widest rounded-2xl hover:scale-[1.02] active:scale-95 disabled:opacity-40 transition-all font-bold cursor-pointer"
+                    className="w-full mt-6 py-4 text-black text-2xs font-black uppercase tracking-widest rounded-2xl hover:scale-[1.02] active:scale-95 disabled:opacity-40 transition-all font-bold cursor-pointer"
                     style={{ backgroundColor: primaryColor }}
                   >
                     {submitting ? 'Guardando Plantilla...' : 'Guardar Plantilla 💾'}
@@ -1145,7 +1145,7 @@ export default function CustomContractsManager({
                 <button
                   type="button"
                   onClick={() => setIsCreatingTemplate(true)}
-                  className="text-[8px] font-black uppercase tracking-widest text-black px-4 py-2 rounded-xl hover:scale-[1.03] transition-all cursor-pointer font-bold"
+                  className="text-2xs font-black uppercase tracking-widest text-black px-4 py-2 rounded-xl hover:scale-[1.03] transition-all cursor-pointer font-bold"
                   style={{ backgroundColor: primaryColor }}
                 >
                   + Nueva Plantilla
@@ -1155,7 +1155,7 @@ export default function CustomContractsManager({
               {templates.length === 0 ? (
                 <div className="py-20 text-center border border-dashed border-card-border rounded-2xl">
                   <span className="text-3xl block mb-3">🗂️</span>
-                  <span className="text-[9px] font-black uppercase tracking-widest text-foreground/30">No hay plantillas guardadas.</span>
+                  <span className="text-2xs font-black uppercase tracking-widest text-foreground/30">No hay plantillas guardadas.</span>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -1163,19 +1163,19 @@ export default function CustomContractsManager({
                     <div key={tpl.id} className="bg-card-bg border border-card-border rounded-2xl p-5 flex flex-col justify-between hover:border-foreground/20 transition-all">
                       <div>
                         <div className="flex justify-between items-start gap-2">
-                          <h4 className="text-[11px] font-black uppercase tracking-wider text-foreground truncate max-w-[150px]">{tpl.title}</h4>
-                          <span className="text-[7px] bg-foreground/5 border border-card-border px-2 py-0.5 rounded text-foreground/40 font-bold uppercase whitespace-nowrap">
+                          <h4 className="text-xs font-black uppercase tracking-wider text-foreground truncate max-w-[150px]">{tpl.title}</h4>
+                          <span className="text-2xs bg-foreground/5 border border-card-border px-2 py-0.5 rounded text-foreground/40 font-bold uppercase whitespace-nowrap">
                             {tpl.tenant ? 'Personalizada' : 'Néctar Labs'}
                           </span>
                         </div>
-                        <p className="text-[8px] text-foreground/45 uppercase tracking-wider mt-2">
+                        <p className="text-2xs text-foreground/45 uppercase tracking-wider mt-2">
                           Firmantes predeterminados: {tpl.signatories_count}
                         </p>
                       </div>
 
                       <button
                         onClick={() => handleSelectTemplate(tpl)}
-                        className="w-full mt-6 py-2.5 bg-foreground/5 hover:bg-foreground/10 text-foreground text-[8px] font-black uppercase tracking-widest rounded-xl border border-card-border hover:border-foreground/20 active:scale-95 transition-all cursor-pointer"
+                        className="w-full mt-6 py-2.5 bg-foreground/5 hover:bg-foreground/10 text-foreground text-2xs font-black uppercase tracking-widest rounded-xl border border-card-border hover:border-foreground/20 active:scale-95 transition-all cursor-pointer"
                       >
                         Utilizar Plantilla
                       </button>
@@ -1232,16 +1232,16 @@ const ContractPreviewModal = ({ contract, onClose }: { contract: any; onClose: (
         <button onClick={onClose} className="absolute top-5 right-5 w-8 h-8 bg-foreground/5 hover:bg-foreground/10 text-foreground/60 rounded-full flex items-center justify-center text-sm transition-all cursor-pointer">✕</button>
         
         <div>
-          <span className="text-[7px] bg-[#C68A1E]/15 text-[#C68A1E] px-2 py-0.5 rounded-full font-black uppercase tracking-wider">Vista Previa en Tiempo Real</span>
+          <span className="text-2xs bg-[#C68A1E]/15 text-[#C68A1E] px-2 py-0.5 rounded-full font-black uppercase tracking-wider">Vista Previa en Tiempo Real</span>
           <h2 className="text-xl font-black text-foreground mt-2 uppercase tracking-tight">{contract.title}</h2>
-          <p className="text-[8px] text-foreground/45 uppercase tracking-widest mt-0.5">Estatus de Firmas del Contrato</p>
+          <p className="text-2xs text-foreground/45 uppercase tracking-widest mt-0.5">Estatus de Firmas del Contrato</p>
         </div>
 
         <div className="flex-1 overflow-y-auto max-h-[50vh] border border-card-border/60 rounded-2xl p-4 bg-background/30 custom-scrollbar">
           {pdfPages.length > 0 ? (
             pdfPages.map((page, idx) => (
               <div key={idx} className="relative">
-                <span className="text-[7px] font-black font-mono text-foreground/35 block text-center mb-1">PÁGINA {idx + 1} DE {pdfPages.length}</span>
+                <span className="text-2xs font-black font-mono text-foreground/35 block text-center mb-1">PÁGINA {idx + 1} DE {pdfPages.length}</span>
                 <PdfPreviewPageCanvas
                   page={page}
                   pageIndex={idx}
@@ -1252,7 +1252,7 @@ const ContractPreviewModal = ({ contract, onClose }: { contract: any; onClose: (
           ) : (
             <div className="py-20 flex flex-col items-center justify-center gap-3">
               <div className="w-6 h-6 rounded-full border-2 border-t-foreground border-foreground/10 animate-spin" style={{ borderTopColor: '#C68A1E' }}></div>
-              <span className="text-[8px] font-black uppercase tracking-widest text-foreground/45">Cargando páginas del contrato...</span>
+              <span className="text-2xs font-black uppercase tracking-widest text-foreground/45">Cargando páginas del contrato...</span>
             </div>
           )}
         </div>
@@ -1271,7 +1271,7 @@ const ContractPreviewModal = ({ contract, onClose }: { contract: any; onClose: (
             </div>
           </div>
           {contract.pdf_file && (
-            <a href={contract.pdf_file} target="_blank" rel="noopener noreferrer" className="px-4 py-2 bg-[#C68A1E] hover:scale-105 active:scale-95 transition-all text-black text-[8px] font-black uppercase tracking-widest rounded-xl font-bold">
+            <a href={contract.pdf_file} target="_blank" rel="noopener noreferrer" className="px-4 py-2 bg-[#C68A1E] hover:scale-105 active:scale-95 transition-all text-black text-2xs font-black uppercase tracking-widest rounded-xl font-bold">
               Abrir PDF Completo
             </a>
           )}

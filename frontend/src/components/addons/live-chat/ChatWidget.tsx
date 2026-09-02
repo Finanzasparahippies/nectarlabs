@@ -310,7 +310,7 @@ export default function ChatWidget({
       {/* Chat Window */}
       {isOpen && (
         <div className="backdrop-blur-2xl border rounded-[2rem] shadow-2xl mb-4 w-[370px] overflow-hidden flex flex-col transition-all duration-300 widget-window widget-border"
-          style={{ height: '520px' }}>
+          className="h-[32.5rem]">
           
           {/* Header */}
           <div className="p-4 border-b flex justify-between items-center bg-white/[0.01] widget-header widget-border">
@@ -349,7 +349,7 @@ export default function ChatWidget({
           {/* Agent connected banner */}
           {isHumanAgentActive && (
             <div
-              className="px-4 py-2 flex items-center gap-2 text-[9px] font-black uppercase tracking-wider"
+              className="px-4 py-2 flex items-center gap-2 text-2xs font-black uppercase tracking-wider"
               style={{ backgroundColor: `${accentColor}18`, borderBottom: `1px solid ${accentColor}30`, color: accentColor }}
             >
               <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: accentColor }}></span>
@@ -370,17 +370,17 @@ export default function ChatWidget({
                   </svg>
                 </div>
                 <h5 className="font-black text-xs text-white mb-2 uppercase tracking-wider">¿Necesitas ayuda?</h5>
-                <p className="text-[10px] text-white/50 max-w-xs mb-6 leading-relaxed">
+                <p className="text-2xs text-white/50 max-w-xs mb-6 leading-relaxed">
                   {welcomeMessage}
                 </p>
-                <div className="text-[9px] text-white/30 mb-6 flex items-center gap-2">
+                <div className="text-2xs text-white/30 mb-6 flex items-center gap-2">
                   <span>🤖</span>
                   <span>Nuestro asistente IA responde al instante</span>
                 </div>
                 <button
                   onClick={handleStartChat}
                   disabled={isSubmitting}
-                  className="w-full py-3.5 text-black font-black uppercase tracking-widest text-[9px] rounded-2xl transition-all hover:scale-[1.01] active:scale-95 disabled:opacity-50 cursor-pointer"
+                  className="w-full py-3.5 text-black font-black uppercase tracking-widest text-2xs rounded-2xl transition-all hover:scale-[1.01] active:scale-95 disabled:opacity-50 cursor-pointer"
                   style={{ backgroundColor: primaryColor }}
                 >
                   {isSubmitting ? 'Iniciando...' : 'Iniciar Conversación'}
@@ -403,14 +403,14 @@ export default function ChatWidget({
                     <div key={msg.id} className={`flex msg-animate ${isMine ? 'justify-end' : 'justify-start'}`}>
                       {/* AI icon avatar */}
                       {isAI && (
-                        <div className="w-6 h-6 rounded-full flex items-center justify-center shrink-0 mr-2 mt-1 text-[10px]"
+                        <div className="w-6 h-6 rounded-full flex items-center justify-center shrink-0 mr-2 mt-1 text-2xs"
                           style={{ backgroundColor: `${primaryColor}18`, border: `1px solid ${primaryColor}30` }}>
                           🤖
                         </div>
                       )}
                       {/* Human agent avatar */}
                       {isAgent && !isAI && (
-                        <div className="w-6 h-6 rounded-full flex items-center justify-center shrink-0 mr-2 mt-1 text-[10px]"
+                        <div className="w-6 h-6 rounded-full flex items-center justify-center shrink-0 mr-2 mt-1 text-2xs"
                           style={{ backgroundColor: `${accentColor}18`, border: `1px solid ${accentColor}30` }}>
                           👤
                         </div>
@@ -427,17 +427,17 @@ export default function ChatWidget({
                         style={isMine ? { backgroundColor: primaryColor } : {}}
                       >
                         {isAI && (
-                          <p className="text-[7px] font-black uppercase tracking-wider mb-1 flex items-center gap-1" style={{ color: primaryColor }}>
+                          <p className="text-2xs font-black uppercase tracking-wider mb-1 flex items-center gap-1" style={{ color: primaryColor }}>
                             <span>✦</span> Asistente IA
                           </p>
                         )}
                         {isAgent && (
-                          <p className="text-[7px] font-black uppercase tracking-wider mb-1 flex items-center gap-1" style={{ color: accentColor }}>
+                          <p className="text-2xs font-black uppercase tracking-wider mb-1 flex items-center gap-1" style={{ color: accentColor }}>
                             🛠️ Agente de Soporte
                           </p>
                         )}
-                        <p className="text-[11px] font-medium leading-relaxed whitespace-pre-wrap">{msg.message}</p>
-                        <p className={`text-[6px] font-bold text-right mt-1 opacity-40 ${isMine ? 'text-black' : 'text-white'}`}>
+                        <p className="text-xs font-medium leading-relaxed whitespace-pre-wrap">{msg.message}</p>
+                        <p className={`text-2xs font-bold text-right mt-1 opacity-40 ${isMine ? 'text-black' : 'text-white'}`}>
                           {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </p>
                       </div>
@@ -448,7 +448,7 @@ export default function ChatWidget({
                 {/* AI Typing Indicator */}
                 {isAiTyping && (
                   <div className="flex justify-start items-end gap-2 msg-animate">
-                    <div className="w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-[10px]"
+                    <div className="w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-2xs"
                       style={{ backgroundColor: `${primaryColor}18`, border: `1px solid ${primaryColor}30` }}>
                       🤖
                     </div>
@@ -493,7 +493,7 @@ export default function ChatWidget({
           {/* Closed chat banner */}
           {activeChat?.status === 'CLOSED' && (
             <div className="p-3 text-center border-t widget-border">
-              <p className="text-[9px] font-black uppercase tracking-wider text-white/30">
+              <p className="text-2xs font-black uppercase tracking-wider text-white/30">
                 Sesión finalizada · Crea un nuevo ticket si necesitas más ayuda
               </p>
             </div>
@@ -520,7 +520,7 @@ export default function ChatWidget({
         
         {hasNewMessages && !isOpen && (
           <span 
-            className="absolute top-0 right-0 w-4 h-4 bg-red-500 rounded-full border-2 flex items-center justify-center text-[7px] font-black text-white animate-bounce"
+            className="absolute top-0 right-0 w-4 h-4 bg-red-500 rounded-full border-2 flex items-center justify-center text-2xs font-black text-white animate-bounce"
             style={{ borderColor: bgColor }}
           >
             !

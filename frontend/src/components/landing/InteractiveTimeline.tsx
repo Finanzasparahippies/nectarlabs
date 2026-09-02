@@ -35,7 +35,7 @@ export default function InteractiveTimeline() {
         <h2 className="relative text-3xl sm:text-5xl md:text-8xl font-black mb-4 tracking-tighter text-nectar-forest dark:text-nectar-cream leading-none z-10">
           Nuestra <span className="text-nectar-gold">Hoja de Ruta</span>
         </h2>
-        <p className="text-[10px] text-nectar-gold font-black uppercase tracking-[0.5em] relative z-10">Ingeniería Predictiva</p>
+        <p className="text-2xs text-nectar-gold font-black uppercase tracking-[0.5em] relative z-10">Ingeniería Predictiva</p>
       </div>
 
       <div className="relative">

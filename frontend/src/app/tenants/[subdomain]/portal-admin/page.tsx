@@ -2033,7 +2033,7 @@ export default function TenantAdminPage() {
               Estás disfrutando de todos los add-ons activos gracias a tu prueba gratuita. Te quedan <strong className="text-emerald-400 font-mono text-sm">{trialStatus.daysLeft}</strong> días para seguir probando la plataforma.
             </p>
           </div>
-          <div className="px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-[10px] font-black uppercase tracking-wider text-emerald-400 shrink-0">
+          <div className="px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-2xs font-black uppercase tracking-wider text-emerald-400 shrink-0">
             Días Restantes: {trialStatus.daysLeft}
           </div>
         </div>
@@ -2109,11 +2109,11 @@ export default function TenantAdminPage() {
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-sm font-black uppercase tracking-tight text-white">{tenantConfig.name}</h1>
-                <span className="px-2 py-0.5 bg-nectar-gold/10 text-nectar-gold border border-nectar-gold/20 text-[6px] font-black rounded-full uppercase tracking-wider">
+                <span className="px-2 py-0.5 bg-nectar-gold/10 text-nectar-gold border border-nectar-gold/20 text-2xs font-black rounded-full uppercase tracking-wider">
                   Admin Panel
                 </span>
               </div>
-              <p className="text-[8px] uppercase tracking-widest font-black opacity-50 mt-0.5">Control de Configuración y Add-ons</p>
+              <p className="text-2xs uppercase tracking-widest font-black opacity-50 mt-0.5">Control de Configuración y Add-ons</p>
             </div>
           </div>
 
@@ -2129,7 +2129,7 @@ export default function TenantAdminPage() {
             )}
             <button
               onClick={() => setActiveTab('metrics')}
-              className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border cursor-pointer"
+              className="px-4 py-2 rounded-xl text-2xs font-black uppercase tracking-wider transition-all border cursor-pointer"
               style={{
                 backgroundColor: activeTab === 'metrics' ? `${primaryColor}15` : 'transparent',
                 borderColor: activeTab === 'metrics' ? primaryColor : 'transparent',
@@ -2140,7 +2140,7 @@ export default function TenantAdminPage() {
             </button>
             <button
               onClick={() => setActiveTab('branding')}
-              className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border cursor-pointer"
+              className="px-4 py-2 rounded-xl text-2xs font-black uppercase tracking-wider transition-all border cursor-pointer"
               style={{
                 backgroundColor: activeTab === 'branding' ? `${primaryColor}15` : 'transparent',
                 borderColor: activeTab === 'branding' ? primaryColor : 'transparent',
@@ -2151,7 +2151,7 @@ export default function TenantAdminPage() {
             </button>
             <button
               onClick={() => setActiveTab('billing')}
-              className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border cursor-pointer"
+              className="px-4 py-2 rounded-xl text-2xs font-black uppercase tracking-wider transition-all border cursor-pointer"
               style={{
                 backgroundColor: activeTab === 'billing' ? `${primaryColor}15` : 'transparent',
                 borderColor: activeTab === 'billing' ? primaryColor : 'transparent',
@@ -2163,7 +2163,7 @@ export default function TenantAdminPage() {
             {tenantConfig?.active_addons?.includes('booking-signature') && (
               <button
                 onClick={() => setActiveTab('contracts')}
-                className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border cursor-pointer"
+                className="px-4 py-2 rounded-xl text-2xs font-black uppercase tracking-wider transition-all border cursor-pointer"
                 style={{
                   backgroundColor: activeTab === 'contracts' ? `${primaryColor}15` : 'transparent',
                   borderColor: activeTab === 'contracts' ? primaryColor : 'transparent',
@@ -2176,7 +2176,7 @@ export default function TenantAdminPage() {
             <button
 
               onClick={() => setActiveTab('integrations')}
-              className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border cursor-pointer"
+              className="px-4 py-2 rounded-xl text-2xs font-black uppercase tracking-wider transition-all border cursor-pointer"
               style={{
                 backgroundColor: activeTab === 'integrations' ? `${primaryColor}15` : 'transparent',
                 borderColor: activeTab === 'integrations' ? primaryColor : 'transparent',
@@ -2188,7 +2188,7 @@ export default function TenantAdminPage() {
             {tenantConfig?.active_addons?.some((a: string) => ['pos-system', 'pos-sales'].includes(a)) && (
               <button
                 onClick={() => setActiveTab('pos')}
-                className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border cursor-pointer"
+                className="px-4 py-2 rounded-xl text-2xs font-black uppercase tracking-wider transition-all border cursor-pointer"
                 style={{
                   backgroundColor: activeTab === 'pos' ? `${primaryColor}15` : 'transparent',
                   borderColor: activeTab === 'pos' ? primaryColor : 'transparent',
@@ -2202,7 +2202,7 @@ export default function TenantAdminPage() {
               <>
                 <button
                   onClick={() => setActiveTab('products')}
-                  className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border cursor-pointer"
+                  className="px-4 py-2 rounded-xl text-2xs font-black uppercase tracking-wider transition-all border cursor-pointer"
                   style={{
                     backgroundColor: activeTab === 'products' ? `${primaryColor}15` : 'transparent',
                     borderColor: activeTab === 'products' ? primaryColor : 'transparent',
@@ -2213,7 +2213,7 @@ export default function TenantAdminPage() {
                 </button>
                 <button
                   onClick={() => setActiveTab('store-config')}
-                  className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border cursor-pointer"
+                  className="px-4 py-2 rounded-xl text-2xs font-black uppercase tracking-wider transition-all border cursor-pointer"
                   style={{
                     backgroundColor: activeTab === 'store-config' ? `${primaryColor}15` : 'transparent',
                     borderColor: activeTab === 'store-config' ? primaryColor : 'transparent',
@@ -2224,7 +2224,7 @@ export default function TenantAdminPage() {
                 </button>
                 <button
                   onClick={() => setActiveTab('delivery-config')}
-                  className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border cursor-pointer"
+                  className="px-4 py-2 rounded-xl text-2xs font-black uppercase tracking-wider transition-all border cursor-pointer"
                   style={{
                     backgroundColor: activeTab === 'delivery-config' ? `${primaryColor}15` : 'transparent',
                     borderColor: activeTab === 'delivery-config' ? primaryColor : 'transparent',
@@ -2241,7 +2241,7 @@ export default function TenantAdminPage() {
             <ThemeToggle />
             <button
               onClick={() => router.push('/dashboard')}
-              className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/10 rounded-xl text-[8px] font-black uppercase tracking-wider transition-all text-white/80"
+              className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/10 rounded-xl text-2xs font-black uppercase tracking-wider transition-all text-white/80"
             >
               Volver a Néctar
             </button>
@@ -2303,7 +2303,7 @@ export default function TenantAdminPage() {
                 </p>
               </div>
               <div className="px-4 py-2 bg-foreground/5 rounded-2xl border border-white/5 flex flex-col items-center shrink-0">
-                <span className="text-[7px] uppercase font-black tracking-widest text-white/40">Add-ons Contratados</span>
+                <span className="text-2xs uppercase font-black tracking-widest text-white/40">Add-ons Contratados</span>
                 <span className="text-xl font-black text-nectar-gold mt-1">{uniqueActiveAddons.length} / 9</span>
               </div>
             </div>
@@ -2331,9 +2331,9 @@ export default function TenantAdminPage() {
                   {/* Mock Bar Chart */}
                   {[35, 42, 28, 55, 64, 48, 70].map((h, i) => (
                     <div key={i} className="w-[11%] flex flex-col items-center gap-1.5 group cursor-pointer">
-                      <span className="text-[7px] font-mono text-nectar-gold opacity-0 group-hover:opacity-100 transition-opacity">{h}</span>
+                      <span className="text-2xs font-mono text-nectar-gold opacity-0 group-hover:opacity-100 transition-opacity">{h}</span>
                       <div className="w-full bg-nectar-gold/10 group-hover:bg-nectar-gold/30 rounded-t-md transition-all duration-300" style={{ height: `${h}%` }}></div>
-                      <span className="text-[7px] text-white/30 uppercase font-black tracking-widest">{['L','M','X','J','V','S','D'][i]}</span>
+                      <span className="text-2xs text-white/30 uppercase font-black tracking-widest">{['L','M','X','J','V','S','D'][i]}</span>
                     </div>
                   ))}
                 </div>
@@ -2370,7 +2370,7 @@ export default function TenantAdminPage() {
                     <circle cx="90" cy="5" r="2.5" fill="#10B981" className="animate-ping origin-center" />
                     <circle cx="90" cy="5" r="1.5" fill="#FFFFFF" />
                   </svg>
-                  <div className="absolute bottom-0 inset-x-0 flex justify-between px-2 text-[6px] text-white/30 font-bold uppercase tracking-widest">
+                  <div className="absolute bottom-0 inset-x-0 flex justify-between px-2 text-2xs text-white/30 font-bold uppercase tracking-widest">
                     <span>Ene</span>
                     <span>Mar</span>
                     <span>May</span>
@@ -2395,7 +2395,7 @@ export default function TenantAdminPage() {
                 {/* Visual Route Mockup */}
                 <div className="h-28 flex flex-col justify-center px-4 space-y-3 pt-2">
                   <div className="space-y-1">
-                    <div className="flex justify-between text-[8px] font-bold">
+                    <div className="flex justify-between text-2xs font-bold">
                       <span className="text-white/60">Camión A-102 (En Ruta)</span>
                       <span className="text-nectar-gold font-mono">82%</span>
                     </div>
@@ -2404,7 +2404,7 @@ export default function TenantAdminPage() {
                     </div>
                   </div>
                   <div className="space-y-1">
-                    <div className="flex justify-between text-[8px] font-bold">
+                    <div className="flex justify-between text-2xs font-bold">
                       <span className="text-white/60">Camión B-305 (En Reparto)</span>
                       <span className="text-emerald-400 font-mono">94%</span>
                     </div>
@@ -2442,7 +2442,7 @@ export default function TenantAdminPage() {
                     <circle cx="100" cy="2" r="2.5" fill="#C68A1E" className="animate-ping origin-center" />
                     <circle cx="100" cy="2" r="1.5" fill="#FFFFFF" />
                   </svg>
-                  <div className="absolute bottom-0 inset-x-0 flex justify-between px-2 text-[6px] text-white/30 font-bold uppercase tracking-widest">
+                  <div className="absolute bottom-0 inset-x-0 flex justify-between px-2 text-2xs text-white/30 font-bold uppercase tracking-widest">
                     <span>Sem 1</span>
                     <span>Sem 2</span>
                     <span>Sem 3</span>
@@ -2472,11 +2472,11 @@ export default function TenantAdminPage() {
                       <path className="text-white/5" strokeWidth="3" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
                       <path className="text-emerald-400" strokeDasharray="98, 100" strokeWidth="3.2" strokeLinecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
                     </svg>
-                    <span className="absolute text-[8px] font-black text-emerald-400 font-mono">99.8%</span>
+                    <span className="absolute text-2xs font-black text-emerald-400 font-mono">99.8%</span>
                   </div>
                   <div className="flex-1 max-w-[120px] flex flex-col justify-center gap-2">
                     <div className="space-y-0.5">
-                      <div className="flex justify-between text-[7px] font-bold text-white/55">
+                      <div className="flex justify-between text-2xs font-bold text-white/55">
                         <span>CPU Load</span>
                         <span className="font-mono">24%</span>
                       </div>
@@ -2485,7 +2485,7 @@ export default function TenantAdminPage() {
                       </div>
                     </div>
                     <div className="space-y-0.5">
-                      <div className="flex justify-between text-[7px] font-bold text-white/55">
+                      <div className="flex justify-between text-2xs font-bold text-white/55">
                         <span>Memory</span>
                         <span className="font-mono">68%</span>
                       </div>
@@ -2518,13 +2518,13 @@ export default function TenantAdminPage() {
                         <path className="text-white/5" strokeWidth="3" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
                         <path className="text-nectar-gold" strokeDasharray={`${tenantConfig?.custom_smtp_host ? 100 : (parseFloat(String(tenantConfig?.shipping_wallet_balance ?? '0')) > 0 ? 100 : 0)}, 100`} strokeWidth="3.2" strokeLinecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
                       </svg>
-                      <span className="absolute text-[7px] font-black text-nectar-gold font-mono">
+                      <span className="absolute text-2xs font-black text-nectar-gold font-mono">
                         {tenantConfig?.custom_smtp_host ? '∞' : (parseFloat(String(tenantConfig?.shipping_wallet_balance ?? '0')) > 0 ? 'OK' : 'S/S')}
                       </span>
                     </div>
                     <div className="text-left space-y-0.5">
-                      <span className="text-[6px] uppercase font-black tracking-widest text-white/30 block">Envíos del Mes</span>
-                      <h4 className="text-[10px] font-black text-white font-mono leading-none">
+                      <span className="text-2xs uppercase font-black tracking-widest text-white/30 block">Envíos del Mes</span>
+                      <h4 className="text-2xs font-black text-white font-mono leading-none">
                         {tenantConfig?.newsletter_sent_this_month ?? 0} enviados
                       </h4>
                       <p className="text-[6.5px] text-white/40 font-bold font-bold">
@@ -2544,7 +2544,7 @@ export default function TenantAdminPage() {
                         setShowNewsletterModal(true);
                       }
                     }}
-                    className="w-full py-2 bg-nectar-gold text-background hover:bg-nectar-gold/90 rounded-xl text-[8px] font-black uppercase tracking-wider transition-all font-bold mt-2 shadow-md shadow-nectar-gold/10 cursor-pointer"
+                    className="w-full py-2 bg-nectar-gold text-background hover:bg-nectar-gold/90 rounded-xl text-2xs font-black uppercase tracking-wider transition-all font-bold mt-2 shadow-md shadow-nectar-gold/10 cursor-pointer"
                   >
                     🚀 Redactar Boletín / Nueva Campaña
                   </button>
@@ -2562,20 +2562,20 @@ export default function TenantAdminPage() {
               <div className="admin-card border rounded-[2.5rem] p-8 md:p-10 shadow-2xl relative overflow-hidden text-left space-y-6">
                 
                 <div>
-                  <span className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold text-[8px] font-black uppercase tracking-widest rounded-full border border-nectar-gold/20">
+                  <span className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold text-2xs font-black uppercase tracking-widest rounded-full border border-nectar-gold/20">
                     Estilo e Identidad
                   </span>
                   <h2 className="text-2xl font-black tracking-tighter mt-4 leading-none text-white">Ajustes de Marca</h2>
-                  <p className="text-[10px] opacity-40 uppercase tracking-widest mt-1">Configura cómo verán tus clientes el portal de soporte y tus addons</p>
+                  <p className="text-2xs opacity-40 uppercase tracking-widest mt-1">Configura cómo verán tus clientes el portal de soporte y tus addons</p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* General Configuration */}
                   <div className="space-y-4">
-                    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-nectar-gold border-b border-white/5 pb-2">Información General</h3>
+                    <h3 className="text-2xs font-black uppercase tracking-[0.2em] text-nectar-gold border-b border-white/5 pb-2">Información General</h3>
                     
                     <div className="space-y-1.5">
-                      <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Nombre del Negocio</label>
+                      <label className="text-2xs font-black uppercase tracking-widest opacity-40">Nombre del Negocio</label>
                       <input
                         type="text"
                         required
@@ -2586,7 +2586,7 @@ export default function TenantAdminPage() {
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Título del Portal Público</label>
+                      <label className="text-2xs font-black uppercase tracking-widest opacity-40">Título del Portal Público</label>
                       <input
                         type="text"
                         placeholder="Ej. Centro de Ayuda e Innovación"
@@ -2597,7 +2597,7 @@ export default function TenantAdminPage() {
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Mensaje de Bienvenida</label>
+                      <label className="text-2xs font-black uppercase tracking-widest opacity-40">Mensaje de Bienvenida</label>
                       <textarea
                         required
                         rows={3}
@@ -2608,7 +2608,7 @@ export default function TenantAdminPage() {
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Texto de Pie de Página (Footer)</label>
+                      <label className="text-2xs font-black uppercase tracking-widest opacity-40">Texto de Pie de Página (Footer)</label>
                       <input
                         type="text"
                         placeholder="Ej. Todos los derechos reservados."
@@ -2625,11 +2625,11 @@ export default function TenantAdminPage() {
                         onChange={(e) => setEditRequireCustomerInfo(e.target.checked)}
                         className="w-4 h-4 accent-nectar-gold"
                       />
-                      <span className="text-[10px] font-bold uppercase tracking-wide text-white/70">Requerir Nombre antes de Chatear</span>
+                      <span className="text-2xs font-bold uppercase tracking-wide text-white/70">Requerir Nombre antes de Chatear</span>
                     </label>
 
                     <div className="space-y-1.5 pt-2">
-                      <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Contexto Personalizado para la IA</label>
+                      <label className="text-2xs font-black uppercase tracking-widest opacity-40">Contexto Personalizado para la IA</label>
                       <textarea
                         rows={4}
                         placeholder="Ej. Eres el bot de una pizzería llamada 'Sushilo'. Ofrece nuestro menú que incluye pizzas y sushi. Nuestro horario es de 12:00 a 22:00."
@@ -2637,7 +2637,7 @@ export default function TenantAdminPage() {
                         onChange={(e) => setEditTenantContext(e.target.value)}
                         className="w-full border rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-nectar-gold transition-all admin-input resize-none"
                       />
-                      <p className="text-[8px] opacity-40 leading-normal">
+                      <p className="text-2xs opacity-40 leading-normal">
                         Proporciona reglas, contexto e información específica que utilizará el bot de asistencia de Inteligencia Artificial para responder a tus clientes.
                       </p>
                     </div>
@@ -2645,61 +2645,61 @@ export default function TenantAdminPage() {
 
                   {/* Visual Style Configuration */}
                   <div className="space-y-4">
-                    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-nectar-gold border-b border-white/5 pb-2">Colores de Interfaz (CSS Palette)</h3>
+                    <h3 className="text-2xs font-black uppercase tracking-[0.2em] text-nectar-gold border-b border-white/5 pb-2">Colores de Interfaz (CSS Palette)</h3>
                     
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-1.5">
-                        <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Color Primario</label>
+                        <label className="text-2xs font-black uppercase tracking-widest opacity-40">Color Primario</label>
                         <div className="flex gap-2">
                           <input type="color" value={editThemeColor} onChange={(e) => setEditThemeColor(e.target.value)} className="w-8 h-8 rounded border border-white/10 cursor-pointer bg-transparent" />
-                          <input type="text" value={editThemeColor} onChange={(e) => setEditThemeColor(e.target.value)} className="flex-1 border rounded-lg px-2 text-[10px] font-mono admin-input" />
+                          <input type="text" value={editThemeColor} onChange={(e) => setEditThemeColor(e.target.value)} className="flex-1 border rounded-lg px-2 text-2xs font-mono admin-input" />
                         </div>
                       </div>
 
                       <div className="space-y-1.5">
-                        <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Color Acento</label>
+                        <label className="text-2xs font-black uppercase tracking-widest opacity-40">Color Acento</label>
                         <div className="flex gap-2">
                           <input type="color" value={editAccentColor} onChange={(e) => setEditAccentColor(e.target.value)} className="w-8 h-8 rounded border border-white/10 cursor-pointer bg-transparent" />
-                          <input type="text" value={editAccentColor} onChange={(e) => setEditAccentColor(e.target.value)} className="flex-1 border rounded-lg px-2 text-[10px] font-mono admin-input" />
+                          <input type="text" value={editAccentColor} onChange={(e) => setEditAccentColor(e.target.value)} className="flex-1 border rounded-lg px-2 text-2xs font-mono admin-input" />
                         </div>
                       </div>
 
                       <div className="space-y-1.5">
-                        <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Fondo General</label>
+                        <label className="text-2xs font-black uppercase tracking-widest opacity-40">Fondo General</label>
                         <div className="flex gap-2">
                           <input type="color" value={editBgColor} onChange={(e) => setEditBgColor(e.target.value)} className="w-8 h-8 rounded border border-white/10 cursor-pointer bg-transparent" />
-                          <input type="text" value={editBgColor} onChange={(e) => setEditBgColor(e.target.value)} className="flex-1 border rounded-lg px-2 text-[10px] font-mono admin-input" />
+                          <input type="text" value={editBgColor} onChange={(e) => setEditBgColor(e.target.value)} className="flex-1 border rounded-lg px-2 text-2xs font-mono admin-input" />
                         </div>
                       </div>
 
                       <div className="space-y-1.5">
-                        <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Fondo Tarjetas</label>
+                        <label className="text-2xs font-black uppercase tracking-widest opacity-40">Fondo Tarjetas</label>
                         <div className="flex gap-2">
                           <input type="color" value={editCardBgColor} onChange={(e) => setEditCardBgColor(e.target.value)} className="w-8 h-8 rounded border border-white/10 cursor-pointer bg-transparent" />
-                          <input type="text" value={editCardBgColor} onChange={(e) => setEditCardBgColor(e.target.value)} className="flex-1 border rounded-lg px-2 text-[10px] font-mono admin-input" />
+                          <input type="text" value={editCardBgColor} onChange={(e) => setEditCardBgColor(e.target.value)} className="flex-1 border rounded-lg px-2 text-2xs font-mono admin-input" />
                         </div>
                       </div>
 
                       <div className="space-y-1.5">
-                        <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Color del Texto</label>
+                        <label className="text-2xs font-black uppercase tracking-widest opacity-40">Color del Texto</label>
                         <div className="flex gap-2">
                           <input type="color" value={editTextColor} onChange={(e) => setEditTextColor(e.target.value)} className="w-8 h-8 rounded border border-white/10 cursor-pointer bg-transparent" />
-                          <input type="text" value={editTextColor} onChange={(e) => setEditTextColor(e.target.value)} className="flex-1 border rounded-lg px-2 text-[10px] font-mono admin-input" />
+                          <input type="text" value={editTextColor} onChange={(e) => setEditTextColor(e.target.value)} className="flex-1 border rounded-lg px-2 text-2xs font-mono admin-input" />
                         </div>
                       </div>
 
                       <div className="space-y-1.5">
-                        <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Bordes / Divisiones</label>
+                        <label className="text-2xs font-black uppercase tracking-widest opacity-40">Bordes / Divisiones</label>
                         <div className="flex gap-2">
                           <input type="color" value={editBorderColor} onChange={(e) => setEditBorderColor(e.target.value)} className="w-8 h-8 rounded border border-white/10 cursor-pointer bg-transparent" />
-                          <input type="text" value={editBorderColor} onChange={(e) => setEditBorderColor(e.target.value)} className="flex-1 border rounded-lg px-2 text-[10px] font-mono admin-input" />
+                          <input type="text" value={editBorderColor} onChange={(e) => setEditBorderColor(e.target.value)} className="flex-1 border rounded-lg px-2 text-2xs font-mono admin-input" />
                         </div>
                       </div>
                     </div>
 
                     {/* Logo Section */}
                     <div className="space-y-2 pt-2">
-                      <label className="text-[8px] font-black uppercase tracking-widest opacity-40 block">Logotipo del Portal</label>
+                      <label className="text-2xs font-black uppercase tracking-widest opacity-40 block">Logotipo del Portal</label>
                       <div className="flex items-center gap-4">
                         {(editLogoPreview || editLogoUrl) ? (
                           <img src={editLogoPreview || editLogoUrl} alt="Logo Preview" className="w-14 h-14 rounded-2xl object-cover border border-white/10 bg-black/40 shrink-0" />
@@ -2718,7 +2718,7 @@ export default function TenantAdminPage() {
                           />
                           <label
                             htmlFor="logo-upload-input"
-                            className="inline-block px-4 py-2 border border-white/10 hover:border-nectar-gold bg-foreground/5 text-white text-[9px] font-black uppercase tracking-widest rounded-xl cursor-pointer hover:scale-102 active:scale-95 transition-all text-center"
+                            className="inline-block px-4 py-2 border border-white/10 hover:border-nectar-gold bg-foreground/5 text-white text-2xs font-black uppercase tracking-widest rounded-xl cursor-pointer hover:scale-102 active:scale-95 transition-all text-center"
                           >
                             Subir Logotipo
                           </label>
@@ -2731,7 +2731,7 @@ export default function TenantAdminPage() {
                               setEditLogoFile(null);
                               setEditLogoPreview(null);
                             }}
-                            className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input"
+                            className="w-full border rounded-xl px-3 py-2 text-2xs focus:outline-none focus:border-nectar-gold transition-all admin-input"
                           />
                         </div>
                       </div>
@@ -2743,7 +2743,7 @@ export default function TenantAdminPage() {
                   <button
                     type="submit"
                     disabled={isSaving}
-                    className="px-8 py-3.5 bg-nectar-gold text-background text-[10px] font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 disabled:opacity-40 disabled:scale-100 transition-all font-bold shadow-lg shadow-nectar-gold/25"
+                    className="px-8 py-3.5 bg-nectar-gold text-background text-2xs font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 disabled:opacity-40 disabled:scale-100 transition-all font-bold shadow-lg shadow-nectar-gold/25"
                   >
                     {isSaving ? 'Guardando Ajustes...' : 'Guardar Cambios'}
                   </button>
@@ -2809,7 +2809,7 @@ export default function TenantAdminPage() {
                   key={sub.id}
                   type="button"
                   onClick={() => setBillingSubTab(sub.id as any)}
-                  className={`px-5 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all duration-300 cursor-pointer ${
+                  className={`px-5 py-2.5 rounded-xl text-2xs font-black uppercase tracking-wider transition-all duration-300 cursor-pointer ${
                     billingSubTab === sub.id
                       ? 'text-background shadow-lg shadow-nectar-gold/15'
                       : 'text-white/50 hover:text-white hover:bg-white/5'
@@ -2847,20 +2847,20 @@ export default function TenantAdminPage() {
                   
                   <div className="border-b border-white/5 pb-4">
                     <h3 className="text-xs font-black uppercase tracking-widest text-white">Balance de Timbres</h3>
-                    <p className="text-[8px] text-white/40 uppercase tracking-wider mt-1">Control de consumo y paquetes</p>
+                    <p className="text-2xs text-white/40 uppercase tracking-wider mt-1">Control de consumo y paquetes</p>
                   </div>
 
                   {billingInfo?.is_ambassador ? (
                     <div className="space-y-3">
                       <div className="flex items-center justify-between p-4 rounded-2xl bg-white/[0.02] border border-white/5">
                         <div>
-                          <span className="text-[7px] uppercase font-black tracking-widest text-white/40 block">Esquema Actual</span>
-                          <span className="mt-1 inline-block px-2.5 py-0.5 border text-[7px] font-black uppercase tracking-widest rounded-full bg-nectar-gold/10 text-nectar-gold border-nectar-gold/20">
+                          <span className="text-2xs uppercase font-black tracking-widest text-white/40 block">Esquema Actual</span>
+                          <span className="mt-1 inline-block px-2.5 py-0.5 border text-2xs font-black uppercase tracking-widest rounded-full bg-nectar-gold/10 text-nectar-gold border-nectar-gold/20">
                             Embajador de Marca (Influencer)
                           </span>
                         </div>
                         <div className="text-right">
-                          <span className="text-[7px] uppercase font-black tracking-widest text-white/40 block">Timbres Totales</span>
+                          <span className="text-2xs uppercase font-black tracking-widest text-white/40 block">Timbres Totales</span>
                           <span className="text-xl font-black text-white font-mono mt-1 block">
                             {(billingInfo?.free_stamps_left ?? 0) + (billingInfo?.stamp_balance ?? 0)}
                           </span>
@@ -2868,11 +2868,11 @@ export default function TenantAdminPage() {
                       </div>
                       <div className="grid grid-cols-2 gap-3 p-4 rounded-2xl bg-white/[0.01] border border-white/5 text-center">
                         <div>
-                          <span className="text-[7px] uppercase font-black tracking-widest text-white/40 block">Timbres de Cortesía</span>
+                          <span className="text-2xs uppercase font-black tracking-widest text-white/40 block">Timbres de Cortesía</span>
                           <span className="text-sm font-black text-white font-mono mt-1 block">{(billingInfo?.free_stamps_left ?? 0)} / 20</span>
                         </div>
                         <div>
-                          <span className="text-[7px] uppercase font-black tracking-widest text-white/40 block">Timbres Adicionales</span>
+                          <span className="text-2xs uppercase font-black tracking-widest text-white/40 block">Timbres Adicionales</span>
                           <span className="text-sm font-black text-white font-mono mt-1 block">{(billingInfo?.stamp_balance ?? 0)}</span>
                         </div>
                       </div>
@@ -2880,14 +2880,14 @@ export default function TenantAdminPage() {
                   ) : (
                     <div className="flex items-center justify-between gap-4 p-4 rounded-2xl bg-white/[0.02] border border-white/5">
                       <div>
-                        <span className="text-[7px] uppercase font-black tracking-widest text-white/40 block">Timbres Disponibles</span>
+                        <span className="text-2xs uppercase font-black tracking-widest text-white/40 block">Timbres Disponibles</span>
                         <span className="text-3xl font-black text-white font-mono leading-none mt-1 block">
                           {billingInfo ? billingInfo.stamp_balance : 0}
                         </span>
                       </div>
                       <div className="text-right">
-                        <span className="text-[7px] uppercase font-black tracking-widest text-white/40 block">Esquema Actual</span>
-                        <span className="mt-1 inline-block px-2.5 py-0.5 border text-[7px] font-black uppercase tracking-widest rounded-full bg-nectar-gold/10 text-nectar-gold border-nectar-gold/20">
+                        <span className="text-2xs uppercase font-black tracking-widest text-white/40 block">Esquema Actual</span>
+                        <span className="mt-1 inline-block px-2.5 py-0.5 border text-2xs font-black uppercase tracking-widest rounded-full bg-nectar-gold/10 text-nectar-gold border-nectar-gold/20">
                           {billingInfo?.is_commercial_partner ? 'Socio Comercial' : 'Suscripción Add-on'}
                         </span>
                       </div>
@@ -2895,7 +2895,7 @@ export default function TenantAdminPage() {
                   )}
 
                   {/* Plan Description details */}
-                  <div className="text-[9px] text-white/50 leading-relaxed space-y-1.5 p-3 rounded-xl bg-white/[0.01] border border-white/5">
+                  <div className="text-2xs text-white/50 leading-relaxed space-y-1.5 p-3 rounded-xl bg-white/[0.01] border border-white/5">
                     {billingInfo?.is_ambassador ? (
                       <p>
                         ✨ Al ser **Embajador de Marca**, dispones de **20 timbres de cortesía al mes**. Si los consumes por completo, podrás seguir facturando adquiriendo timbres adicionales.
@@ -2913,7 +2913,7 @@ export default function TenantAdminPage() {
 
                   {/* Packages Section */}
                   <div className="space-y-3">
-                    <h4 className="text-[9px] font-black uppercase tracking-wider text-white">Adquirir Paquetes de Timbres</h4>
+                    <h4 className="text-2xs font-black uppercase tracking-wider text-white">Adquirir Paquetes de Timbres</h4>
                     <div className="grid grid-cols-3 gap-2">
                       {[
                         { size: 50, price: 75, desc: '50 Timbres' },
@@ -2926,16 +2926,16 @@ export default function TenantAdminPage() {
                           disabled={buyingPackage !== null}
                           className="flex flex-col items-center justify-between p-3 rounded-xl border border-white/5 hover:border-nectar-gold bg-white/[0.01] hover:bg-white/[0.03] transition-all cursor-pointer group text-center disabled:opacity-40"
                         >
-                          <span className="text-[8px] font-black text-white/70 group-hover:text-nectar-gold uppercase tracking-wider">
+                          <span className="text-2xs font-black text-white/70 group-hover:text-nectar-gold uppercase tracking-wider">
                             {pkg.desc}
                           </span>
                           <span className="text-xs font-black text-white font-mono mt-2">
                             ${pkg.price}
                           </span>
-                          <span className="text-[6px] text-white/30 uppercase font-black mt-1">
+                          <span className="text-2xs text-white/30 uppercase font-black mt-1">
                             MXN
                           </span>
-                          <div className="w-full mt-3 py-1 bg-white/5 group-hover:bg-nectar-gold group-hover:text-background text-white text-[6px] font-black uppercase tracking-wider rounded-md transition-all">
+                          <div className="w-full mt-3 py-1 bg-white/5 group-hover:bg-nectar-gold group-hover:text-background text-white text-2xs font-black uppercase tracking-wider rounded-md transition-all">
                             {buyingPackage === pkg.size ? 'Cargando...' : 'Comprar'}
                           </div>
                         </button>
@@ -2950,7 +2950,7 @@ export default function TenantAdminPage() {
                   <div className="flex justify-between items-center border-b border-white/5 pb-4">
                     <div>
                       <h3 className="text-xs font-black uppercase tracking-widest text-white">Historial de CFDIs</h3>
-                      <p className="text-[8px] text-white/40 uppercase tracking-wider mt-1">Facturas emitidas y timbradas</p>
+                      <p className="text-2xs text-white/40 uppercase tracking-wider mt-1">Facturas emitidas y timbradas</p>
                     </div>
                     <div className="flex gap-2">
                       <button
@@ -2972,7 +2972,7 @@ export default function TenantAdminPage() {
                           }]);
                           setShowManualInvoiceModal(true);
                         }}
-                        className="px-3 py-1.5 bg-nectar-gold text-background hover:bg-nectar-gold/90 border border-nectar-gold/20 rounded-lg text-[8px] font-black uppercase tracking-wider transition-all cursor-pointer font-bold"
+                        className="px-3 py-1.5 bg-nectar-gold text-background hover:bg-nectar-gold/90 border border-nectar-gold/20 rounded-lg text-2xs font-black uppercase tracking-wider transition-all cursor-pointer font-bold"
                       >
                         + Factura Manual
                       </button>
@@ -2984,14 +2984,14 @@ export default function TenantAdminPage() {
                           setNewClientEmailVerified(true);
                           setShowNewClientModal(true);
                         }}
-                        className="px-3 py-1.5 bg-white/10 hover:bg-white/20 border border-white/10 rounded-lg text-[8px] font-black uppercase tracking-wider transition-all text-white cursor-pointer font-bold"
+                        className="px-3 py-1.5 bg-white/10 hover:bg-white/20 border border-white/10 rounded-lg text-2xs font-black uppercase tracking-wider transition-all text-white cursor-pointer font-bold"
                       >
                         + Nuevo Cliente
                       </button>
                       <button
                         onClick={loadBillingData}
                         disabled={loadingBilling}
-                        className="px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/5 rounded-lg text-[8px] font-black uppercase tracking-wider transition-all text-white/80 cursor-pointer"
+                        className="px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/5 rounded-lg text-2xs font-black uppercase tracking-wider transition-all text-white/80 cursor-pointer"
                       >
                         {loadingBilling ? 'Sincronizando...' : '🔄 Actualizar'}
                       </button>
@@ -3014,15 +3014,15 @@ export default function TenantAdminPage() {
                   {loadingBilling ? (
                     <div className="py-12 flex flex-col items-center justify-center space-y-3">
                       <span className="w-6 h-6 rounded-full border-2 border-t-white border-white/10 animate-spin"></span>
-                      <p className="text-[8px] font-black uppercase tracking-widest text-white/40">Cargando Facturas...</p>
+                      <p className="text-2xs font-black uppercase tracking-widest text-white/40">Cargando Facturas...</p>
                     </div>
                   ) : invoices.length === 0 ? (
-                    <div className="py-16 text-center text-white/40 uppercase font-black tracking-widest text-[9px]">
+                    <div className="py-16 text-center text-white/40 uppercase font-black tracking-widest text-2xs">
                       No se han emitido facturas para este portal aún.
                     </div>
                   ) : (
                     <div className="overflow-x-auto">
-                      <table className="w-full text-left text-[9px] border-collapse">
+                      <table className="w-full text-left text-2xs border-collapse">
                         <thead>
                           <tr className="border-b border-white/5 text-white/40 uppercase tracking-widest">
                             <th className="py-3 px-2">Fecha</th>
@@ -3058,7 +3058,7 @@ export default function TenantAdminPage() {
                                 ${parseFloat(inv.total).toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN
                               </td>
                               <td className="py-3 px-2 text-center">
-                                <span className={`px-2 py-0.5 border text-[7px] font-black uppercase tracking-widest rounded-full ${
+                                <span className={`px-2 py-0.5 border text-2xs font-black uppercase tracking-widest rounded-full ${
                                   inv.status === 'PAID'
                                     ? 'bg-green-500/10 text-green-400 border-green-500/20'
                                     : inv.status === 'LCO_SYNC_PENDING'
@@ -3072,7 +3072,7 @@ export default function TenantAdminPage() {
                                   {inv.status_display}
                                 </span>
                                 {inv.error_message && inv.status !== 'PAID' && (
-                                  <div className="text-[6px] text-red-400/80 mt-1 max-w-[120px] mx-auto truncate font-mono" title={inv.error_message}>
+                                  <div className="text-2xs text-red-400/80 mt-1 max-w-[120px] mx-auto truncate font-mono" title={inv.error_message}>
                                     {inv.error_message}
                                   </div>
                                 )}
@@ -3084,24 +3084,24 @@ export default function TenantAdminPage() {
                                       href={inv.xml_url}
                                       target="_blank"
                                       rel="noopener noreferrer"
-                                      className="px-2 py-1 bg-white/5 hover:bg-white/10 border border-white/5 text-white text-[7px] font-black uppercase tracking-widest rounded transition-all"
+                                      className="px-2 py-1 bg-white/5 hover:bg-white/10 border border-white/5 text-white text-2xs font-black uppercase tracking-widest rounded transition-all"
                                     >
                                       XML
                                     </a>
                                   ) : (
-                                    <span className="text-white/20 select-none text-[7px]">-</span>
+                                    <span className="text-white/20 select-none text-2xs">-</span>
                                   )}
                                   {inv.pdf_url ? (
                                     <a
                                       href={inv.pdf_url}
                                       target="_blank"
                                       rel="noopener noreferrer"
-                                      className="px-2 py-1 bg-white/5 hover:bg-white/10 border border-white/5 text-white text-[7px] font-black uppercase tracking-widest rounded transition-all"
+                                      className="px-2 py-1 bg-white/5 hover:bg-white/10 border border-white/5 text-white text-2xs font-black uppercase tracking-widest rounded transition-all"
                                     >
                                       PDF
                                     </a>
                                   ) : (
-                                    <span className="text-white/20 select-none text-[7px]">-</span>
+                                    <span className="text-white/20 select-none text-2xs">-</span>
                                   )}
                                 </div>
                               </td>
@@ -3151,31 +3151,31 @@ export default function TenantAdminPage() {
                 <div className="admin-card border rounded-[2rem] p-6 shadow-lg space-y-6 text-left">
                   <div className="border-b border-white/5 pb-4">
                     <h3 className="text-xs font-black uppercase tracking-widest text-white">Configuración Fiscal</h3>
-                    <p className="text-[8px] text-white/40 uppercase tracking-wider mt-1">Perfil emisor registrado ante el SAT</p>
+                    <p className="text-2xs text-white/40 uppercase tracking-wider mt-1">Perfil emisor registrado ante el SAT</p>
                   </div>
 
                   {taxProfileError && (
-                    <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-400 text-[9px] uppercase tracking-wider font-bold rounded-xl">
+                    <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-400 text-2xs uppercase tracking-wider font-bold rounded-xl">
                       ⚠️ {taxProfileError}
                     </div>
                   )}
 
                   <form onSubmit={handleSaveTaxProfile} className="space-y-4">
                     <div className="space-y-1">
-                      <label className="text-[8px] uppercase tracking-wider font-black text-white/50">Razón Social o Nombre Oficial</label>
+                      <label className="text-2xs uppercase tracking-wider font-black text-white/50">Razón Social o Nombre Oficial</label>
                       <input
                         type="text"
                         required
                         placeholder="Ej. NÉCTAR LABS SA DE CV"
                         value={razonSocial}
                         onChange={(e) => setRazonSocial(e.target.value)}
-                        className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input"
+                        className="w-full border rounded-xl px-3 py-2 text-2xs focus:outline-none focus:border-nectar-gold transition-all admin-input"
                       />
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-1">
-                        <label className="text-[8px] uppercase tracking-wider font-black text-white/50">RFC</label>
+                        <label className="text-2xs uppercase tracking-wider font-black text-white/50">RFC</label>
                         <input
                           type="text"
                           required
@@ -3183,11 +3183,11 @@ export default function TenantAdminPage() {
                           placeholder="Ej. NLA260529AAA"
                           value={rfc}
                           onChange={(e) => setRfc(e.target.value.toUpperCase())}
-                          className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input font-mono"
+                          className="w-full border rounded-xl px-3 py-2 text-2xs focus:outline-none focus:border-nectar-gold transition-all admin-input font-mono"
                         />
                       </div>
                       <div className="space-y-1">
-                        <label className="text-[8px] uppercase tracking-wider font-black text-white/50">Código Postal</label>
+                        <label className="text-2xs uppercase tracking-wider font-black text-white/50">Código Postal</label>
                         <input
                           type="text"
                           required
@@ -3195,17 +3195,17 @@ export default function TenantAdminPage() {
                           placeholder="Ej. 06000"
                           value={codigoPostal}
                           onChange={(e) => setCodigoPostal(e.target.value.replace(/\D/g, ''))}
-                          className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input font-mono"
+                          className="w-full border rounded-xl px-3 py-2 text-2xs focus:outline-none focus:border-nectar-gold transition-all admin-input font-mono"
                         />
                       </div>
                     </div>
 
                     <div className="space-y-1">
-                      <label className="text-[8px] uppercase tracking-wider font-black text-white/50">Régimen Fiscal (SAT)</label>
+                      <label className="text-2xs uppercase tracking-wider font-black text-white/50">Régimen Fiscal (SAT)</label>
                       <select
                         value={regimenFiscal}
                         onChange={(e) => setRegimenFiscal(e.target.value)}
-                        className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input"
+                        className="w-full border rounded-xl px-3 py-2 text-2xs focus:outline-none focus:border-nectar-gold transition-all admin-input"
                       >
                         <option value="601">601 - General de Ley Personas Morales</option>
                         <option value="603">603 - Personas Morales con Fines no Lucrativos</option>
@@ -3219,11 +3219,11 @@ export default function TenantAdminPage() {
                     </div>
 
                     <div className="space-y-1">
-                      <label className="text-[8px] uppercase tracking-wider font-black text-white/50">Preferencia de Facturación</label>
+                      <label className="text-2xs uppercase tracking-wider font-black text-white/50">Preferencia de Facturación</label>
                       <select
                         value={invoicingMode}
                         onChange={(e) => setInvoicingMode(e.target.value)}
-                        className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input"
+                        className="w-full border rounded-xl px-3 py-2 text-2xs focus:outline-none focus:border-nectar-gold transition-all admin-input"
                       >
                         <option value="AUTOMATIC">Facturación Automática (al pagar)</option>
                         <option value="MANUAL_CLIENT">Manual por el Cliente</option>
@@ -3237,7 +3237,7 @@ export default function TenantAdminPage() {
                         <div className="flex items-start gap-2.5">
                           <span className="text-lg leading-none mt-0.5">✨</span>
                           <div>
-                            <h4 className="text-[10px] font-black uppercase tracking-wider text-[#C68A1E]">
+                            <h4 className="text-2xs font-black uppercase tracking-wider text-[#C68A1E]">
                               Función Premium Requerida
                             </h4>
                             <p className="text-[9.5px] text-white/60 leading-relaxed mt-1">
@@ -3266,14 +3266,14 @@ export default function TenantAdminPage() {
                     {/* Conceptos por Defecto para Facturas */}
                     <div className="space-y-4 border-t border-white/5 pt-4 mt-4">
                       <div>
-                        <h4 className="text-[9px] font-black uppercase tracking-wide text-white">Conceptos por Defecto</h4>
-                        <p className="text-[7px] text-white/40 leading-relaxed mt-1">
+                        <h4 className="text-2xs font-black uppercase tracking-wide text-white">Conceptos por Defecto</h4>
+                        <p className="text-2xs text-white/40 leading-relaxed mt-1">
                           Define la clave de producto y unidad SAT preseleccionadas automáticamente para tus facturas manuales.
                         </p>
                       </div>
 
                       <div className="space-y-1.5">
-                        <label className="text-[8px] uppercase tracking-wider font-black text-white/50 block">Producto / Servicio SAT por Defecto</label>
+                        <label className="text-2xs uppercase tracking-wider font-black text-white/50 block">Producto / Servicio SAT por Defecto</label>
                         <SATAutocomplete
                           mode="product"
                           value={defaultProductKey}
@@ -3287,7 +3287,7 @@ export default function TenantAdminPage() {
 
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-1.5">
-                          <label className="text-[8px] uppercase tracking-wider font-black text-white/50 block">Clave Unidad SAT por Defecto</label>
+                          <label className="text-2xs uppercase tracking-wider font-black text-white/50 block">Clave Unidad SAT por Defecto</label>
                           <SATAutocomplete
                             mode="unit"
                             value={defaultUnitKey}
@@ -3303,13 +3303,13 @@ export default function TenantAdminPage() {
                         </div>
 
                         <div className="space-y-1.5">
-                          <label className="text-[8px] uppercase tracking-wider font-black text-white/50 block">Nombre Unidad por Defecto</label>
+                          <label className="text-2xs uppercase tracking-wider font-black text-white/50 block">Nombre Unidad por Defecto</label>
                           <input
                             type="text"
                             value={defaultUnitName}
                             onChange={(e) => setDefaultUnitName(e.target.value)}
                             placeholder="Ej. Unidad de servicio"
-                            className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input font-bold"
+                            className="w-full border rounded-xl px-3 py-2 text-2xs focus:outline-none focus:border-nectar-gold transition-all admin-input font-bold"
                           />
                         </div>
                       </div>
@@ -3320,7 +3320,7 @@ export default function TenantAdminPage() {
                         <button
                           type="submit"
                           disabled={isSavingTaxProfile}
-                          className="px-6 py-2.5 text-[9px] font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 disabled:opacity-40 disabled:scale-100 transition-all font-bold shadow-lg"
+                          className="px-6 py-2.5 text-2xs font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 disabled:opacity-40 disabled:scale-100 transition-all font-bold shadow-lg"
                           style={{ backgroundColor: primaryColor, color: '#000000' }}
                         >
                           {isSavingTaxProfile ? 'Guardando Ajustes...' : 'Guardar Configuración'}
@@ -3340,25 +3340,25 @@ export default function TenantAdminPage() {
                     <div className="flex items-center justify-between">
                       <div>
                         <h3 className="text-xs font-black uppercase tracking-widest text-white">Sello Digital CSD</h3>
-                        <p className="text-[8px] text-white/40 uppercase tracking-wider mt-1">Certificado de sello digital para timbrar</p>
+                        <p className="text-2xs text-white/40 uppercase tracking-wider mt-1">Certificado de sello digital para timbrar</p>
                       </div>
                       {/* Badge de vigencia del certificado */}
                       {loadingCsdStatus ? (
                         <span className="w-4 h-4 rounded-full border-2 border-t-white/50 border-white/10 animate-spin"></span>
                       ) : csdStatus?.has_certificate ? (
                         <div className="flex flex-col items-end gap-0.5">
-                          <span className="px-2.5 py-0.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[7px] font-black rounded-full uppercase tracking-widest">✅ Sello Activo</span>
+                          <span className="px-2.5 py-0.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-2xs font-black rounded-full uppercase tracking-widest">✅ Sello Activo</span>
                           {csdStatus.valid_to && (
-                            <span className="text-[7px] text-white/30 font-mono">
+                            <span className="text-2xs text-white/30 font-mono">
                               Vigente hasta: {new Date(csdStatus.valid_to).toLocaleDateString('es-MX')}
                             </span>
                           )}
                         </div>
                       ) : (
-                        <span className="px-2.5 py-0.5 bg-amber-500/10 text-amber-400 border border-amber-500/20 text-[7px] font-black rounded-full uppercase tracking-widest">⚠️ Sin Sello</span>
+                        <span className="px-2.5 py-0.5 bg-amber-500/10 text-amber-400 border border-amber-500/20 text-2xs font-black rounded-full uppercase tracking-widest">⚠️ Sin Sello</span>
                       )}
                     </div>
-                    <p className="text-[7px] text-white/30 leading-relaxed mt-3">
+                    <p className="text-2xs text-white/30 leading-relaxed mt-3">
                       Néctar Labs delega el resguardo directamente al PAC (Facturapi) mediante su API. Las llaves <strong className="text-white/50">nunca tocan nuestros servidores</strong>.
                     </p>
                   </div>
@@ -3366,7 +3366,7 @@ export default function TenantAdminPage() {
                   <form onSubmit={handleUploadCSD} className="space-y-4">
                     {/* Dropzone .cer */}
                     <div className="space-y-1.5">
-                      <label className="text-[8px] uppercase tracking-wider font-black text-white/50 block">Archivo Certificado (.cer)</label>
+                      <label className="text-2xs uppercase tracking-wider font-black text-white/50 block">Archivo Certificado (.cer)</label>
                       <label
                         htmlFor="csd-cer-upload"
                         className={`flex items-center gap-3 p-3 border-2 border-dashed rounded-xl cursor-pointer transition-all ${
@@ -3375,11 +3375,11 @@ export default function TenantAdminPage() {
                       >
                         <span className="text-xl">{csdCerFile ? '📄' : '⬆️'}</span>
                         <div className="flex-1 min-w-0">
-                          <p className={`text-[10px] font-black truncate ${ csdCerFile ? 'text-emerald-400' : 'text-white/40' }`}>
+                          <p className={`text-2xs font-black truncate ${ csdCerFile ? 'text-emerald-400' : 'text-white/40' }`}>
                             {csdCerFile ? csdCerFile.name : 'Seleccionar archivo .cer'}
                           </p>
                           {csdCerFile && (
-                            <p className="text-[8px] text-white/30 mt-0.5">{(csdCerFile.size / 1024).toFixed(1)} KB</p>
+                            <p className="text-2xs text-white/30 mt-0.5">{(csdCerFile.size / 1024).toFixed(1)} KB</p>
                           )}
                         </div>
                         {csdCerFile && (
@@ -3403,12 +3403,12 @@ export default function TenantAdminPage() {
                           e.target.value = '';
                         }}
                       />
-                      {csdCerError && <p className="text-[8px] text-red-400 font-bold">{csdCerError}</p>}
+                      {csdCerError && <p className="text-2xs text-red-400 font-bold">{csdCerError}</p>}
                     </div>
 
                     {/* Dropzone .key */}
                     <div className="space-y-1.5">
-                      <label className="text-[8px] uppercase tracking-wider font-black text-white/50 block">Archivo Llave Privada (.key)</label>
+                      <label className="text-2xs uppercase tracking-wider font-black text-white/50 block">Archivo Llave Privada (.key)</label>
                       <label
                         htmlFor="csd-key-upload"
                         className={`flex items-center gap-3 p-3 border-2 border-dashed rounded-xl cursor-pointer transition-all ${
@@ -3417,11 +3417,11 @@ export default function TenantAdminPage() {
                       >
                         <span className="text-xl">{csdKeyFile ? '🔐' : '⬆️'}</span>
                         <div className="flex-1 min-w-0">
-                          <p className={`text-[10px] font-black truncate ${ csdKeyFile ? 'text-emerald-400' : 'text-white/40' }`}>
+                          <p className={`text-2xs font-black truncate ${ csdKeyFile ? 'text-emerald-400' : 'text-white/40' }`}>
                             {csdKeyFile ? csdKeyFile.name : 'Seleccionar archivo .key'}
                           </p>
                           {csdKeyFile && (
-                            <p className="text-[8px] text-white/30 mt-0.5">{(csdKeyFile.size / 1024).toFixed(1)} KB</p>
+                            <p className="text-2xs text-white/30 mt-0.5">{(csdKeyFile.size / 1024).toFixed(1)} KB</p>
                           )}
                         </div>
                         {csdKeyFile && (
@@ -3445,25 +3445,25 @@ export default function TenantAdminPage() {
                           e.target.value = '';
                         }}
                       />
-                      {csdKeyError && <p className="text-[8px] text-red-400 font-bold">{csdKeyError}</p>}
+                      {csdKeyError && <p className="text-2xs text-red-400 font-bold">{csdKeyError}</p>}
                     </div>
 
                     {/* Password */}
                     <div className="space-y-1.5">
-                      <label className="text-[8px] uppercase tracking-wider font-black text-white/50">Contraseña de la Llave Privada</label>
+                      <label className="text-2xs uppercase tracking-wider font-black text-white/50">Contraseña de la Llave Privada</label>
                       <input
                         type="password"
                         placeholder="••••••••••••"
                         value={csdPassword}
                         onChange={(e) => setCsdPassword(e.target.value)}
-                        className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input"
+                        className="w-full border rounded-xl px-3 py-2 text-2xs focus:outline-none focus:border-nectar-gold transition-all admin-input"
                       />
                     </div>
 
                     <button
                       type="submit"
                       disabled={isUploadingCSD || !csdCerFile || !csdKeyFile || !csdPassword.trim()}
-                      className="w-full py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2 shadow-lg"
+                      className="w-full py-3 rounded-xl text-2xs font-black uppercase tracking-widest transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2 shadow-lg"
                       style={{ backgroundColor: primaryColor, color: '#000' }}
                     >
                       {isUploadingCSD ? (
@@ -3489,25 +3489,25 @@ export default function TenantAdminPage() {
                     
                     <div className="border-b border-white/5 pb-4">
                       <h3 className="text-xs font-black uppercase tracking-widest text-white">Cartera Digital Unificada</h3>
-                      <p className="text-[8px] text-white/40 uppercase tracking-wider mt-1">Saldo prepago para Guías de Envío y Email Marketing</p>
+                      <p className="text-2xs text-white/40 uppercase tracking-wider mt-1">Saldo prepago para Guías de Envío y Email Marketing</p>
                     </div>
 
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-5 rounded-2xl bg-white/[0.02] border border-white/5">
                       <div className="space-y-1">
-                        <span className="text-[8px] font-black text-white/40 uppercase tracking-wider block font-bold">Saldo Disponible</span>
+                        <span className="text-2xs font-black text-white/40 uppercase tracking-wider block font-bold">Saldo Disponible</span>
                         <h2 className="text-3xl font-black text-white font-mono leading-none font-bold">
                           ${parseFloat(String(tenantConfig?.shipping_wallet_balance ?? '0.00')).toFixed(2)} MXN
                         </h2>
                       </div>
-                      <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[9px] uppercase tracking-wider font-bold rounded-xl flex items-center gap-1.5 shrink-0 font-bold">
+                      <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-2xs uppercase tracking-wider font-bold rounded-xl flex items-center gap-1.5 shrink-0 font-bold">
                         <span>●</span> Cartera Activa
                       </div>
                     </div>
 
                     <div className="space-y-4">
                       <div className="border-b border-white/5 pb-2">
-                        <h4 className="text-[9px] font-black text-white/70 uppercase tracking-wider">Recargar Saldo</h4>
-                        <p className="text-[8px] text-white/40 leading-relaxed mt-0.5">
+                        <h4 className="text-2xs font-black text-white/70 uppercase tracking-wider">Recargar Saldo</h4>
+                        <p className="text-2xs text-white/40 leading-relaxed mt-0.5">
                           Selecciona un monto rápido o ingresa un monto personalizado para recargar saldo mediante Stripe.
                         </p>
                       </div>
@@ -3520,7 +3520,7 @@ export default function TenantAdminPage() {
                             type="button"
                             onClick={() => handleBuyShippingFunds(amt)}
                             disabled={rechargeLoading}
-                            className="py-3 border border-white/10 hover:border-nectar-gold rounded-xl text-[10px] font-bold text-white hover:text-nectar-gold bg-white/[0.01] hover:bg-white/[0.04] transition-all cursor-pointer disabled:opacity-40 disabled:pointer-events-none font-bold"
+                            className="py-3 border border-white/10 hover:border-nectar-gold rounded-xl text-2xs font-bold text-white hover:text-nectar-gold bg-white/[0.01] hover:bg-white/[0.04] transition-all cursor-pointer disabled:opacity-40 disabled:pointer-events-none font-bold"
                           >
                             + ${amt} MXN
                           </button>
@@ -3529,10 +3529,10 @@ export default function TenantAdminPage() {
 
                       {/* Recarga personalizada */}
                       <div className="space-y-2">
-                        <label className="text-[8px] uppercase tracking-wider font-black text-white/50 block">Monto Personalizado (MXN)</label>
+                        <label className="text-2xs uppercase tracking-wider font-black text-white/50 block">Monto Personalizado (MXN)</label>
                         <div className="flex gap-2">
                           <div className="relative flex-1">
-                            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40 text-[10px] font-bold">$</span>
+                            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40 text-2xs font-bold">$</span>
                             <input
                               type="number"
                               min="10"
@@ -3542,7 +3542,7 @@ export default function TenantAdminPage() {
                                 const val = e.target.value;
                                 setRechargeAmount(val === '' ? '' : Math.max(0, parseInt(val)));
                               }}
-                              className="w-full border rounded-xl pl-8 pr-3 py-2.5 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input font-bold"
+                              className="w-full border rounded-xl pl-8 pr-3 py-2.5 text-2xs focus:outline-none focus:border-nectar-gold transition-all admin-input font-bold"
                             />
                           </div>
                           <button
@@ -3555,7 +3555,7 @@ export default function TenantAdminPage() {
                               }
                             }}
                             disabled={rechargeLoading || !rechargeAmount || rechargeAmount < 10}
-                            className="px-6 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:scale-[1.02] active:scale-95 flex items-center justify-center font-bold shadow-lg shrink-0 cursor-pointer"
+                            className="px-6 rounded-xl text-2xs font-black uppercase tracking-widest transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:scale-[1.02] active:scale-95 flex items-center justify-center font-bold shadow-lg shrink-0 cursor-pointer"
                             style={{ backgroundColor: primaryColor, color: '#000000' }}
                           >
                             {rechargeLoading ? 'Procesando...' : 'Recargar'}
@@ -3571,16 +3571,16 @@ export default function TenantAdminPage() {
                   <div className="admin-card border rounded-[2rem] p-6 shadow-lg space-y-5 text-left relative overflow-hidden h-full">
                     <div className="border-b border-white/5 pb-4">
                       <h3 className="text-xs font-black uppercase tracking-widest text-white font-bold">Distribución de Costos</h3>
-                      <p className="text-[8px] text-white/40 uppercase tracking-wider mt-1">Cómo se utiliza tu saldo unificado</p>
+                      <p className="text-2xs text-white/40 uppercase tracking-wider mt-1">Cómo se utiliza tu saldo unificado</p>
                     </div>
 
-                    <div className="space-y-4 text-[10px] text-white/70 leading-relaxed font-medium">
+                    <div className="space-y-4 text-2xs text-white/70 leading-relaxed font-medium">
                       <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5 space-y-2">
                         <div className="flex items-center gap-2">
                           <span className="text-lg">📦</span>
-                          <span className="font-black text-white text-[9px] uppercase tracking-wider font-bold">Guías de Envío (Skydropx)</span>
+                          <span className="font-black text-white text-2xs uppercase tracking-wider font-bold">Guías de Envío (Skydropx)</span>
                         </div>
-                        <p className="text-white/50 text-[9px] leading-relaxed">
+                        <p className="text-white/50 text-2xs leading-relaxed">
                           El costo exacto de cada guía cotizada en FedEx, DHL, Estafeta u otras paqueterías se descuenta directamente de tu cartera al generar la etiqueta.
                         </p>
                       </div>
@@ -3588,14 +3588,14 @@ export default function TenantAdminPage() {
                       <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5 space-y-2">
                         <div className="flex items-center gap-2">
                           <span className="text-lg">📧</span>
-                          <span className="font-black text-white text-[9px] uppercase tracking-wider font-bold">Campaigner Masivo</span>
+                          <span className="font-black text-white text-2xs uppercase tracking-wider font-bold">Campaigner Masivo</span>
                         </div>
-                        <p className="text-white/50 text-[9px] leading-relaxed">
+                        <p className="text-white/50 text-2xs leading-relaxed">
                           Cada correo masivo enviado a través de nuestra plataforma (sin SMTP personalizado) tiene un costo fijo de <strong className="text-nectar-gold">$0.01 MXN</strong> (1 centavo). El total de destinatarios se descuenta de tu saldo al enviar.
                         </p>
                       </div>
 
-                      <div className="p-3 bg-white/[0.01] rounded-xl text-[8px] text-white/40 uppercase tracking-wider text-center border border-white/5 font-bold">
+                      <div className="p-3 bg-white/[0.01] rounded-xl text-2xs text-white/40 uppercase tracking-wider text-center border border-white/5 font-bold">
                         💡 CONSEJO: Conecta tu propio servidor SMTP bajo Integraciones para envíos de correo masivos sin costo por email.
                       </div>
                     </div>
@@ -3660,21 +3660,21 @@ export default function TenantAdminPage() {
                   <div className="admin-card border rounded-[2rem] p-8 md:p-10 shadow-2xl relative overflow-hidden text-left space-y-6">
                     
                     <div>
-                      <span className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold text-[8px] font-black uppercase tracking-widest rounded-full border border-nectar-gold/20" style={{ color: primaryColor, borderColor: `${primaryColor}30`, backgroundColor: `${primaryColor}10` }}>
+                      <span className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold text-2xs font-black uppercase tracking-widest rounded-full border border-nectar-gold/20" style={{ color: primaryColor, borderColor: `${primaryColor}30`, backgroundColor: `${primaryColor}10` }}>
                         🔌 Conectividad & Pasarelas
                       </span>
                       <h2 className="text-2xl font-black tracking-tighter mt-4 leading-none text-white">Configuración de Integraciones</h2>
-                      <p className="text-[10px] opacity-40 uppercase tracking-widest mt-1">Conecta tus propias claves de pago, paquetería y mensajería</p>
+                      <p className="text-2xs opacity-40 uppercase tracking-widest mt-1">Conecta tus propias claves de pago, paquetería y mensajería</p>
                     </div>
 
                     <div className={`grid grid-cols-1 ${(isStaff && (hasNewsletterAddon || hasLogisticsAddon)) ? 'md:grid-cols-2' : ''} gap-8`}>
                       {/* SMTP/Amazon SES Configuration (Staff only) */}
                       {hasNewsletterAddon && isStaff && (
                         <div className="space-y-4">
-                          <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-nectar-gold border-b border-white/5 pb-2">Amazon SES / SMTP Personalizado</h3>
+                          <h3 className="text-2xs font-black uppercase tracking-[0.2em] text-nectar-gold border-b border-white/5 pb-2">Amazon SES / SMTP Personalizado</h3>
                           
                           <div className="space-y-1.5">
-                            <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Host SMTP</label>
+                            <label className="text-2xs font-black uppercase tracking-widest opacity-40">Host SMTP</label>
                             <input
                               type="text"
                               placeholder="Ej. email-smtp.us-east-1.amazonaws.com"
@@ -3686,7 +3686,7 @@ export default function TenantAdminPage() {
 
                           <div className="grid grid-cols-3 gap-3">
                             <div className="col-span-2 space-y-1.5">
-                              <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Puerto SMTP</label>
+                              <label className="text-2xs font-black uppercase tracking-widest opacity-40">Puerto SMTP</label>
                               <input
                                 type="text"
                                 placeholder="587"
@@ -3704,13 +3704,13 @@ export default function TenantAdminPage() {
                                   className="w-3.5 h-3.5 accent-nectar-gold"
                                   style={{ accentColor: primaryColor }}
                                 />
-                                <span className="text-[9px] font-bold uppercase tracking-wide text-white/75">TLS</span>
+                                <span className="text-2xs font-bold uppercase tracking-wide text-white/75">TLS</span>
                               </label>
                             </div>
                           </div>
 
                           <div className="space-y-1.5">
-                            <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Usuario SMTP (SMTP Username)</label>
+                            <label className="text-2xs font-black uppercase tracking-widest opacity-40">Usuario SMTP (SMTP Username)</label>
                             <input
                               type="text"
                               placeholder="Ej. AKIAIOSFODNN7EXAMPLE"
@@ -3721,7 +3721,7 @@ export default function TenantAdminPage() {
                           </div>
 
                           <div className="space-y-1.5">
-                            <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Contraseña SMTP (SMTP Password)</label>
+                            <label className="text-2xs font-black uppercase tracking-widest opacity-40">Contraseña SMTP (SMTP Password)</label>
                             <input
                               type="password"
                               placeholder={tenantConfig?.has_custom_smtp_password ? '••••••••••••' : 'Nueva contraseña SMTP'}
@@ -3732,7 +3732,7 @@ export default function TenantAdminPage() {
                           </div>
 
                           <div className="space-y-1.5">
-                            <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Remitente Autorizado (From Email)</label>
+                            <label className="text-2xs font-black uppercase tracking-widest opacity-40">Remitente Autorizado (From Email)</label>
                             <input
                               type="email"
                               placeholder="Ej. boletin@minegocio.com"
@@ -3747,10 +3747,10 @@ export default function TenantAdminPage() {
                       {/* Skydropx & Logistics Configuration (Staff only) */}
                       {hasLogisticsAddon && isStaff && (
                         <div className="space-y-4">
-                          <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-nectar-gold border-b border-white/5 pb-2">Configuración Skydropx</h3>
+                          <h3 className="text-2xs font-black uppercase tracking-[0.2em] text-nectar-gold border-b border-white/5 pb-2">Configuración Skydropx</h3>
                           
                           <div className="space-y-1.5">
-                            <label className="text-[8px] font-black uppercase tracking-widest opacity-40">API Key de Skydropx</label>
+                            <label className="text-2xs font-black uppercase tracking-widest opacity-40">API Key de Skydropx</label>
                             <input
                               type="password"
                               placeholder={tenantConfig?.has_skydropx_api_key ? '••••••••••••' : 'Introduce tu API Key de Skydropx'}
@@ -3761,7 +3761,7 @@ export default function TenantAdminPage() {
                           </div>
 
                           <div className="space-y-1.5">
-                            <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Margen de Ganancia de Envío (%)</label>
+                            <label className="text-2xs font-black uppercase tracking-widest opacity-40">Margen de Ganancia de Envío (%)</label>
                             <input
                               type="number"
                               step="0.01"
@@ -3775,83 +3775,83 @@ export default function TenantAdminPage() {
                           </div>
 
                           <div className="border-t border-white/5 pt-4 mt-2 space-y-3">
-                            <h4 className="text-[9px] font-black uppercase tracking-wide text-white font-bold">Dirección de Origen para Envíos</h4>
+                            <h4 className="text-2xs font-black uppercase tracking-wide text-white font-bold">Dirección de Origen para Envíos</h4>
                             
                             <div className="space-y-1.5">
-                              <label className="text-[8px] font-black uppercase tracking-widest opacity-45">Nombre del Remitente</label>
+                              <label className="text-2xs font-black uppercase tracking-widest opacity-45">Nombre del Remitente</label>
                               <input
                                 type="text"
                                 placeholder="Ej. Almacén Central"
                                 value={originName}
                                 onChange={(e) => setOriginName(e.target.value)}
-                                className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input"
+                                className="w-full border rounded-xl px-3 py-2 text-2xs focus:outline-none focus:border-nectar-gold transition-all admin-input"
                               />
                             </div>
 
                             <div className="grid grid-cols-2 gap-3">
                               <div className="space-y-1.5">
-                                <label className="text-[8px] font-black uppercase tracking-widest opacity-45">Teléfono</label>
+                                <label className="text-2xs font-black uppercase tracking-widest opacity-45">Teléfono</label>
                                 <input
                                   type="text"
                                   placeholder="Ej. 5512345678"
                                   value={originPhone}
                                   onChange={(e) => setOriginPhone(e.target.value)}
-                                  className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input font-mono"
+                                  className="w-full border rounded-xl px-3 py-2 text-2xs focus:outline-none focus:border-nectar-gold transition-all admin-input font-mono"
                                 />
                               </div>
                               <div className="space-y-1.5">
-                                <label className="text-[8px] font-black uppercase tracking-widest opacity-45">Código Postal</label>
+                                <label className="text-2xs font-black uppercase tracking-widest opacity-45">Código Postal</label>
                                 <input
                                   type="text"
                                   maxLength={5}
                                   placeholder="Ej. 06000"
                                   value={originZipCode}
                                   onChange={(e) => setOriginZipCode(e.target.value.replace(/\D/g, ''))}
-                                  className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input font-mono"
+                                  className="w-full border rounded-xl px-3 py-2 text-2xs focus:outline-none focus:border-nectar-gold transition-all admin-input font-mono"
                                 />
                               </div>
                             </div>
 
                             <div className="space-y-1.5">
-                              <label className="text-[8px] font-black uppercase tracking-widest opacity-45">Calle y Número</label>
+                              <label className="text-2xs font-black uppercase tracking-widest opacity-45">Calle y Número</label>
                               <input
                                 type="text"
                                 placeholder="Ej. Av. Paseo de la Reforma 123"
                                 value={originStreet}
                                 onChange={(e) => setOriginStreet(e.target.value)}
-                                className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input"
+                                className="w-full border rounded-xl px-3 py-2 text-2xs focus:outline-none focus:border-nectar-gold transition-all admin-input"
                               />
                             </div>
 
                             <div className="grid grid-cols-3 gap-2">
                               <div className="space-y-1.5">
-                                <label className="text-[8px] font-black uppercase tracking-widest opacity-45">Colonia</label>
+                                <label className="text-2xs font-black uppercase tracking-widest opacity-45">Colonia</label>
                                 <input
                                   type="text"
                                   placeholder="Juárez"
                                   value={originSuburb}
                                   onChange={(e) => setOriginSuburb(e.target.value)}
-                                  className="w-full border rounded-xl px-2.5 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input"
+                                  className="w-full border rounded-xl px-2.5 py-2 text-2xs focus:outline-none focus:border-nectar-gold transition-all admin-input"
                                 />
                               </div>
                               <div className="space-y-1.5">
-                                <label className="text-[8px] font-black uppercase tracking-widest opacity-45">Ciudad</label>
+                                <label className="text-2xs font-black uppercase tracking-widest opacity-45">Ciudad</label>
                                 <input
                                   type="text"
                                   placeholder="CDMX"
                                   value={originCity}
                                   onChange={(e) => setOriginCity(e.target.value)}
-                                  className="w-full border rounded-xl px-2.5 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input"
+                                  className="w-full border rounded-xl px-2.5 py-2 text-2xs focus:outline-none focus:border-nectar-gold transition-all admin-input"
                                 />
                               </div>
                               <div className="space-y-1.5">
-                                <label className="text-[8px] font-black uppercase tracking-widest opacity-45">Estado</label>
+                                <label className="text-2xs font-black uppercase tracking-widest opacity-45">Estado</label>
                                 <input
                                   type="text"
                                   placeholder="CDMX"
                                   value={originState}
                                   onChange={(e) => setOriginState(e.target.value)}
-                                  className="w-full border rounded-xl px-2.5 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input"
+                                  className="w-full border rounded-xl px-2.5 py-2 text-2xs focus:outline-none focus:border-nectar-gold transition-all admin-input"
                                 />
                               </div>
                             </div>
@@ -3862,12 +3862,12 @@ export default function TenantAdminPage() {
                       {/* 💳 Pasarela de Pagos Stripe (Cualquier Tenant con e-commerce) */}
                       {hasEcommerce && (
                         <div className="space-y-4">
-                          <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-nectar-gold border-b border-white/5 pb-2" style={{ color: primaryColor }}>
+                          <h3 className="text-2xs font-black uppercase tracking-[0.2em] text-nectar-gold border-b border-white/5 pb-2" style={{ color: primaryColor }}>
                             Pasarela de Pagos (Stripe)
                           </h3>
                           
                           <div className="space-y-1.5">
-                            <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Stripe Publishable Key (Clave Pública)</label>
+                            <label className="text-2xs font-black uppercase tracking-widest opacity-40">Stripe Publishable Key (Clave Pública)</label>
                             <input
                               type="text"
                               placeholder="pk_live_..."
@@ -3878,7 +3878,7 @@ export default function TenantAdminPage() {
                           </div>
 
                           <div className="space-y-1.5">
-                            <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Stripe Secret Key (Clave Secreta)</label>
+                            <label className="text-2xs font-black uppercase tracking-widest opacity-40">Stripe Secret Key (Clave Secreta)</label>
                             <input
                               type="password"
                               placeholder={hasStripeSecretKey ? '•••••••••••• (dejar vacío para conservar)' : 'sk_live_...'}
@@ -3899,7 +3899,7 @@ export default function TenantAdminPage() {
                       <button
                         type="submit"
                         disabled={isSavingIntegrations}
-                        className="px-8 py-3.5 bg-nectar-gold text-background text-[10px] font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 disabled:opacity-40 disabled:scale-100 transition-all font-bold shadow-lg shadow-nectar-gold/25 cursor-pointer"
+                        className="px-8 py-3.5 bg-nectar-gold text-background text-2xs font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 disabled:opacity-40 disabled:scale-100 transition-all font-bold shadow-lg shadow-nectar-gold/25 cursor-pointer"
                         style={{ backgroundColor: primaryColor }}
                       >
                         {isSavingIntegrations ? 'Guardando Integraciones...' : 'Guardar Integraciones'}
@@ -3933,11 +3933,11 @@ export default function TenantAdminPage() {
             <div className="admin-card border rounded-[2.5rem] p-8 md:p-10 shadow-2xl relative overflow-hidden text-left space-y-6">
               <div className="flex justify-between items-center">
                 <div>
-                  <span className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold text-[8px] font-black uppercase tracking-widest rounded-full border border-nectar-gold/20" style={{ color: primaryColor, borderColor: `${primaryColor}30`, backgroundColor: `${primaryColor}10` }}>
+                  <span className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold text-2xs font-black uppercase tracking-widest rounded-full border border-nectar-gold/20" style={{ color: primaryColor, borderColor: `${primaryColor}30`, backgroundColor: `${primaryColor}10` }}>
                     E-Commerce
                   </span>
                   <h2 className="text-2xl font-black tracking-tighter mt-4 leading-none text-white">Catálogo de Productos</h2>
-                  <p className="text-[10px] opacity-40 uppercase tracking-widest mt-1">Gestiona el inventario, fotos y precios expuestos en tu tienda pública</p>
+                  <p className="text-2xs opacity-40 uppercase tracking-widest mt-1">Gestiona el inventario, fotos y precios expuestos en tu tienda pública</p>
                 </div>
                 <button
                   onClick={openAddProduct}
@@ -3951,7 +3951,7 @@ export default function TenantAdminPage() {
               {loadingProducts ? (
                 <div className="py-24 text-center">
                   <div className="w-8 h-8 border-4 border-t-white border-white/10 rounded-full animate-spin mx-auto mb-4" style={{ borderTopColor: primaryColor }}></div>
-                  <p className="text-[9px] font-black uppercase tracking-widest opacity-30">Cargando catálogo...</p>
+                  <p className="text-2xs font-black uppercase tracking-widest opacity-30">Cargando catálogo...</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -3967,14 +3967,14 @@ export default function TenantAdminPage() {
                           ) : (
                             <span className="text-3xl filter grayscale opacity-25">📦</span>
                           )}
-                          <span className="absolute top-3 right-3 px-2.5 py-1 text-[7px] font-black uppercase tracking-wider text-white border border-white/10 bg-[#020403]/90 backdrop-blur-md rounded-full">
+                          <span className="absolute top-3 right-3 px-2.5 py-1 text-2xs font-black uppercase tracking-wider text-white border border-white/10 bg-[#020403]/90 backdrop-blur-md rounded-full">
                             Stock: {prod.stock}
                           </span>
                         </div>
 
                         <div className="space-y-1">
                           <h3 className="font-bold text-sm text-white truncate">{prod.name}</h3>
-                          <p className="text-[10px] text-white/40 line-clamp-2 leading-relaxed min-h-[2.5rem]">
+                          <p className="text-2xs text-white/40 line-clamp-2 leading-relaxed min-h-[2.5rem]">
                             {prod.description || 'Sin descripción disponible.'}
                           </p>
                         </div>
@@ -3982,7 +3982,7 @@ export default function TenantAdminPage() {
 
                       <div className="pt-4 border-t border-white/5 mt-4 flex items-center justify-between">
                         <div className="flex flex-col">
-                          <span className="text-[7px] font-black uppercase tracking-widest text-white/30">Precio</span>
+                          <span className="text-2xs font-black uppercase tracking-widest text-white/30">Precio</span>
                           <span className="text-xs font-black text-white">${prod.price} MXN</span>
                         </div>
                         <div className="flex gap-2">
@@ -4006,7 +4006,7 @@ export default function TenantAdminPage() {
                   ))}
 
                   {products.length === 0 && (
-                    <div className="col-span-full py-20 text-center border-2 border-dashed border-white/5 rounded-3xl opacity-35 text-[9px] font-black uppercase tracking-wider">
+                    <div className="col-span-full py-20 text-center border-2 border-dashed border-white/5 rounded-3xl opacity-35 text-2xs font-black uppercase tracking-wider">
                       No hay productos registrados en tu catálogo de e-commerce.
                     </div>
                   )}
@@ -4026,7 +4026,7 @@ export default function TenantAdminPage() {
 
       {/* Footer copyright */}
       <footer className="border-t py-6 admin-header mt-12">
-        <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row justify-between items-center gap-4 text-[9px] font-bold text-white/30 uppercase tracking-widest">
+        <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row justify-between items-center gap-4 text-2xs font-bold text-white/30 uppercase tracking-widest">
           <span>&copy; {new Date().getFullYear()} {tenantConfig.name} - Centro de Control</span>
           <span>Desarrollado bajo licencia de Néctar Labs</span>
         </div>
@@ -4050,7 +4050,7 @@ export default function TenantAdminPage() {
 
             <form onSubmit={handleSaveProduct} className="space-y-4">
               <div className="space-y-1">
-                <label className="text-[8px] font-black uppercase tracking-widest text-white/40">Nombre del Producto</label>
+                <label className="text-2xs font-black uppercase tracking-widest text-white/40">Nombre del Producto</label>
                 <input
                   type="text"
                   required
@@ -4063,7 +4063,7 @@ export default function TenantAdminPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="text-[8px] font-black uppercase tracking-widest text-white/40">Precio (MXN)</label>
+                  <label className="text-2xs font-black uppercase tracking-widest text-white/40">Precio (MXN)</label>
                   <input
                     type="number"
                     step="0.01"
@@ -4075,7 +4075,7 @@ export default function TenantAdminPage() {
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[8px] font-black uppercase tracking-widest text-white/40">Inventario (Stock)</label>
+                  <label className="text-2xs font-black uppercase tracking-widest text-white/40">Inventario (Stock)</label>
                   <input
                     type="number"
                     required
@@ -4088,7 +4088,7 @@ export default function TenantAdminPage() {
               </div>
 
               <div className="space-y-1">
-                <label className="text-[8px] font-black uppercase tracking-widest text-white/40">Descripción</label>
+                <label className="text-2xs font-black uppercase tracking-widest text-white/40">Descripción</label>
                 <textarea
                   rows={3}
                   placeholder="Ingresa los ingredientes, detalles o especificaciones..."
@@ -4099,7 +4099,7 @@ export default function TenantAdminPage() {
               </div>
 
               <div className="space-y-1">
-                <label className="text-[8px] font-black uppercase tracking-widest text-white/40">Imagen del Producto</label>
+                <label className="text-2xs font-black uppercase tracking-widest text-white/40">Imagen del Producto</label>
                 <div className="flex gap-4 items-center bg-foreground/[0.02] border border-white/5 rounded-xl p-4">
                   <div className="w-14 h-14 rounded-lg bg-black/40 border border-white/10 overflow-hidden flex items-center justify-center shrink-0">
                     {productImagePreview ? (
@@ -4119,7 +4119,7 @@ export default function TenantAdminPage() {
                           setProductImagePreview(URL.createObjectURL(file));
                         }
                       }}
-                      className="text-xs text-white/40 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-[9px] file:font-black file:uppercase file:tracking-widest file:bg-white/10 file:text-white hover:file:bg-white/20 file:cursor-pointer"
+                      className="text-xs text-white/40 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-2xs file:font-black file:uppercase file:tracking-widest file:bg-white/10 file:text-white hover:file:bg-white/20 file:cursor-pointer"
                     />
                   </div>
                 </div>
@@ -4129,14 +4129,14 @@ export default function TenantAdminPage() {
                 <button
                   type="button"
                   onClick={() => setShowProductModal(false)}
-                  className="px-6 py-3.5 border border-white/10 hover:bg-white/5 text-white/70 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer"
+                  className="px-6 py-3.5 border border-white/10 hover:bg-white/5 text-white/70 hover:text-white rounded-xl text-2xs font-black uppercase tracking-widest transition-all cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={isSavingProduct}
-                  className="px-8 py-3.5 bg-nectar-gold text-background rounded-xl text-[10px] font-black uppercase tracking-widest hover:scale-105 active:scale-95 disabled:opacity-40 transition-all font-bold cursor-pointer"
+                  className="px-8 py-3.5 bg-nectar-gold text-background rounded-xl text-2xs font-black uppercase tracking-widest hover:scale-105 active:scale-95 disabled:opacity-40 transition-all font-bold cursor-pointer"
                   style={{ backgroundColor: primaryColor }}
                 >
                   {isSavingProduct ? 'Guardando...' : (editingProduct ? 'Guardar Cambios' : 'Crear Producto')}
@@ -4162,7 +4162,7 @@ export default function TenantAdminPage() {
             {/* Column 1: Editor Form */}
             <div className={`${isPreviewExpanded ? 'hidden' : 'flex-1'} overflow-y-auto pr-2 custom-scrollbar space-y-6 lg:max-h-[76vh]`}>
               <div>
-                <span className="px-2 py-0.5 bg-nectar-gold/10 text-nectar-gold text-[7px] font-black uppercase tracking-widest rounded-full border border-nectar-gold/20">
+                <span className="px-2 py-0.5 bg-nectar-gold/10 text-nectar-gold text-2xs font-black uppercase tracking-widest rounded-full border border-nectar-gold/20">
                   Email Campaigner
                 </span>
                 <h3 className="text-lg font-black uppercase tracking-tight text-white mt-2">Nueva Campaña de Boletín</h3>
@@ -4173,20 +4173,20 @@ export default function TenantAdminPage() {
                 <div className="bg-nectar-gold/10 border border-nectar-gold/30 p-4 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                   <div>
                     <p className="text-xs font-bold text-nectar-gold uppercase tracking-wider">Borrador Detectado</p>
-                    <p className="text-[10px] text-white/70 mt-0.5">Se encontró progreso no guardado de tu última sesión de edición.</p>
+                    <p className="text-2xs text-white/70 mt-0.5">Se encontró progreso no guardado de tu última sesión de edición.</p>
                   </div>
                   <div className="flex gap-2 shrink-0">
                     <button
                       type="button"
                       onClick={restoreDraft}
-                      className="bg-nectar-gold text-background font-black uppercase tracking-widest text-[9px] px-3.5 py-2 rounded-lg hover:scale-105 transition-all"
+                      className="bg-nectar-gold text-background font-black uppercase tracking-widest text-2xs px-3.5 py-2 rounded-lg hover:scale-105 transition-all"
                     >
                       Restaurar
                     </button>
                     <button
                       type="button"
                       onClick={discardDraft}
-                      className="border border-white/10 hover:bg-white/5 text-white/65 hover:text-white font-black uppercase tracking-widest text-[9px] px-3.5 py-2 rounded-lg transition-all"
+                      className="border border-white/10 hover:bg-white/5 text-white/65 hover:text-white font-black uppercase tracking-widest text-2xs px-3.5 py-2 rounded-lg transition-all"
                     >
                       Descartar
                     </button>
@@ -4211,7 +4211,7 @@ export default function TenantAdminPage() {
                       syncEditorState();
                       setSettingsTab(tab.id as any);
                     }}
-                    className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all duration-200 whitespace-nowrap ${
+                    className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-2xs font-black uppercase tracking-wider transition-all duration-200 whitespace-nowrap ${
                       settingsTab === tab.id
                         ? 'bg-nectar-gold text-background shadow-md scale-[1.02]'
                         : 'text-white/60 hover:text-white hover:bg-white/5'
@@ -4226,7 +4226,7 @@ export default function TenantAdminPage() {
                 {/* Viewport switcher */}
                 {['cover', 'sections', 'ctas'].includes(settingsTab) && (
                   <div className="flex justify-between items-center bg-white/5 border border-white/5 p-3 rounded-2xl">
-                    <span className="text-[9px] text-white/65 uppercase tracking-widest font-black">Vista previa activa:</span>
+                    <span className="text-2xs text-white/65 uppercase tracking-widest font-black">Vista previa activa:</span>
                     <div className="flex bg-neutral-950 border border-white/10 rounded-xl p-0.5 gap-0.5">
                       {[
                         { id: 'desktop', label: 'Escritorio' },
@@ -4237,7 +4237,7 @@ export default function TenantAdminPage() {
                           key={vp.id}
                           type="button"
                           onClick={() => setPreviewViewport(vp.id as any)}
-                          className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all duration-200 ${
+                          className={`px-3 py-1.5 rounded-lg text-2xs font-black uppercase tracking-wider transition-all duration-200 ${
                             previewViewport === vp.id
                               ? 'bg-nectar-gold text-background shadow-md'
                               : 'text-white/65 hover:text-white hover:bg-white/5'
@@ -4279,7 +4279,7 @@ export default function TenantAdminPage() {
                             }
                           }
                         }}
-                        className="w-full border rounded-xl px-3 py-2.5 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input font-bold"
+                        className="w-full border rounded-xl px-3 py-2.5 text-2xs focus:outline-none focus:border-nectar-gold transition-all admin-input font-bold"
                       >
                         <option value="">-- Redactar en Blanco --</option>
                         {blogPosts.map((post) => (
@@ -4296,7 +4296,7 @@ export default function TenantAdminPage() {
                         <button
                           type="button"
                           onClick={() => setEmojiPopoverTarget(emojiPopoverTarget === 'subject' ? null : 'subject')}
-                          className="text-[8px] text-nectar-gold hover:underline flex items-center gap-1 font-black uppercase"
+                          className="text-2xs text-nectar-gold hover:underline flex items-center gap-1 font-black uppercase"
                         >
                           😀 Emojis
                         </button>
@@ -4308,10 +4308,10 @@ export default function TenantAdminPage() {
                         placeholder="Ej. ¡Nueva colección disponible en nuestra tienda!"
                         value={campaignSubject}
                         onChange={(e) => setCampaignSubject(e.target.value)}
-                        className="w-full border rounded-xl px-3 py-2.5 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input"
+                        className="w-full border rounded-xl px-3 py-2.5 text-2xs focus:outline-none focus:border-nectar-gold transition-all admin-input"
                       />
                       {emojiPopoverTarget === 'subject' && (
-                        <div className="absolute right-0 top-[55px] z-[100] bg-neutral-950 border border-white/10 rounded-2xl p-3 shadow-2xl w-60 grid grid-cols-6 gap-2">
+                        <div className="absolute right-0 top-[3.4375rem] z-[100] bg-neutral-950 border border-white/10 rounded-2xl p-3 shadow-2xl w-60 grid grid-cols-6 gap-2">
                           {CURATED_EMOJIS.map(em => (
                             <button
                               key={em}
@@ -4340,7 +4340,7 @@ export default function TenantAdminPage() {
                             key={mode.id}
                             type="button"
                             onClick={() => setCampTextMode(mode.id as any)}
-                            className={`px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all duration-200 ${
+                            className={`px-3 py-1.5 rounded-xl text-2xs font-black uppercase tracking-wider transition-all duration-200 ${
                               campTextMode === mode.id
                                 ? 'bg-nectar-gold text-background shadow-md'
                                 : 'text-white/60 hover:text-white hover:bg-white/5'
@@ -4355,7 +4355,7 @@ export default function TenantAdminPage() {
                     <div className="space-y-3">
                       <div className="flex justify-between items-center">
                         <label className="text-[7.5px] uppercase tracking-wider font-black text-white/50 block">Contenido del Correo</label>
-                        <span className="text-[8px] bg-nectar-gold/10 text-nectar-gold border border-nectar-gold/20 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
+                        <span className="text-2xs bg-nectar-gold/10 text-nectar-gold border border-nectar-gold/20 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
                           Editando: {editorActiveTab === 'title' ? 'Título' : editorActiveTab === 'footer' ? 'Pie' : 'Cuerpo'}
                         </span>
                       </div>
@@ -4379,7 +4379,7 @@ export default function TenantAdminPage() {
                               }
                               setEditorActiveTab(tab.id as any);
                             }}
-                            className={`flex-1 py-2 text-center rounded-xl text-[9px] font-black uppercase tracking-wider transition-all duration-200 ${
+                            className={`flex-1 py-2 text-center rounded-xl text-2xs font-black uppercase tracking-wider transition-all duration-200 ${
                               editorActiveTab === tab.id
                                 ? 'bg-nectar-gold text-background shadow-md'
                                 : 'text-white/60 hover:text-white hover:bg-white/5'
@@ -4583,7 +4583,7 @@ export default function TenantAdminPage() {
                 {settingsTab === 'theme' && (
                   <div className="space-y-6">
                     <div className="space-y-2">
-                      <label className="text-[8px] text-white/60 uppercase tracking-widest font-black block">Plantilla de Fondo / Diseño Premium</label>
+                      <label className="text-2xs text-white/60 uppercase tracking-widest font-black block">Plantilla de Fondo / Diseño Premium</label>
                       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
                         {[
                           { id: 'minimalist', name: 'Carbon', desc: 'Negro & Ámbar', class: 'bg-[#0c0d13] border-nectar-gold/40 text-nectar-gold' },
@@ -4597,16 +4597,16 @@ export default function TenantAdminPage() {
                             onClick={() => setTemplateType(t.id)}
                             className={`p-3 rounded-2xl border cursor-pointer text-center transition-all hover:scale-102 flex flex-col justify-center items-center gap-1 ${t.class} ${templateType === t.id ? 'ring-2 ring-nectar-gold border-transparent' : 'opacity-65 hover:opacity-100'}`}
                           >
-                            <span className="text-[10px] font-black uppercase tracking-wider">{t.name}</span>
-                            <span className="text-[7px] font-bold uppercase tracking-widest opacity-60">{t.desc}</span>
+                            <span className="text-2xs font-black uppercase tracking-wider">{t.name}</span>
+                            <span className="text-2xs font-bold uppercase tracking-widest opacity-60">{t.desc}</span>
                           </div>
                         ))}
                       </div>
                     </div>
 
                     <div className="space-y-3">
-                      <label className="text-[8px] text-white/60 uppercase tracking-widest font-black block">Tipografía Global de Sección</label>
-                      <p className="text-[8px] text-white/40 uppercase tracking-widest font-bold">
+                      <label className="text-2xs text-white/60 uppercase tracking-widest font-black block">Tipografía Global de Sección</label>
+                      <p className="text-2xs text-white/40 uppercase tracking-widest font-bold">
                         Sección activa seleccionada: <span className="text-nectar-gold underline italic">{editorActiveTab === 'title' ? 'Título' : editorActiveTab === 'footer' ? 'Pie' : 'Cuerpo'}</span>
                       </p>
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -4639,7 +4639,7 @@ export default function TenantAdminPage() {
                               }`}
                             >
                               <span className="text-xs font-black">{f.name}</span>
-                              <span className="text-[7px] font-bold uppercase tracking-widest opacity-60">{f.desc}</span>
+                              <span className="text-2xs font-bold uppercase tracking-widest opacity-60">{f.desc}</span>
                             </div>
                           );
                         })}
@@ -4647,21 +4647,21 @@ export default function TenantAdminPage() {
                     </div>
 
                     <div className="space-y-4 border-t border-white/5 pt-4">
-                      <label className="text-[8px] text-white/60 uppercase tracking-widest font-black block">Fondo del Correo</label>
+                      <label className="text-2xs text-white/60 uppercase tracking-widest font-black block">Fondo del Correo</label>
                       <div className="space-y-3">
                         <div className="space-y-1">
-                          <label className="text-[7px] uppercase tracking-wider font-black text-white/50 block">URL de Imagen de Fondo</label>
+                          <label className="text-2xs uppercase tracking-wider font-black text-white/50 block">URL de Imagen de Fondo</label>
                           <input
                             type="url"
                             placeholder="https://..."
                             value={bgImageUrl}
                             onChange={(e) => setBgImageUrl(e.target.value)}
-                            className="w-full border rounded-xl px-3 py-2 text-[9px] focus:outline-none focus:border-nectar-gold transition-all admin-input"
+                            className="w-full border rounded-xl px-3 py-2 text-2xs focus:outline-none focus:border-nectar-gold transition-all admin-input"
                           />
                         </div>
                         <div className="grid grid-cols-3 gap-2">
                           <div className="space-y-1">
-                            <label className="text-[6px] uppercase tracking-wider font-black text-white/40 block">Opacidad</label>
+                            <label className="text-2xs uppercase tracking-wider font-black text-white/40 block">Opacidad</label>
                             <input
                               type="number"
                               min="0.1"
@@ -4669,26 +4669,26 @@ export default function TenantAdminPage() {
                               step="0.1"
                               value={bgOpacity}
                               onChange={(e) => setBgOpacity(e.target.value)}
-                              className="w-full border rounded-xl px-2 py-1.5 text-[9px] focus:outline-none focus:border-nectar-gold transition-all admin-input font-mono"
+                              className="w-full border rounded-xl px-2 py-1.5 text-2xs focus:outline-none focus:border-nectar-gold transition-all admin-input font-mono"
                             />
                           </div>
                           <div className="space-y-1">
-                            <label className="text-[6px] uppercase tracking-wider font-black text-white/40 block">Saturación %</label>
+                            <label className="text-2xs uppercase tracking-wider font-black text-white/40 block">Saturación %</label>
                             <input
                               type="number"
                               min="0"
                               max="200"
                               value={bgSaturation}
                               onChange={(e) => setBgSaturation(e.target.value)}
-                              className="w-full border rounded-xl px-2 py-1.5 text-[9px] focus:outline-none focus:border-nectar-gold transition-all admin-input font-mono"
+                              className="w-full border rounded-xl px-2 py-1.5 text-2xs focus:outline-none focus:border-nectar-gold transition-all admin-input font-mono"
                             />
                           </div>
                           <div className="space-y-1">
-                            <label className="text-[6px] uppercase tracking-wider font-black text-white/40 block">Posición</label>
+                            <label className="text-2xs uppercase tracking-wider font-black text-white/40 block">Posición</label>
                             <select
                               value={bgPosition}
                               onChange={(e) => setBgPosition(e.target.value)}
-                              className="w-full border rounded-xl px-2 py-1.5 text-[9px] focus:outline-none focus:border-nectar-gold transition-all admin-input font-bold"
+                              className="w-full border rounded-xl px-2 py-1.5 text-2xs focus:outline-none focus:border-nectar-gold transition-all admin-input font-bold"
                             >
                               <option value="center">Centro</option>
                               <option value="top">Arriba</option>
@@ -4713,26 +4713,26 @@ export default function TenantAdminPage() {
                         placeholder="https://..."
                         value={imageUrl}
                         onChange={(e) => setImageUrl(e.target.value)}
-                        className="w-full border rounded-xl px-3 py-2 text-[9px] focus:outline-none focus:border-nectar-gold transition-all admin-input"
+                        className="w-full border rounded-xl px-3 py-2 text-2xs focus:outline-none focus:border-nectar-gold transition-all admin-input"
                       />
                     </div>
                     <div className="grid grid-cols-3 gap-3 pt-3 border-t border-white/5">
                       <div className="space-y-1">
-                        <label className="text-[7px] uppercase tracking-wider font-black text-white/40 block">Ancho Portada</label>
+                        <label className="text-2xs uppercase tracking-wider font-black text-white/40 block">Ancho Portada</label>
                         <input
                           type="text"
                           value={campImageWidth}
                           onChange={(e) => setCampImageWidth(e.target.value)}
                           placeholder="100% o 300px"
-                          className="w-full border rounded-xl px-3 py-2 text-[9px] focus:outline-none focus:border-nectar-gold transition-all admin-input font-mono"
+                          className="w-full border rounded-xl px-3 py-2 text-2xs focus:outline-none focus:border-nectar-gold transition-all admin-input font-mono"
                         />
                       </div>
                       <div className="space-y-1">
-                        <label className="text-[7px] uppercase tracking-wider font-black text-white/40 block">Alineación</label>
+                        <label className="text-2xs uppercase tracking-wider font-black text-white/40 block">Alineación</label>
                         <select
                           value={campImageAlign}
                           onChange={(e) => setCampImageAlign(e.target.value)}
-                          className="w-full border rounded-xl px-3 py-2 text-[9px] focus:outline-none focus:border-nectar-gold transition-all admin-input font-bold"
+                          className="w-full border rounded-xl px-3 py-2 text-2xs focus:outline-none focus:border-nectar-gold transition-all admin-input font-bold"
                         >
                           <option value="center">Centro</option>
                           <option value="left">Izquierda</option>
@@ -4740,36 +4740,36 @@ export default function TenantAdminPage() {
                         </select>
                       </div>
                       <div className="space-y-1">
-                        <label className="text-[7px] uppercase tracking-wider font-black text-white/40 block">Bordes Redondeados</label>
+                        <label className="text-2xs uppercase tracking-wider font-black text-white/40 block">Bordes Redondeados</label>
                         <input
                           type="text"
                           value={campImageRadius}
                           onChange={(e) => setCampImageRadius(e.target.value)}
                           placeholder="20px"
-                          className="w-full border rounded-xl px-3 py-2 text-[9px] focus:outline-none focus:border-nectar-gold transition-all admin-input font-mono"
+                          className="w-full border rounded-xl px-3 py-2 text-2xs focus:outline-none focus:border-nectar-gold transition-all admin-input font-mono"
                         />
                       </div>
                     </div>
                     {/* Viewport specific adjustments */}
                     <div className="space-y-3 pt-3 border-t border-white/5">
-                      <h4 className="text-[8px] font-black uppercase tracking-widest text-nectar-gold">Ajustes según pantalla:</h4>
+                      <h4 className="text-2xs font-black uppercase tracking-widest text-nectar-gold">Ajustes según pantalla:</h4>
                       <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-1">
-                          <label className="text-[7px] uppercase tracking-wider font-black text-white/40 block">Ancho Tablet</label>
+                          <label className="text-2xs uppercase tracking-wider font-black text-white/40 block">Ancho Tablet</label>
                           <input
                             type="text"
                             value={campImageWidthTablet}
                             onChange={(e) => setCampImageWidthTablet(e.target.value)}
-                            className="w-full border rounded-xl px-3 py-2 text-[9px] admin-input font-mono"
+                            className="w-full border rounded-xl px-3 py-2 text-2xs admin-input font-mono"
                           />
                         </div>
                         <div className="space-y-1">
-                          <label className="text-[7px] uppercase tracking-wider font-black text-white/40 block">Ancho Móvil</label>
+                          <label className="text-2xs uppercase tracking-wider font-black text-white/40 block">Ancho Móvil</label>
                           <input
                             type="text"
                             value={campImageWidthMobile}
                             onChange={(e) => setCampImageWidthMobile(e.target.value)}
-                            className="w-full border rounded-xl px-3 py-2 text-[9px] admin-input font-mono"
+                            className="w-full border rounded-xl px-3 py-2 text-2xs admin-input font-mono"
                           />
                         </div>
                       </div>
@@ -4789,7 +4789,7 @@ export default function TenantAdminPage() {
                             type="text"
                             value={campCardMaxWidthDesktop}
                             onChange={(e) => setCampCardMaxWidthDesktop(e.target.value)}
-                            className="w-full border rounded-xl px-3 py-2.5 text-[9px] admin-input font-mono"
+                            className="w-full border rounded-xl px-3 py-2.5 text-2xs admin-input font-mono"
                           />
                         </div>
                         <div className="space-y-1">
@@ -4798,7 +4798,7 @@ export default function TenantAdminPage() {
                             type="text"
                             value={campCardPaddingDesktop}
                             onChange={(e) => setCampCardPaddingDesktop(e.target.value)}
-                            className="w-full border rounded-xl px-3 py-2.5 text-[9px] admin-input font-mono"
+                            className="w-full border rounded-xl px-3 py-2.5 text-2xs admin-input font-mono"
                           />
                         </div>
                       </div>
@@ -4809,7 +4809,7 @@ export default function TenantAdminPage() {
                             type="text"
                             value={campCardPaddingTablet}
                             onChange={(e) => setCampCardPaddingTablet(e.target.value)}
-                            className="w-full border rounded-xl px-3 py-2.5 text-[9px] admin-input font-mono"
+                            className="w-full border rounded-xl px-3 py-2.5 text-2xs admin-input font-mono"
                           />
                         </div>
                         <div className="space-y-1">
@@ -4818,7 +4818,7 @@ export default function TenantAdminPage() {
                             type="text"
                             value={campCardPaddingMobile}
                             onChange={(e) => setCampCardPaddingMobile(e.target.value)}
-                            className="w-full border rounded-xl px-3 py-2.5 text-[9px] admin-input font-mono"
+                            className="w-full border rounded-xl px-3 py-2.5 text-2xs admin-input font-mono"
                           />
                         </div>
                       </div>
@@ -4828,30 +4828,30 @@ export default function TenantAdminPage() {
                       <h4 className="text-[8.5px] font-black uppercase tracking-widest text-nectar-gold pb-1.5 border-b border-white/5">Personalización de Textos</h4>
                       <div className="grid grid-cols-3 gap-3">
                         <div className="space-y-1">
-                          <label className="text-[7px] uppercase tracking-wider font-black text-white/40 block">Tamaño Título (PC)</label>
-                          <input type="text" value={campTitleFontSizeDesktop} onChange={(e) => setCampTitleFontSizeDesktop(e.target.value)} className="w-full border rounded-xl px-2 py-2 text-[9px] admin-input font-mono" />
+                          <label className="text-2xs uppercase tracking-wider font-black text-white/40 block">Tamaño Título (PC)</label>
+                          <input type="text" value={campTitleFontSizeDesktop} onChange={(e) => setCampTitleFontSizeDesktop(e.target.value)} className="w-full border rounded-xl px-2 py-2 text-2xs admin-input font-mono" />
                         </div>
                         <div className="space-y-1">
-                          <label className="text-[7px] uppercase tracking-wider font-black text-white/40 block">Título (Tab)</label>
-                          <input type="text" value={campTitleFontSizeTablet} onChange={(e) => setCampTitleFontSizeTablet(e.target.value)} className="w-full border rounded-xl px-2 py-2 text-[9px] admin-input font-mono" />
+                          <label className="text-2xs uppercase tracking-wider font-black text-white/40 block">Título (Tab)</label>
+                          <input type="text" value={campTitleFontSizeTablet} onChange={(e) => setCampTitleFontSizeTablet(e.target.value)} className="w-full border rounded-xl px-2 py-2 text-2xs admin-input font-mono" />
                         </div>
                         <div className="space-y-1">
-                          <label className="text-[7px] uppercase tracking-wider font-black text-white/40 block">Título (Móvil)</label>
-                          <input type="text" value={campTitleFontSizeMobile} onChange={(e) => setCampTitleFontSizeMobile(e.target.value)} className="w-full border rounded-xl px-2 py-2 text-[9px] admin-input font-mono" />
+                          <label className="text-2xs uppercase tracking-wider font-black text-white/40 block">Título (Móvil)</label>
+                          <input type="text" value={campTitleFontSizeMobile} onChange={(e) => setCampTitleFontSizeMobile(e.target.value)} className="w-full border rounded-xl px-2 py-2 text-2xs admin-input font-mono" />
                         </div>
                       </div>
                       <div className="grid grid-cols-3 gap-3">
                         <div className="space-y-1">
-                          <label className="text-[7px] uppercase tracking-wider font-black text-white/40 block">Tamaño Cuerpo (PC)</label>
-                          <input type="text" value={campBodyFontSizeDesktop} onChange={(e) => setCampBodyFontSizeDesktop(e.target.value)} className="w-full border rounded-xl px-2 py-2 text-[9px] admin-input font-mono" />
+                          <label className="text-2xs uppercase tracking-wider font-black text-white/40 block">Tamaño Cuerpo (PC)</label>
+                          <input type="text" value={campBodyFontSizeDesktop} onChange={(e) => setCampBodyFontSizeDesktop(e.target.value)} className="w-full border rounded-xl px-2 py-2 text-2xs admin-input font-mono" />
                         </div>
                         <div className="space-y-1">
-                          <label className="text-[7px] uppercase tracking-wider font-black text-white/40 block">Cuerpo (Tab)</label>
-                          <input type="text" value={campBodyFontSizeTablet} onChange={(e) => setCampBodyFontSizeTablet(e.target.value)} className="w-full border rounded-xl px-2 py-2 text-[9px] admin-input font-mono" />
+                          <label className="text-2xs uppercase tracking-wider font-black text-white/40 block">Cuerpo (Tab)</label>
+                          <input type="text" value={campBodyFontSizeTablet} onChange={(e) => setCampBodyFontSizeTablet(e.target.value)} className="w-full border rounded-xl px-2 py-2 text-2xs admin-input font-mono" />
                         </div>
                         <div className="space-y-1">
-                          <label className="text-[7px] uppercase tracking-wider font-black text-white/40 block">Cuerpo (Móvil)</label>
-                          <input type="text" value={campBodyFontSizeMobile} onChange={(e) => setCampBodyFontSizeMobile(e.target.value)} className="w-full border rounded-xl px-2 py-2 text-[9px] admin-input font-mono" />
+                          <label className="text-2xs uppercase tracking-wider font-black text-white/40 block">Cuerpo (Móvil)</label>
+                          <input type="text" value={campBodyFontSizeMobile} onChange={(e) => setCampBodyFontSizeMobile(e.target.value)} className="w-full border rounded-xl px-2 py-2 text-2xs admin-input font-mono" />
                         </div>
                       </div>
                       <div className="space-y-1.5 pt-2">
@@ -4859,7 +4859,7 @@ export default function TenantAdminPage() {
                         <select
                           value={campBodyAlignment}
                           onChange={(e) => setCampBodyAlignment(e.target.value)}
-                          className="w-full border rounded-xl px-3 py-2 text-[9px] admin-input font-bold"
+                          className="w-full border rounded-xl px-3 py-2 text-2xs admin-input font-bold"
                         >
                           <option value="center">Centro</option>
                           <option value="left">Izquierda</option>
@@ -4920,7 +4920,7 @@ export default function TenantAdminPage() {
                             placeholder="ej: Registrarme"
                             value={ctaText}
                             onChange={(e) => setCtaText(e.target.value)}
-                            className="w-full border rounded-xl px-3 py-2.5 text-[9px] focus:outline-none focus:border-nectar-gold transition-all admin-input"
+                            className="w-full border rounded-xl px-3 py-2.5 text-2xs focus:outline-none focus:border-nectar-gold transition-all admin-input"
                           />
                         </div>
                         <div className="space-y-1.5">
@@ -4930,17 +4930,17 @@ export default function TenantAdminPage() {
                             placeholder="https://..."
                             value={ctaLink}
                             onChange={(e) => setCtaLink(e.target.value)}
-                            className="w-full border rounded-xl px-3 py-2.5 text-[9px] focus:outline-none focus:border-nectar-gold transition-all admin-input"
+                            className="w-full border rounded-xl px-3 py-2.5 text-2xs focus:outline-none focus:border-nectar-gold transition-all admin-input"
                           />
                         </div>
                       </div>
                       <div className="grid grid-cols-3 gap-3 pt-2">
                         <div className="space-y-1">
-                          <label className="text-[7px] uppercase tracking-wider font-black text-white/40 block">Alineación Botón</label>
+                          <label className="text-2xs uppercase tracking-wider font-black text-white/40 block">Alineación Botón</label>
                           <select
                             value={campCtaAlignment}
                             onChange={(e) => setCampCtaAlignment(e.target.value)}
-                            className="w-full border rounded-xl px-3 py-2.5 text-[9px] admin-input font-bold"
+                            className="w-full border rounded-xl px-3 py-2.5 text-2xs admin-input font-bold"
                           >
                             <option value="center">Centro</option>
                             <option value="left">Izquierda</option>
@@ -4948,12 +4948,12 @@ export default function TenantAdminPage() {
                           </select>
                         </div>
                         <div className="space-y-1">
-                          <label className="text-[7px] uppercase tracking-wider font-black text-white/40 block">Margen Superior</label>
-                          <input type="text" value={campCtaMarginTop} onChange={(e) => setCampCtaMarginTop(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-[9px] admin-input font-mono" />
+                          <label className="text-2xs uppercase tracking-wider font-black text-white/40 block">Margen Superior</label>
+                          <input type="text" value={campCtaMarginTop} onChange={(e) => setCampCtaMarginTop(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-2xs admin-input font-mono" />
                         </div>
                         <div className="space-y-1">
-                          <label className="text-[7px] uppercase tracking-wider font-black text-white/40 block">Margen Inferior</label>
-                          <input type="text" value={campCtaMarginBottom} onChange={(e) => setCampCtaMarginBottom(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-[9px] admin-input font-mono" />
+                          <label className="text-2xs uppercase tracking-wider font-black text-white/40 block">Margen Inferior</label>
+                          <input type="text" value={campCtaMarginBottom} onChange={(e) => setCampCtaMarginBottom(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-2xs admin-input font-mono" />
                         </div>
                       </div>
                     </div>
@@ -4966,7 +4966,7 @@ export default function TenantAdminPage() {
                           onClick={() => {
                             setExtraCtas(prev => prev.filter((_, i) => i !== idx));
                           }}
-                          className="absolute top-4 right-4 text-red-500/60 hover:text-red-500 text-[8px] font-black uppercase tracking-widest cursor-pointer"
+                          className="absolute top-4 right-4 text-red-500/60 hover:text-red-500 text-2xs font-black uppercase tracking-widest cursor-pointer"
                         >
                           Eliminar Botón
                         </button>
@@ -4985,7 +4985,7 @@ export default function TenantAdminPage() {
                                 const newText = e.target.value;
                                 setExtraCtas(prev => prev.map((b, i) => i === idx ? { ...b, text: newText } : b));
                               }}
-                              className="w-full border rounded-xl px-3 py-2.5 text-[9px] focus:outline-none focus:border-nectar-gold transition-all admin-input font-bold"
+                              className="w-full border rounded-xl px-3 py-2.5 text-2xs focus:outline-none focus:border-nectar-gold transition-all admin-input font-bold"
                             />
                           </div>
                           <div className="space-y-1.5">
@@ -4999,13 +4999,13 @@ export default function TenantAdminPage() {
                                 const newLink = e.target.value;
                                 setExtraCtas(prev => prev.map((b, i) => i === idx ? { ...b, link: newLink } : b));
                               }}
-                              className="w-full border rounded-xl px-3 py-2.5 text-[9px] focus:outline-none focus:border-nectar-gold transition-all admin-input font-bold"
+                              className="w-full border rounded-xl px-3 py-2.5 text-2xs focus:outline-none focus:border-nectar-gold transition-all admin-input font-bold"
                             />
                           </div>
                         </div>
                         <div className="grid grid-cols-4 gap-3 pt-2">
                           <div className="space-y-1">
-                            <label className="text-[7px] uppercase tracking-wider font-black text-white/40 block">Color de Fondo</label>
+                            <label className="text-2xs uppercase tracking-wider font-black text-white/40 block">Color de Fondo</label>
                             <div className="flex gap-2 items-center">
                               <input
                                 type="color"
@@ -5020,7 +5020,7 @@ export default function TenantAdminPage() {
                             </div>
                           </div>
                           <div className="space-y-1">
-                            <label className="text-[7px] uppercase tracking-wider font-black text-white/40 block">Color de Texto</label>
+                            <label className="text-2xs uppercase tracking-wider font-black text-white/40 block">Color de Texto</label>
                             <div className="flex gap-2 items-center">
                               <input
                                 type="color"
@@ -5035,7 +5035,7 @@ export default function TenantAdminPage() {
                             </div>
                           </div>
                           <div className="space-y-1">
-                            <label className="text-[7px] uppercase tracking-wider font-black text-white/40 block">Radio de Borde</label>
+                            <label className="text-2xs uppercase tracking-wider font-black text-white/40 block">Radio de Borde</label>
                             <input
                               type="text"
                               value={btn.radius || '10px'}
@@ -5043,7 +5043,7 @@ export default function TenantAdminPage() {
                                 const newRadius = e.target.value;
                                 setExtraCtas(prev => prev.map((b, i) => i === idx ? { ...b, radius: newRadius } : b));
                               }}
-                              className="w-full border rounded-xl px-3 py-2.5 text-[9px] focus:outline-none focus:border-nectar-gold transition-all admin-input font-mono"
+                              className="w-full border rounded-xl px-3 py-2.5 text-2xs focus:outline-none focus:border-nectar-gold transition-all admin-input font-mono"
                             />
                           </div>
                           <div className="space-y-1 flex flex-col justify-end pb-2">
@@ -5072,7 +5072,7 @@ export default function TenantAdminPage() {
                       onClick={() => {
                         setExtraCtas(prev => [...prev, { text: '', link: '', bg_color: (tenantConfig && tenantConfig.theme_color) || '#C68A1E', text_color: '#000000', radius: '10px', is_full_width: false }]);
                       }}
-                      className="w-full py-4 border border-dashed border-white/10 hover:border-nectar-gold/60 text-white/50 hover:text-nectar-gold hover:bg-nectar-gold/[0.02] rounded-[2rem] text-[9px] font-black uppercase tracking-widest transition-all cursor-pointer text-center font-bold flex items-center justify-center gap-2"
+                      className="w-full py-4 border border-dashed border-white/10 hover:border-nectar-gold/60 text-white/50 hover:text-nectar-gold hover:bg-nectar-gold/[0.02] rounded-[2rem] text-2xs font-black uppercase tracking-widest transition-all cursor-pointer text-center font-bold flex items-center justify-center gap-2"
                     >
                       <span>+ Añadir Otro Botón</span>
                     </button>
@@ -5083,8 +5083,8 @@ export default function TenantAdminPage() {
                 {settingsTab === 'library' && (
                   <div className="space-y-4">
                     <div className="flex justify-between items-center pb-2 border-b border-white/5">
-                      <span className="text-[10px] text-white/40 uppercase tracking-widest font-black">Biblioteca de Imágenes</span>
-                      <label className="px-3.5 py-2 bg-nectar-gold/10 border border-nectar-gold/20 hover:bg-nectar-gold/20 rounded-xl text-[9px] font-black uppercase tracking-widest text-nectar-gold flex items-center gap-1 cursor-pointer transition-all">
+                      <span className="text-2xs text-white/40 uppercase tracking-widest font-black">Biblioteca de Imágenes</span>
+                      <label className="px-3.5 py-2 bg-nectar-gold/10 border border-nectar-gold/20 hover:bg-nectar-gold/20 rounded-xl text-2xs font-black uppercase tracking-widest text-nectar-gold flex items-center gap-1 cursor-pointer transition-all">
                         {libraryUploadLoading ? 'Subiendo...' : '+ Subir Imagen'}
                         <input
                           type="file"
@@ -5102,8 +5102,8 @@ export default function TenantAdminPage() {
                     {templateImages.length === 0 ? (
                       <div className="text-center py-12 border border-dashed border-white/10 rounded-[2rem] space-y-2">
                         <span className="text-2xl opacity-30 block">📁</span>
-                        <p className="text-[10px] text-white/40 uppercase tracking-widest font-black">Tu biblioteca está vacía</p>
-                        <p className="text-[9px] text-white/30 max-w-xs mx-auto leading-normal">Sube imágenes para utilizarlas como portada, fondo o insertarlas directamente en el cuerpo del correo.</p>
+                        <p className="text-2xs text-white/40 uppercase tracking-widest font-black">Tu biblioteca está vacía</p>
+                        <p className="text-2xs text-white/30 max-w-xs mx-auto leading-normal">Sube imágenes para utilizarlas como portada, fondo o insertarlas directamente en el cuerpo del correo.</p>
                       </div>
                     ) : (
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 max-h-[46vh] overflow-y-auto pr-1 custom-scrollbar">
@@ -5114,7 +5114,7 @@ export default function TenantAdminPage() {
                               <button
                                 type="button"
                                 onClick={() => insertImageAtCursor(img.image)}
-                                className="w-full py-1.5 bg-nectar-gold hover:bg-yellow-500 text-background rounded-lg text-[8px] font-black uppercase tracking-wider flex items-center justify-center gap-1 transition-all"
+                                className="w-full py-1.5 bg-nectar-gold hover:bg-yellow-500 text-background rounded-lg text-2xs font-black uppercase tracking-wider flex items-center justify-center gap-1 transition-all"
                               >
                                 Insertar en Editor
                               </button>
@@ -5122,14 +5122,14 @@ export default function TenantAdminPage() {
                                 <button
                                   type="button"
                                   onClick={() => handleUseTemplateAsCover(img.image)}
-                                  className="py-1 bg-white/10 hover:bg-white/20 text-white rounded-lg text-[7px] font-black uppercase tracking-wider transition-all"
+                                  className="py-1 bg-white/10 hover:bg-white/20 text-white rounded-lg text-2xs font-black uppercase tracking-wider transition-all"
                                 >
                                   Portada
                                 </button>
                                 <button
                                   type="button"
                                   onClick={() => handleUseTemplateAsBg(img.image)}
-                                  className="py-1 bg-white/10 hover:bg-white/20 text-white rounded-lg text-[7px] font-black uppercase tracking-wider transition-all"
+                                  className="py-1 bg-white/10 hover:bg-white/20 text-white rounded-lg text-2xs font-black uppercase tracking-wider transition-all"
                                 >
                                   Fondo
                                 </button>
@@ -5137,7 +5137,7 @@ export default function TenantAdminPage() {
                               <button
                                 type="button"
                                 onClick={() => handleTemplateImageDelete(img.id)}
-                                className="w-full py-1 bg-red-950/80 hover:bg-red-900 border border-red-800/40 text-red-300 rounded-lg text-[7px] font-black uppercase tracking-wider transition-all"
+                                className="w-full py-1 bg-red-950/80 hover:bg-red-900 border border-red-800/40 text-red-300 rounded-lg text-2xs font-black uppercase tracking-wider transition-all"
                               >
                                 Eliminar
                               </button>
@@ -5159,7 +5159,7 @@ export default function TenantAdminPage() {
                   <button
                     type="button"
                     onClick={() => setIsPreviewExpanded(!isPreviewExpanded)}
-                    className="px-2 py-1 bg-white/5 border border-white/10 text-[7px] text-white/50 hover:text-white rounded-lg font-black uppercase"
+                    className="px-2 py-1 bg-white/5 border border-white/10 text-2xs text-white/50 hover:text-white rounded-lg font-black uppercase"
                   >
                     {isPreviewExpanded ? '⇐ Editar' : 'Expandir 🗖'}
                   </button>
@@ -5173,7 +5173,7 @@ export default function TenantAdminPage() {
                         key={vp.id}
                         type="button"
                         onClick={() => setPreviewViewport(vp.id as any)}
-                        className={`px-2 py-0.5 rounded text-[8px] transition-all ${
+                        className={`px-2 py-0.5 rounded text-2xs transition-all ${
                           previewViewport === vp.id ? 'bg-nectar-gold text-background font-bold' : 'text-white/40'
                         }`}
                       >
@@ -5421,7 +5421,7 @@ export default function TenantAdminPage() {
                 <button
                   type="button"
                   onClick={() => setShowNewsletterModal(false)}
-                  className="px-4 py-2 border border-white/10 hover:bg-white/5 rounded-xl text-[8px] font-black uppercase tracking-wider transition-all text-white/80 cursor-pointer font-bold"
+                  className="px-4 py-2 border border-white/10 hover:bg-white/5 rounded-xl text-2xs font-black uppercase tracking-wider transition-all text-white/80 cursor-pointer font-bold"
                 >
                   Cancelar
                 </button>
@@ -5429,7 +5429,7 @@ export default function TenantAdminPage() {
                   type="button"
                   onClick={handleSendCampaign}
                   disabled={isSendingCampaign || !campaignSubject.trim() || !campaignContent.trim()}
-                  className="px-6 py-2 bg-nectar-gold text-background hover:bg-nectar-gold/90 rounded-xl text-[8px] font-black uppercase tracking-wider transition-all font-bold shadow-md cursor-pointer"
+                  className="px-6 py-2 bg-nectar-gold text-background hover:bg-nectar-gold/90 rounded-xl text-2xs font-black uppercase tracking-wider transition-all font-bold shadow-md cursor-pointer"
                 >
                   {isSendingCampaign ? 'Enviando...' : '🚀 Enviar Campaña'}
                 </button>
@@ -5456,7 +5456,7 @@ export default function TenantAdminPage() {
             
             <div className="space-y-2">
               <h3 className="text-sm font-black uppercase tracking-tight text-white">Límite de Envíos Superado</h3>
-              <p className="text-[10px] text-white/70 leading-relaxed font-medium">
+              <p className="text-2xs text-white/70 leading-relaxed font-medium">
                 El Campaigner Masivo requiere saldo en tu Cartera Digital ($0.01 MXN por correo) o que conectes tu propio servidor SMTP para envíos ilimitados sin costo fijo.
               </p>
             </div>
@@ -5468,7 +5468,7 @@ export default function TenantAdminPage() {
                   setActiveTab('billing');
                   setBillingSubTab('cartera');
                 }}
-                className="w-full py-3 bg-nectar-gold text-background hover:bg-nectar-gold/90 rounded-xl text-[8px] font-black uppercase tracking-wider transition-all font-bold shadow-md shadow-nectar-gold/10 cursor-pointer"
+                className="w-full py-3 bg-nectar-gold text-background hover:bg-nectar-gold/90 rounded-xl text-2xs font-black uppercase tracking-wider transition-all font-bold shadow-md shadow-nectar-gold/10 cursor-pointer"
               >
                 💳 Recargar Cartera Digital
               </button>
@@ -5478,7 +5478,7 @@ export default function TenantAdminPage() {
                   setShowOverLimitModal(false);
                   setActiveTab('integrations');
                 }}
-                className="w-full py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[8px] font-black uppercase tracking-wider transition-all text-white font-bold cursor-pointer"
+                className="w-full py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-2xs font-black uppercase tracking-wider transition-all text-white font-bold cursor-pointer"
               >
                 ⚙️ Conectar Amazon SES / SMTP Propio
               </button>
@@ -5486,7 +5486,7 @@ export default function TenantAdminPage() {
               <button
                 type="button"
                 onClick={() => setShowOverLimitModal(false)}
-                className="w-full py-2.5 text-[8px] font-black uppercase tracking-wider transition-all text-white/40 hover:text-white/60 cursor-pointer"
+                className="w-full py-2.5 text-2xs font-black uppercase tracking-wider transition-all text-white/40 hover:text-white/60 cursor-pointer"
               >
                 Cerrar
               </button>
@@ -5517,13 +5517,13 @@ export default function TenantAdminPage() {
             </button>
 
             <div>
-              <span className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold text-[8px] font-black uppercase tracking-widest rounded-full border border-nectar-gold/20">
+              <span className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold text-2xs font-black uppercase tracking-widest rounded-full border border-nectar-gold/20">
                 Facturación SAT
               </span>
               <h2 className="text-2xl font-black tracking-tighter mt-4 leading-none">
                 Emitir Factura Manual a Cliente
               </h2>
-              <p className="text-[10px] opacity-40 uppercase tracking-widest mt-1">
+              <p className="text-2xs opacity-40 uppercase tracking-widest mt-1">
                 Genera y timbra una factura personalizada para tu cliente. Esta acción consumirá 1 timbre de tu balance.
               </p>
             </div>
@@ -5531,20 +5531,20 @@ export default function TenantAdminPage() {
             <form onSubmit={handleCreateManualInvoice} className="space-y-6">
               {/* Datos Fiscales */}
               <div className="bg-background/40 border border-white/5 p-5 rounded-2xl space-y-4 admin-card">
-                <h3 className="text-[9px] font-black uppercase tracking-widest opacity-50 border-b border-white/5 pb-2">
+                <h3 className="text-2xs font-black uppercase tracking-widest opacity-50 border-b border-white/5 pb-2">
                   Datos de Facturación del Cliente
                 </h3>
 
                 <div className="space-y-3">
-                  <label className="text-[8px] font-black uppercase tracking-widest opacity-40 block">Cliente de la Factura</label>
+                  <label className="text-2xs font-black uppercase tracking-widest opacity-40 block">Cliente de la Factura</label>
                   
                   {selectedCustomer ? (
                     /* Selected Customer Card */
                     <div className="flex items-center justify-between p-4 bg-[#C68A1E]/10 border border-[#C68A1E]/30 rounded-2xl animate-in fade-in zoom-in-95 duration-150">
                       <div>
-                        <span className="text-[8px] font-black uppercase tracking-widest text-[#C68A1E]">Cliente Seleccionado ✓</span>
+                        <span className="text-2xs font-black uppercase tracking-widest text-[#C68A1E]">Cliente Seleccionado ✓</span>
                         <h4 className="text-xs font-bold text-white mt-1">{selectedCustomer.username || 'Usuario'}</h4>
-                        <p className="text-[9px] text-white/50">{selectedCustomer.email}</p>
+                        <p className="text-2xs text-white/50">{selectedCustomer.email}</p>
                       </div>
                       <button
                         type="button"
@@ -5555,7 +5555,7 @@ export default function TenantAdminPage() {
                           setManualRazonSocial('');
                           setManualCodigoPostal('');
                         }}
-                        className="px-3 py-1.5 bg-white/5 hover:bg-red-500/10 text-white/60 hover:text-red-400 border border-white/10 hover:border-red-500/20 rounded-xl text-[8px] font-black uppercase tracking-wider transition-all cursor-pointer font-bold"
+                        className="px-3 py-1.5 bg-white/5 hover:bg-red-500/10 text-white/60 hover:text-red-400 border border-white/10 hover:border-red-500/20 rounded-xl text-2xs font-black uppercase tracking-wider transition-all cursor-pointer font-bold"
                       >
                         Quitar
                       </button>
@@ -5573,7 +5573,7 @@ export default function TenantAdminPage() {
                             disabled={tenantUsers.length === 0}
                             className="w-full bg-background border border-white/10 rounded-xl px-4 py-2.5 pl-10 text-xs focus:outline-none focus:border-[#C68A1E] text-foreground placeholder:text-white/20 admin-input font-bold disabled:opacity-50"
                           />
-                          <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/30 select-none text-[10px]">🔍</div>
+                          <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/30 select-none text-2xs">🔍</div>
                           {customerSearchQuery && (
                             <button
                               type="button"
@@ -5593,7 +5593,7 @@ export default function TenantAdminPage() {
                             setNewClientEmailVerified(true);
                             setShowNewClientModal(true);
                           }}
-                          className="px-4 py-2.5 bg-white/10 hover:bg-white/20 border border-white/10 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all text-white cursor-pointer font-bold whitespace-nowrap shrink-0"
+                          className="px-4 py-2.5 bg-white/10 hover:bg-white/20 border border-white/10 rounded-xl text-2xs font-black uppercase tracking-wider transition-all text-white cursor-pointer font-bold whitespace-nowrap shrink-0"
                         >
                           + Nuevo
                         </button>
@@ -5610,7 +5610,7 @@ export default function TenantAdminPage() {
                             
                             if (filtered.length === 0) {
                               return (
-                                <div className="p-3 text-center text-white/30 text-[8px] uppercase tracking-wider font-bold">
+                                <div className="p-3 text-center text-white/30 text-2xs uppercase tracking-wider font-bold">
                                   Sin clientes coincidentes
                                 </div>
                               );
@@ -5638,7 +5638,7 @@ export default function TenantAdminPage() {
                                   <span className="text-xs font-bold text-white group-hover:text-[#C68A1E] transition-colors">{u.username || 'Usuario'}</span>
                                   <span className="text-[9.5px] text-white/50">{u.email}</span>
                                   {contract?.tax_id && (
-                                    <span className="text-[8px] text-[#C68A1E]/80 font-mono mt-0.5">RFC: {contract.tax_id}</span>
+                                    <span className="text-2xs text-[#C68A1E]/80 font-mono mt-0.5">RFC: {contract.tax_id}</span>
                                   )}
                                 </button>
                               );
@@ -5652,7 +5652,7 @@ export default function TenantAdminPage() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <label className="text-[8px] font-black uppercase tracking-widest opacity-40">RFC</label>
+                    <label className="text-2xs font-black uppercase tracking-widest opacity-40">RFC</label>
                     <input
                       type="text"
                       required
@@ -5663,7 +5663,7 @@ export default function TenantAdminPage() {
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Razón Social</label>
+                    <label className="text-2xs font-black uppercase tracking-widest opacity-40">Razón Social</label>
                     <input
                       type="text"
                       required
@@ -5677,7 +5677,7 @@ export default function TenantAdminPage() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Régimen Fiscal</label>
+                    <label className="text-2xs font-black uppercase tracking-widest opacity-40">Régimen Fiscal</label>
                     <select
                       value={manualRegimenFiscal}
                       onChange={(e) => setManualRegimenFiscal(e.target.value)}
@@ -5696,7 +5696,7 @@ export default function TenantAdminPage() {
                     </select>
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Código Postal</label>
+                    <label className="text-2xs font-black uppercase tracking-widest opacity-40">Código Postal</label>
                     <input
                       type="text"
                       required
@@ -5709,7 +5709,7 @@ export default function TenantAdminPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Email de Envío de Factura</label>
+                  <label className="text-2xs font-black uppercase tracking-widest opacity-40">Email de Envío de Factura</label>
                   <input
                     type="email"
                     required
@@ -5724,7 +5724,7 @@ export default function TenantAdminPage() {
               {/* Conceptos (Items) */}
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <label className="text-[9px] font-black uppercase tracking-widest opacity-50">Conceptos / Ítems de la Factura</label>
+                  <label className="text-2xs font-black uppercase tracking-widest opacity-50">Conceptos / Ítems de la Factura</label>
                   <button
                     type="button"
                     onClick={() => {
@@ -5737,7 +5737,7 @@ export default function TenantAdminPage() {
                         unit_name: taxProfile?.default_unit_name || 'Unidad de servicio'
                       }]);
                     }}
-                    className="text-[8px] font-black text-nectar-gold hover:underline uppercase tracking-widest font-bold cursor-pointer"
+                    className="text-2xs font-black text-nectar-gold hover:underline uppercase tracking-widest font-bold cursor-pointer"
                   >
                     + Agregar Concepto
                   </button>
@@ -5752,18 +5752,18 @@ export default function TenantAdminPage() {
                           onClick={() => {
                             setManualItems(prev => prev.filter((_, i) => i !== idx));
                           }}
-                          className="absolute top-2 right-3 text-red-500 hover:text-red-700 text-[8px] font-black uppercase tracking-wider cursor-pointer"
+                          className="absolute top-2 right-3 text-red-500 hover:text-red-700 text-2xs font-black uppercase tracking-wider cursor-pointer"
                         >
                           remover
                         </button>
                       )}
                       <div className="grid grid-cols-4 gap-2">
                         <div className="col-span-2 space-y-1 relative concept-search-container">
-                          <label className="text-[7px] font-black uppercase tracking-widest opacity-40">Descripción</label>
+                          <label className="text-2xs font-black uppercase tracking-widest opacity-40">Descripción</label>
                           <input
                             type="text"
                             required
-                            className="w-full px-3 py-1.5 bg-background border border-white/10 rounded-lg text-[9px] font-bold text-foreground admin-input"
+                            className="w-full px-3 py-1.5 bg-background border border-white/10 rounded-lg text-2xs font-bold text-foreground admin-input"
                             placeholder="ej. Servicio de Consultoría"
                             value={item.description}
                             onChange={(e) => handleDescriptionChange(idx, e.target.value)}
@@ -5776,7 +5776,7 @@ export default function TenantAdminPage() {
                           {activeSuggestionIdx === idx && (loadingSuggestions || suggestedProducts.length > 0) && (
                             <div className="absolute left-0 right-0 mt-1 z-50 max-h-48 overflow-y-auto rounded-xl border border-white/10 bg-[#050a06]/95 backdrop-blur-md shadow-2xl py-1.5 custom-scrollbar">
                               {loadingSuggestions ? (
-                                <div className="flex items-center justify-center py-3 text-[8px] font-black uppercase tracking-wider text-white/40">
+                                <div className="flex items-center justify-center py-3 text-2xs font-black uppercase tracking-wider text-white/40">
                                   <span className="w-3 h-3 rounded-full border-2 border-t-white border-white/10 animate-spin mr-2"></span>
                                   Buscando catálogo SAT...
                                 </div>
@@ -5797,7 +5797,7 @@ export default function TenantAdminPage() {
                                     className="w-full text-left px-3 py-1.5 hover:bg-white/5 transition-colors flex flex-col gap-0.5 border-b border-white/[0.02] last:border-0 cursor-pointer"
                                   >
                                     <div className="flex justify-between items-center w-full">
-                                      <span className="text-[8px] font-black font-mono tracking-wider text-nectar-gold">
+                                      <span className="text-2xs font-black font-mono tracking-wider text-nectar-gold">
                                         {prod.code}
                                       </span>
                                     </div>
@@ -5811,12 +5811,12 @@ export default function TenantAdminPage() {
                           )}
                         </div>
                         <div className="space-y-1">
-                          <label className="text-[7px] font-black uppercase tracking-widest opacity-40">Cant.</label>
+                          <label className="text-2xs font-black uppercase tracking-widest opacity-40">Cant.</label>
                           <input
                             type="number"
                             required
                             min="1"
-                            className="w-full px-3 py-1.5 bg-background border border-white/10 rounded-lg text-[9px] font-bold text-center text-foreground font-mono admin-input"
+                            className="w-full px-3 py-1.5 bg-background border border-white/10 rounded-lg text-2xs font-bold text-center text-foreground font-mono admin-input"
                             value={item.quantity}
                             onChange={(e) => {
                               const newQty = parseInt(e.target.value) || 1;
@@ -5825,13 +5825,13 @@ export default function TenantAdminPage() {
                           />
                         </div>
                         <div className="space-y-1">
-                          <label className="text-[7px] font-black uppercase tracking-widest opacity-40">Precio Unit. (MXN)</label>
+                          <label className="text-2xs font-black uppercase tracking-widest opacity-40">Precio Unit. (MXN)</label>
                           <input
                             type="number"
                             required
                             min="0.01"
                             step="0.01"
-                            className="w-full px-3 py-1.5 bg-background border border-white/10 rounded-lg text-[9px] font-bold text-right text-foreground font-mono admin-input"
+                            className="w-full px-3 py-1.5 bg-background border border-white/10 rounded-lg text-2xs font-bold text-right text-foreground font-mono admin-input"
                             placeholder="0.00"
                             value={item.unit_price || ''}
                             onChange={(e) => {
@@ -5844,7 +5844,7 @@ export default function TenantAdminPage() {
 
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-3 border-t border-white/5 pt-3 mt-2">
                         <div className="space-y-1">
-                          <label className="text-[7px] font-black uppercase tracking-widest opacity-40 block">Clave Producto SAT</label>
+                          <label className="text-2xs font-black uppercase tracking-widest opacity-40 block">Clave Producto SAT</label>
                           <SATAutocomplete
                             mode="product"
                             value={item.product_key}
@@ -5858,7 +5858,7 @@ export default function TenantAdminPage() {
                           />
                         </div>
                         <div className="space-y-1">
-                          <label className="text-[7px] font-black uppercase tracking-widest opacity-40 block">Clave Unidad SAT</label>
+                          <label className="text-2xs font-black uppercase tracking-widest opacity-40 block">Clave Unidad SAT</label>
                           <SATAutocomplete
                             mode="unit"
                             value={item.unit_key}
@@ -5872,11 +5872,11 @@ export default function TenantAdminPage() {
                           />
                         </div>
                         <div className="space-y-1">
-                          <label className="text-[7px] font-black uppercase tracking-widest opacity-40 block">Nombre Unidad</label>
+                          <label className="text-2xs font-black uppercase tracking-widest opacity-40 block">Nombre Unidad</label>
                           <input
                             type="text"
                             required
-                            className="w-full px-3 py-1.5 bg-background border border-white/10 rounded-lg text-[9px] font-bold text-foreground admin-input font-mono"
+                            className="w-full px-3 py-1.5 bg-background border border-white/10 rounded-lg text-2xs font-bold text-foreground admin-input font-mono"
                             placeholder="ej. Unidad de servicio"
                             value={item.unit_name}
                             onChange={(e) => {
@@ -5899,7 +5899,7 @@ export default function TenantAdminPage() {
                   const total = parseFloat((subtotal + iva).toFixed(2));
 
                   return (
-                    <div className="grid grid-cols-3 gap-6 text-[9px] font-black uppercase tracking-widest">
+                    <div className="grid grid-cols-3 gap-6 text-2xs font-black uppercase tracking-widest">
                       <div>
                         <span className="opacity-40 block">Subtotal</span>
                         <span className="text-xs font-mono font-bold text-white/80">${subtotal.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</span>
@@ -5920,14 +5920,14 @@ export default function TenantAdminPage() {
                   <button
                     type="button"
                     onClick={() => setShowManualInvoiceModal(false)}
-                    className="px-5 py-3 border border-white/10 hover:bg-white/5 text-[9px] font-black uppercase tracking-widest rounded-xl transition-all cursor-pointer"
+                    className="px-5 py-3 border border-white/10 hover:bg-white/5 text-2xs font-black uppercase tracking-widest rounded-xl transition-all cursor-pointer"
                   >
                     Cancelar
                   </button>
                   <button
                     type="submit"
                     disabled={isSubmittingManualInvoice}
-                    className="px-6 py-3 bg-nectar-gold text-background hover:bg-nectar-gold/90 text-[9px] font-black uppercase tracking-widest rounded-xl transition-all font-bold shadow-md cursor-pointer"
+                    className="px-6 py-3 bg-nectar-gold text-background hover:bg-nectar-gold/90 text-2xs font-black uppercase tracking-widest rounded-xl transition-all font-bold shadow-md cursor-pointer"
                   >
                     {isSubmittingManualInvoice ? 'Emitiendo...' : 'Timbrar Factura'}
                   </button>
@@ -5979,13 +5979,13 @@ export default function TenantAdminPage() {
             </button>
 
             <div>
-              <span className="px-3 py-1 bg-red-500/10 text-red-500 text-[8px] font-black uppercase tracking-widest rounded-full border border-red-500/20">
+              <span className="px-3 py-1 bg-red-500/10 text-red-500 text-2xs font-black uppercase tracking-widest rounded-full border border-red-500/20">
                 Cancelación SAT
               </span>
               <h2 className="text-2xl font-black tracking-tighter mt-4 leading-none text-white">
                 Cancelar Factura CFDI
               </h2>
-              <p className="text-[10px] opacity-40 uppercase tracking-widest mt-1">
+              <p className="text-2xs opacity-40 uppercase tracking-widest mt-1">
                 Selecciona el motivo de cancelación ante el SAT.
               </p>
             </div>
@@ -6009,7 +6009,7 @@ export default function TenantAdminPage() {
               className="space-y-4"
             >
               <div className="space-y-1.5">
-                <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Motivo de Cancelación *</label>
+                <label className="text-2xs font-black uppercase tracking-widest opacity-40">Motivo de Cancelación *</label>
                 <select
                   value={cancelMotive}
                   onChange={(e) => {
@@ -6027,7 +6027,7 @@ export default function TenantAdminPage() {
 
               {cancelMotive === '01' && (
                 <div className="space-y-1.5 animate-fadeIn">
-                  <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Folio Sustituto (UUID o ID de Facturapi) *</label>
+                  <label className="text-2xs font-black uppercase tracking-widest opacity-40">Folio Sustituto (UUID o ID de Facturapi) *</label>
                   <input
                     type="text"
                     required
@@ -6036,7 +6036,7 @@ export default function TenantAdminPage() {
                     onChange={(e) => setCancelSubstitution(e.target.value)}
                     className="w-full bg-background border border-white/10 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-nectar-gold text-foreground font-mono admin-input"
                   />
-                  <p className="text-[8px] opacity-40 uppercase tracking-widest">
+                  <p className="text-2xs opacity-40 uppercase tracking-widest">
                     Especifica el UUID de la factura que reemplaza a la factura actual.
                   </p>
                 </div>
@@ -6046,14 +6046,14 @@ export default function TenantAdminPage() {
                 <button
                   type="button"
                   onClick={() => setShowCancelModal(false)}
-                  className="px-5 py-3 border border-white/10 hover:bg-white/5 text-[9px] font-black uppercase tracking-widest rounded-xl transition-all cursor-pointer text-white/80"
+                  className="px-5 py-3 border border-white/10 hover:bg-white/5 text-2xs font-black uppercase tracking-widest rounded-xl transition-all cursor-pointer text-white/80"
                 >
                   Regresar
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmittingCancel}
-                  className="px-6 py-3 bg-red-600 hover:bg-red-500 text-white text-[9px] font-black uppercase tracking-widest rounded-xl transition-all font-bold shadow-lg cursor-pointer"
+                  className="px-6 py-3 bg-red-600 hover:bg-red-500 text-white text-2xs font-black uppercase tracking-widest rounded-xl transition-all font-bold shadow-lg cursor-pointer"
                 >
                   {isSubmittingCancel ? 'Cancelando...' : 'Confirmar Cancelación'}
                 </button>
@@ -6085,19 +6085,19 @@ export default function TenantAdminPage() {
             </button>
 
             <div>
-              <span className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold text-[8px] font-black uppercase tracking-widest rounded-full border border-nectar-gold/20">
+              <span className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold text-2xs font-black uppercase tracking-widest rounded-full border border-nectar-gold/20">
                 {editingFacCustomer ? 'Editar Receptor' : 'Nuevo Receptor'}
               </span>
               <h2 className="text-2xl font-black tracking-tighter mt-4 leading-none text-white">
                 {editingFacCustomer ? 'Actualizar Datos Fiscales' : 'Registrar Receptor Fiscal'}
               </h2>
-              <p className="text-[10px] opacity-40 uppercase tracking-widest mt-1">
+              <p className="text-2xs opacity-40 uppercase tracking-widest mt-1">
                 El receptor será creado directamente en el catálogo de Facturapi
               </p>
             </div>
 
             {facCustomerError && (
-              <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-400 text-[9px] uppercase tracking-wider font-bold rounded-xl">
+              <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-400 text-2xs uppercase tracking-wider font-bold rounded-xl">
                 ⚠️ {facCustomerError}
               </div>
             )}
@@ -6105,7 +6105,7 @@ export default function TenantAdminPage() {
             <form onSubmit={handleSaveFacCustomer} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-[8px] font-black uppercase tracking-widest opacity-40">RFC *</label>
+                  <label className="text-2xs font-black uppercase tracking-widest opacity-40">RFC *</label>
                   <input
                     type="text"
                     required
@@ -6117,7 +6117,7 @@ export default function TenantAdminPage() {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Código Postal *</label>
+                  <label className="text-2xs font-black uppercase tracking-widest opacity-40">Código Postal *</label>
                   <input
                     type="text"
                     required
@@ -6131,7 +6131,7 @@ export default function TenantAdminPage() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Razón Social o Nombre Oficial *</label>
+                <label className="text-2xs font-black uppercase tracking-widest opacity-40">Razón Social o Nombre Oficial *</label>
                 <input
                   type="text"
                   required
@@ -6143,7 +6143,7 @@ export default function TenantAdminPage() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Régimen Fiscal (SAT)</label>
+                <label className="text-2xs font-black uppercase tracking-widest opacity-40">Régimen Fiscal (SAT)</label>
                 <select
                   value={facCustomerRegimen}
                   onChange={(e) => setFacCustomerRegimen(e.target.value)}
@@ -6162,7 +6162,7 @@ export default function TenantAdminPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Email (Opcional)</label>
+                  <label className="text-2xs font-black uppercase tracking-widest opacity-40">Email (Opcional)</label>
                   <input
                     type="email"
                     placeholder="cliente@empresa.com"
@@ -6172,7 +6172,7 @@ export default function TenantAdminPage() {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Teléfono (Opcional)</label>
+                  <label className="text-2xs font-black uppercase tracking-widest opacity-40">Teléfono (Opcional)</label>
                   <input
                     type="tel"
                     placeholder="+52 55 0000 0000"
@@ -6187,14 +6187,14 @@ export default function TenantAdminPage() {
                 <button
                   type="button"
                   onClick={() => setShowFacCustomerModal(false)}
-                  className="px-5 py-3 border border-white/10 hover:bg-white/5 text-[9px] font-black uppercase tracking-widest rounded-xl transition-all cursor-pointer text-white/80"
+                  className="px-5 py-3 border border-white/10 hover:bg-white/5 text-2xs font-black uppercase tracking-widest rounded-xl transition-all cursor-pointer text-white/80"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={isSavingFacCustomer}
-                  className="px-6 py-3 text-[9px] font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 disabled:opacity-40 disabled:scale-100 transition-all font-bold shadow-lg cursor-pointer"
+                  className="px-6 py-3 text-2xs font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 disabled:opacity-40 disabled:scale-100 transition-all font-bold shadow-lg cursor-pointer"
                   style={{ backgroundColor: primaryColor, color: '#000' }}
                 >
                   {isSavingFacCustomer
@@ -6273,7 +6273,7 @@ function AddonMetricCard({ slug, title, icon, activeList, primaryColor, metrics,
       <div className="space-y-4">
         <div className="flex justify-between items-start">
           <span className="text-3xl">{icon}</span>
-          <span className={`px-2.5 py-0.5 border text-[7px] font-black uppercase tracking-widest rounded-full font-mono ${
+          <span className={`px-2.5 py-0.5 border text-2xs font-black uppercase tracking-widest rounded-full font-mono ${
             isActive 
               ? 'bg-green-500/10 text-green-400 border-green-500/20' 
               : 'bg-red-500/10 text-red-400 border-red-500/20'
@@ -6292,7 +6292,7 @@ function AddonMetricCard({ slug, title, icon, activeList, primaryColor, metrics,
         {/* 2. Visual Content Area */}
         <div className={`relative flex-1 ${!isActive ? 'blur-sm select-none pointer-events-none' : ''}`}>
           {children ? children : (
-            <div className="h-28 flex items-center justify-center text-[10px] text-white/20 uppercase font-black tracking-widest">
+            <div className="h-28 flex items-center justify-center text-2xs text-white/20 uppercase font-black tracking-widest">
               Sin Vista Previa de Datos
             </div>
           )}
@@ -6316,7 +6316,7 @@ function AddonMetricCard({ slug, title, icon, activeList, primaryColor, metrics,
             <div className="w-8 h-8 rounded-xl bg-nectar-gold/10 border border-nectar-gold/20 text-nectar-gold flex items-center justify-center text-md shadow-lg shadow-nectar-gold/10 mb-2 animate-[bounce_3s_infinite]">
               🔒
             </div>
-            <h5 className="text-[9px] font-black uppercase tracking-wider text-white">Módulo No Contratado</h5>
+            <h5 className="text-2xs font-black uppercase tracking-wider text-white">Módulo No Contratado</h5>
             <p className="text-[7.5px] text-white/50 max-w-[170px] leading-relaxed mt-0.5 mb-2">
               Habilita este Add-on para ver sus analíticas.
             </p>
@@ -6497,13 +6497,13 @@ function POSTab({ tenantConfig, primaryColor }: POSTabProps) {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'PAID':
-        return <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[8px] font-black uppercase tracking-wider font-mono">Pagada</span>;
+        return <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-2xs font-black uppercase tracking-wider font-mono">Pagada</span>;
       case 'INVOICED':
-        return <span className="px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20 text-[8px] font-black uppercase tracking-wider font-mono">Facturada</span>;
+        return <span className="px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20 text-2xs font-black uppercase tracking-wider font-mono">Facturada</span>;
       case 'CANCELLED':
-        return <span className="px-2 py-0.5 rounded-full bg-red-500/10 text-red-400 border border-red-500/20 text-[8px] font-black uppercase tracking-wider font-mono">Cancelada</span>;
+        return <span className="px-2 py-0.5 rounded-full bg-red-500/10 text-red-400 border border-red-500/20 text-2xs font-black uppercase tracking-wider font-mono">Cancelada</span>;
       default:
-        return <span className="px-2 py-0.5 rounded-full bg-white/10 text-white/50 border border-white/20 text-[8px] font-black uppercase tracking-wider font-mono">{status}</span>;
+        return <span className="px-2 py-0.5 rounded-full bg-white/10 text-white/50 border border-white/20 text-2xs font-black uppercase tracking-wider font-mono">{status}</span>;
     }
   };
 
@@ -6535,7 +6535,7 @@ function POSTab({ tenantConfig, primaryColor }: POSTabProps) {
           <span className="text-xl font-black text-white font-mono mt-1 block" style={{ color: primaryColor }}>
             ${totalRevenue.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MXN
           </span>
-          <span className="text-[7px] text-white/40 uppercase mt-2 tracking-wider">Monto acumulado en notas vigentes</span>
+          <span className="text-2xs text-white/40 uppercase mt-2 tracking-wider">Monto acumulado en notas vigentes</span>
         </div>
 
         <div className="admin-card border rounded-2xl p-5 relative overflow-hidden flex flex-col justify-between min-h-[110px]">
@@ -6543,7 +6543,7 @@ function POSTab({ tenantConfig, primaryColor }: POSTabProps) {
           <span className="text-xl font-black text-white font-mono mt-1 block">
             {activeNotes.length}
           </span>
-          <span className="text-[7px] text-white/40 uppercase mt-2 tracking-wider">Notas de venta pagadas</span>
+          <span className="text-2xs text-white/40 uppercase mt-2 tracking-wider">Notas de venta pagadas</span>
         </div>
 
         <div className="admin-card border rounded-2xl p-5 relative overflow-hidden flex flex-col justify-between min-h-[110px]">
@@ -6551,7 +6551,7 @@ function POSTab({ tenantConfig, primaryColor }: POSTabProps) {
           <span className="text-xl font-black text-white font-mono mt-1 block text-blue-400">
             {invoicedNotesCount}
           </span>
-          <span className="text-[7px] text-white/40 uppercase mt-2 tracking-wider">Autofacturadas por el cliente</span>
+          <span className="text-2xs text-white/40 uppercase mt-2 tracking-wider">Autofacturadas por el cliente</span>
         </div>
 
         <div className="admin-card border rounded-2xl p-5 relative overflow-hidden flex flex-col justify-between min-h-[110px]">
@@ -6559,7 +6559,7 @@ function POSTab({ tenantConfig, primaryColor }: POSTabProps) {
           <span className="text-xl font-black text-white font-mono mt-1 block" style={{ color: (tenantConfig.stamp_balance || 0) < 5 ? '#EF4444' : '#10B981' }}>
             {tenantConfig.stamp_balance ?? 0}
           </span>
-          <span className="text-[7px] text-white/40 uppercase mt-2 tracking-wider">Saldo de timbrado para CFDI 4.0</span>
+          <span className="text-2xs text-white/40 uppercase mt-2 tracking-wider">Saldo de timbrado para CFDI 4.0</span>
         </div>
       </div>
 
@@ -6568,18 +6568,18 @@ function POSTab({ tenantConfig, primaryColor }: POSTabProps) {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <h4 className="text-xs font-black uppercase tracking-wider text-white">Enlace de Autofactura para Clientes</h4>
-            <p className="text-[8px] text-white/50 uppercase tracking-widest mt-1">Comparte este enlace para que tus clientes facturen sus notas de venta solos</p>
+            <p className="text-2xs text-white/50 uppercase tracking-widest mt-1">Comparte este enlace para que tus clientes facturen sus notas de venta solos</p>
           </div>
           <div className="flex w-full sm:w-auto items-center gap-2">
             <input
               type="text"
               readOnly
               value={autofacturaUrl}
-              className="bg-background border border-white/10 rounded-xl px-3 py-2 text-[9px] text-white/60 font-mono focus:outline-none w-full sm:w-[320px]"
+              className="bg-background border border-white/10 rounded-xl px-3 py-2 text-2xs text-white/60 font-mono focus:outline-none w-full sm:w-[320px]"
             />
             <button
               onClick={copyAutofacturaLink}
-              className="px-4 py-2 bg-white/5 border border-white/10 hover:bg-white/10 text-white text-[9px] font-black uppercase tracking-wider rounded-xl transition-all active:scale-95 cursor-pointer"
+              className="px-4 py-2 bg-white/5 border border-white/10 hover:bg-white/10 text-white text-2xs font-black uppercase tracking-wider rounded-xl transition-all active:scale-95 cursor-pointer"
             >
               Copiar
             </button>
@@ -6593,7 +6593,7 @@ function POSTab({ tenantConfig, primaryColor }: POSTabProps) {
         <div className="lg:col-span-3 space-y-3">
           <button
             onClick={() => setActiveSubTab('create')}
-            className={`w-full text-left px-5 py-4 rounded-2xl border text-[9px] font-black uppercase tracking-widest transition-all flex justify-between items-center cursor-pointer ${
+            className={`w-full text-left px-5 py-4 rounded-2xl border text-2xs font-black uppercase tracking-widest transition-all flex justify-between items-center cursor-pointer ${
               activeSubTab === 'create'
                 ? 'bg-white/5 text-white border-white/20'
                 : 'bg-transparent text-white/40 border-transparent hover:text-white/70'
@@ -6608,7 +6608,7 @@ function POSTab({ tenantConfig, primaryColor }: POSTabProps) {
               setActiveSubTab('list');
               fetchNotes();
             }}
-            className={`w-full text-left px-5 py-4 rounded-2xl border text-[9px] font-black uppercase tracking-widest transition-all flex justify-between items-center cursor-pointer ${
+            className={`w-full text-left px-5 py-4 rounded-2xl border text-2xs font-black uppercase tracking-widest transition-all flex justify-between items-center cursor-pointer ${
               activeSubTab === 'list'
                 ? 'bg-white/5 text-white border-white/20'
                 : 'bg-transparent text-white/40 border-transparent hover:text-white/70'
@@ -6626,7 +6626,7 @@ function POSTab({ tenantConfig, primaryColor }: POSTabProps) {
             <div className="admin-card border rounded-2xl p-6 space-y-6">
               <div>
                 <h3 className="text-sm font-black uppercase tracking-wider text-white">Registrar Nota de Venta</h3>
-                <p className="text-[8px] text-white/40 uppercase tracking-widest mt-0.5">Crea una nota de venta para público general. El cliente podrá facturarla después.</p>
+                <p className="text-2xs text-white/40 uppercase tracking-widest mt-0.5">Crea una nota de venta para público general. El cliente podrá facturarla después.</p>
               </div>
 
               <form onSubmit={handleCreateNote} className="space-y-6">
@@ -6637,7 +6637,7 @@ function POSTab({ tenantConfig, primaryColor }: POSTabProps) {
                     <select
                       value={paymentMethod}
                       onChange={(e) => setPaymentMethod(e.target.value)}
-                      className="w-full bg-background border border-white/10 rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold text-foreground admin-input font-bold uppercase"
+                      className="w-full bg-background border border-white/10 rounded-xl px-3 py-2 text-2xs focus:outline-none focus:border-nectar-gold text-foreground admin-input font-bold uppercase"
                     >
                       <option value="01">01 - Efectivo</option>
                       <option value="02">02 - Cheque nominativo</option>
@@ -6652,11 +6652,11 @@ function POSTab({ tenantConfig, primaryColor }: POSTabProps) {
                 {/* Items Block */}
                 <div className="space-y-4">
                   <div className="flex justify-between items-center border-b border-white/10 pb-2">
-                    <span className="text-[8px] uppercase font-black tracking-widest text-white/60">Conceptos de Venta</span>
+                    <span className="text-2xs uppercase font-black tracking-widest text-white/60">Conceptos de Venta</span>
                     <button
                       type="button"
                       onClick={handleAddItem}
-                      className="px-3 py-1 bg-white/5 border border-white/10 hover:bg-white/10 text-[8px] font-black uppercase tracking-wider rounded-lg transition-all text-white cursor-pointer"
+                      className="px-3 py-1 bg-white/5 border border-white/10 hover:bg-white/10 text-2xs font-black uppercase tracking-wider rounded-lg transition-all text-white cursor-pointer"
                     >
                       + Agregar Línea
                     </button>
@@ -6666,12 +6666,12 @@ function POSTab({ tenantConfig, primaryColor }: POSTabProps) {
                     {items.map((item, idx) => (
                       <div key={idx} className="bg-white/[0.01] border border-white/5 rounded-2xl p-4 space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
                         <div className="flex justify-between items-center">
-                          <span className="text-[8px] font-mono text-white/30 font-black">LÍNEA {idx + 1}</span>
+                          <span className="text-2xs font-mono text-white/30 font-black">LÍNEA {idx + 1}</span>
                           {items.length > 1 && (
                             <button
                               type="button"
                               onClick={() => handleRemoveItem(idx)}
-                              className="text-red-400 hover:text-red-300 text-[8px] uppercase font-black tracking-wider cursor-pointer"
+                              className="text-red-400 hover:text-red-300 text-2xs uppercase font-black tracking-wider cursor-pointer"
                             >
                               Eliminar
                             </button>
@@ -6681,35 +6681,35 @@ function POSTab({ tenantConfig, primaryColor }: POSTabProps) {
                         <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
                           {/* Concepto */}
                           <div className="sm:col-span-5">
-                            <label className="text-[7px] uppercase font-bold text-white/50 block mb-1">Descripción / Concepto</label>
+                            <label className="text-2xs uppercase font-bold text-white/50 block mb-1">Descripción / Concepto</label>
                             <input
                               type="text"
                               required
                               placeholder="Ej. Consumo de alimentos, Servicio de asesoría"
                               value={item.description}
                               onChange={(e) => handleUpdateItem(idx, 'description', e.target.value)}
-                              className="w-full bg-background border border-white/10 rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold text-foreground admin-input"
+                              className="w-full bg-background border border-white/10 rounded-xl px-3 py-2 text-2xs focus:outline-none focus:border-nectar-gold text-foreground admin-input"
                             />
                           </div>
 
                           {/* Cantidad */}
                           <div className="sm:col-span-2">
-                            <label className="text-[7px] uppercase font-bold text-white/50 block mb-1">Cantidad</label>
+                            <label className="text-2xs uppercase font-bold text-white/50 block mb-1">Cantidad</label>
                             <input
                               type="number"
                               required
                               min="1"
                               value={item.quantity}
                               onChange={(e) => handleUpdateItem(idx, 'quantity', parseInt(e.target.value, 10) || 1)}
-                              className="w-full bg-background border border-white/10 rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold text-foreground admin-input font-bold font-mono"
+                              className="w-full bg-background border border-white/10 rounded-xl px-3 py-2 text-2xs focus:outline-none focus:border-nectar-gold text-foreground admin-input font-bold font-mono"
                             />
                           </div>
 
                           {/* Precio Unitario */}
                           <div className="sm:col-span-5">
-                            <label className="text-[7px] uppercase font-bold text-white/50 block mb-1">Precio Unitario (IVA Incl.)</label>
+                            <label className="text-2xs uppercase font-bold text-white/50 block mb-1">Precio Unitario (IVA Incl.)</label>
                             <div className="relative">
-                              <span className="absolute left-3 top-2.5 text-[10px] text-white/30">$</span>
+                              <span className="absolute left-3 top-2.5 text-2xs text-white/30">$</span>
                               <input
                                 type="number"
                                 required
@@ -6718,7 +6718,7 @@ function POSTab({ tenantConfig, primaryColor }: POSTabProps) {
                                 placeholder="0.00"
                                 value={item.unit_price}
                                 onChange={(e) => handleUpdateItem(idx, 'unit_price', e.target.value)}
-                                className="w-full bg-background border border-white/10 rounded-xl pl-6 pr-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold text-foreground admin-input font-bold font-mono"
+                                className="w-full bg-background border border-white/10 rounded-xl pl-6 pr-3 py-2 text-2xs focus:outline-none focus:border-nectar-gold text-foreground admin-input font-bold font-mono"
                               />
                             </div>
                           </div>
@@ -6727,7 +6727,7 @@ function POSTab({ tenantConfig, primaryColor }: POSTabProps) {
                         {/* SAT Catalog Keys */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-white/[0.03] pt-3">
                           <div>
-                            <label className="text-[7px] uppercase font-bold text-white/50 block mb-1">Clave de Producto SAT</label>
+                            <label className="text-2xs uppercase font-bold text-white/50 block mb-1">Clave de Producto SAT</label>
                             <SATAutocomplete
                               mode="product"
                               value={item.product_key}
@@ -6738,7 +6738,7 @@ function POSTab({ tenantConfig, primaryColor }: POSTabProps) {
                             />
                           </div>
                           <div>
-                            <label className="text-[7px] uppercase font-bold text-white/50 block mb-1">Clave de Unidad SAT</label>
+                            <label className="text-2xs uppercase font-bold text-white/50 block mb-1">Clave de Unidad SAT</label>
                             <SATAutocomplete
                               mode="unit"
                               value={item.unit_key}
@@ -6756,7 +6756,7 @@ function POSTab({ tenantConfig, primaryColor }: POSTabProps) {
 
                 {/* Subtotal & Total display */}
                 <div className="border-t border-white/10 pt-4 flex flex-col items-end">
-                  <div className="w-full sm:w-64 space-y-1.5 text-right font-mono text-[10px]">
+                  <div className="w-full sm:w-64 space-y-1.5 text-right font-mono text-2xs">
                     <div className="flex justify-between text-white/55">
                       <span>Subtotal (Neto estimado):</span>
                       <span>${(calculateTotal() / 1.16).toFixed(2)} MXN</span>
@@ -6776,7 +6776,7 @@ function POSTab({ tenantConfig, primaryColor }: POSTabProps) {
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="px-8 py-3.5 bg-nectar-gold text-background text-[10px] font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 disabled:opacity-40 disabled:scale-100 transition-all font-bold shadow-lg shadow-nectar-gold/25 cursor-pointer"
+                    className="px-8 py-3.5 bg-nectar-gold text-background text-2xs font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 disabled:opacity-40 disabled:scale-100 transition-all font-bold shadow-lg shadow-nectar-gold/25 cursor-pointer"
                     style={{ backgroundColor: primaryColor }}
                   >
                     {submitting ? 'Generando Nota...' : 'Crear Nota de Venta'}
@@ -6789,7 +6789,7 @@ function POSTab({ tenantConfig, primaryColor }: POSTabProps) {
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
                   <h3 className="text-sm font-black uppercase tracking-wider text-white">Historial de Notas de Venta</h3>
-                  <p className="text-[8px] text-white/40 uppercase tracking-widest mt-0.5">Consulta y gestiona las notas de venta expedidas.</p>
+                  <p className="text-2xs text-white/40 uppercase tracking-widest mt-0.5">Consulta y gestiona las notas de venta expedidas.</p>
                 </div>
                 <div className="w-full sm:w-64">
                   <input
@@ -6797,7 +6797,7 @@ function POSTab({ tenantConfig, primaryColor }: POSTabProps) {
                     placeholder="Buscar por folio (NV-...)"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full bg-background border border-white/10 rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold text-white admin-input font-mono"
+                    className="w-full bg-background border border-white/10 rounded-xl px-3 py-2 text-2xs focus:outline-none focus:border-nectar-gold text-white admin-input font-mono"
                   />
                 </div>
               </div>
@@ -6805,12 +6805,12 @@ function POSTab({ tenantConfig, primaryColor }: POSTabProps) {
               {loading ? (
                 <div className="py-20 flex flex-col items-center justify-center gap-3">
                   <div className="w-6 h-6 rounded-full border-2 border-t-white border-white/10 animate-spin" style={{ borderTopColor: primaryColor }}></div>
-                  <span className="text-[8px] font-black uppercase tracking-widest text-white/40">Cargando historial...</span>
+                  <span className="text-2xs font-black uppercase tracking-widest text-white/40">Cargando historial...</span>
                 </div>
               ) : filteredNotes.length === 0 ? (
                 <div className="py-20 text-center border border-dashed border-white/10 rounded-2xl">
                   <span className="text-2xl block mb-2">📋</span>
-                  <span className="text-[8px] font-black uppercase tracking-widest text-white/35">No se encontraron notas de venta</span>
+                  <span className="text-2xs font-black uppercase tracking-widest text-white/35">No se encontraron notas de venta</span>
                 </div>
               ) : (
                 <div className="overflow-x-auto custom-scrollbar">
@@ -6827,7 +6827,7 @@ function POSTab({ tenantConfig, primaryColor }: POSTabProps) {
                     </thead>
                     <tbody className="divide-y divide-white/[0.04]">
                       {filteredNotes.map((note) => (
-                        <tr key={note.id} className="text-[10px] hover:bg-white/[0.01] transition-colors">
+                        <tr key={note.id} className="text-2xs hover:bg-white/[0.01] transition-colors">
                           <td className="py-3.5 pl-4 font-mono font-bold text-white">{note.folio}</td>
                           <td className="py-3.5 text-white/60 font-mono">{new Date(note.created_at).toLocaleDateString()}</td>
                           <td className="py-3.5 text-white/60 font-medium">{getPaymentMethodName(note.payment_method)}</td>
@@ -6836,14 +6836,14 @@ function POSTab({ tenantConfig, primaryColor }: POSTabProps) {
                           <td className="py-3.5 pr-4 text-right space-x-2">
                             <button
                               onClick={() => setSelectedNote(note)}
-                              className="text-white/60 hover:text-white border border-white/10 hover:bg-white/5 px-2.5 py-1 rounded-lg text-[8px] uppercase font-black tracking-wider transition-all cursor-pointer font-mono"
+                              className="text-white/60 hover:text-white border border-white/10 hover:bg-white/5 px-2.5 py-1 rounded-lg text-2xs uppercase font-black tracking-wider transition-all cursor-pointer font-mono"
                             >
                               Detalles
                             </button>
                             {note.status === 'PAID' && (
                               <button
                                 onClick={() => handleCancelNote(note.id, note.folio)}
-                                className="text-red-400 hover:text-red-300 border border-red-500/10 hover:bg-red-500/5 px-2.5 py-1 rounded-lg text-[8px] uppercase font-black tracking-wider transition-all cursor-pointer font-mono"
+                                className="text-red-400 hover:text-red-300 border border-red-500/10 hover:bg-red-500/5 px-2.5 py-1 rounded-lg text-2xs uppercase font-black tracking-wider transition-all cursor-pointer font-mono"
                               >
                                 Cancelar
                               </button>
@@ -6873,7 +6873,7 @@ function POSTab({ tenantConfig, primaryColor }: POSTabProps) {
             <div className="text-center pb-4">
               <span className="text-2xl">🧾</span>
               <h4 className="text-sm font-black uppercase mt-1 tracking-widest" style={{ color: primaryColor }}>Detalles de Nota</h4>
-              <span className="text-[10px] font-bold text-white/50">{selectedNote.folio}</span>
+              <span className="text-2xs font-bold text-white/50">{selectedNote.folio}</span>
             </div>
 
             <div className="flex-1 overflow-y-auto custom-scrollbar border-t border-dashed border-white/20 py-4 space-y-3 text-xs">
@@ -6883,15 +6883,15 @@ function POSTab({ tenantConfig, primaryColor }: POSTabProps) {
               <p className="flex justify-between"><span>Forma de Pago SAT:</span><span>{selectedNote.payment_method} - {getPaymentMethodName(selectedNote.payment_method)}</span></p>
               
               <div className="border-t border-dashed border-white/10 pt-3 mt-3">
-                <p className="text-[10px] uppercase font-bold text-white/50 mb-1.5">Conceptos:</p>
+                <p className="text-2xs uppercase font-bold text-white/50 mb-1.5">Conceptos:</p>
                 <div className="space-y-2">
                   {selectedNote.items?.map((item: any, idx: number) => (
                     <div key={idx} className="bg-white/[0.02] border border-white/5 p-2.5 rounded-xl space-y-1">
-                      <div className="flex justify-between font-bold text-[11px]">
+                      <div className="flex justify-between font-bold text-xs">
                         <span>{item.quantity}x {item.description}</span>
                         <span>${(item.unit_price * item.quantity).toFixed(2)}</span>
                       </div>
-                      <div className="flex justify-between text-[8px] text-white/40">
+                      <div className="flex justify-between text-2xs text-white/40">
                         <span>SAT Prod: {item.product_key}</span>
                         <span>SAT Unidad: {item.unit_key}</span>
                       </div>
@@ -6912,13 +6912,13 @@ function POSTab({ tenantConfig, primaryColor }: POSTabProps) {
                   navigator.clipboard.writeText(selectedNote.folio);
                   showToast('Folio copiado', 'success');
                 }}
-                className="flex-1 py-2 rounded-xl bg-white/5 border border-white/10 text-white font-bold text-[10px] uppercase hover:bg-white/10 active:scale-95 transition-all cursor-pointer font-mono"
+                className="flex-1 py-2 rounded-xl bg-white/5 border border-white/10 text-white font-bold text-2xs uppercase hover:bg-white/10 active:scale-95 transition-all cursor-pointer font-mono"
               >
                 Copiar Folio
               </button>
               <button
                 onClick={() => setSelectedNote(null)}
-                className="flex-1 py-2 rounded-xl text-background font-bold text-[10px] uppercase hover:scale-105 active:scale-95 transition-all cursor-pointer font-mono"
+                className="flex-1 py-2 rounded-xl text-background font-bold text-2xs uppercase hover:scale-105 active:scale-95 transition-all cursor-pointer font-mono"
                 style={{ backgroundColor: primaryColor }}
               >
                 Cerrar
@@ -6945,9 +6945,9 @@ function POSTab({ tenantConfig, primaryColor }: POSTabProps) {
               <p className="flex justify-between"><span>Fecha:</span><span>{new Date(createdNote.created_at).toLocaleString()}</span></p>
               <p className="flex justify-between"><span>Método Pago:</span><span>{getPaymentMethodName(createdNote.payment_method)}</span></p>
               <div className="border-t border-dashed border-white/10 pt-2 mt-2">
-                <p className="text-[10px] uppercase font-bold text-white/50 mb-1">Conceptos:</p>
+                <p className="text-2xs uppercase font-bold text-white/50 mb-1">Conceptos:</p>
                 {createdNote.items?.map((item: any, idx: number) => (
-                  <p key={idx} className="flex justify-between text-[11px]">
+                  <p key={idx} className="flex justify-between text-xs">
                     <span>{item.quantity}x {item.description}</span>
                     <span>${(item.unit_price * item.quantity).toFixed(2)}</span>
                   </p>
@@ -6958,7 +6958,7 @@ function POSTab({ tenantConfig, primaryColor }: POSTabProps) {
                 <span style={{ color: primaryColor }}>${parseFloat(createdNote.total).toFixed(2)} MXN</span>
               </div>
             </div>
-            <p className="text-[9px] text-white/40 mb-4 leading-relaxed uppercase">
+            <p className="text-2xs text-white/40 mb-4 leading-relaxed uppercase">
               Proporciona este folio al cliente para que se autofacture desde el portal público.
             </p>
             <div className="flex gap-2">
@@ -6967,13 +6967,13 @@ function POSTab({ tenantConfig, primaryColor }: POSTabProps) {
                   navigator.clipboard.writeText(createdNote.folio);
                   showToast('Folio copiado', 'success');
                 }}
-                className="flex-1 py-2 rounded-xl bg-white/5 border border-white/10 text-white font-bold text-[10px] uppercase hover:bg-white/10 active:scale-95 transition-all cursor-pointer"
+                className="flex-1 py-2 rounded-xl bg-white/5 border border-white/10 text-white font-bold text-2xs uppercase hover:bg-white/10 active:scale-95 transition-all cursor-pointer"
               >
                 Copiar Folio
               </button>
               <button
                 onClick={() => setCreatedNote(null)}
-                className="flex-1 py-2 rounded-xl text-background font-bold text-[10px] uppercase hover:scale-105 active:scale-95 transition-all cursor-pointer font-mono"
+                className="flex-1 py-2 rounded-xl text-background font-bold text-2xs uppercase hover:scale-105 active:scale-95 transition-all cursor-pointer font-mono"
                 style={{ backgroundColor: primaryColor }}
               >
                 Aceptar

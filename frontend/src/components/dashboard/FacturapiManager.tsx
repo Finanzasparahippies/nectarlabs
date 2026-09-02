@@ -430,7 +430,7 @@ export default function FacturapiManager({
       {toast && (
         <div className="fixed top-6 right-6 z-50 max-w-sm w-full bg-card-bg/95 backdrop-blur-md border border-card-border p-4 rounded-xl shadow-2xl flex items-center gap-3 animate-fadeIn">
           <span className={`w-2 h-2 rounded-full shrink-0 ${toast.type === 'success' ? 'bg-green-500' : toast.type === 'error' ? 'bg-red-500' : 'bg-blue-500'}`} />
-          <p className="text-[10px] font-black uppercase tracking-wider text-foreground">{toast.message}</p>
+          <p className="text-2xs font-black uppercase tracking-wider text-foreground">{toast.message}</p>
         </div>
       )}
 
@@ -466,11 +466,11 @@ export default function FacturapiManager({
           <div className="flex items-center justify-between border-b border-white/5 pb-4">
             <div>
               <h3 className="text-xs font-black uppercase tracking-widest text-white">Receptores Fiscales</h3>
-              <p className="text-[8px] text-white/40 uppercase tracking-wider mt-1">Directorio de clientes para timbrado</p>
+              <p className="text-2xs text-white/40 uppercase tracking-wider mt-1">Directorio de clientes para timbrado</p>
             </div>
             <button
               onClick={() => openCustomerModal()}
-              className="px-3 py-1.5 text-[8px] font-black uppercase tracking-wider rounded-xl transition-all hover:scale-105 active:scale-95 cursor-pointer"
+              className="px-3 py-1.5 text-2xs font-black uppercase tracking-wider rounded-xl transition-all hover:scale-105 active:scale-95 cursor-pointer"
               style={{ backgroundColor: primaryColor, color: '#000' }}
             >
               + Nuevo Cliente
@@ -482,18 +482,18 @@ export default function FacturapiManager({
             placeholder="Buscar por RFC o razón social..."
             value={customerSearch}
             onChange={(e) => setCustomerSearch(e.target.value)}
-            className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input"
+            className="w-full border rounded-xl px-3 py-2 text-2xs focus:outline-none focus:border-nectar-gold transition-all admin-input"
           />
 
           {loadingCustomers ? (
             <div className="py-8 flex items-center justify-center gap-2 text-white/30">
               <span className="w-4 h-4 rounded-full border-2 border-t-white/50 border-white/10 animate-spin"></span>
-              <span className="text-[9px] uppercase tracking-widest font-black">Cargando catálogo...</span>
+              <span className="text-2xs uppercase tracking-widest font-black">Cargando catálogo...</span>
             </div>
           ) : customers.length === 0 ? (
             <div className="py-8 flex flex-col items-center justify-center text-center">
               <span className="text-3xl mb-2">👥</span>
-              <p className="text-[8px] uppercase font-black tracking-widest text-white/30">Sin clientes registrados</p>
+              <p className="text-2xs uppercase font-black tracking-widest text-white/30">Sin clientes registrados</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -512,13 +512,13 @@ export default function FacturapiManager({
                       {(customer.legal_name || 'C').charAt(0).toUpperCase()}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-[10px] font-black text-white truncate">{customer.legal_name}</p>
-                      <p className="text-[8px] text-white/40 font-mono">{customer.tax_id} • R.F. {customer.tax_system}</p>
+                      <p className="text-2xs font-black text-white truncate">{customer.legal_name}</p>
+                      <p className="text-2xs text-white/40 font-mono">{customer.tax_id} • R.F. {customer.tax_system}</p>
                     </div>
                     <div className="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                       <button
                         onClick={() => openCustomerModal(customer)}
-                        className="px-2 py-1 text-[7px] font-black uppercase tracking-wider border border-white/10 hover:border-white/30 text-white/50 hover:text-white rounded-lg cursor-pointer"
+                        className="px-2 py-1 text-2xs font-black uppercase tracking-wider border border-white/10 hover:border-white/30 text-white/50 hover:text-white rounded-lg cursor-pointer"
                       >
                         Editar
                       </button>
@@ -529,7 +529,7 @@ export default function FacturapiManager({
                           }
                         }}
                         disabled={deletingCustomerId === customer.id}
-                        className="px-2 py-1 text-[7px] font-black uppercase tracking-wider border border-red-500/20 hover:border-red-500/40 text-red-500/50 hover:text-red-400 rounded-lg cursor-pointer"
+                        className="px-2 py-1 text-2xs font-black uppercase tracking-wider border border-red-500/20 hover:border-red-500/40 text-red-500/50 hover:text-red-400 rounded-lg cursor-pointer"
                       >
                         {deletingCustomerId === customer.id ? '...' : 'Borrar'}
                       </button>
@@ -547,11 +547,11 @@ export default function FacturapiManager({
           <div className="flex items-center justify-between border-b border-white/5 pb-4">
             <div>
               <h3 className="text-xs font-black uppercase tracking-widest text-white">Catálogo de Productos</h3>
-              <p className="text-[8px] text-white/40 uppercase tracking-wider mt-1">Conceptos registrados para facturación rápida</p>
+              <p className="text-2xs text-white/40 uppercase tracking-wider mt-1">Conceptos registrados para facturación rápida</p>
             </div>
             <button
               onClick={() => openProductModal()}
-              className="px-3 py-1.5 text-[8px] font-black uppercase tracking-wider rounded-xl transition-all hover:scale-105 active:scale-95 cursor-pointer"
+              className="px-3 py-1.5 text-2xs font-black uppercase tracking-wider rounded-xl transition-all hover:scale-105 active:scale-95 cursor-pointer"
               style={{ backgroundColor: primaryColor, color: '#000' }}
             >
               + Nuevo Producto
@@ -563,18 +563,18 @@ export default function FacturapiManager({
             placeholder="Buscar por descripción..."
             value={productSearch}
             onChange={(e) => setProductSearch(e.target.value)}
-            className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input"
+            className="w-full border rounded-xl px-3 py-2 text-2xs focus:outline-none focus:border-nectar-gold transition-all admin-input"
           />
 
           {loadingProducts ? (
             <div className="py-8 flex items-center justify-center gap-2 text-white/30">
               <span className="w-4 h-4 rounded-full border-2 border-t-white/50 border-white/10 animate-spin"></span>
-              <span className="text-[9px] uppercase tracking-widest font-black">Cargando catálogo...</span>
+              <span className="text-2xs uppercase tracking-widest font-black">Cargando catálogo...</span>
             </div>
           ) : products.length === 0 ? (
             <div className="py-8 flex flex-col items-center justify-center text-center">
               <span className="text-3xl mb-2">📦</span>
-              <p className="text-[8px] uppercase font-black tracking-widest text-white/30">Sin productos registrados</p>
+              <p className="text-2xs uppercase font-black tracking-widest text-white/30">Sin productos registrados</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -589,15 +589,15 @@ export default function FacturapiManager({
                     className="flex items-center gap-3 p-3 rounded-2xl border border-white/5 hover:border-white/10 bg-white/[0.01] hover:bg-white/[0.03] transition-all group"
                   >
                     <div className="flex-1 min-w-0">
-                      <p className="text-[10px] font-black text-white truncate">{product.description}</p>
-                      <p className="text-[8px] text-white/40 font-mono">
+                      <p className="text-2xs font-black text-white truncate">{product.description}</p>
+                      <p className="text-2xs text-white/40 font-mono">
                         ${product.price.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN • Clave SAT: {product.product_key}
                       </p>
                     </div>
                     <div className="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                       <button
                         onClick={() => openProductModal(product)}
-                        className="px-2 py-1 text-[7px] font-black uppercase tracking-wider border border-white/10 hover:border-white/30 text-white/50 hover:text-white rounded-lg cursor-pointer"
+                        className="px-2 py-1 text-2xs font-black uppercase tracking-wider border border-white/10 hover:border-white/30 text-white/50 hover:text-white rounded-lg cursor-pointer"
                       >
                         Editar
                       </button>
@@ -608,7 +608,7 @@ export default function FacturapiManager({
                           }
                         }}
                         disabled={deletingProductId === product.id}
-                        className="px-2 py-1 text-[7px] font-black uppercase tracking-wider border border-red-500/20 hover:border-red-500/40 text-red-500/50 hover:text-red-400 rounded-lg cursor-pointer"
+                        className="px-2 py-1 text-2xs font-black uppercase tracking-wider border border-red-500/20 hover:border-red-500/40 text-red-500/50 hover:text-red-400 rounded-lg cursor-pointer"
                       >
                         {deletingProductId === product.id ? '...' : 'Borrar'}
                       </button>
@@ -626,11 +626,11 @@ export default function FacturapiManager({
           <div className="flex items-center justify-between border-b border-white/5 pb-4">
             <div>
               <h3 className="text-xs font-black uppercase tracking-widest text-white">Notas de Venta / Recibos</h3>
-              <p className="text-[8px] text-white/40 uppercase tracking-wider mt-1">Notas simplificadas emitidas ante Facturapi</p>
+              <p className="text-2xs text-white/40 uppercase tracking-wider mt-1">Notas simplificadas emitidas ante Facturapi</p>
             </div>
             <button
               onClick={() => setShowReceiptModal(true)}
-              className="px-3 py-1.5 text-[8px] font-black uppercase tracking-wider rounded-xl transition-all hover:scale-105 active:scale-95 cursor-pointer"
+              className="px-3 py-1.5 text-2xs font-black uppercase tracking-wider rounded-xl transition-all hover:scale-105 active:scale-95 cursor-pointer"
               style={{ backgroundColor: primaryColor, color: '#000' }}
             >
               + Emitir Nota
@@ -642,22 +642,22 @@ export default function FacturapiManager({
             placeholder="Buscar por folio..."
             value={receiptSearch}
             onChange={(e) => setReceiptSearch(e.target.value)}
-            className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input font-bold"
+            className="w-full border rounded-xl px-3 py-2 text-2xs focus:outline-none focus:border-nectar-gold transition-all admin-input font-bold"
           />
 
           {loadingReceipts ? (
             <div className="py-8 flex items-center justify-center gap-2 text-white/30">
               <span className="w-4 h-4 rounded-full border-2 border-t-white/50 border-white/10 animate-spin"></span>
-              <span className="text-[9px] uppercase tracking-widest font-black">Cargando notas...</span>
+              <span className="text-2xs uppercase tracking-widest font-black">Cargando notas...</span>
             </div>
           ) : receipts.length === 0 ? (
             <div className="py-8 flex flex-col items-center justify-center text-center">
               <span className="text-3xl mb-2">🧾</span>
-              <p className="text-[8px] uppercase font-black tracking-widest text-white/30">Sin notas de venta emitidas</p>
+              <p className="text-2xs uppercase font-black tracking-widest text-white/30">Sin notas de venta emitidas</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-[9px] border-collapse">
+              <table className="w-full text-left text-2xs border-collapse">
                 <thead>
                   <tr className="border-b border-white/5 text-white/40 uppercase tracking-widest">
                     <th className="py-3 px-2">ID Nota</th>
@@ -682,7 +682,7 @@ export default function FacturapiManager({
                           ${parseFloat(rec.total?.toString() || '0').toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN
                         </td>
                         <td className="py-3 px-2 text-center">
-                          <span className={`px-2.5 py-0.5 border text-[7px] font-black uppercase tracking-widest rounded-full ${
+                          <span className={`px-2.5 py-0.5 border text-2xs font-black uppercase tracking-widest rounded-full ${
                             rec.status === 'valid'
                               ? 'bg-green-500/10 text-green-400 border-green-500/20'
                               : 'bg-white/5 text-white/40 border-white/10'
@@ -705,11 +705,11 @@ export default function FacturapiManager({
           <div className="flex items-center justify-between border-b border-white/5 pb-4">
             <div>
               <h3 className="text-xs font-black uppercase tracking-widest text-white">Retenciones Fiscales</h3>
-              <p className="text-[8px] text-white/40 uppercase tracking-wider mt-1">Declaraciones de retención emitidas</p>
+              <p className="text-2xs text-white/40 uppercase tracking-wider mt-1">Declaraciones de retención emitidas</p>
             </div>
             <button
               onClick={() => setShowRetentionModal(true)}
-              className="px-3 py-1.5 text-[8px] font-black uppercase tracking-wider rounded-xl transition-all hover:scale-105 active:scale-95 cursor-pointer"
+              className="px-3 py-1.5 text-2xs font-black uppercase tracking-wider rounded-xl transition-all hover:scale-105 active:scale-95 cursor-pointer"
               style={{ backgroundColor: primaryColor, color: '#000' }}
             >
               + Emitir Retención
@@ -721,22 +721,22 @@ export default function FacturapiManager({
             placeholder="Buscar por RFC de receptor..."
             value={retentionSearch}
             onChange={(e) => setRetentionSearch(e.target.value)}
-            className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input font-bold"
+            className="w-full border rounded-xl px-3 py-2 text-2xs focus:outline-none focus:border-nectar-gold transition-all admin-input font-bold"
           />
 
           {loadingRetentions ? (
             <div className="py-8 flex items-center justify-center gap-2 text-white/30">
               <span className="w-4 h-4 rounded-full border-2 border-t-white/50 border-white/10 animate-spin"></span>
-              <span className="text-[9px] uppercase tracking-widest font-black">Cargando retenciones...</span>
+              <span className="text-2xs uppercase tracking-widest font-black">Cargando retenciones...</span>
             </div>
           ) : retentions.length === 0 ? (
             <div className="py-8 flex flex-col items-center justify-center text-center">
               <span className="text-3xl mb-2">📑</span>
-              <p className="text-[8px] uppercase font-black tracking-widest text-white/30">Sin retenciones emitidas</p>
+              <p className="text-2xs uppercase font-black tracking-widest text-white/30">Sin retenciones emitidas</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-[9px] border-collapse">
+              <table className="w-full text-left text-2xs border-collapse">
                 <thead>
                   <tr className="border-b border-white/5 text-white/40 uppercase tracking-widest">
                     <th className="py-3 px-2">ID Retención</th>
@@ -760,7 +760,7 @@ export default function FacturapiManager({
                         </td>
                         <td className="py-3 px-2 text-white/70 font-mono">Tipo {ret.cve_retenc}</td>
                         <td className="py-3 px-2 text-center">
-                          <span className={`px-2.5 py-0.5 border text-[7px] font-black uppercase tracking-widest rounded-full ${
+                          <span className={`px-2.5 py-0.5 border text-2xs font-black uppercase tracking-widest rounded-full ${
                             ret.status === 'valid'
                               ? 'bg-green-500/10 text-green-400 border-green-500/20'
                               : 'bg-white/5 text-white/40 border-white/10'
@@ -786,27 +786,27 @@ export default function FacturapiManager({
             </h3>
 
             {customerError && (
-              <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-400 text-[9px] uppercase tracking-wider font-bold rounded-xl">
+              <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-400 text-2xs uppercase tracking-wider font-bold rounded-xl">
                 ⚠️ {customerError}
               </div>
             )}
 
             <form onSubmit={handleSaveCustomer} className="space-y-4">
               <div className="space-y-1">
-                <label className="text-[8px] uppercase tracking-wider font-black text-white/50">Razón Social</label>
+                <label className="text-2xs uppercase tracking-wider font-black text-white/50">Razón Social</label>
                 <input
                   type="text"
                   required
                   placeholder="Ej. JOHN DOE"
                   value={custName}
                   onChange={(e) => setCustName(e.target.value)}
-                  className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input"
+                  className="w-full border rounded-xl px-3 py-2 text-2xs focus:outline-none focus:border-nectar-gold transition-all admin-input"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="text-[8px] uppercase tracking-wider font-black text-white/50">RFC</label>
+                  <label className="text-2xs uppercase tracking-wider font-black text-white/50">RFC</label>
                   <input
                     type="text"
                     required
@@ -814,11 +814,11 @@ export default function FacturapiManager({
                     placeholder="Ej. XAXX010101000"
                     value={custRfc}
                     onChange={(e) => setCustRfc(e.target.value.toUpperCase())}
-                    className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input font-mono"
+                    className="w-full border rounded-xl px-3 py-2 text-2xs focus:outline-none focus:border-nectar-gold transition-all admin-input font-mono"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[8px] uppercase tracking-wider font-black text-white/50">Código Postal</label>
+                  <label className="text-2xs uppercase tracking-wider font-black text-white/50">Código Postal</label>
                   <input
                     type="text"
                     required
@@ -826,17 +826,17 @@ export default function FacturapiManager({
                     placeholder="Ej. 83240"
                     value={custZip}
                     onChange={(e) => setCustZip(e.target.value.replace(/\D/g, ''))}
-                    className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input font-mono"
+                    className="w-full border rounded-xl px-3 py-2 text-2xs focus:outline-none focus:border-nectar-gold transition-all admin-input font-mono"
                   />
                 </div>
               </div>
 
               <div className="space-y-1">
-                <label className="text-[8px] uppercase tracking-wider font-black text-white/50">Régimen Fiscal (SAT)</label>
+                <label className="text-2xs uppercase tracking-wider font-black text-white/50">Régimen Fiscal (SAT)</label>
                 <select
                   value={custRegimen}
                   onChange={(e) => setCustRegimen(e.target.value)}
-                  className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input"
+                  className="w-full border rounded-xl px-3 py-2 text-2xs focus:outline-none focus:border-nectar-gold transition-all admin-input"
                 >
                   <option value="601">601 - General de Ley Personas Morales</option>
                   <option value="603">603 - Personas Morales con Fines no Lucrativos</option>
@@ -851,24 +851,24 @@ export default function FacturapiManager({
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="text-[8px] uppercase tracking-wider font-black text-white/50">Email</label>
+                  <label className="text-2xs uppercase tracking-wider font-black text-white/50">Email</label>
                   <input
                     type="email"
                     required
                     placeholder="ejemplo@correo.com"
                     value={custEmail}
                     onChange={(e) => setCustEmail(e.target.value)}
-                    className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input"
+                    className="w-full border rounded-xl px-3 py-2 text-2xs focus:outline-none focus:border-nectar-gold transition-all admin-input"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[8px] uppercase tracking-wider font-black text-white/50">Teléfono</label>
+                  <label className="text-2xs uppercase tracking-wider font-black text-white/50">Teléfono</label>
                   <input
                     type="text"
                     placeholder="10 dígitos"
                     value={custPhone}
                     onChange={(e) => setCustPhone(e.target.value.replace(/\D/g, ''))}
-                    className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input"
+                    className="w-full border rounded-xl px-3 py-2 text-2xs focus:outline-none focus:border-nectar-gold transition-all admin-input"
                   />
                 </div>
               </div>
@@ -877,14 +877,14 @@ export default function FacturapiManager({
                 <button
                   type="button"
                   onClick={() => setShowCustomerModal(false)}
-                  className="px-4 py-2 text-[8px] font-black uppercase tracking-widest border border-white/10 hover:border-white/20 text-white/70 hover:text-white rounded-xl cursor-pointer"
+                  className="px-4 py-2 text-2xs font-black uppercase tracking-widest border border-white/10 hover:border-white/20 text-white/70 hover:text-white rounded-xl cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={savingCustomer}
-                  className="px-6 py-2 text-[8px] font-black uppercase tracking-widest rounded-xl transition-all cursor-pointer font-bold disabled:opacity-40"
+                  className="px-6 py-2 text-2xs font-black uppercase tracking-widest rounded-xl transition-all cursor-pointer font-bold disabled:opacity-40"
                   style={{ backgroundColor: primaryColor, color: '#000' }}
                 >
                   {savingCustomer ? 'Guardando...' : 'Guardar Cliente'}
@@ -904,26 +904,26 @@ export default function FacturapiManager({
             </h3>
 
             {productError && (
-              <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-400 text-[9px] uppercase tracking-wider font-bold rounded-xl">
+              <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-400 text-2xs uppercase tracking-wider font-bold rounded-xl">
                 ⚠️ {productError}
               </div>
             )}
 
             <form onSubmit={handleSaveProduct} className="space-y-4">
               <div className="space-y-1">
-                <label className="text-[8px] uppercase tracking-wider font-black text-white/50">Descripción del Producto</label>
+                <label className="text-2xs uppercase tracking-wider font-black text-white/50">Descripción del Producto</label>
                 <input
                   type="text"
                   required
                   placeholder="Ej. Renta de equipo o Licencia mensual"
                   value={prodDesc}
                   onChange={(e) => setProdDesc(e.target.value)}
-                  className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input"
+                  className="w-full border rounded-xl px-3 py-2 text-2xs focus:outline-none focus:border-nectar-gold transition-all admin-input"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-[8px] uppercase tracking-wider font-black text-white/50">Precio Unitario (MXN)</label>
+                <label className="text-2xs uppercase tracking-wider font-black text-white/50">Precio Unitario (MXN)</label>
                 <input
                   type="number"
                   step="0.01"
@@ -931,12 +931,12 @@ export default function FacturapiManager({
                   placeholder="0.00"
                   value={prodPrice}
                   onChange={(e) => setProdPrice(e.target.value)}
-                  className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input font-mono"
+                  className="w-full border rounded-xl px-3 py-2 text-2xs focus:outline-none focus:border-nectar-gold transition-all admin-input font-mono"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[8px] uppercase tracking-wider font-black text-white/50 block">Clave SAT de Producto</label>
+                <label className="text-2xs uppercase tracking-wider font-black text-white/50 block">Clave SAT de Producto</label>
                 <SATAutocomplete
                   mode="product"
                   value={prodKey}
@@ -948,7 +948,7 @@ export default function FacturapiManager({
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[8px] uppercase tracking-wider font-black text-white/50 block">Clave SAT de Unidad</label>
+                <label className="text-2xs uppercase tracking-wider font-black text-white/50 block">Clave SAT de Unidad</label>
                 <SATAutocomplete
                   mode="unit"
                   value={prodUnitKey}
@@ -963,14 +963,14 @@ export default function FacturapiManager({
                 <button
                   type="button"
                   onClick={() => setShowProductModal(false)}
-                  className="px-4 py-2 text-[8px] font-black uppercase tracking-widest border border-white/10 hover:border-white/20 text-white/70 hover:text-white rounded-xl cursor-pointer"
+                  className="px-4 py-2 text-2xs font-black uppercase tracking-widest border border-white/10 hover:border-white/20 text-white/70 hover:text-white rounded-xl cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={savingProduct}
-                  className="px-6 py-2 text-[8px] font-black uppercase tracking-widest rounded-xl transition-all cursor-pointer font-bold disabled:opacity-40"
+                  className="px-6 py-2 text-2xs font-black uppercase tracking-widest rounded-xl transition-all cursor-pointer font-bold disabled:opacity-40"
                   style={{ backgroundColor: primaryColor, color: '#000' }}
                 >
                   {savingProduct ? 'Guardando...' : 'Guardar Producto'}
@@ -990,7 +990,7 @@ export default function FacturapiManager({
             </h3>
 
             {receiptError && (
-              <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-400 text-[9px] uppercase tracking-wider font-bold rounded-xl">
+              <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-400 text-2xs uppercase tracking-wider font-bold rounded-xl">
                 ⚠️ {receiptError}
               </div>
             )}
@@ -998,21 +998,21 @@ export default function FacturapiManager({
             <form onSubmit={handleSaveReceipt} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="text-[8px] uppercase tracking-wider font-black text-white/50">Folio de la Nota (Opcional)</label>
+                  <label className="text-2xs uppercase tracking-wider font-black text-white/50">Folio de la Nota (Opcional)</label>
                   <input
                     type="number"
                     placeholder="Auto-incrementable si se deja vacío"
                     value={recFolio}
                     onChange={(e) => setRecFolio(e.target.value)}
-                    className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input font-mono"
+                    className="w-full border rounded-xl px-3 py-2 text-2xs focus:outline-none focus:border-nectar-gold transition-all admin-input font-mono"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[8px] uppercase tracking-wider font-black text-white/50">Forma de Pago</label>
+                  <label className="text-2xs uppercase tracking-wider font-black text-white/50">Forma de Pago</label>
                   <select
                     value={recPaymentForm}
                     onChange={(e) => setRecPaymentForm(e.target.value)}
-                    className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input"
+                    className="w-full border rounded-xl px-3 py-2 text-2xs focus:outline-none focus:border-nectar-gold transition-all admin-input"
                   >
                     <option value="01">01 - Efectivo</option>
                     <option value="03">03 - Transferencia electrónica de fondos</option>
@@ -1025,11 +1025,11 @@ export default function FacturapiManager({
 
               <div className="space-y-3 pt-3 border-t border-white/5">
                 <div className="flex justify-between items-center">
-                  <h4 className="text-[9px] font-black uppercase tracking-wider text-white">Desglose de Conceptos</h4>
+                  <h4 className="text-2xs font-black uppercase tracking-wider text-white">Desglose de Conceptos</h4>
                   <button
                     type="button"
                     onClick={() => setRecItems(prev => [...prev, { quantity: 1, product: { description: '', price: 0, product_key: '43231500', unit_key: 'E48' } }])}
-                    className="px-2.5 py-1 text-[7px] font-black uppercase tracking-wider bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 text-white cursor-pointer"
+                    className="px-2.5 py-1 text-2xs font-black uppercase tracking-wider bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 text-white cursor-pointer"
                   >
                     + Agregar Fila
                   </button>
@@ -1049,7 +1049,7 @@ export default function FacturapiManager({
                             const val = parseInt(e.target.value) || 1;
                             setRecItems(prev => prev.map((it, idx) => idx === index ? { ...it, quantity: val } : it));
                           }}
-                          className="w-full border rounded-xl px-2 py-1.5 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input font-mono"
+                          className="w-full border rounded-xl px-2 py-1.5 text-2xs focus:outline-none focus:border-nectar-gold transition-all admin-input font-mono"
                         />
                       </div>
                       <div className="flex-1">
@@ -1063,7 +1063,7 @@ export default function FacturapiManager({
                             const val = e.target.value;
                             setRecItems(prev => prev.map((it, idx) => idx === index ? { ...it, product: { ...it.product, description: val } } : it));
                           }}
-                          className="w-full border rounded-xl px-2.5 py-1.5 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input"
+                          className="w-full border rounded-xl px-2.5 py-1.5 text-2xs focus:outline-none focus:border-nectar-gold transition-all admin-input"
                         />
                       </div>
                       <div className="w-20 shrink-0">
@@ -1078,7 +1078,7 @@ export default function FacturapiManager({
                             const val = parseFloat(e.target.value) || 0;
                             setRecItems(prev => prev.map((it, idx) => idx === index ? { ...it, product: { ...it.product, price: val } } : it));
                           }}
-                          className="w-full border rounded-xl px-2.5 py-1.5 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input font-mono"
+                          className="w-full border rounded-xl px-2.5 py-1.5 text-2xs focus:outline-none focus:border-nectar-gold transition-all admin-input font-mono"
                         />
                       </div>
                       {recItems.length > 1 && (
@@ -1099,14 +1099,14 @@ export default function FacturapiManager({
                 <button
                   type="button"
                   onClick={() => setShowReceiptModal(false)}
-                  className="px-4 py-2 text-[8px] font-black uppercase tracking-widest border border-white/10 hover:border-white/20 text-white/70 hover:text-white rounded-xl cursor-pointer"
+                  className="px-4 py-2 text-2xs font-black uppercase tracking-widest border border-white/10 hover:border-white/20 text-white/70 hover:text-white rounded-xl cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={savingReceipt}
-                  className="px-6 py-2 text-[8px] font-black uppercase tracking-widest rounded-xl transition-all cursor-pointer font-bold disabled:opacity-40"
+                  className="px-6 py-2 text-2xs font-black uppercase tracking-widest rounded-xl transition-all cursor-pointer font-bold disabled:opacity-40"
                   style={{ backgroundColor: primaryColor, color: '#000' }}
                 >
                   {savingReceipt ? 'Procesando...' : 'Emitir Nota'}
@@ -1126,7 +1126,7 @@ export default function FacturapiManager({
             </h3>
 
             {retentionError && (
-              <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-400 text-[9px] uppercase tracking-wider font-bold rounded-xl">
+              <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-400 text-2xs uppercase tracking-wider font-bold rounded-xl">
                 ⚠️ {retentionError}
               </div>
             )}
@@ -1134,21 +1134,21 @@ export default function FacturapiManager({
             <form onSubmit={handleSaveRetention} className="space-y-4">
               {/* Receptor Info */}
               <div className="space-y-3">
-                <h4 className="text-[9px] font-black uppercase tracking-wider text-white">Receptor de Retención</h4>
+                <h4 className="text-2xs font-black uppercase tracking-wider text-white">Receptor de Retención</h4>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <label className="text-[8px] uppercase tracking-wider font-black text-white/50">Razón Social</label>
+                    <label className="text-2xs uppercase tracking-wider font-black text-white/50">Razón Social</label>
                     <input
                       type="text"
                       required
                       placeholder="Ej. JOHN DOE"
                       value={retCustName}
                       onChange={(e) => setRetCustName(e.target.value)}
-                      className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input"
+                      className="w-full border rounded-xl px-3 py-2 text-2xs focus:outline-none focus:border-nectar-gold transition-all admin-input"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[8px] uppercase tracking-wider font-black text-white/50">RFC</label>
+                    <label className="text-2xs uppercase tracking-wider font-black text-white/50">RFC</label>
                     <input
                       type="text"
                       required
@@ -1156,24 +1156,24 @@ export default function FacturapiManager({
                       placeholder="Ej. XAXX010101000"
                       value={retCustRfc}
                       onChange={(e) => setRetCustRfc(e.target.value.toUpperCase())}
-                      className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input font-mono"
+                      className="w-full border rounded-xl px-3 py-2 text-2xs focus:outline-none focus:border-nectar-gold transition-all admin-input font-mono"
                     />
                   </div>
                 </div>
                 <div className="grid grid-cols-3 gap-3">
                   <div className="space-y-1 col-span-2">
-                    <label className="text-[8px] uppercase tracking-wider font-black text-white/50">Email</label>
+                    <label className="text-2xs uppercase tracking-wider font-black text-white/50">Email</label>
                     <input
                       type="email"
                       required
                       placeholder="correo@ejemplo.com"
                       value={retCustEmail}
                       onChange={(e) => setRetCustEmail(e.target.value)}
-                      className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input"
+                      className="w-full border rounded-xl px-3 py-2 text-2xs focus:outline-none focus:border-nectar-gold transition-all admin-input"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[8px] uppercase tracking-wider font-black text-white/50">C.P.</label>
+                    <label className="text-2xs uppercase tracking-wider font-black text-white/50">C.P.</label>
                     <input
                       type="text"
                       required
@@ -1181,16 +1181,16 @@ export default function FacturapiManager({
                       placeholder="Ej. 83240"
                       value={retCustZip}
                       onChange={(e) => setRetCustZip(e.target.value.replace(/\D/g, ''))}
-                      className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input font-mono"
+                      className="w-full border rounded-xl px-3 py-2 text-2xs focus:outline-none focus:border-nectar-gold transition-all admin-input font-mono"
                     />
                   </div>
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[8px] uppercase tracking-wider font-black text-white/50">Régimen Fiscal (Receptor)</label>
+                  <label className="text-2xs uppercase tracking-wider font-black text-white/50">Régimen Fiscal (Receptor)</label>
                   <select
                     value={retCustRegimen}
                     onChange={(e) => setRetCustRegimen(e.target.value)}
-                    className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input"
+                    className="w-full border rounded-xl px-3 py-2 text-2xs focus:outline-none focus:border-nectar-gold transition-all admin-input"
                   >
                     <option value="601">601 - General de Ley Personas Morales</option>
                     <option value="616">616 - Sin obligaciones fiscales</option>
@@ -1201,14 +1201,14 @@ export default function FacturapiManager({
 
               {/* Retention Details */}
               <div className="space-y-3 pt-3 border-t border-white/5">
-                <h4 className="text-[9px] font-black uppercase tracking-wider text-white">Declaración Fiscal</h4>
+                <h4 className="text-2xs font-black uppercase tracking-wider text-white">Declaración Fiscal</h4>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <label className="text-[8px] uppercase tracking-wider font-black text-white/50">Tipo de Retención (Clave)</label>
+                    <label className="text-2xs uppercase tracking-wider font-black text-white/50">Tipo de Retención (Clave)</label>
                     <select
                       value={retCve}
                       onChange={(e) => setRetCve(e.target.value)}
-                      className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input font-bold"
+                      className="w-full border rounded-xl px-3 py-2 text-2xs focus:outline-none focus:border-nectar-gold transition-all admin-input font-bold"
                     >
                       <option value="03">03 - Regalias por derechos de autor</option>
                       <option value="04">04 - Autotransporte terrestre de carga</option>
@@ -1216,24 +1216,24 @@ export default function FacturapiManager({
                     </select>
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[8px] uppercase tracking-wider font-black text-white/50">Año Fiscal</label>
+                    <label className="text-2xs uppercase tracking-wider font-black text-white/50">Año Fiscal</label>
                     <input
                       type="number"
                       required
                       value={retEjerc}
                       onChange={(e) => setRetEjerc(e.target.value)}
-                      className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input font-mono"
+                      className="w-full border rounded-xl px-3 py-2 text-2xs focus:outline-none focus:border-nectar-gold transition-all admin-input font-mono"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <label className="text-[8px] uppercase tracking-wider font-black text-white/50">Mes Inicial</label>
+                    <label className="text-2xs uppercase tracking-wider font-black text-white/50">Mes Inicial</label>
                     <select
                       value={retMesIni}
                       onChange={(e) => setRetMesIni(e.target.value)}
-                      className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input font-mono"
+                      className="w-full border rounded-xl px-3 py-2 text-2xs focus:outline-none focus:border-nectar-gold transition-all admin-input font-mono"
                     >
                       {Array.from({ length: 12 }, (_, i) => (
                         <option key={i + 1} value={i + 1}>{i + 1}</option>
@@ -1241,11 +1241,11 @@ export default function FacturapiManager({
                     </select>
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[8px] uppercase tracking-wider font-black text-white/50">Mes Final</label>
+                    <label className="text-2xs uppercase tracking-wider font-black text-white/50">Mes Final</label>
                     <select
                       value={retMesFin}
                       onChange={(e) => setRetMesFin(e.target.value)}
-                      className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input font-mono"
+                      className="w-full border rounded-xl px-3 py-2 text-2xs focus:outline-none focus:border-nectar-gold transition-all admin-input font-mono"
                     >
                       {Array.from({ length: 12 }, (_, i) => (
                         <option key={i + 1} value={i + 1}>{i + 1}</option>
@@ -1256,7 +1256,7 @@ export default function FacturapiManager({
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <label className="text-[8px] uppercase tracking-wider font-black text-white/50">Monto Operación (MXN)</label>
+                    <label className="text-2xs uppercase tracking-wider font-black text-white/50">Monto Operación (MXN)</label>
                     <input
                       type="number"
                       step="0.01"
@@ -1264,18 +1264,18 @@ export default function FacturapiManager({
                       placeholder="0.00"
                       value={retMontoOper}
                       onChange={(e) => setRetMontoOper(e.target.value)}
-                      className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input font-mono"
+                      className="w-full border rounded-xl px-3 py-2 text-2xs focus:outline-none focus:border-nectar-gold transition-all admin-input font-mono"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[8px] uppercase tracking-wider font-black text-white/50">Monto Exento (MXN)</label>
+                    <label className="text-2xs uppercase tracking-wider font-black text-white/50">Monto Exento (MXN)</label>
                     <input
                       type="number"
                       step="0.01"
                       placeholder="0.00"
                       value={retMontoExent}
                       onChange={(e) => setRetMontoExent(e.target.value)}
-                      className="w-full border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input font-mono"
+                      className="w-full border rounded-xl px-3 py-2 text-2xs focus:outline-none focus:border-nectar-gold transition-all admin-input font-mono"
                     />
                   </div>
                 </div>
@@ -1284,11 +1284,11 @@ export default function FacturapiManager({
               {/* Impuestos Retenidos desglosados */}
               <div className="space-y-3 pt-3 border-t border-white/5">
                 <div className="flex justify-between items-center">
-                  <h4 className="text-[9px] font-black uppercase tracking-wider text-white">Impuestos Retenidos</h4>
+                  <h4 className="text-2xs font-black uppercase tracking-wider text-white">Impuestos Retenidos</h4>
                   <button
                     type="button"
                     onClick={() => setRetImps(prev => [...prev, { impuesto: 'ISR', tipo_pago_ret: '04', monto_ret: 0 }])}
-                    className="px-2.5 py-1 text-[7px] font-black uppercase tracking-wider bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 text-white cursor-pointer"
+                    className="px-2.5 py-1 text-2xs font-black uppercase tracking-wider bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 text-white cursor-pointer"
                   >
                     + Agregar Impuesto
                   </button>
@@ -1305,7 +1305,7 @@ export default function FacturapiManager({
                             const val = e.target.value as 'ISR' | 'IVA';
                             setRetImps(prev => prev.map((im, i) => i === idx ? { ...im, impuesto: val } : im));
                           }}
-                          className="w-full border rounded-xl px-2 py-1 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input font-bold"
+                          className="w-full border rounded-xl px-2 py-1 text-2xs focus:outline-none focus:border-nectar-gold transition-all admin-input font-bold"
                         >
                           <option value="ISR">ISR</option>
                           <option value="IVA">IVA</option>
@@ -1322,7 +1322,7 @@ export default function FacturapiManager({
                             const val = parseFloat(e.target.value) || 0;
                             setRetImps(prev => prev.map((im, i) => i === idx ? { ...im, monto_ret: val } : im));
                           }}
-                          className="w-full border rounded-xl px-2.5 py-1 text-[10px] focus:outline-none focus:border-nectar-gold transition-all admin-input font-mono"
+                          className="w-full border rounded-xl px-2.5 py-1 text-2xs focus:outline-none focus:border-nectar-gold transition-all admin-input font-mono"
                         />
                       </div>
                       {retImps.length > 1 && (
@@ -1343,14 +1343,14 @@ export default function FacturapiManager({
                 <button
                   type="button"
                   onClick={() => setShowRetentionModal(false)}
-                  className="px-4 py-2 text-[8px] font-black uppercase tracking-widest border border-white/10 hover:border-white/20 text-white/70 hover:text-white rounded-xl cursor-pointer"
+                  className="px-4 py-2 text-2xs font-black uppercase tracking-widest border border-white/10 hover:border-white/20 text-white/70 hover:text-white rounded-xl cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={savingRetention}
-                  className="px-6 py-2 text-[8px] font-black uppercase tracking-widest rounded-xl transition-all cursor-pointer font-bold disabled:opacity-40"
+                  className="px-6 py-2 text-2xs font-black uppercase tracking-widest rounded-xl transition-all cursor-pointer font-bold disabled:opacity-40"
                   style={{ backgroundColor: primaryColor, color: '#000' }}
                 >
                   {savingRetention ? 'Procesando...' : 'Emitir Retención'}

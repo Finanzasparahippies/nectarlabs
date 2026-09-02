@@ -789,7 +789,7 @@ function DashboardPageOriginal() {
   if (loading) return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-background">
       <div className="w-12 h-12 border-4 border-nectar-gold border-t-transparent rounded-full animate-spin mb-4"></div>
-      <div className="font-black uppercase tracking-[0.4em] opacity-20 text-[10px]">Syncing Ecosystem...</div>
+      <div className="font-black uppercase tracking-[0.4em] opacity-20 text-2xs">Syncing Ecosystem...</div>
     </div>
   );
 
@@ -804,18 +804,18 @@ function DashboardPageOriginal() {
                 <span className="w-4 h-4 rounded-full border-2 border-nectar-gold border-t-transparent animate-spin shrink-0"></span>
               )}
               {notification.type === 'success' && (
-                <span className="w-4 h-4 rounded-full bg-green-500/20 border border-green-500 text-green-500 flex items-center justify-center font-bold text-[9px] shrink-0">✓</span>
+                <span className="w-4 h-4 rounded-full bg-green-500/20 border border-green-500 text-green-500 flex items-center justify-center font-bold text-2xs shrink-0">✓</span>
               )}
               {notification.type === 'cancel' && (
-                <span className="w-4 h-4 rounded-full bg-yellow-500/20 border border-yellow-500 text-yellow-500 flex items-center justify-center font-bold text-[9px] shrink-0">!</span>
+                <span className="w-4 h-4 rounded-full bg-yellow-500/20 border border-yellow-500 text-yellow-500 flex items-center justify-center font-bold text-2xs shrink-0">!</span>
               )}
-              <h3 className="font-black text-[10px] uppercase tracking-wider text-foreground">
+              <h3 className="font-black text-2xs uppercase tracking-wider text-foreground">
                 {notification.title}
               </h3>
             </div>
             <button
               onClick={() => setNotification(null)}
-              className="text-[9px] font-black uppercase tracking-widest opacity-40 hover:opacity-100 transition-opacity"
+              className="text-2xs font-black uppercase tracking-widest opacity-40 hover:opacity-100 transition-opacity"
             >
               Cerrar
             </button>
@@ -840,7 +840,7 @@ function DashboardPageOriginal() {
                     isSales ? 'Consola de Ventas' :
                       activeTab === 'hire-plan' ? 'Escala tu Ecosistema' : 'Centro de Control'}
           </h1>
-          <p className="text-[10px] font-black uppercase tracking-[0.5em] text-nectar-gold opacity-80">
+          <p className="text-2xs font-black uppercase tracking-[0.5em] text-nectar-gold opacity-80">
             {isDriver ? (activeTab === 'driver-stats' ? 'Ganancias, Historial de Viajes e Indicadores' : 'Consola de Entregas y GPS en Vivo') :
               isCEO ? (activeTab === 'business' ? 'Consola Financiera y de Infraestructura' : 'Panel de Operaciones Néctar Labs') :
                 isDeveloper ? 'Workspace de Desarrollo y Soporte' :
@@ -866,7 +866,7 @@ function DashboardPageOriginal() {
                 <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/5 rounded-full blur-3xl -mr-20 -mt-20"></div>
                 <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
                   <div className="space-y-2 max-w-3xl">
-                    <span className="px-3 py-1 bg-amber-500/20 text-amber-400 text-[8px] font-black uppercase tracking-widest rounded-full border border-amber-500/30">
+                    <span className="px-3 py-1 bg-amber-500/20 text-amber-400 text-2xs font-black uppercase tracking-widest rounded-full border border-amber-500/30">
                       Reunión de Inducción Pendiente
                     </span>
                     <h2 className="text-2xl font-black tracking-tight text-foreground mt-2">
@@ -878,7 +878,7 @@ function DashboardPageOriginal() {
                   </div>
                   <a
                     href="mailto:contacto@nectarlabs.dev?subject=Reunion%20de%20Aprobacion%20Vendedor%20Nectar%20Labs"
-                    className="px-8 py-4 bg-nectar-gold hover:bg-nectar-gold/90 text-background text-[10px] font-black uppercase tracking-widest rounded-xl hover:scale-[1.02] active:scale-95 transition-all shadow-lg shadow-nectar-gold/20 shrink-0 text-center font-bold"
+                    className="px-8 py-4 bg-nectar-gold hover:bg-nectar-gold/90 text-background text-2xs font-black uppercase tracking-widest rounded-xl hover:scale-[1.02] active:scale-95 transition-all shadow-lg shadow-nectar-gold/20 shrink-0 text-center font-bold"
                   >
                     Agendar Reunión 📅
                   </a>
@@ -894,7 +894,7 @@ function DashboardPageOriginal() {
                   <div className="absolute top-0 right-0 w-64 h-64 bg-nectar-gold/5 rounded-full blur-3xl -mr-20 -mt-20"></div>
                   <div className="relative z-10 flex flex-col justify-between h-full space-y-6">
                     <div>
-                      <span className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold text-[8px] font-black uppercase tracking-widest rounded-full">Código de Vendedor</span>
+                      <span className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold text-2xs font-black uppercase tracking-widest rounded-full">Código de Vendedor</span>
                       <h2 className="text-3xl font-black tracking-tighter mt-4 mb-2">Tu Enlace de Referido</h2>
                       <p className="text-xs text-foreground/60 leading-relaxed uppercase tracking-wider">
                         Comparte este código exclusivo con tus clientes prospectos. Al ingresarlo durante su registro, obtendrán un <strong>10% de descuento</strong> en su primer abono y se vincularán a tu cuenta para comisiones recurrentes.
@@ -921,7 +921,7 @@ function DashboardPageOriginal() {
                             navigator.clipboard.writeText(link);
                             showToast("¡Enlace de referido copiado!", "success");
                           }}
-                          className="px-6 py-4 bg-nectar-gold hover:bg-nectar-gold/90 text-background text-[10px] font-black uppercase tracking-widest rounded-2xl transition-all hover:scale-[1.02] active:scale-95 whitespace-nowrap"
+                          className="px-6 py-4 bg-nectar-gold hover:bg-nectar-gold/90 text-background text-2xs font-black uppercase tracking-widest rounded-2xl transition-all hover:scale-[1.02] active:scale-95 whitespace-nowrap"
                         >
                           Copiar Enlace Directo
                         </button>
@@ -936,45 +936,45 @@ function DashboardPageOriginal() {
                 <div className="absolute top-0 right-0 w-64 h-64 bg-nectar-forest/5 rounded-full blur-3xl -mr-20 -mt-20"></div>
                 <div className="relative z-10 space-y-6">
                   <div>
-                    <span className="px-3 py-1 bg-nectar-forest/10 text-nectar-forest text-[8px] font-black uppercase tracking-widest rounded-full">Esquema de Comisiones</span>
+                    <span className="px-3 py-1 bg-nectar-forest/10 text-nectar-forest text-2xs font-black uppercase tracking-widest rounded-full">Esquema de Comisiones</span>
                     <h2 className="text-3xl font-black tracking-tighter mt-4 mb-2">Estructura Néctar Labs</h2>
                   </div>
 
                   <div className="space-y-4">
-                    <h4 className="text-[10px] font-black uppercase tracking-wider text-foreground/60">Contratos & Módulos Estándar (Mensual Recurrente):</h4>
+                    <h4 className="text-2xs font-black uppercase tracking-wider text-foreground/60">Contratos & Módulos Estándar (Mensual Recurrente):</h4>
                     <div className="grid grid-cols-3 gap-4">
                       <div className="p-4 bg-background/40 border border-card-border/60 rounded-2xl text-center">
-                        <span className="text-[8px] font-black uppercase tracking-widest opacity-40 block">Mes 1</span>
+                        <span className="text-2xs font-black uppercase tracking-widest opacity-40 block">Mes 1</span>
                         <span className="text-2xl font-black text-nectar-gold font-mono">10%</span>
-                        <p className="text-[8px] font-bold text-foreground/50 mt-1 uppercase">Abono Inicial</p>
+                        <p className="text-2xs font-bold text-foreground/50 mt-1 uppercase">Abono Inicial</p>
                       </div>
                       <div className="p-4 bg-background/40 border border-card-border/60 rounded-2xl text-center">
-                        <span className="text-[8px] font-black uppercase tracking-widest opacity-40 block">Mes 2</span>
+                        <span className="text-2xs font-black uppercase tracking-widest opacity-40 block">Mes 2</span>
                         <span className="text-2xl font-black text-nectar-gold font-mono">5%</span>
-                        <p className="text-[8px] font-bold text-foreground/50 mt-1 uppercase">Segundo Mes</p>
+                        <p className="text-2xs font-bold text-foreground/50 mt-1 uppercase">Segundo Mes</p>
                       </div>
                       <div className="p-4 bg-background/40 border border-card-border/60 rounded-2xl text-center">
-                        <span className="text-[8px] font-black uppercase tracking-widest opacity-40 block">Mes 3+</span>
+                        <span className="text-2xs font-black uppercase tracking-widest opacity-40 block">Mes 3+</span>
                         <span className="text-2xl font-black text-nectar-gold font-mono">2%</span>
-                        <p className="text-[8px] font-bold text-foreground/50 mt-1 uppercase">Permanente</p>
+                        <p className="text-2xs font-bold text-foreground/50 mt-1 uppercase">Permanente</p>
                       </div>
                     </div>
 
-                    <h4 className="text-[10px] font-black uppercase tracking-wider text-foreground/60 mt-4">Proyectos Personalizados (Cotizaciones):</h4>
+                    <h4 className="text-2xs font-black uppercase tracking-wider text-foreground/60 mt-4">Proyectos Personalizados (Cotizaciones):</h4>
                     <div className="p-4 bg-nectar-gold/10 border border-nectar-gold/30 rounded-2xl flex items-center justify-between">
                       <div>
-                        <span className="text-[8px] font-black uppercase tracking-widest text-nectar-gold block">Abono 1 (Anticipo 50%)</span>
+                        <span className="text-2xs font-black uppercase tracking-widest text-nectar-gold block">Abono 1 (Anticipo 50%)</span>
                         <span className="text-2xl font-black text-nectar-gold font-mono">20%</span>
-                        <p className="text-[8px] font-bold text-foreground/65 mt-0.5 uppercase">Comisión única sobre el total cotizado</p>
+                        <p className="text-2xs font-bold text-foreground/65 mt-0.5 uppercase">Comisión única sobre el total cotizado</p>
                       </div>
                       <div className="text-right max-w-[150px]">
                         <span className="text-[7.5px] font-bold text-foreground/45 uppercase tracking-wider block">Nota</span>
-                        <p className="text-[9px] text-foreground/65 leading-tight mt-1">La liquidación final (Abono 2) no genera comisiones adicionales.</p>
+                        <p className="text-2xs text-foreground/65 leading-tight mt-1">La liquidación final (Abono 2) no genera comisiones adicionales.</p>
                       </div>
                     </div>
                   </div>
 
-                  <div className="p-4 rounded-xl bg-nectar-gold/5 border border-nectar-gold/15 text-[10px] leading-relaxed text-foreground/70 font-medium">
+                  <div className="p-4 rounded-xl bg-nectar-gold/5 border border-nectar-gold/15 text-2xs leading-relaxed text-foreground/70 font-medium">
                     ⚠️ <strong>Información importante:</strong> Este beneficio por comisión es el único esquema compensatorio para vendedores registrados en esta modalidad. No se contemplan seguros, prestaciones de ley u otros adicionales por el momento.
                   </div>
                 </div>
@@ -987,11 +987,11 @@ function DashboardPageOriginal() {
               <div className="p-6 rounded-[2rem] bg-card-bg border border-card-border flex flex-col justify-between gap-4 relative overflow-hidden group">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-green-500/5 rounded-full blur-2xl -mr-10 -mt-10"></div>
                 <div className="relative z-10">
-                  <span className="text-[8px] font-black uppercase tracking-widest opacity-40">Comisiones Cobradas</span>
+                  <span className="text-2xs font-black uppercase tracking-widest opacity-40">Comisiones Cobradas</span>
                   <h3 className="text-3xl font-black tracking-tight mt-2 text-green-400 font-mono">
                     ${(salesSummary?.paid_total || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })} <span className="text-xs font-bold text-foreground/50">MXN</span>
                   </h3>
-                  <p className="text-[9px] text-foreground/50 mt-1 uppercase tracking-wider font-bold">Transferido a tu cuenta bancaria registrada</p>
+                  <p className="text-2xs text-foreground/50 mt-1 uppercase tracking-wider font-bold">Transferido a tu cuenta bancaria registrada</p>
                 </div>
               </div>
 
@@ -999,11 +999,11 @@ function DashboardPageOriginal() {
               <div className="p-6 rounded-[2rem] bg-card-bg border border-card-border flex flex-col justify-between gap-4 relative overflow-hidden group">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-500/5 rounded-full blur-2xl -mr-10 -mt-10"></div>
                 <div className="relative z-10">
-                  <span className="text-[8px] font-black uppercase tracking-widest opacity-40">Comisiones Pendientes</span>
+                  <span className="text-2xs font-black uppercase tracking-widest opacity-40">Comisiones Pendientes</span>
                   <h3 className="text-3xl font-black tracking-tight mt-2 text-yellow-500 font-mono">
                     ${(salesSummary?.pending_total || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })} <span className="text-xs font-bold text-foreground/50">MXN</span>
                   </h3>
-                  <p className="text-[9px] text-foreground/50 mt-1 uppercase tracking-wider font-bold">Por liquidar tras validación del pago del cliente</p>
+                  <p className="text-2xs text-foreground/50 mt-1 uppercase tracking-wider font-bold">Por liquidar tras validación del pago del cliente</p>
                 </div>
               </div>
 
@@ -1011,11 +1011,11 @@ function DashboardPageOriginal() {
               <div className="p-6 rounded-[2rem] bg-card-bg border border-card-border flex flex-col justify-between gap-4 relative overflow-hidden group">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-nectar-gold/5 rounded-full blur-2xl -mr-10 -mt-10"></div>
                 <div className="relative z-10">
-                  <span className="text-[8px] font-black uppercase tracking-widest opacity-40">Clientes Adquiridos</span>
+                  <span className="text-2xs font-black uppercase tracking-widest opacity-40">Clientes Adquiridos</span>
                   <h3 className="text-3xl font-black tracking-tight mt-2 text-nectar-gold font-mono">
                     {salesSummary?.referred_contracts_count || 0} <span className="text-xs font-bold text-foreground/50">Ecosistemas</span>
                   </h3>
-                  <p className="text-[9px] text-foreground/50 mt-1 uppercase tracking-wider font-bold">Contratos activos vinculados a tu código</p>
+                  <p className="text-2xs text-foreground/50 mt-1 uppercase tracking-wider font-bold">Contratos activos vinculados a tu código</p>
                 </div>
               </div>
             </div>
@@ -1027,13 +1027,13 @@ function DashboardPageOriginal() {
             <section className="p-8 md:p-10 rounded-[3rem] bg-card-bg border border-card-border shadow-xl relative">
               <div className="mb-8">
                 <h3 className="text-xs font-black uppercase tracking-[0.3em] opacity-30">Historial de Comisiones</h3>
-                <p className="text-[9px] font-bold text-foreground/40 mt-1 uppercase tracking-wider">Seguimiento de abonos de tus referidos y estado de pagos</p>
+                <p className="text-2xs font-bold text-foreground/40 mt-1 uppercase tracking-wider">Seguimiento de abonos de tus referidos y estado de pagos</p>
               </div>
 
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="border-b border-card-border/50 text-[8px] font-black uppercase tracking-widest opacity-40">
+                    <tr className="border-b border-card-border/50 text-2xs font-black uppercase tracking-widest opacity-40">
                       <th className="pb-4">Cliente</th>
                       <th className="pb-4 text-center">Mensualidad</th>
                       <th className="pb-4 text-right">Monto Recibido</th>
@@ -1063,19 +1063,19 @@ function DashboardPageOriginal() {
                         </td>
                         <td className="py-4 text-center">
                           {comm.status === 'PAID' ? (
-                            <span className="px-3 py-1 bg-green-500/10 text-green-500 text-[7px] font-black uppercase tracking-widest rounded-full border border-green-500/20">Liquidada</span>
+                            <span className="px-3 py-1 bg-green-500/10 text-green-500 text-2xs font-black uppercase tracking-widest rounded-full border border-green-500/20">Liquidada</span>
                           ) : (
-                            <span className="px-3 py-1 bg-yellow-500/10 text-yellow-500 text-[7px] font-black uppercase tracking-widest rounded-full border border-yellow-500/20">En Espera</span>
+                            <span className="px-3 py-1 bg-yellow-500/10 text-yellow-500 text-2xs font-black uppercase tracking-widest rounded-full border border-yellow-500/20">En Espera</span>
                           )}
                         </td>
-                        <td className="py-4 text-right text-[10px] font-bold opacity-60">
+                        <td className="py-4 text-right text-2xs font-bold opacity-60">
                           {new Date(comm.created_at).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })}
                         </td>
                       </tr>
                     ))}
                     {salesCommissions.length === 0 && (
                       <tr>
-                        <td colSpan={7} className="py-12 text-center text-[9px] font-black uppercase tracking-widest opacity-25">
+                        <td colSpan={7} className="py-12 text-center text-2xs font-black uppercase tracking-widest opacity-25">
                           No tienes comisiones registradas aún
                         </td>
                       </tr>
@@ -1127,7 +1127,7 @@ function DashboardPageOriginal() {
             <section className="p-10 rounded-[3rem] bg-card-bg border border-card-border shadow-xl relative overflow-hidden">
               <div className="absolute top-0 right-0 w-64 h-64 bg-nectar-gold/5 rounded-full blur-3xl -mr-20 -mt-20"></div>
               <div className="relative z-10 max-w-2xl">
-                <span className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold text-[8px] font-black uppercase tracking-widest rounded-full">Planes de Ingeniería Néctar Labs</span>
+                <span className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold text-2xs font-black uppercase tracking-widest rounded-full">Planes de Ingeniería Néctar Labs</span>
                 <h2 className="text-4xl font-black tracking-tighter mt-4 mb-2">Escala tu Ecosistema Tecnológico</h2>
                 <p className="text-xs text-foreground/60 uppercase tracking-wider mb-8">
                   Elige un plan de inversión de ingeniería mensual o agrega complementos. Todos los planes incluyen infraestructura en la nube dedicada.
@@ -1143,7 +1143,7 @@ function DashboardPageOriginal() {
                     <div key={plan.id} className="p-8 rounded-[2rem] bg-background/50 border border-card-border flex flex-col justify-between hover:border-nectar-gold transition-all duration-300 group animate-in fade-in zoom-in-95 relative">
                       <div>
                         <div className="flex items-center justify-between gap-2 mb-2">
-                          <span className="px-2.5 py-0.5 bg-nectar-gold/10 text-nectar-gold text-[8px] font-black uppercase tracking-wider rounded-full border border-nectar-gold/20">
+                          <span className="px-2.5 py-0.5 bg-nectar-gold/10 text-nectar-gold text-2xs font-black uppercase tracking-wider rounded-full border border-nectar-gold/20">
                             Contrato 6 Meses
                           </span>
                         </div>
@@ -1160,12 +1160,12 @@ function DashboardPageOriginal() {
                                   <span className="text-xs line-through opacity-50 font-mono">
                                     ${origPrice.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
                                   </span>
-                                  <span className="px-2 py-0.5 bg-red-500/10 text-red-500 text-[8px] font-black uppercase tracking-widest rounded-full border border-red-500/20">
+                                  <span className="px-2 py-0.5 bg-red-500/10 text-red-500 text-2xs font-black uppercase tracking-widest rounded-full border border-red-500/20">
                                     -{discount}% OFF
                                   </span>
                                 </div>
                                 <div className="text-3xl font-black text-nectar-gold font-mono">
-                                  ${finalPrice.toLocaleString('es-MX', { minimumFractionDigits: 2 })} <span className="text-[10px] text-foreground/50 uppercase tracking-widest">MXN / Mes</span>
+                                  ${finalPrice.toLocaleString('es-MX', { minimumFractionDigits: 2 })} <span className="text-2xs text-foreground/50 uppercase tracking-widest">MXN / Mes</span>
                                 </div>
                               </div>
                             );
@@ -1173,7 +1173,7 @@ function DashboardPageOriginal() {
 
                           return (
                             <div className="text-3xl font-black text-nectar-gold mb-6 font-mono">
-                              ${origPrice.toLocaleString('es-MX', { minimumFractionDigits: 2 })} <span className="text-[10px] text-foreground/50 uppercase tracking-widest">MXN / Mes</span>
+                              ${origPrice.toLocaleString('es-MX', { minimumFractionDigits: 2 })} <span className="text-2xs text-foreground/50 uppercase tracking-widest">MXN / Mes</span>
                             </div>
                           );
                         })()}
@@ -1234,7 +1234,7 @@ function DashboardPageOriginal() {
 
                       <Link
                         href={`/onboarding?plan=${plan.id}`}
-                        className="w-full py-4 bg-nectar-gold hover:bg-nectar-gold/90 text-background text-center rounded-xl text-[10px] font-black uppercase tracking-widest transition-all hover:scale-[1.02] shadow-lg shadow-nectar-gold/10"
+                        className="w-full py-4 bg-nectar-gold hover:bg-nectar-gold/90 text-background text-center rounded-xl text-2xs font-black uppercase tracking-widest transition-all hover:scale-[1.02] shadow-lg shadow-nectar-gold/10"
                       >
                         Contratar Plan
                       </Link>
@@ -1255,13 +1255,13 @@ function DashboardPageOriginal() {
                   {contracts.filter(c => !c.is_fully_signed).map(contract => (
                     <div key={contract.id} className="bg-background/10 backdrop-blur-md border border-background/20 p-6 rounded-2xl flex flex-col justify-between">
                       <div>
-                        <p className="text-[8px] font-black uppercase tracking-widest opacity-60">Cliente</p>
+                        <p className="text-2xs font-black uppercase tracking-widest opacity-60">Cliente</p>
                         <h4 className="font-black text-lg">{contract.full_name}</h4>
-                        <p className="text-[9px] font-bold mt-1 opacity-80">{contract.plan_name}</p>
+                        <p className="text-2xs font-bold mt-1 opacity-80">{contract.plan_name}</p>
                       </div>
                       <Link
                         href={`/contract/dev-sign/${contract.id}`}
-                        className="mt-6 py-3 bg-background text-nectar-gold text-center rounded-xl text-[9px] font-black uppercase tracking-widest hover:scale-105 transition-all"
+                        className="mt-6 py-3 bg-background text-nectar-gold text-center rounded-xl text-2xs font-black uppercase tracking-widest hover:scale-105 transition-all"
                       >
                         Firmar y Cerrar
                       </Link>
@@ -1280,17 +1280,17 @@ function DashboardPageOriginal() {
                   {addonSubscriptions.filter((sub: any) => !sub.is_activated && (sub.status === 'active' || sub.status === 'trialing')).map((sub: any) => (
                     <div key={sub.id} className="bg-background/10 backdrop-blur-md border border-background/20 p-6 rounded-2xl flex flex-col justify-between">
                       <div>
-                        <p className="text-[8px] font-black uppercase tracking-widest opacity-60">Cliente</p>
+                        <p className="text-2xs font-black uppercase tracking-widest opacity-60">Cliente</p>
                         <h4 className="font-black text-lg truncate" title={sub.user_email}>{sub.user_email}</h4>
-                        <p className="text-[9px] font-bold mt-1 opacity-80">{sub.addon_details?.name || 'Módulo/Add-on'}</p>
+                        <p className="text-2xs font-bold mt-1 opacity-80">{sub.addon_details?.name || 'Módulo/Add-on'}</p>
                         {sub.tenant_subdomain && (
-                          <p className="text-[8px] font-bold mt-1 opacity-60">Tenant: {sub.tenant_subdomain}</p>
+                          <p className="text-2xs font-bold mt-1 opacity-60">Tenant: {sub.tenant_subdomain}</p>
                         )}
                       </div>
                       <button
                         onClick={() => handleActivateAddon(sub.id)}
                         disabled={activatingSubId === sub.id}
-                        className="mt-6 py-3 bg-background text-nectar-gold text-center rounded-xl text-[9px] font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all font-bold disabled:opacity-50"
+                        className="mt-6 py-3 bg-background text-nectar-gold text-center rounded-xl text-2xs font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all font-bold disabled:opacity-50"
                       >
                         {activatingSubId === sub.id ? 'Activando...' : 'Activar Add-on'}
                       </button>
@@ -1306,7 +1306,7 @@ function DashboardPageOriginal() {
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8 border-b border-card-border/40 pb-6">
                   <div>
                     <h3 className="text-xs font-black uppercase tracking-[0.3em] opacity-30">Contratos del Ecosistema</h3>
-                    <p className="text-[9px] font-bold text-foreground/40 mt-1 uppercase tracking-wider">Historial completo de contratos de Partner Tecnológico</p>
+                    <p className="text-2xs font-bold text-foreground/40 mt-1 uppercase tracking-wider">Historial completo de contratos de Partner Tecnológico</p>
                   </div>
 
                   {/* Premium segment tabs */}
@@ -1338,7 +1338,7 @@ function DashboardPageOriginal() {
                 <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse">
                     <thead>
-                      <tr className="border-b border-card-border/50 text-[8px] font-black uppercase tracking-widest opacity-40">
+                      <tr className="border-b border-card-border/50 text-2xs font-black uppercase tracking-widest opacity-40">
                         <th className="pb-4 w-10 text-center">Detalle</th>
                         <th className="pb-4">Cliente / Razón Social</th>
                         <th className="pb-4">Plan</th>
@@ -1378,7 +1378,7 @@ function DashboardPageOriginal() {
                         if (filteredContracts.length === 0) {
                           return (
                             <tr>
-                              <td colSpan={8} className="py-12 text-center text-[9px] font-black uppercase tracking-widest opacity-25">
+                              <td colSpan={8} className="py-12 text-center text-2xs font-black uppercase tracking-widest opacity-25">
                                 No hay contratos que coincidan con el filtro
                               </td>
                             </tr>
@@ -1426,7 +1426,7 @@ function DashboardPageOriginal() {
                                   })()}
                                 </div>
                                 <div className="flex flex-col gap-0.5 mt-0.5">
-                                  <p className="text-[7px] font-bold text-foreground/45 uppercase tracking-wider">{contract.tax_id}</p>
+                                  <p className="text-2xs font-bold text-foreground/45 uppercase tracking-wider">{contract.tax_id}</p>
                                   {(contract.tenant_custom_domain || contract.tenant_subdomain) && (() => {
                                     const host = typeof window !== 'undefined' ? window.location.hostname : '';
                                     const hasCustomDomain = !!contract.tenant_custom_domain;
@@ -1453,7 +1453,7 @@ function DashboardPageOriginal() {
                                       <div className="flex flex-col gap-1.5 mt-1 text-[8.5px]">
                                         {hasCustomDomain && (
                                           <div className="flex flex-col">
-                                            <span className="text-[7px] text-foreground/40 font-black uppercase tracking-wider">Dominio Contratado:</span>
+                                            <span className="text-2xs text-foreground/40 font-black uppercase tracking-wider">Dominio Contratado:</span>
                                             <a
                                               href={`https://${contract.tenant_custom_domain}`}
                                               target="_blank"
@@ -1466,7 +1466,7 @@ function DashboardPageOriginal() {
                                           </div>
                                         )}
                                         <div className="flex flex-col">
-                                          <span className="text-[7px] text-foreground/40 font-black uppercase tracking-wider">
+                                          <span className="text-2xs text-foreground/40 font-black uppercase tracking-wider">
                                             {hasCustomDomain ? 'Enlace Activo:' : 'Subdominio Asignado:'}
                                           </span>
                                           <a
@@ -1479,7 +1479,7 @@ function DashboardPageOriginal() {
                                             <svg className="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6m12-2l-11 11m11-11h-6m6 0v6" /></svg>
                                           </a>
                                           {hasCustomDomain && !hasCustomDomainActive && (
-                                            <span className="text-[7px] text-yellow-500/80 font-black uppercase tracking-wider mt-0.5">
+                                            <span className="text-2xs text-yellow-500/80 font-black uppercase tracking-wider mt-0.5">
                                               ⚠️ Redirección desactivada
                                             </span>
                                           )}
@@ -1492,17 +1492,17 @@ function DashboardPageOriginal() {
                               <td className="py-4 font-bold text-xs">
                                 {contract.plan_name || 'Solo Add-ons / Complementos'}
                               </td>
-                              <td className="py-4 text-center text-[10px] font-bold opacity-60">
+                              <td className="py-4 text-center text-2xs font-bold opacity-60">
                                 {contract.signed_at ? new Date(contract.signed_at).toLocaleDateString('es-ES') : '—'}
                               </td>
-                              <td className="py-4 text-center text-[10px] font-bold opacity-60">
+                              <td className="py-4 text-center text-2xs font-bold opacity-60">
                                 {contract.developer_signed_at ? new Date(contract.developer_signed_at).toLocaleDateString('es-ES') : '—'}
                               </td>
                               <td className="py-4 text-center">
                                 {contract.is_fully_signed ? (
-                                  <span className="px-3 py-1 bg-green-500/10 text-green-500 text-[7px] font-black uppercase tracking-widest rounded-full">Activo / Firmado</span>
+                                  <span className="px-3 py-1 bg-green-500/10 text-green-500 text-2xs font-black uppercase tracking-widest rounded-full">Activo / Firmado</span>
                                 ) : (
-                                  <span className="px-3 py-1 bg-yellow-500/10 text-yellow-500 text-[7px] font-black uppercase tracking-widest rounded-full">Pendiente Firma</span>
+                                  <span className="px-3 py-1 bg-yellow-500/10 text-yellow-500 text-2xs font-black uppercase tracking-widest rounded-full">Pendiente Firma</span>
                                 )}
                               </td>
                               <td className="py-4 text-right">
@@ -1510,7 +1510,7 @@ function DashboardPageOriginal() {
                                   {!contract.is_fully_signed && (
                                     <Link
                                       href={`/contract/dev-sign/${contract.id}`}
-                                      className="px-3 py-1.5 bg-nectar-gold text-background hover:scale-105 text-[8px] font-black uppercase tracking-widest rounded-lg transition-all"
+                                      className="px-3 py-1.5 bg-nectar-gold text-background hover:scale-105 text-2xs font-black uppercase tracking-widest rounded-lg transition-all"
                                     >
                                       Firmar
                                     </Link>
@@ -1520,12 +1520,12 @@ function DashboardPageOriginal() {
                                       href={getInlineViewUrl(contract.pdf_file, 'contract', contract.id)}
                                       target="_blank"
                                       rel="noreferrer"
-                                      className="px-3 py-1.5 bg-card-border hover:bg-foreground hover:text-background text-[8px] font-black uppercase tracking-widest rounded-lg transition-all inline-block"
+                                      className="px-3 py-1.5 bg-card-border hover:bg-foreground hover:text-background text-2xs font-black uppercase tracking-widest rounded-lg transition-all inline-block"
                                     >
                                       Descargar PDF
                                     </a>
                                   ) : (
-                                    <span className="text-[8px] opacity-35 font-bold uppercase py-1.5 inline-block">Sin PDF</span>
+                                    <span className="text-2xs opacity-35 font-bold uppercase py-1.5 inline-block">Sin PDF</span>
                                   )}
                                 </div>
                               </td>
@@ -1537,7 +1537,7 @@ function DashboardPageOriginal() {
                                     {/* Col 1: Addons Toggle Control (1/3 width) */}
                                     <div className="space-y-6">
                                       <div className="flex justify-between items-center">
-                                        <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-nectar-gold">
+                                        <h4 className="text-2xs font-black uppercase tracking-[0.2em] text-nectar-gold">
                                           Control de Add-ons / Complementos
                                         </h4>
                                       </div>
@@ -1553,7 +1553,7 @@ function DashboardPageOriginal() {
                                                 <div className="min-w-0 pr-3">
                                                   <div className="flex items-center gap-1.5 flex-wrap">
                                                     <span className="font-black text-xs text-foreground group-hover:text-nectar-gold transition-colors">{addon.name}</span>
-                                                    <span className="px-1.5 py-0.5 bg-nectar-gold/10 text-nectar-gold text-[7px] font-black uppercase tracking-widest rounded border border-nectar-gold/20">
+                                                    <span className="px-1.5 py-0.5 bg-nectar-gold/10 text-nectar-gold text-2xs font-black uppercase tracking-widest rounded border border-nectar-gold/20">
                                                       {addon.category_badge}
                                                     </span>
                                                   </div>
@@ -1575,7 +1575,7 @@ function DashboardPageOriginal() {
                                             );
                                           })}
                                           {allAddons.length === 0 && (
-                                            <p className="text-[9px] opacity-40 italic text-center py-4">No hay Add-ons registrados en el catálogo.</p>
+                                            <p className="text-2xs opacity-40 italic text-center py-4">No hay Add-ons registrados en el catálogo.</p>
                                           )}
                                         </div>
                                       </div>
@@ -1584,10 +1584,10 @@ function DashboardPageOriginal() {
                                     {/* Col 2 & 3: Installments (2/3 width) */}
                                     <div className="xl:col-span-2 space-y-6">
                                       <div className="flex justify-between items-center">
-                                        <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-nectar-gold">
+                                        <h4 className="text-2xs font-black uppercase tracking-[0.2em] text-nectar-gold">
                                           Mensualidades Obligatorias del Contrato #{contract.id}
                                         </h4>
-                                        <span className="text-[8px] font-black uppercase tracking-widest opacity-40">
+                                        <span className="text-2xs font-black uppercase tracking-widest opacity-40">
                                           {installments.filter(inst => inst.contract === contract.id && inst.status === 'PAID').length} de {installments.filter(inst => inst.contract === contract.id).length} Pagados
                                         </span>
                                       </div>
@@ -1600,13 +1600,13 @@ function DashboardPageOriginal() {
                                             <div key={inst.id} className="p-5 rounded-2xl bg-card-bg/95 border border-card-border/80 flex flex-col justify-between gap-4 hover:border-nectar-gold/30 transition-all duration-300">
                                               <div className="flex justify-between items-start">
                                                 <div>
-                                                  <span className="text-[8px] font-black uppercase tracking-widest opacity-45">Mes {inst.installment_number} de 6</span>
+                                                  <span className="text-2xs font-black uppercase tracking-widest opacity-45">Mes {inst.installment_number} de 6</span>
                                                   <h5 className="font-black text-sm mt-0.5">${parseFloat(inst.amount).toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN</h5>
                                                 </div>
                                                 <select
                                                   value={inst.status}
                                                   onChange={(e) => handleUpdateInstallmentStatus(inst.id, e.target.value)}
-                                                  className={`px-2 py-0.5 text-[7px] font-black uppercase tracking-wider rounded-full bg-background border focus:outline-none cursor-pointer transition-colors ${inst.status === 'PAID'
+                                                  className={`px-2 py-0.5 text-2xs font-black uppercase tracking-wider rounded-full bg-background border focus:outline-none cursor-pointer transition-colors ${inst.status === 'PAID'
                                                     ? 'border-green-500/30 text-green-500 bg-green-500/5'
                                                     : inst.status === 'CANCELLED'
                                                       ? 'border-red-500/30 text-red-500 bg-red-500/5'
@@ -1621,7 +1621,7 @@ function DashboardPageOriginal() {
                                                 </select>
                                               </div>
 
-                                              <div className="space-y-1.5 text-[9px] border-t border-card-border/40 pt-3">
+                                              <div className="space-y-1.5 text-2xs border-t border-card-border/40 pt-3">
                                                 <div className="flex justify-between opacity-60">
                                                   <span>Vence:</span>
                                                   <span className="font-bold">{inst.due_date}</span>
@@ -1645,7 +1645,7 @@ function DashboardPageOriginal() {
                                                 <div className="mt-1">
                                                   <button
                                                     onClick={() => handleUpdateInstallmentStatus(inst.id, 'PAID')}
-                                                    className="w-full py-2 bg-green-600 hover:bg-green-500 text-white text-[8px] font-black uppercase tracking-widest rounded-lg hover:scale-[1.02] active:scale-95 transition-all shadow-md"
+                                                    className="w-full py-2 bg-green-600 hover:bg-green-500 text-white text-2xs font-black uppercase tracking-widest rounded-lg hover:scale-[1.02] active:scale-95 transition-all shadow-md"
                                                   >
                                                     Aprobar Pago
                                                   </button>
@@ -1657,7 +1657,7 @@ function DashboardPageOriginal() {
                                                   {inst.cfdi_uuid ? (
                                                     <div className="text-left">
                                                       <span className="px-2 py-0.5 bg-green-500/10 text-green-400 text-[6.5px] font-black uppercase tracking-widest rounded-full">SAT Timbrada</span>
-                                                      <p className="text-[7px] font-mono text-foreground/45 mt-1 select-all break-all">{inst.cfdi_uuid}</p>
+                                                      <p className="text-2xs font-mono text-foreground/45 mt-1 select-all break-all">{inst.cfdi_uuid}</p>
                                                     </div>
                                                   ) : (
                                                     <div className="flex items-center gap-1.5">
@@ -1666,11 +1666,11 @@ function DashboardPageOriginal() {
                                                         placeholder="UUID CFDI 4.0"
                                                         value={cfdiInputs[inst.id] || ""}
                                                         onChange={(e) => setCfdiInputs(prev => ({ ...prev, [inst.id]: e.target.value }))}
-                                                        className="bg-background border border-card-border/80 rounded-md px-2 py-1 text-[7px] font-mono focus:outline-none focus:border-nectar-gold flex-1 text-foreground"
+                                                        className="bg-background border border-card-border/80 rounded-md px-2 py-1 text-2xs font-mono focus:outline-none focus:border-nectar-gold flex-1 text-foreground"
                                                       />
                                                       <button
                                                         onClick={() => handleSaveCFDI(inst.id)}
-                                                        className="px-2 py-1 bg-nectar-gold text-background text-[7px] font-black uppercase tracking-widest rounded-md hover:scale-[1.02] active:scale-95 transition-all"
+                                                        className="px-2 py-1 bg-nectar-gold text-background text-2xs font-black uppercase tracking-widest rounded-md hover:scale-[1.02] active:scale-95 transition-all"
                                                       >
                                                         Guardar
                                                       </button>
@@ -1727,22 +1727,22 @@ function DashboardPageOriginal() {
                       {/* Left: Active Add-ons List */}
                       <div className="space-y-6 text-left">
                         <header>
-                          <span className="px-3 py-1 bg-green-500/10 text-green-500 text-[8px] font-black uppercase tracking-widest rounded-full">Suscripción Activa ✓</span>
+                          <span className="px-3 py-1 bg-green-500/10 text-green-500 text-2xs font-black uppercase tracking-widest rounded-full">Suscripción Activa ✓</span>
                           <h2 className="text-3xl font-black tracking-tighter mt-3 mb-1">Mis Add-ons Activos</h2>
-                          <p className="text-[9px] font-black uppercase tracking-widest text-nectar-gold opacity-80">Gestión de Suscripciones y Módulos Ecosistema</p>
+                          <p className="text-2xs font-black uppercase tracking-widest text-nectar-gold opacity-80">Gestión de Suscripciones y Módulos Ecosistema</p>
                         </header>
 
                         <div className="space-y-4">
-                          <label className="text-[9px] font-black uppercase tracking-widest opacity-40 ml-1">Módulos en Suscripción Directa</label>
+                          <label className="text-2xs font-black uppercase tracking-widest opacity-40 ml-1">Módulos en Suscripción Directa</label>
                           <div className="space-y-3">
                             {addonSubscriptions.length > 0 ? (
                               addonSubscriptions.map(sub => (
                                 <div key={sub.id} className="p-4 bg-background/30 border border-card-border rounded-xl flex items-center justify-between">
                                   <div>
                                     <span className="font-bold text-xs text-foreground block">{sub.addon_details?.name}</span>
-                                    <span className="text-[8px] opacity-50 uppercase font-black">Ciclo: {sub.billing_cycle === 'yearly' ? 'Anual' : 'Mensual'} • Tarifa: ${parseFloat(sub.price_paid).toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN</span>
+                                    <span className="text-2xs opacity-50 uppercase font-black">Ciclo: {sub.billing_cycle === 'yearly' ? 'Anual' : 'Mensual'} • Tarifa: ${parseFloat(sub.price_paid).toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN</span>
                                   </div>
-                                  <span className="px-2 py-0.5 bg-green-500/10 text-green-500 text-[8px] font-black uppercase tracking-widest rounded-md border border-green-500/20">
+                                  <span className="px-2 py-0.5 bg-green-500/10 text-green-500 text-2xs font-black uppercase tracking-widest rounded-md border border-green-500/20">
                                     Activo
                                   </span>
                                 </div>
@@ -1759,7 +1759,7 @@ function DashboardPageOriginal() {
                       {/* Right: Facturapi CFDI Invoicing Info */}
                       <div className="p-8 rounded-[2rem] bg-background/40 border border-card-border/50 flex flex-col justify-between text-left">
                         <div className="space-y-4">
-                          <h4 className="text-[10px] font-black uppercase tracking-widest text-nectar-gold mb-2">Facturación Fiscal Electrónica (Facturapi)</h4>
+                          <h4 className="text-2xs font-black uppercase tracking-widest text-nectar-gold mb-2">Facturación Fiscal Electrónica (Facturapi)</h4>
                           <p className="text-xs text-foreground/75 leading-relaxed">
                             Tus suscripciones de Add-ons se procesan de forma recurrente y segura a través de Stripe.
                           </p>
@@ -1768,7 +1768,7 @@ function DashboardPageOriginal() {
                           </p>
                           <button
                             onClick={handleOpenBillingPortal}
-                            className="w-full mt-4 py-2.5 bg-[#635BFF] hover:bg-[#5b53e8] text-white text-center rounded-xl text-[8px] font-black uppercase tracking-widest transition-all shadow-lg shadow-[#635BFF]/10 active:scale-95 font-bold"
+                            className="w-full mt-4 py-2.5 bg-[#635BFF] hover:bg-[#5b53e8] text-white text-center rounded-xl text-2xs font-black uppercase tracking-widest transition-all shadow-lg shadow-[#635BFF]/10 active:scale-95 font-bold"
                           >
                             Pagar en Línea
                           </button>
@@ -1787,16 +1787,16 @@ function DashboardPageOriginal() {
                     {/* Left: Commitment details & form */}
                     <div className="space-y-6 text-left">
                       <header>
-                        <span className="px-3 py-1 bg-green-500/10 text-green-500 text-[8px] font-black uppercase tracking-widest rounded-full">Trato Cerrado ✓</span>
+                        <span className="px-3 py-1 bg-green-500/10 text-green-500 text-2xs font-black uppercase tracking-widest rounded-full">Trato Cerrado ✓</span>
                         <h2 className="text-3xl font-black tracking-tighter mt-3 mb-1">Compromiso de Pago</h2>
-                        <p className="text-[9px] font-black uppercase tracking-widest text-nectar-gold opacity-80">Suscripción y Activación de Partner Tecnológico</p>
+                        <p className="text-2xs font-black uppercase tracking-widest text-nectar-gold opacity-80">Suscripción y Activación de Partner Tecnológico</p>
                         {activeContract.pdf_file && (
                           <div className="mt-2">
                             <a
                               href={getInlineViewUrl(activeContract.pdf_file, 'contract', activeContract.id)}
                               target="_blank"
                               rel="noreferrer"
-                              className="inline-flex items-center gap-2 text-[9px] font-black uppercase tracking-widest text-nectar-gold hover:underline"
+                              className="inline-flex items-center gap-2 text-2xs font-black uppercase tracking-widest text-nectar-gold hover:underline"
                             >
                               📥 Descargar Contrato Certificado (PDF)
                             </a>
@@ -1806,7 +1806,7 @@ function DashboardPageOriginal() {
 
                       {activeContracts.length > 1 && (
                         <div className="space-y-2 mt-4">
-                          <label className="text-[9px] font-black uppercase tracking-widest opacity-40 ml-1">Seleccionar Contrato Activo</label>
+                          <label className="text-2xs font-black uppercase tracking-widest opacity-40 ml-1">Seleccionar Contrato Activo</label>
                           <select
                             value={activeContract.id}
                             onChange={(e) => setSelectedActiveContractId(Number(e.target.value))}
@@ -1821,7 +1821,7 @@ function DashboardPageOriginal() {
 
                       <div className="space-y-4">
                         <div className="space-y-2">
-                          <label className="text-[9px] font-black uppercase tracking-widest opacity-40 ml-1">Fecha de Compromiso de Pago</label>
+                          <label className="text-2xs font-black uppercase tracking-widest opacity-40 ml-1">Fecha de Compromiso de Pago</label>
                           {isStaff ? (
                             <input
                               type="date"
@@ -1832,7 +1832,7 @@ function DashboardPageOriginal() {
                           ) : (
                             <div className="w-full bg-background/30 border border-card-border rounded-xl p-4 flex items-center justify-between">
                               <span className="text-xs font-bold text-foreground">{formatDate(nextPaymentDate)}</span>
-                              <span className="px-2.5 py-0.5 bg-nectar-gold/10 text-nectar-gold text-[8px] font-black uppercase tracking-widest rounded-full">
+                              <span className="px-2.5 py-0.5 bg-nectar-gold/10 text-nectar-gold text-2xs font-black uppercase tracking-widest rounded-full">
                                 Estipulado
                               </span>
                             </div>
@@ -1840,7 +1840,7 @@ function DashboardPageOriginal() {
                         </div>
 
                         <div className="space-y-3">
-                          <label className="text-[9px] font-black uppercase tracking-widest opacity-40 ml-1">Medio de Pago Seleccionado</label>
+                          <label className="text-2xs font-black uppercase tracking-widest opacity-40 ml-1">Medio de Pago Seleccionado</label>
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                             {[
                               { value: 'SPEI', label: 'SPEI', desc: 'Transferencia electrónica directa', icon: '🏦' },
@@ -1864,11 +1864,11 @@ function DashboardPageOriginal() {
                                     }`}
                                 >
                                   {isSelected && (
-                                    <span className="absolute top-3 right-3 text-nectar-gold text-[10px]">●</span>
+                                    <span className="absolute top-3 right-3 text-nectar-gold text-2xs">●</span>
                                   )}
                                   <span className="text-lg mb-2">{method.icon}</span>
-                                  <span className="text-[10px] font-black uppercase tracking-wider text-foreground leading-tight block">{method.label}</span>
-                                  <span className="text-[8px] text-foreground/60 leading-relaxed mt-1 block">{method.desc}</span>
+                                  <span className="text-2xs font-black uppercase tracking-wider text-foreground leading-tight block">{method.label}</span>
+                                  <span className="text-2xs text-foreground/60 leading-relaxed mt-1 block">{method.desc}</span>
                                 </button>
                               );
                             })}
@@ -1882,7 +1882,7 @@ function DashboardPageOriginal() {
                       {nextPendingMethod === 'STRIPE' && (
                         <div className="space-y-6 flex flex-col justify-between h-full">
                           <div className="space-y-3">
-                            <h4 className="text-[10px] font-black uppercase tracking-widest text-nectar-gold mb-2">Pago en línea seguro</h4>
+                            <h4 className="text-2xs font-black uppercase tracking-widest text-nectar-gold mb-2">Pago en línea seguro</h4>
                             <p className="text-xs text-foreground/75 leading-relaxed">
                               Realiza tu pago directamente con tarjeta a través de Stripe de manera segura y encriptada. El cobro se procesará automáticamente al inicio de cada ciclo de facturación.
                             </p>
@@ -1893,7 +1893,7 @@ function DashboardPageOriginal() {
                           {nextPending && (
                             <button
                               onClick={() => handlePayStripe(nextPending.id)}
-                              className="w-full py-3 bg-[#635BFF] hover:bg-[#5b53e8] text-white text-center rounded-xl text-[8px] font-black uppercase tracking-widest transition-all shadow-lg shadow-[#635BFF]/10 active:scale-95 font-bold"
+                              className="w-full py-3 bg-[#635BFF] hover:bg-[#5b53e8] text-white text-center rounded-xl text-2xs font-black uppercase tracking-widest transition-all shadow-lg shadow-[#635BFF]/10 active:scale-95 font-bold"
                             >
                               💳 Pagar con Stripe ahora
                             </button>
@@ -1904,7 +1904,7 @@ function DashboardPageOriginal() {
                       {nextPendingMethod === 'SPEI' && (
                         <div className="space-y-4 flex flex-col justify-between h-full">
                           <div className="space-y-4">
-                            <h4 className="text-[10px] font-black uppercase tracking-widest text-nectar-gold mb-2">Instrucciones de Transferencia SPEI</h4>
+                            <h4 className="text-2xs font-black uppercase tracking-widest text-nectar-gold mb-2">Instrucciones de Transferencia SPEI</h4>
                             <div className="space-y-2 text-xs">
                               <div className="flex justify-between border-b border-card-border/30 py-2">
                                 <span className="opacity-50">Banco Destino:</span>
@@ -1924,7 +1924,7 @@ function DashboardPageOriginal() {
                                       navigator.clipboard.writeText('012760029365498378');
                                       showToast('CLABE copiada al portapapeles', 'success');
                                     }}
-                                    className="p-1 hover:bg-white/5 border border-white/10 rounded cursor-pointer text-[8px] shrink-0 text-nectar-gold"
+                                    className="p-1 hover:bg-white/5 border border-white/10 rounded cursor-pointer text-2xs shrink-0 text-nectar-gold"
                                     title="Copiar CLABE"
                                   >
                                     📋
@@ -1941,7 +1941,7 @@ function DashboardPageOriginal() {
                                       navigator.clipboard.writeText('6621390238');
                                       showToast('Celular copiado al portapapeles', 'success');
                                     }}
-                                    className="p-1 hover:bg-white/5 border border-white/10 rounded cursor-pointer text-[8px] shrink-0 text-nectar-gold"
+                                    className="p-1 hover:bg-white/5 border border-white/10 rounded cursor-pointer text-2xs shrink-0 text-nectar-gold"
                                     title="Copiar Celular"
                                   >
                                     📋
@@ -1954,7 +1954,7 @@ function DashboardPageOriginal() {
                           {nextPending && (
                             <div className="pt-4 border-t border-card-border/30 space-y-4">
                               <div className="flex items-center justify-between gap-2">
-                                <span className="text-[8px] uppercase tracking-wider font-bold text-foreground/60">¿Requiere Factura?</span>
+                                <span className="text-2xs uppercase tracking-wider font-bold text-foreground/60">¿Requiere Factura?</span>
                                 <div className="flex items-center gap-2">
                                   <input
                                     type="checkbox"
@@ -1963,7 +1963,7 @@ function DashboardPageOriginal() {
                                     onChange={(e) => setWantsInvoiceMap(prev => ({ ...prev, [nextPending.id]: e.target.checked }))}
                                     className="rounded border-card-border bg-card-bg text-nectar-gold focus:ring-nectar-gold w-3.5 h-3.5 cursor-pointer"
                                   />
-                                  <label htmlFor={`spei-wants-inv-${nextPending.id}`} className="text-[8px] uppercase tracking-wider font-bold text-foreground/60 cursor-pointer select-none">
+                                  <label htmlFor={`spei-wants-inv-${nextPending.id}`} className="text-2xs uppercase tracking-wider font-bold text-foreground/60 cursor-pointer select-none">
                                     Facturar (+16% IVA)
                                   </label>
                                 </div>
@@ -1971,20 +1971,20 @@ function DashboardPageOriginal() {
 
                               {nextPending.receipt_file ? (
                                 <div className="p-3 bg-green-500/5 border border-green-500/20 rounded-xl flex items-center justify-between">
-                                  <span className="text-[8px] text-green-400 font-black uppercase tracking-widest">✓ Comprobante Subido</span>
+                                  <span className="text-2xs text-green-400 font-black uppercase tracking-widest">✓ Comprobante Subido</span>
                                   <a
                                     href={getInlineViewUrl(nextPending.receipt_file, 'receipt', nextPending.id)}
                                     target="_blank"
                                     rel="noreferrer"
-                                    className="text-[8px] text-[#C68A1E] hover:underline font-black uppercase tracking-widest"
+                                    className="text-2xs text-[#C68A1E] hover:underline font-black uppercase tracking-widest"
                                   >
                                     Ver Comprobante
                                   </a>
                                 </div>
                               ) : (
                                 <div className="space-y-2">
-                                  <span className="text-[8px] font-black uppercase tracking-widest opacity-40 block">Comprobante de Pago</span>
-                                  <label className="flex items-center justify-center gap-2 w-full py-3 border border-dashed border-[#C68A1E]/30 hover:border-[#C68A1E]/60 text-[#C68A1E] hover:bg-[#C68A1E]/5 text-center rounded-xl text-[8px] font-black uppercase tracking-widest transition-all cursor-pointer font-bold">
+                                  <span className="text-2xs font-black uppercase tracking-widest opacity-40 block">Comprobante de Pago</span>
+                                  <label className="flex items-center justify-center gap-2 w-full py-3 border border-dashed border-[#C68A1E]/30 hover:border-[#C68A1E]/60 text-[#C68A1E] hover:bg-[#C68A1E]/5 text-center rounded-xl text-2xs font-black uppercase tracking-widest transition-all cursor-pointer font-bold">
                                     <span>📁 Subir Archivo PDF/Imagen</span>
                                     <input
                                       type="file"
@@ -2006,8 +2006,8 @@ function DashboardPageOriginal() {
                       {nextPendingMethod === 'DEPOSIT' && (
                         <div className="space-y-4 flex flex-col justify-between h-full">
                           <div className="space-y-4">
-                            <h4 className="text-[10px] font-black uppercase tracking-widest text-nectar-gold mb-2">Instrucciones de Depósito Directo</h4>
-                            <p className="text-[10px] text-foreground/75 leading-relaxed">
+                            <h4 className="text-2xs font-black uppercase tracking-widest text-nectar-gold mb-2">Instrucciones de Depósito Directo</h4>
+                            <p className="text-2xs text-foreground/75 leading-relaxed">
                               Puedes realizar tu depósito directo en cualquier sucursal BBVA o Practicaja utilizando los siguientes datos:
                             </p>
                             <div className="space-y-2 text-xs">
@@ -2025,7 +2025,7 @@ function DashboardPageOriginal() {
                                       navigator.clipboard.writeText('4152314435535540');
                                       showToast('Tarjeta copiada al portapapeles', 'success');
                                     }}
-                                    className="p-1 hover:bg-white/5 border border-white/10 rounded cursor-pointer text-[8px] shrink-0 text-nectar-gold"
+                                    className="p-1 hover:bg-white/5 border border-white/10 rounded cursor-pointer text-2xs shrink-0 text-nectar-gold"
                                     title="Copiar Tarjeta"
                                   >
                                     📋
@@ -2038,7 +2038,7 @@ function DashboardPageOriginal() {
                           {nextPending && (
                             <div className="pt-4 border-t border-card-border/30 space-y-4">
                               <div className="flex items-center justify-between gap-2">
-                                <span className="text-[8px] uppercase tracking-wider font-bold text-foreground/60">¿Requiere Factura?</span>
+                                <span className="text-2xs uppercase tracking-wider font-bold text-foreground/60">¿Requiere Factura?</span>
                                 <div className="flex items-center gap-2">
                                   <input
                                     type="checkbox"
@@ -2047,7 +2047,7 @@ function DashboardPageOriginal() {
                                     onChange={(e) => setWantsInvoiceMap(prev => ({ ...prev, [nextPending.id]: e.target.checked }))}
                                     className="rounded border-card-border bg-card-bg text-nectar-gold focus:ring-nectar-gold w-3.5 h-3.5 cursor-pointer"
                                   />
-                                  <label htmlFor={`deposit-wants-inv-${nextPending.id}`} className="text-[8px] uppercase tracking-wider font-bold text-foreground/60 cursor-pointer select-none">
+                                  <label htmlFor={`deposit-wants-inv-${nextPending.id}`} className="text-2xs uppercase tracking-wider font-bold text-foreground/60 cursor-pointer select-none">
                                     Facturar (+16% IVA)
                                   </label>
                                 </div>
@@ -2055,20 +2055,20 @@ function DashboardPageOriginal() {
 
                               {nextPending.receipt_file ? (
                                 <div className="p-3 bg-green-500/5 border border-green-500/20 rounded-xl flex items-center justify-between">
-                                  <span className="text-[8px] text-green-400 font-black uppercase tracking-widest">✓ Comprobante Subido</span>
+                                  <span className="text-2xs text-green-400 font-black uppercase tracking-widest">✓ Comprobante Subido</span>
                                   <a
                                     href={getInlineViewUrl(nextPending.receipt_file, 'receipt', nextPending.id)}
                                     target="_blank"
                                     rel="noreferrer"
-                                    className="text-[8px] text-[#C68A1E] hover:underline font-black uppercase tracking-widest"
+                                    className="text-2xs text-[#C68A1E] hover:underline font-black uppercase tracking-widest"
                                   >
                                     Ver Comprobante
                                   </a>
                                 </div>
                               ) : (
                                 <div className="space-y-2">
-                                  <span className="text-[8px] font-black uppercase tracking-widest opacity-40 block">Comprobante de Pago</span>
-                                  <label className="flex items-center justify-center gap-2 w-full py-3 border border-dashed border-[#C68A1E]/30 hover:border-[#C68A1E]/60 text-[#C68A1E] hover:bg-[#C68A1E]/5 text-center rounded-xl text-[8px] font-black uppercase tracking-widest transition-all cursor-pointer font-bold">
+                                  <span className="text-2xs font-black uppercase tracking-widest opacity-40 block">Comprobante de Pago</span>
+                                  <label className="flex items-center justify-center gap-2 w-full py-3 border border-dashed border-[#C68A1E]/30 hover:border-[#C68A1E]/60 text-[#C68A1E] hover:bg-[#C68A1E]/5 text-center rounded-xl text-2xs font-black uppercase tracking-widest transition-all cursor-pointer font-bold">
                                     <span>📁 Subir Archivo PDF/Imagen</span>
                                     <input
                                       type="file"
@@ -2107,12 +2107,12 @@ function DashboardPageOriginal() {
                                 <div>
                                   <span className="px-2 py-0.5 bg-nectar-gold/10 text-nectar-gold text-[7.5px] font-black uppercase tracking-widest rounded-full">Programa de Referidos</span>
                                   <h4 className="text-lg font-black tracking-tight mt-2">Invita a un amigo y ambos ganan</h4>
-                                  <p className="text-[10px] text-foreground/60 mt-1 leading-relaxed">
+                                  <p className="text-2xs text-foreground/60 mt-1 leading-relaxed">
                                     Comparte tu código: tu referido obtiene un <strong>10% de descuento</strong> en su primer mes, y tú recibes un <strong>10% de descuento</strong> en tu siguiente mensualidad.
                                   </p>
                                 </div>
                                 <div className="text-right shrink-0">
-                                  <span className="text-[8px] uppercase tracking-widest opacity-40 block font-black">Referidos</span>
+                                  <span className="text-2xs uppercase tracking-widest opacity-40 block font-black">Referidos</span>
                                   <span className="text-2xl font-black text-nectar-gold font-mono">{myReferralCode.used_count || 0}</span>
                                 </div>
                               </div>
@@ -2123,7 +2123,7 @@ function DashboardPageOriginal() {
                                     navigator.clipboard.writeText(myReferralCode.code);
                                     showToast("¡Código de referido copiado al portapapeles!", "success");
                                   }}
-                                  className="px-4 py-2 bg-nectar-gold hover:bg-nectar-gold/90 text-background text-[9px] font-black uppercase tracking-widest rounded-lg transition-all active:scale-95 shrink-0 font-bold"
+                                  className="px-4 py-2 bg-nectar-gold hover:bg-nectar-gold/90 text-background text-2xs font-black uppercase tracking-widest rounded-lg transition-all active:scale-95 shrink-0 font-bold"
                                 >
                                   Copiar Código
                                 </button>
@@ -2140,7 +2140,7 @@ function DashboardPageOriginal() {
                               <div>
                                 <span className="px-2 py-0.5 bg-nectar-gold/10 text-nectar-gold text-[7.5px] font-black uppercase tracking-widest rounded-full">Descuento Especial</span>
                                 <h4 className="text-lg font-black tracking-tight mt-2">Aplicar Cupón a tu Siguiente Pago</h4>
-                                <p className="text-[10px] text-foreground/60 mt-1 leading-relaxed">
+                                <p className="text-2xs text-foreground/60 mt-1 leading-relaxed">
                                   Aplica un código promocional o de referido para descontar tu próxima mensualidad (Mes {nextPendingInstallment.installment_number}).
                                 </p>
                               </div>
@@ -2156,13 +2156,13 @@ function DashboardPageOriginal() {
                                 <button
                                   onClick={handleApplyRetroactiveCode}
                                   disabled={applyingRetroactiveCode || !retroactiveCodeInput.trim()}
-                                  className="px-6 bg-nectar-gold hover:bg-nectar-gold/90 text-background rounded-xl text-[9px] font-black uppercase tracking-widest transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 font-bold"
+                                  className="px-6 bg-nectar-gold hover:bg-nectar-gold/90 text-background rounded-xl text-2xs font-black uppercase tracking-widest transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 font-bold"
                                 >
                                   {applyingRetroactiveCode ? 'Aplicando...' : 'Aplicar'}
                                 </button>
                               </div>
 
-                              <div className="pt-2 flex justify-between items-center text-[9px] uppercase tracking-wider border-t border-card-border/40">
+                              <div className="pt-2 flex justify-between items-center text-2xs uppercase tracking-wider border-t border-card-border/40">
                                 <span className="text-foreground/40 font-bold">¿Quieres un código personalizado?</span>
                                 <button
                                   type="button"
@@ -2174,12 +2174,12 @@ function DashboardPageOriginal() {
                               </div>
 
                               {retroactiveSuccessMessage && (
-                                <p className="text-[9px] text-green-400 font-bold bg-green-500/5 p-2 rounded border border-green-500/10 animate-in fade-in">
+                                <p className="text-2xs text-green-400 font-bold bg-green-500/5 p-2 rounded border border-green-500/10 animate-in fade-in">
                                   ✓ {retroactiveSuccessMessage}
                                 </p>
                               )}
                               {retroactiveErrorMessage && (
-                                <p className="text-[9px] text-red-500 font-bold bg-red-500/5 p-2 rounded border border-red-500/10 animate-in fade-in">
+                                <p className="text-2xs text-red-500 font-bold bg-red-500/5 p-2 rounded border border-red-500/10 animate-in fade-in">
                                   ✗ {retroactiveErrorMessage}
                                 </p>
                               )}
@@ -2192,11 +2192,11 @@ function DashboardPageOriginal() {
                               <div>
                                 <span className="px-2 py-0.5 bg-nectar-forest/10 text-nectar-forest text-[7.5px] font-black uppercase tracking-widest rounded-full">Información</span>
                                 <h4 className="text-lg font-black tracking-tight mt-2">Ecosistema Néctar Labs</h4>
-                                <p className="text-[10px] text-foreground/60 mt-1 leading-relaxed">
+                                <p className="text-2xs text-foreground/60 mt-1 leading-relaxed">
                                   Tu infraestructura de Partner Tecnológico se aprovisiona y mantiene activa las 24 horas del día. Si requieres más ayuda, abre un ticket de soporte.
                                 </p>
                               </div>
-                              <div className="pt-2 flex justify-between items-center text-[9px] uppercase tracking-wider border-t border-card-border/40">
+                              <div className="pt-2 flex justify-between items-center text-2xs uppercase tracking-wider border-t border-card-border/40">
                                 <span className="text-foreground/40 font-bold">¿Tienes requerimientos especiales?</span>
                                 <button
                                   type="button"
@@ -2229,7 +2229,7 @@ function DashboardPageOriginal() {
                             {activeInstallments.length > 0 && (
                               <button
                                 onClick={() => setPaymentsExpanded(!paymentsExpanded)}
-                                className="px-4 py-2 border border-card-border hover:bg-foreground hover:text-background text-[8px] font-black uppercase tracking-widest rounded-xl transition-all flex items-center gap-2"
+                                className="px-4 py-2 border border-card-border hover:bg-foreground hover:text-background text-2xs font-black uppercase tracking-widest rounded-xl transition-all flex items-center gap-2"
                               >
                                 <span>{paymentsExpanded ? 'Ocultar Calendario' : 'Ver Calendario Completo'}</span>
                                 <svg
@@ -2253,46 +2253,46 @@ function DashboardPageOriginal() {
                               <span className="px-2 py-0.5 bg-nectar-gold/10 text-nectar-gold text-[7.5px] font-black uppercase tracking-widest rounded-full">Próximo Pago Requerido</span>
                               <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mt-4">
                                 <div className="min-w-0">
-                                  <span className="text-[9px] font-black uppercase tracking-widest opacity-40">
+                                  <span className="text-2xs font-black uppercase tracking-widest opacity-40">
                                     Mes {nextPending.installment_number} de 6
                                   </span>
                                   {nextPending.project_name && (
-                                    <span className="text-[9px] font-bold text-nectar-gold truncate max-w-[150px]">
+                                    <span className="text-2xs font-bold text-nectar-gold truncate max-w-[150px]">
                                       • {nextPending.project_name}
                                     </span>
                                   )}
                                   <h4 className="font-bold text-sm text-foreground mt-0.5">
                                     Mensualidad de Ingeniería
                                   </h4>
-                                  <p className="text-[10px] text-foreground/50 mt-1">
+                                  <p className="text-2xs text-foreground/50 mt-1">
                                     Vencimiento: <span className="font-semibold text-foreground/80">{formatDate(nextPending.due_date)}</span>
                                   </p>
                                   {nextPending.cfdi_uuid && (
-                                    <p className="text-[9px] text-green-500 font-bold mt-1">
-                                      Folio Fiscal SAT: <span className="font-mono select-all text-[8px] tracking-tight">{nextPending.cfdi_uuid}</span>
+                                    <p className="text-2xs text-green-500 font-bold mt-1">
+                                      Folio Fiscal SAT: <span className="font-mono select-all text-2xs tracking-tight">{nextPending.cfdi_uuid}</span>
                                     </p>
                                   )}
                                 </div>
 
                                 <div className="flex flex-wrap items-center gap-6">
                                   <div className="text-left md:text-right min-w-[120px]">
-                                    <span className="text-[8px] uppercase tracking-widest opacity-40 block font-black">Monto</span>
+                                    <span className="text-2xs uppercase tracking-widest opacity-40 block font-black">Monto</span>
                                     <span className="font-black text-base text-foreground font-mono">
                                       ${(parseFloat(nextPending.amount) * (wantsInvoiceMap[nextPending.id] ? 1.16 : 1.0)).toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN
                                     </span>
                                     {wantsInvoiceMap[nextPending.id] && (
-                                      <span className="text-[7px] text-green-400 block font-bold uppercase mt-0.5">Con 16% IVA</span>
+                                      <span className="text-2xs text-green-400 block font-bold uppercase mt-0.5">Con 16% IVA</span>
                                     )}
                                   </div>
 
                                   <div className="w-full md:w-auto min-w-[160px] flex flex-col gap-2 justify-end bg-background/25 border border-card-border/40 p-3 rounded-xl">
                                     {/* Selector de Método de Pago */}
                                     <div className="flex flex-col gap-1 w-full text-left">
-                                      <label className="text-[7px] font-black uppercase tracking-widest opacity-40">Método de Pago</label>
+                                      <label className="text-2xs font-black uppercase tracking-widest opacity-40">Método de Pago</label>
                                       <select
                                         value={nextPendingMethod}
                                         onChange={(e) => setSelectedPaymentMethods(prev => ({ ...prev, [nextPending.id]: e.target.value }))}
-                                        className="w-full bg-background/50 border border-card-border rounded-lg px-2 py-1 focus:outline-none focus:border-nectar-gold text-[9px] font-bold text-foreground"
+                                        className="w-full bg-background/50 border border-card-border rounded-lg px-2 py-1 focus:outline-none focus:border-nectar-gold text-2xs font-bold text-foreground"
                                       >
                                         <option value="SPEI">SPEI (Transferencia)</option>
                                         <option value="DEPOSIT">Depósito (BBVA)</option>
@@ -2309,7 +2309,7 @@ function DashboardPageOriginal() {
                                         onChange={(e) => setWantsInvoiceMap(prev => ({ ...prev, [nextPending.id]: e.target.checked }))}
                                         className="rounded border-card-border bg-card-bg dark:border-white/20 dark:bg-black/40 text-nectar-gold focus:ring-nectar-gold w-3 h-3 cursor-pointer"
                                       />
-                                      <label htmlFor={`wants-invoice-${nextPending.id}`} className="text-[8px] uppercase tracking-wider font-bold text-foreground/60 cursor-pointer select-none">
+                                      <label htmlFor={`wants-invoice-${nextPending.id}`} className="text-2xs uppercase tracking-wider font-bold text-foreground/60 cursor-pointer select-none">
                                         Facturar (+16% IVA)
                                       </label>
                                     </div>
@@ -2318,16 +2318,16 @@ function DashboardPageOriginal() {
                                     {nextPendingMethod === 'STRIPE' ? (
                                       <button
                                         onClick={() => handlePayStripe(nextPending.id)}
-                                        className="w-full py-2 bg-[#635BFF] hover:bg-[#5b53e8] text-white text-center rounded-xl text-[8px] font-black uppercase tracking-widest transition-all shadow-lg shadow-[#635BFF]/10 active:scale-95 font-bold mt-1"
+                                        className="w-full py-2 bg-[#635BFF] hover:bg-[#5b53e8] text-white text-center rounded-xl text-2xs font-black uppercase tracking-widest transition-all shadow-lg shadow-[#635BFF]/10 active:scale-95 font-bold mt-1"
                                       >
                                         Pagar con Stripe
                                       </button>
                                     ) : nextPending.receipt_file ? (
-                                      <p className="text-[8px] text-center opacity-60 italic font-bold py-2 px-4 bg-background/40 rounded-xl border border-card-border/30 w-full mt-1">
+                                      <p className="text-2xs text-center opacity-60 italic font-bold py-2 px-4 bg-background/40 rounded-xl border border-card-border/30 w-full mt-1">
                                         Comprobante en validación
                                       </p>
                                     ) : (
-                                      <label className="w-full block py-2 border border-dashed border-nectar-gold/50 text-nectar-gold hover:bg-nectar-gold hover:text-background text-center rounded-xl text-[8px] font-black uppercase tracking-widest transition-all cursor-pointer hover:border-solid font-bold mt-1">
+                                      <label className="w-full block py-2 border border-dashed border-nectar-gold/50 text-nectar-gold hover:bg-nectar-gold hover:text-background text-center rounded-xl text-2xs font-black uppercase tracking-widest transition-all cursor-pointer hover:border-solid font-bold mt-1">
                                         Subir Comprobante
                                         <input
                                           type="file"
@@ -2347,7 +2347,7 @@ function DashboardPageOriginal() {
                           ) : (
                             activeInstallments.length > 0 && (
                               <div className="mb-6 p-6 rounded-2xl bg-green-500/5 border border-green-500/20 text-center">
-                                <span className="text-[10px] font-black text-green-500 uppercase tracking-widest">✓ Todos tus compromisos de pago están al corriente</span>
+                                <span className="text-2xs font-black text-green-500 uppercase tracking-widest">✓ Todos tus compromisos de pago están al corriente</span>
                               </div>
                             )
                           )}
@@ -2356,7 +2356,7 @@ function DashboardPageOriginal() {
                           {paymentsExpanded && (
                             <div className="mt-6 animate-fadeIn space-y-4">
                               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                                <span className="text-[8px] font-black uppercase tracking-[0.2em] text-foreground/30 font-bold">Calendario Completo de Pagos</span>
+                                <span className="text-2xs font-black uppercase tracking-[0.2em] text-foreground/30 font-bold">Calendario Completo de Pagos</span>
                                 <input
                                   type="text"
                                   placeholder="Buscar mensualidad, vencimiento o estatus..."
@@ -2368,7 +2368,7 @@ function DashboardPageOriginal() {
                               <div className="overflow-x-auto bg-background/30 rounded-2xl border border-card-border/60">
                                 <table className="w-full text-left border-collapse min-w-[650px]">
                                   <thead>
-                                    <tr className="border-b border-card-border/50 text-[8px] font-black uppercase tracking-widest opacity-40">
+                                    <tr className="border-b border-card-border/50 text-2xs font-black uppercase tracking-widest opacity-40">
                                       <th className="p-4 pl-6">Mensualidad</th>
                                       <th className="p-4">Vencimiento</th>
                                       <th className="p-4 text-right">Monto</th>
@@ -2413,7 +2413,7 @@ function DashboardPageOriginal() {
                                           <tr key={inst.id} className="border-b border-card-border/30 last:border-0 hover:bg-foreground/[0.01] transition-colors">
                                             <td className="p-4 pl-6">
                                               <div className="flex items-center gap-2">
-                                                <span className="w-5 h-5 rounded-full bg-foreground/5 flex items-center justify-center text-[9px] font-bold text-foreground/70">
+                                                <span className="w-5 h-5 rounded-full bg-foreground/5 flex items-center justify-center text-2xs font-bold text-foreground/70">
                                                   {inst.installment_number}
                                                 </span>
                                                 <div>
@@ -2436,7 +2436,7 @@ function DashboardPageOriginal() {
                                               )}
                                             </td>
                                             <td className="p-4 text-center">
-                                              <span className={`px-2.5 py-0.5 text-[7px] font-black uppercase tracking-widest rounded-full border ${bgClass}`}>
+                                              <span className={`px-2.5 py-0.5 text-2xs font-black uppercase tracking-widest rounded-full border ${bgClass}`}>
                                                 {statusText}
                                               </span>
                                             </td>
@@ -2447,7 +2447,7 @@ function DashboardPageOriginal() {
                                                   <select
                                                     value={instMethod}
                                                     onChange={(e) => setSelectedPaymentMethods(prev => ({ ...prev, [inst.id]: e.target.value }))}
-                                                    className="bg-background/50 border border-card-border rounded-lg px-2 py-1 focus:outline-none focus:border-nectar-gold text-[9px] font-bold text-foreground"
+                                                    className="bg-background/50 border border-card-border rounded-lg px-2 py-1 focus:outline-none focus:border-nectar-gold text-2xs font-bold text-foreground"
                                                   >
                                                     <option value="SPEI">SPEI (Trans.)</option>
                                                     <option value="DEPOSIT">Depósito</option>
@@ -2471,16 +2471,16 @@ function DashboardPageOriginal() {
                                                   {instMethod === 'STRIPE' ? (
                                                     <button
                                                       onClick={() => handlePayStripe(inst.id)}
-                                                      className="px-3 py-1.5 bg-[#635BFF] hover:bg-[#5b53e8] text-white text-[8px] font-black uppercase tracking-widest rounded-lg transition-all"
+                                                      className="px-3 py-1.5 bg-[#635BFF] hover:bg-[#5b53e8] text-white text-2xs font-black uppercase tracking-widest rounded-lg transition-all"
                                                     >
                                                       Pagar con Stripe
                                                     </button>
                                                   ) : isPendingReview ? (
-                                                    <span className="text-[8px] font-bold opacity-60 italic py-1 px-2.5 bg-background/50 rounded border border-card-border/30">
+                                                    <span className="text-2xs font-bold opacity-60 italic py-1 px-2.5 bg-background/50 rounded border border-card-border/30">
                                                       Validando...
                                                     </span>
                                                   ) : (
-                                                    <label className="px-3 py-1.5 border border-dashed border-nectar-gold/50 text-nectar-gold hover:bg-nectar-gold hover:text-background text-[8px] font-black uppercase tracking-widest rounded-lg transition-all cursor-pointer">
+                                                    <label className="px-3 py-1.5 border border-dashed border-nectar-gold/50 text-nectar-gold hover:bg-nectar-gold hover:text-background text-2xs font-black uppercase tracking-widest rounded-lg transition-all cursor-pointer">
                                                       Subir Comprobante
                                                       <input
                                                         type="file"
@@ -2508,14 +2508,14 @@ function DashboardPageOriginal() {
                                                         <button
                                                           onClick={() => handleRequestInvoice(inst.id)}
                                                           disabled={isPending || requestingInvoice === inst.id}
-                                                          className="px-2.5 py-1 bg-nectar-gold/10 text-nectar-gold hover:bg-nectar-gold hover:text-background text-[8px] font-black uppercase tracking-widest rounded-lg border border-nectar-gold/20 transition-all disabled:opacity-50"
+                                                          className="px-2.5 py-1 bg-nectar-gold/10 text-nectar-gold hover:bg-nectar-gold hover:text-background text-2xs font-black uppercase tracking-widest rounded-lg border border-nectar-gold/20 transition-all disabled:opacity-50"
                                                         >
                                                           {isPending ? 'Sincronizando SAT...' : requestingInvoice === inst.id ? 'Emitiendo...' : 'Solicitar Factura (CFDI)'}
                                                         </button>
                                                       );
                                                     } else if (hasCFDI) {
                                                       return (
-                                                        <span className="text-[9px] font-mono text-foreground/45 font-bold block select-all">
+                                                        <span className="text-2xs font-mono text-foreground/45 font-bold block select-all">
                                                           CFDI: {inst.cfdi_uuid}
                                                         </span>
                                                       );
@@ -2550,13 +2550,13 @@ function DashboardPageOriginal() {
               <section className="mb-16 bg-card-bg border border-card-border rounded-[2.5rem] p-8 md:p-10 shadow-lg text-left">
                 <div className="mb-8">
                   <h3 className="text-xs font-black uppercase tracking-[0.3em] opacity-30">Mis Facturas (CFDI)</h3>
-                  <p className="text-[9px] font-bold text-foreground/40 mt-1 uppercase tracking-wider">Historial de comprobantes fiscales timbrados emitidos para tu portal</p>
+                  <p className="text-2xs font-bold text-foreground/40 mt-1 uppercase tracking-wider">Historial de comprobantes fiscales timbrados emitidos para tu portal</p>
                 </div>
 
                 <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse">
                     <thead>
-                      <tr className="border-b border-card-border/50 text-[8px] font-black uppercase tracking-widest opacity-40">
+                      <tr className="border-b border-card-border/50 text-2xs font-black uppercase tracking-widest opacity-40">
                         <th className="pb-4">Fecha</th>
                         <th className="pb-4">Folio Fiscal SAT (UUID)</th>
                         <th className="pb-4 text-right">Monto</th>
@@ -2570,14 +2570,14 @@ function DashboardPageOriginal() {
                           <td className="py-4 text-xs font-mono opacity-80">
                             {new Date(inv.created_at).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })}
                           </td>
-                          <td className="py-4 font-mono text-[9px] opacity-75 select-all max-w-[250px] truncate" title={inv.uuid_sat || 'No asignado'}>
+                          <td className="py-4 font-mono text-2xs opacity-75 select-all max-w-[250px] truncate" title={inv.uuid_sat || 'No asignado'}>
                             {inv.uuid_sat || '—'}
                           </td>
                           <td className="py-4 text-right font-black text-xs">
                             ${parseFloat(inv.total).toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN
                           </td>
                           <td className="py-4 text-center">
-                            <span className="px-2.5 py-0.5 text-[7px] font-black uppercase tracking-widest rounded-full bg-green-500/10 text-green-500 border border-green-500/25">
+                            <span className="px-2.5 py-0.5 text-2xs font-black uppercase tracking-widest rounded-full bg-green-500/10 text-green-500 border border-green-500/25">
                               {inv.status_display}
                             </span>
                           </td>
@@ -2588,7 +2588,7 @@ function DashboardPageOriginal() {
                                   href={inv.pdf_url}
                                   target="_blank"
                                   rel="noreferrer"
-                                  className="px-2.5 py-1 bg-card-border hover:bg-foreground hover:text-background text-[8px] font-black uppercase tracking-widest rounded-lg transition-all font-bold"
+                                  className="px-2.5 py-1 bg-card-border hover:bg-foreground hover:text-background text-2xs font-black uppercase tracking-widest rounded-lg transition-all font-bold"
                                 >
                                   PDF
                                 </a>
@@ -2598,7 +2598,7 @@ function DashboardPageOriginal() {
                                   href={inv.xml_url}
                                   target="_blank"
                                   rel="noreferrer"
-                                  className="px-2.5 py-1 bg-card-border hover:bg-foreground hover:text-background text-[8px] font-black uppercase tracking-widest rounded-lg transition-all font-bold"
+                                  className="px-2.5 py-1 bg-card-border hover:bg-foreground hover:text-background text-2xs font-black uppercase tracking-widest rounded-lg transition-all font-bold"
                                 >
                                   XML
                                 </a>
@@ -2628,11 +2628,11 @@ function DashboardPageOriginal() {
                       <div key={contract.id} className="bg-background/40 border border-card-border/60 p-6 rounded-2xl flex flex-col justify-between">
                         <div>
                           {hasClientSignature ? (
-                            <span className="px-2.5 py-1 bg-nectar-gold/10 text-nectar-gold text-[8px] font-black uppercase tracking-widest rounded-full animate-pulse border border-nectar-gold/25">
+                            <span className="px-2.5 py-1 bg-nectar-gold/10 text-nectar-gold text-2xs font-black uppercase tracking-widest rounded-full animate-pulse border border-nectar-gold/25">
                               Esperando Firma de Néctar Labs
                             </span>
                           ) : (
-                            <span className="px-2.5 py-1 bg-red-500/10 text-red-400 text-[8px] font-black uppercase tracking-widest rounded-full border border-red-500/25">
+                            <span className="px-2.5 py-1 bg-red-500/10 text-red-400 text-2xs font-black uppercase tracking-widest rounded-full border border-red-500/25">
                               Acción Requerida: Pendiente de tu firma
                             </span>
                           )}
@@ -2643,8 +2643,8 @@ function DashboardPageOriginal() {
                               : "Tu propuesta comercial de proyecto ha sido aprobada. Revisa los términos y firma el contrato digitalmente."
                             }
                           </p>
-                          <p className="text-[9px] font-bold opacity-60 mt-2">Razón Social: {contract.full_name}</p>
-                          <p className="text-[8px] font-bold opacity-40 mt-1">Registrado: {contract.signed_at ? new Date(contract.signed_at).toLocaleDateString('es-ES') : '—'}</p>
+                          <p className="text-2xs font-bold opacity-60 mt-2">Razón Social: {contract.full_name}</p>
+                          <p className="text-2xs font-bold opacity-40 mt-1">Registrado: {contract.signed_at ? new Date(contract.signed_at).toLocaleDateString('es-ES') : '—'}</p>
                         </div>
                         <div className="flex gap-2 mt-6">
                           {!hasClientSignature ? (
@@ -2660,7 +2660,7 @@ function DashboardPageOriginal() {
                                 href={getInlineViewUrl(contract.pdf_file, 'contract', contract.id)}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="flex-1 py-2.5 bg-card-border hover:bg-foreground hover:text-background text-center rounded-xl text-[8px] font-black uppercase tracking-widest transition-all inline-block font-bold"
+                                className="flex-1 py-2.5 bg-card-border hover:bg-foreground hover:text-background text-center rounded-xl text-2xs font-black uppercase tracking-widest transition-all inline-block font-bold"
                               >
                                 Ver Contrato Parcial (PDF)
                               </a>
@@ -2741,10 +2741,10 @@ function DashboardPageOriginal() {
                             <div className="flex justify-between items-start mb-10">
                               <div className="space-y-1">
                                 <h3 className="text-2xl font-black tracking-tight">{project.name}</h3>
-                                {isStaff && project.client_username && <p className="text-[8px] font-bold text-nectar-gold opacity-60">Cliente: {project.client_username}</p>}
-                                {project.designer_email && <p className="text-[8px] font-bold text-foreground/45 uppercase tracking-wider">Diseñador: {project.designer_email}</p>}
+                                {isStaff && project.client_username && <p className="text-2xs font-bold text-nectar-gold opacity-60">Cliente: {project.client_username}</p>}
+                                {project.designer_email && <p className="text-2xs font-bold text-foreground/45 uppercase tracking-wider">Diseñador: {project.designer_email}</p>}
                               </div>
-                              <span className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold text-[8px] font-black uppercase tracking-widest rounded-full">{project.status}</span>
+                              <span className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold text-2xs font-black uppercase tracking-widest rounded-full">{project.status}</span>
                             </div>
 
                             <div className="mb-10 flex items-center gap-6">
@@ -2767,13 +2767,13 @@ function DashboardPageOriginal() {
                                 </svg>
                                 <div className="absolute inset-0 flex flex-col items-center justify-center mt-1">
                                   <span className="text-2xl font-black leading-none tracking-tighter">{formatHoursToHM(remHours)}</span>
-                                  <span className="text-[8px] font-black text-foreground/40 uppercase tracking-widest mt-1">HRS REST</span>
+                                  <span className="text-2xs font-black text-foreground/40 uppercase tracking-widest mt-1">HRS REST</span>
                                 </div>
                               </div>
 
                               {/* Stats */}
                               <div className="flex flex-col gap-3">
-                                <h4 className="text-[9px] font-black text-foreground/40 uppercase tracking-[0.2em]">{isDesignerUser ? 'Horas de Diseño' : 'Horas de Desarrollo'}</h4>
+                                <h4 className="text-2xs font-black text-foreground/40 uppercase tracking-[0.2em]">{isDesignerUser ? 'Horas de Diseño' : 'Horas de Desarrollo'}</h4>
                                 <div className="flex flex-col gap-1">
                                   <div className="flex items-center gap-2">
                                     <div className="w-1.5 h-1.5 rounded-full bg-card-border"></div>
@@ -2792,19 +2792,19 @@ function DashboardPageOriginal() {
 
                           <div className="flex gap-2">
                             {project.staging_url && (
-                              <a href={project.staging_url} target="_blank" className="flex-1 py-3 bg-card-border hover:bg-foreground hover:text-background text-center rounded-xl text-[9px] font-black uppercase tracking-widest transition-all">
+                              <a href={project.staging_url} target="_blank" className="flex-1 py-3 bg-card-border hover:bg-foreground hover:text-background text-center rounded-xl text-2xs font-black uppercase tracking-widest transition-all">
                                 Ver Staging
                               </a>
                             )}
                             {project.production_url && (
-                              <a href={project.production_url} target="_blank" className="flex-1 py-3 border border-nectar-gold text-nectar-gold hover:bg-nectar-gold hover:text-background text-center rounded-xl text-[9px] font-black uppercase tracking-widest transition-all">
+                              <a href={project.production_url} target="_blank" className="flex-1 py-3 border border-nectar-gold text-nectar-gold hover:bg-nectar-gold hover:text-background text-center rounded-xl text-2xs font-black uppercase tracking-widest transition-all">
                                 Producción
                               </a>
                             )}
                             {isStaff && (
                               <button
                                 onClick={() => handleDeleteProject(project.id, project.name)}
-                                className="px-4 bg-red-500/10 text-red-500 hover:bg-red-600 hover:text-white rounded-xl text-[9px] font-black uppercase tracking-widest transition-all flex items-center justify-center border border-red-500/20"
+                                className="px-4 bg-red-500/10 text-red-500 hover:bg-red-600 hover:text-white rounded-xl text-2xs font-black uppercase tracking-widest transition-all flex items-center justify-center border border-red-500/20"
                                 title="Eliminar Proyecto"
                               >
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2824,7 +2824,7 @@ function DashboardPageOriginal() {
                           <div className="absolute bottom-[-20%] left-[-10%] w-64 h-64 bg-nectar-forest/10 rounded-full blur-3xl"></div>
 
                           <div className="relative z-10 space-y-6">
-                            <span className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold text-[8px] font-black uppercase tracking-widest rounded-full border border-nectar-gold/20">
+                            <span className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold text-2xs font-black uppercase tracking-widest rounded-full border border-nectar-gold/20">
                               Servicio de Add-ons Activo
                             </span>
 
@@ -2851,7 +2851,7 @@ function DashboardPageOriginal() {
                                   </span>
                                 </div>
                                 <div className="h-px bg-card-border/40"></div>
-                                <div className="text-[10px] leading-relaxed text-foreground/60">
+                                <div className="text-2xs leading-relaxed text-foreground/60">
                                   <span className="text-nectar-gold font-black uppercase tracking-widest block mb-1">Nota sobre Dominios Personalizados</span>
                                   Si prefieres mapear un dominio propio (ej. <span className="font-mono">soporte.tudominio.com</span>), podemos ayudarte a integrarlo mediante un contrato adicional. Los costos de dominio varían según disponibilidad y proveedor.
                                 </div>
@@ -2865,7 +2865,7 @@ function DashboardPageOriginal() {
                             <div className="flex flex-wrap gap-4 pt-4">
                               <Link
                                 href="/dashboard/tenant-settings"
-                                className="px-8 py-3 bg-nectar-gold text-background font-black uppercase tracking-widest text-[10px] rounded-xl hover:scale-105 active:scale-95 transition-all shadow-lg shadow-nectar-gold/15"
+                                className="px-8 py-3 bg-nectar-gold text-background font-black uppercase tracking-widest text-2xs rounded-xl hover:scale-105 active:scale-95 transition-all shadow-lg shadow-nectar-gold/15"
                               >
                                 Personalizar Portal
                               </Link>
@@ -2881,7 +2881,7 @@ function DashboardPageOriginal() {
                                   })()}
                                   target="_blank"
                                   rel="noreferrer"
-                                  className="px-8 py-3 bg-card-border hover:bg-foreground hover:text-background text-foreground font-black uppercase tracking-widest text-[10px] rounded-xl transition-all border border-card-border"
+                                  className="px-8 py-3 bg-card-border hover:bg-foreground hover:text-background text-foreground font-black uppercase tracking-widest text-2xs rounded-xl transition-all border border-card-border"
                                 >
                                   Abrir Portal Público ↗
                                 </a>
@@ -2923,14 +2923,14 @@ function DashboardPageOriginal() {
                     {tickets.map(ticket => (
                       <div key={ticket.id} className="p-5 rounded-2xl border border-card-border hover:bg-foreground/5 transition-all group">
                         <div className="flex justify-between items-center mb-2">
-                          <span className="text-[7px] font-black uppercase tracking-widest text-nectar-gold">{ticket.category}</span>
+                          <span className="text-2xs font-black uppercase tracking-widest text-nectar-gold">{ticket.category}</span>
                           <span className={`w-2 h-2 rounded-full ${ticket.status === 'open' ? 'bg-green-500' : 'bg-red-500'}`}></span>
                         </div>
                         <h4 className="font-bold text-sm text-foreground/80 group-hover:text-foreground transition-colors">{ticket.title}</h4>
-                        {isStaff && <p className="text-[7px] font-bold opacity-40 mt-1 uppercase">{ticket.user_email}</p>}
+                        {isStaff && <p className="text-2xs font-bold opacity-40 mt-1 uppercase">{ticket.user_email}</p>}
                       </div>
                     ))}
-                    {tickets.length === 0 && <p className="text-center py-10 opacity-20 font-bold uppercase tracking-widest text-[10px]">Sin requerimientos pendientes</p>}
+                    {tickets.length === 0 && <p className="text-center py-10 opacity-20 font-bold uppercase tracking-widest text-2xs">Sin requerimientos pendientes</p>}
                   </div>
                 </section>
 
@@ -2957,21 +2957,21 @@ function DashboardPageOriginal() {
                               <div>
                                 <h4 className="font-bold text-xs text-foreground/80 group-hover:text-foreground transition-colors">{tenant.name}</h4>
                                 {isStaff && tenant.owner_email && (
-                                  <span className="block text-[8px] font-bold text-nectar-gold opacity-60 mt-1 lowercase font-mono">
+                                  <span className="block text-2xs font-bold text-nectar-gold opacity-60 mt-1 lowercase font-mono">
                                     Owner: {tenant.owner_email}
                                   </span>
                                 )}
                               </div>
-                              <span className={`px-2.5 py-1 text-[7px] font-black uppercase tracking-widest rounded-full border shrink-0 ${tenant.is_active
+                              <span className={`px-2.5 py-1 text-2xs font-black uppercase tracking-widest rounded-full border shrink-0 ${tenant.is_active
                                 ? 'bg-green-500/10 text-green-500 border-green-500/20'
                                 : 'bg-amber-500/10 text-amber-500 border-amber-500/20'
                                 }`}>
                                 {tenant.is_active ? 'Activo' : 'Reservado'}
                               </span>
                             </div>
-                            <div className="flex justify-between items-center text-[10px] opacity-60">
+                            <div className="flex justify-between items-center text-2xs opacity-60">
                               <span>URL:</span>
-                              <span className="font-mono text-[9px] text-nectar-gold font-bold">{urlDisplay}</span>
+                              <span className="font-mono text-2xs text-nectar-gold font-bold">{urlDisplay}</span>
                             </div>
 
                             {/* Active Addons inside Tenant */}
@@ -2982,7 +2982,7 @@ function DashboardPageOriginal() {
                                   {tenant.active_addons.map((slug: string) => {
                                     const addonObj = allAddons.find(a => a.slug === slug);
                                     return (
-                                      <span key={slug} className="px-2 py-0.5 bg-nectar-gold/10 text-nectar-gold text-[7px] font-black uppercase tracking-widest rounded-md border border-nectar-gold/20" title={addonObj?.description || slug}>
+                                      <span key={slug} className="px-2 py-0.5 bg-nectar-gold/10 text-nectar-gold text-2xs font-black uppercase tracking-widest rounded-md border border-nectar-gold/20" title={addonObj?.description || slug}>
                                         {addonObj?.name || slug}
                                       </span>
                                     );
@@ -2996,7 +2996,7 @@ function DashboardPageOriginal() {
                             )}
 
                             {!tenant.is_active && (
-                              <div className="pt-2 text-[8px] font-bold text-amber-500 opacity-80 leading-relaxed uppercase tracking-wider">
+                              <div className="pt-2 text-2xs font-bold text-amber-500 opacity-80 leading-relaxed uppercase tracking-wider">
                                 ⚠️ Aprovisionado en estado reservado. Se activará de forma automática al detectar el pago de la mensualidad.
                               </div>
                             )}
@@ -3006,7 +3006,7 @@ function DashboardPageOriginal() {
                             {!isStaff && (
                               <Link
                                 href="/dashboard/tenant-settings"
-                                className="flex-1 min-w-[90px] py-2 bg-background border border-card-border hover:border-foreground text-foreground text-center rounded-xl text-[8px] font-black uppercase tracking-widest transition-all cursor-pointer font-bold flex items-center justify-center font-bold"
+                                className="flex-1 min-w-[90px] py-2 bg-background border border-card-border hover:border-foreground text-foreground text-center rounded-xl text-2xs font-black uppercase tracking-widest transition-all cursor-pointer font-bold flex items-center justify-center font-bold"
                               >
                                 Personalizar Marca
                               </Link>
@@ -3017,7 +3017,7 @@ function DashboardPageOriginal() {
                                   window.open(domain, '_blank', 'noopener,noreferrer');
                                 }
                               }}
-                              className={`flex-1 min-w-[90px] py-2 text-center rounded-xl text-[8px] font-black uppercase tracking-widest transition-all cursor-pointer font-bold ${tenant.is_active
+                              className={`flex-1 min-w-[90px] py-2 text-center rounded-xl text-2xs font-black uppercase tracking-widest transition-all cursor-pointer font-bold ${tenant.is_active
                                 ? 'bg-nectar-gold/10 hover:bg-nectar-gold hover:text-background border border-nectar-gold/20 hover:border-nectar-gold text-nectar-gold'
                                 : 'bg-card-border text-foreground/40 cursor-not-allowed border border-transparent'
                                 }`}
@@ -3033,7 +3033,7 @@ function DashboardPageOriginal() {
                                   const tokenParam = token ? `?token=${encodeURIComponent(token)}` : '';
                                   window.open(`${domain}/portal-admin${tokenParam}`, '_blank', 'noopener,noreferrer');
                                 }}
-                                className="flex-1 min-w-[90px] py-2 bg-foreground hover:bg-foreground/90 text-background text-center rounded-xl text-[8px] font-black uppercase tracking-widest transition-all cursor-pointer font-bold flex items-center justify-center border border-transparent font-bold"
+                                className="flex-1 min-w-[90px] py-2 bg-foreground hover:bg-foreground/90 text-background text-center rounded-xl text-2xs font-black uppercase tracking-widest transition-all cursor-pointer font-bold flex items-center justify-center border border-transparent font-bold"
                               >
                                 Consola Admin ⚙️
                               </button>
@@ -3043,7 +3043,7 @@ function DashboardPageOriginal() {
                       );
                     })}
                     {tenants.length === 0 && (
-                      <p className="text-center py-10 opacity-20 font-bold uppercase tracking-widest text-[10px]">Sin subdominios registrados</p>
+                      <p className="text-center py-10 opacity-20 font-bold uppercase tracking-widest text-2xs">Sin subdominios registrados</p>
                     )}
                   </div>
                 </section>

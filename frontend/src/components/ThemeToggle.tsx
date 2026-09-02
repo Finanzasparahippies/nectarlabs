@@ -61,11 +61,11 @@ export default function ThemeToggle() {
       {/* LIGHT MODE BACKGROUND ELEMENTS (Clouds) */}
       <div className={`absolute inset-0 overflow-hidden pointer-events-none transition-opacity duration-500 ${theme === 'light' ? 'opacity-100' : 'opacity-0'}`}>
         {/* Cloud 1 */}
-        <svg className="absolute top-[6px] left-[26px] w-[14px] h-[8px] text-white/85 fill-current animate-[pulse_3s_ease-in-out_infinite]" viewBox="0 0 24 16">
+        <svg className="absolute top-1.5 left-[26px] w-[14px] h-[8px] text-white/85 fill-current animate-[pulse_3s_ease-in-out_infinite]" viewBox="0 0 24 16">
           <path d="M19.36 6.005A6 6 0 0 0 8.001 5a5.5 5.5 0 0 0-5.5 5.5c0 .17.008.34.024.507A4.5 4.5 0 0 0 6.5 15h11a5 5 0 0 0 1.86-9.995z"/>
         </svg>
         {/* Cloud 2 */}
-        <svg className="absolute top-[18px] left-[14px] w-[10px] h-[6px] text-white/60 fill-current animate-[pulse_4s_ease-in-out_infinite]" viewBox="0 0 24 16">
+        <svg className="absolute top-4.5 left-[14px] w-[10px] h-[6px] text-white/60 fill-current animate-[pulse_4s_ease-in-out_infinite]" viewBox="0 0 24 16">
           <path d="M19.36 6.005A6 6 0 0 0 8.001 5a5.5 5.5 0 0 0-5.5 5.5c0 .17.008.34.024.507A4.5 4.5 0 0 0 6.5 15h11a5 5 0 0 0 1.86-9.995z"/>
         </svg>
       </div>
@@ -73,22 +73,22 @@ export default function ThemeToggle() {
       {/* DARK MODE BACKGROUND ELEMENTS (Stars) */}
       <div className={`absolute inset-0 overflow-hidden pointer-events-none transition-opacity duration-500 ${theme === 'dark' ? 'opacity-100' : 'opacity-0'}`}>
         {/* Star 1 */}
-        <svg className="absolute top-[7px] left-[14px] w-[5px] h-[5px] text-amber-200/90 fill-current animate-pulse" viewBox="0 0 24 24">
+        <svg className="absolute top-2 left-[14px] w-[5px] h-[5px] text-amber-200/90 fill-current animate-pulse" viewBox="0 0 24 24">
           <path d="M12 .587l3.668 7.431 8.2 1.192-5.934 5.785 1.4 8.168L12 18.896l-7.334 3.857 1.4-8.168L.133 9.21l8.2-1.192z"/>
         </svg>
         {/* Star 2 */}
-        <svg className="absolute top-[19px] left-[22px] w-[4px] h-[4px] text-white/80 fill-current animate-pulse [animation-delay:1s]" viewBox="0 0 24 24">
+        <svg className="absolute top-[1.1875rem] left-[22px] w-[4px] h-[4px] text-white/80 fill-current animate-pulse [animation-delay:1s]" viewBox="0 0 24 24">
           <path d="M12 .587l3.668 7.431 8.2 1.192-5.934 5.785 1.4 8.168L12 18.896l-7.334 3.857 1.4-8.168L.133 9.21l8.2-1.192z"/>
         </svg>
         {/* Star 3 */}
-        <svg className="absolute top-[11px] left-[30px] w-[4px] h-[4px] text-yellow-100/70 fill-current animate-pulse [animation-delay:0.5s]" viewBox="0 0 24 24">
+        <svg className="absolute top-3 left-[30px] w-[4px] h-[4px] text-yellow-100/70 fill-current animate-pulse [animation-delay:0.5s]" viewBox="0 0 24 24">
           <path d="M12 .587l3.668 7.431 8.2 1.192-5.934 5.785 1.4 8.168L12 18.896l-7.334 3.857 1.4-8.168L.133 9.21l8.2-1.192z"/>
         </svg>
       </div>
 
       {/* THE MORPHING ORB (Sun / Moon) */}
       <div
-        className={`absolute top-[3px] left-[3px] w-7 h-7 rounded-full transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] overflow-hidden ${
+        className={`absolute top-1 left-[3px] w-7 h-7 rounded-full transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] overflow-hidden ${
           theme === 'light'
             ? 'translate-x-0 bg-gradient-to-br from-amber-400 to-orange-500 shadow-[0_2px_8px_rgba(245,158,11,0.5),0_0_0_4px_rgba(245,158,11,0.15)]'
             : 'translate-x-9 bg-gradient-to-br from-slate-100 to-slate-300 shadow-[0_2px_8px_rgba(255,255,255,0.25),0_0_0_4px_rgba(255,255,255,0.08)]'
@@ -104,11 +104,11 @@ export default function ThemeToggle() {
         {/* Moon Craters (Dark Mode only) */}
         <div className={`absolute inset-0 transition-opacity duration-300 ${theme === 'dark' ? 'opacity-100 scale-100' : 'opacity-0 scale-75'}`}>
           {/* Crater 1 */}
-          <div className="absolute top-[6px] left-[6px] w-[5px] h-[5px] rounded-full bg-slate-400/20 shadow-[inset_1px_1px_1px_rgba(0,0,0,0.15)]" />
+          <div className="absolute top-1.5 left-[6px] w-[5px] h-[5px] rounded-full bg-slate-400/20 shadow-[inset_1px_1px_1px_rgba(0,0,0,0.15)]" />
           {/* Crater 2 */}
-          <div className="absolute top-[14px] left-[8px] w-[7px] h-[7px] rounded-full bg-slate-400/20 shadow-[inset_1px_1px_1px_rgba(0,0,0,0.15)]" />
+          <div className="absolute top-3.5 left-[8px] w-[7px] h-[7px] rounded-full bg-slate-400/20 shadow-[inset_1px_1px_1px_rgba(0,0,0,0.15)]" />
           {/* Crater 3 */}
-          <div className="absolute top-[10px] left-[17px] w-[4px] h-[4px] rounded-full bg-slate-400/20 shadow-[inset_1px_1px_1px_rgba(0,0,0,0.15)]" />
+          <div className="absolute top-2.5 left-[17px] w-[4px] h-[4px] rounded-full bg-slate-400/20 shadow-[inset_1px_1px_1px_rgba(0,0,0,0.15)]" />
         </div>
       </div>
     </button>

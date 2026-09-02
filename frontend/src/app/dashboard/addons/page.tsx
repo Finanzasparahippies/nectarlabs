@@ -587,11 +587,11 @@ export default function AddonsPage() {
           <div className="flex justify-between items-start">
             <span className="text-3xl">{addon.icon}</span>
             <div className="flex flex-col gap-1.5 items-end">
-              <span className="px-2.5 py-0.5 bg-nectar-gold/10 text-nectar-gold border border-nectar-gold/25 text-[7px] font-black rounded-full uppercase tracking-wider font-mono">
+              <span className="px-2.5 py-0.5 bg-nectar-gold/10 text-nectar-gold border border-nectar-gold/25 text-2xs font-black rounded-full uppercase tracking-wider font-mono">
                 {addon.categoryBadge}
               </span>
               {isAddonActive && (
-                <span className="px-2.5 py-0.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 text-[7px] font-black rounded-full uppercase tracking-wider font-mono">
+                <span className="px-2.5 py-0.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 text-2xs font-black rounded-full uppercase tracking-wider font-mono">
                   ✔️ Activo
                 </span>
               )}
@@ -600,7 +600,7 @@ export default function AddonsPage() {
 
           <div>
             <h3 className="text-sm font-black uppercase text-foreground tracking-wide mt-2">{addon.name}</h3>
-            <p className="text-[10px] text-foreground/60 leading-relaxed mt-2 line-clamp-4">{addon.description}</p>
+            <p className="text-2xs text-foreground/60 leading-relaxed mt-2 line-clamp-4">{addon.description}</p>
           </div>
         </div>
 
@@ -613,7 +613,7 @@ export default function AddonsPage() {
                   <span className="text-base font-black text-[#C68A1E] font-mono">
                     Gratuito
                   </span>
-                  <p className="text-[7px] text-foreground/35 uppercase tracking-widest mt-0.5">
+                  <p className="text-2xs text-foreground/35 uppercase tracking-widest mt-0.5">
                     Incluido en tu {hasPlanContract ? 'Plan' : 'Paquete'}
                   </p>
                 </div>
@@ -626,7 +626,7 @@ export default function AddonsPage() {
                     ${(price || 0).toLocaleString('es-MX')} MXN
                   </span>
                   {billingCycle === 'yearly' && savings > 0 && (
-                    <p className="text-[7px] text-emerald-400 font-bold uppercase tracking-wider mt-0.5">
+                    <p className="text-2xs text-emerald-400 font-bold uppercase tracking-wider mt-0.5">
                       Ahorro de ${(savings || 0).toLocaleString('es-MX')} MXN
                     </p>
                   )}
@@ -634,7 +634,7 @@ export default function AddonsPage() {
               )}
             </div>
             
-            <span className="text-[7px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full border text-emerald-400 bg-emerald-400/10 border-emerald-400/20">
+            <span className="text-2xs font-black uppercase tracking-wider px-2.5 py-1 rounded-full border text-emerald-400 bg-emerald-400/10 border-emerald-400/20">
               Módulo de Negocio
             </span>
           </div>
@@ -643,14 +643,14 @@ export default function AddonsPage() {
             <button
               type="button"
               onClick={() => setSelectedAddon(addon)}
-              className="px-2 py-2 bg-foreground/[0.04] border border-card-border hover:bg-foreground/[0.08] text-foreground text-[8px] font-black uppercase tracking-widest rounded-lg hover:scale-105 active:scale-95 transition-all cursor-pointer text-center truncate"
+              className="px-2 py-2 bg-foreground/[0.04] border border-card-border hover:bg-foreground/[0.08] text-foreground text-2xs font-black uppercase tracking-widest rounded-lg hover:scale-105 active:scale-95 transition-all cursor-pointer text-center truncate"
             >
               Ficha
             </button>
             <button
               type="button"
               onClick={() => setExportWidgetAddon(addon)}
-              className="px-2 py-2 bg-nectar-gold/10 border border-nectar-gold/30 text-nectar-gold hover:bg-nectar-gold/20 text-[8px] font-black uppercase tracking-widest rounded-lg hover:scale-105 active:scale-95 transition-all cursor-pointer text-center truncate"
+              className="px-2 py-2 bg-nectar-gold/10 border border-nectar-gold/30 text-nectar-gold hover:bg-nectar-gold/20 text-2xs font-black uppercase tracking-widest rounded-lg hover:scale-105 active:scale-95 transition-all cursor-pointer text-center truncate"
               title="Exportar Widget Embebible"
             >
               Widget 🧩
@@ -659,7 +659,7 @@ export default function AddonsPage() {
               <button
                 type="button"
                 onClick={() => setManageAddon(addon)}
-                className="px-2 py-2 text-background text-[8px] font-black uppercase tracking-widest rounded-lg hover:scale-105 active:scale-95 transition-all shadow-md cursor-pointer text-center truncate"
+                className="px-2 py-2 text-background text-2xs font-black uppercase tracking-widest rounded-lg hover:scale-105 active:scale-95 transition-all shadow-md cursor-pointer text-center truncate"
                 style={{ backgroundColor: '#C68A1E' }}
               >
                 Asignar
@@ -668,7 +668,7 @@ export default function AddonsPage() {
               hasPlanContract ? (
                 <button
                   disabled
-                  className="px-2 py-2 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[8px] font-black uppercase tracking-widest rounded-lg cursor-default text-center truncate"
+                  className="px-2 py-2 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-2xs font-black uppercase tracking-widest rounded-lg cursor-default text-center truncate"
                 >
                   Activo
                 </button>
@@ -677,7 +677,7 @@ export default function AddonsPage() {
                   type="button"
                   onClick={handleOpenBillingPortal}
                   disabled={isSubmitting}
-                  className="px-2 py-2 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 text-[8px] font-black uppercase tracking-widest rounded-lg hover:scale-105 active:scale-95 transition-all shadow-md cursor-pointer text-center truncate"
+                  className="px-2 py-2 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 text-2xs font-black uppercase tracking-widest rounded-lg hover:scale-105 active:scale-95 transition-all shadow-md cursor-pointer text-center truncate"
                 >
                   {isSubmitting ? '...' : 'Gestionar'}
                 </button>
@@ -686,7 +686,7 @@ export default function AddonsPage() {
               <button
                 type="button"
                 onClick={() => setRequestAddon(addon)}
-                className="px-2 py-2 text-background text-[8px] font-black uppercase tracking-widest rounded-lg hover:scale-105 active:scale-95 transition-all shadow-md cursor-pointer text-center truncate"
+                className="px-2 py-2 text-background text-2xs font-black uppercase tracking-widest rounded-lg hover:scale-105 active:scale-95 transition-all shadow-md cursor-pointer text-center truncate"
                 style={{ backgroundColor: '#C68A1E' }}
               >
                 {hasPlanContract ? 'Solicitar' : 'Adquirir'}
@@ -901,7 +901,7 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
     return (
       <div className="min-h-screen bg-background text-foreground flex flex-col items-center justify-center">
         <div className="w-12 h-12 border-4 border-nectar-gold border-t-transparent rounded-full animate-spin mb-4"></div>
-        <div className="font-black uppercase tracking-[0.4em] opacity-20 text-[10px] animate-pulse">Sincronizando Módulos...</div>
+        <div className="font-black uppercase tracking-[0.4em] opacity-20 text-2xs animate-pulse">Sincronizando Módulos...</div>
       </div>
     );
   }
@@ -920,7 +920,7 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
             <h1 className="text-4xl md:text-6xl font-black tracking-tighter mb-2">
               Módulos & Add-ons
             </h1>
-            <p className="text-[10px] font-black uppercase tracking-[0.5em] text-nectar-gold opacity-80">
+            <p className="text-2xs font-black uppercase tracking-[0.5em] text-nectar-gold opacity-80">
               Servicios Aislados y Funcionalidades en Suscripción
             </p>
           </div>
@@ -934,8 +934,8 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
                 </svg>
               </div>
               <div>
-                <p className="text-[10px] font-black uppercase tracking-widest text-nectar-gold">Plan de 6 Meses Activo</p>
-                <p className="text-[9px] text-muted leading-tight mt-0.5">Todos los Add-ons están incluidos sin costo adicional. La integración se deduce de tus horas de desarrollo.</p>
+                <p className="text-2xs font-black uppercase tracking-widest text-nectar-gold">Plan de 6 Meses Activo</p>
+                <p className="text-2xs text-muted leading-tight mt-0.5">Todos los Add-ons están incluidos sin costo adicional. La integración se deduce de tus horas de desarrollo.</p>
               </div>
             </div>
           ) : (
@@ -943,7 +943,7 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
               <button
                 type="button"
                 onClick={() => setBillingCycle('monthly')}
-                className={`px-6 py-2.5 rounded-xl font-black uppercase tracking-widest text-[9px] transition-all duration-300 ${billingCycle === 'monthly'
+                className={`px-6 py-2.5 rounded-xl font-black uppercase tracking-widest text-2xs transition-all duration-300 ${billingCycle === 'monthly'
                   ? 'bg-nectar-gold text-background shadow-md'
                   : 'text-foreground/60 hover:text-foreground hover:bg-foreground/5'
                   }`}
@@ -953,12 +953,12 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
               <button
                 type="button"
                 onClick={() => setBillingCycle('yearly')}
-                className={`px-6 py-2.5 rounded-xl font-black uppercase tracking-widest text-[9px] transition-all duration-300 ${billingCycle === 'yearly'
+                className={`px-6 py-2.5 rounded-xl font-black uppercase tracking-widest text-2xs transition-all duration-300 ${billingCycle === 'yearly'
                   ? 'bg-nectar-gold text-background shadow-md'
                   : 'text-foreground/60 hover:text-foreground hover:bg-foreground/5'
                   }`}
               >
-                Pago Anual <span className="text-[7px] text-nectar-forest dark:text-nectar-cream bg-white/20 px-1 py-0.5 rounded ml-1 font-bold">2 meses gratis</span>
+                Pago Anual <span className="text-2xs text-nectar-forest dark:text-nectar-cream bg-white/20 px-1 py-0.5 rounded ml-1 font-bold">2 meses gratis</span>
               </button>
             </div>
           )}
@@ -971,7 +971,7 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
               <h3 className="text-lg font-black tracking-tight mb-1">¡Solicitud Enviada con Éxito!</h3>
               <p className="text-xs opacity-75">Se ha creado el ticket de implementación con alta prioridad para que nuestro equipo técnico coordine la integración contigo.</p>
             </div>
-            <Link href="/tickets" className="px-8 py-3 bg-emerald-500 text-background font-black uppercase tracking-widest text-[9px] rounded-xl hover:scale-105 active:scale-95 transition-all text-center">
+            <Link href="/tickets" className="px-8 py-3 bg-emerald-500 text-background font-black uppercase tracking-widest text-2xs rounded-xl hover:scale-105 active:scale-95 transition-all text-center">
               Ir a mis Tickets
             </Link>
           </div>
@@ -1013,11 +1013,11 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
                     <h2 className="text-xl md:text-2xl font-black uppercase tracking-wider text-foreground flex items-center gap-2">
                       📦 Paquetes de Software Completos
                     </h2>
-                    <p className="text-[10px] font-black uppercase tracking-[0.3em] text-nectar-gold opacity-80 mt-1">
+                    <p className="text-2xs font-black uppercase tracking-[0.3em] text-nectar-gold opacity-80 mt-1">
                       Soluciones integrales llave en mano para tu negocio
                     </p>
                   </div>
-                  <span className="px-2.5 py-0.5 bg-nectar-gold/10 text-nectar-gold border border-nectar-gold/25 text-[8px] font-mono rounded font-bold uppercase tracking-wider">
+                  <span className="px-2.5 py-0.5 bg-nectar-gold/10 text-nectar-gold border border-nectar-gold/25 text-2xs font-mono rounded font-bold uppercase tracking-wider">
                     {packages.length} {packages.length === 1 ? 'Paquete' : 'Paquetes'}
                   </span>
                 </div>
@@ -1035,11 +1035,11 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
                     <h2 className="text-xl md:text-2xl font-black uppercase tracking-wider text-foreground flex items-center gap-2">
                       🧩 Módulos & Funcionalidades Individuales
                     </h2>
-                    <p className="text-[10px] font-black uppercase tracking-[0.3em] text-nectar-gold opacity-80 mt-1">
+                    <p className="text-2xs font-black uppercase tracking-[0.3em] text-nectar-gold opacity-80 mt-1">
                       Equipamiento tecnológico específico a la carta
                     </p>
                   </div>
-                  <span className="px-2.5 py-0.5 bg-nectar-gold/10 text-nectar-gold border border-nectar-gold/25 text-[8px] font-mono rounded font-bold uppercase tracking-wider">
+                  <span className="px-2.5 py-0.5 bg-nectar-gold/10 text-nectar-gold border border-nectar-gold/25 text-2xs font-mono rounded font-bold uppercase tracking-wider">
                     {modules.length} {modules.length === 1 ? 'Módulo' : 'Módulos'}
                   </span>
                 </div>
@@ -1074,7 +1074,7 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
                   {selectedAddon.icon}
                 </div>
                 <div>
-                  <span className="text-[8px] font-black uppercase tracking-widest text-nectar-gold block mb-1">
+                  <span className="text-2xs font-black uppercase tracking-widest text-nectar-gold block mb-1">
                     Ficha Técnica de Add-on
                   </span>
                   <h2 className="text-3xl font-black tracking-tight">{selectedAddon.name}</h2>
@@ -1092,7 +1092,7 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
 
                   return (
                     <div>
-                      <h4 className="text-[10px] font-black uppercase tracking-widest text-nectar-gold mb-3">
+                      <h4 className="text-2xs font-black uppercase tracking-widest text-nectar-gold mb-3">
                         Funcionalidades Clave
                       </h4>
                       <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -1109,7 +1109,7 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 border-t border-card-border/50 pt-6">
                   <div>
-                    <h4 className="text-[10px] font-black uppercase tracking-widest text-nectar-gold mb-2">
+                    <h4 className="text-2xs font-black uppercase tracking-widest text-nectar-gold mb-2">
                       Origen en el Ecosistema
                     </h4>
                     <p className="text-xs font-mono bg-background/50 border border-card-border/80 p-3.5 rounded-xl truncate text-foreground/80" title={selectedAddon.sourceReference}>
@@ -1117,7 +1117,7 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
                     </p>
                   </div>
                   <div>
-                    <h4 className="text-[10px] font-black uppercase tracking-widest text-nectar-gold mb-2">
+                    <h4 className="text-2xs font-black uppercase tracking-widest text-nectar-gold mb-2">
                       Requerimientos de Infraestructura
                     </h4>
                     <p className="text-xs text-foreground/80 leading-relaxed">
@@ -1188,7 +1188,7 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
                   {exportWidgetAddon.icon}
                 </div>
                 <div>
-                  <span className="text-[8px] font-black uppercase tracking-widest text-nectar-gold block mb-1">
+                  <span className="text-2xs font-black uppercase tracking-widest text-nectar-gold block mb-1">
                     Exportador de Widgets SaaS Embebibles
                   </span>
                   <h2 className="text-2xl font-black tracking-tight">{exportWidgetAddon.name}</h2>
@@ -1201,10 +1201,10 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
 
               {/* Script Embed Code */}
               <div className="space-y-2">
-                <label className="text-[9px] font-black uppercase tracking-widest text-nectar-gold block">
+                <label className="text-2xs font-black uppercase tracking-widest text-nectar-gold block">
                   1. Fragmento de Código Script (&lt;script&gt;)
                 </label>
-                <div className="bg-background/80 border border-card-border p-4 rounded-2xl font-mono text-[10px] text-foreground/90 relative group">
+                <div className="bg-background/80 border border-card-border p-4 rounded-2xl font-mono text-2xs text-foreground/90 relative group">
                   <code className="break-all block">
                     {`<script src="https://nectarlabs.ai/widget.js" data-tenant="${tenants[0]?.subdomain || 'mi-marca'}" data-addon="${exportWidgetAddon.id}" async></script>`}
                   </code>
@@ -1213,7 +1213,7 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
                       navigator.clipboard.writeText(`<script src="https://nectarlabs.ai/widget.js" data-tenant="${tenants[0]?.subdomain || 'mi-marca'}" data-addon="${exportWidgetAddon.id}" async></script>`);
                       showToast("Código script copiado al portapapeles", "success");
                     }}
-                    className="mt-3 block w-full py-2.5 bg-nectar-gold text-background font-black text-[9px] uppercase tracking-widest rounded-xl hover:scale-[1.01] transition-transform cursor-pointer text-center"
+                    className="mt-3 block w-full py-2.5 bg-nectar-gold text-background font-black text-2xs uppercase tracking-widest rounded-xl hover:scale-[1.01] transition-transform cursor-pointer text-center"
                   >
                     Copiar Código Script
                   </button>
@@ -1222,10 +1222,10 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
 
               {/* iframe Embed Code */}
               <div className="space-y-2">
-                <label className="text-[9px] font-black uppercase tracking-widest text-nectar-gold block">
+                <label className="text-2xs font-black uppercase tracking-widest text-nectar-gold block">
                   2. Fragmento de Código iframe (&lt;iframe&gt;)
                 </label>
-                <div className="bg-background/80 border border-card-border p-4 rounded-2xl font-mono text-[10px] text-foreground/90 relative group">
+                <div className="bg-background/80 border border-card-border p-4 rounded-2xl font-mono text-2xs text-foreground/90 relative group">
                   <code className="break-all block">
                     {`<iframe src="https://${tenants[0]?.subdomain || 'mi-marca'}.nectarlabs.ai/widgets/${exportWidgetAddon.id}" width="100%" height="600" frameborder="0" allow="camera; microphone; payment"></iframe>`}
                   </code>
@@ -1234,7 +1234,7 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
                       navigator.clipboard.writeText(`<iframe src="https://${tenants[0]?.subdomain || 'mi-marca'}.nectarlabs.ai/widgets/${exportWidgetAddon.id}" width="100%" height="600" frameborder="0" allow="camera; microphone; payment"></iframe>`);
                       showToast("Código iframe copiado al portapapeles", "success");
                     }}
-                    className="mt-3 block w-full py-2.5 border border-card-border text-foreground font-black text-[9px] uppercase tracking-widest rounded-xl hover:bg-foreground/5 transition-colors cursor-pointer text-center"
+                    className="mt-3 block w-full py-2.5 border border-card-border text-foreground font-black text-2xs uppercase tracking-widest rounded-xl hover:bg-foreground/5 transition-colors cursor-pointer text-center"
                   >
                     Copiar Código iframe
                   </button>
@@ -1246,14 +1246,14 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
                 <div className="flex items-center gap-2 text-amber-400 text-xs font-black uppercase tracking-wider">
                   <span>🛡️</span> Control de Origen CORS & Seguridad de Dominios
                 </div>
-                <p className="text-[10px] text-foreground/80 leading-relaxed">
+                <p className="text-2xs text-foreground/80 leading-relaxed">
                   Para evitar el uso no autorizado o el secuestro de tus widgets en sitios externos no suscritos, el backend de Nectar Labs valida estrictamente los dominios autorizados en la cabecera HTTP origin.
                 </p>
-                <div className="pt-2 flex justify-between items-center text-[9px] font-mono">
+                <div className="pt-2 flex justify-between items-center text-2xs font-mono">
                   <span className="text-foreground/60">Dominios Registrados actualmente:</span>
                   <span className="text-nectar-gold font-bold">{tenants[0]?.allowed_origins || 'Subdominio Nativo'}</span>
                 </div>
-                <Link href="/dashboard/tenant-settings" className="inline-block mt-2 text-[9px] font-black uppercase tracking-widest text-nectar-gold hover:underline">
+                <Link href="/dashboard/tenant-settings" className="inline-block mt-2 text-2xs font-black uppercase tracking-widest text-nectar-gold hover:underline">
                   → Configurar Dominios Autorizados (CORS) en Ajustes de la Colmena
                 </Link>
               </div>
@@ -1290,7 +1290,7 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
               </button>
 
               <div className="mb-8">
-                <span className="text-[8px] font-black uppercase tracking-widest text-nectar-gold block mb-1">
+                <span className="text-2xs font-black uppercase tracking-widest text-nectar-gold block mb-1">
                   Nueva Solicitud de Integración
                 </span>
                 <h2 className="text-3xl font-black tracking-tight mb-2">Configurar {requestAddon.name}</h2>
@@ -1304,15 +1304,15 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
               <form onSubmit={handleRequestIntegration} className="space-y-6">
                 <div className="bg-background/50 border border-card-border p-6 rounded-2xl flex justify-between items-center">
                   <div>
-                    <span className="text-[8px] font-bold opacity-50 uppercase tracking-widest text-muted block mb-0.5">Módulo Seleccionado</span>
+                    <span className="text-2xs font-bold opacity-50 uppercase tracking-widest text-muted block mb-0.5">Módulo Seleccionado</span>
                     <span className="font-bold text-sm text-foreground">{requestAddon.name}</span>
                   </div>
                   <div className="text-right">
-                    <span className="text-[8px] font-bold opacity-50 uppercase tracking-widest text-muted block mb-0.5">Precio de Integración</span>
+                    <span className="text-2xs font-bold opacity-50 uppercase tracking-widest text-muted block mb-0.5">Precio de Integración</span>
                     {hasPlanContract ? (
                       <span className="font-black text-lg text-nectar-gold text-right">
                         $0 MXN
-                        <span className="text-[9px] font-bold text-muted opacity-60 block">
+                        <span className="text-2xs font-bold text-muted opacity-60 block">
                           Incluido en tu Plan
                         </span>
                       </span>
@@ -1326,7 +1326,7 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
                           });
                           return total.toLocaleString('es-MX');
                         })()} MXN
-                        <span className="text-[9px] font-bold text-muted opacity-60 block">
+                        <span className="text-2xs font-bold text-muted opacity-60 block">
                           / {billingCycle === 'monthly' ? 'mes' : 'año'}
                         </span>
                       </span>
@@ -1336,7 +1336,7 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
 
                  {requestAddon.id.startsWith('pack-') && !hasPlanContract && (
                    <div className="space-y-3 border-t border-card-border/50 pt-4">
-                     <label className="text-[10px] font-black uppercase tracking-widest text-nectar-gold block">
+                     <label className="text-2xs font-black uppercase tracking-widest text-nectar-gold block">
                        Anexar Complementos Adicionales (Sumados al paquete)
                      </label>
                      <div className="grid grid-cols-1 gap-2.5">
@@ -1366,13 +1366,13 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
                                <span className="text-xl">{opt.icon}</span>
                                <div>
                                  <span className="text-xs font-bold text-foreground block">{opt.name}</span>
-                                 <span className="text-[8px] text-muted uppercase font-black tracking-wider">Add-on independiente</span>
+                                 <span className="text-2xs text-muted uppercase font-black tracking-wider">Add-on independiente</span>
                                </div>
                              </div>
                              <div className="flex items-center gap-3">
                                <span className="text-xs font-black text-nectar-gold font-mono">+${price} MXN</span>
                                <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${isChecked ? 'border-nectar-gold bg-nectar-gold text-background' : 'border-card-border'}`}>
-                                 {isChecked && <span className="text-[8px] font-black">✓</span>}
+                                 {isChecked && <span className="text-2xs font-black">✓</span>}
                                </div>
                              </div>
                            </button>
@@ -1383,13 +1383,13 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
                  )}
 
                 <div className="space-y-4 border-t border-card-border/50 pt-4">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-nectar-gold block">
+                  <label className="text-2xs font-black uppercase tracking-widest text-nectar-gold block">
                     Portal de Destino
                   </label>
 
                   {tenants.length > 0 && (
                     <div className="space-y-2">
-                      <span className="text-[8px] font-bold opacity-50 uppercase tracking-widest text-muted block">
+                      <span className="text-2xs font-bold opacity-50 uppercase tracking-widest text-muted block">
                         Selecciona tu Portal
                       </span>
                       <select
@@ -1412,12 +1412,12 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
 
                   {selectedTenantId === 'new' && (
                     <div className="space-y-4 bg-foreground/[0.02] border border-card-border p-5 rounded-2xl animate-premium">
-                      <span className="text-[8px] font-black text-nectar-gold uppercase tracking-widest block mb-2">
+                      <span className="text-2xs font-black text-nectar-gold uppercase tracking-widest block mb-2">
                         Configurar Nuevo Portal
                       </span>
 
                       <div className="space-y-2">
-                        <label htmlFor="newTenantName" className="text-[8px] font-bold opacity-50 uppercase tracking-widest text-muted block">
+                        <label htmlFor="newTenantName" className="text-2xs font-bold opacity-50 uppercase tracking-widest text-muted block">
                           Nombre del Portal / Empresa
                         </label>
                         <input
@@ -1431,7 +1431,7 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
                       </div>
 
                       <div className="space-y-2">
-                        <label htmlFor="newTenantSubdomain" className="text-[8px] font-bold opacity-50 uppercase tracking-widest text-muted block">
+                        <label htmlFor="newTenantSubdomain" className="text-2xs font-bold opacity-50 uppercase tracking-widest text-muted block">
                           Sufijo / Subdominio
                         </label>
                         <div className="flex items-center gap-2 bg-background/50 border border-card-border focus-within:border-nectar-gold/60 rounded-2xl px-4 py-3.5 transition-colors">
@@ -1453,14 +1453,14 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
                   )}
 
                   {tenantErrorMsg && (
-                    <p className="text-[9px] text-red-400 font-bold uppercase tracking-wider bg-red-400/5 border border-red-400/20 px-4 py-2.5 rounded-xl">
+                    <p className="text-2xs text-red-400 font-bold uppercase tracking-wider bg-red-400/5 border border-red-400/20 px-4 py-2.5 rounded-xl">
                       ⚠️ {tenantErrorMsg}
                     </p>
                   )}
                 </div>
 
                 <div>
-                  <label htmlFor="comments" className="text-[10px] font-black uppercase tracking-widest text-nectar-gold block mb-3">
+                  <label htmlFor="comments" className="text-2xs font-black uppercase tracking-widest text-nectar-gold block mb-3">
                     Comentarios o Requerimientos Especiales (Opcional)
                   </label>
                   <textarea
@@ -1520,7 +1520,7 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
               </button>
 
               <div className="mb-6">
-                <span className="text-[8px] font-black uppercase tracking-widest text-nectar-gold block mb-1 font-mono">
+                <span className="text-2xs font-black uppercase tracking-widest text-nectar-gold block mb-1 font-mono">
                   Administración de Add-on · Sistema Completo
                 </span>
                 <h2 className="text-3xl font-black tracking-tight mb-2">Asignar {manageAddon.name}</h2>
@@ -1567,7 +1567,7 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
                     return (
                       <div className="text-center py-10 text-foreground/30">
                         <p className="text-xs font-bold uppercase tracking-widest">Sin resultados</p>
-                        <p className="text-[10px] mt-1">No hay portales activos que coincidan con la búsqueda.</p>
+                        <p className="text-2xs mt-1">No hay portales activos que coincidan con la búsqueda.</p>
                       </div>
                     );
                   }
@@ -1601,7 +1601,7 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
                             {tenant.subdomain}.nectarlabs.dev
                           </span>
                           {isActive && (
-                            <span className="text-[7px] font-black uppercase tracking-widest text-emerald-400 bg-emerald-400/10 border border-emerald-400/20 px-2 py-0.5 rounded mt-1 inline-block">
+                            <span className="text-2xs font-black uppercase tracking-widest text-emerald-400 bg-emerald-400/10 border border-emerald-400/20 px-2 py-0.5 rounded mt-1 inline-block">
                               ✓ Módulo Activo
                             </span>
                           )}
@@ -1628,7 +1628,7 @@ ${comments.trim() ? comments : '_El cliente no ingresó comentarios adicionales.
               </div>
 
               <div className="flex items-center justify-between pt-6 border-t border-card-border/50 mt-6">
-                <span className="text-[9px] text-foreground/30 font-mono">
+                <span className="text-2xs text-foreground/30 font-mono">
                   {tenants.filter(t => t.is_active).length} portales activos en el sistema
                 </span>
                 <button

@@ -86,7 +86,7 @@ export default function SubscriptionCards() {
         <h2 className="relative text-3xl sm:text-5xl md:text-8xl font-black mb-4 tracking-tighter text-nectar-forest dark:text-nectar-cream leading-none z-10">
           Inversión <span className="text-nectar-gold">Tecnológica</span>
         </h2>
-        <p className="text-[10px] text-nectar-gold font-black uppercase tracking-[0.5em] relative z-10">Contratos de 6 Meses de Alto Valor</p>
+        <p className="text-2xs text-nectar-gold font-black uppercase tracking-[0.5em] relative z-10">Contratos de 6 Meses de Alto Valor</p>
       </div>
 
       {loading ? (
@@ -114,18 +114,18 @@ export default function SubscriptionCards() {
                 }`}
               >
                 {plan.is_recommended ? (
-                  <div className="absolute top-0 right-0 px-6 py-2.5 sm:px-10 sm:py-4 bg-nectar-gold text-nectar-cream text-[9px] sm:text-[11px] font-black uppercase tracking-[0.4em] shadow-lg rounded-bl-2xl">
+                  <div className="absolute top-0 right-0 px-6 py-2.5 sm:px-10 sm:py-4 bg-nectar-gold text-nectar-cream text-2xs sm:text-xs font-black uppercase tracking-[0.4em] shadow-lg rounded-bl-2xl">
                     Recomendado
                   </div>
                 ) : (
-                  <div className="absolute top-0 right-0 px-4 py-2 bg-foreground/5 text-foreground/60 text-[8px] sm:text-[9px] font-black uppercase tracking-[0.2em] rounded-bl-xl border-l border-b border-card-border">
+                  <div className="absolute top-0 right-0 px-4 py-2 bg-foreground/5 text-foreground/60 text-2xs sm:text-2xs font-black uppercase tracking-[0.2em] rounded-bl-xl border-l border-b border-card-border">
                     Contrato 6 Meses
                   </div>
                 )}
 
                 <div>
                   <div className="flex items-center gap-2 mb-3">
-                    <span className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold text-[9px] font-black uppercase tracking-widest rounded-full border border-nectar-gold/20">
+                    <span className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold text-2xs font-black uppercase tracking-widest rounded-full border border-nectar-gold/20">
                       Contrato 6 Meses
                     </span>
                   </div>
@@ -133,7 +133,7 @@ export default function SubscriptionCards() {
                   <p className="text-foreground opacity-80 text-xs sm:text-sm mb-6 leading-relaxed font-medium min-h-[auto] md:min-h-[64px]">{plan.description}</p>
 
                   <div className="flex flex-col mb-6 sm:mb-8">
-                    <div className="text-[10px] font-black tracking-[0.3em] uppercase text-foreground/40 mb-2">
+                    <div className="text-2xs font-black tracking-[0.3em] uppercase text-foreground/40 mb-2">
                       Inversión Mensual
                     </div>
                     <div className="flex items-baseline gap-2 mb-1 flex-wrap">

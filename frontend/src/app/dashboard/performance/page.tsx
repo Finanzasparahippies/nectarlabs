@@ -140,7 +140,7 @@ export default function PerformancePage() {
     return (
       <div className="min-h-screen bg-background text-foreground flex flex-col items-center justify-center">
         <div className="w-12 h-12 border-4 border-nectar-gold border-t-transparent rounded-full animate-spin mb-4"></div>
-        <div className="font-black uppercase tracking-[0.4em] opacity-20 text-[10px] animate-pulse">Sincronizando Diagnósticos...</div>
+        <div className="font-black uppercase tracking-[0.4em] opacity-20 text-2xs animate-pulse">Sincronizando Diagnósticos...</div>
       </div>
     );
   }
@@ -169,7 +169,7 @@ export default function PerformancePage() {
           <h1 className="text-4xl md:text-6xl font-black tracking-tighter mb-2">
             Métricas de Servidor
           </h1>
-          <p className="text-[10px] font-black uppercase tracking-widest text-nectar-gold opacity-80">
+          <p className="text-2xs font-black uppercase tracking-widest text-nectar-gold opacity-80">
             Diagnósticos del sistema en tiempo real
           </p>
         </header>
@@ -181,7 +181,7 @@ export default function PerformancePage() {
             {/* CPU Metric */}
             <div className="bg-card-bg border border-card-border p-8 rounded-[2.5rem] relative overflow-hidden group hover:border-nectar-gold/50 transition-all duration-300">
               <div className="flex justify-between items-center mb-6">
-                <span className="text-[10px] font-black uppercase tracking-widest opacity-40">Procesador (CPU)</span>
+                <span className="text-2xs font-black uppercase tracking-widest opacity-40">Procesador (CPU)</span>
                 <svg className="w-5 h-5 text-nectar-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
                 </svg>
@@ -203,7 +203,7 @@ export default function PerformancePage() {
             {/* RAM Metric */}
             <div className="bg-card-bg border border-card-border p-8 rounded-[2.5rem] relative overflow-hidden group hover:border-nectar-gold/50 transition-all duration-300">
               <div className="flex justify-between items-center mb-6">
-                <span className="text-[10px] font-black uppercase tracking-widest opacity-40">Memoria RAM</span>
+                <span className="text-2xs font-black uppercase tracking-widest opacity-40">Memoria RAM</span>
                 <svg className="w-5 h-5 text-nectar-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                 </svg>
@@ -227,7 +227,7 @@ export default function PerformancePage() {
             {/* Disk Metric */}
             <div className="bg-card-bg border border-card-border p-8 rounded-[2.5rem] relative overflow-hidden group hover:border-nectar-gold/50 transition-all duration-300">
               <div className="flex justify-between items-center mb-6">
-                <span className="text-[10px] font-black uppercase tracking-widest opacity-40">Almacenamiento (SSD)</span>
+                <span className="text-2xs font-black uppercase tracking-widest opacity-40">Almacenamiento (SSD)</span>
                 <svg className="w-5 h-5 text-nectar-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
                 </svg>
@@ -257,7 +257,7 @@ export default function PerformancePage() {
             {/* Card 1 */}
             <div className="bg-card-bg border border-card-border p-8 rounded-[2rem] hover:border-nectar-gold/50 transition-all group duration-300">
               <div className="flex justify-between items-start mb-6">
-                <span className="text-[9px] font-black uppercase tracking-widest opacity-40">Tiempos de Respuesta (Avg)</span>
+                <span className="text-2xs font-black uppercase tracking-widest opacity-40">Tiempos de Respuesta (Avg)</span>
                 <svg className="w-5 h-5 text-nectar-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
@@ -265,13 +265,13 @@ export default function PerformancePage() {
               <div className="text-3xl font-black tracking-tighter mb-2 text-foreground">
                 {summary?.server.avg_response_time.toFixed(3)}s
               </div>
-              <div className="text-[9px] font-black uppercase tracking-widest text-nectar-gold opacity-65">Promedio Global</div>
+              <div className="text-2xs font-black uppercase tracking-widest text-nectar-gold opacity-65">Promedio Global</div>
             </div>
 
             {/* Card 2 */}
             <div className="bg-card-bg border border-card-border p-8 rounded-[2rem] hover:border-nectar-gold/50 transition-all group duration-300">
               <div className="flex justify-between items-start mb-6">
-                <span className="text-[9px] font-black uppercase tracking-widest opacity-40">Consultas DB (Avg)</span>
+                <span className="text-2xs font-black uppercase tracking-widest opacity-40">Consultas DB (Avg)</span>
                 <svg className="w-5 h-5 text-nectar-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
                 </svg>
@@ -279,13 +279,13 @@ export default function PerformancePage() {
               <div className="text-3xl font-black tracking-tighter mb-2 text-foreground">
                 {summary?.server.avg_queries.toFixed(1)}
               </div>
-              <div className="text-[9px] font-black uppercase tracking-widest text-nectar-gold opacity-65">Queries por solicitud</div>
+              <div className="text-2xs font-black uppercase tracking-widest text-nectar-gold opacity-65">Queries por solicitud</div>
             </div>
 
             {/* Card 3 */}
             <div className="bg-card-bg border border-card-border p-8 rounded-[2rem] hover:border-nectar-gold/50 transition-all group duration-300">
               <div className="flex justify-between items-start mb-6">
-                <span className="text-[9px] font-black uppercase tracking-widest opacity-40">Total Solicitudes</span>
+                <span className="text-2xs font-black uppercase tracking-widest opacity-40">Total Solicitudes</span>
                 <svg className="w-5 h-5 text-nectar-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
@@ -293,13 +293,13 @@ export default function PerformancePage() {
               <div className="text-3xl font-black tracking-tighter mb-2 text-foreground">
                 {summary?.server.total_requests.toLocaleString()}
               </div>
-              <div className="text-[9px] font-black uppercase tracking-widest text-nectar-gold opacity-65">Peticiones totales</div>
+              <div className="text-2xs font-black uppercase tracking-widest text-nectar-gold opacity-65">Peticiones totales</div>
             </div>
 
             {/* Card 4 */}
             <div className="bg-card-bg border border-card-border p-8 rounded-[2rem] hover:border-nectar-gold/50 transition-all group duration-300">
               <div className="flex justify-between items-start mb-6">
-                <span className="text-[9px] font-black uppercase tracking-widest opacity-40">Tiempo Máximo</span>
+                <span className="text-2xs font-black uppercase tracking-widest opacity-40">Tiempo Máximo</span>
                 <svg className="w-5 h-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
@@ -307,7 +307,7 @@ export default function PerformancePage() {
               <div className="text-3xl font-black tracking-tighter mb-2 text-foreground">
                 {summary?.server.max_response_time.toFixed(3)}s
               </div>
-              <div className="text-[9px] font-black uppercase tracking-widest text-red-500/80">Peor caso registrado</div>
+              <div className="text-2xs font-black uppercase tracking-widest text-red-500/80">Peor caso registrado</div>
             </div>
           </div>
         </section>
@@ -318,7 +318,7 @@ export default function PerformancePage() {
           <div className="bg-card-bg border border-card-border rounded-[3rem] p-8 md:p-12">
             <header className="mb-8">
               <h2 className="text-2xl font-black tracking-tighter">Core Web Vitals</h2>
-              <p className="text-[9px] font-black uppercase tracking-widest text-nectar-gold opacity-80">Rendimiento en el navegador (Promedio)</p>
+              <p className="text-2xs font-black uppercase tracking-widest text-nectar-gold opacity-80">Rendimiento en el navegador (Promedio)</p>
             </header>
             <div className="space-y-4">
               {summary?.vitals && summary.vitals.length > 0 ? (
@@ -326,7 +326,7 @@ export default function PerformancePage() {
                   <div key={v.name} className="flex justify-between items-center p-5 bg-background/50 border border-card-border/60 rounded-2xl hover:border-nectar-gold/20 transition-all">
                     <div>
                       <span className="font-bold text-sm block tracking-wide">{v.name}</span>
-                      <span className="text-[9px] font-bold uppercase opacity-35">{v.count} muestras</span>
+                      <span className="text-2xs font-bold uppercase opacity-35">{v.count} muestras</span>
                     </div>
                     <span className="font-black text-nectar-gold text-lg">{v.avg_value.toFixed(2)} ms</span>
                   </div>
@@ -343,7 +343,7 @@ export default function PerformancePage() {
           <div className="bg-card-bg border border-card-border rounded-[3rem] p-8 md:p-12">
             <header className="mb-8">
               <h2 className="text-2xl font-black tracking-tighter">Endpoints más lentos</h2>
-              <p className="text-[9px] font-black uppercase tracking-widest text-nectar-gold opacity-80">Optimizaciones prioritarias</p>
+              <p className="text-2xs font-black uppercase tracking-widest text-nectar-gold opacity-80">Optimizaciones prioritarias</p>
             </header>
             <div className="space-y-5">
               {summary?.slowest_endpoints && summary.slowest_endpoints.length > 0 ? (
@@ -380,7 +380,7 @@ export default function PerformancePage() {
             <header className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
               <div>
                 <h2 className="text-2xl md:text-3xl font-black tracking-tighter">Archivos de Log del Sistema</h2>
-                <p className="text-[10px] font-black uppercase tracking-widest text-nectar-gold opacity-80 mt-1">
+                <p className="text-2xs font-black uppercase tracking-widest text-nectar-gold opacity-80 mt-1">
                   Gestión y descarga segura de auditoría (Rotating File Handlers UTF-8)
                 </p>
               </div>
@@ -398,7 +398,7 @@ export default function PerformancePage() {
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm">
                   <thead>
-                    <tr className="border-b border-card-border/60 text-[10px] uppercase font-black tracking-widest text-foreground/40">
+                    <tr className="border-b border-card-border/60 text-2xs uppercase font-black tracking-widest text-foreground/40">
                       <th className="pb-4 pl-4">Nombre del Archivo</th>
                       <th className="pb-4">Tamaño</th>
                       <th className="pb-4">Última Modificación</th>

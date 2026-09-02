@@ -178,7 +178,7 @@ export default function InvoicingGuidePage() {
               🧾
             </div>
             <div className="space-y-1">
-              <span className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold text-[8px] font-black uppercase tracking-widest rounded-full border border-nectar-gold/20">
+              <span className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold text-2xs font-black uppercase tracking-widest rounded-full border border-nectar-gold/20">
                 MÓDULO ADQUIRIDO (ADD-ON)
               </span>
               <h1 className="text-3xl md:text-5xl font-black tracking-tight mt-2 text-foreground">
@@ -199,7 +199,7 @@ export default function InvoicingGuidePage() {
             <div className="bg-card-bg border border-card-border rounded-[2rem] p-6 shadow-lg space-y-6">
               <div>
                 <h3 className="text-xs font-black uppercase tracking-wider text-nectar-gold">Ruta del Cliente (Onboarding)</h3>
-                <p className="text-[8px] text-muted uppercase tracking-widest mt-1">Pasos requeridos para timbrar CFDI 4.0</p>
+                <p className="text-2xs text-muted uppercase tracking-widest mt-1">Pasos requeridos para timbrar CFDI 4.0</p>
               </div>
 
               {/* Steps timeline vertical */}
@@ -207,14 +207,14 @@ export default function InvoicingGuidePage() {
                 
                 {/* Step 1 */}
                 <div className="relative">
-                  <span className={`absolute -left-9 top-0.5 w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black border transition-all ${
+                  <span className={`absolute -left-9 top-0.5 w-6 h-6 rounded-full flex items-center justify-center text-2xs font-black border transition-all ${
                     currentSimStep >= 1 ? 'bg-nectar-gold text-background border-nectar-gold' : 'bg-background text-muted border-card-border'
                   }`}>
                     1
                   </span>
                   <div className="space-y-1">
                     <h4 className="text-xs font-black uppercase tracking-wide text-foreground">Activar Add-on de Facturación</h4>
-                    <p className="text-[10px] text-muted leading-relaxed">
+                    <p className="text-2xs text-muted leading-relaxed">
                       El administrador (tú) o el cliente adquiere el módulo `mexico-invoicing` en la tienda de addons. Esto habilita las vistas en su subdominio.
                     </p>
                   </div>
@@ -222,14 +222,14 @@ export default function InvoicingGuidePage() {
 
                 {/* Step 2 */}
                 <div className="relative">
-                  <span className={`absolute -left-9 top-0.5 w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black border transition-all ${
+                  <span className={`absolute -left-9 top-0.5 w-6 h-6 rounded-full flex items-center justify-center text-2xs font-black border transition-all ${
                     currentSimStep >= 2 ? 'bg-nectar-gold text-background border-nectar-gold' : 'bg-background text-muted border-card-border'
                   }`}>
                     2
                   </span>
                   <div className="space-y-1">
                     <h4 className="text-xs font-black uppercase tracking-wide text-foreground">Perfil Fiscal Emisor</h4>
-                    <p className="text-[10px] text-muted leading-relaxed">
+                    <p className="text-2xs text-muted leading-relaxed">
                       El inquilino completa sus datos fiscales oficiales: RFC, Razón Social, Régimen de tributación del SAT y Código Postal de domicilio fiscal.
                     </p>
                   </div>
@@ -237,14 +237,14 @@ export default function InvoicingGuidePage() {
 
                 {/* Step 3 */}
                 <div className="relative">
-                  <span className={`absolute -left-9 top-0.5 w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black border transition-all ${
+                  <span className={`absolute -left-9 top-0.5 w-6 h-6 rounded-full flex items-center justify-center text-2xs font-black border transition-all ${
                     currentSimStep >= 3 ? 'bg-nectar-gold text-background border-nectar-gold' : 'bg-background text-muted border-card-border'
                   }`}>
                     3
                   </span>
                   <div className="space-y-1">
                     <h4 className="text-xs font-black uppercase tracking-wide text-foreground">Carga Segura de CSD</h4>
-                    <p className="text-[10px] text-muted leading-relaxed">
+                    <p className="text-2xs text-muted leading-relaxed">
                       Se suben los certificados .cer y .key. Se envían mediante HTTPS directo a los HSMs del PAC sin guardarse localmente en la base de datos.
                     </p>
                   </div>
@@ -252,14 +252,14 @@ export default function InvoicingGuidePage() {
 
                 {/* Step 4 */}
                 <div className="relative">
-                  <span className={`absolute -left-9 top-0.5 w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black border transition-all ${
+                  <span className={`absolute -left-9 top-0.5 w-6 h-6 rounded-full flex items-center justify-center text-2xs font-black border transition-all ${
                     currentSimStep >= 4 ? 'bg-nectar-gold text-background border-nectar-gold' : 'bg-background text-muted border-card-border'
                   }`}>
                     4
                   </span>
                   <div className="space-y-1">
                     <h4 className="text-xs font-black uppercase tracking-wide text-foreground">Sincronización LCO (SAT)</h4>
-                    <p className="text-[10px] text-muted leading-relaxed">
+                    <p className="text-2xs text-muted leading-relaxed">
                       Esperar de 24 a 72 horas hábiles a que el SAT dé de alta el certificado en la lista de contribuyentes oficiales obligados a facturar.
                     </p>
                   </div>
@@ -267,14 +267,14 @@ export default function InvoicingGuidePage() {
 
                 {/* Step 5 */}
                 <div className="relative">
-                  <span className={`absolute -left-9 top-0.5 w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black border transition-all ${
+                  <span className={`absolute -left-9 top-0.5 w-6 h-6 rounded-full flex items-center justify-center text-2xs font-black border transition-all ${
                     currentSimStep >= 5 ? 'bg-nectar-gold text-background border-nectar-gold' : 'bg-background text-muted border-card-border'
                   }`}>
                     5
                   </span>
                   <div className="space-y-1">
                     <h4 className="text-xs font-black uppercase tracking-wide text-foreground">Consola de Facturación Activa</h4>
-                    <p className="text-[10px] text-muted leading-relaxed">
+                    <p className="text-2xs text-muted leading-relaxed">
                       El módulo queda 100% activo. Se pueden emitir comprobantes de cobro automatizados a clientes de compras y realizar timbrados manuales.
                     </p>
                   </div>
@@ -292,9 +292,9 @@ export default function InvoicingGuidePage() {
               <div className="border-b border-card-border pb-4 flex justify-between items-center">
                 <div>
                   <h3 className="text-xs font-black uppercase tracking-wider text-foreground">Consola de Simulación Interactiva</h3>
-                  <p className="text-[8px] text-nectar-gold uppercase tracking-widest mt-1">Prueba el flujo del cliente en tiempo real</p>
+                  <p className="text-2xs text-nectar-gold uppercase tracking-widest mt-1">Prueba el flujo del cliente en tiempo real</p>
                 </div>
-                <span className="px-2.5 py-0.5 bg-nectar-gold/5 text-nectar-gold border border-nectar-gold/20 text-[7px] font-mono font-black uppercase rounded-full tracking-widest">
+                <span className="px-2.5 py-0.5 bg-nectar-gold/5 text-nectar-gold border border-nectar-gold/20 text-2xs font-mono font-black uppercase rounded-full tracking-widest">
                   Paso {currentSimStep} de 5
                 </span>
               </div>
@@ -312,7 +312,7 @@ export default function InvoicingGuidePage() {
                   <div className="pt-6 flex justify-end">
                     <button
                       onClick={() => setCurrentSimStep(2)}
-                      className="px-6 py-3 bg-nectar-gold text-background text-[10px] font-black uppercase tracking-widest rounded-xl hover:scale-102 transition-all cursor-pointer shadow-lg shadow-nectar-gold/20"
+                      className="px-6 py-3 bg-nectar-gold text-background text-2xs font-black uppercase tracking-widest rounded-xl hover:scale-102 transition-all cursor-pointer shadow-lg shadow-nectar-gold/20"
                     >
                       Configurar Perfil Fiscal →
                     </button>
@@ -327,51 +327,51 @@ export default function InvoicingGuidePage() {
                     <div className="space-y-1">
                       <span className="text-xl">📝</span>
                       <h4 className="text-sm font-black uppercase tracking-tight text-foreground">Paso 2: Datos Oficiales del Emisor</h4>
-                      <p className="text-[10px] text-muted leading-relaxed">
+                      <p className="text-2xs text-muted leading-relaxed">
                         Ingresa los datos fiscales simulados del negocio. El RFC debe medir entre 12 y 13 caracteres.
                       </p>
                     </div>
 
                     <div className="space-y-3 pt-2">
                       <div className="space-y-1">
-                        <label className="text-[8px] uppercase tracking-wider font-black text-foreground/50">Razón Social</label>
+                        <label className="text-2xs uppercase tracking-wider font-black text-foreground/50">Razón Social</label>
                         <input
                           type="text"
                           value={simRazon}
                           onChange={(e) => setSimRazon(e.target.value.toUpperCase())}
-                          className="w-full bg-background border border-card-border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all"
+                          className="w-full bg-background border border-card-border rounded-xl px-3 py-2 text-2xs focus:outline-none focus:border-nectar-gold transition-all"
                         />
                       </div>
 
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-1">
-                          <label className="text-[8px] uppercase tracking-wider font-black text-foreground/50">RFC Emisor</label>
+                          <label className="text-2xs uppercase tracking-wider font-black text-foreground/50">RFC Emisor</label>
                           <input
                             type="text"
                             maxLength={13}
                             value={simRfc}
                             onChange={(e) => setSimRfc(e.target.value.toUpperCase())}
-                            className="w-full bg-background border border-card-border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all font-mono"
+                            className="w-full bg-background border border-card-border rounded-xl px-3 py-2 text-2xs focus:outline-none focus:border-nectar-gold transition-all font-mono"
                           />
                         </div>
                         <div className="space-y-1">
-                          <label className="text-[8px] uppercase tracking-wider font-black text-foreground/50">Código Postal</label>
+                          <label className="text-2xs uppercase tracking-wider font-black text-foreground/50">Código Postal</label>
                           <input
                             type="text"
                             maxLength={5}
                             value={simCp}
                             onChange={(e) => setSimCp(e.target.value.replace(/\D/g, ''))}
-                            className="w-full bg-background border border-card-border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all font-mono"
+                            className="w-full bg-background border border-card-border rounded-xl px-3 py-2 text-2xs focus:outline-none focus:border-nectar-gold transition-all font-mono"
                           />
                         </div>
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-[8px] uppercase tracking-wider font-black text-foreground/50">Régimen Fiscal (SAT)</label>
+                        <label className="text-2xs uppercase tracking-wider font-black text-foreground/50">Régimen Fiscal (SAT)</label>
                         <select
                           value={simRegimen}
                           onChange={(e) => setSimRegimen(e.target.value)}
-                          className="w-full bg-background border border-card-border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all"
+                          className="w-full bg-background border border-card-border rounded-xl px-3 py-2 text-2xs focus:outline-none focus:border-nectar-gold transition-all"
                         >
                           <option value="601">601 - General de Ley Personas Morales</option>
                           <option value="612">612 - Personas Físicas con Actividades Empresariales</option>
@@ -384,7 +384,7 @@ export default function InvoicingGuidePage() {
                   <div className="pt-6 flex justify-between gap-4">
                     <button
                       onClick={() => setCurrentSimStep(1)}
-                      className="px-4 py-3 border border-card-border hover:bg-foreground/5 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all cursor-pointer"
+                      className="px-4 py-3 border border-card-border hover:bg-foreground/5 text-2xs font-black uppercase tracking-widest rounded-xl transition-all cursor-pointer"
                     >
                       Atrás
                     </button>
@@ -396,7 +396,7 @@ export default function InvoicingGuidePage() {
                         }
                         setCurrentSimStep(3);
                       }}
-                      className="px-6 py-3 bg-nectar-gold text-background text-[10px] font-black uppercase tracking-widest rounded-xl hover:scale-102 transition-all cursor-pointer shadow-lg shadow-nectar-gold/20"
+                      className="px-6 py-3 bg-nectar-gold text-background text-2xs font-black uppercase tracking-widest rounded-xl hover:scale-102 transition-all cursor-pointer shadow-lg shadow-nectar-gold/20"
                     >
                       Guardar y Subir Sellos →
                     </button>
@@ -411,7 +411,7 @@ export default function InvoicingGuidePage() {
                     <div className="space-y-1">
                       <span className="text-xl">🔑</span>
                       <h4 className="text-sm font-black uppercase tracking-tight text-foreground">Paso 3: Cargar Sellos CSD del SAT</h4>
-                      <p className="text-[10px] text-muted leading-relaxed">
+                      <p className="text-2xs text-muted leading-relaxed">
                         Sube archivos simulados .cer y .key. En producción, el backend los valida contra el SAT y los resguarda de forma segura en el PAC.
                       </p>
                     </div>
@@ -419,15 +419,15 @@ export default function InvoicingGuidePage() {
                     <form onSubmit={handleSimulateUpload} className="space-y-4 pt-2">
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-1.5">
-                          <label className="text-[8px] uppercase tracking-wider font-black text-foreground/50">Archivo Certificado (.cer)</label>
+                          <label className="text-2xs uppercase tracking-wider font-black text-foreground/50">Archivo Certificado (.cer)</label>
                           <div className="border border-dashed border-card-border/80 rounded-xl p-3 bg-background flex flex-col items-center justify-center cursor-pointer text-center relative hover:border-nectar-gold/40 transition-colors">
                             {simCerFile ? (
-                              <span className="text-[9px] text-green-400 font-mono">✓ {simCerFile}</span>
+                              <span className="text-2xs text-green-400 font-mono">✓ {simCerFile}</span>
                             ) : (
                               <button
                                 type="button"
                                 onClick={() => setSimCerFile('CSD_EMISOR.cer')}
-                                className="text-[9px] text-muted hover:text-nectar-gold uppercase tracking-wider font-black bg-transparent border-0 cursor-pointer"
+                                className="text-2xs text-muted hover:text-nectar-gold uppercase tracking-wider font-black bg-transparent border-0 cursor-pointer"
                               >
                                 Seleccionar .cer
                               </button>
@@ -436,15 +436,15 @@ export default function InvoicingGuidePage() {
                         </div>
 
                         <div className="space-y-1.5">
-                          <label className="text-[8px] uppercase tracking-wider font-black text-foreground/50">Llave Privada (.key)</label>
+                          <label className="text-2xs uppercase tracking-wider font-black text-foreground/50">Llave Privada (.key)</label>
                           <div className="border border-dashed border-card-border/80 rounded-xl p-3 bg-background flex flex-col items-center justify-center cursor-pointer text-center relative hover:border-nectar-gold/40 transition-colors">
                             {simKeyFile ? (
-                              <span className="text-[9px] text-green-400 font-mono">✓ {simKeyFile}</span>
+                              <span className="text-2xs text-green-400 font-mono">✓ {simKeyFile}</span>
                             ) : (
                               <button
                                 type="button"
                                 onClick={() => setSimKeyFile('CSD_EMISOR.key')}
-                                className="text-[9px] text-muted hover:text-nectar-gold uppercase tracking-wider font-black bg-transparent border-0 cursor-pointer"
+                                className="text-2xs text-muted hover:text-nectar-gold uppercase tracking-wider font-black bg-transparent border-0 cursor-pointer"
                               >
                                 Seleccionar .key
                               </button>
@@ -454,26 +454,26 @@ export default function InvoicingGuidePage() {
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-[8px] uppercase tracking-wider font-black text-foreground/50">Contraseña de la Llave Privada</label>
+                        <label className="text-2xs uppercase tracking-wider font-black text-foreground/50">Contraseña de la Llave Privada</label>
                         <input
                           type="password"
                           placeholder="Introduce tu contraseña"
                           required
                           value={simPassword}
                           onChange={(e) => setSimPassword(e.target.value)}
-                          className="w-full bg-background border border-card-border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all"
+                          className="w-full bg-background border border-card-border rounded-xl px-3 py-2 text-2xs focus:outline-none focus:border-nectar-gold transition-all"
                         />
                       </div>
 
                       {uploadStatus === 'uploading' && (
-                        <div className="p-3 bg-nectar-gold/5 border border-nectar-gold/10 text-nectar-gold text-[9px] uppercase tracking-wider font-bold rounded-xl flex items-center justify-center gap-2">
+                        <div className="p-3 bg-nectar-gold/5 border border-nectar-gold/10 text-nectar-gold text-2xs uppercase tracking-wider font-bold rounded-xl flex items-center justify-center gap-2">
                           <span className="w-3.5 h-3.5 rounded-full border-2 border-t-nectar-gold border-nectar-gold/10 animate-spin"></span>
                           Estableciendo canal SSL y cargando sellos directamente al PAC...
                         </div>
                       )}
                       
                       {uploadStatus === 'success' && (
-                        <div className="p-3 bg-green-500/10 border border-green-500/25 text-green-400 text-[9px] uppercase tracking-wider font-bold rounded-xl text-center">
+                        <div className="p-3 bg-green-500/10 border border-green-500/25 text-green-400 text-2xs uppercase tracking-wider font-bold rounded-xl text-center">
                           ✓ Sellos validados y almacenados en Facturapi con éxito.
                         </div>
                       )}
@@ -484,7 +484,7 @@ export default function InvoicingGuidePage() {
                     <button
                       onClick={() => setCurrentSimStep(2)}
                       disabled={uploadStatus === 'uploading'}
-                      className="px-4 py-3 border border-card-border hover:bg-foreground/5 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all cursor-pointer disabled:opacity-40"
+                      className="px-4 py-3 border border-card-border hover:bg-foreground/5 text-2xs font-black uppercase tracking-widest rounded-xl transition-all cursor-pointer disabled:opacity-40"
                     >
                       Atrás
                     </button>
@@ -492,7 +492,7 @@ export default function InvoicingGuidePage() {
                       type="submit"
                       onClick={handleSimulateUpload}
                       disabled={!simCerFile || !simKeyFile || !simPassword || uploadStatus !== 'idle'}
-                      className="px-6 py-3 bg-nectar-gold text-background text-[10px] font-black uppercase tracking-widest rounded-xl hover:scale-102 transition-all cursor-pointer shadow-lg shadow-nectar-gold/20 disabled:opacity-40 disabled:scale-100"
+                      className="px-6 py-3 bg-nectar-gold text-background text-2xs font-black uppercase tracking-widest rounded-xl hover:scale-102 transition-all cursor-pointer shadow-lg shadow-nectar-gold/20 disabled:opacity-40 disabled:scale-100"
                     >
                       Validar y Cargar al PAC
                     </button>
@@ -507,13 +507,13 @@ export default function InvoicingGuidePage() {
                     <div className="space-y-1">
                       <span className="text-xl">⏳</span>
                       <h4 className="text-sm font-black uppercase tracking-tight text-foreground">Paso 4: Latencia LCO del SAT</h4>
-                      <p className="text-[10px] text-muted leading-relaxed">
+                      <p className="text-2xs text-muted leading-relaxed">
                         El SAT puede tardar de 24 a 72 horas en indexar sellos nuevos. Si el cliente intenta facturar inmediatamente, el PAC retornará una excepción del tipo **`LCOSyncError`** y pasará la factura a estado `LCO_SYNC_PENDING` (Pendiente).
                       </p>
                     </div>
 
                     <div className="border border-card-border bg-background rounded-xl p-4 space-y-3">
-                      <div className="flex justify-between text-[8px] font-black uppercase tracking-wider">
+                      <div className="flex justify-between text-2xs font-black uppercase tracking-wider">
                         <span className="text-muted">Estado del CSD en LCO del SAT</span>
                         <span className={`${lcoStatus === 'active' ? 'text-green-400' : 'text-amber-400'}`}>
                           {lcoStatus === 'pending' ? 'INACTIVO (LCO Sync Pendiente)' : lcoStatus === 'syncing' ? 'SINCRONIZANDO...' : 'ACTIVO Y LISTO'}
@@ -527,7 +527,7 @@ export default function InvoicingGuidePage() {
                         ></div>
                       </div>
                       
-                      <p className="text-[8px] text-muted/60 leading-relaxed uppercase">
+                      <p className="text-2xs text-muted/60 leading-relaxed uppercase">
                         El SaaS ejecutará tareas automáticas (cron) para reintentar el timbrado de forma transparente tan pronto como el SAT actualice su lista LCO.
                       </p>
                     </div>
@@ -537,14 +537,14 @@ export default function InvoicingGuidePage() {
                     <button
                       onClick={() => setCurrentSimStep(3)}
                       disabled={lcoStatus === 'syncing'}
-                      className="px-4 py-3 border border-card-border hover:bg-foreground/5 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all cursor-pointer disabled:opacity-40"
+                      className="px-4 py-3 border border-card-border hover:bg-foreground/5 text-2xs font-black uppercase tracking-widest rounded-xl transition-all cursor-pointer disabled:opacity-40"
                     >
                       Atrás
                     </button>
                     <button
                       onClick={handleSimulateLco}
                       disabled={lcoStatus !== 'pending'}
-                      className="px-6 py-3 bg-nectar-gold text-background text-[10px] font-black uppercase tracking-widest rounded-xl hover:scale-102 transition-all cursor-pointer shadow-lg shadow-nectar-gold/20 disabled:opacity-40"
+                      className="px-6 py-3 bg-nectar-gold text-background text-2xs font-black uppercase tracking-widest rounded-xl hover:scale-102 transition-all cursor-pointer shadow-lg shadow-nectar-gold/20 disabled:opacity-40"
                     >
                       {lcoStatus === 'pending' ? 'Simular 72 horas (Sync SAT)' : lcoStatus === 'syncing' ? 'Sincronizando...' : 'Completado ✓'}
                     </button>
@@ -559,7 +559,7 @@ export default function InvoicingGuidePage() {
                     <div className="space-y-1">
                       <span className="text-xl">🚀</span>
                       <h4 className="text-sm font-black uppercase tracking-tight text-foreground">Paso 5: Consola Sandbox de Timbrado</h4>
-                      <p className="text-[10px] text-muted leading-relaxed">
+                      <p className="text-2xs text-muted leading-relaxed">
                         ¡Todo listo! Simula la emisión de una factura de tu cliente (Emisor: **{simRazon}**) a un cliente final.
                       </p>
                     </div>
@@ -568,51 +568,51 @@ export default function InvoicingGuidePage() {
                       <form onSubmit={handleSimulateStamping} className="space-y-3 pt-2">
                         <div className="grid grid-cols-2 gap-4">
                           <div className="space-y-1">
-                            <label className="text-[8px] uppercase tracking-wider font-black text-foreground/50">RFC del Cliente</label>
+                            <label className="text-2xs uppercase tracking-wider font-black text-foreground/50">RFC del Cliente</label>
                             <input
                               type="text"
                               required
                               value={testClientRfc}
                               onChange={(e) => setTestClientRfc(e.target.value.toUpperCase())}
-                              className="w-full bg-background border border-card-border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all font-mono"
+                              className="w-full bg-background border border-card-border rounded-xl px-3 py-2 text-2xs focus:outline-none focus:border-nectar-gold transition-all font-mono"
                             />
                           </div>
                           <div className="space-y-1">
-                            <label className="text-[8px] uppercase tracking-wider font-black text-foreground/50">Monto Base (MXN)</label>
+                            <label className="text-2xs uppercase tracking-wider font-black text-foreground/50">Monto Base (MXN)</label>
                             <input
                               type="number"
                               required
                               value={testAmount}
                               onChange={(e) => setTestAmount(e.target.value)}
-                              className="w-full bg-background border border-card-border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all font-mono"
+                              className="w-full bg-background border border-card-border rounded-xl px-3 py-2 text-2xs focus:outline-none focus:border-nectar-gold transition-all font-mono"
                             />
                           </div>
                         </div>
 
                         <div className="space-y-1">
-                          <label className="text-[8px] uppercase tracking-wider font-black text-foreground/50">Razón Social Cliente</label>
+                          <label className="text-2xs uppercase tracking-wider font-black text-foreground/50">Razón Social Cliente</label>
                           <input
                             type="text"
                             required
                             value={testClientName}
                             onChange={(e) => setTestClientName(e.target.value.toUpperCase())}
-                            className="w-full bg-background border border-card-border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all"
+                            className="w-full bg-background border border-card-border rounded-xl px-3 py-2 text-2xs focus:outline-none focus:border-nectar-gold transition-all"
                           />
                         </div>
 
                         <div className="space-y-1">
-                          <label className="text-[8px] uppercase tracking-wider font-black text-foreground/50">Concepto de Facturación</label>
+                          <label className="text-2xs uppercase tracking-wider font-black text-foreground/50">Concepto de Facturación</label>
                           <input
                             type="text"
                             required
                             value={testDesc}
                             onChange={(e) => setTestDesc(e.target.value)}
-                            className="w-full bg-background border border-card-border rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold transition-all"
+                            className="w-full bg-background border border-card-border rounded-xl px-3 py-2 text-2xs focus:outline-none focus:border-nectar-gold transition-all"
                           />
                         </div>
 
                         {stampingStatus === 'stamping' && (
-                          <div className="p-3 bg-nectar-gold/5 border border-nectar-gold/10 text-nectar-gold text-[9px] uppercase tracking-wider font-bold rounded-xl flex items-center justify-center gap-2">
+                          <div className="p-3 bg-nectar-gold/5 border border-nectar-gold/10 text-nectar-gold text-2xs uppercase tracking-wider font-bold rounded-xl flex items-center justify-center gap-2">
                             <span className="w-3.5 h-3.5 rounded-full border-2 border-t-nectar-gold border-nectar-gold/10 animate-spin"></span>
                             Firmando XML y solicitando timbrado fiscal ante el SAT...
                           </div>
@@ -625,7 +625,7 @@ export default function InvoicingGuidePage() {
                             <span className="px-2 py-0.5 bg-green-500/10 text-green-400 border border-green-500/20 text-[6.5px] font-black uppercase rounded-full tracking-widest">
                               TIMBRADA CON ÉXITO
                             </span>
-                            <h5 className="text-[10px] font-black uppercase tracking-wide text-foreground mt-1.5">CFDI Emitido por {simRazon}</h5>
+                            <h5 className="text-2xs font-black uppercase tracking-wide text-foreground mt-1.5">CFDI Emitido por {simRazon}</h5>
                             <p className="text-[7.5px] text-muted font-mono mt-0.5">UUID SAT: {stampedInvoice.uuid}</p>
                           </div>
                           <div className="text-right">
@@ -669,7 +669,7 @@ export default function InvoicingGuidePage() {
                         setCurrentSimStep(4);
                       }}
                       disabled={stampingStatus === 'stamping'}
-                      className="px-4 py-3 border border-card-border hover:bg-foreground/5 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all cursor-pointer disabled:opacity-40"
+                      className="px-4 py-3 border border-card-border hover:bg-foreground/5 text-2xs font-black uppercase tracking-widest rounded-xl transition-all cursor-pointer disabled:opacity-40"
                     >
                       Atrás
                     </button>
@@ -678,7 +678,7 @@ export default function InvoicingGuidePage() {
                         type="submit"
                         onClick={handleSimulateStamping}
                         disabled={stampingStatus === 'stamping'}
-                        className="px-6 py-3 bg-nectar-gold text-background text-[10px] font-black uppercase tracking-widest rounded-xl hover:scale-102 transition-all cursor-pointer shadow-lg shadow-nectar-gold/20 disabled:opacity-40"
+                        className="px-6 py-3 bg-nectar-gold text-background text-2xs font-black uppercase tracking-widest rounded-xl hover:scale-102 transition-all cursor-pointer shadow-lg shadow-nectar-gold/20 disabled:opacity-40"
                       >
                         Timbrar Factura de Prueba
                       </button>
@@ -689,7 +689,7 @@ export default function InvoicingGuidePage() {
                           setStampingStatus('idle');
                           setCurrentSimStep(2);
                         }}
-                        className="px-6 py-3 bg-nectar-gold text-background text-[10px] font-black uppercase tracking-widest rounded-xl hover:scale-102 transition-all cursor-pointer shadow-lg"
+                        className="px-6 py-3 bg-nectar-gold text-background text-2xs font-black uppercase tracking-widest rounded-xl hover:scale-102 transition-all cursor-pointer shadow-lg"
                       >
                         Reiniciar Simulación ↺
                       </button>
@@ -706,7 +706,7 @@ export default function InvoicingGuidePage() {
         <section className="bg-card-bg border border-card-border rounded-[2rem] p-8 shadow-xl">
           <div className="border-b border-card-border pb-4 mb-6">
             <h3 className="text-xs font-black uppercase tracking-wider text-nectar-gold">Preguntas Frecuentes de Integración SAT</h3>
-            <p className="text-[8px] text-muted uppercase tracking-widest mt-1">Conoce a fondo las políticas y reglas del SAT</p>
+            <p className="text-2xs text-muted uppercase tracking-widest mt-1">Conoce a fondo las políticas y reglas del SAT</p>
           </div>
 
           <div className="space-y-4">

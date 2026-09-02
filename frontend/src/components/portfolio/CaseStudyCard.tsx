@@ -29,7 +29,7 @@ export default function CaseStudyCard({ caseStudy }: { caseStudy: CaseStudy }) {
       <div className="p-6">
         <div className="flex gap-2 mb-4">
           {caseStudy.tech_stack.slice(0, 3).map((tech, i) => (
-            <span key={i} className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-foreground/40 uppercase tracking-tighter">
+            <span key={i} className="text-2xs font-bold px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-foreground/40 uppercase tracking-tighter">
               {tech}
             </span>
           ))}

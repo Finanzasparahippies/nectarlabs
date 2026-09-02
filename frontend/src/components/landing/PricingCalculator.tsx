@@ -148,7 +148,7 @@ export default function PricingCalculator({ onOpenScheduler }: { onOpenScheduler
       <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-nectar-gold/5 blur-[120px] rounded-full pointer-events-none"></div>
 
       <div className="text-center mb-12 sm:mb-20">
-        <span className="text-[10px] text-nectar-gold font-black uppercase tracking-[0.4em] block mb-3">Calculadora de Inversión</span>
+        <span className="text-2xs text-nectar-gold font-black uppercase tracking-[0.4em] block mb-3">Calculadora de Inversión</span>
         <h2 className="text-3xl sm:text-6xl font-black mb-4 sm:mb-6 tracking-tighter text-foreground">Inversor Inteligente</h2>
         <p className="text-sm sm:text-lg text-foreground/60 max-w-2xl mx-auto leading-relaxed">
           Optimiza tu capital de desarrollo eligiendo el esquema ideal. Compara la alianza estratégica con la contratación individual.
@@ -158,25 +158,25 @@ export default function PricingCalculator({ onOpenScheduler }: { onOpenScheduler
         <div className="inline-flex bg-background/80 dark:bg-card-bg/60 border border-card-border p-1.5 rounded-2xl relative z-10 shadow-sm mt-8 sm:mt-10">
           <button
             onClick={() => handleModeChange('partner')}
-            className={`px-6 sm:px-8 py-3 rounded-xl font-black uppercase tracking-widest text-[9px] sm:text-[10px] transition-all duration-300 cursor-pointer flex items-center gap-2 ${
+            className={`px-6 sm:px-8 py-3 rounded-xl font-black uppercase tracking-widest text-2xs sm:text-2xs transition-all duration-300 cursor-pointer flex items-center gap-2 ${
               mode === 'partner'
                 ? 'bg-nectar-forest dark:bg-nectar-leaf text-white shadow-md font-bold'
                 : 'text-foreground/60 hover:text-foreground hover:bg-foreground/5'
             }`}
           >
             🛡️ Partner Tecnológico
-            <span className="text-[8px] px-1.5 py-0.5 rounded bg-nectar-gold text-background font-extrabold uppercase">6 Meses</span>
+            <span className="text-2xs px-1.5 py-0.5 rounded bg-nectar-gold text-background font-extrabold uppercase">6 Meses</span>
           </button>
           <button
             onClick={() => handleModeChange('addons')}
-            className={`px-6 sm:px-8 py-3 rounded-xl font-black uppercase tracking-widest text-[9px] sm:text-[10px] transition-all duration-300 cursor-pointer flex items-center gap-2 ${
+            className={`px-6 sm:px-8 py-3 rounded-xl font-black uppercase tracking-widest text-2xs sm:text-2xs transition-all duration-300 cursor-pointer flex items-center gap-2 ${
               mode === 'addons'
                 ? 'bg-nectar-forest dark:bg-nectar-leaf text-white shadow-md font-bold'
                 : 'text-foreground/60 hover:text-foreground hover:bg-foreground/5'
             }`}
           >
             🧩 Solo Módulos
-            <span className="text-[8px] px-1.5 py-0.5 rounded bg-foreground/10 text-foreground/70 font-extrabold uppercase">A la Carta</span>
+            <span className="text-2xs px-1.5 py-0.5 rounded bg-foreground/10 text-foreground/70 font-extrabold uppercase">A la Carta</span>
           </button>
         </div>
       </div>
@@ -190,14 +190,14 @@ export default function PricingCalculator({ onOpenScheduler }: { onOpenScheduler
               <div className="p-6 sm:p-8 rounded-[2rem] bg-background/40 dark:bg-card-bg/30 border border-card-border/85 dark:border-card-border/40">
                 <div className="flex justify-between items-end mb-6">
                   <div>
-                    <label className="text-[10px] font-black uppercase tracking-[0.3em] text-nectar-gold block mb-1">
+                    <label className="text-2xs font-black uppercase tracking-[0.3em] text-nectar-gold block mb-1">
                       Ingeniería de Software
                     </label>
                     <p className="text-xs text-foreground/50">Desarrollo dedicado, DevOps y Soporte Técnico</p>
                   </div>
                   <div className="text-right">
                     <span className="text-3xl font-black text-nectar-forest dark:text-nectar-cream">{activePlan.hours > 0 ? `${activePlan.hours}h` : 'Plantillas'}</span>
-                    <span className="text-[9px] font-bold text-foreground/45 block uppercase">{activePlan.hours > 0 ? 'Bolsa Dedicada' : 'Visual/Autónomo'}</span>
+                    <span className="text-2xs font-bold text-foreground/45 block uppercase">{activePlan.hours > 0 ? 'Bolsa Dedicada' : 'Visual/Autónomo'}</span>
                   </div>
                 </div>
 
@@ -213,7 +213,7 @@ export default function PricingCalculator({ onOpenScheduler }: { onOpenScheduler
                     className="w-full h-2 bg-foreground/10 dark:bg-foreground/5 rounded-full appearance-none cursor-pointer accent-nectar-gold"
                   />
                   {/* Markings */}
-                  <div className="flex justify-between mt-4 px-1 text-[9px] font-black uppercase tracking-wider text-foreground/50">
+                  <div className="flex justify-between mt-4 px-1 text-2xs font-black uppercase tracking-wider text-foreground/50">
                     <span className={planIndex === 0 ? 'text-nectar-gold font-black' : ''}>Básico ($2,999)</span>
                     <span className={planIndex === 1 ? 'text-nectar-gold font-black' : ''}>Mid ($3,499)</span>
                     <span className={planIndex === 2 ? 'text-nectar-gold font-black' : ''}>12h Premium ($3,999)</span>
@@ -225,7 +225,7 @@ export default function PricingCalculator({ onOpenScheduler }: { onOpenScheduler
                     "{activePlan.description}"
                   </div>
                   <div className="shrink-0 bg-nectar-forest/5 dark:bg-nectar-leaf/10 border border-nectar-forest/10 dark:border-nectar-leaf/20 px-3.5 py-2 rounded-xl text-center">
-                    <span className="text-[8px] font-black block opacity-40 uppercase">Precio Plan</span>
+                    <span className="text-2xs font-black block opacity-40 uppercase">Precio Plan</span>
                     <span className="text-sm font-black text-nectar-gold">${(activePlan.price ?? activePlan.totalMonthly).toLocaleString('es-MX')} / {activePlan.period || 'mes'}</span>
                   </div>
                 </div>
@@ -235,12 +235,12 @@ export default function PricingCalculator({ onOpenScheduler }: { onOpenScheduler
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <div>
-                    <label className="text-[10px] font-black uppercase tracking-[0.3em] text-nectar-gold block mb-1">
+                    <label className="text-2xs font-black uppercase tracking-[0.3em] text-nectar-gold block mb-1">
                       Catálogo de Add-ons
                     </label>
                     <p className="text-xs text-foreground/50">Todos los módulos incluidos a tasa cero ($0 MXN)</p>
                   </div>
-                  <span className="px-2.5 py-1 bg-green-500/10 border border-green-500/20 text-green-500 text-[8px] font-black uppercase tracking-widest rounded-full">
+                  <span className="px-2.5 py-1 bg-green-500/10 border border-green-500/20 text-green-500 text-2xs font-black uppercase tracking-widest rounded-full">
                     🛡️ Incluidos en Alianza
                   </span>
                 </div>
@@ -253,11 +253,11 @@ export default function PricingCalculator({ onOpenScheduler }: { onOpenScheduler
                     >
                       <div className="min-w-0">
                         <span className="text-xs font-black text-foreground block truncate group-hover:text-nectar-gold transition-colors">{addon.name}</span>
-                        <span className="text-[9px] text-foreground/45 block truncate leading-snug">{addon.desc}</span>
+                        <span className="text-2xs text-foreground/45 block truncate leading-snug">{addon.desc}</span>
                       </div>
                       <div className="text-right shrink-0">
-                        <span className="text-[9px] font-black text-green-500 bg-green-500/10 border border-green-500/25 px-2 py-0.5 rounded-full uppercase tracking-wider block">Gratis</span>
-                        <span className="text-[8px] text-foreground/30 line-through mt-0.5 block">${addon.monthlyPrice}/mes</span>
+                        <span className="text-2xs font-black text-green-500 bg-green-500/10 border border-green-500/25 px-2 py-0.5 rounded-full uppercase tracking-wider block">Gratis</span>
+                        <span className="text-2xs text-foreground/30 line-through mt-0.5 block">${addon.monthlyPrice}/mes</span>
                       </div>
                     </div>
                   ))}
@@ -269,7 +269,7 @@ export default function PricingCalculator({ onOpenScheduler }: { onOpenScheduler
               {/* Billing Cycle Switcher for Addons */}
               <div className="p-6 sm:p-8 rounded-[2rem] bg-background/40 dark:bg-card-bg/30 border border-card-border/80 dark:border-card-border/40 flex flex-col sm:flex-row justify-between items-center gap-6">
                 <div>
-                  <label className="text-[10px] font-black uppercase tracking-[0.3em] text-nectar-gold block mb-1">
+                  <label className="text-2xs font-black uppercase tracking-[0.3em] text-nectar-gold block mb-1">
                     Ciclo de Facturación
                   </label>
                   <p className="text-xs text-foreground/50">Elige el periodo de pago para tus módulos a la carta</p>
@@ -278,7 +278,7 @@ export default function PricingCalculator({ onOpenScheduler }: { onOpenScheduler
                 <div className="inline-flex bg-background border border-card-border p-1 rounded-xl">
                   <button
                     onClick={() => setBillingCycle('monthly')}
-                    className={`px-5 py-2 rounded-lg font-black uppercase tracking-widest text-[9px] transition-all duration-300 cursor-pointer ${
+                    className={`px-5 py-2 rounded-lg font-black uppercase tracking-widest text-2xs transition-all duration-300 cursor-pointer ${
                       billingCycle === 'monthly'
                         ? 'bg-nectar-forest dark:bg-nectar-leaf text-white shadow-sm font-bold'
                         : 'text-foreground/60 hover:text-foreground'
@@ -288,7 +288,7 @@ export default function PricingCalculator({ onOpenScheduler }: { onOpenScheduler
                   </button>
                   <button
                     onClick={() => setBillingCycle('yearly')}
-                    className={`px-5 py-2 rounded-lg font-black uppercase tracking-widest text-[9px] transition-all duration-300 cursor-pointer flex items-center gap-1.5 ${
+                    className={`px-5 py-2 rounded-lg font-black uppercase tracking-widest text-2xs transition-all duration-300 cursor-pointer flex items-center gap-1.5 ${
                       billingCycle === 'yearly'
                         ? 'bg-nectar-forest dark:bg-nectar-leaf text-white shadow-sm font-bold'
                         : 'text-foreground/60 hover:text-foreground'
@@ -303,7 +303,7 @@ export default function PricingCalculator({ onOpenScheduler }: { onOpenScheduler
               {/* Add-ons Checklist */}
               <div className="space-y-4">
                 <div>
-                  <label className="text-[10px] font-black uppercase tracking-[0.3em] text-nectar-gold block mb-1">
+                  <label className="text-2xs font-black uppercase tracking-[0.3em] text-nectar-gold block mb-1">
                     Selecciona tus Módulos
                   </label>
                   <p className="text-xs text-foreground/50">Elige los complementos técnicos que deseas integrar</p>
@@ -327,12 +327,12 @@ export default function PricingCalculator({ onOpenScheduler }: { onOpenScheduler
                         <div className={`w-5 h-5 rounded-full border shrink-0 flex items-center justify-center transition-all ${
                           isChecked ? 'border-nectar-gold bg-nectar-gold text-background' : 'border-card-border bg-background'
                         }`}>
-                          {isChecked && <span className="text-[9px] font-black">✓</span>}
+                          {isChecked && <span className="text-2xs font-black">✓</span>}
                         </div>
                         <div className="min-w-0 flex-1">
                           <span className="text-xs font-black text-foreground block truncate">{addon.name}</span>
-                          <p className="text-[9px] text-foreground/50 line-clamp-2 leading-relaxed mt-1 mb-2">{addon.desc}</p>
-                          <span className="text-[10px] font-black text-nectar-gold font-mono">
+                          <p className="text-2xs text-foreground/50 line-clamp-2 leading-relaxed mt-1 mb-2">{addon.desc}</p>
+                          <span className="text-2xs font-black text-nectar-gold font-mono">
                             ${price.toLocaleString('es-MX')} MXN / {billingCycle === 'monthly' ? 'mes' : 'año'}
                           </span>
                         </div>
@@ -347,7 +347,7 @@ export default function PricingCalculator({ onOpenScheduler }: { onOpenScheduler
           {/* Brand Design Add-on Selector */}
           <div className="space-y-4 pt-6 border-t border-card-border/40 dark:border-card-border/10 animate-fadeIn">
             <div>
-              <label className="text-[10px] font-black uppercase tracking-[0.3em] text-nectar-gold block mb-1">
+              <label className="text-2xs font-black uppercase tracking-[0.3em] text-nectar-gold block mb-1">
                 Servicio Complementario: Diseño de Marca
               </label>
               <p className="text-xs text-foreground/50">
@@ -373,7 +373,7 @@ export default function PricingCalculator({ onOpenScheduler }: { onOpenScheduler
                     }`}
                   >
                     <div>
-                      <span className={`text-[7px] font-black uppercase tracking-widest block mb-1 ${
+                      <span className={`text-2xs font-black uppercase tracking-widest block mb-1 ${
                         isActive ? 'text-nectar-gold' : 'text-foreground/40'
                       }`}>
                         {tier === 'none' ? 'Básico' : 'Diseño Creativo'}
@@ -383,9 +383,9 @@ export default function PricingCalculator({ onOpenScheduler }: { onOpenScheduler
 
                     <div className="mt-4">
                       {info.hours > 0 && (
-                        <span className="text-[8px] font-bold text-foreground/45 block uppercase font-mono">{info.hours}h Diseño / mes</span>
+                        <span className="text-2xs font-bold text-foreground/45 block uppercase font-mono">{info.hours}h Diseño / mes</span>
                       )}
-                      <span className="text-[9px] font-black text-nectar-gold font-mono">
+                      <span className="text-2xs font-black text-nectar-gold font-mono">
                         {price > 0 ? `$${price.toLocaleString('es-MX')} MXN` : 'Sin Costo'}
                       </span>
                     </div>
@@ -407,7 +407,7 @@ export default function PricingCalculator({ onOpenScheduler }: { onOpenScheduler
 
           <div>
             <div className="mb-8">
-              <span className="text-[8px] font-black uppercase tracking-[0.4em] text-nectar-gold block mb-1">Inversión Estimada</span>
+              <span className="text-2xs font-black uppercase tracking-[0.4em] text-nectar-gold block mb-1">Inversión Estimada</span>
               <h3 className="text-2xl font-black tracking-tight">Recibo de Conceptos</h3>
             </div>
 
@@ -419,7 +419,7 @@ export default function PricingCalculator({ onOpenScheduler }: { onOpenScheduler
                   <div className="flex justify-between items-center py-2.5 border-b border-white/5">
                     <div>
                       <span className="font-bold text-white block">{activePlan.name}</span>
-                      <span className="text-[9px] text-white/50">{activePlan.hours} horas de desarrollo/mes</span>
+                      <span className="text-2xs text-white/50">{activePlan.hours} horas de desarrollo/mes</span>
                     </div>
                     <span className="font-mono font-bold">${activePlan.totalMonthly.toLocaleString('es-MX')} MXN</span>
                   </div>
@@ -428,7 +428,7 @@ export default function PricingCalculator({ onOpenScheduler }: { onOpenScheduler
                     <div className="flex justify-between items-center py-2.5 border-b border-white/5">
                       <div>
                         <span className="font-bold text-white block">Diseño de Marca ({brandDesignInfo.name})</span>
-                        <span className="text-[9px] text-white/50">{brandDesignInfo.hours} horas de diseño mensuales</span>
+                        <span className="text-2xs text-white/50">{brandDesignInfo.hours} horas de diseño mensuales</span>
                       </div>
                       <span className="font-mono font-bold">${brandDesignInfo.price.toLocaleString('es-MX')} MXN</span>
                     </div>
@@ -438,9 +438,9 @@ export default function PricingCalculator({ onOpenScheduler }: { onOpenScheduler
                   <div className="flex justify-between items-center py-2.5 border-b border-white/5">
                     <div>
                       <span className="font-bold text-white block">Módulos del Ecosistema</span>
-                      <span className="text-[9px] text-white/50">Todos los add-ons integrados sin costo</span>
+                      <span className="text-2xs text-white/50">Todos los add-ons integrados sin costo</span>
                     </div>
-                    <span className="font-black text-green-400 bg-green-500/10 border border-green-500/25 px-2 py-0.5 rounded text-[8px] uppercase tracking-wider">Incluidos ($0)</span>
+                    <span className="font-black text-green-400 bg-green-500/10 border border-green-500/25 px-2 py-0.5 rounded text-2xs uppercase tracking-wider">Incluidos ($0)</span>
                   </div>
                 </>
               ) : (
@@ -455,7 +455,7 @@ export default function PricingCalculator({ onOpenScheduler }: { onOpenScheduler
                         <div key={id} className="flex justify-between items-center py-2.5 border-b border-white/5">
                           <div>
                             <span className="font-bold text-white block">{addon.name}</span>
-                            <span className="text-[9px] text-white/50">Módulo autónomo a la carta</span>
+                            <span className="text-2xs text-white/50">Módulo autónomo a la carta</span>
                           </div>
                           <span className="font-mono font-bold">${price.toLocaleString('es-MX')} MXN</span>
                         </div>
@@ -471,7 +471,7 @@ export default function PricingCalculator({ onOpenScheduler }: { onOpenScheduler
                     <div className="flex justify-between items-center py-2.5 border-b border-white/5">
                       <div>
                         <span className="font-bold text-white block">Diseño de Marca ({brandDesignInfo.name})</span>
-                        <span className="text-[9px] text-white/50">{brandDesignInfo.hours} horas de diseño mensuales</span>
+                        <span className="text-2xs text-white/50">{brandDesignInfo.hours} horas de diseño mensuales</span>
                       </div>
                       <span className="font-mono font-bold">${brandDesignCost.toLocaleString('es-MX')} MXN</span>
                     </div>
@@ -503,7 +503,7 @@ export default function PricingCalculator({ onOpenScheduler }: { onOpenScheduler
                 <span className="text-white">Total</span>
                 <span className="text-nectar-gold font-mono">
                   ${(mode === 'partner' ? partnerTotal : addonsTotal).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
-                  <span className="text-[9px] font-bold text-white/40 ml-1">MXN / {billingCycle === 'monthly' || mode === 'partner' ? 'mes' : 'año'}</span>
+                  <span className="text-2xs font-bold text-white/40 ml-1">MXN / {billingCycle === 'monthly' || mode === 'partner' ? 'mes' : 'año'}</span>
                 </span>
               </div>
             </div>
@@ -513,15 +513,15 @@ export default function PricingCalculator({ onOpenScheduler }: { onOpenScheduler
             {/* Efficiency / Savings Box */}
             {mode === 'partner' ? (
               <div className="p-4 rounded-2xl bg-white/5 border border-white/10 text-center sm:text-left">
-                <span className="text-[8px] font-black uppercase tracking-[0.2em] text-nectar-gold block mb-1">Eficiencia de Capital</span>
+                <span className="text-2xs font-black uppercase tracking-[0.2em] text-nectar-gold block mb-1">Eficiencia de Capital</span>
                 <p className="text-base font-black text-green-400 font-mono">-${partnerSavings.toLocaleString('es-MX')} MXN / mes</p>
-                <p className="text-[8px] text-white/40 mt-1 uppercase tracking-wider">Ahorro proyectado comparado a tarifas de agencia promedio ($1,200 MXN/h)</p>
+                <p className="text-2xs text-white/40 mt-1 uppercase tracking-wider">Ahorro proyectado comparado a tarifas de agencia promedio ($1,200 MXN/h)</p>
               </div>
             ) : (
               <div className="p-4 rounded-2xl bg-white/5 border border-white/10 text-center sm:text-left">
-                <span className="text-[8px] font-black uppercase tracking-[0.2em] text-nectar-gold block mb-1">Soberanía de Código</span>
+                <span className="text-2xs font-black uppercase tracking-[0.2em] text-nectar-gold block mb-1">Soberanía de Código</span>
                 <p className="text-xs font-bold text-white">Propiedad absoluta e integración nativa</p>
-                <p className="text-[8px] text-white/40 mt-1 uppercase tracking-wider">Sin dependencias de terceros. Soporte directo de nuestro equipo de ingeniería.</p>
+                <p className="text-2xs text-white/40 mt-1 uppercase tracking-wider">Sin dependencias de terceros. Soporte directo de nuestro equipo de ingeniería.</p>
               </div>
             )}
 
@@ -531,13 +531,13 @@ export default function PricingCalculator({ onOpenScheduler }: { onOpenScheduler
                 href={getRedirectUrl()}
                 className="block w-full"
               >
-                <button className="w-full py-4 bg-white text-nectar-forest font-black uppercase tracking-widest rounded-2xl hover:bg-nectar-gold hover:text-white transition-all shadow-xl text-[10px] sm:text-xs cursor-pointer">
+                <button className="w-full py-4 bg-white text-nectar-forest font-black uppercase tracking-widest rounded-2xl hover:bg-nectar-gold hover:text-white transition-all shadow-xl text-2xs sm:text-xs cursor-pointer">
                   {mode === 'partner' ? '🛡️ Iniciar Onboarding' : '🧩 Contratar Módulos'}
                 </button>
               </a>
               <button 
                 onClick={() => onOpenScheduler?.(mode === 'addons' ? selectedAddons[0] || '' : '')}
-                className="w-full py-4 bg-transparent border border-white/20 text-white hover:border-nectar-gold hover:text-nectar-gold font-black uppercase tracking-widest rounded-2xl transition-all text-[10px] sm:text-xs cursor-pointer"
+                className="w-full py-4 bg-transparent border border-white/20 text-white hover:border-nectar-gold hover:text-nectar-gold font-black uppercase tracking-widest rounded-2xl transition-all text-2xs sm:text-xs cursor-pointer"
               >
                 📅 Agendar Consultoría Técnica
               </button>

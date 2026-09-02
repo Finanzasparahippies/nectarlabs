@@ -67,7 +67,7 @@ export default function SponsorTiers({ primaryColor }: SponsorTiersProps) {
         </div>
         <div>
           <h3 className="text-sm font-black uppercase tracking-wider text-white">Nivel de Patrocinio y Membresías</h3>
-          <p className="text-[9px] uppercase tracking-widest font-black text-white/40">Add-on: Patreon & Sponsorship</p>
+          <p className="text-2xs uppercase tracking-widest font-black text-white/40">Add-on: Patreon & Sponsorship</p>
         </div>
       </div>
 
@@ -86,12 +86,12 @@ export default function SponsorTiers({ primaryColor }: SponsorTiersProps) {
               <h4 className="text-xs font-black uppercase tracking-tight text-white">{tier.name}</h4>
               <div className="mt-3 flex items-baseline gap-1 text-white">
                 <span className="text-xl font-black">{tier.price}</span>
-                <span className="text-[9px] font-black uppercase text-white/45">{tier.period}</span>
+                <span className="text-2xs font-black uppercase text-white/45">{tier.period}</span>
               </div>
               <ul className="mt-4 space-y-2">
                 {tier.features.map((f, idx) => (
-                  <li key={idx} className="flex gap-2 items-start text-[10px] text-white/60 leading-tight">
-                    <span className="text-[9px]" style={{ color: primaryColor }}>✓</span>
+                  <li key={idx} className="flex gap-2 items-start text-2xs text-white/60 leading-tight">
+                    <span className="text-2xs" style={{ color: primaryColor }}>✓</span>
                     <span>{f}</span>
                   </li>
                 ))}
@@ -100,7 +100,7 @@ export default function SponsorTiers({ primaryColor }: SponsorTiersProps) {
 
             <button
               type="button"
-              className="mt-6 w-full py-3 rounded-xl font-black uppercase tracking-wider text-[8px] transition-all hover:scale-102 active:scale-95 cursor-pointer"
+              className="mt-6 w-full py-3 rounded-xl font-black uppercase tracking-wider text-2xs transition-all hover:scale-102 active:scale-95 cursor-pointer"
               style={{
                 backgroundColor: selectedTier === tier.id ? primaryColor : 'rgba(255,255,255,0.03)',
                 color: selectedTier === tier.id ? '#000000' : '#FFFFFF'
@@ -125,7 +125,7 @@ export default function SponsorTiers({ primaryColor }: SponsorTiersProps) {
             onClick={() => {
               setToast({ message: 'Redirigiendo a pasarela de cobros segura de Stripe...', type: 'info' });
             }}
-            className="px-5 py-3 rounded-xl font-black uppercase tracking-widest text-[9px] hover:scale-105 active:scale-95 transition-all text-black cursor-pointer animate-pulse"
+            className="px-5 py-3 rounded-xl font-black uppercase tracking-widest text-2xs hover:scale-105 active:scale-95 transition-all text-black cursor-pointer animate-pulse"
             style={{ backgroundColor: primaryColor }}
           >
             Proceder al pago con Stripe

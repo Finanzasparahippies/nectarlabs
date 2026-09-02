@@ -285,14 +285,14 @@ export default function AddonShowcase() {
         <div className="space-y-4">
           <div className="flex justify-between items-start">
             <span className="text-3xl">{addon.icon}</span>
-            <span className="px-2.5 py-0.5 bg-nectar-gold/10 text-nectar-gold border border-nectar-gold/25 text-[7px] font-black rounded-full uppercase tracking-wider font-mono">
+            <span className="px-2.5 py-0.5 bg-nectar-gold/10 text-nectar-gold border border-nectar-gold/25 text-2xs font-black rounded-full uppercase tracking-wider font-mono">
               {addon.categoryBadge}
             </span>
           </div>
 
           <div>
             <h3 className="text-sm font-black uppercase text-nectar-forest dark:text-white tracking-wide mt-2">{addon.name}</h3>
-            <p className="text-[10px] text-nectar-forest/70 dark:text-white/50 leading-relaxed mt-2 line-clamp-4">{addon.description}</p>
+            <p className="text-2xs text-nectar-forest/70 dark:text-white/50 leading-relaxed mt-2 line-clamp-4">{addon.description}</p>
           </div>
         </div>
 
@@ -306,13 +306,13 @@ export default function AddonShowcase() {
                 ${price.toLocaleString('es-MX')} MXN
               </span>
               {billingCycle === 'yearly' && savings > 0 && (
-                <p className="text-[7px] text-emerald-500 font-bold uppercase tracking-wider mt-0.5">
+                <p className="text-2xs text-emerald-500 font-bold uppercase tracking-wider mt-0.5">
                   Ahorro de ${savings.toLocaleString('es-MX')} MXN
                 </p>
               )}
             </div>
 
-            <span className="text-[7px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full border text-emerald-400 bg-emerald-400/10 border-emerald-400/20">
+            <span className="text-2xs font-black uppercase tracking-wider px-2.5 py-1 rounded-full border text-emerald-400 bg-emerald-400/10 border-emerald-400/20">
               Valor de Negocio
             </span>
           </div>
@@ -320,13 +320,13 @@ export default function AddonShowcase() {
           <div className="grid grid-cols-2 gap-3">
             <button
               onClick={() => setSelectedAddon(addon)}
-              className="px-4 py-2 bg-foreground/5 border border-foreground/10 hover:bg-foreground/10 text-foreground text-[8px] font-black uppercase tracking-widest rounded-lg hover:scale-105 active:scale-95 transition-all cursor-pointer text-center"
+              className="px-4 py-2 bg-foreground/5 border border-foreground/10 hover:bg-foreground/10 text-foreground text-2xs font-black uppercase tracking-widest rounded-lg hover:scale-105 active:scale-95 transition-all cursor-pointer text-center"
             >
               Ficha
             </button>
             <Link href={`/dashboard/addons?request=${addon.id}`} className="w-full">
               <button
-                className="w-full px-4 py-2 text-background text-[8px] font-black uppercase tracking-widest rounded-lg hover:scale-105 active:scale-95 transition-all shadow-md cursor-pointer text-center"
+                className="w-full px-4 py-2 text-background text-2xs font-black uppercase tracking-widest rounded-lg hover:scale-105 active:scale-95 transition-all shadow-md cursor-pointer text-center"
                 style={{ backgroundColor: '#C68A1E' }}
               >
                 Integrar
@@ -348,7 +348,7 @@ export default function AddonShowcase() {
         <h2 className="relative text-3xl sm:text-5xl md:text-8xl font-black mb-4 tracking-tighter text-nectar-forest dark:text-nectar-cream leading-none z-10">
           Módulos <span className="text-nectar-gold">Adicionales</span>
         </h2>
-        <p className="text-[10px] text-nectar-gold font-black uppercase tracking-[0.5em] relative z-10 mb-6 sm:mb-12">
+        <p className="text-2xs text-nectar-gold font-black uppercase tracking-[0.5em] relative z-10 mb-6 sm:mb-12">
           Microservicios Independientes a la Carta
         </p>
 
@@ -356,7 +356,7 @@ export default function AddonShowcase() {
         <div className="inline-flex bg-card-bg border border-card-border p-1.5 rounded-2xl relative z-10 shadow-sm mx-auto">
           <button
             onClick={() => setBillingCycle('monthly')}
-            className={`px-6 py-2.5 rounded-xl font-black uppercase tracking-widest text-[9px] transition-all duration-300 ${billingCycle === 'monthly'
+            className={`px-6 py-2.5 rounded-xl font-black uppercase tracking-widest text-2xs transition-all duration-300 ${billingCycle === 'monthly'
               ? 'bg-nectar-gold text-background shadow-md'
               : 'text-foreground/60 hover:text-foreground hover:bg-foreground/5'
               }`}
@@ -365,12 +365,12 @@ export default function AddonShowcase() {
           </button>
           <button
             onClick={() => setBillingCycle('yearly')}
-            className={`px-6 py-2.5 rounded-xl font-black uppercase tracking-widest text-[9px] transition-all duration-300 ${billingCycle === 'yearly'
+            className={`px-6 py-2.5 rounded-xl font-black uppercase tracking-widest text-2xs transition-all duration-300 ${billingCycle === 'yearly'
               ? 'bg-nectar-gold text-background shadow-md'
               : 'text-foreground/60 hover:text-foreground hover:bg-foreground/5'
               }`}
           >
-            Anual <span className="text-[7px] text-nectar-cream bg-white/20 px-1 py-0.5 rounded ml-1 font-bold">2 meses gratis</span>
+            Anual <span className="text-2xs text-nectar-cream bg-white/20 px-1 py-0.5 rounded ml-1 font-bold">2 meses gratis</span>
           </button>
         </div>
       </div>
@@ -385,11 +385,11 @@ export default function AddonShowcase() {
                 <h2 className="text-xl md:text-2xl font-black uppercase tracking-wider text-nectar-forest dark:text-white flex items-center gap-2">
                   📦 Paquetes de Software Completos
                 </h2>
-                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-nectar-gold opacity-80 mt-1">
+                <p className="text-2xs font-black uppercase tracking-[0.3em] text-nectar-gold opacity-80 mt-1">
                   Soluciones integrales llave en mano para tu negocio
                 </p>
               </div>
-              <span className="px-2.5 py-0.5 bg-nectar-gold/10 text-nectar-gold border border-nectar-gold/25 text-[8px] font-mono rounded font-bold uppercase tracking-wider">
+              <span className="px-2.5 py-0.5 bg-nectar-gold/10 text-nectar-gold border border-nectar-gold/25 text-2xs font-mono rounded font-bold uppercase tracking-wider">
                 {packages.length} {packages.length === 1 ? 'Paquete' : 'Paquetes'}
               </span>
             </div>
@@ -407,11 +407,11 @@ export default function AddonShowcase() {
                 <h2 className="text-xl md:text-2xl font-black uppercase tracking-wider text-nectar-forest dark:text-white flex items-center gap-2">
                   🧩 Módulos & Funcionalidades Individuales
                 </h2>
-                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-nectar-gold opacity-80 mt-1">
+                <p className="text-2xs font-black uppercase tracking-[0.3em] text-nectar-gold opacity-80 mt-1">
                   Equipamiento tecnológico específico a la carta
                 </p>
               </div>
-              <span className="px-2.5 py-0.5 bg-nectar-gold/10 text-nectar-gold border border-nectar-gold/25 text-[8px] font-mono rounded font-bold uppercase tracking-wider">
+              <span className="px-2.5 py-0.5 bg-nectar-gold/10 text-nectar-gold border border-nectar-gold/25 text-2xs font-mono rounded font-bold uppercase tracking-wider">
                 {modules.length} {modules.length === 1 ? 'Módulo' : 'Módulos'}
               </span>
             </div>
@@ -445,7 +445,7 @@ export default function AddonShowcase() {
                 {selectedAddon.icon}
               </div>
               <div>
-                <span className="text-[8px] font-black uppercase tracking-widest text-nectar-gold block mb-1">
+                <span className="text-2xs font-black uppercase tracking-widest text-nectar-gold block mb-1">
                   Ficha Técnica de Módulo
                 </span>
                 <h2 className="text-xl sm:text-3xl font-black tracking-tight">{selectedAddon.name}</h2>
@@ -463,7 +463,7 @@ export default function AddonShowcase() {
 
                 return (
                   <div>
-                    <h4 className="text-[10px] font-black uppercase tracking-widest text-nectar-gold mb-3">
+                    <h4 className="text-2xs font-black uppercase tracking-widest text-nectar-gold mb-3">
                       Funcionalidades Clave
                     </h4>
                     <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -480,7 +480,7 @@ export default function AddonShowcase() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 border-t border-card-border/50 pt-6">
                 <div>
-                  <h4 className="text-[10px] font-black uppercase tracking-widest text-nectar-gold mb-2">
+                  <h4 className="text-2xs font-black uppercase tracking-widest text-nectar-gold mb-2">
                     Complejidad e Infraestructura
                   </h4>
                   <p className="text-xs text-foreground/80 leading-relaxed">
@@ -488,7 +488,7 @@ export default function AddonShowcase() {
                   </p>
                 </div>
                 <div>
-                  <h4 className="text-[10px] font-black uppercase tracking-widest text-nectar-gold mb-2">
+                  <h4 className="text-2xs font-black uppercase tracking-widest text-nectar-gold mb-2">
                     Esquema Comercial
                   </h4>
                   <p className="text-xs text-foreground/80 leading-relaxed">

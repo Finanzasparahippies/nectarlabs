@@ -259,7 +259,7 @@ function OnboardingContent() {
     <div className="min-h-screen bg-background text-foreground selection:bg-nectar-gold">
       <Navbar />
       <div className="max-w-3xl mx-auto px-6 pt-48 pb-12">
-        <Link href="/" className="inline-block mb-12 text-[10px] font-black uppercase tracking-widest opacity-40 hover:opacity-100">
+        <Link href="/" className="inline-block mb-12 text-2xs font-black uppercase tracking-widest opacity-40 hover:opacity-100">
           ← Cancelar Proceso
         </Link>
 
@@ -277,7 +277,7 @@ function OnboardingContent() {
 
             <div className="grid gap-6">
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-widest opacity-40">Plan Seleccionado</label>
+                <label className="text-2xs font-black uppercase tracking-widest opacity-40">Plan Seleccionado</label>
                 <select
                   name="plan"
                   value={formData.plan}
@@ -306,13 +306,13 @@ function OnboardingContent() {
                 return (
                   <div className="p-5 rounded-2xl bg-green-500/5 border border-green-500/25 flex items-center justify-between text-xs animate-in fade-in zoom-in-95">
                     <div>
-                      <span className="text-[8px] font-black uppercase tracking-widest text-green-500 block mb-1">¡Descuento Promocional Activado!</span>
+                      <span className="text-2xs font-black uppercase tracking-widest text-green-500 block mb-1">¡Descuento Promocional Activado!</span>
                       <p className="text-foreground/80 font-bold">
                         Tienes un <span className="text-green-400 font-extrabold">{discount}% de descuento</span> en este plan de ingeniería.
                       </p>
                     </div>
                     <div className="text-right">
-                      <span className="text-[9px] line-through opacity-50 block font-mono">${origPrice.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN</span>
+                      <span className="text-2xs line-through opacity-50 block font-mono">${origPrice.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN</span>
                       <span className="text-sm font-black text-green-400 font-mono">${discPrice.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN</span>
                     </div>
                   </div>
@@ -323,10 +323,10 @@ function OnboardingContent() {
               {selectedPlanObj && (
                 <div className="space-y-3 p-6 rounded-3xl bg-card-bg/60 border-2 border-card-border/80 animate-in fade-in slide-in-from-bottom-3 duration-300">
                   <div className="flex items-center justify-between">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-nectar-gold">
+                    <label className="text-2xs font-black uppercase tracking-widest text-nectar-gold">
                       Elige la frecuencia de pagos de tu plan.
                     </label>
-                    <span className="text-[9px] uppercase font-bold opacity-50">6 meses de compromiso</span>
+                    <span className="text-2xs uppercase font-bold opacity-50">6 meses de compromiso</span>
                   </div>
                   <p className="text-xs text-foreground/70 font-semibold">
                     Divide el monto total de tu plan en el periodo que mejor se adapte al flujo de tu negocio.
@@ -355,7 +355,7 @@ function OnboardingContent() {
                             <span className="text-xs font-black uppercase tracking-wider text-foreground">
                               {breakdown.label}
                             </span>
-                            <span className={`text-[8px] font-black px-2 py-0.5 rounded-full uppercase ${isSelected ? 'bg-nectar-gold text-background' : 'bg-card-border text-foreground/60'
+                            <span className={`text-2xs font-black px-2 py-0.5 rounded-full uppercase ${isSelected ? 'bg-nectar-gold text-background' : 'bg-card-border text-foreground/60'
                               }`}>
                               {breakdown.installmentsPerMonth} / mes
                             </span>
@@ -364,38 +364,38 @@ function OnboardingContent() {
                           <div className="space-y-1 mb-3">
                             {appliedPromo ? (
                               <>
-                                <span className="text-[10px] line-through opacity-40 font-mono block">
+                                <span className="text-2xs line-through opacity-40 font-mono block">
                                   ${breakdown.baseInstallment.toLocaleString('es-MX', { minimumFractionDigits: 2 })} / {breakdown.shortLabel}
                                 </span>
                                 <span className="text-lg font-black font-mono text-green-400 block">
                                   ${breakdown.promoDiscountedInstallment.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
-                                  <span className="text-[10px] font-bold text-foreground/60"> / {breakdown.shortLabel}</span>
+                                  <span className="text-2xs font-bold text-foreground/60"> / {breakdown.shortLabel}</span>
                                 </span>
                               </>
                             ) : breakdown.planDisc > 0 ? (
                               <>
-                                <span className="text-[10px] line-through opacity-40 font-mono block">
+                                <span className="text-2xs line-through opacity-40 font-mono block">
                                   ${breakdown.baseInstallment.toLocaleString('es-MX', { minimumFractionDigits: 2 })} / {breakdown.shortLabel}
                                 </span>
                                 <span className="text-lg font-black font-mono text-green-400 block">
                                   ${breakdown.planDiscountedInstallment.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
-                                  <span className="text-[10px] font-bold text-foreground/60"> / {breakdown.shortLabel}</span>
+                                  <span className="text-2xs font-bold text-foreground/60"> / {breakdown.shortLabel}</span>
                                 </span>
                               </>
                             ) : (
                               <span className="text-lg font-black font-mono text-nectar-gold block">
                                 ${breakdown.baseInstallment.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
-                                <span className="text-[10px] font-bold text-foreground/60"> / {breakdown.shortLabel}</span>
+                                <span className="text-2xs font-bold text-foreground/60"> / {breakdown.shortLabel}</span>
                               </span>
                             )}
                           </div>
 
-                          <div className="text-[9px] opacity-60 font-medium border-t border-card-border/40 pt-2">
+                          <div className="text-2xs opacity-60 font-medium border-t border-card-border/40 pt-2">
                             Total: {breakdown.totalInstallments} exhibiciones
                           </div>
 
                           {!breakdown.isValid && (
-                            <div className="text-[8px] font-bold text-red-400 mt-2">
+                            <div className="text-2xs font-bold text-red-400 mt-2">
                               ⚠ Inferior al mínimo permitido por pasarela ($50.00 MXN)
                             </div>
                           )}
@@ -409,7 +409,7 @@ function OnboardingContent() {
               {/* Promo Code Input Block */}
               {formData.plan && (
                 <div className="space-y-3 p-6 rounded-2xl bg-card-bg/50 border border-card-border/80 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                  <label className="text-[10px] font-black uppercase tracking-widest opacity-40 block">¿Tienes un Código de Referido o Promocional?</label>
+                  <label className="text-2xs font-black uppercase tracking-widest opacity-40 block">¿Tienes un Código de Referido o Promocional?</label>
                   <div className="flex gap-2">
                     <input
                       type="text"
@@ -422,18 +422,18 @@ function OnboardingContent() {
                       type="button"
                       onClick={handleValidatePromo}
                       disabled={validatingPromo}
-                      className="px-6 bg-foreground hover:bg-nectar-gold text-background rounded-xl text-[10px] font-black uppercase tracking-widest transition-all hover:scale-[1.02] active:scale-95"
+                      className="px-6 bg-foreground hover:bg-nectar-gold text-background rounded-xl text-2xs font-black uppercase tracking-widest transition-all hover:scale-[1.02] active:scale-95"
                     >
                       {validatingPromo ? 'Validando...' : 'Aplicar'}
                     </button>
                   </div>
                   {appliedPromo && (
-                    <div className="text-[10px] text-green-400 font-bold mt-2 flex items-center gap-1 bg-green-500/5 p-3 rounded-lg border border-green-500/10">
+                    <div className="text-2xs text-green-400 font-bold mt-2 flex items-center gap-1 bg-green-500/5 p-3 rounded-lg border border-green-500/10">
                       <span>✓</span> Código promocional <span className="underline">{appliedPromo.code}</span> aplicado con éxito: <strong>-{appliedPromo.discount_percentage}% de descuento</strong> en tu primer pago.
                     </div>
                   )}
                   {promoError && (
-                    <div className="text-[10px] text-red-500 font-bold mt-2 bg-red-500/5 p-3 rounded-lg border border-red-500/10">
+                    <div className="text-2xs text-red-500 font-bold mt-2 bg-red-500/5 p-3 rounded-lg border border-red-500/10">
                       ✗ {promoError}
                     </div>
                   )}
@@ -441,7 +441,7 @@ function OnboardingContent() {
               )}
 
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-widest opacity-40">Idea del Proyecto (Un párrafo)</label>
+                <label className="text-2xs font-black uppercase tracking-widest opacity-40">Idea del Proyecto (Un párrafo)</label>
                 <textarea
                   name="project_idea"
                   placeholder="Describe la esencia de tu proyecto..."
@@ -453,7 +453,7 @@ function OnboardingContent() {
               </div>
 
               <div className="space-y-4">
-                <label className="text-[10px] font-black uppercase tracking-widest opacity-40">¿Requieres Diseño de Marca? (Opcional)</label>
+                <label className="text-2xs font-black uppercase tracking-widest opacity-40">¿Requieres Diseño de Marca? (Opcional)</label>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   {[
                     { id: 'NONE', name: 'Sin Diseño', price: 0, display: '' },
@@ -492,7 +492,7 @@ function OnboardingContent() {
 
             <div className="grid gap-6">
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-widest opacity-40">Nombre Completo o Razón Social</label>
+                <label className="text-2xs font-black uppercase tracking-widest opacity-40">Nombre Completo o Razón Social</label>
                 <input
                   type="text"
                   name="full_name"
@@ -504,7 +504,7 @@ function OnboardingContent() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest opacity-40">RFC</label>
+                  <label className="text-2xs font-black uppercase tracking-widest opacity-40">RFC</label>
                   <input
                     type="text"
                     name="tax_id"
@@ -514,7 +514,7 @@ function OnboardingContent() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest opacity-40">Dirección Fiscal</label>
+                  <label className="text-2xs font-black uppercase tracking-widest opacity-40">Dirección Fiscal</label>
                   <input
                     type="text"
                     name="address"
@@ -572,7 +572,7 @@ function OnboardingContent() {
               <div className="p-8 md:p-12 overflow-y-auto custom-contract-scrollbar flex-1 bg-background/30 selection:bg-nectar-gold selection:text-background">
                 <header className="mb-12 border-b border-card-border/60 pb-8">
                   <h2 className="text-2xl font-black tracking-tighter mb-2">CONTRATO DE PRESTACIÓN DE SERVICIOS TECNOLÓGICOS</h2>
-                  <p className="text-nectar-gold font-bold uppercase tracking-widest text-[10px]">Modalidad: Partner Tecnológico</p>
+                  <p className="text-nectar-gold font-bold uppercase tracking-widest text-2xs">Modalidad: Partner Tecnológico</p>
                 </header>
 
                 <div className="prose prose-invert max-w-none space-y-10 text-sm leading-relaxed opacity-85">
@@ -584,14 +584,14 @@ function OnboardingContent() {
                     <h3 className="text-lg font-black uppercase tracking-tight text-foreground">DECLARACIONES Y DATOS DE LAS PARTES</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2 p-5 bg-background/80 rounded-2xl border border-card-border/60 text-xs">
-                        <h4 className="font-black text-[9px] uppercase text-nectar-gold">EL DESARROLLADOR</h4>
+                        <h4 className="font-black text-2xs uppercase text-nectar-gold">EL DESARROLLADOR</h4>
                         <p><strong>Jesus Saul Villegas Cruz</strong></p>
                         <p>RFC: VICJ911227KY2</p>
                         <p>Domicilio: Poder Legislativo 345, col. Ley 57. Hermosillo, Sonora.</p>
                         <p>Email: contacto@finanzasparahippies.com</p>
                       </div>
                       <div className="space-y-2 p-5 bg-background/80 rounded-2xl border border-card-border/60 text-xs">
-                        <h4 className="font-black text-[9px] uppercase text-nectar-gold">EL CLIENTE</h4>
+                        <h4 className="font-black text-2xs uppercase text-nectar-gold">EL CLIENTE</h4>
                         <p><strong>{formData.full_name || '___________________'}</strong></p>
                         <p>RFC: {formData.tax_id || '__________________________'}</p>
                         <p>Domicilio: {formData.address || '______________________'}</p>
@@ -626,7 +626,7 @@ function OnboardingContent() {
                                 <span>Inversión Base del Plan ({selectedPlanObj.name}):</span>
                                 <span className="font-mono">${currentBreakdown.baseMonthly.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN / Mes</span>
                               </div>
-                              <div className="flex justify-between items-center text-[10px] text-green-400">
+                              <div className="flex justify-between items-center text-2xs text-green-400">
                                 <span>Descuento de Referido/Promo ({appliedPromo.code}) en primer pago:</span>
                                 <span>-{appliedPromo.discount_percentage}%</span>
                               </div>
@@ -635,7 +635,7 @@ function OnboardingContent() {
                                 <span>Primer Pago con Código ({currentBreakdown.label}):</span>
                                 <span className="font-mono text-base">${currentBreakdown.promoDiscountedInstallment.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN / {currentBreakdown.shortLabel}</span>
                               </div>
-                              <div className="flex justify-between items-center text-foreground/80 text-[11px] pt-1">
+                              <div className="flex justify-between items-center text-foreground/80 text-xs pt-1">
                                 <span>Cuotas Subsecuentes ({currentBreakdown.totalInstallments - 1} abonos):</span>
                                 <span className="font-mono">${currentBreakdown.planDiscountedInstallment.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN / {currentBreakdown.shortLabel}</span>
                               </div>
@@ -646,7 +646,7 @@ function OnboardingContent() {
                                 <span>Inversión Normal del Plan ({selectedPlanObj.name}):</span>
                                 <span className="line-through font-mono">${currentBreakdown.baseMonthly.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN / Mes</span>
                               </div>
-                              <div className="flex justify-between items-center text-[10px] text-green-400">
+                              <div className="flex justify-between items-center text-2xs text-green-400">
                                 <span>Descuento Promocional Aplicado:</span>
                                 <span>-{currentBreakdown.planDisc}%</span>
                               </div>
@@ -713,7 +713,7 @@ function OnboardingContent() {
                 <div className="px-8 pt-6 pb-2 bg-[#361542] text-[#f2ecdc] border-t border-nectar-gold/30">
                   <div className="flex items-center justify-between mb-4 border-b border-white/10 pb-3">
                     <div>
-                      <span className="text-[9px] font-black uppercase tracking-widest text-[#0de5a8] block mb-0.5">
+                      <span className="text-2xs font-black uppercase tracking-widest text-[#0de5a8] block mb-0.5">
                         Resumen de Alcance Técnico & Propiedad Intelectual
                       </span>
                       <h4 className="text-lg font-black text-white tracking-tight">
@@ -727,11 +727,11 @@ function OnboardingContent() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs mb-4">
                     <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10 space-y-1.5">
-                      <div className="flex items-center gap-2 font-black text-[#0de5a8] text-[11px]">
+                      <div className="flex items-center gap-2 font-black text-[#0de5a8] text-xs">
                         <span>⚡</span>
                         <span>Bolsa de Horas de Ingeniería</span>
                       </div>
-                      <p className="opacity-80 text-[11px] leading-relaxed">
+                      <p className="opacity-80 text-xs leading-relaxed">
                         {selectedPlanObj.name.toLowerCase().includes('premium')
                           ? '12 hrs/mes para desarrollos a medida desde cero o adaptación de plantillas.'
                           : selectedPlanObj.name.toLowerCase().includes('mid')
@@ -739,27 +739,27 @@ function OnboardingContent() {
                           : 'Sin horas de desarrollo a medida. Uso autónomo mediante herramientas nativas.'}
                       </p>
                       {selectedPlanObj.hours > 0 ? (
-                        <span className="inline-block text-[8px] font-black uppercase tracking-wider text-amber-300 bg-amber-400/10 px-2 py-0.5 rounded-full">
+                        <span className="inline-block text-2xs font-black uppercase tracking-wider text-amber-300 bg-amber-400/10 px-2 py-0.5 rounded-full">
                           ⚠ Bolsa mensual no acumulable (Use-it-or-lose-it)
                         </span>
                       ) : (
-                        <span className="inline-block text-[8px] font-black uppercase tracking-wider text-white/50 bg-white/5 px-2 py-0.5 rounded-full">
+                        <span className="inline-block text-2xs font-black uppercase tracking-wider text-white/50 bg-white/5 px-2 py-0.5 rounded-full">
                           Personalización autónoma por el usuario
                         </span>
                       )}
                     </div>
 
                     <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10 space-y-1.5">
-                      <div className="flex items-center gap-2 font-black text-[#0de5a8] text-[11px]">
+                      <div className="flex items-center gap-2 font-black text-[#0de5a8] text-xs">
                         <span>🛡️</span>
                         <span>Propiedad Intelectual (IP)</span>
                       </div>
-                      <p className="opacity-80 text-[11px] leading-relaxed">
+                      <p className="opacity-80 text-xs leading-relaxed">
                         {selectedPlanObj.name.toLowerCase().includes('premium')
                           ? 'Transferencia y consolidación total de propiedad del código al cumplir 6 meses.'
                           : 'Derecho de uso licenciado de add-ons y plantillas oficiales. No incluye propiedad de código fuente.'}
                       </p>
-                      <span className="inline-block text-[8px] font-black uppercase tracking-wider text-[#0de5a8] bg-[#0de5a8]/10 px-2 py-0.5 rounded-full">
+                      <span className="inline-block text-2xs font-black uppercase tracking-wider text-[#0de5a8] bg-[#0de5a8]/10 px-2 py-0.5 rounded-full">
                         {selectedPlanObj.name.toLowerCase().includes('premium')
                           ? '✓ Consolidación IP de Código al Mes 6'
                           : '✓ Derecho de Uso Licenciado (Software)'}
@@ -794,10 +794,10 @@ function OnboardingContent() {
                 </div>
 
                 <div className="flex justify-between items-center">
-                  <button onClick={clearSignature} className="text-[10px] font-black uppercase tracking-widest text-red-400 hover:text-red-500 transition-colors active:scale-95">
+                  <button onClick={clearSignature} className="text-2xs font-black uppercase tracking-widest text-red-400 hover:text-red-500 transition-colors active:scale-95">
                     Borrar Trazo
                   </button>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-nectar-gold">Firma aquí con tu mouse o dedo</p>
+                  <p className="text-2xs font-black uppercase tracking-widest text-nectar-gold">Firma aquí con tu mouse o dedo</p>
                 </div>
               </div>
             </div>
@@ -829,7 +829,7 @@ function OnboardingContent() {
             <p className="text-xl opacity-60 max-w-md mx-auto">
               Tu contrato ha sido generado y firmado. En breve recibirás un correo con el PDF y los detalles de nuestra primera sesión de planeación.
             </p>
-            <div className="text-[10px] font-black uppercase tracking-widest text-nectar-gold animate-pulse">
+            <div className="text-2xs font-black uppercase tracking-widest text-nectar-gold animate-pulse">
               Redirigiendo a tu Dashboard en {redirectCountdown} segundos...
             </div>
             <div className="pt-12">

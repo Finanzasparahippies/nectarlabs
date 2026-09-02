@@ -155,7 +155,7 @@ export default function TenantSearchBar<
 
       {/* Results Header */}
       <div className="flex justify-between items-center px-1">
-        <span className="text-[8px] font-black uppercase tracking-wider text-foreground/40">
+        <span className="text-2xs font-black uppercase tracking-wider text-foreground/40">
           Resultados
         </span>
         <span className="px-2 py-0.5 bg-nectar-gold/10 text-nectar-gold text-[7.5px] font-black uppercase tracking-widest rounded-full font-mono border border-nectar-gold/15">
@@ -212,7 +212,7 @@ export default function TenantSearchBar<
                   ownerUser.email.toLowerCase().includes(searchLower))
               ) {
                 return (
-                  <div className="mt-1 pt-1.5 border-t border-card-border/30 flex flex-col text-[7px] text-foreground/40 gap-0.5">
+                  <div className="mt-1 pt-1.5 border-t border-card-border/30 flex flex-col text-2xs text-foreground/40 gap-0.5">
                     <span>Propietario Coincidente:</span>
                     <span className="font-mono font-bold">
                       {highlightText(ownerUser.username, debouncedSearch)} ({highlightText(ownerUser.email, debouncedSearch)})
@@ -225,8 +225,8 @@ export default function TenantSearchBar<
 
             {/* Project match badge */}
             {matchedProject && (
-              <div className="mt-1.5 px-2.5 py-1.5 bg-nectar-gold/5 border border-nectar-gold/20 rounded-lg text-[7px] text-nectar-gold font-bold flex flex-col gap-0.5 animate-fadeIn">
-                <span className="uppercase text-[6px] tracking-wider opacity-60">Proyecto Coincidente</span>
+              <div className="mt-1.5 px-2.5 py-1.5 bg-nectar-gold/5 border border-nectar-gold/20 rounded-lg text-2xs text-nectar-gold font-bold flex flex-col gap-0.5 animate-fadeIn">
+                <span className="uppercase text-2xs tracking-wider opacity-60">Proyecto Coincidente</span>
                 <span className="truncate">{matchedProject}</span>
               </div>
             )}
@@ -234,7 +234,7 @@ export default function TenantSearchBar<
         ))}
 
         {filteredItems.length === 0 && (
-          <div className="py-8 text-center border border-dashed border-card-border rounded-xl opacity-30 text-[9px] font-black uppercase tracking-wider">
+          <div className="py-8 text-center border border-dashed border-card-border rounded-xl opacity-30 text-2xs font-black uppercase tracking-wider">
             Sin resultados
           </div>
         )}

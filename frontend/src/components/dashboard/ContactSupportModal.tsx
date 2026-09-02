@@ -91,7 +91,7 @@ ${description}
           <div>
             <span className="px-2 py-0.5 bg-nectar-gold/10 text-nectar-gold text-[7.5px] font-black uppercase tracking-widest rounded-full">Soporte Técnico</span>
             <h3 className="text-2xl font-black tracking-tight mt-2 text-foreground">Solicitar Código Personalizado</h3>
-            <p className="text-[9px] text-foreground/45 uppercase tracking-wider mt-1">Genera un ticket de soporte de implementación automatizado</p>
+            <p className="text-2xs text-foreground/45 uppercase tracking-wider mt-1">Genera un ticket de soporte de implementación automatizado</p>
           </div>
           <button
             onClick={onClose}
@@ -107,20 +107,20 @@ ${description}
               ✓
             </div>
             <h4 className="text-sm font-black uppercase tracking-widest text-green-400">Solicitud Enviada</h4>
-            <p className="text-[10px] text-foreground/60 max-w-xs mx-auto leading-relaxed">
+            <p className="text-2xs text-foreground/60 max-w-xs mx-auto leading-relaxed">
               Tu ticket de soporte ha sido generado exitosamente. Se ha notificado al equipo por correo y le daremos seguimiento a la brevedad.
             </p>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-5">
             {error && (
-              <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 text-[10px] font-bold">
+              <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 text-2xs font-bold">
                 ✗ {error}
               </div>
             )}
 
             <div className="space-y-1">
-              <label className="text-[8px] font-black uppercase tracking-widest text-foreground/50">Valor o Código Deseado *</label>
+              <label className="text-2xs font-black uppercase tracking-widest text-foreground/50">Valor o Código Deseado *</label>
               <input
                 type="text"
                 required
@@ -132,7 +132,7 @@ ${description}
             </div>
 
             <div className="space-y-1">
-              <label className="text-[8px] font-black uppercase tracking-widest text-foreground/50">Detalles y Justificación de la Solicitud *</label>
+              <label className="text-2xs font-black uppercase tracking-widest text-foreground/50">Detalles y Justificación de la Solicitud *</label>
               <textarea
                 required
                 rows={4}
@@ -147,14 +147,14 @@ ${description}
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 py-3 bg-background border border-card-border rounded-xl text-[9px] font-black uppercase tracking-widest text-foreground/60 hover:text-foreground transition-all cursor-pointer"
+                className="flex-1 py-3 bg-background border border-card-border rounded-xl text-2xs font-black uppercase tracking-widest text-foreground/60 hover:text-foreground transition-all cursor-pointer"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
                 disabled={isSubmitting || !valorDeseado.trim() || !description.trim()}
-                className="flex-1 py-3 bg-nectar-gold hover:bg-nectar-gold/90 text-background rounded-xl text-[9px] font-black uppercase tracking-widest transition-all disabled:opacity-40 font-bold hover:scale-[1.02] active:scale-95 cursor-pointer"
+                className="flex-1 py-3 bg-nectar-gold hover:bg-nectar-gold/90 text-background rounded-xl text-2xs font-black uppercase tracking-widest transition-all disabled:opacity-40 font-bold hover:scale-[1.02] active:scale-95 cursor-pointer"
               >
                 {isSubmitting ? 'Enviando...' : 'Enviar Solicitud'}
               </button>

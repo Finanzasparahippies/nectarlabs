@@ -700,7 +700,7 @@ export default function TenantSettingsPage() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background">
         <div className="w-12 h-12 border-4 border-nectar-gold border-t-transparent rounded-full animate-spin mb-4"></div>
-        <div className="font-black uppercase tracking-[0.4em] opacity-20 text-[10px]">Cargando Configuración...</div>
+        <div className="font-black uppercase tracking-[0.4em] opacity-20 text-2xs">Cargando Configuración...</div>
       </div>
     );
   }
@@ -715,7 +715,7 @@ export default function TenantSettingsPage() {
           <h1 className="text-4xl md:text-6xl font-black tracking-tighter mb-2">
             Configuración del Negocio
           </h1>
-          <p className="text-[10px] font-black uppercase tracking-[0.5em] text-nectar-gold opacity-80 animate-pulse">
+          <p className="text-2xs font-black uppercase tracking-[0.5em] text-nectar-gold opacity-80 animate-pulse">
             Configuración de tu portal, branding, productos y usuarios
           </p>
         </header>
@@ -739,7 +739,7 @@ export default function TenantSettingsPage() {
 
             <form onSubmit={handleCreateTenant} className="space-y-4">
               <div className="space-y-1">
-                <label className="text-[9px] font-black uppercase tracking-widest text-foreground/40">Nombre de tu Negocio / Marca</label>
+                <label className="text-2xs font-black uppercase tracking-widest text-foreground/40">Nombre de tu Negocio / Marca</label>
                 <input
                   type="text"
                   value={newTenantName}
@@ -751,7 +751,7 @@ export default function TenantSettingsPage() {
               </div>
 
               <div className="space-y-1">
-                <label className="text-[9px] font-black uppercase tracking-widest text-foreground/40">Subdominio Comercial</label>
+                <label className="text-2xs font-black uppercase tracking-widest text-foreground/40">Subdominio Comercial</label>
                 <div className="flex items-center bg-background border border-card-border rounded-xl px-4 py-3 focus-within:border-nectar-gold transition-all">
                   <input
                     type="text"
@@ -761,15 +761,15 @@ export default function TenantSettingsPage() {
                     required
                     className="flex-1 bg-transparent text-xs text-foreground focus:outline-none"
                   />
-                  <span className="text-[10px] font-bold text-nectar-gold pl-2">.nectarlabs.dev</span>
+                  <span className="text-2xs font-bold text-nectar-gold pl-2">.nectarlabs.dev</span>
                 </div>
-                <p className="text-[8px] text-foreground/30 uppercase mt-1">Define la dirección web pública de tu portal de cliente.</p>
+                <p className="text-2xs text-foreground/30 uppercase mt-1">Define la dirección web pública de tu portal de cliente.</p>
               </div>
 
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full py-4 bg-nectar-gold hover:bg-nectar-gold/90 text-background font-black uppercase tracking-widest text-[10px] rounded-xl transition-all hover:scale-[1.01] active:scale-95 disabled:opacity-50 mt-6 cursor-pointer"
+                className="w-full py-4 bg-nectar-gold hover:bg-nectar-gold/90 text-background font-black uppercase tracking-widest text-2xs rounded-xl transition-all hover:scale-[1.01] active:scale-95 disabled:opacity-50 mt-6 cursor-pointer"
               >
                 {isSubmitting ? 'Iniciando...' : 'Guardar y Continuar'}
               </button>
@@ -799,7 +799,7 @@ export default function TenantSettingsPage() {
                 <div className="flex border-b border-card-border pb-px mb-8 gap-6 overflow-x-auto">
                   <button
                     onClick={() => setActiveSubTab('branding')}
-                    className={`pb-3 text-[10px] font-black uppercase tracking-widest relative transition-all whitespace-nowrap ${activeSubTab === 'branding' ? 'text-nectar-gold' : 'text-foreground/45 hover:text-foreground'
+                    className={`pb-3 text-2xs font-black uppercase tracking-widest relative transition-all whitespace-nowrap ${activeSubTab === 'branding' ? 'text-nectar-gold' : 'text-foreground/45 hover:text-foreground'
                       }`}
                   >
                     Portal y Negocio
@@ -807,7 +807,7 @@ export default function TenantSettingsPage() {
                   </button>
                   <button
                     onClick={() => setActiveSubTab('colors')}
-                    className={`pb-3 text-[10px] font-black uppercase tracking-widest relative transition-all whitespace-nowrap ${activeSubTab === 'colors' ? 'text-nectar-gold' : 'text-foreground/45 hover:text-foreground'
+                    className={`pb-3 text-2xs font-black uppercase tracking-widest relative transition-all whitespace-nowrap ${activeSubTab === 'colors' ? 'text-nectar-gold' : 'text-foreground/45 hover:text-foreground'
                       }`}
                   >
                     Colores y Branding
@@ -815,7 +815,7 @@ export default function TenantSettingsPage() {
                   </button>
                   <button
                     onClick={() => setActiveSubTab('products')}
-                    className={`pb-3 text-[10px] font-black uppercase tracking-widest relative transition-all whitespace-nowrap ${activeSubTab === 'products' ? 'text-nectar-gold' : 'text-foreground/45 hover:text-foreground'
+                    className={`pb-3 text-2xs font-black uppercase tracking-widest relative transition-all whitespace-nowrap ${activeSubTab === 'products' ? 'text-nectar-gold' : 'text-foreground/45 hover:text-foreground'
                       }`}
                   >
                     Productos
@@ -823,7 +823,7 @@ export default function TenantSettingsPage() {
                   </button>
                   <button
                     onClick={() => setActiveSubTab('users')}
-                    className={`pb-3 text-[10px] font-black uppercase tracking-widest relative transition-all whitespace-nowrap ${activeSubTab === 'users' ? 'text-nectar-gold' : 'text-foreground/45 hover:text-foreground'
+                    className={`pb-3 text-2xs font-black uppercase tracking-widest relative transition-all whitespace-nowrap ${activeSubTab === 'users' ? 'text-nectar-gold' : 'text-foreground/45 hover:text-foreground'
                       }`}
                   >
                     Usuarios
@@ -831,7 +831,7 @@ export default function TenantSettingsPage() {
                   </button>
                   <button
                     onClick={() => setActiveSubTab('contracts')}
-                    className={`pb-3 text-[10px] font-black uppercase tracking-widest relative transition-all whitespace-nowrap ${activeSubTab === 'contracts' ? 'text-nectar-gold' : 'text-foreground/45 hover:text-foreground'
+                    className={`pb-3 text-2xs font-black uppercase tracking-widest relative transition-all whitespace-nowrap ${activeSubTab === 'contracts' ? 'text-nectar-gold' : 'text-foreground/45 hover:text-foreground'
                       }`}
                   >
                     Contratos
@@ -846,7 +846,7 @@ export default function TenantSettingsPage() {
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-card-border pb-4 mb-6">
                       <div>
                         <h4 className="text-xs font-black uppercase tracking-widest text-nectar-gold">Portal y Negocio</h4>
-                        <p className="text-[8px] text-foreground/45 uppercase tracking-wider mt-1">Configuración general de tu portal público</p>
+                        <p className="text-2xs text-foreground/45 uppercase tracking-wider mt-1">Configuración general de tu portal público</p>
                       </div>
 
                       {/* History controls */}
@@ -855,7 +855,7 @@ export default function TenantSettingsPage() {
                           type="button"
                           disabled={historyLength === 0}
                           onClick={handleUndo}
-                          className="px-3 py-1.5 bg-foreground/5 hover:bg-foreground/10 border border-card-border text-foreground text-[8px] font-black uppercase tracking-widest rounded-xl transition-all disabled:opacity-30 cursor-pointer"
+                          className="px-3 py-1.5 bg-foreground/5 hover:bg-foreground/10 border border-card-border text-foreground text-2xs font-black uppercase tracking-widest rounded-xl transition-all disabled:opacity-30 cursor-pointer"
                         >
                           ↩ Deshacer (Ctrl+Z)
                         </button>
@@ -866,7 +866,7 @@ export default function TenantSettingsPage() {
                             initTenantFields(selectedTenant!);
                             showToast('Configuración original restaurada.', 'info');
                           }}
-                          className="px-3 py-1.5 bg-red-500/5 hover:bg-red-500/10 border border-red-500/20 text-red-400 text-[8px] font-black uppercase tracking-widest rounded-xl transition-all cursor-pointer"
+                          className="px-3 py-1.5 bg-red-500/5 hover:bg-red-500/10 border border-red-500/20 text-red-400 text-2xs font-black uppercase tracking-widest rounded-xl transition-all cursor-pointer"
                         >
                           ↺ Restaurar Original
                         </button>
@@ -875,7 +875,7 @@ export default function TenantSettingsPage() {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-1">
-                        <label className="text-[9px] font-black uppercase tracking-widest text-foreground/40">Nombre del Negocio / Portal</label>
+                        <label className="text-2xs font-black uppercase tracking-widest text-foreground/40">Nombre del Negocio / Portal</label>
                         <input
                           type="text"
                           value={editName}
@@ -887,7 +887,7 @@ export default function TenantSettingsPage() {
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-[9px] font-black uppercase tracking-widest text-foreground/40">Título del Portal (Pestaña del Navegador)</label>
+                        <label className="text-2xs font-black uppercase tracking-widest text-foreground/40">Título del Portal (Pestaña del Navegador)</label>
                         <input
                           type="text"
                           value={editPortalTitle}
@@ -901,7 +901,7 @@ export default function TenantSettingsPage() {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-1">
-                        <label className="text-[9px] font-black uppercase tracking-widest text-foreground/40">Categoría del Negocio / Tienda</label>
+                        <label className="text-2xs font-black uppercase tracking-widest text-foreground/40">Categoría del Negocio / Tienda</label>
                         <select
                           value={editStoreCategory}
                           onFocus={pushToHistory}
@@ -920,7 +920,7 @@ export default function TenantSettingsPage() {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-1">
-                        <label className="text-[9px] font-black uppercase tracking-widest text-foreground/40">Logotipo (Subir Archivo)</label>
+                        <label className="text-2xs font-black uppercase tracking-widest text-foreground/40">Logotipo (Subir Archivo)</label>
                         <div className="flex flex-col sm:flex-row gap-4 items-center bg-background border border-card-border rounded-xl p-4">
                           <div className="relative w-16 h-16 rounded-xl border border-card-border overflow-hidden bg-background flex items-center justify-center shrink-0">
                             {editLogoPreview || editLogoUrl ? (
@@ -930,7 +930,7 @@ export default function TenantSettingsPage() {
                                 className="w-full h-full object-cover"
                               />
                             ) : (
-                              <span className="text-[10px] text-foreground/30 uppercase font-black text-center p-1">Sin Logo</span>
+                              <span className="text-2xs text-foreground/30 uppercase font-black text-center p-1">Sin Logo</span>
                             )}
                           </div>
                           <div className="flex-1 space-y-2">
@@ -945,7 +945,7 @@ export default function TenantSettingsPage() {
                                   setEditLogoPreview(URL.createObjectURL(file));
                                 }
                               }}
-                              className="text-xs text-foreground file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-[10px] file:font-black file:uppercase file:tracking-wider file:bg-foreground/5 file:text-foreground hover:file:bg-foreground/10 w-full"
+                              className="text-xs text-foreground file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-2xs file:font-black file:uppercase file:tracking-wider file:bg-foreground/5 file:text-foreground hover:file:bg-foreground/10 w-full"
                             />
                             {(editLogoPreview || editLogoUrl) && (
                               <button
@@ -956,7 +956,7 @@ export default function TenantSettingsPage() {
                                   setEditLogoPreview(null);
                                   setEditLogoUrl('');
                                 }}
-                                className="text-[8px] font-black uppercase tracking-widest text-red-500 hover:underline block"
+                                className="text-2xs font-black uppercase tracking-widest text-red-500 hover:underline block"
                               >
                                 Remover Logo
                               </button>
@@ -966,7 +966,7 @@ export default function TenantSettingsPage() {
                       </div>
 
                       <div className="space-y-1 flex flex-col justify-end">
-                        <label className="text-[9px] font-black uppercase tracking-widest text-foreground/40">O URL Externa del Logo</label>
+                        <label className="text-2xs font-black uppercase tracking-widest text-foreground/40">O URL Externa del Logo</label>
                         <input
                           type="url"
                           value={editLogoUrl}
@@ -981,7 +981,7 @@ export default function TenantSettingsPage() {
                     {/* Choice of Domain Type */}
                     <div className="pt-4 border-t border-card-border space-y-6">
                       <div className="space-y-2">
-                        <label className="text-[9px] font-black uppercase tracking-widest text-foreground/40">Tipo de Dominio Preferido</label>
+                        <label className="text-2xs font-black uppercase tracking-widest text-foreground/40">Tipo de Dominio Preferido</label>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           {/* Option 1: Nectarlabs Subdomain */}
                           <div
@@ -1001,7 +1001,7 @@ export default function TenantSettingsPage() {
                                 {!editUseCustomDomain && <div className="w-1.5 h-1.5 rounded-full bg-background"></div>}
                               </div>
                             </div>
-                            <p className="text-[9px] text-foreground/50 uppercase leading-relaxed">
+                            <p className="text-2xs text-foreground/50 uppercase leading-relaxed">
                               Activa un subdominio instantáneo bajo nectarlabs.dev sin configuraciones extras.
                             </p>
                           </div>
@@ -1024,7 +1024,7 @@ export default function TenantSettingsPage() {
                                 {editUseCustomDomain && <div className="w-1.5 h-1.5 rounded-full bg-background"></div>}
                               </div>
                             </div>
-                            <p className="text-[9px] text-foreground/50 uppercase leading-relaxed">
+                            <p className="text-2xs text-foreground/50 uppercase leading-relaxed">
                               Usa tu propio dominio (ej. mi-tienda.com) apuntando tus registros DNS (CNAME).
                             </p>
                           </div>
@@ -1037,7 +1037,7 @@ export default function TenantSettingsPage() {
                         <div className="space-y-6">
                           {/* Subdomain Input */}
                           <div className={`space-y-1 transition-opacity duration-300 ${editUseCustomDomain ? 'opacity-50' : 'opacity-100'}`}>
-                            <label className="text-[9px] font-black uppercase tracking-widest text-foreground/40">Subdominio del Negocio</label>
+                            <label className="text-2xs font-black uppercase tracking-widest text-foreground/40">Subdominio del Negocio</label>
                             <div className="flex items-center bg-background border border-card-border rounded-xl px-4 py-3 focus-within:border-nectar-gold transition-all">
                               <input
                                 type="text"
@@ -1048,13 +1048,13 @@ export default function TenantSettingsPage() {
                                 disabled={editUseCustomDomain}
                                 className="flex-1 bg-transparent text-xs text-foreground focus:outline-none disabled:cursor-not-allowed"
                               />
-                              <span className="text-[10px] font-bold text-nectar-gold pl-2">.nectarlabs.dev</span>
+                              <span className="text-2xs font-bold text-nectar-gold pl-2">.nectarlabs.dev</span>
                             </div>
                           </div>
 
                           {/* Custom Domain Input */}
                           <div className={`space-y-1 transition-all duration-300 ${!editUseCustomDomain ? 'opacity-40 pointer-events-none' : 'opacity-100'}`}>
-                            <label className="text-[9px] font-black uppercase tracking-widest text-foreground/40">Dominio Personalizado (CNAME Mapping)</label>
+                            <label className="text-2xs font-black uppercase tracking-widest text-foreground/40">Dominio Personalizado (CNAME Mapping)</label>
                             <input
                               type="text"
                               value={editCustomDomain}
@@ -1064,7 +1064,7 @@ export default function TenantSettingsPage() {
                               placeholder="Ej. tienda.minegocio.com"
                               className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-foreground focus:outline-none focus:border-nectar-gold transition-all disabled:cursor-not-allowed"
                             />
-                            <p className="text-[8px] text-foreground/30 uppercase mt-1">
+                            <p className="text-2xs text-foreground/30 uppercase mt-1">
                               Ingresa el dominio sin http:// o https://
                             </p>
 
@@ -1074,13 +1074,13 @@ export default function TenantSettingsPage() {
                                   type="button"
                                   onClick={handleValidateDomain}
                                   disabled={isValidatingDomain}
-                                  className="px-4 py-2 bg-foreground/5 hover:bg-foreground/10 border border-card-border text-foreground rounded-lg text-[9px] font-black uppercase tracking-wider transition-all disabled:opacity-50 cursor-pointer"
+                                  className="px-4 py-2 bg-foreground/5 hover:bg-foreground/10 border border-card-border text-foreground rounded-lg text-2xs font-black uppercase tracking-wider transition-all disabled:opacity-50 cursor-pointer"
                                 >
                                   {isValidatingDomain ? 'Validando...' : 'Verificar DNS'}
                                 </button>
                                 {domainValidationResult && (
                                   <div
-                                    className={`p-3 rounded-lg border text-[10px] ${domainValidationResult.is_valid
+                                    className={`p-3 rounded-lg border text-2xs ${domainValidationResult.is_valid
                                       ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
                                       : 'bg-red-500/10 border-red-500/30 text-red-400'
                                       }`}
@@ -1099,19 +1099,19 @@ export default function TenantSettingsPage() {
                         {/* Right Column: Step-by-Step DNS Guide (Only highlighted when Custom Domain is chosen) */}
                         <div className={`transition-all duration-500 ${!editUseCustomDomain ? 'opacity-30 pointer-events-none' : 'opacity-100'}`}>
                           <div className="p-6 rounded-2xl bg-foreground/[0.02] border border-card-border/80 space-y-4">
-                            <h5 className="text-[10px] font-black uppercase tracking-widest text-nectar-gold flex items-center gap-1.5">
+                            <h5 className="text-2xs font-black uppercase tracking-widest text-nectar-gold flex items-center gap-1.5">
                               <span>📋 Guía de Configuración DNS (Paso a Paso)</span>
                             </h5>
-                            <div className="space-y-4 text-[10px] text-foreground/75 leading-relaxed">
+                            <div className="space-y-4 text-2xs text-foreground/75 leading-relaxed">
                               {/* Step 1 */}
                               <div className="flex gap-3">
-                                <span className="flex items-center justify-center w-5 h-5 rounded-full bg-nectar-gold/10 text-nectar-gold font-black shrink-0 text-[9px]">1</span>
+                                <span className="flex items-center justify-center w-5 h-5 rounded-full bg-nectar-gold/10 text-nectar-gold font-black shrink-0 text-2xs">1</span>
                                 <div className="space-y-1">
                                   <p className="font-black uppercase tracking-wider text-foreground">Configurar en tu Proveedor de Dominio (DNS Externo)</p>
-                                  <p className="text-[9px] text-foreground/50 uppercase leading-normal">
+                                  <p className="text-2xs text-foreground/50 uppercase leading-normal">
                                     Inicia sesión en tu proveedor de dominio (Cloudflare, GoDaddy, Namecheap, etc.) y agrega un registro de tipo <strong className="text-foreground">CNAME</strong>:
                                   </p>
-                                  <div className="mt-2 p-3 rounded-xl bg-background border border-card-border/80 font-mono text-[9px] space-y-1 select-all relative group/copy">
+                                  <div className="mt-2 p-3 rounded-xl bg-background border border-card-border/80 font-mono text-2xs space-y-1 select-all relative group/copy">
                                     <div><span className="text-foreground/40 font-bold">Tipo:</span> CNAME</div>
                                     <div><span className="text-foreground/40 font-bold">Nombre / Host:</span> tienda <span className="text-foreground/30 font-normal">(o tu subdominio de preferencia)</span></div>
                                     <div className="flex justify-between items-center">
@@ -1122,7 +1122,7 @@ export default function TenantSettingsPage() {
                                           navigator.clipboard.writeText("nectarlabs.dev");
                                           showToast("Destino copiado al portapapeles", "info");
                                         }}
-                                        className="text-[8px] font-black uppercase tracking-widest text-nectar-gold bg-nectar-gold/10 border border-nectar-gold/25 px-2 py-1 rounded hover:bg-nectar-gold hover:text-background transition-all cursor-pointer"
+                                        className="text-2xs font-black uppercase tracking-widest text-nectar-gold bg-nectar-gold/10 border border-nectar-gold/25 px-2 py-1 rounded hover:bg-nectar-gold hover:text-background transition-all cursor-pointer"
                                       >
                                         Copiar
                                       </button>
@@ -1133,10 +1133,10 @@ export default function TenantSettingsPage() {
 
                               {/* Step 2 */}
                               <div className="flex gap-3">
-                                <span className="flex items-center justify-center w-5 h-5 rounded-full bg-nectar-gold/10 text-nectar-gold font-black shrink-0 text-[9px]">2</span>
+                                <span className="flex items-center justify-center w-5 h-5 rounded-full bg-nectar-gold/10 text-nectar-gold font-black shrink-0 text-2xs">2</span>
                                 <div className="space-y-1">
                                   <p className="font-black uppercase tracking-wider text-foreground">Registrar en Nectar Labs (Dentro de Nectarlabs)</p>
-                                  <p className="text-[9px] text-foreground/50 uppercase leading-normal">
+                                  <p className="text-2xs text-foreground/50 uppercase leading-normal">
                                     Ingresa tu dominio completo en el campo de la izquierda y haz clic en Guardar Configuración al final de la página.
                                   </p>
                                 </div>
@@ -1144,10 +1144,10 @@ export default function TenantSettingsPage() {
 
                               {/* Step 3 */}
                               <div className="flex gap-3">
-                                <span className="flex items-center justify-center w-5 h-5 rounded-full bg-nectar-gold/10 text-nectar-gold font-black shrink-0 text-[9px]">3</span>
+                                <span className="flex items-center justify-center w-5 h-5 rounded-full bg-nectar-gold/10 text-nectar-gold font-black shrink-0 text-2xs">3</span>
                                 <div className="space-y-1">
                                   <p className="font-black uppercase tracking-wider text-foreground">Validación de Registros y SSL</p>
-                                  <p className="text-[9px] text-foreground/50 uppercase leading-normal">
+                                  <p className="text-2xs text-foreground/50 uppercase leading-normal">
                                     Haz clic en <strong className="text-foreground">Verificar DNS</strong>. Nuestro servidor validará que apunte correctamente y aprovisionará el certificado SSL automático.
                                   </p>
                                 </div>
@@ -1160,7 +1160,7 @@ export default function TenantSettingsPage() {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-card-border">
                       <div className="space-y-1">
-                        <label className="text-[9px] font-black uppercase tracking-widest text-foreground/40">Mensaje de Bienvenida del Portal</label>
+                        <label className="text-2xs font-black uppercase tracking-widest text-foreground/40">Mensaje de Bienvenida del Portal</label>
                         <textarea
                           value={editWelcomeMessage}
                           onFocus={pushToHistory}
@@ -1171,7 +1171,7 @@ export default function TenantSettingsPage() {
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-[9px] font-black uppercase tracking-widest text-foreground/40">Texto de Pie de Página (Footer)</label>
+                        <label className="text-2xs font-black uppercase tracking-widest text-foreground/40">Texto de Pie de Página (Footer)</label>
                         <textarea
                           value={editFooterText}
                           onFocus={pushToHistory}
@@ -1186,7 +1186,7 @@ export default function TenantSettingsPage() {
                       <div className="flex items-center justify-between p-4 bg-background/50 border border-card-border rounded-xl">
                         <div>
                           <h4 className="text-xs font-black uppercase tracking-wide text-foreground">Exigir Registro / Datos de Cliente</h4>
-                          <p className="text-[9px] text-foreground/40 uppercase mt-0.5">Exige nombre y correo electrónico antes de permitir iniciar una sesión de soporte o compra.</p>
+                          <p className="text-2xs text-foreground/40 uppercase mt-0.5">Exige nombre y correo electrónico antes de permitir iniciar una sesión de soporte o compra.</p>
                         </div>
                         <label className="relative inline-flex items-center cursor-pointer select-none">
                           <input
@@ -1195,14 +1195,14 @@ export default function TenantSettingsPage() {
                             onChange={(e) => { pushToHistory(); setEditRequireCustomerInfo(e.target.checked); }}
                             className="sr-only peer"
                           />
-                          <div className="w-11 h-6 bg-card-border peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-nectar-gold"></div>
+                          <div className="w-11 h-6 bg-card-border peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-nectar-gold"></div>
                         </label>
                       </div>
 
                       <div className="flex items-center justify-between p-4 bg-background/50 border border-card-border rounded-xl">
                         <div>
                           <h4 className="text-xs font-black uppercase tracking-wide text-foreground">Facturación Automática de Servicios</h4>
-                          <p className="text-[9px] text-foreground/40 uppercase mt-0.5">Emitir factura fiscal CFDI automáticamente al procesarse cada uno de tus pagos.</p>
+                          <p className="text-2xs text-foreground/40 uppercase mt-0.5">Emitir factura fiscal CFDI automáticamente al procesarse cada uno de tus pagos.</p>
                         </div>
                         <label className="relative inline-flex items-center cursor-pointer select-none">
                           <input
@@ -1211,12 +1211,12 @@ export default function TenantSettingsPage() {
                             onChange={(e) => { pushToHistory(); setEditInvoicingMode(e.target.checked ? 'AUTOMATIC' : 'MANUAL_CLIENT'); }}
                             className="sr-only peer"
                           />
-                          <div className="w-11 h-6 bg-card-border peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-nectar-gold"></div>
+                          <div className="w-11 h-6 bg-card-border peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-nectar-gold"></div>
                         </label>
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-[9px] font-black uppercase tracking-widest text-foreground/40">Orígenes Permitidos (Widget CORS Security)</label>
+                        <label className="text-2xs font-black uppercase tracking-widest text-foreground/40">Orígenes Permitidos (Widget CORS Security)</label>
                         <textarea
                           value={editAllowedOrigins}
                           onFocus={pushToHistory}
@@ -1225,15 +1225,15 @@ export default function TenantSettingsPage() {
                           rows={2}
                           className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-foreground focus:outline-none focus:border-nectar-gold transition-all resize-none"
                         ></textarea>
-                        <p className="text-[8px] text-foreground/30 uppercase mt-1">Dominios desde los que se autoriza embeber el widget del portal.</p>
+                        <p className="text-2xs text-foreground/30 uppercase mt-1">Dominios desde los que se autoriza embeber el widget del portal.</p>
                       </div>
 
                       {(userRole === 'ADMIN' || isStaff) && (
                         <div className="space-y-4 pt-4 border-t border-card-border">
-                          <h4 className="text-[10px] font-black uppercase tracking-widest text-nectar-gold">Configuraciones de Integración del Sistema (Sólo Administradores Matrix)</h4>
+                          <h4 className="text-2xs font-black uppercase tracking-widest text-nectar-gold">Configuraciones de Integración del Sistema (Sólo Administradores Matrix)</h4>
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-1">
-                              <label className="text-[9px] font-black uppercase tracking-widest text-foreground/40">URL de Frontend Personalizada</label>
+                              <label className="text-2xs font-black uppercase tracking-widest text-foreground/40">URL de Frontend Personalizada</label>
                               <input
                                 type="text"
                                 value={editCustomFrontendUrl}
@@ -1244,7 +1244,7 @@ export default function TenantSettingsPage() {
                               />
                             </div>
                             <div className="space-y-1">
-                              <label className="text-[9px] font-black uppercase tracking-widest text-foreground/40">URL de Backend Personalizada (Proxy)</label>
+                              <label className="text-2xs font-black uppercase tracking-widest text-foreground/40">URL de Backend Personalizada (Proxy)</label>
                               <input
                                 type="text"
                                 value={editCustomBackendUrl}
@@ -1263,7 +1263,7 @@ export default function TenantSettingsPage() {
                       <button
                         type="submit"
                         disabled={isSubmitting}
-                        className="px-8 py-4 bg-nectar-gold hover:bg-nectar-gold/90 text-background font-black uppercase tracking-widest text-[10px] rounded-xl transition-all hover:scale-105 active:scale-95 disabled:opacity-50 cursor-pointer"
+                        className="px-8 py-4 bg-nectar-gold hover:bg-nectar-gold/90 text-background font-black uppercase tracking-widest text-2xs rounded-xl transition-all hover:scale-105 active:scale-95 disabled:opacity-50 cursor-pointer"
                       >
                         {isSubmitting ? 'Guardando...' : 'Guardar Configuración'}
                       </button>
@@ -1276,7 +1276,7 @@ export default function TenantSettingsPage() {
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-card-border pb-4 mb-6">
                       <div>
                         <h4 className="text-xs font-black uppercase tracking-widest text-nectar-gold">Colores y Branding</h4>
-                        <p className="text-[8px] text-foreground/45 uppercase tracking-wider mt-1">Configura la identidad de marca de tu Colmena</p>
+                        <p className="text-2xs text-foreground/45 uppercase tracking-wider mt-1">Configura la identidad de marca de tu Colmena</p>
                       </div>
 
                       {/* History controls */}
@@ -1285,7 +1285,7 @@ export default function TenantSettingsPage() {
                           type="button"
                           disabled={historyLength === 0}
                           onClick={handleUndo}
-                          className="px-3 py-1.5 bg-foreground/5 hover:bg-foreground/10 border border-card-border text-foreground text-[8px] font-black uppercase tracking-widest rounded-xl transition-all disabled:opacity-30 cursor-pointer"
+                          className="px-3 py-1.5 bg-foreground/5 hover:bg-foreground/10 border border-card-border text-foreground text-2xs font-black uppercase tracking-widest rounded-xl transition-all disabled:opacity-30 cursor-pointer"
                         >
                           ↩ Deshacer (Ctrl+Z)
                         </button>
@@ -1296,7 +1296,7 @@ export default function TenantSettingsPage() {
                             initTenantFields(selectedTenant!);
                             showToast('Configuración original restaurada.', 'info');
                           }}
-                          className="px-3 py-1.5 bg-red-500/5 hover:bg-red-500/10 border border-red-500/20 text-red-400 text-[8px] font-black uppercase tracking-widest rounded-xl transition-all cursor-pointer"
+                          className="px-3 py-1.5 bg-red-500/5 hover:bg-red-500/10 border border-red-500/20 text-red-400 text-2xs font-black uppercase tracking-widest rounded-xl transition-all cursor-pointer"
                         >
                           ↺ Restaurar Original
                         </button>
@@ -1305,11 +1305,11 @@ export default function TenantSettingsPage() {
 
                     {/* Modo Oscuro */}
                     <div className="space-y-4">
-                      <h5 className="text-[10px] font-black uppercase tracking-widest text-foreground/70">Paleta de Colores (Modo Oscuro)</h5>
+                      <h5 className="text-2xs font-black uppercase tracking-widest text-foreground/70">Paleta de Colores (Modo Oscuro)</h5>
                       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
                         {/* 1. Theme Color */}
                         <div className="p-4 bg-foreground/[0.01] border border-card-border/40 rounded-2xl space-y-3">
-                          <label className="text-[8px] font-black uppercase tracking-widest text-foreground/45 block">Primario (Tema)</label>
+                          <label className="text-2xs font-black uppercase tracking-widest text-foreground/45 block">Primario (Tema)</label>
                           <div className="flex items-center gap-3">
                             <input
                               type="color"
@@ -1329,7 +1329,7 @@ export default function TenantSettingsPage() {
 
                         {/* 2. Accent Color */}
                         <div className="p-4 bg-foreground/[0.01] border border-card-border/40 rounded-2xl space-y-3">
-                          <label className="text-[8px] font-black uppercase tracking-widest text-foreground/45 block">Acento</label>
+                          <label className="text-2xs font-black uppercase tracking-widest text-foreground/45 block">Acento</label>
                           <div className="flex items-center gap-3">
                             <input
                               type="color"
@@ -1349,7 +1349,7 @@ export default function TenantSettingsPage() {
 
                         {/* 3. Text Color */}
                         <div className="p-4 bg-foreground/[0.01] border border-card-border/40 rounded-2xl space-y-3">
-                          <label className="text-[8px] font-black uppercase tracking-widest text-foreground/45 block">Texto Principal</label>
+                          <label className="text-2xs font-black uppercase tracking-widest text-foreground/45 block">Texto Principal</label>
                           <div className="flex items-center gap-3">
                             <input
                               type="color"
@@ -1369,7 +1369,7 @@ export default function TenantSettingsPage() {
 
                         {/* 4. Canvas BG Color */}
                         <div className="p-4 bg-foreground/[0.01] border border-card-border/40 rounded-2xl space-y-3">
-                          <label className="text-[8px] font-black uppercase tracking-widest text-foreground/45 block">Fondo Lienzo</label>
+                          <label className="text-2xs font-black uppercase tracking-widest text-foreground/45 block">Fondo Lienzo</label>
                           <div className="flex items-center gap-3">
                             <input
                               type="color"
@@ -1389,7 +1389,7 @@ export default function TenantSettingsPage() {
 
                         {/* 5. Card BG Color */}
                         <div className="p-4 bg-foreground/[0.01] border border-card-border/40 rounded-2xl space-y-3">
-                          <label className="text-[8px] font-black uppercase tracking-widest text-foreground/45 block">Fondo Tarjetas</label>
+                          <label className="text-2xs font-black uppercase tracking-widest text-foreground/45 block">Fondo Tarjetas</label>
                           <div className="flex items-center gap-3">
                             <input
                               type="color"
@@ -1409,7 +1409,7 @@ export default function TenantSettingsPage() {
 
                         {/* 6. Border Color */}
                         <div className="p-4 bg-foreground/[0.01] border border-card-border/40 rounded-2xl space-y-3">
-                          <label className="text-[8px] font-black uppercase tracking-widest text-foreground/45 block">Bordes y Divisiones</label>
+                          <label className="text-2xs font-black uppercase tracking-widest text-foreground/45 block">Bordes y Divisiones</label>
                           <div className="flex items-center gap-3">
                             <input
                               type="color"
@@ -1431,11 +1431,11 @@ export default function TenantSettingsPage() {
 
                     {/* Modo Claro */}
                     <div className="space-y-4 pt-6 border-t border-card-border">
-                      <h5 className="text-[10px] font-black uppercase tracking-widest text-foreground/70">Paleta de Colores (Modo Claro)</h5>
+                      <h5 className="text-2xs font-black uppercase tracking-widest text-foreground/70">Paleta de Colores (Modo Claro)</h5>
                       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
                         {/* 1. Theme Color Light */}
                         <div className="p-4 bg-foreground/[0.01] border border-card-border/40 rounded-2xl space-y-3">
-                          <label className="text-[8px] font-black uppercase tracking-widest text-foreground/45 block">Primario (Tema) Claro</label>
+                          <label className="text-2xs font-black uppercase tracking-widest text-foreground/45 block">Primario (Tema) Claro</label>
                           <div className="flex items-center gap-3">
                             <input
                               type="color"
@@ -1455,7 +1455,7 @@ export default function TenantSettingsPage() {
 
                         {/* 2. Accent Color Light */}
                         <div className="p-4 bg-foreground/[0.01] border border-card-border/40 rounded-2xl space-y-3">
-                          <label className="text-[8px] font-black uppercase tracking-widest text-foreground/45 block">Acento Claro</label>
+                          <label className="text-2xs font-black uppercase tracking-widest text-foreground/45 block">Acento Claro</label>
                           <div className="flex items-center gap-3">
                             <input
                               type="color"
@@ -1475,7 +1475,7 @@ export default function TenantSettingsPage() {
 
                         {/* 3. Text Color Light */}
                         <div className="p-4 bg-foreground/[0.01] border border-card-border/40 rounded-2xl space-y-3">
-                          <label className="text-[8px] font-black uppercase tracking-widest text-foreground/45 block">Texto Principal Claro</label>
+                          <label className="text-2xs font-black uppercase tracking-widest text-foreground/45 block">Texto Principal Claro</label>
                           <div className="flex items-center gap-3">
                             <input
                               type="color"
@@ -1495,7 +1495,7 @@ export default function TenantSettingsPage() {
 
                         {/* 4. Canvas BG Color Light */}
                         <div className="p-4 bg-foreground/[0.01] border border-card-border/40 rounded-2xl space-y-3">
-                          <label className="text-[8px] font-black uppercase tracking-widest text-foreground/45 block">Fondo Lienzo Claro</label>
+                          <label className="text-2xs font-black uppercase tracking-widest text-foreground/45 block">Fondo Lienzo Claro</label>
                           <div className="flex items-center gap-3">
                             <input
                               type="color"
@@ -1515,7 +1515,7 @@ export default function TenantSettingsPage() {
 
                         {/* 5. Card BG Color Light */}
                         <div className="p-4 bg-foreground/[0.01] border border-card-border/40 rounded-2xl space-y-3">
-                          <label className="text-[8px] font-black uppercase tracking-widest text-foreground/45 block">Fondo Tarjetas Claro</label>
+                          <label className="text-2xs font-black uppercase tracking-widest text-foreground/45 block">Fondo Tarjetas Claro</label>
                           <div className="flex items-center gap-3">
                             <input
                               type="color"
@@ -1535,7 +1535,7 @@ export default function TenantSettingsPage() {
 
                         {/* 6. Border Color Light */}
                         <div className="p-4 bg-foreground/[0.01] border border-card-border/40 rounded-2xl space-y-3">
-                          <label className="text-[8px] font-black uppercase tracking-widest text-foreground/45 block">Bordes y Divisiones Claro</label>
+                          <label className="text-2xs font-black uppercase tracking-widest text-foreground/45 block">Bordes y Divisiones Claro</label>
                           <div className="flex items-center gap-3">
                             <input
                               type="color"
@@ -1566,7 +1566,7 @@ export default function TenantSettingsPage() {
                       >
                         <div className="flex justify-between items-center mb-4">
                           <span
-                            className="text-[8px] font-black uppercase tracking-widest opacity-60"
+                            className="text-2xs font-black uppercase tracking-widest opacity-60"
                             style={{ color: previewDarkMode ? editTextColor : editTextColorLight }}
                           >
                             Vista Previa en Tiempo Real
@@ -1575,7 +1575,7 @@ export default function TenantSettingsPage() {
                             <button
                               type="button"
                               onClick={() => setPreviewDarkMode(!previewDarkMode)}
-                              className="px-2.5 py-1 rounded-lg border text-[8px] font-black uppercase tracking-widest transition-all hover:bg-foreground/5"
+                              className="px-2.5 py-1 rounded-lg border text-2xs font-black uppercase tracking-widest transition-all hover:bg-foreground/5"
                               style={{
                                 color: previewDarkMode ? editTextColor : editTextColorLight,
                                 borderColor: previewDarkMode ? editBorderColor : editBorderColorLight
@@ -1607,14 +1607,14 @@ export default function TenantSettingsPage() {
                             Módulo Principal
                           </h5>
                           <p
-                            className="text-[10px] leading-relaxed font-semibold"
+                            className="text-2xs leading-relaxed font-semibold"
                             style={{ color: previewDarkMode ? editTextColor : editTextColorLight }}
                           >
                             Esta tarjeta simula la combinación exacta de colores para el fondo, bordes, tarjetas y fuentes de tu portal público.
                           </p>
                           <div className="flex gap-2 pt-2">
                             <span
-                              className="px-4 py-2 rounded-xl text-[8px] font-black uppercase tracking-widest transition-all"
+                              className="px-4 py-2 rounded-xl text-2xs font-black uppercase tracking-widest transition-all"
                               style={{
                                 backgroundColor: previewDarkMode ? editAccentColor : editAccentColorLight,
                                 color: '#FFFFFF'
@@ -1623,7 +1623,7 @@ export default function TenantSettingsPage() {
                               Botón de Acción
                             </span>
                             <span
-                              className="px-4 py-2 rounded-xl text-[8px] font-black uppercase tracking-widest border transition-all"
+                              className="px-4 py-2 rounded-xl text-2xs font-black uppercase tracking-widest border transition-all"
                               style={{
                                 borderColor: previewDarkMode ? editBorderColor : editBorderColorLight,
                                 color: previewDarkMode ? editTextColor : editTextColorLight
@@ -1640,7 +1640,7 @@ export default function TenantSettingsPage() {
                     <div className="pt-6 border-t border-card-border space-y-6">
                       <div>
                         <h4 className="text-xs font-black uppercase tracking-widest text-nectar-gold">Efecto Visual de la Colmena</h4>
-                        <p className="text-[8px] text-foreground/45 uppercase tracking-wider mt-1">Configura las partículas animadas que caen en tu portal público</p>
+                        <p className="text-2xs text-foreground/45 uppercase tracking-wider mt-1">Configura las partículas animadas que caen en tu portal público</p>
                       </div>
 
                       <div className="flex items-center gap-3 p-4 bg-foreground/[0.01] border border-card-border/40 rounded-2xl">
@@ -1651,7 +1651,7 @@ export default function TenantSettingsPage() {
                           onChange={(e) => { pushToHistory(); setEditPollenActive(e.target.checked); }}
                           className="w-4 h-4 rounded border-card-border bg-background text-nectar-gold focus:ring-nectar-gold cursor-pointer"
                         />
-                        <label htmlFor="pollen-active" className="text-[10px] font-black uppercase tracking-widest text-foreground cursor-pointer select-none">
+                        <label htmlFor="pollen-active" className="text-2xs font-black uppercase tracking-widest text-foreground cursor-pointer select-none">
                           Activar lluvia de partículas / polen en el portal público
                         </label>
                       </div>
@@ -1659,7 +1659,7 @@ export default function TenantSettingsPage() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {/* Particle Icon Select */}
                         <div className="space-y-2 p-4 bg-foreground/[0.01] border border-card-border/40 rounded-2xl">
-                          <label className="text-[8px] font-black uppercase tracking-widest text-foreground/45 block">Icono del Efecto</label>
+                          <label className="text-2xs font-black uppercase tracking-widest text-foreground/45 block">Icono del Efecto</label>
                           <select
                             value={predefinedIcons.includes(editPollenIcon) ? editPollenIcon : 'custom'}
                             onChange={(e) => {
@@ -1684,7 +1684,7 @@ export default function TenantSettingsPage() {
 
                           {!predefinedIcons.includes(editPollenIcon) && (
                             <div className="mt-2 space-y-1">
-                              <label className="text-[8px] font-black uppercase tracking-widest text-foreground/40">Emoji o Carácter Personalizado</label>
+                              <label className="text-2xs font-black uppercase tracking-widest text-foreground/40">Emoji o Carácter Personalizado</label>
                               <input
                                 type="text"
                                 maxLength={10}
@@ -1703,7 +1703,7 @@ export default function TenantSettingsPage() {
 
                         {/* Particle Color Picker */}
                         <div className="space-y-2 p-4 bg-foreground/[0.01] border border-card-border/40 rounded-2xl">
-                          <label className="text-[8px] font-black uppercase tracking-widest text-foreground/45 block">Color de las Partículas</label>
+                          <label className="text-2xs font-black uppercase tracking-widest text-foreground/45 block">Color de las Partículas</label>
                           <div className="flex items-center gap-3">
                             <input
                               type="color"
@@ -1723,7 +1723,7 @@ export default function TenantSettingsPage() {
 
                         {/* Particle Count Input */}
                         <div className="space-y-2 p-4 bg-foreground/[0.01] border border-card-border/40 rounded-2xl">
-                          <label className="text-[8px] font-black uppercase tracking-widest text-foreground/45 block">Cantidad de Partículas</label>
+                          <label className="text-2xs font-black uppercase tracking-widest text-foreground/45 block">Cantidad de Partículas</label>
                           <input
                             type="number"
                             min={1}
@@ -1733,12 +1733,12 @@ export default function TenantSettingsPage() {
                             onChange={(e) => setEditPollenCount(parseInt(e.target.value) || 6)}
                             className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-foreground focus:outline-none focus:border-nectar-gold font-bold"
                           />
-                          <p className="text-[8px] text-foreground/30 uppercase mt-1">Controla cuántas partículas flotan simultáneamente en la pantalla.</p>
+                          <p className="text-2xs text-foreground/30 uppercase mt-1">Controla cuántas partículas flotan simultáneamente en la pantalla.</p>
                         </div>
 
                         {/* Particle Blur Strength */}
                         <div className="space-y-2 p-4 bg-foreground/[0.01] border border-card-border/40 rounded-2xl">
-                          <label className="text-[8px] font-black uppercase tracking-widest text-foreground/45 block">Desenfoque de Partículas (Blur en px)</label>
+                          <label className="text-2xs font-black uppercase tracking-widest text-foreground/45 block">Desenfoque de Partículas (Blur en px)</label>
                           <div className="flex items-center gap-3">
                             <input
                               type="range"
@@ -1754,7 +1754,7 @@ export default function TenantSettingsPage() {
                               {editPollenBlur}px
                             </span>
                           </div>
-                          <p className="text-[8px] text-foreground/30 uppercase mt-1">Nivel de desenfoque aplicado a cada partícula para dar profundidad.</p>
+                          <p className="text-2xs text-foreground/30 uppercase mt-1">Nivel de desenfoque aplicado a cada partícula para dar profundidad.</p>
                         </div>
                       </div>
                     </div>
@@ -1763,7 +1763,7 @@ export default function TenantSettingsPage() {
                       <button
                         type="submit"
                         disabled={isSubmitting}
-                        className="px-8 py-4 bg-nectar-gold hover:bg-nectar-gold/90 text-background font-black uppercase tracking-widest text-[10px] rounded-xl transition-all hover:scale-105 active:scale-95 disabled:opacity-50 cursor-pointer"
+                        className="px-8 py-4 bg-nectar-gold hover:bg-nectar-gold/90 text-background font-black uppercase tracking-widest text-2xs rounded-xl transition-all hover:scale-105 active:scale-95 disabled:opacity-50 cursor-pointer"
                       >
                         {isSubmitting ? 'Guardando...' : 'Guardar Colores'}
                       </button>
@@ -1777,7 +1777,7 @@ export default function TenantSettingsPage() {
                       <h3 className="text-xs font-black uppercase tracking-wider text-foreground/40">Mis Productos</h3>
                       <button
                         onClick={openAddProduct}
-                        className="px-4 py-2 bg-nectar-gold hover:bg-nectar-gold/90 text-background text-[9px] font-black uppercase tracking-widest rounded-xl transition-all active:scale-95 cursor-pointer"
+                        className="px-4 py-2 bg-nectar-gold hover:bg-nectar-gold/90 text-background text-2xs font-black uppercase tracking-widest rounded-xl transition-all active:scale-95 cursor-pointer"
                       >
                         + Agregar Producto
                       </button>
@@ -1791,15 +1791,15 @@ export default function TenantSettingsPage() {
                               {prod.image ? (
                                 <img src={prod.image} alt={prod.name} className="w-full h-full object-cover" />
                               ) : (
-                                <span className="text-[10px] text-foreground/20 uppercase font-black">📦</span>
+                                <span className="text-2xs text-foreground/20 uppercase font-black">📦</span>
                               )}
                             </div>
                             <div className="min-w-0">
                               <h4 className="font-bold text-sm text-foreground truncate">{prod.name}</h4>
-                              <p className="text-[10px] text-foreground/50 truncate max-w-[200px]">{prod.description || 'Sin descripción'}</p>
+                              <p className="text-2xs text-foreground/50 truncate max-w-[200px]">{prod.description || 'Sin descripción'}</p>
                               <div className="flex gap-3 items-center mt-1">
                                 <span className="text-xs font-bold text-nectar-gold">${prod.price}</span>
-                                <span className="text-[8px] font-black uppercase tracking-wider text-foreground/30">Stock: {prod.stock}</span>
+                                <span className="text-2xs font-black uppercase tracking-wider text-foreground/30">Stock: {prod.stock}</span>
                               </div>
                             </div>
                           </div>
@@ -1823,7 +1823,7 @@ export default function TenantSettingsPage() {
                         </div>
                       ))}
                       {products.length === 0 && (
-                        <div className="col-span-full py-12 text-center border-2 border-dashed border-card-border rounded-3xl opacity-30 text-[10px] font-black uppercase tracking-wider">
+                        <div className="col-span-full py-12 text-center border-2 border-dashed border-card-border rounded-3xl opacity-30 text-2xs font-black uppercase tracking-wider">
                           No tienes productos registrados para este negocio.
                         </div>
                       )}
@@ -1837,7 +1837,7 @@ export default function TenantSettingsPage() {
                       <h3 className="text-xs font-black uppercase tracking-wider text-foreground/40">Usuarios de mi Negocio</h3>
                       <button
                         onClick={openAddUser}
-                        className="px-4 py-2 bg-nectar-gold hover:bg-nectar-gold/90 text-background text-[9px] font-black uppercase tracking-widest rounded-xl transition-all active:scale-95 cursor-pointer"
+                        className="px-4 py-2 bg-nectar-gold hover:bg-nectar-gold/90 text-background text-2xs font-black uppercase tracking-widest rounded-xl transition-all active:scale-95 cursor-pointer"
                       >
                         + Registrar Usuario
                       </button>
@@ -1846,7 +1846,7 @@ export default function TenantSettingsPage() {
                     <div className="overflow-x-auto">
                       <table className="w-full text-left border-collapse">
                         <thead>
-                          <tr className="border-b border-card-border/50 text-[8px] font-black uppercase tracking-widest opacity-40">
+                          <tr className="border-b border-card-border/50 text-2xs font-black uppercase tracking-widest opacity-40">
                             <th className="pb-4">Username</th>
                             <th className="pb-4">Correo Electrónico</th>
                             <th className="pb-4">Rol</th>
@@ -1859,7 +1859,7 @@ export default function TenantSettingsPage() {
                               <td className="py-4 font-bold text-xs">{userItem.username}</td>
                               <td className="py-4 text-xs opacity-80 select-all">{userItem.email}</td>
                               <td className="py-4">
-                                <span className={`px-2.5 py-0.5 text-[7px] font-black uppercase tracking-widest rounded-full ${userItem.role === 'BUSINESS'
+                                <span className={`px-2.5 py-0.5 text-2xs font-black uppercase tracking-widest rounded-full ${userItem.role === 'BUSINESS'
                                   ? 'bg-nectar-gold/10 text-nectar-gold border border-nectar-gold/20'
                                   : 'bg-foreground/5 text-foreground/70 border border-card-border/50'
                                   }`}>
@@ -1870,14 +1870,14 @@ export default function TenantSettingsPage() {
                                 <div className="inline-flex gap-2">
                                   <button
                                     onClick={() => openEditUser(userItem)}
-                                    className="px-2 py-1 bg-foreground/5 hover:bg-foreground/10 text-foreground rounded text-[10px]"
+                                    className="px-2 py-1 bg-foreground/5 hover:bg-foreground/10 text-foreground rounded text-2xs"
                                   >
                                     Editar
                                   </button>
                                   {userItem.id !== selectedTenant?.owner && (
                                     <button
                                       onClick={() => handleDeleteUser(userItem.id)}
-                                      className="px-2 py-1 bg-red-500/10 hover:bg-red-500/25 text-red-500 rounded text-[10px]"
+                                      className="px-2 py-1 bg-red-500/10 hover:bg-red-500/25 text-red-500 rounded text-2xs"
                                     >
                                       Eliminar
                                     </button>
@@ -1896,7 +1896,7 @@ export default function TenantSettingsPage() {
                     <div className="flex justify-between items-center border-b border-card-border pb-4">
                       <div>
                         <h3 className="text-xs font-black uppercase tracking-wider text-nectar-gold">Contratos Digitales Personalizados</h3>
-                        <p className="text-[8px] text-foreground/45 uppercase tracking-wider mt-1">Administra y crea contratos específicos para {selectedTenant.name}</p>
+                        <p className="text-2xs text-foreground/45 uppercase tracking-wider mt-1">Administra y crea contratos específicos para {selectedTenant.name}</p>
                       </div>
                     </div>
                     <CustomContractsManager tenantId={selectedTenant.id} primaryColor={selectedTenant.theme_color || '#C68A1E'} />
@@ -1911,7 +1911,7 @@ export default function TenantSettingsPage() {
                   <div className="absolute top-0 left-0 right-0 h-2" style={{ backgroundColor: editThemeColor }}></div>
 
                   <div className="text-center pt-4">
-                    <span className="text-[8px] font-black uppercase tracking-widest text-foreground/30">Vista Previa Visual</span>
+                    <span className="text-2xs font-black uppercase tracking-widest text-foreground/30">Vista Previa Visual</span>
                     <h4 className="text-xs font-black uppercase text-foreground tracking-tight mt-2">Portal Comercial</h4>
                   </div>
 
@@ -1933,14 +1933,14 @@ export default function TenantSettingsPage() {
                         />
                       ) : (
                         <span
-                          className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-black text-black"
+                          className="w-5 h-5 rounded-full flex items-center justify-center text-2xs font-black text-black"
                           style={{ backgroundColor: editThemeColor }}
                         >
                           {editName ? editName.substring(0, 1).toUpperCase() : 'S'}
                         </span>
                       )}
                       <div>
-                        <p className="text-[9px] font-black uppercase" style={{ color: editTextColor }}>{editName || 'Negocio'}</p>
+                        <p className="text-2xs font-black uppercase" style={{ color: editTextColor }}>{editName || 'Negocio'}</p>
                         <p className="text-[6.5px] font-bold uppercase tracking-wider" style={{ color: editAccentColor }}>{editSubdomain ? `${editSubdomain}.nectarlabs.dev` : 'Subdominio'}</p>
                       </div>
                     </div>
@@ -1955,7 +1955,7 @@ export default function TenantSettingsPage() {
                             color: editTextColor
                           }}
                         >
-                          <p className="text-[9px] leading-relaxed">{editWelcomeMessage || '¡Hola! Bienvenido a nuestro portal.'}</p>
+                          <p className="text-2xs leading-relaxed">{editWelcomeMessage || '¡Hola! Bienvenido a nuestro portal.'}</p>
                         </div>
                       </div>
 
@@ -1969,7 +1969,7 @@ export default function TenantSettingsPage() {
                         >
                           <div className="h-4 rounded border opacity-20" style={{ borderColor: editBorderColor }}></div>
                           <div className="h-4 rounded border opacity-20" style={{ borderColor: editBorderColor }}></div>
-                          <div className="h-4 rounded flex items-center justify-center text-[7px] font-black uppercase tracking-wider cursor-default" style={{ backgroundColor: editThemeColor, color: editBgColor }}>
+                          <div className="h-4 rounded flex items-center justify-center text-2xs font-black uppercase tracking-wider cursor-default" style={{ backgroundColor: editThemeColor, color: editBgColor }}>
                             Ingresar
                           </div>
                         </div>
@@ -2001,7 +2001,7 @@ export default function TenantSettingsPage() {
 
             <form onSubmit={handleSaveProduct} className="space-y-4">
               <div className="space-y-1">
-                <label className="text-[9px] font-black uppercase tracking-widest text-foreground/45">Nombre del Producto</label>
+                <label className="text-2xs font-black uppercase tracking-widest text-foreground/45">Nombre del Producto</label>
                 <input
                   type="text"
                   value={productName}
@@ -2012,7 +2012,7 @@ export default function TenantSettingsPage() {
               </div>
 
               <div className="space-y-1">
-                <label className="text-[9px] font-black uppercase tracking-widest text-foreground/45">Descripción</label>
+                <label className="text-2xs font-black uppercase tracking-widest text-foreground/45">Descripción</label>
                 <textarea
                   value={productDesc}
                   onChange={(e) => setProductDesc(e.target.value)}
@@ -2023,7 +2023,7 @@ export default function TenantSettingsPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="text-[9px] font-black uppercase tracking-widest text-foreground/45">Precio (MXN)</label>
+                  <label className="text-2xs font-black uppercase tracking-widest text-foreground/45">Precio (MXN)</label>
                   <input
                     type="number"
                     value={productPrice}
@@ -2035,7 +2035,7 @@ export default function TenantSettingsPage() {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[9px] font-black uppercase tracking-widest text-foreground/45">Stock</label>
+                  <label className="text-2xs font-black uppercase tracking-widest text-foreground/45">Stock</label>
                   <input
                     type="number"
                     value={productStock}
@@ -2048,7 +2048,7 @@ export default function TenantSettingsPage() {
               </div>
 
               <div className="space-y-1">
-                <label className="text-[9px] font-black uppercase tracking-widest text-foreground/45">Imagen del Producto (Archivo)</label>
+                <label className="text-2xs font-black uppercase tracking-widest text-foreground/45">Imagen del Producto (Archivo)</label>
                 <div className="flex gap-4 items-center bg-background border border-card-border rounded-xl p-3">
                   <div className="w-10 h-10 bg-card-bg rounded-lg border border-card-border overflow-hidden flex items-center justify-center shrink-0">
                     {productImagePreview ? (
@@ -2067,7 +2067,7 @@ export default function TenantSettingsPage() {
                         setProductImagePreview(URL.createObjectURL(file));
                       }
                     }}
-                    className="text-xs text-foreground w-full file:mr-4 file:py-1 file:px-3 file:rounded-xl file:border-0 file:text-[9px] file:font-black file:uppercase file:bg-foreground/5 file:text-foreground hover:file:bg-foreground/10"
+                    className="text-xs text-foreground w-full file:mr-4 file:py-1 file:px-3 file:rounded-xl file:border-0 file:text-2xs file:font-black file:uppercase file:bg-foreground/5 file:text-foreground hover:file:bg-foreground/10"
                   />
                 </div>
               </div>
@@ -2076,14 +2076,14 @@ export default function TenantSettingsPage() {
                 <button
                   type="button"
                   onClick={() => setShowProductModal(false)}
-                  className="flex-1 py-3 bg-foreground/5 hover:bg-foreground/10 border border-card-border text-foreground rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
+                  className="flex-1 py-3 bg-foreground/5 hover:bg-foreground/10 border border-card-border text-foreground rounded-xl text-2xs font-black uppercase tracking-widest transition-all"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="flex-1 py-3 bg-nectar-gold hover:bg-nectar-gold/90 text-background rounded-xl text-[10px] font-black uppercase tracking-widest transition-all font-bold"
+                  className="flex-1 py-3 bg-nectar-gold hover:bg-nectar-gold/90 text-background rounded-xl text-2xs font-black uppercase tracking-widest transition-all font-bold"
                 >
                   {isSubmitting ? 'Guardando...' : 'Guardar'}
                 </button>
@@ -2107,7 +2107,7 @@ export default function TenantSettingsPage() {
 
             <form onSubmit={handleSaveUser} className="space-y-4">
               <div className="space-y-1">
-                <label className="text-[9px] font-black uppercase tracking-widest text-foreground/45">Username</label>
+                <label className="text-2xs font-black uppercase tracking-widest text-foreground/45">Username</label>
                 <input
                   type="text"
                   value={userUsername}
@@ -2118,7 +2118,7 @@ export default function TenantSettingsPage() {
               </div>
 
               <div className="space-y-1">
-                <label className="text-[9px] font-black uppercase tracking-widest text-foreground/45">Correo Electrónico</label>
+                <label className="text-2xs font-black uppercase tracking-widest text-foreground/45">Correo Electrónico</label>
                 <input
                   type="email"
                   value={userEmail}
@@ -2129,7 +2129,7 @@ export default function TenantSettingsPage() {
               </div>
 
               <div className="space-y-1">
-                <label className="text-[9px] font-black uppercase tracking-widest text-foreground/45">Contraseña {editingUser && '(Dejar vacío para mantener)'}</label>
+                <label className="text-2xs font-black uppercase tracking-widest text-foreground/45">Contraseña {editingUser && '(Dejar vacío para mantener)'}</label>
                 <input
                   type="password"
                   value={userPassword}
@@ -2140,7 +2140,7 @@ export default function TenantSettingsPage() {
               </div>
 
               <div className="space-y-1">
-                <label className="text-[9px] font-black uppercase tracking-widest text-foreground/45">Rol de Usuario</label>
+                <label className="text-2xs font-black uppercase tracking-widest text-foreground/45">Rol de Usuario</label>
                 <select
                   value={userRoleSelect}
                   onChange={(e) => setUserRoleSelect(e.target.value)}
@@ -2155,14 +2155,14 @@ export default function TenantSettingsPage() {
                 <button
                   type="button"
                   onClick={() => setShowUserModal(false)}
-                  className="flex-1 py-3 bg-foreground/5 hover:bg-foreground/10 border border-card-border text-foreground rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
+                  className="flex-1 py-3 bg-foreground/5 hover:bg-foreground/10 border border-card-border text-foreground rounded-xl text-2xs font-black uppercase tracking-widest transition-all"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="flex-1 py-3 bg-nectar-gold hover:bg-nectar-gold/90 text-background rounded-xl text-[10px] font-black uppercase tracking-widest transition-all font-bold"
+                  className="flex-1 py-3 bg-nectar-gold hover:bg-nectar-gold/90 text-background rounded-xl text-2xs font-black uppercase tracking-widest transition-all font-bold"
                 >
                   {isSubmitting ? 'Guardando...' : 'Guardar'}
                 </button>

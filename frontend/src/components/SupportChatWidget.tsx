@@ -566,7 +566,7 @@ export default function SupportChatWidget() {
 
         {/* Unread notification dot */}
         {hasNewMessages && !isOpen && (
-          <span className="absolute top-0 right-0 w-4.5 h-4.5 bg-red-500 rounded-full border-2 border-background flex items-center justify-center text-[7px] font-black text-white">
+          <span className="absolute top-0 right-0 w-4.5 h-4.5 bg-red-500 rounded-full border-2 border-background flex items-center justify-center text-2xs font-black text-white">
             !
           </span>
         )}

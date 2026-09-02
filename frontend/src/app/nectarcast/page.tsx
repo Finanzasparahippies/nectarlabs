@@ -168,7 +168,7 @@ export default function NectarCastPage() {
               : 'bg-card-bg/40 border-card-border hover:border-card-border/80'
             }`}>
             {detectedOS === 'windows' && (
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-nectar-gold text-background text-[10px] font-black tracking-widest uppercase rounded-full shadow-md">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-nectar-gold text-background text-2xs font-black tracking-widest uppercase rounded-full shadow-md">
                 ⭐ Tu Sistema Detectado
               </div>
             )}
@@ -189,7 +189,7 @@ export default function NectarCastPage() {
                 >
                   <span className="flex flex-col text-left">
                     <span className="font-extrabold">{downloads.windows.primary.label}</span>
-                    <span className="text-[10px] opacity-80 font-medium">{downloads.windows.primary.desc}</span>
+                    <span className="text-2xs opacity-80 font-medium">{downloads.windows.primary.desc}</span>
                   </span>
                   <svg className="w-5 h-5 group-hover:translate-y-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -202,13 +202,13 @@ export default function NectarCastPage() {
                 >
                   <span className="flex flex-col text-left">
                     <span>{downloads.windows.secondary.label}</span>
-                    <span className="text-[10px] opacity-60 font-normal">{downloads.windows.secondary.desc}</span>
+                    <span className="text-2xs opacity-60 font-normal">{downloads.windows.secondary.desc}</span>
                   </span>
-                  <span className="text-[10px] uppercase font-mono px-2 py-0.5 bg-foreground/10 rounded">.MSI</span>
+                  <span className="text-2xs uppercase font-mono px-2 py-0.5 bg-foreground/10 rounded">.MSI</span>
                 </a>
               </div>
             </div>
-            <div className="mt-8 pt-4 border-t border-card-border flex items-center justify-between text-[11px] text-foreground/50 font-medium">
+            <div className="mt-8 pt-4 border-t border-card-border flex items-center justify-between text-xs text-foreground/50 font-medium">
               <span>Arquitectura x64</span>
               <span>Licencia MIT</span>
             </div>
@@ -220,7 +220,7 @@ export default function NectarCastPage() {
               : 'bg-card-bg/40 border-card-border hover:border-card-border/80'
             }`}>
             {detectedOS === 'mac' && (
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-nectar-gold text-background text-[10px] font-black tracking-widest uppercase rounded-full shadow-md">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-nectar-gold text-background text-2xs font-black tracking-widest uppercase rounded-full shadow-md">
                 ⭐ Tu Sistema Detectado
               </div>
             )}
@@ -241,7 +241,7 @@ export default function NectarCastPage() {
                 >
                   <span className="flex flex-col text-left">
                     <span className="font-extrabold">{downloads.mac.primary.label}</span>
-                    <span className="text-[10px] opacity-80 font-medium">{downloads.mac.primary.desc}</span>
+                    <span className="text-2xs opacity-80 font-medium">{downloads.mac.primary.desc}</span>
                   </span>
                   <svg className="w-5 h-5 group-hover:translate-y-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -249,7 +249,7 @@ export default function NectarCastPage() {
                 </a>
               </div>
             </div>
-            <div className="mt-8 pt-4 border-t border-card-border flex items-center justify-between text-[11px] text-foreground/50 font-medium">
+            <div className="mt-8 pt-4 border-t border-card-border flex items-center justify-between text-xs text-foreground/50 font-medium">
               <span>Apple Silicon & Intel</span>
               <span>Licencia MIT</span>
             </div>
@@ -261,7 +261,7 @@ export default function NectarCastPage() {
               : 'bg-card-bg/40 border-card-border hover:border-card-border/80'
             }`}>
             {detectedOS === 'linux' && (
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-nectar-gold text-background text-[10px] font-black tracking-widest uppercase rounded-full shadow-md">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-nectar-gold text-background text-2xs font-black tracking-widest uppercase rounded-full shadow-md">
                 ⭐ Tu Sistema Detectado
               </div>
             )}
@@ -282,7 +282,7 @@ export default function NectarCastPage() {
                 >
                   <span className="flex flex-col text-left">
                     <span className="font-extrabold">{downloads.linux.primary.label}</span>
-                    <span className="text-[10px] opacity-80 font-medium">{downloads.linux.primary.desc}</span>
+                    <span className="text-2xs opacity-80 font-medium">{downloads.linux.primary.desc}</span>
                   </span>
                   <svg className="w-5 h-5 group-hover:translate-y-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -296,14 +296,14 @@ export default function NectarCastPage() {
                   >
                     <span className="flex flex-col text-left">
                       <span>{downloads.linux.secondary.label}</span>
-                      <span className="text-[10px] opacity-60 font-normal">{downloads.linux.secondary.desc}</span>
+                      <span className="text-2xs opacity-60 font-normal">{downloads.linux.secondary.desc}</span>
                     </span>
-                    <span className="text-[10px] uppercase font-mono px-2 py-0.5 bg-foreground/10 rounded">.DEB</span>
+                    <span className="text-2xs uppercase font-mono px-2 py-0.5 bg-foreground/10 rounded">.DEB</span>
                   </a>
                 )}
               </div>
             </div>
-            <div className="mt-8 pt-4 border-t border-card-border flex items-center justify-between text-[11px] text-foreground/50 font-medium">
+            <div className="mt-8 pt-4 border-t border-card-border flex items-center justify-between text-xs text-foreground/50 font-medium">
               <span>AMD64 / x86_64</span>
               <span>Licencia MIT</span>
             </div>
@@ -423,10 +423,10 @@ export default function NectarCastPage() {
               Abre OBS Studio ➔ <strong>Ajustes</strong> ➔ <strong>Emisión</strong>. Selecciona Servicio <strong>Personalizado</strong>.
             </p>
             <div className="p-3 bg-background border border-card-border rounded-xl flex items-center justify-between gap-2">
-              <code className="text-[11px] font-mono text-nectar-gold truncate">rtmp://127.0.0.1:1935/live</code>
+              <code className="text-xs font-mono text-nectar-gold truncate">rtmp://127.0.0.1:1935/live</code>
               <button
                 onClick={handleCopyRtmp}
-                className="px-2 py-1 bg-nectar-gold/20 text-nectar-gold hover:bg-nectar-gold hover:text-background text-[10px] font-bold rounded transition-all whitespace-nowrap"
+                className="px-2 py-1 bg-nectar-gold/20 text-nectar-gold hover:bg-nectar-gold hover:text-background text-2xs font-bold rounded transition-all whitespace-nowrap"
               >
                 {copiedRtmp ? '¡Copiado!' : 'Copiar'}
               </button>
@@ -442,7 +442,7 @@ export default function NectarCastPage() {
               En el campo <strong>Clave de Retransmisión (Stream Key)</strong> en tu OBS Studio, ingresa la palabra clave por defecto:
             </p>
             <div className="p-3 bg-background border border-card-border rounded-xl">
-              <code className="text-[11px] font-mono text-nectar-gold">test</code>
+              <code className="text-xs font-mono text-nectar-gold">test</code>
             </div>
           </div>
 
@@ -454,7 +454,7 @@ export default function NectarCastPage() {
             <p className="text-xs text-foreground/70 leading-relaxed mb-4">
               Presiona <strong>Iniciar Transmisión</strong> en OBS. Néctar Cast capturará la señal local y te permitirás encender el flujo a YouTube, Facebook, Twitch o Instagram.
             </p>
-            <div className="text-[10px] text-nectar-gold font-bold uppercase tracking-wider flex items-center gap-1">
+            <div className="text-2xs text-nectar-gold font-bold uppercase tracking-wider flex items-center gap-1">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
               0% Carga Adicional en tu CPU
             </div>
@@ -469,7 +469,7 @@ export default function NectarCastPage() {
           <div className="absolute top-0 right-0 -mt-10 -mr-10 w-80 h-80 bg-nectar-gold/20 rounded-full blur-[100px] pointer-events-none"></div>
 
           <div className="relative z-10 max-w-3xl">
-            <div className="inline-block px-4 py-1.5 mb-6 text-[10px] font-black tracking-widest text-nectar-gold uppercase border border-nectar-gold/30 rounded-full bg-background/50 backdrop-blur-md">
+            <div className="inline-block px-4 py-1.5 mb-6 text-2xs font-black tracking-widest text-nectar-gold uppercase border border-nectar-gold/30 rounded-full bg-background/50 backdrop-blur-md">
               Desarrollado por Nectar-Labs
             </div>
 

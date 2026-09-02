@@ -92,14 +92,14 @@ export default function ClientSignPage() {
         </svg>
       </div>
       <h2 className="text-4xl font-black text-foreground mb-4">Contrato Firmado con Éxito</h2>
-      <p className="text-muted font-bold uppercase tracking-widest text-[10px]">Guardando propuesta y notificando a ingeniería...</p>
+      <p className="text-muted font-bold uppercase tracking-widest text-2xs">Guardando propuesta y notificando a ingeniería...</p>
     </div>
   );
 
   if (loading) return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-background">
       <div className="w-12 h-12 border-4 border-nectar-gold border-t-transparent rounded-full animate-spin mb-4"></div>
-      <p className="text-nectar-gold font-black text-[10px] uppercase tracking-widest animate-pulse">Generando Documento de Contrato...</p>
+      <p className="text-nectar-gold font-black text-2xs uppercase tracking-widest animate-pulse">Generando Documento de Contrato...</p>
     </div>
   );
 
@@ -108,7 +108,7 @@ export default function ClientSignPage() {
       <div className="text-red-500 font-black text-xs uppercase tracking-widest bg-red-500/10 px-6 py-3 rounded-xl border border-red-500/20 max-w-md w-full">
         {error}
       </div>
-      <Link href="/dashboard" className="text-[10px] font-black uppercase tracking-[0.3em] text-nectar-gold hover:underline">Volver al Centro de Control</Link>
+      <Link href="/dashboard" className="text-2xs font-black uppercase tracking-[0.3em] text-nectar-gold hover:underline">Volver al Centro de Control</Link>
     </div>
   );
 
@@ -119,10 +119,10 @@ export default function ClientSignPage() {
       <div className="w-full max-w-4xl space-y-12">
         {/* Navigation */}
         <div className="flex justify-between items-center">
-          <Link href="/dashboard" className="text-[9px] font-black uppercase tracking-widest opacity-40 hover:opacity-100 transition-opacity">
+          <Link href="/dashboard" className="text-2xs font-black uppercase tracking-widest opacity-40 hover:opacity-100 transition-opacity">
             ← Cancelar y Volver
           </Link>
-          <span className="text-[9px] font-mono text-nectar-gold uppercase tracking-wider bg-nectar-gold/10 border border-nectar-gold/20 px-3 py-1 rounded-full">
+          <span className="text-2xs font-mono text-nectar-gold uppercase tracking-wider bg-nectar-gold/10 border border-nectar-gold/20 px-3 py-1 rounded-full">
             Propuesta de Proyecto Custom
           </span>
         </div>
@@ -173,13 +173,13 @@ export default function ClientSignPage() {
                   </div>
 
                   <div className="space-y-3">
-                    <h5 className="text-[10px] font-black uppercase tracking-widest opacity-40">Módulos y Funcionalidades Incluidas</h5>
+                    <h5 className="text-2xs font-black uppercase tracking-widest opacity-40">Módulos y Funcionalidades Incluidas</h5>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {quote.modules && quote.modules.map((mod: any, index: number) => (
                         <div key={index} className="p-4 rounded-xl bg-background/50 border border-card-border/40 flex flex-col justify-between">
                           <div>
                             <span className="text-xs font-black text-white block">{mod.name}</span>
-                            <span className="text-[10px] text-foreground/60 leading-normal block mt-1">{mod.description || "Alcance estándar del módulo."}</span>
+                            <span className="text-2xs text-foreground/60 leading-normal block mt-1">{mod.description || "Alcance estándar del módulo."}</span>
                           </div>
                           <span className="text-xs font-mono font-bold text-nectar-gold mt-3 block">
                             ${parseFloat(mod.price || "0").toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN
@@ -196,14 +196,14 @@ export default function ClientSignPage() {
                     </span>
                   </div>
 
-                  <div className="p-4 rounded-xl bg-nectar-gold/5 border border-nectar-gold/15 text-[10px] leading-relaxed text-foreground/70 uppercase">
+                  <div className="p-4 rounded-xl bg-nectar-gold/5 border border-nectar-gold/15 text-2xs leading-relaxed text-foreground/70 uppercase">
                     ℹ️ <strong>Esquema de Abono:</strong> 50% de anticipo obligatorio (${(parseFloat(quote.total_price || "0") / 2).toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN) para iniciar ingeniería y 50% de liquidación (${(parseFloat(quote.total_price || "0") / 2).toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN) contra entrega.
                   </div>
                 </div>
               ) : (
                 <div className="p-6 rounded-2xl bg-background/30 border border-card-border/50">
                   <p className="text-xs font-bold">{contract?.plan_name || "Partner Tecnológico de Ingeniería"}</p>
-                  <p className="text-[10px] text-foreground/60 mt-1">Idea de Proyecto: {contract?.project_idea}</p>
+                  <p className="text-2xs text-foreground/60 mt-1">Idea de Proyecto: {contract?.project_idea}</p>
                 </div>
               )}
             </div>
@@ -211,7 +211,7 @@ export default function ClientSignPage() {
             {/* Terms & Conditions */}
             <div className="space-y-3 pt-4 border-t border-card-border/30">
               <h3 className="text-xs font-black uppercase tracking-widest text-nectar-gold">2. Términos y Cláusulas Clave</h3>
-              <div className="text-[10px] text-foreground/60 leading-relaxed space-y-2 uppercase tracking-wide">
+              <div className="text-2xs text-foreground/60 leading-relaxed space-y-2 uppercase tracking-wide">
                 <p><strong>Cláusula Primera:</strong> EL DESARROLLADOR se compromete a entregar los módulos listados en la Sección 1 en el plazo estipulado.</p>
                 <p><strong>Cláusula Segunda:</strong> EL CLIENTE autoriza a EL DESARROLLADOR a comenzar el aprovisionamiento de servidores una vez recibido el pago del primer abono (50% de anticipo).</p>
                 <p><strong>Cláusula Tercera:</strong> El código fuente y los activos digitales del proyecto serán propiedad intelectual del cliente una vez liquidada la totalidad del proyecto.</p>
@@ -229,7 +229,7 @@ export default function ClientSignPage() {
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
               <div className="space-y-2">
-                <label className="text-[9px] font-black uppercase tracking-widest opacity-40 ml-1">Nombre Completo o Razón Social</label>
+                <label className="text-2xs font-black uppercase tracking-widest opacity-40 ml-1">Nombre Completo o Razón Social</label>
                 <input
                   type="text"
                   value={fullName}
@@ -240,7 +240,7 @@ export default function ClientSignPage() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-[9px] font-black uppercase tracking-widest opacity-40 ml-1">RFC / ID Fiscal (Tax ID)</label>
+                <label className="text-2xs font-black uppercase tracking-widest opacity-40 ml-1">RFC / ID Fiscal (Tax ID)</label>
                 <input
                   type="text"
                   value={taxId}
@@ -251,7 +251,7 @@ export default function ClientSignPage() {
               </div>
 
               <div className="space-y-2 md:col-span-2">
-                <label className="text-[9px] font-black uppercase tracking-widest opacity-40 ml-1">Dirección Fiscal Completa</label>
+                <label className="text-2xs font-black uppercase tracking-widest opacity-40 ml-1">Dirección Fiscal Completa</label>
                 <input
                   type="text"
                   value={address}
@@ -265,7 +265,7 @@ export default function ClientSignPage() {
             {/* Signature Canvas */}
             <div className="space-y-4">
               <div className="text-center mb-2">
-                <span className="text-[10px] font-black uppercase tracking-widest text-foreground">Traza tu Firma Digital en el recuadro</span>
+                <span className="text-2xs font-black uppercase tracking-widest text-foreground">Traza tu Firma Digital en el recuadro</span>
               </div>
               <div className="bg-white rounded-[2rem] border border-nectar-gold/20 overflow-hidden shadow-[0_4px_25px_rgba(0,0,0,0.3)] h-64 relative group">
                 <SignaturePad
@@ -279,14 +279,14 @@ export default function ClientSignPage() {
               <div className="flex flex-col md:flex-row gap-4 justify-center pt-4">
                 <button
                   onClick={() => sigPad.current?.clear()}
-                  className="px-8 py-4 border border-card-border rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-red-50 hover:text-red-600 transition-all active:scale-95"
+                  className="px-8 py-4 border border-card-border rounded-full text-2xs font-black uppercase tracking-widest hover:bg-red-50 hover:text-red-600 transition-all active:scale-95"
                 >
                   Limpiar Lienzo
                 </button>
                 <button
                   onClick={handleSign}
                   disabled={saving}
-                  className={`px-12 py-4 bg-nectar-gold text-background rounded-full text-[10px] font-black uppercase tracking-widest shadow-xl hover:scale-105 active:scale-95 transition-all font-bold ${saving ? 'opacity-50 cursor-wait' : ''}`}
+                  className={`px-12 py-4 bg-nectar-gold text-background rounded-full text-2xs font-black uppercase tracking-widest shadow-xl hover:scale-105 active:scale-95 transition-all font-bold ${saving ? 'opacity-50 cursor-wait' : ''}`}
                 >
                   {saving ? "Registrando tu Firma..." : "Firmar Contrato e Iniciar"}
                 </button>

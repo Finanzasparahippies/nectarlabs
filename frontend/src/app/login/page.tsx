@@ -74,7 +74,7 @@ function LoginContent() {
 
         <form onSubmit={handleSubmit} className="space-y-8">
           <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-4">Email Corporativo</label>
+            <label className="text-2xs font-black uppercase tracking-widest opacity-40 ml-4">Email Corporativo</label>
             <input
               type="email"
               required
@@ -87,8 +87,8 @@ function LoginContent() {
 
           <div className="space-y-2">
             <div className="flex justify-between ml-4 mr-1">
-              <label className="text-[10px] font-black uppercase tracking-widest opacity-40">Contraseña</label>
-              <Link href="#" className="text-[10px] font-black uppercase tracking-widest text-nectar-gold opacity-60 hover:opacity-100">¿Olvidaste?</Link>
+              <label className="text-2xs font-black uppercase tracking-widest opacity-40">Contraseña</label>
+              <Link href="#" className="text-2xs font-black uppercase tracking-widest text-nectar-gold opacity-60 hover:opacity-100">¿Olvidaste?</Link>
             </div>
             <div className="relative">
               <input
@@ -145,7 +145,7 @@ export default function LoginPage() {
     <Suspense fallback={
       <div className="min-h-screen flex flex-col items-center justify-center bg-background">
         <div className="w-12 h-12 border-4 border-nectar-gold border-t-transparent rounded-full animate-spin mb-4"></div>
-        <div className="font-black uppercase tracking-[0.4em] opacity-20 text-[10px]">Syncing Ecosystem...</div>
+        <div className="font-black uppercase tracking-[0.4em] opacity-20 text-2xs">Syncing Ecosystem...</div>
       </div>
     }>
       <LoginContent />

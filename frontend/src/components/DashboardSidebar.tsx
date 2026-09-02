@@ -358,7 +358,7 @@ function DashboardSidebarContent() {
         </svg>
       ),
       badge: tenants[0] && (
-        <span className={`px-2 py-0.5 text-[7px] font-black uppercase tracking-widest rounded-full shrink-0 ${tenants[0].is_active
+        <span className={`px-2 py-0.5 text-2xs font-black uppercase tracking-widest rounded-full shrink-0 ${tenants[0].is_active
           ? 'bg-green-500/10 text-green-400 border border-green-500/20'
           : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
           }`}>
@@ -588,7 +588,7 @@ function DashboardSidebarContent() {
           onClick={() => setEcosystemsExpanded(!ecosystemsExpanded)}
           className="flex justify-between items-center w-full px-6 mb-2 text-left group"
         >
-          <span className="text-[8px] font-black uppercase tracking-[0.2em] text-foreground/30 group-hover:text-foreground/60 transition-colors">
+          <span className="text-2xs font-black uppercase tracking-[0.2em] text-foreground/30 group-hover:text-foreground/60 transition-colors">
             Mis Colmenas
           </span>
           <div className="flex items-center gap-2">
@@ -627,7 +627,7 @@ function DashboardSidebarContent() {
                   {/* Accordion Trigger */}
                   <button
                     onClick={() => toggleTenant(tenant.id)}
-                    className={`flex items-center gap-3.5 px-6 py-3 w-full text-left rounded-2xl font-black uppercase tracking-widest text-[9px] transition-all duration-300 group ${isOpen
+                    className={`flex items-center gap-3.5 px-6 py-3 w-full text-left rounded-2xl font-black uppercase tracking-widest text-2xs transition-all duration-300 group ${isOpen
                       ? 'bg-foreground/[0.02] text-foreground'
                       : 'text-foreground/60 hover:text-foreground hover:bg-foreground/[0.02]'
                       }`}
@@ -637,7 +637,7 @@ function DashboardSidebarContent() {
                     </svg>
 
                     <div className="flex-1 min-w-0">
-                      <span className="block truncate font-black text-[9px] uppercase tracking-widest">{tenant.name}</span>
+                      <span className="block truncate font-black text-2xs uppercase tracking-widest">{tenant.name}</span>
                       <span className="block text-[6.5px] font-mono text-foreground/35 lowercase tracking-normal truncate">
                         {(tenant.use_custom_domain && tenant.custom_domain) ? tenant.custom_domain : `${tenant.subdomain}.nectarlabs.dev`}
                       </span>
@@ -660,13 +660,13 @@ function DashboardSidebarContent() {
 
                   {/* Sublinks */}
                   {isOpen && (
-                    <div className="pl-[27px] ml-7 border-l border-card-border/50 py-1 space-y-1.5">
+                    <div className="pl-[1.6875rem] ml-7 border-l border-card-border/50 py-1 space-y-1.5">
                       <button
                         onClick={(e) => {
                           e.preventDefault();
                           window.open(tenantUrl, '_blank', 'noopener,noreferrer');
                         }}
-                        className="flex items-center justify-between py-2 pr-6 text-foreground/50 hover:text-nectar-gold transition-all duration-300 text-[8px] font-black uppercase tracking-widest hover:translate-x-1 group/sub w-full text-left bg-transparent border-0 cursor-pointer"
+                        className="flex items-center justify-between py-2 pr-6 text-foreground/50 hover:text-nectar-gold transition-all duration-300 text-2xs font-black uppercase tracking-widest hover:translate-x-1 group/sub w-full text-left bg-transparent border-0 cursor-pointer"
                       >
                         <span className="flex items-center gap-2">
                           <span className="w-1 h-1 rounded-full bg-foreground/20 group-hover/sub:bg-nectar-gold"></span>
@@ -683,7 +683,7 @@ function DashboardSidebarContent() {
                           const tokenParam = token ? `?token=${encodeURIComponent(token)}` : '';
                           window.open(`${tenantUrl}/portal-admin${tokenParam}`, '_blank', 'noopener,noreferrer');
                         }}
-                        className="flex items-center justify-between py-2 pr-6 text-foreground/50 hover:text-nectar-gold transition-all duration-300 text-[8px] font-black uppercase tracking-widest hover:translate-x-1 group/sub w-full text-left bg-transparent border-0 cursor-pointer"
+                        className="flex items-center justify-between py-2 pr-6 text-foreground/50 hover:text-nectar-gold transition-all duration-300 text-2xs font-black uppercase tracking-widest hover:translate-x-1 group/sub w-full text-left bg-transparent border-0 cursor-pointer"
                       >
                         <span className="flex items-center gap-2">
                           <span className="w-1 h-1 rounded-full bg-foreground/20 group-hover/sub:bg-nectar-gold"></span>
@@ -716,7 +716,7 @@ function DashboardSidebarContent() {
         {workspaceLinks.length > 0 && (
           <div className="space-y-2">
             {!isCollapsed && (
-              <span className="px-6 text-[8px] font-black uppercase tracking-[0.2em] text-foreground/30 block mb-3">
+              <span className="px-6 text-2xs font-black uppercase tracking-[0.2em] text-foreground/30 block mb-3">
                 Control de Mando
               </span>
             )}
@@ -727,7 +727,7 @@ function DashboardSidebarContent() {
                 onClick={link.onClick}
                 title={link.label}
                 id={link.id}
-                className={`flex items-center gap-4 rounded-2xl font-black uppercase tracking-widest text-[9px] transition-all duration-300 group ${isCollapsed ? 'justify-center px-0 py-3.5 w-full' : 'px-6 py-3.5 w-full text-left'
+                className={`flex items-center gap-4 rounded-2xl font-black uppercase tracking-widest text-2xs transition-all duration-300 group ${isCollapsed ? 'justify-center px-0 py-3.5 w-full' : 'px-6 py-3.5 w-full text-left'
                   } ${link.active
                     ? 'bg-nectar-gold/10 text-nectar-gold'
                     : 'hover:bg-foreground/[0.04] text-foreground/60 hover:text-foreground'
@@ -748,7 +748,7 @@ function DashboardSidebarContent() {
         {operationsLinks.length > 0 && (
           <div className="space-y-2 pt-4 border-t border-card-border/40">
             {!isCollapsed && (
-              <span className="px-6 text-[8px] font-black uppercase tracking-[0.2em] text-foreground/30 block mb-3">
+              <span className="px-6 text-2xs font-black uppercase tracking-[0.2em] text-foreground/30 block mb-3">
                 Operaciones
               </span>
             )}
@@ -759,7 +759,7 @@ function DashboardSidebarContent() {
                 onClick={link.onClick}
                 title={link.label}
                 id={link.id}
-                className={`flex items-center gap-4 rounded-2xl font-black uppercase tracking-widest text-[9px] transition-all duration-300 group ${isCollapsed ? 'justify-center px-0 py-3.5 w-full' : 'px-6 py-3.5 w-full text-left'
+                className={`flex items-center gap-4 rounded-2xl font-black uppercase tracking-widest text-2xs transition-all duration-300 group ${isCollapsed ? 'justify-center px-0 py-3.5 w-full' : 'px-6 py-3.5 w-full text-left'
                   } ${link.active
                     ? 'bg-nectar-gold/10 text-nectar-gold'
                     : 'hover:bg-foreground/[0.04] text-foreground/60 hover:text-foreground'
@@ -844,10 +844,10 @@ function DashboardSidebarContent() {
               </div>
 
               <div className="flex-1 min-w-0 text-left">
-                <span className="block font-black text-[10px] text-foreground uppercase tracking-wider truncate">
+                <span className="block font-black text-2xs text-foreground uppercase tracking-wider truncate">
                   {currentUser.username || 'Usuario'}
                 </span>
-                <span className="block text-[8px] text-foreground/45 truncate font-mono mt-0.5">
+                <span className="block text-2xs text-foreground/45 truncate font-mono mt-0.5">
                   {currentUser.email}
                 </span>
                 <span className="inline-block px-2 py-0.5 bg-nectar-gold/10 text-nectar-gold border border-nectar-gold/20 text-[6.5px] font-black rounded-full uppercase tracking-wider mt-1.5 font-bold">
@@ -860,7 +860,7 @@ function DashboardSidebarContent() {
           <div className="flex items-center justify-between">
             <button
               onClick={handleLogout}
-              className="flex items-center gap-3 py-3 text-red-500/60 hover:text-red-500 transition-all font-black uppercase tracking-widest text-[9px]"
+              className="flex items-center gap-3 py-3 text-red-500/60 hover:text-red-500 transition-all font-black uppercase tracking-widest text-2xs"
             >
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
                 <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" />
@@ -936,10 +936,10 @@ function DashboardSidebarContent() {
                   </div>
 
                   <div className="flex-1 min-w-0 text-left">
-                    <span className="block font-black text-[10px] text-foreground uppercase tracking-wider truncate">
+                    <span className="block font-black text-2xs text-foreground uppercase tracking-wider truncate">
                       {currentUser.username || 'Usuario'}
                     </span>
-                    <span className="block text-[8px] text-foreground/45 truncate font-mono mt-0.5">
+                    <span className="block text-2xs text-foreground/45 truncate font-mono mt-0.5">
                       {currentUser.email}
                     </span>
                     <span className="inline-block px-2 py-0.5 bg-nectar-gold/10 text-nectar-gold border border-nectar-gold/20 text-[6.5px] font-black rounded-full uppercase tracking-wider mt-1.5 font-bold">
@@ -955,7 +955,7 @@ function DashboardSidebarContent() {
             {!isCollapsed ? (
               <button
                 onClick={handleLogout}
-                className="flex items-center gap-3 py-3 text-red-500/60 hover:text-red-500 transition-all font-black uppercase tracking-widest text-[9px] group cursor-pointer"
+                className="flex items-center gap-3 py-3 text-red-500/60 hover:text-red-500 transition-all font-black uppercase tracking-widest text-2xs group cursor-pointer"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-0.5">
                   <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" />

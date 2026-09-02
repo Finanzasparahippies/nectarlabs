@@ -186,12 +186,12 @@ export default function InteractiveTutorial({
         className="bg-[#0b0e0c] border border-[#C68A1E]/40 rounded-[2rem] p-6 shadow-[0_10px_50px_rgba(0,0,0,0.8)] animate-in fade-in zoom-in-95 duration-300"
       >
         <div className="flex items-center justify-between mb-3 border-b border-card-border/40 pb-2.5">
-          <span className="text-[10px] font-black uppercase tracking-widest text-[#C68A1E]">
+          <span className="text-2xs font-black uppercase tracking-widest text-[#C68A1E]">
             Guía Interactiva ({currentStepIdx + 1}/{steps.length})
           </span>
           <button 
             onClick={handleSkip} 
-            className="text-[9px] font-black uppercase tracking-wider text-white/40 hover:text-white transition-colors cursor-pointer"
+            className="text-2xs font-black uppercase tracking-wider text-white/40 hover:text-white transition-colors cursor-pointer"
           >
             Omitir
           </button>
@@ -200,7 +200,7 @@ export default function InteractiveTutorial({
         <h4 className="text-xs font-black text-white mb-2 uppercase tracking-wide">
           {currentStep.title}
         </h4>
-        <p className="text-[10px] leading-relaxed text-white/70 font-medium mb-6">
+        <p className="text-2xs leading-relaxed text-white/70 font-medium mb-6">
           {currentStep.content}
         </p>
 
@@ -219,7 +219,7 @@ export default function InteractiveTutorial({
               <button
                 type="button"
                 onClick={handleBack}
-                className="px-3 py-2 bg-white/5 hover:bg-white/10 text-white text-[9px] font-black uppercase tracking-widest rounded-xl transition-all cursor-pointer border border-white/10"
+                className="px-3 py-2 bg-white/5 hover:bg-white/10 text-white text-2xs font-black uppercase tracking-widest rounded-xl transition-all cursor-pointer border border-white/10"
               >
                 Anterior
               </button>
@@ -227,7 +227,7 @@ export default function InteractiveTutorial({
             <button
               type="button"
               onClick={handleNext}
-              className="px-4 py-2 bg-[#C68A1E] text-black text-[9px] font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 transition-all cursor-pointer"
+              className="px-4 py-2 bg-[#C68A1E] text-black text-2xs font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 transition-all cursor-pointer"
             >
               {currentStepIdx === steps.length - 1 ? 'Terminar' : 'Siguiente'}
             </button>

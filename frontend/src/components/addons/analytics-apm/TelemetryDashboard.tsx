@@ -57,7 +57,7 @@ export default function TelemetryDashboard({ primaryColor }: TelemetryDashboardP
           </div>
           <div>
             <h3 className="text-sm font-black uppercase tracking-wider text-white">Panel de Rendimiento APM</h3>
-            <p className="text-[9px] uppercase tracking-widest font-black text-white/40">Add-on: Analytics APM</p>
+            <p className="text-2xs uppercase tracking-widest font-black text-white/40">Add-on: Analytics APM</p>
           </div>
         </div>
         
@@ -70,36 +70,36 @@ export default function TelemetryDashboard({ primaryColor }: TelemetryDashboardP
         {/* LCP Gauge */}
         <div className="bg-white/[0.01] border border-white/5 rounded-2xl p-4 flex flex-col justify-between">
           <div>
-            <p className="text-[8px] text-white/40 uppercase font-black tracking-wider">Largest Contentful Paint</p>
+            <p className="text-2xs text-white/40 uppercase font-black tracking-wider">Largest Contentful Paint</p>
             <p className="text-2xl font-black mt-2 text-white">{webVitals.lcp}s</p>
           </div>
           <div className="mt-4 flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
-            <span className="text-[7px] text-white/50 uppercase font-black tracking-widest">Excelente (&lt;2.5s)</span>
+            <span className="text-2xs text-white/50 uppercase font-black tracking-widest">Excelente (&lt;2.5s)</span>
           </div>
         </div>
 
         {/* FID Gauge */}
         <div className="bg-white/[0.01] border border-white/5 rounded-2xl p-4 flex flex-col justify-between">
           <div>
-            <p className="text-[8px] text-white/40 uppercase font-black tracking-wider">First Input Delay</p>
+            <p className="text-2xs text-white/40 uppercase font-black tracking-wider">First Input Delay</p>
             <p className="text-2xl font-black mt-2 text-white">{webVitals.fid}ms</p>
           </div>
           <div className="mt-4 flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
-            <span className="text-[7px] text-white/50 uppercase font-black tracking-widest">Excelente (&lt;100ms)</span>
+            <span className="text-2xs text-white/50 uppercase font-black tracking-widest">Excelente (&lt;100ms)</span>
           </div>
         </div>
 
         {/* CLS Gauge */}
         <div className="bg-white/[0.01] border border-white/5 rounded-2xl p-4 flex flex-col justify-between">
           <div>
-            <p className="text-[8px] text-white/40 uppercase font-black tracking-wider">Cumulative Layout Shift</p>
+            <p className="text-2xs text-white/40 uppercase font-black tracking-wider">Cumulative Layout Shift</p>
             <p className="text-2xl font-black mt-2 text-white">{webVitals.cls}</p>
           </div>
           <div className="mt-4 flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
-            <span className="text-[7px] text-white/50 uppercase font-black tracking-widest">Excelente (&lt;0.1)</span>
+            <span className="text-2xs text-white/50 uppercase font-black tracking-widest">Excelente (&lt;0.1)</span>
           </div>
         </div>
       </div>
@@ -107,7 +107,7 @@ export default function TelemetryDashboard({ primaryColor }: TelemetryDashboardP
       <div className="mt-4 bg-[#020403] border border-white/5 rounded-2xl p-4 grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
         {/* Core CPU/RAM gauges */}
         <div className="space-y-1">
-          <div className="flex justify-between text-[9px] uppercase font-bold text-white/50">
+          <div className="flex justify-between text-2xs uppercase font-bold text-white/50">
             <span>Uso de CPU</span>
             <span className="text-white font-black">{cpuUsage}%</span>
           </div>
@@ -120,7 +120,7 @@ export default function TelemetryDashboard({ primaryColor }: TelemetryDashboardP
         </div>
 
         <div className="space-y-1">
-          <div className="flex justify-between text-[9px] uppercase font-bold text-white/50">
+          <div className="flex justify-between text-2xs uppercase font-bold text-white/50">
             <span>Uso de Memoria RAM</span>
             <span className="text-white font-black">{ramUsage}%</span>
           </div>
@@ -133,9 +133,9 @@ export default function TelemetryDashboard({ primaryColor }: TelemetryDashboardP
         </div>
 
         <div className="text-center md:text-right">
-          <span className="text-[8px] text-white/40 uppercase font-black tracking-wider">Consultas SQL por segundo</span>
+          <span className="text-2xs text-white/40 uppercase font-black tracking-wider">Consultas SQL por segundo</span>
           <p className="text-lg font-black text-white mt-1" style={{ color: primaryColor }}>
-            {dbQueries} <span className="text-[9px] text-white/30 uppercase">queries/s</span>
+            {dbQueries} <span className="text-2xs text-white/30 uppercase">queries/s</span>
           </p>
         </div>
       </div>

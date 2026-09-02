@@ -12,7 +12,7 @@ export default function NectarCastBanner() {
 
         <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-10">
           <div className="max-w-2xl text-left">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 mb-6 text-[10px] sm:text-xs font-black tracking-widest text-nectar-gold uppercase border border-nectar-gold/30 rounded-full bg-nectar-gold/10">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 mb-6 text-2xs sm:text-xs font-black tracking-widest text-nectar-gold uppercase border border-nectar-gold/30 rounded-full bg-nectar-gold/10">
               <span className="w-2 h-2 rounded-full bg-nectar-gold animate-ping" />
               Software Gratuito • Ecosistema Nectar-Labs
             </div>

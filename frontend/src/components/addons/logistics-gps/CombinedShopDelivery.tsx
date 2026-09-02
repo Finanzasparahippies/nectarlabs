@@ -97,7 +97,7 @@ function StatusBadge({ status }: { status: string }) {
   const s = STATUS_LABELS[status] || { label: status, emoji: '📋', color: '#9CA3AF' };
   return (
     <span
-      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider"
+      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-2xs font-black uppercase tracking-wider"
       style={{ backgroundColor: `${s.color}20`, color: s.color, border: `1px solid ${s.color}40` }}
     >
       {s.emoji} {s.label}
@@ -501,7 +501,7 @@ export default function CombinedShopDelivery({
       {/* ── Layout Toggle ── */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-2">
-          <span className="text-[10px] font-black uppercase tracking-widest opacity-50">Vista</span>
+          <span className="text-2xs font-black uppercase tracking-widest opacity-50">Vista</span>
           <div className="flex items-center bg-white/5 border border-white/10 rounded-2xl p-1 gap-1">
             {([
               { key: 'split', label: isMobile ? '↕' : '↔', title: 'Vista dividida' },
@@ -512,7 +512,7 @@ export default function CombinedShopDelivery({
                 key={opt.key}
                 title={opt.title}
                 onClick={() => setLayout(opt.key)}
-                className="px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all duration-300 cursor-pointer"
+                className="px-3 py-1.5 rounded-xl text-2xs font-black uppercase tracking-wider transition-all duration-300 cursor-pointer"
                 style={{
                   backgroundColor: layout === opt.key ? primary : 'transparent',
                   color: layout === opt.key ? '#000' : 'inherit',
@@ -538,7 +538,7 @@ export default function CombinedShopDelivery({
           🛒 Carrito
           {cartCount > 0 && (
             <span
-              className="absolute -top-2 -right-2 w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-black text-black animate-bounce"
+              className="absolute -top-2 -right-2 w-5 h-5 rounded-full flex items-center justify-center text-2xs font-black text-black animate-bounce"
               style={{ backgroundColor: primary }}
             >
               {cartCount}
@@ -565,7 +565,7 @@ export default function CombinedShopDelivery({
             }}
           >
             {/* WS connection indicator */}
-            <div className="absolute top-3 right-3 z-20 flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-black/60 backdrop-blur-sm text-[9px] font-black uppercase tracking-wider">
+            <div className="absolute top-3 right-3 z-20 flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-black/60 backdrop-blur-sm text-2xs font-black uppercase tracking-wider">
               <span
                 className={`w-2 h-2 rounded-full ${wsConnected ? 'bg-green-400 animate-pulse' : 'bg-yellow-400'}`}
               />
@@ -641,7 +641,7 @@ export default function CombinedShopDelivery({
                 <p className="text-xs font-black uppercase tracking-wider text-red-400">{productsError}</p>
                 <button
                   onClick={() => fetchProducts()}
-                  className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider bg-white/10 hover:bg-white/20 transition-all border border-white/10 cursor-pointer"
+                  className="px-4 py-2 rounded-xl text-2xs font-black uppercase tracking-wider bg-white/10 hover:bg-white/20 transition-all border border-white/10 cursor-pointer"
                 >
                   🔄 Reintentar
                 </button>
@@ -698,7 +698,7 @@ export default function CombinedShopDelivery({
                       )}
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-black truncate">{item.name}</p>
-                        <p className="text-[10px] opacity-60">${parseFloat(item.price).toFixed(2)} c/u</p>
+                        <p className="text-2xs opacity-60">${parseFloat(item.price).toFixed(2)} c/u</p>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
                         <button onClick={() => updateQty(item.id, item.qty - 1)} className="w-7 h-7 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center text-xs font-black transition-all cursor-pointer">−</button>
@@ -742,7 +742,7 @@ export default function CombinedShopDelivery({
 
                 {tenantConfig?.stripe_publishable_key && (
                   <div className="space-y-2 pt-2">
-                    <span className="text-[9px] font-black uppercase tracking-wider opacity-45">Método de Pago</span>
+                    <span className="text-2xs font-black uppercase tracking-wider opacity-45">Método de Pago</span>
                     <div className="grid grid-cols-2 gap-2">
                       <button
                         type="button"
@@ -803,7 +803,7 @@ export default function CombinedShopDelivery({
 
             {activeOrder.driver_name && (
               <div className="p-4 rounded-2xl border border-white/10 bg-white/5 space-y-2">
-                <p className="text-[10px] font-black uppercase tracking-widest opacity-50">Tu repartidor</p>
+                <p className="text-2xs font-black uppercase tracking-widest opacity-50">Tu repartidor</p>
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-2xl flex items-center justify-center text-xl" style={{ backgroundColor: `${primary}20` }}>
                     🛵
@@ -811,7 +811,7 @@ export default function CombinedShopDelivery({
                   <div>
                     <p className="text-sm font-black">{activeOrder.driver_name}</p>
                     {activeOrder.driver_phone && (
-                      <a href={`tel:${activeOrder.driver_phone}`} className="text-[10px] opacity-60 underline">
+                      <a href={`tel:${activeOrder.driver_phone}`} className="text-2xs opacity-60 underline">
                         {activeOrder.driver_phone}
                       </a>
                     )}
@@ -822,15 +822,15 @@ export default function CombinedShopDelivery({
 
             {activeOrder.tracking_number && (
               <div className="p-4 rounded-2xl border border-white/10 bg-white/5 space-y-1">
-                <p className="text-[10px] font-black uppercase tracking-widest opacity-50">Guía de paquetería</p>
+                <p className="text-2xs font-black uppercase tracking-widest opacity-50">Guía de paquetería</p>
                 <p className="text-sm font-mono font-black">{activeOrder.tracking_number}</p>
-                {activeOrder.courier && <p className="text-[10px] opacity-60">{activeOrder.courier}</p>}
+                {activeOrder.courier && <p className="text-2xs opacity-60">{activeOrder.courier}</p>}
                 {activeOrder.tracking_url && (
                   <a
                     href={activeOrder.tracking_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-block mt-1 text-[10px] font-black underline"
+                    className="inline-block mt-1 text-2xs font-black underline"
                     style={{ color: primary }}
                   >
                     Rastrear paquete →
@@ -890,13 +890,13 @@ function ProductCard({
         </p>
         {cartQty > 0 ? (
           <div className="flex items-center gap-2">
-            <button onClick={onRemove} className="flex-1 py-1.5 rounded-xl border border-white/20 text-[10px] font-black hover:bg-red-500/20 hover:border-red-500/40 transition-all cursor-pointer">
+            <button onClick={onRemove} className="flex-1 py-1.5 rounded-xl border border-white/20 text-2xs font-black hover:bg-red-500/20 hover:border-red-500/40 transition-all cursor-pointer">
               Quitar
             </button>
             <span className="text-xs font-black w-6 text-center">{cartQty}</span>
             <button
               onClick={onAdd}
-              className="flex-1 py-1.5 rounded-xl text-[10px] font-black transition-all hover:opacity-80 cursor-pointer"
+              className="flex-1 py-1.5 rounded-xl text-2xs font-black transition-all hover:opacity-80 cursor-pointer"
               style={{ backgroundColor: primaryColor, color: '#000' }}
             >
               +1
@@ -905,7 +905,7 @@ function ProductCard({
         ) : (
           <button
             onClick={onAdd}
-            className="w-full py-1.5 rounded-xl text-[10px] font-black transition-all hover:opacity-80 active:scale-95 cursor-pointer"
+            className="w-full py-1.5 rounded-xl text-2xs font-black transition-all hover:opacity-80 active:scale-95 cursor-pointer"
             style={{ backgroundColor: primaryColor, color: '#000' }}
           >
             Agregar

@@ -121,7 +121,7 @@ const PdfSignPageCanvas = ({ page, pageIndex, currentSignatory, signatories }: a
         return (
           <div
             key={bIdx}
-            className={`absolute border-2 flex flex-col items-center justify-center p-1 text-[8px] font-black uppercase rounded ${
+            className={`absolute border-2 flex flex-col items-center justify-center p-1 text-2xs font-black uppercase rounded ${
               box.isCurrent
                 ? 'border-[#C68A1E] bg-[#C68A1E]/20 text-[#C68A1E] animate-pulse'
                 : box.signature_base64
@@ -402,7 +402,7 @@ export default function CustomContractSignPage() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-[#06070b] text-[#f3f4f6] font-sans">
         <div className="w-10 h-10 border-4 border-[#C68A1E] border-t-transparent rounded-full animate-spin mb-4"></div>
-        <p className="text-[10px] font-black uppercase tracking-[0.4em] opacity-40">Cargando Contrato Digital...</p>
+        <p className="text-2xs font-black uppercase tracking-[0.4em] opacity-40">Cargando Contrato Digital...</p>
       </div>
     );
   }
@@ -419,7 +419,7 @@ export default function CustomContractSignPage() {
         </p>
         <button
           onClick={() => router.push('/')}
-          className="mt-8 px-6 py-2.5 bg-white/5 border border-white/10 hover:bg-white/10 text-[9px] font-black uppercase tracking-widest rounded-xl transition-all"
+          className="mt-8 px-6 py-2.5 bg-white/5 border border-white/10 hover:bg-white/10 text-2xs font-black uppercase tracking-widest rounded-xl transition-all"
         >
           Volver al Inicio
         </button>
@@ -469,23 +469,23 @@ export default function CustomContractSignPage() {
           </div>
 
           <div className="border-b border-white/5 pb-6 mb-8 text-left">
-            <span className="px-2.5 py-0.5 text-[7px] font-black uppercase tracking-widest rounded-full" style={{ backgroundColor: `${primaryColor}15`, color: primaryColor, border: `1px solid ${primaryColor}20` }}>
+            <span className="px-2.5 py-0.5 text-2xs font-black uppercase tracking-widest rounded-full" style={{ backgroundColor: `${primaryColor}15`, color: primaryColor, border: `1px solid ${primaryColor}20` }}>
               CONTRATO DIGITAL
             </span>
             <h2 className="text-2xl sm:text-3xl font-black tracking-tighter text-white mt-4">{contract.title}</h2>
-            <p className="text-[9px] uppercase tracking-widest opacity-40 mt-1">Néctar Labs Ecosystem Legal System</p>
+            <p className="text-2xs uppercase tracking-widest opacity-40 mt-1">Néctar Labs Ecosystem Legal System</p>
           </div>
 
           {/* Document Content */}
           <div className="flex-1 text-left space-y-8 overflow-y-auto max-h-[60vh] pr-4 custom-scrollbar text-xs leading-relaxed text-white/80 select-text">
             {pdfPages.length > 0 ? (
               <div className="space-y-4">
-                <span className="text-[8px] font-black uppercase text-[#C68A1E] block text-center tracking-widest bg-[#C68A1E]/10 border border-[#C68A1E]/20 p-2.5 rounded-xl">
+                <span className="text-2xs font-black uppercase text-[#C68A1E] block text-center tracking-widest bg-[#C68A1E]/10 border border-[#C68A1E]/20 p-2.5 rounded-xl">
                   🔍 Ubicación de Firmas: Busca el bloque dorado que parpadea y firma en el panel derecho.
                 </span>
                 {pdfPages.map((page, idx) => (
                   <div key={idx} className="relative">
-                    <span className="text-[7px] font-black font-mono text-white/35 block text-center mb-1">
+                    <span className="text-2xs font-black font-mono text-white/35 block text-center mb-1">
                       PÁGINA {idx + 1} DE {pdfPages.length}
                     </span>
                     <PdfSignPageCanvas
@@ -501,7 +501,7 @@ export default function CustomContractSignPage() {
               <>
                 {/* Proemio */}
                 <div className="space-y-2">
-                  <h3 className="text-[9px] font-black uppercase tracking-wider" style={{ color: primaryColor }}>PROEMIO</h3>
+                  <h3 className="text-2xs font-black uppercase tracking-wider" style={{ color: primaryColor }}>PROEMIO</h3>
                   <p className="bg-white/[0.02] border border-white/5 p-4 rounded-xl font-medium leading-relaxed italic whitespace-pre-line text-white/70">
                     {contract.proemio}
                   </p>
@@ -509,7 +509,7 @@ export default function CustomContractSignPage() {
 
                 {/* Declaraciones */}
                 <div className="space-y-2">
-                  <h3 className="text-[9px] font-black uppercase tracking-wider" style={{ color: primaryColor }}>DECLARACIONES</h3>
+                  <h3 className="text-2xs font-black uppercase tracking-wider" style={{ color: primaryColor }}>DECLARACIONES</h3>
                   <p className="whitespace-pre-line text-justify leading-relaxed font-normal">
                     {contract.declarations}
                   </p>
@@ -517,7 +517,7 @@ export default function CustomContractSignPage() {
 
                 {/* Clausulas */}
                 <div className="space-y-2">
-                  <h3 className="text-[9px] font-black uppercase tracking-wider" style={{ color: primaryColor }}>CLÁUSULAS</h3>
+                  <h3 className="text-2xs font-black uppercase tracking-wider" style={{ color: primaryColor }}>CLÁUSULAS</h3>
                   <p className="whitespace-pre-line text-justify leading-relaxed font-normal">
                     {contract.clauses}
                   </p>
@@ -531,9 +531,9 @@ export default function CustomContractSignPage() {
             <div className="text-left">
               <span className="text-[7.5px] font-black uppercase tracking-widest opacity-35 block">Estatus del Documento</span>
               {contract.is_fully_signed ? (
-                <span className="text-[10px] font-black text-green-400 mt-1 block uppercase">✓ Totalmente Firmado</span>
+                <span className="text-2xs font-black text-green-400 mt-1 block uppercase">✓ Totalmente Firmado</span>
               ) : (
-                <span className="text-[10px] font-black text-amber-400 mt-1 block uppercase">⚡ Pendiente de Firmas</span>
+                <span className="text-2xs font-black text-amber-400 mt-1 block uppercase">⚡ Pendiente de Firmas</span>
               )}
             </div>
 
@@ -542,7 +542,7 @@ export default function CustomContractSignPage() {
                 href={contract.pdf_file}
                 target="_blank"
                 rel="noreferrer"
-                className="px-4 py-2 border rounded-xl text-[9px] font-black uppercase tracking-widest transition-all"
+                className="px-4 py-2 border rounded-xl text-2xs font-black uppercase tracking-widest transition-all"
                 style={{ borderColor: primaryColor, color: primaryColor, backgroundColor: `${primaryColor}05` }}
               >
                 Descargar Copia Certificada (PDF)
@@ -564,14 +564,14 @@ export default function CustomContractSignPage() {
                 <p className="text-xs text-white/60 leading-relaxed">
                   Has completado de manera exitosa tu firma digital en este contrato.
                 </p>
-                <p className="text-[9px] text-white/40 uppercase tracking-widest font-mono">
+                <p className="text-2xs text-white/40 uppercase tracking-widest font-mono">
                   Tu dirección IP y marca temporal han sido registradas para certificación digital.
                 </p>
               </div>
 
               <div className="border-t border-white/5 pt-4 space-y-2 text-left">
                 <span className="text-[7.5px] font-black uppercase tracking-widest opacity-40 block">Próximos Pasos</span>
-                <p className="text-[10px] text-white/50 leading-normal">
+                <p className="text-2xs text-white/50 leading-normal">
                   Una vez que todos los firmantes hayan estampado su firma, recibirás automáticamente una copia certificada del contrato digital en formato PDF en tu correo electrónico.
                 </p>
               </div>
@@ -580,7 +580,7 @@ export default function CustomContractSignPage() {
             /* Signature Form & Board */
             <div className="bg-white/[0.01] border border-white/5 p-8 rounded-[2.5rem] shadow-xl text-left space-y-6 flex flex-col justify-between">
               <div>
-                <span className="px-2.5 py-0.5 text-[7px] font-black uppercase tracking-widest rounded-full bg-nectar-gold/10 text-nectar-gold border border-nectar-gold/20">
+                <span className="px-2.5 py-0.5 text-2xs font-black uppercase tracking-widest rounded-full bg-nectar-gold/10 text-nectar-gold border border-nectar-gold/20">
                   Panel de Firma
                 </span>
                 <h3 className="text-lg font-black tracking-tight text-white mt-4">Estampar Firma Digital</h3>
@@ -590,7 +590,7 @@ export default function CustomContractSignPage() {
               </div>
 
               {error && (
-                <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-400 text-[9px] uppercase tracking-wider font-bold rounded-xl">
+                <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-400 text-2xs uppercase tracking-wider font-bold rounded-xl">
                   ⚠️ {error}
                 </div>
               )}
@@ -598,7 +598,7 @@ export default function CustomContractSignPage() {
               {/* Draw Area */}
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
-                  <label className="text-[8px] font-black uppercase tracking-widest opacity-40">Dibuja tu firma aquí</label>
+                  <label className="text-2xs font-black uppercase tracking-widest opacity-40">Dibuja tu firma aquí</label>
                   <button
                     onClick={clearCanvas}
                     className="text-[8.5px] text-[#C68A1E] font-black uppercase tracking-wider hover:underline"
@@ -627,7 +627,7 @@ export default function CustomContractSignPage() {
                   )}
                 </div>
 
-                <p className="text-[8px] text-white/30 leading-normal text-justify">
+                <p className="text-2xs text-white/30 leading-normal text-justify">
                   Al pulsar el botón de abajo, reconozco y acepto de manera libre y voluntaria que mi firma electrónica estampada en el lienzo superior posee validez legal e implicaciones vinculantes equivalentes a una firma autógrafa conforme a las legislaciones aplicables de comercio y firma electrónica.
                 </p>
               </div>
@@ -635,7 +635,7 @@ export default function CustomContractSignPage() {
               <button
                 onClick={handleSign}
                 disabled={submitting || !hasDrawn}
-                className="w-full py-4 text-background rounded-xl text-[9px] font-black uppercase tracking-widest transition-all disabled:opacity-40 disabled:scale-100 hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2 shadow-lg cursor-pointer font-bold mt-4"
+                className="w-full py-4 text-background rounded-xl text-2xs font-black uppercase tracking-widest transition-all disabled:opacity-40 disabled:scale-100 hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2 shadow-lg cursor-pointer font-bold mt-4"
                 style={{ backgroundColor: primaryColor }}
               >
                 {submitting ? (
@@ -652,18 +652,18 @@ export default function CustomContractSignPage() {
 
           {/* Involucrados */}
           <div className="bg-white/[0.01] border border-white/5 p-6 rounded-[2rem] shadow-xl text-left space-y-4">
-            <h4 className="text-[9px] font-black uppercase tracking-widest opacity-40">Firmantes Involucrados</h4>
+            <h4 className="text-2xs font-black uppercase tracking-widest opacity-40">Firmantes Involucrados</h4>
             <div className="space-y-3">
               {contract.signatories?.map((sig) => (
                 <div key={sig.id} className="flex justify-between items-center gap-4 text-xs">
                   <div>
                     <h5 className="font-bold text-white/95 leading-none">{sig.name}</h5>
-                    <span className="text-[8px] font-medium opacity-50 block mt-1 uppercase tracking-wider">{sig.role}</span>
+                    <span className="text-2xs font-medium opacity-50 block mt-1 uppercase tracking-wider">{sig.role}</span>
                   </div>
                   {sig.has_signed ? (
-                    <span className="text-[8px] font-black text-green-400 uppercase tracking-widest shrink-0">✓ Firmado</span>
+                    <span className="text-2xs font-black text-green-400 uppercase tracking-widest shrink-0">✓ Firmado</span>
                   ) : (
-                    <span className="text-[8px] font-black text-white/35 uppercase tracking-widest shrink-0 font-bold">Pendiente</span>
+                    <span className="text-2xs font-black text-white/35 uppercase tracking-widest shrink-0 font-bold">Pendiente</span>
                   )}
                 </div>
               ))}
@@ -675,8 +675,8 @@ export default function CustomContractSignPage() {
       {/* Toast popup */}
       {toastMessage && (
         <div className="fixed bottom-6 right-6 z-50 bg-[#0c0d14]/90 border border-green-500/20 p-4 rounded-xl shadow-2xl flex items-center gap-2.5 animate-in fade-in slide-in-from-bottom-2 duration-300">
-          <span className="w-4 h-4 rounded-full bg-green-500/20 text-green-400 flex items-center justify-center text-[9px] font-bold">✓</span>
-          <span className="text-[10px] uppercase font-black tracking-wider text-white">{toastMessage}</span>
+          <span className="w-4 h-4 rounded-full bg-green-500/20 text-green-400 flex items-center justify-center text-2xs font-bold">✓</span>
+          <span className="text-2xs uppercase font-black tracking-wider text-white">{toastMessage}</span>
         </div>
       )}
     </div>

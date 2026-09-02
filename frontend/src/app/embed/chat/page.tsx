@@ -412,7 +412,7 @@ function ChatWidgetContent() {
                 <button
                   onClick={handleLogout}
                   title="Salir"
-                  className="text-[8px] font-black uppercase bg-white/5 px-2 py-1 rounded-lg transition-all border widget-border hover:opacity-85"
+                  className="text-2xs font-black uppercase bg-white/5 px-2 py-1 rounded-lg transition-all border widget-border hover:opacity-85"
                   style={{ color: tenantConfig.accent_color || '#10B981', borderColor: `${tenantConfig.accent_color || '#10B981'}30` }}
                 >
                   Salir
@@ -430,7 +430,7 @@ function ChatWidgetContent() {
           {/* Body Content */}
           <div className="flex-1 overflow-y-auto p-4.5 space-y-4 custom-scrollbar relative">
             {widgetError && (
-              <div className="absolute top-2 left-2 right-2 bg-red-500/90 text-white text-[10px] font-bold p-2.5 rounded-xl text-center z-10 shadow-lg">
+              <div className="absolute top-2 left-2 right-2 bg-red-500/90 text-white text-2xs font-bold p-2.5 rounded-xl text-center z-10 shadow-lg">
                 {widgetError}
               </div>
             )}
@@ -441,21 +441,21 @@ function ChatWidgetContent() {
                   ⚠️
                 </div>
                 <h5 className="font-black text-sm text-white uppercase tracking-wide">¿Cerrar Sesión de Chat?</h5>
-                <p className="text-[10px] text-white/50 max-w-xs mx-auto leading-relaxed">
+                <p className="text-2xs text-white/50 max-w-xs mx-auto leading-relaxed">
                   Esta acción finalizará tu conversación actual con soporte técnico. No podrás reactivar este mismo chat.
                 </p>
                 <div className="flex gap-3 w-full pt-4">
                   <button
                     type="button"
                     onClick={() => setShowCloseConfirm(false)}
-                    className="flex-1 py-2.5 bg-white/5 hover:bg-white/10 text-white border border-white/10 font-black uppercase tracking-widest text-[8px] rounded-xl transition-all cursor-pointer widget-card widget-border"
+                    className="flex-1 py-2.5 bg-white/5 hover:bg-white/10 text-white border border-white/10 font-black uppercase tracking-widest text-2xs rounded-xl transition-all cursor-pointer widget-card widget-border"
                   >
                     Cancelar
                   </button>
                   <button
                     type="button"
                     onClick={confirmCloseChat}
-                    className="flex-1 py-2.5 bg-red-500 hover:bg-red-600 text-white font-black uppercase tracking-widest text-[8px] rounded-xl transition-all cursor-pointer"
+                    className="flex-1 py-2.5 bg-red-500 hover:bg-red-600 text-white font-black uppercase tracking-widest text-2xs rounded-xl transition-all cursor-pointer"
                   >
                     Sí, Cerrar
                   </button>
@@ -474,7 +474,7 @@ function ChatWidgetContent() {
                     </svg>
                   </div>
                   <h5 className="font-black text-sm text-white uppercase tracking-wide">Iniciar Sesión de Soporte</h5>
-                  <p className="text-[10px] text-white/50 max-w-xs mx-auto mt-1 leading-relaxed">
+                  <p className="text-2xs text-white/50 max-w-xs mx-auto mt-1 leading-relaxed">
                     Por favor introduce tu nombre para conectarte con un ingeniero de {tenantConfig.name}.
                   </p>
                 </div>
@@ -494,7 +494,7 @@ function ChatWidgetContent() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full py-3.5 text-black font-black uppercase tracking-widest text-[9px] rounded-xl transition-all hover:scale-[1.01] active:scale-95 disabled:opacity-50 mt-4 cursor-pointer"
+                  className="w-full py-3.5 text-black font-black uppercase tracking-widest text-2xs rounded-xl transition-all hover:scale-[1.01] active:scale-95 disabled:opacity-50 mt-4 cursor-pointer"
                   style={{ backgroundColor: primaryColor }}
                 >
                   {isSubmitting ? 'Iniciando...' : 'Iniciar Conversación'}
@@ -512,13 +512,13 @@ function ChatWidgetContent() {
                   </svg>
                 </div>
                 <h5 className="font-black text-sm text-white uppercase tracking-wide">Canal de Soporte Activo</h5>
-                <p className="text-[10px] text-white/50 max-w-xs mb-8 leading-relaxed mt-1">
+                <p className="text-2xs text-white/50 max-w-xs mb-8 leading-relaxed mt-1">
                   {tenantConfig.welcome_message}
                 </p>
                 <button
                   onClick={handleStartChat}
                   disabled={isSubmitting}
-                  className="w-full py-3.5 text-black font-black uppercase tracking-widest text-[9px] rounded-xl transition-all hover:scale-[1.01] active:scale-95 disabled:opacity-50 cursor-pointer"
+                  className="w-full py-3.5 text-black font-black uppercase tracking-widest text-2xs rounded-xl transition-all hover:scale-[1.01] active:scale-95 disabled:opacity-50 cursor-pointer"
                   style={{ backgroundColor: primaryColor }}
                 >
                   {isSubmitting ? 'Abriendo canal...' : 'Hablar con un Agente'}
@@ -625,7 +625,7 @@ function ChatWidgetContent() {
 
         {hasNewMessages && !isOpen && (
           <span
-            className="absolute top-0 right-0 w-4 h-4 bg-red-500 rounded-full border-2 flex items-center justify-center text-[7px] font-black text-white"
+            className="absolute top-0 right-0 w-4 h-4 bg-red-500 rounded-full border-2 flex items-center justify-center text-2xs font-black text-white"
             style={{ borderColor: tenantConfig.bg_color || '#020403' }}
           >
             !

@@ -153,7 +153,7 @@ export default function StoreConfigTab({ subdomain, primaryColor, onToast, isSta
     <button
       key={key}
       onClick={() => setActiveSection(key)}
-      className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider border transition-all cursor-pointer"
+      className="px-4 py-2 rounded-xl text-2xs font-black uppercase tracking-wider border transition-all cursor-pointer"
       style={{
         backgroundColor: activeSection === key ? `${primaryColor}20` : 'transparent',
         borderColor: activeSection === key ? primaryColor : 'transparent',
@@ -217,7 +217,7 @@ export default function StoreConfigTab({ subdomain, primaryColor, onToast, isSta
                   🏢
                 </div>
               )}
-              <label className="mt-2 block text-center text-[10px] font-black uppercase tracking-wider cursor-pointer transition-all hover:opacity-80" style={{ color: primaryColor }}>
+              <label className="mt-2 block text-center text-2xs font-black uppercase tracking-wider cursor-pointer transition-all hover:opacity-80" style={{ color: primaryColor }}>
                 Cambiar foto
                 <input type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} />
               </label>
@@ -278,13 +278,13 @@ export default function StoreConfigTab({ subdomain, primaryColor, onToast, isSta
 
           {/* Shipment category */}
           <div className="p-5 rounded-3xl border border-white/10 bg-white/5 space-y-3">
-            <p className="text-[10px] font-black uppercase tracking-widest opacity-50">Tipo de producto que envías</p>
+            <p className="text-2xs font-black uppercase tracking-widest opacity-50">Tipo de producto que envías</p>
             <div className="flex flex-wrap gap-2">
               {SHIPMENT_CATEGORIES.map(cat => (
                 <button
                   key={cat.value}
                   onClick={() => setConfig(p => ({ ...p, shipment_category: cat.value }))}
-                  className="px-3 py-2 rounded-xl text-[10px] font-black border transition-all cursor-pointer"
+                  className="px-3 py-2 rounded-xl text-2xs font-black border transition-all cursor-pointer"
                   style={{
                     backgroundColor: config.shipment_category === cat.value ? `${primaryColor}20` : 'transparent',
                     borderColor: config.shipment_category === cat.value ? primaryColor : 'rgba(255,255,255,0.1)',
@@ -299,7 +299,7 @@ export default function StoreConfigTab({ subdomain, primaryColor, onToast, isSta
 
           {/* Delivery modes */}
           <div className="p-5 rounded-3xl border border-white/10 bg-white/5 space-y-3">
-            <p className="text-[10px] font-black uppercase tracking-widest opacity-50">Modalidades de entrega</p>
+            <p className="text-2xs font-black uppercase tracking-widest opacity-50">Modalidades de entrega</p>
             <div className="flex flex-col sm:flex-row gap-3">
               {[
                 { key: 'offers_local_delivery' as const, label: '🛵 Entrega local (repartidor propio)' },
@@ -328,7 +328,7 @@ export default function StoreConfigTab({ subdomain, primaryColor, onToast, isSta
       {activeSection === 'boxes' && (
         <div className="space-y-5">
           <div className="p-5 rounded-3xl border border-white/10 bg-white/5 space-y-4">
-            <p className="text-[10px] font-black uppercase tracking-widest opacity-50">Tamaños de caja disponibles</p>
+            <p className="text-2xs font-black uppercase tracking-widest opacity-50">Tamaños de caja disponibles</p>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {BOX_SIZES.map(box => {
                 const selected = selectedBoxSizes.includes(box.code);
@@ -343,7 +343,7 @@ export default function StoreConfigTab({ subdomain, primaryColor, onToast, isSta
                     }}
                   >
                     <p className="text-sm font-black" style={{ color: selected ? primaryColor : 'inherit' }}>{box.code}</p>
-                    <p className="text-[10px] opacity-50">{box.label.split('— ')[1]}</p>
+                    <p className="text-2xs opacity-50">{box.label.split('— ')[1]}</p>
                   </button>
                 );
               })}
@@ -352,7 +352,7 @@ export default function StoreConfigTab({ subdomain, primaryColor, onToast, isSta
 
           {selectedBoxSizes.includes('CUSTOM') && (
             <div className="p-5 rounded-3xl border border-white/10 bg-white/5 space-y-3">
-              <p className="text-[10px] font-black uppercase tracking-widest opacity-50">Dimensiones personalizadas</p>
+              <p className="text-2xs font-black uppercase tracking-widest opacity-50">Dimensiones personalizadas</p>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {[
                   { key: 'custom_box_length_cm', label: 'Largo (cm)' },
@@ -361,7 +361,7 @@ export default function StoreConfigTab({ subdomain, primaryColor, onToast, isSta
                   { key: 'custom_box_weight_kg', label: 'Peso máx (kg)' },
                 ].map(field => (
                   <div key={field.key} className="space-y-1">
-                    <label className="text-[9px] font-black uppercase tracking-wider opacity-50">{field.label}</label>
+                    <label className="text-2xs font-black uppercase tracking-wider opacity-50">{field.label}</label>
                     <input
                       type="number"
                       min="0"
@@ -386,17 +386,17 @@ export default function StoreConfigTab({ subdomain, primaryColor, onToast, isSta
               <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-xl shrink-0">📡</div>
               <div>
                 <p className="text-sm font-black">Integración Skydropx</p>
-                <p className="text-[10px] opacity-50">Plataforma multi-paquetería (FedEx, DHL, Estafeta, J&T, etc.)</p>
+                <p className="text-2xs opacity-50">Plataforma multi-paquetería (FedEx, DHL, Estafeta, J&T, etc.)</p>
               </div>
               {config.has_skydropx_api_key && (
-                <span className="ml-auto px-2 py-1 rounded-lg bg-green-500/10 border border-green-500/20 text-[9px] font-black text-green-400 shrink-0">
+                <span className="ml-auto px-2 py-1 rounded-lg bg-green-500/10 border border-green-500/20 text-2xs font-black text-green-400 shrink-0">
                   ✓ Configurado
                 </span>
               )}
             </div>
             {isStaff ? (
               <div className="space-y-1">
-                <label className="text-[9px] font-black uppercase tracking-wider opacity-50">API Key de Skydropx</label>
+                <label className="text-2xs font-black uppercase tracking-wider opacity-50">API Key de Skydropx</label>
                 <input
                   type="password"
                   placeholder={config.has_skydropx_api_key ? '••••••••••••• (dejar vacío para no cambiar)' : 'sk_live_...'}
@@ -415,7 +415,7 @@ export default function StoreConfigTab({ subdomain, primaryColor, onToast, isSta
               </div>
             )}
             <div className="space-y-1">
-              <label className="text-[9px] font-black uppercase tracking-wider opacity-50">Markup sobre tarifa de courier (%)</label>
+              <label className="text-2xs font-black uppercase tracking-wider opacity-50">Markup sobre tarifa de courier (%)</label>
               <input
                 type="number"
                 min="0"
@@ -426,9 +426,9 @@ export default function StoreConfigTab({ subdomain, primaryColor, onToast, isSta
                 onChange={e => setConfig(p => ({ ...p, shipping_markup_percentage: e.target.value }))}
                 className={`${inputCls} disabled:opacity-50 disabled:cursor-not-allowed`}
               />
-              <p className="text-[9px] opacity-40">Porcentaje que se suma al costo real de la guía antes de mostrar al cliente.</p>
+              <p className="text-2xs opacity-40">Porcentaje que se suma al costo real de la guía antes de mostrar al cliente.</p>
               {!isStaff && (
-                <p className="text-[9px] text-amber-500/80 font-bold">
+                <p className="text-2xs text-amber-500/80 font-bold">
                   * Solo el CEO o administradores de Nectar Labs pueden modificar esta tasa.
                 </p>
               )}

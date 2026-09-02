@@ -109,7 +109,7 @@ interface DownloadOption {
       <section className="w-full pt-36 pb-20 px-6 max-w-7xl mx-auto text-center relative overflow-hidden">
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-nectar-gold/10 blur-[120px] rounded-full pointer-events-none" />
 
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-nectar-gold/10 border border-nectar-gold/30 text-nectar-gold text-[10px] font-black uppercase tracking-widest mb-6 animate-fade-in">
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-nectar-gold/10 border border-nectar-gold/30 text-nectar-gold text-2xs font-black uppercase tracking-widest mb-6 animate-fade-in">
           <span className="w-2 h-2 rounded-full bg-nectar-gold animate-pulse" />
           NectarQ Desktop Client & Kiosk Manager
         </div>
@@ -136,7 +136,7 @@ interface DownloadOption {
             >
               <span className="capitalize">{os}</span>
               {detectedOS === os && (
-                <span className="px-1.5 py-0.5 text-[8px] bg-background/20 text-background rounded font-bold">
+                <span className="px-1.5 py-0.5 text-2xs bg-background/20 text-background rounded font-bold">
                   Tu SO
                 </span>
               )}
@@ -164,7 +164,7 @@ interface DownloadOption {
               className="w-full py-4 px-6 bg-nectar-gold text-background font-black text-xs uppercase tracking-widest rounded-2xl flex items-center justify-between hover:scale-[1.02] active:scale-98 transition-transform shadow-lg shadow-nectar-gold/20"
             >
               <span>{downloads[activeTab].primary.label}</span>
-              <span className="text-[9px] bg-background/20 px-2 py-1 rounded font-mono">
+              <span className="text-2xs bg-background/20 px-2 py-1 rounded font-mono">
                 {downloads[activeTab].primary.format}
               </span>
             </a>
@@ -177,14 +177,14 @@ interface DownloadOption {
                 className="w-full py-3.5 px-6 bg-foreground/5 border border-card-border text-foreground font-black text-xs uppercase tracking-widest rounded-2xl flex items-center justify-between hover:bg-foreground/10 transition-all"
               >
                 <span>{downloads[activeTab].secondary!.label}</span>
-                <span className="text-[9px] text-muted font-mono">
+                <span className="text-2xs text-muted font-mono">
                   {downloads[activeTab].secondary!.format}
                 </span>
               </a>
             )}
           </div>
 
-          <p className="text-[10px] text-muted mt-6 text-left border-t border-card-border pt-4">
+          <p className="text-2xs text-muted mt-6 text-left border-t border-card-border pt-4">
             * Licencia de libre uso para sucursales registradas en el ecosistema Nectar Labs.
           </p>
         </div>
@@ -193,7 +193,7 @@ interface DownloadOption {
       {/* Feature Grid */}
       <section className="w-full py-20 px-6 max-w-7xl mx-auto border-t border-card-border">
         <div className="text-center mb-16">
-          <span className="text-[10px] font-black uppercase tracking-[0.4em] text-nectar-gold block mb-2">
+          <span className="text-2xs font-black uppercase tracking-[0.4em] text-nectar-gold block mb-2">
             Módulos del Sistema
           </span>
           <h2 className="text-3xl sm:text-5xl font-black tracking-tight text-foreground">

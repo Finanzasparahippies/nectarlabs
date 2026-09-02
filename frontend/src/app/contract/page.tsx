@@ -7,7 +7,7 @@ export default function ContractPage() {
   return (
     <div className="min-h-screen bg-background text-foreground p-8 md:p-24">
       <div className="max-w-4xl mx-auto bg-card-bg border border-card-border rounded-[3rem] p-12 md:p-20 shadow-2xl">
-        <Link href="/" className="inline-block mb-12 text-[10px] font-black uppercase tracking-widest opacity-40 hover:opacity-100 transition-opacity">
+        <Link href="/" className="inline-block mb-12 text-2xs font-black uppercase tracking-widest opacity-40 hover:opacity-100 transition-opacity">
           ← Volver a Nectar Labs
         </Link>
         
@@ -25,14 +25,14 @@ export default function ContractPage() {
             <h2 className="text-xl font-black uppercase tracking-tight">DECLARACIONES Y DATOS DE LAS PARTES</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="space-y-2 p-6 bg-background/50 rounded-2xl border border-card-border">
-                <h3 className="font-black text-[10px] uppercase text-nectar-gold">EL DESARROLLADOR</h3>
+                <h3 className="font-black text-2xs uppercase text-nectar-gold">EL DESARROLLADOR</h3>
                 <p><strong>Jesus Saul Villegas Cruz</strong></p>
                 <p>RFC: VICJ911227KY2</p>
                 <p>Domicilio: Poder Legislativo 345, col. Ley 57. Hermosillo, Sonora.</p>
                 <p>Email: contacto@finanzasparahippies.com</p>
               </div>
               <div className="space-y-2 p-6 bg-background/50 rounded-2xl border border-card-border opacity-50">
-                <h3 className="font-black text-[10px] uppercase text-nectar-gold">EL CLIENTE</h3>
+                <h3 className="font-black text-2xs uppercase text-nectar-gold">EL CLIENTE</h3>
                 <p>Razón Social: ___________________</p>
                 <p>RFC: __________________________</p>
                 <p>Domicilio: ______________________</p>
@@ -74,7 +74,7 @@ export default function ContractPage() {
               <div className="p-4 border border-card-border rounded-xl text-xs"><strong>Quincenal:</strong> $900 MXN<br/>(6h/mes - 1.5h/sem)</div>
               <div className="p-4 border border-card-border rounded-xl text-xs"><strong>Semanal:</strong> $500 MXN<br/>(4h/mes - 1h/sem)</div>
             </div>
-            <p className="text-[10px] opacity-60">Nota: Los costos de diseño de marca son adicionales a la suscripción de ingeniería seleccionada.</p>
+            <p className="text-2xs opacity-60">Nota: Los costos de diseño de marca son adicionales a la suscripción de ingeniería seleccionada.</p>
           </section>
 
           <section className="space-y-4">
@@ -109,12 +109,12 @@ export default function ContractPage() {
             <div className="text-center space-y-4">
               <div className="h-0.5 w-full bg-foreground/20 mb-8"></div>
               <p className="font-black">Jesus Saul Villegas Cruz</p>
-              <p className="text-[10px] uppercase opacity-40 italic">EL DESARROLLADOR</p>
+              <p className="text-2xs uppercase opacity-40 italic">EL DESARROLLADOR</p>
             </div>
             <div className="text-center space-y-4">
               <div className="h-0.5 w-full bg-foreground/20 mb-8"></div>
               <p className="font-black">___________________________</p>
-              <p className="text-[10px] uppercase opacity-40 italic">EL CLIENTE</p>
+              <p className="text-2xs uppercase opacity-40 italic">EL CLIENTE</p>
             </div>
           </footer>
         </div>

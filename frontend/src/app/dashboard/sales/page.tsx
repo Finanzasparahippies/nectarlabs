@@ -125,7 +125,7 @@ export default function SalesOraclePage() {
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#151F18] pb-6">
           <div>
-            <span className="text-[9px] text-nectar-gold font-black uppercase tracking-[0.4em] block mb-2">Simulador de Comisiones y ROI</span>
+            <span className="text-2xs text-nectar-gold font-black uppercase tracking-[0.4em] block mb-2">Simulador de Comisiones y ROI</span>
             <h1 className="text-3xl font-black uppercase tracking-widest text-white">
               Néctar Financial Oracle
             </h1>
@@ -135,7 +135,7 @@ export default function SalesOraclePage() {
           </div>
           <div className="bg-[#050a06] border border-[#151F18] px-4 py-2.5 rounded-2xl flex items-center gap-3">
             <span className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse"></span>
-            <span className="text-[10px] font-black uppercase tracking-widest text-green-400">Algoritmo Ir 1.2 Activo</span>
+            <span className="text-2xs font-black uppercase tracking-widest text-green-400">Algoritmo Ir 1.2 Activo</span>
           </div>
         </div>
 
@@ -152,9 +152,9 @@ export default function SalesOraclePage() {
               <div className="flex justify-between items-start">
                 <div>
                   <h3 className="text-xs font-black uppercase tracking-widest text-white">El Ataque Semanal ($1,000)</h3>
-                  <p className="text-[10px] text-white/40 uppercase tracking-wider mt-0.5">Parcialidades que optimizan tu liquidez</p>
+                  <p className="text-2xs text-white/40 uppercase tracking-wider mt-0.5">Parcialidades que optimizan tu liquidez</p>
                 </div>
-                <span className="bg-[#10B981]/10 border border-[#10B981]/25 text-[#10B981] px-2.5 py-1 rounded-full text-[8px] font-black uppercase tracking-widest">
+                <span className="bg-[#10B981]/10 border border-[#10B981]/25 text-[#10B981] px-2.5 py-1 rounded-full text-2xs font-black uppercase tracking-widest">
                   Frecuencia Semanal
                 </span>
               </div>
@@ -192,7 +192,7 @@ export default function SalesOraclePage() {
                 />
               </div>
 
-              <div className="pt-4 border-t border-[#151F18] flex justify-between text-[10px] uppercase font-black text-white/50">
+              <div className="pt-4 border-t border-[#151F18] flex justify-between text-2xs uppercase font-black text-white/50">
                 <span>Flujo Mensual Equivalente (wFlow):</span>
                 <span className="text-[#10B981] font-mono">${(weeklyClients * weeklyTicket * 4).toLocaleString('es-MX')} MXN / mes</span>
               </div>
@@ -205,9 +205,9 @@ export default function SalesOraclePage() {
               <div className="flex justify-between items-start">
                 <div>
                   <h3 className="text-xs font-black uppercase tracking-widest text-white">Planes Mensuales de Ingeniería</h3>
-                  <p className="text-[10px] text-white/40 uppercase tracking-wider mt-0.5">Esquemas fijos de socio tecnológico</p>
+                  <p className="text-2xs text-white/40 uppercase tracking-wider mt-0.5">Esquemas fijos de socio tecnológico</p>
                 </div>
-                <span className="bg-[#C68A1E]/10 border border-[#C68A1E]/25 text-[#C68A1E] px-2.5 py-1 rounded-full text-[8px] font-black uppercase tracking-widest">
+                <span className="bg-[#C68A1E]/10 border border-[#C68A1E]/25 text-[#C68A1E] px-2.5 py-1 rounded-full text-2xs font-black uppercase tracking-widest">
                   Frecuencia Mensual
                 </span>
               </div>
@@ -245,7 +245,7 @@ export default function SalesOraclePage() {
                 />
               </div>
 
-              <div className="pt-4 border-t border-[#151F18] flex justify-between text-[10px] uppercase font-black text-white/50">
+              <div className="pt-4 border-t border-[#151F18] flex justify-between text-2xs uppercase font-black text-white/50">
                 <span>Flujo Mensual (mFlow):</span>
                 <span className="text-[#10B981] font-mono">${(monthlyClients * monthlyTicket).toLocaleString('es-MX')} MXN / mes</span>
               </div>
@@ -258,9 +258,9 @@ export default function SalesOraclePage() {
               <div className="flex justify-between items-start">
                 <div>
                   <h3 className="text-xs font-black uppercase tracking-widest text-white">Proyectos a Medida (Cotizados)</h3>
-                  <p className="text-[10px] text-white/40 uppercase tracking-wider mt-0.5">Comisión única del 20% pagada al anticipo</p>
+                  <p className="text-2xs text-white/40 uppercase tracking-wider mt-0.5">Comisión única del 20% pagada al anticipo</p>
                 </div>
-                <span className="bg-blue-500/10 border border-blue-500/25 text-blue-400 px-2.5 py-1 rounded-full text-[8px] font-black uppercase tracking-widest">
+                <span className="bg-blue-500/10 border border-blue-500/25 text-blue-400 px-2.5 py-1 rounded-full text-2xs font-black uppercase tracking-widest">
                   Pago Único / Proyecto
                 </span>
               </div>
@@ -298,7 +298,7 @@ export default function SalesOraclePage() {
                 />
               </div>
 
-              <div className="pt-4 border-t border-[#151F18] flex justify-between text-[10px] uppercase font-black text-white/50">
+              <div className="pt-4 border-t border-[#151F18] flex justify-between text-2xs uppercase font-black text-white/50">
                 <span>Flujo de Proyecto Proyectado (cFlow):</span>
                 <span className="text-[#10B981] font-mono">${(customQuotes * customQuoteVal).toLocaleString('es-MX')} MXN</span>
               </div>
@@ -318,7 +318,7 @@ export default function SalesOraclePage() {
               <div>
                 <div className="flex justify-between items-center mb-6">
                   <div>
-                    <span className="text-[8px] font-black uppercase tracking-[0.3em] text-nectar-gold block mb-1">
+                    <span className="text-2xs font-black uppercase tracking-[0.3em] text-nectar-gold block mb-1">
                       Proyección de Comisión Residual
                     </span>
                     <h3 className="text-lg font-black uppercase tracking-widest text-white">Impacto Financiero</h3>
@@ -409,23 +409,23 @@ export default function SalesOraclePage() {
                   )}
 
                   {/* Active Tooltip Info */}
-                  <div className="h-10 flex items-center justify-between px-3.5 border-t border-[#151F18]/50 text-[10px] font-mono text-white/50">
+                  <div className="h-10 flex items-center justify-between px-3.5 border-t border-[#151F18]/50 text-2xs font-mono text-white/50">
                     {activePoint !== null ? (
                       <>
-                        <span className="uppercase text-[8px] font-black tracking-wider text-nectar-gold">Detalle {projections[activePoint].label}:</span>
+                        <span className="uppercase text-2xs font-black tracking-wider text-nectar-gold">Detalle {projections[activePoint].label}:</span>
                         <span>Comisión Acumulada: <strong className="text-white font-bold">${projections[activePoint].cumulativeCommissions.toLocaleString('es-MX', { maximumFractionDigits: 0 })} MXN</strong></span>
                         <span>Mes Flujo: <strong className="text-white font-bold">${projections[activePoint].grossFlow.toLocaleString('es-MX', { maximumFractionDigits: 0 })} MXN</strong></span>
                       </>
                     ) : (
-                      <span className="w-full text-center text-[8px] font-black uppercase tracking-widest text-white/30 animate-pulse">Pasa el cursor sobre los nodos para inspeccionar los meses</span>
+                      <span className="w-full text-center text-2xs font-black uppercase tracking-widest text-white/30 animate-pulse">Pasa el cursor sobre los nodos para inspeccionar los meses</span>
                     )}
                   </div>
                 </div>
 
                 {/* Explanation text on weekly payment cash flow impact */}
                 <div className="p-4 rounded-2xl bg-white/[0.02] border border-[#1c2e26]/30 text-xs space-y-2">
-                  <span className="text-[8px] font-black uppercase tracking-wider text-nectar-gold block">Previsión de Flujo Semanal</span>
-                  <p className="text-[10px] text-white/50 leading-relaxed">
+                  <span className="text-2xs font-black uppercase tracking-wider text-nectar-gold block">Previsión de Flujo Semanal</span>
+                  <p className="text-2xs text-white/50 leading-relaxed">
                     Al diluir los cobros en parcialidades semanales de <strong className="text-white font-bold">${weeklyTicket.toLocaleString('es-MX')} MXN</strong>, la línea de ingresos se suaviza y la liquidez se estabiliza. En lugar de picos de tesorería a final de mes, el negocio recibe un goteo síncrono de efectivo constante.
                   </p>
                 </div>
@@ -442,7 +442,7 @@ export default function SalesOraclePage() {
                     setCustomQuotes(1);
                     setCustomQuoteVal(50000);
                   }}
-                  className="w-full py-4 bg-[#C68A1E] text-background hover:bg-[#C68A1E]/95 text-[10px] font-black uppercase tracking-widest rounded-2xl hover:scale-[1.02] active:scale-95 transition-all shadow-xl cursor-pointer"
+                  className="w-full py-4 bg-[#C68A1E] text-background hover:bg-[#C68A1E]/95 text-2xs font-black uppercase tracking-widest rounded-2xl hover:scale-[1.02] active:scale-95 transition-all shadow-xl cursor-pointer"
                 >
                   Restablecer Simulador
                 </button>

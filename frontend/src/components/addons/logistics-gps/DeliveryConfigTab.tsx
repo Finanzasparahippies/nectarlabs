@@ -144,7 +144,7 @@ export default function DeliveryConfigTab({ subdomain, primaryColor, onToast }: 
     <button
       key={key}
       onClick={() => setActiveSection(key)}
-      className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider border transition-all cursor-pointer relative"
+      className="px-4 py-2 rounded-xl text-2xs font-black uppercase tracking-wider border transition-all cursor-pointer relative"
       style={{
         backgroundColor: activeSection === key ? `${primaryColor}20` : 'transparent',
         borderColor: activeSection === key ? primaryColor : 'transparent',
@@ -154,7 +154,7 @@ export default function DeliveryConfigTab({ subdomain, primaryColor, onToast }: 
       {icon} {label}
       {badge !== undefined && badge > 0 && (
         <span
-          className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-black text-black"
+          className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full flex items-center justify-center text-2xs font-black text-black"
           style={{ backgroundColor: primaryColor }}
         >
           {badge}
@@ -192,10 +192,10 @@ export default function DeliveryConfigTab({ subdomain, primaryColor, onToast }: 
       {activeSection === 'map' && (
         <div className="space-y-5">
           <div className="p-5 rounded-3xl border border-white/10 bg-white/5 space-y-4">
-            <p className="text-[10px] font-black uppercase tracking-widest opacity-50">Centro del mapa (por defecto)</p>
+            <p className="text-2xs font-black uppercase tracking-widest opacity-50">Centro del mapa (por defecto)</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1">
-                <label className="text-[9px] font-black uppercase tracking-wider opacity-50">Latitud</label>
+                <label className="text-2xs font-black uppercase tracking-wider opacity-50">Latitud</label>
                 <input
                   type="number" step="any"
                   value={config.map_center_latitude}
@@ -204,7 +204,7 @@ export default function DeliveryConfigTab({ subdomain, primaryColor, onToast }: 
                 />
               </div>
               <div className="space-y-1">
-                <label className="text-[9px] font-black uppercase tracking-wider opacity-50">Longitud</label>
+                <label className="text-2xs font-black uppercase tracking-wider opacity-50">Longitud</label>
                 <input
                   type="number" step="any"
                   value={config.map_center_longitude}
@@ -213,7 +213,7 @@ export default function DeliveryConfigTab({ subdomain, primaryColor, onToast }: 
                 />
               </div>
               <div className="space-y-1">
-                <label className="text-[9px] font-black uppercase tracking-wider opacity-50">Zoom inicial (1–19)</label>
+                <label className="text-2xs font-black uppercase tracking-wider opacity-50">Zoom inicial (1–19)</label>
                 <input
                   type="number" min="1" max="19"
                   value={config.zoom_level}
@@ -222,7 +222,7 @@ export default function DeliveryConfigTab({ subdomain, primaryColor, onToast }: 
                 />
               </div>
               <div className="space-y-1">
-                <label className="text-[9px] font-black uppercase tracking-wider opacity-50">Radio de búsqueda de repartidor (km)</label>
+                <label className="text-2xs font-black uppercase tracking-wider opacity-50">Radio de búsqueda de repartidor (km)</label>
                 <input
                   type="number" min="1" max="200"
                   value={config.driver_search_radius_km}
@@ -235,7 +235,7 @@ export default function DeliveryConfigTab({ subdomain, primaryColor, onToast }: 
 
           {/* Toggles */}
           <div className="p-5 rounded-3xl border border-white/10 bg-white/5 space-y-4">
-            <p className="text-[10px] font-black uppercase tracking-widest opacity-50">Opciones de rastreo</p>
+            <p className="text-2xs font-black uppercase tracking-widest opacity-50">Opciones de rastreo</p>
             {[
               { key: 'enable_public_tracking' as const, label: '🌐 Rastreo público activado', desc: 'Los clientes pueden ver la ubicación del repartidor en tiempo real' },
               { key: 'enable_realtime' as const, label: '⚡ WebSocket en tiempo real', desc: 'Actualización instantánea vía WebSocket (requiere servidor Channels + Redis)' },
@@ -253,7 +253,7 @@ export default function DeliveryConfigTab({ subdomain, primaryColor, onToast }: 
                 </div>
                 <div>
                   <p className="text-xs font-black">{opt.label}</p>
-                  <p className="text-[10px] opacity-40 mt-0.5">{opt.desc}</p>
+                  <p className="text-2xs opacity-40 mt-0.5">{opt.desc}</p>
                 </div>
               </div>
             ))}
@@ -284,7 +284,7 @@ export default function DeliveryConfigTab({ subdomain, primaryColor, onToast }: 
             <div className="text-center py-16 opacity-50 space-y-2">
               <span className="text-4xl">🛵</span>
               <p className="text-xs font-black uppercase tracking-widest">Sin repartidores registrados</p>
-              <button onClick={() => setActiveSection('new-driver')} className="text-[10px] underline cursor-pointer" style={{ color: primaryColor }}>
+              <button onClick={() => setActiveSection('new-driver')} className="text-2xs underline cursor-pointer" style={{ color: primaryColor }}>
                 Agregar el primero
               </button>
             </div>
@@ -299,23 +299,23 @@ export default function DeliveryConfigTab({ subdomain, primaryColor, onToast }: 
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-black truncate">{driver.name}</p>
-                  <p className="text-[10px] opacity-50 truncate">
+                  <p className="text-2xs opacity-50 truncate">
                     {driver.phone || driver.email || 'Sin contacto'} • {driver.plate_number || 'Sin placa'}
                   </p>
                   {driver.active_order_count > 0 && (
-                    <span className="text-[9px] font-black px-1.5 py-0.5 rounded-md" style={{ backgroundColor: `${primaryColor}20`, color: primaryColor }}>
+                    <span className="text-2xs font-black px-1.5 py-0.5 rounded-md" style={{ backgroundColor: `${primaryColor}20`, color: primaryColor }}>
                       {driver.active_order_count} entrega{driver.active_order_count !== 1 ? 's' : ''} activa{driver.active_order_count !== 1 ? 's' : ''}
                     </span>
                   )}
                 </div>
                 <div className="flex items-center gap-3 shrink-0">
                   {driver.is_verified ? (
-                    <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-green-500/10 text-green-400 border border-green-500/20 font-black">✓ Verificado</span>
+                    <span className="text-2xs px-1.5 py-0.5 rounded-md bg-green-500/10 text-green-400 border border-green-500/20 font-black">✓ Verificado</span>
                   ) : (
                     <button
                       type="button"
                       onClick={() => handleVerifyDriver(driver.id)}
-                      className="px-3 py-1.5 bg-green-600 hover:bg-green-500 text-white text-[9px] font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-md"
+                      className="px-3 py-1.5 bg-green-600 hover:bg-green-500 text-white text-2xs font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-md"
                     >
                       ✓ Autorizar
                     </button>
@@ -341,7 +341,7 @@ export default function DeliveryConfigTab({ subdomain, primaryColor, onToast }: 
       {/* ── Section: New Driver ── */}
       {activeSection === 'new-driver' && (
         <div className="p-5 rounded-3xl border border-white/10 bg-white/5 space-y-4">
-          <p className="text-[10px] font-black uppercase tracking-widest opacity-50">Registro de nuevo repartidor</p>
+          <p className="text-2xs font-black uppercase tracking-widest opacity-50">Registro de nuevo repartidor</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <input
               type="text"
@@ -372,13 +372,13 @@ export default function DeliveryConfigTab({ subdomain, primaryColor, onToast }: 
               className={inputCls}
             />
             <div className="sm:col-span-2 space-y-1">
-              <label className="text-[9px] font-black uppercase tracking-wider opacity-50">Tipo de vehículo</label>
+              <label className="text-2xs font-black uppercase tracking-wider opacity-50">Tipo de vehículo</label>
               <div className="flex flex-wrap gap-2">
                 {VEHICLE_TYPES.map(v => (
                   <button
                     key={v.value}
                     onClick={() => setNewDriver(p => ({ ...p, vehicle_type: v.value }))}
-                    className="px-3 py-2 rounded-xl text-[10px] font-black border transition-all cursor-pointer"
+                    className="px-3 py-2 rounded-xl text-2xs font-black border transition-all cursor-pointer"
                     style={{
                       backgroundColor: newDriver.vehicle_type === v.value ? `${primaryColor}20` : 'transparent',
                       borderColor: newDriver.vehicle_type === v.value ? primaryColor : 'rgba(255,255,255,0.1)',

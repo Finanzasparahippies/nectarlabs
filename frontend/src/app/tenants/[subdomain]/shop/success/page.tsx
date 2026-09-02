@@ -78,7 +78,7 @@ export default function ShopSuccessPage() {
             </div>
             <Link 
               href={`/`}
-              className="inline-block px-8 py-3.5 border border-white/10 hover:bg-white/5 text-white/80 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
+              className="inline-block px-8 py-3.5 border border-white/10 hover:bg-white/5 text-white/80 rounded-xl text-2xs font-black uppercase tracking-widest transition-all"
             >
               Regresar al Portal
             </Link>
@@ -95,28 +95,28 @@ export default function ShopSuccessPage() {
 
             {/* Success message details */}
             <div>
-              <span className="px-3 py-1 bg-[#10B981]/10 text-[#10B981] text-[8px] font-black uppercase tracking-widest rounded-full border border-[#10B981]/20">
+              <span className="px-3 py-1 bg-[#10B981]/10 text-[#10B981] text-2xs font-black uppercase tracking-widest rounded-full border border-[#10B981]/20">
                 Pago Procesado Correctamente
               </span>
               <h1 className="text-3xl font-black tracking-tighter text-white mt-4 uppercase">¡Gracias por tu compra!</h1>
-              <p className="text-[10px] uppercase tracking-wider text-white/40 mt-1">Pedido registrado exitosamente en {subdomain.toUpperCase()}</p>
+              <p className="text-2xs uppercase tracking-wider text-white/40 mt-1">Pedido registrado exitosamente en {subdomain.toUpperCase()}</p>
             </div>
 
             {/* Billing breakdown */}
             <div className="bg-white/[0.01] border border-white/5 rounded-2xl p-6 text-left space-y-4">
-              <div className="flex justify-between border-b border-white/5 pb-2 text-[10px]">
+              <div className="flex justify-between border-b border-white/5 pb-2 text-2xs">
                 <span className="text-white/40 uppercase font-black">ID del Pedido:</span>
                 <span className="font-mono font-bold text-white"># {order?.id}</span>
               </div>
-              <div className="flex justify-between border-b border-white/5 pb-2 text-[10px]">
+              <div className="flex justify-between border-b border-white/5 pb-2 text-2xs">
                 <span className="text-white/40 uppercase font-black">Cliente:</span>
                 <span className="font-bold text-white">{order?.full_name}</span>
               </div>
-              <div className="flex justify-between border-b border-white/5 pb-2 text-[10px]">
+              <div className="flex justify-between border-b border-white/5 pb-2 text-2xs">
                 <span className="text-white/40 uppercase font-black">Método de Envío:</span>
                 <span className="font-bold text-[#C68A1E] uppercase">{order?.shipping_provider}</span>
               </div>
-              <div className="flex justify-between text-[11px] font-bold">
+              <div className="flex justify-between text-xs font-bold">
                 <span className="text-white/60 uppercase font-black">Total Pagado:</span>
                 <span className="text-[#C68A1E] font-mono">${parseFloat(order?.total || '0').toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN</span>
               </div>
@@ -128,13 +128,13 @@ export default function ShopSuccessPage() {
                 <div className="absolute top-0 right-0 w-24 h-24 bg-green-500/[0.02] rounded-full blur-xl"></div>
                 <div>
                   <h3 className="text-sm font-black uppercase tracking-wider text-green-400">🏍️ ¡Rastreo Local Activado!</h3>
-                  <p className="text-[9px] text-white/60 leading-relaxed mt-1.5 max-w-sm mx-auto">
+                  <p className="text-2xs text-white/60 leading-relaxed mt-1.5 max-w-sm mx-auto">
                     Tu pedido califica para entrega local inmediata. Un repartidor de nuestra flota ecológica se encuentra preparando tu despacho. Puedes seguir su posición en vivo sobre el mapa satelital.
                   </p>
                 </div>
                 <Link
                   href={`/?addon=delivery-tracking`}
-                  className="inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-[#C68A1E] text-black font-black uppercase tracking-widest text-[9px] rounded-xl hover:scale-105 active:scale-95 transition-all shadow-lg shadow-[#C68A1E]/30 w-full cursor-pointer font-bold"
+                  className="inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-[#C68A1E] text-black font-black uppercase tracking-widest text-2xs rounded-xl hover:scale-105 active:scale-95 transition-all shadow-lg shadow-[#C68A1E]/30 w-full cursor-pointer font-bold"
                 >
                   📍 Rastrear en tiempo real
                 </Link>
@@ -145,14 +145,14 @@ export default function ShopSuccessPage() {
                 <div className="bg-white/[0.01] border border-white/5 rounded-2xl p-6 text-center space-y-4">
                   <div>
                     <h3 className="text-xs font-black uppercase tracking-wider text-white">Número de Guía (Skydropx)</h3>
-                    <p className="text-[10px] font-mono font-bold text-nectar-gold mt-1.5">{order.tracking_number}</p>
+                    <p className="text-2xs font-mono font-bold text-nectar-gold mt-1.5">{order.tracking_number}</p>
                   </div>
                   {order.tracking_url && (
                     <a
                       href={order.tracking_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-block w-full py-3.5 border border-white/10 hover:bg-white/5 rounded-xl text-[9px] font-black uppercase tracking-widest text-white transition-all text-center"
+                      className="inline-block w-full py-3.5 border border-white/10 hover:bg-white/5 rounded-xl text-2xs font-black uppercase tracking-widest text-white transition-all text-center"
                     >
                       ✈️ Abrir Portal de Rastreo de Paquetería
                     </a>
@@ -164,7 +164,7 @@ export default function ShopSuccessPage() {
             <div className="pt-4 flex justify-center">
               <Link
                 href={`/`}
-                className="text-[9px] font-black uppercase tracking-widest text-white/50 hover:text-white transition-all"
+                className="text-2xs font-black uppercase tracking-widest text-white/50 hover:text-white transition-all"
               >
                 ← Regresar al Inicio del Portal
               </Link>

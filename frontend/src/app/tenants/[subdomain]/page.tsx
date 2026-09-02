@@ -814,7 +814,7 @@ export default function TenantPortalPage() {
               <h1 className="text-sm sm:text-base font-black uppercase tracking-tight text-white transition-colors duration-300 group-hover:text-nectar-gold" style={{ color: isDarkMode ? '#FFFFFF' : '#111827' }}>
                 {tenantConfig.name}
               </h1>
-              <p className="text-[9px] uppercase tracking-widest font-black opacity-60">
+              <p className="text-2xs uppercase tracking-widest font-black opacity-60">
                 {tenantConfig.portal_title || 'Portal de Servicios'}
               </p>
             </div>
@@ -833,7 +833,7 @@ export default function TenantPortalPage() {
             <div className="flex items-center bg-white/5 dark:bg-black/20 p-1 rounded-2xl border border-white/5">
               <button
                 onClick={() => setCurrentSection('addons')}
-                className="px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all duration-300 cursor-pointer flex items-center gap-1.5"
+                className="px-4 py-2.5 rounded-xl text-2xs font-black uppercase tracking-wider transition-all duration-300 cursor-pointer flex items-center gap-1.5"
                 style={{
                   backgroundColor: currentSection === 'addons' ? primaryColor : 'transparent',
                   color: currentSection === 'addons' ? '#000000' : (isDarkMode ? 'rgba(255, 255, 255, 0.6)' : 'rgba(17, 24, 39, 0.6)'),
@@ -844,7 +844,7 @@ export default function TenantPortalPage() {
               </button>
               <button
                 onClick={() => setCurrentSection('support')}
-                className="px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all duration-300 cursor-pointer flex items-center gap-1.5"
+                className="px-4 py-2.5 rounded-xl text-2xs font-black uppercase tracking-wider transition-all duration-300 cursor-pointer flex items-center gap-1.5"
                 style={{
                   backgroundColor: currentSection === 'support' ? primaryColor : 'transparent',
                   color: currentSection === 'support' ? '#000000' : (isDarkMode ? 'rgba(255, 255, 255, 0.6)' : 'rgba(17, 24, 39, 0.6)'),
@@ -867,10 +867,10 @@ export default function TenantPortalPage() {
 
             {isAuthenticated && (
               <div className="flex items-center gap-3 ml-1 sm:ml-3">
-                <span className="text-[10px] text-white/40 font-bold hidden lg:inline">{email}</span>
+                <span className="text-2xs text-white/40 font-bold hidden lg:inline">{email}</span>
                 <button
                   onClick={handleLogout}
-                  className="px-4 py-2.5 bg-red-500/10 hover:bg-red-500 hover:text-white border border-red-500/20 hover:border-red-500 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all duration-300"
+                  className="px-4 py-2.5 bg-red-500/10 hover:bg-red-500 hover:text-white border border-red-500/20 hover:border-red-500 rounded-xl text-2xs font-black uppercase tracking-wider transition-all duration-300"
                 >
                   Cerrar Sesión
                 </button>
@@ -953,7 +953,7 @@ export default function TenantPortalPage() {
                     alt={tenantConfig.name}
                     className="w-24 h-24 rounded-[1.75rem] object-cover border border-white/10"
                   />
-                  <span className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-4 border-[#020403] flex items-center justify-center text-[10px] animate-pulse" title="Portal Activo" style={{ borderColor: isDarkMode ? (tenantConfig.bg_color || '#020403') : (tenantConfig.bg_color_light || '#FAFAFA') }}>
+                  <span className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-4 border-[#020403] flex items-center justify-center text-2xs animate-pulse" title="Portal Activo" style={{ borderColor: isDarkMode ? (tenantConfig.bg_color || '#020403') : (tenantConfig.bg_color_light || '#FAFAFA') }}>
                     ✓
                   </span>
                 </div>
@@ -965,7 +965,7 @@ export default function TenantPortalPage() {
                   >
                     {tenantConfig.name.substring(0, 1).toUpperCase()}
                   </div>
-                  <span className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-4 border-[#020403] flex items-center justify-center text-[10px] animate-pulse" title="Portal Activo" style={{ borderColor: isDarkMode ? (tenantConfig.bg_color || '#020403') : (tenantConfig.bg_color_light || '#FAFAFA') }}>
+                  <span className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-4 border-[#020403] flex items-center justify-center text-2xs animate-pulse" title="Portal Activo" style={{ borderColor: isDarkMode ? (tenantConfig.bg_color || '#020403') : (tenantConfig.bg_color_light || '#FAFAFA') }}>
                     ✓
                   </span>
                 </div>
@@ -973,11 +973,11 @@ export default function TenantPortalPage() {
 
               <div className="flex-1 text-center md:text-left space-y-3">
                 <div className="flex flex-wrap justify-center md:justify-start items-center gap-2">
-                  <span className="px-3.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest bg-white/5 dark:bg-white/5 border border-white/10 text-white/50 flex items-center gap-1">
+                  <span className="px-3.5 py-1 rounded-full text-2xs font-black uppercase tracking-widest bg-white/5 dark:bg-white/5 border border-white/10 text-white/50 flex items-center gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-nectar-gold animate-ping"></span>
                     Colmena de Servicios
                   </span>
-                  <span className="px-3.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest text-emerald-400 bg-emerald-500/10 border border-emerald-500/20">
+                  <span className="px-3.5 py-1 rounded-full text-2xs font-black uppercase tracking-widest text-emerald-400 bg-emerald-500/10 border border-emerald-500/20">
                     Verificado por Nectar Labs
                   </span>
                 </div>
@@ -1020,7 +1020,7 @@ export default function TenantPortalPage() {
                           <button
                             key={tab.slug}
                             onClick={() => setActiveAddonTab(tab.slug)}
-                            className="px-5 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 whitespace-nowrap cursor-pointer border flex items-center gap-2 hover:scale-[1.03] active:scale-95 shadow-sm"
+                            className="px-5 py-3 rounded-2xl text-2xs font-black uppercase tracking-widest transition-all duration-300 whitespace-nowrap cursor-pointer border flex items-center gap-2 hover:scale-[1.03] active:scale-95 shadow-sm"
                             style={{
                               backgroundColor: isActive ? primaryColor : 'transparent',
                               borderColor: isActive ? primaryColor : 'rgba(255, 255, 255, 0.05)',
@@ -1075,7 +1075,7 @@ export default function TenantPortalPage() {
                   </p>
                   <button
                     onClick={() => setCurrentSection('support')}
-                    className="px-6 py-3.5 text-black font-black uppercase tracking-widest text-[9px] rounded-xl hover:scale-102 active:scale-95 transition-all inline-block cursor-pointer"
+                    className="px-6 py-3.5 text-black font-black uppercase tracking-widest text-2xs rounded-xl hover:scale-102 active:scale-95 transition-all inline-block cursor-pointer"
                     style={{ backgroundColor: primaryColor }}
                   >
                     Ir a Soporte Técnico
@@ -1116,7 +1116,7 @@ export default function TenantPortalPage() {
                   <form onSubmit={handleAuthSubmit} className="space-y-5 relative z-10">
                     {tenantConfig.require_customer_info && (
                       <div className="space-y-1.5 text-left">
-                        <label className="text-[9px] font-black uppercase tracking-widest text-white/40 block ml-1">
+                        <label className="text-2xs font-black uppercase tracking-widest text-white/40 block ml-1">
                           Nombre Completo
                         </label>
                         <input
@@ -1134,7 +1134,7 @@ export default function TenantPortalPage() {
                     )}
 
                     <div className="space-y-1.5 text-left">
-                      <label className="text-[9px] font-black uppercase tracking-widest text-white/40 block ml-1">
+                      <label className="text-2xs font-black uppercase tracking-widest text-white/40 block ml-1">
                         Correo Electrónico
                       </label>
                       <input
@@ -1153,7 +1153,7 @@ export default function TenantPortalPage() {
                     <button
                       type="submit"
                       disabled={isSubmittingAuth}
-                      className="w-full py-4.5 text-black font-black uppercase tracking-widest text-[10px] rounded-2xl transition-all duration-300 hover:scale-[1.01] active:scale-95 disabled:opacity-50 mt-8 cursor-pointer shadow-lg hover:shadow-xl"
+                      className="w-full py-4.5 text-black font-black uppercase tracking-widest text-2xs rounded-2xl transition-all duration-300 hover:scale-[1.01] active:scale-95 disabled:opacity-50 mt-8 cursor-pointer shadow-lg hover:shadow-xl"
                       style={{
                         backgroundColor: primaryColor,
                         boxShadow: `0 4px 20px ${primaryColor}30`
@@ -1178,7 +1178,7 @@ export default function TenantPortalPage() {
                         <div>
                           <button
                             onClick={() => setSelectedTicket(null)}
-                            className="text-[9px] font-black uppercase tracking-widest text-white/40 hover:text-white mb-2 flex items-center gap-1.5 transition-colors cursor-pointer group/btn"
+                            className="text-2xs font-black uppercase tracking-widest text-white/40 hover:text-white mb-2 flex items-center gap-1.5 transition-colors cursor-pointer group/btn"
                           >
                             <span className="transition-transform group-hover/btn:-translate-x-0.5">←</span> Volver a la Lista
                           </button>
@@ -1260,7 +1260,7 @@ export default function TenantPortalPage() {
                           <button
                             type="submit"
                             disabled={!ticketMessageText.trim() || isSendingTicketMsg}
-                            className="px-6 py-4 text-black font-black uppercase tracking-widest text-[9px] rounded-2xl transition-all duration-300 hover:scale-[1.02] active:scale-95 disabled:opacity-50 cursor-pointer shadow-md"
+                            className="px-6 py-4 text-black font-black uppercase tracking-widest text-2xs rounded-2xl transition-all duration-300 hover:scale-[1.02] active:scale-95 disabled:opacity-50 cursor-pointer shadow-md"
                             style={{
                               backgroundColor: primaryColor,
                               boxShadow: `0 4px 15px ${primaryColor}20`
@@ -1345,7 +1345,7 @@ export default function TenantPortalPage() {
                           <button
                             type="submit"
                             disabled={isCreatingTicket}
-                            className="px-6 py-4 text-black font-black uppercase tracking-widest text-[9px] rounded-2xl hover:scale-[1.01] active:scale-95 transition-all duration-300 disabled:opacity-50 cursor-pointer shadow-lg hover:shadow-xl"
+                            className="px-6 py-4 text-black font-black uppercase tracking-widest text-2xs rounded-2xl hover:scale-[1.01] active:scale-95 transition-all duration-300 disabled:opacity-50 cursor-pointer shadow-lg hover:shadow-xl"
                             style={{
                               backgroundColor: primaryColor,
                               boxShadow: `0 4px 15px ${primaryColor}20`
@@ -1378,7 +1378,7 @@ export default function TenantPortalPage() {
                                     <h4 className="text-xs font-black uppercase text-white tracking-tight group-hover/card:text-nectar-gold transition-colors duration-300" style={{ color: isDarkMode ? '#FFFFFF' : '#111827' }}>
                                       {t.title}
                                     </h4>
-                                    <p className="text-[8px] uppercase tracking-widest text-white/40 mt-1 font-bold">
+                                    <p className="text-2xs uppercase tracking-widest text-white/40 mt-1 font-bold">
                                       Ticket #{t.id} | Categoría: {t.category} | Prioridad: {t.priority}
                                     </p>
                                   </div>
@@ -1429,7 +1429,7 @@ export default function TenantPortalPage() {
                           </div>
                           <div>
                             <h4 className="text-xs font-black uppercase text-white tracking-tight" style={{ color: isDarkMode ? '#FFFFFF' : '#111827' }}>Chat en Vivo con Operadores</h4>
-                            <p className="text-[11px] text-white/50 dark:text-white/60 mt-1 leading-relaxed font-medium">
+                            <p className="text-xs text-white/50 dark:text-white/60 mt-1 leading-relaxed font-medium">
                               {activeAddonsList.includes('bot-chat') ? (
                                 <>
                                   Soporte instantáneo por chat. Haz clic en el widget circular dorado en la esquina inferior derecha para chatear directamente.
@@ -1456,7 +1456,7 @@ export default function TenantPortalPage() {
                           </div>
                           <div>
                             <h4 className="text-xs font-black uppercase text-white tracking-tight" style={{ color: isDarkMode ? '#FFFFFF' : '#111827' }}>SLA y Garantía Néctar</h4>
-                            <p className="text-[11px] text-white/50 dark:text-white/60 mt-1 leading-relaxed font-medium">
+                            <p className="text-xs text-white/50 dark:text-white/60 mt-1 leading-relaxed font-medium">
                               Nuestros ingenieros operan bajo un acuerdo de nivel de servicio (SLA) de menos de 2 horas para incidencias críticas de producción.
                             </p>
                           </div>
@@ -1465,7 +1465,7 @@ export default function TenantPortalPage() {
                     </div>
 
                     <div className="mt-8 pt-6 border-t flex flex-col items-stretch gap-4 tenant-border">
-                      <div className="flex justify-between items-center text-[9px] uppercase tracking-widest font-black text-white/30">
+                      <div className="flex justify-between items-center text-2xs uppercase tracking-widest font-black text-white/30">
                         <span>Sesión Activa</span>
                         <span className="text-green-400 animate-pulse">En Línea</span>
                       </div>
@@ -1496,10 +1496,10 @@ export default function TenantPortalPage() {
       {/* Footer copyright */}
       <footer className="border-t py-6 tenant-footer">
         <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row justify-between items-center gap-4 text-center sm:text-left">
-          <p className="text-[10px] font-black uppercase tracking-widest text-white/20">
+          <p className="text-2xs font-black uppercase tracking-widest text-white/20">
             {tenantConfig.footer_text || `© ${new Date().getFullYear()} Néctar Labs Software Artesanal. Todos los derechos reservados.`}
           </p>
-          <div className="flex gap-6 text-[10px] font-black uppercase tracking-widest text-white/30">
+          <div className="flex gap-6 text-2xs font-black uppercase tracking-widest text-white/30">
             <a href="https://nectarlabs.dev" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-all">
               Sitio Oficial
             </a>
@@ -1812,7 +1812,7 @@ function SATInvoicingForm({ tenantId, subdomain, primaryColor, ownerId, showToas
 
         <div>
           <h3 className="text-xl font-black uppercase text-white tracking-wide">Solicitar Factura SAT</h3>
-          <p className="text-[10px] text-white/50 uppercase tracking-widest mt-1">Ingresa tus datos fiscales para emitir tu CFDI 4.0 de forma automática</p>
+          <p className="text-2xs text-white/50 uppercase tracking-widest mt-1">Ingresa tus datos fiscales para emitir tu CFDI 4.0 de forma automática</p>
         </div>
 
         {errorMsg && (
@@ -1830,12 +1830,12 @@ function SATInvoicingForm({ tenantId, subdomain, primaryColor, ownerId, showToas
         {/* Datos Fiscales */}
         <div className="space-y-4">
           <div className="flex justify-between items-center border-b border-white/5 pb-2">
-            <h4 className="text-[10px] font-black uppercase tracking-widest text-white/40">1. Datos de Facturación</h4>
+            <h4 className="text-2xs font-black uppercase tracking-widest text-white/40">1. Datos de Facturación</h4>
             {!isTenantAdmin ? (
               <button
                 type="button"
                 onClick={() => setShowAdminLogin(true)}
-                className="text-[9px] font-black hover:underline uppercase tracking-widest cursor-pointer text-nectar-gold"
+                className="text-2xs font-black hover:underline uppercase tracking-widest cursor-pointer text-nectar-gold"
               >
                 🔑 Modo Administrador
               </button>
@@ -1851,7 +1851,7 @@ function SATInvoicingForm({ tenantId, subdomain, primaryColor, ownerId, showToas
                   setRazonSocial('');
                   setCodigoPostal('');
                 }}
-                className="text-[9px] font-black hover:underline uppercase tracking-widest cursor-pointer text-red-400"
+                className="text-2xs font-black hover:underline uppercase tracking-widest cursor-pointer text-red-400"
               >
                 🔒 Salir de Admin
               </button>
@@ -1860,7 +1860,7 @@ function SATInvoicingForm({ tenantId, subdomain, primaryColor, ownerId, showToas
 
           {isTenantAdmin && (
             <div className="space-y-3 p-5 bg-white/[0.02] border border-white/5 rounded-2xl relative mb-4">
-              <label className="text-[8px] font-black uppercase tracking-widest text-white/50 block">Seleccionar Cliente Registrado</label>
+              <label className="text-2xs font-black uppercase tracking-widest text-white/50 block">Seleccionar Cliente Registrado</label>
 
               {selectedCustomer ? (
                 /* Selected Customer Card */
@@ -1868,7 +1868,7 @@ function SATInvoicingForm({ tenantId, subdomain, primaryColor, ownerId, showToas
                   <div>
                     <span className="text-[7.5px] font-black uppercase tracking-widest text-nectar-gold">Cliente Seleccionado ✓</span>
                     <h4 className="text-xs font-bold text-white mt-0.5">{selectedCustomer.username || 'Usuario'}</h4>
-                    <p className="text-[9px] text-white/50">{selectedCustomer.email}</p>
+                    <p className="text-2xs text-white/50">{selectedCustomer.email}</p>
                   </div>
                   <button
                     type="button"
@@ -1879,7 +1879,7 @@ function SATInvoicingForm({ tenantId, subdomain, primaryColor, ownerId, showToas
                       setRazonSocial('');
                       setCodigoPostal('');
                     }}
-                    className="px-3 py-1.5 bg-white/5 hover:bg-red-500/10 text-white/60 hover:text-red-400 border border-white/10 hover:border-red-500/20 rounded-xl text-[8px] font-black uppercase tracking-wider transition-all cursor-pointer font-bold"
+                    className="px-3 py-1.5 bg-white/5 hover:bg-red-500/10 text-white/60 hover:text-red-400 border border-white/10 hover:border-red-500/20 rounded-xl text-2xs font-black uppercase tracking-wider transition-all cursor-pointer font-bold"
                   >
                     Quitar
                   </button>
@@ -1897,7 +1897,7 @@ function SATInvoicingForm({ tenantId, subdomain, primaryColor, ownerId, showToas
                         disabled={tenantUsers.length === 0}
                         className="w-full bg-transparent border border-white/10 rounded-xl px-4 py-2.5 pl-10 text-xs focus:outline-none focus:border-nectar-gold text-white placeholder:text-white/20 admin-input font-bold disabled:opacity-50"
                       />
-                      <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/30 select-none text-[10px]">🔍</div>
+                      <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/30 select-none text-2xs">🔍</div>
                       {customerSearchQuery && (
                         <button
                           type="button"
@@ -1913,7 +1913,7 @@ function SATInvoicingForm({ tenantId, subdomain, primaryColor, ownerId, showToas
                       onClick={() => {
                         setShowNewClientModal(true);
                       }}
-                      className="px-4 py-2.5 bg-white/10 hover:bg-white/20 border border-white/10 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all text-white cursor-pointer font-bold whitespace-nowrap shrink-0"
+                      className="px-4 py-2.5 bg-white/10 hover:bg-white/20 border border-white/10 rounded-xl text-2xs font-black uppercase tracking-wider transition-all text-white cursor-pointer font-bold whitespace-nowrap shrink-0"
                     >
                       + Nuevo
                     </button>
@@ -1930,7 +1930,7 @@ function SATInvoicingForm({ tenantId, subdomain, primaryColor, ownerId, showToas
 
                         if (filtered.length === 0) {
                           return (
-                            <div className="p-3 text-center text-white/30 text-[8px] uppercase tracking-wider font-bold">
+                            <div className="p-3 text-center text-white/30 text-2xs uppercase tracking-wider font-bold">
                               Sin clientes coincidentes
                             </div>
                           );
@@ -1958,7 +1958,7 @@ function SATInvoicingForm({ tenantId, subdomain, primaryColor, ownerId, showToas
                               <span className="text-xs font-bold text-white group-hover:text-nectar-gold transition-colors">{u.username || 'Usuario'}</span>
                               <span className="text-[9.5px] text-white/50">{u.email}</span>
                               {contract?.tax_id && (
-                                <span className="text-[8px] text-nectar-gold/80 font-mono mt-0.5">RFC: {contract.tax_id}</span>
+                                <span className="text-2xs text-nectar-gold/80 font-mono mt-0.5">RFC: {contract.tax_id}</span>
                               )}
                             </button>
                           );
@@ -1973,7 +1973,7 @@ function SATInvoicingForm({ tenantId, subdomain, primaryColor, ownerId, showToas
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="text-[8px] font-black uppercase tracking-widest text-white/50">RFC (Receptor)</label>
+              <label className="text-2xs font-black uppercase tracking-widest text-white/50">RFC (Receptor)</label>
               <input
                 type="text"
                 required
@@ -1985,7 +1985,7 @@ function SATInvoicingForm({ tenantId, subdomain, primaryColor, ownerId, showToas
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-[8px] font-black uppercase tracking-widest text-white/50">Razón Social o Nombre Completo</label>
+              <label className="text-2xs font-black uppercase tracking-widest text-white/50">Razón Social o Nombre Completo</label>
               <input
                 type="text"
                 required
@@ -1999,7 +1999,7 @@ function SATInvoicingForm({ tenantId, subdomain, primaryColor, ownerId, showToas
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="text-[8px] font-black uppercase tracking-widest text-white/50">Régimen Fiscal</label>
+              <label className="text-2xs font-black uppercase tracking-widest text-white/50">Régimen Fiscal</label>
               <select
                 value={regimenFiscal}
                 onChange={(e) => setRegimenFiscal(e.target.value)}
@@ -2018,7 +2018,7 @@ function SATInvoicingForm({ tenantId, subdomain, primaryColor, ownerId, showToas
               </select>
             </div>
             <div className="space-y-1.5">
-              <label className="text-[8px] font-black uppercase tracking-widest text-white/50">Código Postal del Domicilio Fiscal</label>
+              <label className="text-2xs font-black uppercase tracking-widest text-white/50">Código Postal del Domicilio Fiscal</label>
               <input
                 type="text"
                 required
@@ -2033,7 +2033,7 @@ function SATInvoicingForm({ tenantId, subdomain, primaryColor, ownerId, showToas
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="text-[8px] font-black uppercase tracking-widest text-white/50">Uso de CFDI</label>
+              <label className="text-2xs font-black uppercase tracking-widest text-white/50">Uso de CFDI</label>
               <select
                 value={usoCfdi}
                 onChange={(e) => setUsoCfdi(e.target.value)}
@@ -2057,7 +2057,7 @@ function SATInvoicingForm({ tenantId, subdomain, primaryColor, ownerId, showToas
               </select>
             </div>
             <div className="space-y-1.5">
-              <label className="text-[8px] font-black uppercase tracking-widest text-white/50">Email de Recepción de Factura</label>
+              <label className="text-2xs font-black uppercase tracking-widest text-white/50">Email de Recepción de Factura</label>
               <input
                 type="email"
                 required
@@ -2073,11 +2073,11 @@ function SATInvoicingForm({ tenantId, subdomain, primaryColor, ownerId, showToas
           {isTenantAdmin ? (
             <div className="space-y-4 border-t border-white/5 pt-6 mt-6 animate-in fade-in duration-250">
               <div className="flex justify-between items-center">
-                <h4 className="text-[10px] font-black uppercase tracking-widest text-white/40">2. Conceptos a Facturar</h4>
+                <h4 className="text-2xs font-black uppercase tracking-widest text-white/40">2. Conceptos a Facturar</h4>
                 <button
                   type="button"
                   onClick={() => setManualItems([...manualItems, { quantity: 1, unit_price: 0, description: '', product_key: '43231500', unit_key: 'E48', unit_name: 'Unidad de servicio' }])}
-                  className="px-2.5 py-1 bg-white/5 hover:bg-white/15 border border-white/10 rounded-lg text-[8px] font-black uppercase tracking-wider transition-all text-white cursor-pointer font-bold"
+                  className="px-2.5 py-1 bg-white/5 hover:bg-white/15 border border-white/10 rounded-lg text-2xs font-black uppercase tracking-wider transition-all text-white cursor-pointer font-bold"
                 >
                   + Agregar Concepto
                 </button>
@@ -2090,7 +2090,7 @@ function SATInvoicingForm({ tenantId, subdomain, primaryColor, ownerId, showToas
                       <button
                         type="button"
                         onClick={() => setManualItems(manualItems.filter((_, i) => i !== idx))}
-                        className="absolute top-4 right-4 text-red-400 hover:text-red-300 text-[8px] uppercase tracking-widest font-black"
+                        className="absolute top-4 right-4 text-red-400 hover:text-red-300 text-2xs uppercase tracking-widest font-black"
                       >
                         ✕ Eliminar
                       </button>
@@ -2098,7 +2098,7 @@ function SATInvoicingForm({ tenantId, subdomain, primaryColor, ownerId, showToas
 
                     <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
                       <div className="md:col-span-2 space-y-1.5">
-                        <label className="text-[8px] font-black uppercase tracking-widest text-white/50">Cant.</label>
+                        <label className="text-2xs font-black uppercase tracking-widest text-white/50">Cant.</label>
                         <input
                           type="number"
                           required
@@ -2113,7 +2113,7 @@ function SATInvoicingForm({ tenantId, subdomain, primaryColor, ownerId, showToas
                       </div>
 
                       <div className="md:col-span-3 space-y-1.5">
-                        <label className="text-[8px] font-black uppercase tracking-widest text-white/50">Precio Unitario</label>
+                        <label className="text-2xs font-black uppercase tracking-widest text-white/50">Precio Unitario</label>
                         <input
                           type="number"
                           required
@@ -2129,7 +2129,7 @@ function SATInvoicingForm({ tenantId, subdomain, primaryColor, ownerId, showToas
                       </div>
 
                       <div className="md:col-span-7 space-y-1.5 relative concept-search-container">
-                        <label className="text-[8px] font-black uppercase tracking-widest text-white/50">Descripción del Concepto</label>
+                        <label className="text-2xs font-black uppercase tracking-widest text-white/50">Descripción del Concepto</label>
                         <input
                           type="text"
                           required
@@ -2151,8 +2151,8 @@ function SATInvoicingForm({ tenantId, subdomain, primaryColor, ownerId, showToas
                                 }}
                                 className="w-full text-left p-2.5 rounded-xl hover:bg-nectar-gold/10 border border-transparent hover:border-nectar-gold/20 flex flex-col gap-0.5 transition-all cursor-pointer group"
                               >
-                                <span className="text-[10px] font-bold text-white group-hover:text-nectar-gold transition-colors">{p.name}</span>
-                                <span className="text-[8px] text-white/40 font-mono">Clave: {p.code} | Categoria: {p.class_name}</span>
+                                <span className="text-2xs font-bold text-white group-hover:text-nectar-gold transition-colors">{p.name}</span>
+                                <span className="text-2xs text-white/40 font-mono">Clave: {p.code} | Categoria: {p.class_name}</span>
                               </button>
                             ))}
                           </div>
@@ -2162,7 +2162,7 @@ function SATInvoicingForm({ tenantId, subdomain, primaryColor, ownerId, showToas
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-1.5">
-                        <label className="text-[8px] font-black uppercase tracking-widest text-white/50 block">Producto / Servicio SAT</label>
+                        <label className="text-2xs font-black uppercase tracking-widest text-white/50 block">Producto / Servicio SAT</label>
                         <SATAutocomplete
                           mode="product"
                           value={item.product_key}
@@ -2176,7 +2176,7 @@ function SATInvoicingForm({ tenantId, subdomain, primaryColor, ownerId, showToas
 
                       <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-1.5">
-                          <label className="text-[8px] font-black uppercase tracking-widest text-white/50 block">Clave Unidad SAT</label>
+                          <label className="text-2xs font-black uppercase tracking-widest text-white/50 block">Clave Unidad SAT</label>
                           <SATAutocomplete
                             mode="unit"
                             value={item.unit_key}
@@ -2189,7 +2189,7 @@ function SATInvoicingForm({ tenantId, subdomain, primaryColor, ownerId, showToas
                         </div>
 
                         <div className="space-y-1.5">
-                          <label className="text-[8px] font-black uppercase tracking-widest text-white/50 block">Nombre Unidad</label>
+                          <label className="text-2xs font-black uppercase tracking-widest text-white/50 block">Nombre Unidad</label>
                           <input
                             type="text"
                             value={item.unit_name}
@@ -2205,9 +2205,9 @@ function SATInvoicingForm({ tenantId, subdomain, primaryColor, ownerId, showToas
             </div>
           ) : (
             <div className="space-y-4 border-t border-white/5 pt-6 mt-6 animate-in fade-in duration-250">
-              <h4 className="text-[10px] font-black uppercase tracking-widest text-white/40">2. Información del Ticket</h4>
+              <h4 className="text-2xs font-black uppercase tracking-widest text-white/40">2. Información del Ticket</h4>
               <div className="space-y-1.5">
-                <label className="text-[8px] font-black uppercase tracking-widest text-white/50">Número de Ticket o Recibo</label>
+                <label className="text-2xs font-black uppercase tracking-widest text-white/50">Número de Ticket o Recibo</label>
                 <input
                   type="text"
                   required
@@ -2216,7 +2216,7 @@ function SATInvoicingForm({ tenantId, subdomain, primaryColor, ownerId, showToas
                   onChange={(e) => setTicketNumber(e.target.value)}
                   className="w-full border border-white/10 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-nectar-gold bg-transparent text-white font-mono uppercase"
                 />
-                <p className="text-[8px] text-white/30 uppercase tracking-wider">
+                <p className="text-2xs text-white/30 uppercase tracking-wider">
                   Ingresa el ID o código de ticket impreso en tu nota de compra para recuperar tus conceptos automáticamente.
                 </p>
               </div>
@@ -2227,7 +2227,7 @@ function SATInvoicingForm({ tenantId, subdomain, primaryColor, ownerId, showToas
         {/* Totales y Timbrado */}
         <div className="pt-6 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-6">
           {isTenantAdmin ? (
-            <div className="flex gap-8 text-[9px] font-black uppercase tracking-widest w-full md:w-auto">
+            <div className="flex gap-8 text-2xs font-black uppercase tracking-widest w-full md:w-auto">
               <div>
                 <span className="opacity-40 block">Subtotal</span>
                 <span className="text-sm font-mono font-bold text-white/80">${subtotal.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</span>
@@ -2242,7 +2242,7 @@ function SATInvoicingForm({ tenantId, subdomain, primaryColor, ownerId, showToas
               </div>
             </div>
           ) : (
-            <div className="text-[8px] text-white/40 uppercase tracking-wider font-bold">
+            <div className="text-2xs text-white/40 uppercase tracking-wider font-bold">
               El total y desglose de IVA se calcularán directamente del ticket.
             </div>
           )}
@@ -2308,7 +2308,7 @@ function SATInvoicingForm({ tenantId, subdomain, primaryColor, ownerId, showToas
 
             <div>
               <span
-                className="px-3 py-1 text-[8px] font-black uppercase tracking-widest rounded-full border"
+                className="px-3 py-1 text-2xs font-black uppercase tracking-widest rounded-full border"
                 style={{
                   backgroundColor: `${primaryColor}15`,
                   color: primaryColor,
@@ -2320,7 +2320,7 @@ function SATInvoicingForm({ tenantId, subdomain, primaryColor, ownerId, showToas
               <h2 className="text-2xl font-black tracking-tighter mt-4 leading-none text-white uppercase">
                 Modo Administrador
               </h2>
-              <p className="text-[10px] opacity-40 uppercase tracking-widest mt-1 text-white/70">
+              <p className="text-2xs opacity-40 uppercase tracking-widest mt-1 text-white/70">
                 Inicia sesión con tu cuenta de administrador o dueño para habilitar la búsqueda e inscripción de clientes.
               </p>
             </div>
@@ -2333,7 +2333,7 @@ function SATInvoicingForm({ tenantId, subdomain, primaryColor, ownerId, showToas
 
             <form onSubmit={handleAdminLoginSubmit} className="space-y-4">
               <div className="space-y-1.5">
-                <label className="text-[8px] font-black uppercase tracking-widest opacity-40 text-white/60">Email del Administrador</label>
+                <label className="text-2xs font-black uppercase tracking-widest opacity-40 text-white/60">Email del Administrador</label>
                 <input
                   type="email"
                   required
@@ -2345,7 +2345,7 @@ function SATInvoicingForm({ tenantId, subdomain, primaryColor, ownerId, showToas
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[8px] font-black uppercase tracking-widest opacity-40 text-white/60">Contraseña</label>
+                <label className="text-2xs font-black uppercase tracking-widest opacity-40 text-white/60">Contraseña</label>
                 <input
                   type="password"
                   required
@@ -2360,14 +2360,14 @@ function SATInvoicingForm({ tenantId, subdomain, primaryColor, ownerId, showToas
                 <button
                   type="button"
                   onClick={() => setShowAdminLogin(false)}
-                  className="px-5 py-3 border border-white/10 hover:bg-white/5 text-[9px] font-black uppercase tracking-widest rounded-xl transition-all cursor-pointer text-white/80"
+                  className="px-5 py-3 border border-white/10 hover:bg-white/5 text-2xs font-black uppercase tracking-widest rounded-xl transition-all cursor-pointer text-white/80"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={adminLoginLoading}
-                  className="px-6 py-3 text-[9px] font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 disabled:opacity-40 disabled:scale-100 transition-all font-bold shadow-lg cursor-pointer"
+                  className="px-6 py-3 text-2xs font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 disabled:opacity-40 disabled:scale-100 transition-all font-bold shadow-lg cursor-pointer"
                   style={{
                     backgroundColor: primaryColor,
                     color: '#000000',
@@ -2561,13 +2561,13 @@ function EcommerceStore({ tenantId, subdomain, primaryColor }: EcommerceStorePro
                 <img src={product.image} alt={product.name} className="w-full h-36 object-cover rounded-xl mb-4 border border-white/5" />
               )}
               <h4 className="text-sm font-black uppercase text-white">{product.name}</h4>
-              <p className="text-[10px] text-white/50 mt-1 line-clamp-2">{product.description}</p>
+              <p className="text-2xs text-white/50 mt-1 line-clamp-2">{product.description}</p>
             </div>
 
             <div className="mt-4 border-t border-white/5 pt-3 flex justify-between items-center">
               <div>
                 <span className="text-xs font-black text-white font-mono">${parseFloat(product.price).toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN</span>
-                <span className="block text-[8px] text-white/30 uppercase mt-0.5">Stock: {product.stock} pz</span>
+                <span className="block text-2xs text-white/30 uppercase mt-0.5">Stock: {product.stock} pz</span>
               </div>
               <button
                 type="button"
@@ -2578,7 +2578,7 @@ function EcommerceStore({ tenantId, subdomain, primaryColor }: EcommerceStorePro
                   setErrorMsg(null);
                 }}
                 disabled={product.stock <= 0}
-                className="px-3.5 py-2 text-[9px] font-black uppercase tracking-widest text-black rounded-lg hover:scale-102 active:scale-95 transition-all cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+                className="px-3.5 py-2 text-2xs font-black uppercase tracking-widest text-black rounded-lg hover:scale-102 active:scale-95 transition-all cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
                 style={{ backgroundColor: primaryColor }}
               >
                 {product.stock <= 0 ? 'Sin Stock' : 'Comprar'}
@@ -2610,32 +2610,32 @@ function EcommerceStore({ tenantId, subdomain, primaryColor }: EcommerceStorePro
                 <img src={selectedProduct.image} alt={selectedProduct.name} className="w-12 h-12 object-cover rounded-lg border border-white/5 shrink-0" />
               )}
               <div>
-                <span className="text-[8px] font-black uppercase tracking-widest text-white/40 block mb-0.5">Completar Compra</span>
+                <span className="text-2xs font-black uppercase tracking-widest text-white/40 block mb-0.5">Completar Compra</span>
                 <h3 className="text-base font-black text-white uppercase">{selectedProduct.name}</h3>
-                <span className="text-[10px] font-mono font-bold text-nectar-gold">${parseFloat(selectedProduct.price).toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN</span>
+                <span className="text-2xs font-mono font-bold text-nectar-gold">${parseFloat(selectedProduct.price).toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN</span>
               </div>
             </div>
 
             {errorMsg && (
-              <div className="mb-4 p-3.5 bg-red-500/10 border border-red-500/20 text-red-400 text-[10px] uppercase font-bold rounded-xl">
+              <div className="mb-4 p-3.5 bg-red-500/10 border border-red-500/20 text-red-400 text-2xs uppercase font-bold rounded-xl">
                 ⚠️ {errorMsg}
               </div>
             )}
 
             {shippingRates.length === 0 ? (
               <form onSubmit={handleFetchShippingRates} className="space-y-4">
-                <h4 className="text-[9px] font-black uppercase tracking-widest text-white/50 border-b border-white/5 pb-2">Información de Envío y Contacto</h4>
+                <h4 className="text-2xs font-black uppercase tracking-widest text-white/50 border-b border-white/5 pb-2">Información de Envío y Contacto</h4>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <label className="text-[8px] uppercase tracking-wider font-black text-white/45">Nombre Completo</label>
+                    <label className="text-2xs uppercase tracking-wider font-black text-white/45">Nombre Completo</label>
                     <input
                       type="text" required placeholder="Carlos Mendoza" value={fullName} onChange={(e) => setFullName(e.target.value)}
                       className="w-full border border-white/10 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-nectar-gold bg-transparent text-white"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[8px] uppercase tracking-wider font-black text-white/45">Correo Electrónico</label>
+                    <label className="text-2xs uppercase tracking-wider font-black text-white/45">Correo Electrónico</label>
                     <input
                       type="email" required placeholder="correo@ejemplo.com" value={email} onChange={(e) => setEmail(e.target.value)}
                       className="w-full border border-white/10 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-nectar-gold bg-transparent text-white"
@@ -2645,14 +2645,14 @@ function EcommerceStore({ tenantId, subdomain, primaryColor }: EcommerceStorePro
 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <label className="text-[8px] uppercase tracking-wider font-black text-white/45">Teléfono</label>
+                    <label className="text-2xs uppercase tracking-wider font-black text-white/45">Teléfono</label>
                     <input
                       type="tel" required placeholder="5512345678" value={phone} onChange={(e) => setPhone(e.target.value)}
                       className="w-full border border-white/10 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-nectar-gold bg-transparent text-white"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[8px] uppercase tracking-wider font-black text-white/45">Código Postal</label>
+                    <label className="text-2xs uppercase tracking-wider font-black text-white/45">Código Postal</label>
                     <input
                       type="text" required maxLength={5} placeholder="06000" value={postalCode} onChange={(e) => setPostalCode(e.target.value)}
                       className="w-full border border-white/10 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-nectar-gold bg-transparent text-white"
@@ -2661,7 +2661,7 @@ function EcommerceStore({ tenantId, subdomain, primaryColor }: EcommerceStorePro
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[8px] uppercase tracking-wider font-black text-white/45">Calle y Número</label>
+                  <label className="text-2xs uppercase tracking-wider font-black text-white/45">Calle y Número</label>
                   <input
                     type="text" required placeholder="Av. Paseo de la Reforma #123" value={streetAndNumber} onChange={(e) => setStreetAndNumber(e.target.value)}
                     className="w-full border border-white/10 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-nectar-gold bg-transparent text-white"
@@ -2670,21 +2670,21 @@ function EcommerceStore({ tenantId, subdomain, primaryColor }: EcommerceStorePro
 
                 <div className="grid grid-cols-3 gap-2">
                   <div className="space-y-1">
-                    <label className="text-[8px] uppercase tracking-wider font-black text-white/45">Colonia</label>
+                    <label className="text-2xs uppercase tracking-wider font-black text-white/45">Colonia</label>
                     <input
                       type="text" required placeholder="Juárez" value={suburb} onChange={(e) => setSuburb(e.target.value)}
                       className="w-full border border-white/10 rounded-xl px-2 py-2 text-xs focus:outline-none focus:border-nectar-gold bg-transparent text-white"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[8px] uppercase tracking-wider font-black text-white/45">Ciudad</label>
+                    <label className="text-2xs uppercase tracking-wider font-black text-white/45">Ciudad</label>
                     <input
                       type="text" required placeholder="Cuauhtémoc" value={city} onChange={(e) => setCity(e.target.value)}
                       className="w-full border border-white/10 rounded-xl px-2 py-2 text-xs focus:outline-none focus:border-nectar-gold bg-transparent text-white"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[8px] uppercase tracking-wider font-black text-white/45">Estado</label>
+                    <label className="text-2xs uppercase tracking-wider font-black text-white/45">Estado</label>
                     <input
                       type="text" required placeholder="CDMX" value={state} onChange={(e) => setState(e.target.value)}
                       className="w-full border border-white/10 rounded-xl px-2 py-2 text-xs focus:outline-none focus:border-nectar-gold bg-transparent text-white"
@@ -2695,14 +2695,14 @@ function EcommerceStore({ tenantId, subdomain, primaryColor }: EcommerceStorePro
                 {/* Coordenadas GPS para entregas locales / restaurantes de Nectar Delivery */}
                 <div className="grid grid-cols-3 gap-3 items-end bg-white/[0.01] border border-white/5 p-3 rounded-xl">
                   <div className="space-y-1">
-                    <label className="text-[7px] uppercase tracking-wider font-black text-white/45">Latitud GPS</label>
+                    <label className="text-2xs uppercase tracking-wider font-black text-white/45">Latitud GPS</label>
                     <input
                       type="text" required placeholder="19.4326" value={latitude} onChange={(e) => setLatitude(e.target.value)}
                       className="w-full border border-white/10 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-nectar-gold bg-transparent text-white font-mono"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[7px] uppercase tracking-wider font-black text-white/45">Longitud GPS</label>
+                    <label className="text-2xs uppercase tracking-wider font-black text-white/45">Longitud GPS</label>
                     <input
                       type="text" required placeholder="-99.1332" value={longitude} onChange={(e) => setLongitude(e.target.value)}
                       className="w-full border border-white/10 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-nectar-gold bg-transparent text-white font-mono"
@@ -2713,7 +2713,7 @@ function EcommerceStore({ tenantId, subdomain, primaryColor }: EcommerceStorePro
                       type="button"
                       onClick={handleGetLocation}
                       disabled={locatingUser}
-                      className="w-full py-2 border border-white/10 bg-white/5 hover:bg-white/10 text-white rounded-xl text-[8px] font-black uppercase tracking-wider transition-all disabled:opacity-50 h-[32px] flex items-center justify-center cursor-pointer"
+                      className="w-full py-2 border border-white/10 bg-white/5 hover:bg-white/10 text-white rounded-xl text-2xs font-black uppercase tracking-wider transition-all disabled:opacity-50 h-[32px] flex items-center justify-center cursor-pointer"
                     >
                       {locatingUser ? 'Ubicando...' : '📍 GPS en Vivo'}
                     </button>
@@ -2723,7 +2723,7 @@ function EcommerceStore({ tenantId, subdomain, primaryColor }: EcommerceStorePro
                 <button
                   type="submit"
                   disabled={fetchingRates}
-                  className="w-full py-3.5 text-black font-black uppercase tracking-widest text-[9px] rounded-xl transition-all cursor-pointer disabled:opacity-50 mt-4 animate-premium"
+                  className="w-full py-3.5 text-black font-black uppercase tracking-widest text-2xs rounded-xl transition-all cursor-pointer disabled:opacity-50 mt-4 animate-premium"
                   style={{ backgroundColor: primaryColor }}
                 >
                   {fetchingRates ? 'Calculando costos de envío...' : 'Calcular Envío'}
@@ -2731,7 +2731,7 @@ function EcommerceStore({ tenantId, subdomain, primaryColor }: EcommerceStorePro
               </form>
             ) : (
               <div className="space-y-6 animate-premium">
-                <h4 className="text-[9px] font-black uppercase tracking-widest text-white/55 border-b border-white/5 pb-2">Selecciona un Proveedor de Envío</h4>
+                <h4 className="text-2xs font-black uppercase tracking-widest text-white/55 border-b border-white/5 pb-2">Selecciona un Proveedor de Envío</h4>
 
                 <div className="space-y-2">
                   {shippingRates.map((rate, idx) => (
@@ -2743,7 +2743,7 @@ function EcommerceStore({ tenantId, subdomain, primaryColor }: EcommerceStorePro
                     >
                       <div>
                         <span className="text-xs font-black text-white uppercase">{rate.provider}</span>
-                        <span className="block text-[8px] text-white/40 uppercase mt-0.5">Entrega estimada: {rate.days} días</span>
+                        <span className="block text-2xs text-white/40 uppercase mt-0.5">Entrega estimada: {rate.days} días</span>
                       </div>
                       <span className="text-xs font-mono font-bold text-white">${parseFloat(rate.amount).toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN</span>
                     </div>
@@ -2774,7 +2774,7 @@ function EcommerceStore({ tenantId, subdomain, primaryColor }: EcommerceStorePro
                       setShippingRates([]);
                       setSelectedRate(null);
                     }}
-                    className="flex-1 py-3 text-[9px] font-black uppercase tracking-widest hover:bg-white/5 border border-white/10 text-white rounded-xl text-center transition-all cursor-pointer"
+                    className="flex-1 py-3 text-2xs font-black uppercase tracking-widest hover:bg-white/5 border border-white/10 text-white rounded-xl text-center transition-all cursor-pointer"
                   >
                     ← Modificar Envío
                   </button>
@@ -2782,7 +2782,7 @@ function EcommerceStore({ tenantId, subdomain, primaryColor }: EcommerceStorePro
                     type="button"
                     onClick={handleCreateCheckoutSession}
                     disabled={checkoutLoading || !selectedRate}
-                    className="flex-1 py-3 text-[9px] font-black uppercase tracking-widest text-black rounded-xl text-center hover:scale-102 active:scale-95 transition-all cursor-pointer disabled:opacity-50"
+                    className="flex-1 py-3 text-2xs font-black uppercase tracking-widest text-black rounded-xl text-center hover:scale-102 active:scale-95 transition-all cursor-pointer disabled:opacity-50"
                     style={{ backgroundColor: primaryColor }}
                   >
                     {checkoutLoading ? 'Procesando Stripe...' : 'Proceder al Pago'}

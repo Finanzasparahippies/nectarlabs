@@ -67,7 +67,7 @@ export default function SubscribeForm({ tenantId, subdomain, primaryColor }: Sub
         </div>
         <div>
           <h3 className="text-sm font-black uppercase tracking-wider text-white">Suscríbete a nuestro boletín</h3>
-          <p className="text-[9px] uppercase tracking-widest font-black text-white/40">Add-on: Newsletter Campaigner</p>
+          <p className="text-2xs uppercase tracking-widest font-black text-white/40">Add-on: Newsletter Campaigner</p>
         </div>
       </div>
 
@@ -80,7 +80,7 @@ export default function SubscribeForm({ tenantId, subdomain, primaryColor }: Sub
           <p className="font-bold">{message}</p>
           <button
             onClick={() => setMessage(null)}
-            className="mt-2 text-[10px] underline hover:text-white transition-colors"
+            className="mt-2 text-2xs underline hover:text-white transition-colors"
           >
             Suscribir otro correo
           </button>
@@ -100,7 +100,7 @@ export default function SubscribeForm({ tenantId, subdomain, primaryColor }: Sub
             <button
               type="submit"
               disabled={loading || !email.trim()}
-              className="px-6 py-3 text-black font-black uppercase tracking-widest text-[9px] rounded-xl hover:scale-102 active:scale-95 disabled:opacity-50 transition-all cursor-pointer whitespace-nowrap"
+              className="px-6 py-3 text-black font-black uppercase tracking-widest text-2xs rounded-xl hover:scale-102 active:scale-95 disabled:opacity-50 transition-all cursor-pointer whitespace-nowrap"
               style={{ backgroundColor: primaryColor }}
             >
               {loading ? 'Procesando...' : 'Suscribirse'}
@@ -108,7 +108,7 @@ export default function SubscribeForm({ tenantId, subdomain, primaryColor }: Sub
           </div>
 
           {error && (
-            <p className="text-[10px] text-red-400 font-bold mt-1 text-center">
+            <p className="text-2xs text-red-400 font-bold mt-1 text-center">
               ⚠️ {error}
             </p>
           )}

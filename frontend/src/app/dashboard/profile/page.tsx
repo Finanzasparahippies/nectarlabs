@@ -173,7 +173,7 @@ export default function UserProfilePage() {
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-1">
-                    <label className="text-[8px] font-black uppercase tracking-widest text-white/45">Nombre de Usuario</label>
+                    <label className="text-2xs font-black uppercase tracking-widest text-white/45">Nombre de Usuario</label>
                     <input
                       type="text"
                       value={username}
@@ -182,7 +182,7 @@ export default function UserProfilePage() {
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[8px] font-black uppercase tracking-widest text-white/45">Correo Electrónico</label>
+                    <label className="text-2xs font-black uppercase tracking-widest text-white/45">Correo Electrónico</label>
                     <input
                       type="email"
                       value={email}
@@ -199,7 +199,7 @@ export default function UserProfilePage() {
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-1">
-                    <label className="text-[8px] font-black uppercase tracking-widest text-white/45">Nueva Contraseña (Opcional)</label>
+                    <label className="text-2xs font-black uppercase tracking-widest text-white/45">Nueva Contraseña (Opcional)</label>
                     <input
                       type="password"
                       value={password}
@@ -209,7 +209,7 @@ export default function UserProfilePage() {
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[8px] font-black uppercase tracking-widest text-white/45">Confirmar Nueva Contraseña</label>
+                    <label className="text-2xs font-black uppercase tracking-widest text-white/45">Confirmar Nueva Contraseña</label>
                     <input
                       type="password"
                       value={confirmPassword}
@@ -225,7 +225,7 @@ export default function UserProfilePage() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-8 py-4 bg-nectar-gold hover:bg-nectar-gold/90 text-background font-black uppercase tracking-widest text-[10px] rounded-xl transition-all hover:scale-105 active:scale-95 disabled:opacity-50 cursor-pointer"
+                  className="px-8 py-4 bg-nectar-gold hover:bg-nectar-gold/90 text-background font-black uppercase tracking-widest text-2xs rounded-xl transition-all hover:scale-105 active:scale-95 disabled:opacity-50 cursor-pointer"
                 >
                   {isSubmitting ? 'Guardando...' : 'Guardar Cambios'}
                 </button>
@@ -237,9 +237,9 @@ export default function UserProfilePage() {
                 <div>
                   <h2 className="text-xs font-black uppercase tracking-widest text-nectar-gold mb-2 border-b border-[#151F18] pb-4 flex items-center justify-between">
                     <span>Quiero ser repartidor 🚴‍♂️</span>
-                    <span className="text-[9px] px-3 py-1 bg-nectar-gold/10 rounded-full">$399 MXN / Mes</span>
+                    <span className="text-2xs px-3 py-1 bg-nectar-gold/10 rounded-full">$399 MXN / Mes</span>
                   </h2>
-                  <p className="text-[11px] leading-relaxed text-white/60 mb-6">
+                  <p className="text-xs leading-relaxed text-white/60 mb-6">
                     Únete como repartidor independiente y recibe pedidos de múltiples tiendas del ecosistema de forma directa.
                     <br />
                     <span className="text-yellow-500 font-bold">⚠️ Nota de Responsabilidad:</span> Néctar Labs no se hace responsable en caso de cualquier percance o desperfecto ya que el dinero de las ventas y repartos no pasa a través de la plataforma. Cada negocio/restaurante procesa cobros directamente vía Stripe, Efectivo o CoDi.
@@ -247,7 +247,7 @@ export default function UserProfilePage() {
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-1">
-                      <label className="text-[8px] font-black uppercase tracking-widest text-white/45">Tipo de Vehículo</label>
+                      <label className="text-2xs font-black uppercase tracking-widest text-white/45">Tipo de Vehículo</label>
                       <select
                         value={vehicleType}
                         onChange={(e) => setVehicleType(e.target.value)}
@@ -261,7 +261,7 @@ export default function UserProfilePage() {
                     </div>
 
                     <div className="space-y-1">
-                      <label className="text-[8px] font-black uppercase tracking-widest text-white/45">Placas / Número de Placa (Opcional)</label>
+                      <label className="text-2xs font-black uppercase tracking-widest text-white/45">Placas / Número de Placa (Opcional)</label>
                       <input
                         type="text"
                         value={plateNumber}
@@ -272,22 +272,22 @@ export default function UserProfilePage() {
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-[8px] font-black uppercase tracking-widest text-white/45">Foto de Licencia de Conducir</label>
+                      <label className="text-2xs font-black uppercase tracking-widest text-white/45">Foto de Licencia de Conducir</label>
                       <input
                         type="file"
                         accept="image/*"
                         onChange={(e) => setLicensePhoto(e.target.files?.[0] || null)}
-                        className="w-full text-xs text-white/60 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-[10px] file:font-black file:uppercase file:bg-nectar-gold file:text-background file:cursor-pointer hover:file:opacity-90"
+                        className="w-full text-xs text-white/60 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-2xs file:font-black file:uppercase file:bg-nectar-gold file:text-background file:cursor-pointer hover:file:opacity-90"
                       />
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-[8px] font-black uppercase tracking-widest text-white/45">Foto del Vehículo</label>
+                      <label className="text-2xs font-black uppercase tracking-widest text-white/45">Foto del Vehículo</label>
                       <input
                         type="file"
                         accept="image/*"
                         onChange={(e) => setVehiclePhoto(e.target.files?.[0] || null)}
-                        className="w-full text-xs text-white/60 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-[10px] file:font-black file:uppercase file:bg-nectar-gold file:text-background file:cursor-pointer hover:file:opacity-90"
+                        className="w-full text-xs text-white/60 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-2xs file:font-black file:uppercase file:bg-nectar-gold file:text-background file:cursor-pointer hover:file:opacity-90"
                       />
                     </div>
                   </div>
@@ -297,7 +297,7 @@ export default function UserProfilePage() {
                   <button
                     type="submit"
                     disabled={becomingDriver}
-                    className="px-8 py-4 bg-nectar-gold hover:bg-nectar-gold/90 text-background font-black uppercase tracking-widest text-[10px] rounded-xl transition-all hover:scale-105 active:scale-95 disabled:opacity-50 cursor-pointer"
+                    className="px-8 py-4 bg-nectar-gold hover:bg-nectar-gold/90 text-background font-black uppercase tracking-widest text-2xs rounded-xl transition-all hover:scale-105 active:scale-95 disabled:opacity-50 cursor-pointer"
                   >
                     {becomingDriver ? 'Enviando Solicitud...' : 'Registrarme como Repartidor'}
                   </button>

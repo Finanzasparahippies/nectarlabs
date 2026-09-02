@@ -145,7 +145,7 @@ export default function AddonTutorial() {
         <h2 className="relative text-3xl sm:text-5xl md:text-8xl font-black mb-4 tracking-tighter text-nectar-forest dark:text-nectar-cream leading-none z-10">
           Contratación <span className="text-nectar-gold">Flexible</span>
         </h2>
-        <p className="text-[10px] text-nectar-gold font-black uppercase tracking-[0.5em] relative z-10 mb-6 sm:mb-12">
+        <p className="text-2xs text-nectar-gold font-black uppercase tracking-[0.5em] relative z-10 mb-6 sm:mb-12">
           Sin plazos forzosos • Todo bajo tu control
         </p>
       </div>
@@ -199,7 +199,7 @@ export default function AddonTutorial() {
               )}
               
               <div className="flex justify-between items-center mb-3">
-                <span className={`text-[8px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full border ${
+                <span className={`text-2xs font-black uppercase tracking-widest px-2.5 py-1 rounded-full border ${
                   activeAddon === config.id
                     ? 'text-nectar-gold bg-nectar-gold/5 border-nectar-gold/20'
                     : 'text-muted bg-foreground/5 border-transparent'
@@ -211,7 +211,7 @@ export default function AddonTutorial() {
               <h4 className="text-base sm:text-lg font-black tracking-tight mb-1 text-foreground">
                 {config.name}
               </h4>
-              <p className="text-[11px] text-muted leading-relaxed">
+              <p className="text-xs text-muted leading-relaxed">
                 {config.teaser}
               </p>
             </button>
@@ -223,7 +223,7 @@ export default function AddonTutorial() {
           <div id="tour-simulator-phone" className="w-full max-w-lg aspect-[9/16] rounded-[2.5rem] sm:rounded-[3.5rem] bg-[#020403] border-[6px] sm:border-[10px] border-neutral-800 p-4 sm:p-5 flex flex-col justify-between relative overflow-hidden shadow-2xl">
             
             {/* Dynamic Status Bar (Signal, Wifi, Time, Battery) */}
-            <div className="absolute top-2 left-0 right-0 px-8 flex justify-between items-center z-20 text-[9px] text-white/40 font-bold select-none">
+            <div className="absolute top-2 left-0 right-0 px-8 flex justify-between items-center z-20 text-2xs text-white/40 font-bold select-none">
               <span>15:53</span>
               <div className="flex items-center gap-1.5">
                 <span>📶</span>
@@ -240,12 +240,12 @@ export default function AddonTutorial() {
               <div className="flex items-center gap-2.5">
                 {/* Tenant Logo Placeholder */}
                 <div className="w-7 h-7 rounded-[10px] bg-gradient-to-tr from-nectar-gold to-nectar-forest p-[1.5px] flex items-center justify-center shadow-lg">
-                  <div className="w-full h-full bg-[#121815] rounded-[8.5px] flex items-center justify-center text-[9px] font-black text-nectar-gold">
+                  <div className="w-full h-full bg-[#121815] rounded-[8.5px] flex items-center justify-center text-2xs font-black text-nectar-gold">
                     NL
                   </div>
                 </div>
                 <div className="flex flex-col text-left">
-                  <span className="text-[10px] font-black tracking-tight text-white leading-none">Néctar Partner</span>
+                  <span className="text-2xs font-black tracking-tight text-white leading-none">Néctar Partner</span>
                   <span className="text-[7.5px] text-emerald-400 font-semibold flex items-center gap-0.5 mt-0.5">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
                     demo-tenant.nectarlabs.dev
@@ -272,8 +272,8 @@ export default function AddonTutorial() {
                         👨‍💻
                       </div>
                       <div className="flex flex-col text-left">
-                        <span className="text-[9px] font-black text-white leading-none">Ing. Gutiérrez</span>
-                        <span className="text-[7px] text-white/40 mt-0.5">Soporte Técnico Especializado</span>
+                        <span className="text-2xs font-black text-white leading-none">Ing. Gutiérrez</span>
+                        <span className="text-2xs text-white/40 mt-0.5">Soporte Técnico Especializado</span>
                       </div>
                     </div>
                     <span className="text-[6.5px] font-black text-emerald-400 flex items-center gap-1">
@@ -304,7 +304,7 @@ export default function AddonTutorial() {
 
                   {/* Input area mockup */}
                   <div className="flex gap-2 items-center bg-black/40 border border-white/5 p-1.5 rounded-xl shrink-0">
-                    <div className="flex-1 h-7 rounded-lg bg-white/5 px-2.5 flex items-center text-[9px] text-white/30 text-left">
+                    <div className="flex-1 h-7 rounded-lg bg-white/5 px-2.5 flex items-center text-2xs text-white/30 text-left">
                       Escribe un mensaje...
                     </div>
                     <div className="w-7 h-7 rounded-lg bg-nectar-gold flex items-center justify-center shrink-0 shadow-lg shadow-nectar-gold/20">
@@ -322,8 +322,8 @@ export default function AddonTutorial() {
                   <div className="text-left">
                     <div className="flex justify-between items-start mb-2">
                       <div>
-                        <h5 className="text-[11px] font-black tracking-tight text-white">Acuerdo de Adhesión N° 402</h5>
-                        <p className="text-[8px] text-white/50">Consultoría e Ingeniería Nivel II</p>
+                        <h5 className="text-xs font-black tracking-tight text-white">Acuerdo de Adhesión N° 402</h5>
+                        <p className="text-2xs text-white/50">Consultoría e Ingeniería Nivel II</p>
                       </div>
                       <span className="text-[6.5px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border border-nectar-gold/30 text-nectar-gold bg-nectar-gold/5">
                         Por Firmar
@@ -331,7 +331,7 @@ export default function AddonTutorial() {
                     </div>
 
                     {/* Compact Contract Box */}
-                    <div className="bg-white/5 p-2 rounded-xl border border-white/5 text-[7px] text-white/60 leading-relaxed mb-3">
+                    <div className="bg-white/5 p-2 rounded-xl border border-white/5 text-2xs text-white/60 leading-relaxed mb-3">
                       <span className="font-bold text-nectar-gold uppercase block mb-0.5">Cláusula 4.1 - Soporte de Add-ons:</span>
                       El suscriptor acepta los términos y condiciones de contratación flexible mes a mes bajo infraestructura Néctar Labs.
                     </div>
@@ -404,13 +404,13 @@ export default function AddonTutorial() {
                         🛵
                       </div>
                       <div>
-                        <span className="text-[7px] text-white/50 block font-bold uppercase leading-none">Repartidor en Ruta</span>
-                        <span className="text-[9px] font-black text-white">Luis Hernández</span>
+                        <span className="text-2xs text-white/50 block font-bold uppercase leading-none">Repartidor en Ruta</span>
+                        <span className="text-2xs font-black text-white">Luis Hernández</span>
                         <span className="text-[6.5px] text-emerald-400 block font-semibold">Moto Honda • Placas SON-2940</span>
                       </div>
                     </div>
                     <div className="text-right">
-                      <span className="text-[10px] font-black text-nectar-gold block">ETA: 12 min</span>
+                      <span className="text-2xs font-black text-nectar-gold block">ETA: 12 min</span>
                       <span className="text-[6.5px] text-white/40 block">Dist: 1.8 km</span>
                     </div>
                   </div>
@@ -420,7 +420,7 @@ export default function AddonTutorial() {
                     
                     {/* Origin location icon (Néctar Hub) */}
                     <div className="absolute bottom-4 left-6 flex flex-col items-center z-10">
-                      <div className="w-5 h-5 rounded-full bg-nectar-forest border border-nectar-gold/30 flex items-center justify-center text-[9px] shadow-lg">
+                      <div className="w-5 h-5 rounded-full bg-nectar-forest border border-nectar-gold/30 flex items-center justify-center text-2xs shadow-lg">
                         🏢
                       </div>
                       <span className="text-[5.5px] text-white/50 font-black uppercase mt-0.5 tracking-wider bg-black/40 px-1 rounded">Origen</span>
@@ -439,12 +439,12 @@ export default function AddonTutorial() {
                         left: `${24 + (212 - 24) * (gpsProgress / 100) - 10}px`
                       }}
                     >
-                      <span className="text-[9px]">🛵</span>
+                      <span className="text-2xs">🛵</span>
                     </div>
 
                     {/* Target location icon (Destination 🏠) */}
                     <div className="absolute top-2 right-6 flex flex-col items-center z-10">
-                      <div className="w-5 h-5 rounded-full bg-red-950/80 border border-red-500/40 flex items-center justify-center text-[9px] shadow-lg animate-pulse">
+                      <div className="w-5 h-5 rounded-full bg-red-950/80 border border-red-500/40 flex items-center justify-center text-2xs shadow-lg animate-pulse">
                         🏠
                       </div>
                       <span className="text-[5.5px] text-red-400 font-black uppercase mt-0.5 tracking-wider bg-black/40 px-1 rounded">Entrega</span>
@@ -467,11 +467,11 @@ export default function AddonTutorial() {
                     {/* Relevant addresses */}
                     <div className="grid grid-cols-2 gap-2 text-[6.5px] text-white/40 pt-1 border-t border-white/5 font-semibold">
                       <div>
-                        <span className="text-nectar-gold block text-[5px] uppercase tracking-wider">De:</span>
+                        <span className="text-nectar-gold block text-2xs uppercase tracking-wider">De:</span>
                         Néctar Hub Central
                       </div>
                       <div>
-                        <span className="text-red-400 block text-[5px] uppercase tracking-wider">Para:</span>
+                        <span className="text-red-400 block text-2xs uppercase tracking-wider">Para:</span>
                         Av. Paseo del Río #312
                       </div>
                     </div>
@@ -484,7 +484,7 @@ export default function AddonTutorial() {
                 <div className="w-full h-full bg-neutral-900/30 border border-white/5 rounded-2xl p-4 flex flex-col justify-between text-left overflow-y-auto">
                   <div>
                     <div className="flex justify-between items-center mb-2">
-                      <h5 className="text-[10px] font-black tracking-tight text-white">Suscripción VIP & Feed Privado</h5>
+                      <h5 className="text-2xs font-black tracking-tight text-white">Suscripción VIP & Feed Privado</h5>
                       <span className="text-[6.5px] font-black uppercase text-emerald-400 tracking-wider flex items-center gap-0.5">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Conectado a Stripe
                       </span>
@@ -496,8 +496,8 @@ export default function AddonTutorial() {
                         <span className="text-[6.5px] text-nectar-gold font-black uppercase tracking-wider">Artículo Público</span>
                         <span className="text-[6.5px] text-white/30 font-bold">Hace 2 horas</span>
                       </div>
-                      <p className="text-[9px] text-white leading-relaxed font-bold">Guía de Inicio: Configurando tu DNS Staging</p>
-                      <p className="text-[8px] text-white/50 mt-0.5 leading-relaxed">Paso a paso para configurar los registros A y TXT de tus subdominios en Cloudflare.</p>
+                      <p className="text-2xs text-white leading-relaxed font-bold">Guía de Inicio: Configurando tu DNS Staging</p>
+                      <p className="text-2xs text-white/50 mt-0.5 leading-relaxed">Paso a paso para configurar los registros A y TXT de tus subdominios en Cloudflare.</p>
                     </div>
 
                     {/* VIP Post 2 (Locked) */}
@@ -507,29 +507,29 @@ export default function AddonTutorial() {
                           <span className="text-[6.5px] text-red-400 font-bold uppercase tracking-wider">Contenido Platino</span>
                           <span className="text-[6.5px] text-white/30">Hace 1 día</span>
                         </div>
-                        <p className="text-[9px] text-white font-bold">Patrón de Middleware Exclusivo para Multi-tenant</p>
-                        <p className="text-[8px] text-white">Código listo para copiar y pegar de la arquitectura del middleware...</p>
+                        <p className="text-2xs text-white font-bold">Patrón de Middleware Exclusivo para Multi-tenant</p>
+                        <p className="text-2xs text-white">Código listo para copiar y pegar de la arquitectura del middleware...</p>
                       </div>
 
                       {/* Overlaid Lock */}
                       <div className="absolute inset-0 bg-black/75 flex flex-col items-center justify-center gap-1 animate-premium">
                         <span className="text-base">🔒</span>
                         <span className="text-[7.5px] font-black text-nectar-gold uppercase tracking-widest leading-none">Miembros Premium</span>
-                        <span className="text-[6px] text-white/40">Desbloquea el Nivel Platino</span>
+                        <span className="text-2xs text-white/40">Desbloquea el Nivel Platino</span>
                       </div>
                     </div>
                   </div>
 
                   {/* Payment Card selection */}
                   <div className="bg-black/60 p-3 rounded-xl border border-white/5 flex flex-col gap-2.5 mt-auto">
-                    <div className="flex justify-between items-center text-[9px] font-black">
+                    <div className="flex justify-between items-center text-2xs font-black">
                       <span className="text-white">Acceso Total Platino</span>
                       <span className="text-nectar-gold">$129 MXN / mes</span>
                     </div>
                     <button className="w-full py-2 bg-nectar-gold text-black font-black uppercase text-[7.5px] tracking-widest rounded-lg hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-1 shadow-lg shadow-nectar-gold/25">
                       <span>💳</span> Suscribirse con Stripe
                     </button>
-                    <span className="text-[6px] text-white/30 text-center uppercase tracking-wider block leading-none">
+                    <span className="text-2xs text-white/30 text-center uppercase tracking-wider block leading-none">
                       Cobro recurrente mensual • Cancela en 1-click
                     </span>
                   </div>
@@ -541,12 +541,12 @@ export default function AddonTutorial() {
                 <div className="w-full h-full bg-neutral-900/30 border border-white/5 rounded-2xl p-4 flex flex-col justify-between text-left overflow-y-auto">
                   <div>
                     <div className="flex justify-between items-center mb-1">
-                      <h5 className="text-[10px] font-black tracking-tight text-white">Métricas de Telemetría APM</h5>
+                      <h5 className="text-2xs font-black tracking-tight text-white">Métricas de Telemetría APM</h5>
                       <span className="text-[6.5px] font-black text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
                         ● EN VIVO
                       </span>
                     </div>
-                    <p className="text-[8px] text-white/40 mb-3">Monitor de Consultas y Web Vitals en producción</p>
+                    <p className="text-2xs text-white/40 mb-3">Monitor de Consultas y Web Vitals en producción</p>
 
                     {/* Speedometers grid */}
                     <div className="grid grid-cols-2 gap-3 mb-3">
@@ -565,14 +565,14 @@ export default function AddonTutorial() {
                       <div className="bg-black/50 p-2.5 rounded-xl border border-white/5 text-center flex flex-col justify-center">
                         <span className="text-[6.5px] text-white/40 font-black uppercase tracking-wider mb-0.5">LCP Speed Index</span>
                         <span className="text-base font-black text-nectar-gold leading-none">1.24s</span>
-                        <span className="text-[6px] text-emerald-400 font-bold block mt-1 leading-none">Optimizada (Verde)</span>
+                        <span className="text-2xs text-emerald-400 font-bold block mt-1 leading-none">Optimizada (Verde)</span>
                       </div>
                     </div>
                   </div>
 
                   {/* CPU & Memory Charts */}
                   <div className="bg-black/50 p-3 rounded-xl border border-white/5 flex-1 flex flex-col justify-between min-h-[90px]">
-                    <div className="flex justify-between items-center text-[7px] font-black text-white/50 mb-1.5 uppercase tracking-wider">
+                    <div className="flex justify-between items-center text-2xs font-black text-white/50 mb-1.5 uppercase tracking-wider">
                       <span>Carga Base de Datos (Consultas/seg)</span>
                       <span className="text-nectar-gold font-mono">Telemetry</span>
                     </div>
@@ -612,7 +612,7 @@ export default function AddonTutorial() {
 
                     {newsletterSubscribed ? (
                       <div className="p-3.5 bg-emerald-500/10 border border-emerald-500/20 rounded-xl animate-premium text-center">
-                        <span className="text-[10px] font-black text-emerald-400 block mb-0.5">✓ Registro Exitoso</span>
+                        <span className="text-2xs font-black text-emerald-400 block mb-0.5">✓ Registro Exitoso</span>
                         <p className="text-[7.5px] text-white/60 leading-normal">
                           Conexión Brevo SMTP activa. Verifica tu correo de bienvenida.
                         </p>
@@ -625,7 +625,7 @@ export default function AddonTutorial() {
                           value={newsletterEmail}
                           onChange={(e) => setNewsletterEmail(e.target.value)}
                           placeholder="tu-correo@empresa.com"
-                          className="w-full px-3 py-2 bg-black/60 border border-white/10 text-white rounded-lg text-[9px] text-center focus:outline-none focus:border-nectar-gold transition-all placeholder-white/20"
+                          className="w-full px-3 py-2 bg-black/60 border border-white/10 text-white rounded-lg text-2xs text-center focus:outline-none focus:border-nectar-gold transition-all placeholder-white/20"
                         />
                         <button 
                           type="submit" 
@@ -646,7 +646,7 @@ export default function AddonTutorial() {
             </div>
 
             {/* Tenant Footer Placeholder */}
-            <div className="border-t border-white/5 pt-2.5 pb-1 shrink-0 flex justify-between items-center z-10 text-[7px] text-white/30 uppercase tracking-widest font-black select-none">
+            <div className="border-t border-white/5 pt-2.5 pb-1 shrink-0 flex justify-between items-center z-10 text-2xs text-white/30 uppercase tracking-widest font-black select-none">
               <span>© 2026 Partner Corp</span>
               <span>Soporte • Privacidad • Términos</span>
             </div>

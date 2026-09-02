@@ -87,7 +87,7 @@ function RegisterContent() {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-4">Nombre de Usuario</label>
+            <label className="text-2xs font-black uppercase tracking-widest opacity-40 ml-4">Nombre de Usuario</label>
             <input
               type="text"
               required
@@ -99,7 +99,7 @@ function RegisterContent() {
           </div>
 
           <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-4">Email</label>
+            <label className="text-2xs font-black uppercase tracking-widest opacity-40 ml-4">Email</label>
             <input
               type="email"
               required
@@ -111,7 +111,7 @@ function RegisterContent() {
           </div>
 
           <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-4">Contraseña</label>
+            <label className="text-2xs font-black uppercase tracking-widest opacity-40 ml-4">Contraseña</label>
             <div className="relative">
               <input
                 type={showPassword ? "text" : "password"}
@@ -141,7 +141,7 @@ function RegisterContent() {
           </div>
 
           <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-4">Confirmar Contraseña</label>
+            <label className="text-2xs font-black uppercase tracking-widest opacity-40 ml-4">Confirmar Contraseña</label>
             <div className="relative">
               <input
                 type={showConfirmPassword ? "text" : "password"}
@@ -171,7 +171,7 @@ function RegisterContent() {
           </div>
 
           <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-4">Código de Referido (Opcional)</label>
+            <label className="text-2xs font-black uppercase tracking-widest opacity-40 ml-4">Código de Referido (Opcional)</label>
             <input
               type="text"
               className="w-full px-6 py-4 bg-background border border-card-border rounded-2xl focus:border-nectar-gold outline-none transition-all font-bold uppercase font-mono text-foreground"
@@ -182,13 +182,13 @@ function RegisterContent() {
           </div>
 
           <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-4">Tipo de Cuenta</label>
+            <label className="text-2xs font-black uppercase tracking-widest opacity-40 ml-4">Tipo de Cuenta</label>
             <div className="grid grid-cols-3 gap-2">
               <div className="relative group">
                 <button
                   type="button"
                   onClick={() => setFormData({ ...formData, role: 'CUSTOMER' })}
-                  className={`w-full py-3 rounded-2xl border font-black text-[9px] uppercase tracking-wider transition-all ${formData.role === 'CUSTOMER'
+                  className={`w-full py-3 rounded-2xl border font-black text-2xs uppercase tracking-wider transition-all ${formData.role === 'CUSTOMER'
                     ? 'border-nectar-gold bg-nectar-gold/10 text-nectar-gold'
                     : 'border-card-border text-foreground/50 hover:border-card-border/80 bg-background/50'
                     }`}
@@ -196,8 +196,8 @@ function RegisterContent() {
                   Cliente
                 </button>
                 <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-64 p-4 rounded-2xl bg-card-bg border border-card-border shadow-2xl opacity-0 scale-95 pointer-events-none group-hover:opacity-100 group-hover:scale-100 transition-all duration-300 z-50 text-left">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-nectar-gold mb-1">Cliente:</p>
-                  <p className="text-[11px] leading-relaxed text-foreground/80 font-medium">
+                  <p className="text-2xs font-black uppercase tracking-widest text-nectar-gold mb-1">Cliente:</p>
+                  <p className="text-xs leading-relaxed text-foreground/80 font-medium">
                     Para empresarios y negocios que buscan delegar su ingeniería de software, diseño de marca y soporte continuo de TI.
                   </p>
                   <div className="absolute top-full left-1/2 -translate-x-1/2 border-[6px] border-transparent border-t-card-bg"></div>
@@ -208,7 +208,7 @@ function RegisterContent() {
                 <button
                   type="button"
                   onClick={() => setFormData({ ...formData, role: 'SALES' })}
-                  className={`w-full py-3 rounded-2xl border font-black text-[9px] uppercase tracking-wider transition-all ${formData.role === 'SALES'
+                  className={`w-full py-3 rounded-2xl border font-black text-2xs uppercase tracking-wider transition-all ${formData.role === 'SALES'
                     ? 'border-nectar-gold bg-nectar-gold/10 text-nectar-gold'
                     : 'border-card-border text-foreground/50 hover:border-card-border/80 bg-background/50'
                     }`}
@@ -216,8 +216,8 @@ function RegisterContent() {
                   Vendedor
                 </button>
                 <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-64 p-4 rounded-2xl bg-card-bg border border-card-border shadow-2xl opacity-0 scale-95 pointer-events-none group-hover:opacity-100 group-hover:scale-100 transition-all duration-300 z-50 text-left">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-nectar-gold mb-1">Vendedor:</p>
-                  <p className="text-[11px] leading-relaxed text-foreground/80 font-medium">
+                  <p className="text-2xs font-black uppercase tracking-widest text-nectar-gold mb-1">Vendedor:</p>
+                  <p className="text-xs leading-relaxed text-foreground/80 font-medium">
                     Para profesionales independientes que desean referir clientes a Néctar Labs y generar ingresos pasivos residuales (10%, 5% y 2%).
                   </p>
                   <div className="absolute top-full left-1/2 -translate-x-1/2 border-[6px] border-transparent border-t-card-bg"></div>
@@ -228,7 +228,7 @@ function RegisterContent() {
                 <button
                   type="button"
                   onClick={() => setFormData({ ...formData, role: 'DRIVER' })}
-                  className={`w-full py-3 rounded-2xl border font-black text-[9px] uppercase tracking-wider transition-all ${formData.role === 'DRIVER'
+                  className={`w-full py-3 rounded-2xl border font-black text-2xs uppercase tracking-wider transition-all ${formData.role === 'DRIVER'
                     ? 'border-nectar-gold bg-nectar-gold/10 text-nectar-gold animate-in fade-in duration-200'
                     : 'border-card-border text-foreground/50 hover:border-card-border/80 bg-background/50'
                     }`}
@@ -236,8 +236,8 @@ function RegisterContent() {
                   Repartidor
                 </button>
                 <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-64 p-4 rounded-2xl bg-card-bg border border-card-border shadow-2xl opacity-0 scale-95 pointer-events-none group-hover:opacity-100 group-hover:scale-100 transition-all duration-300 z-50 text-left">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-nectar-gold mb-1">Repartidor:</p>
-                  <p className="text-[11px] leading-relaxed text-foreground/80 font-medium">
+                  <p className="text-2xs font-black uppercase tracking-widest text-nectar-gold mb-1">Repartidor:</p>
+                  <p className="text-xs leading-relaxed text-foreground/80 font-medium">
                     Para repartidores independientes. Recibe entregas de comercios locales, gestiona tus rutas en tiempo real y contrata tu módulo ilimitado por $399.00 MXN mensuales.
                   </p>
                   <div className="absolute top-full left-1/2 -translate-x-1/2 border-[6px] border-transparent border-t-card-bg"></div>
@@ -247,7 +247,7 @@ function RegisterContent() {
           </div>
 
           {formData.role === 'DRIVER' && (
-            <div className="p-4 bg-yellow-500/10 border border-yellow-500/20 text-[10px] leading-relaxed text-yellow-500/90 font-bold rounded-2xl text-center">
+            <div className="p-4 bg-yellow-500/10 border border-yellow-500/20 text-2xs leading-relaxed text-yellow-500/90 font-bold rounded-2xl text-center">
               ⚠️ Néctar Labs no se hace responsable en caso de cualquier desperfecto ya que el dinero de las ventas y repartos no pasa a través de la plataforma. Cada negocio/restaurante se conecta y procesa transacciones de forma independiente a través de su propia cuenta de Stripe, pagos directos en Efectivo o CoDi.
             </div>
           )}
@@ -278,7 +278,7 @@ export default function RegisterPage() {
     <Suspense fallback={
       <div className="min-h-screen flex flex-col items-center justify-center bg-background">
         <div className="w-12 h-12 border-4 border-nectar-gold border-t-transparent rounded-full animate-spin mb-4"></div>
-        <div className="font-black uppercase tracking-[0.4em] opacity-20 text-[10px]">Sincronizando Ecosistema Néctar...</div>
+        <div className="font-black uppercase tracking-[0.4em] opacity-20 text-2xs">Sincronizando Ecosistema Néctar...</div>
       </div>
     }>
       <RegisterContent />

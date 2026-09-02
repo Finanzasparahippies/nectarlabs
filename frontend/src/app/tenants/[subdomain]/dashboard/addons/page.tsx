@@ -257,7 +257,7 @@ export default function TenantDashboardAddonsPage() {
     return (
       <div className="min-h-screen bg-[#020403] flex flex-col items-center justify-center gap-3">
         <div className="w-8 h-8 rounded-full border-2 border-t-white border-white/10 animate-spin"></div>
-        <span className="text-[10px] font-black uppercase tracking-widest text-white/40">Cargando Módulos...</span>
+        <span className="text-2xs font-black uppercase tracking-widest text-white/40">Cargando Módulos...</span>
       </div>
     );
   }
@@ -273,7 +273,7 @@ export default function TenantDashboardAddonsPage() {
           </p>
           <button
             onClick={() => router.push('/')}
-            className="px-6 py-2.5 bg-white/5 border border-white/10 text-white rounded-xl text-[10px] uppercase font-black tracking-wider hover:bg-white/10 transition-all cursor-pointer"
+            className="px-6 py-2.5 bg-white/5 border border-white/10 text-white rounded-xl text-2xs uppercase font-black tracking-wider hover:bg-white/10 transition-all cursor-pointer"
           >
             Ir a Inicio
           </button>
@@ -339,14 +339,14 @@ export default function TenantDashboardAddonsPage() {
         <div className="space-y-4">
           <div className="flex justify-between items-start">
             <span className="text-3xl">{addon.icon}</span>
-            <span className="px-2.5 py-0.5 bg-nectar-gold/10 text-nectar-gold border border-nectar-gold/25 text-[7px] font-black rounded-full uppercase tracking-wider font-mono">
+            <span className="px-2.5 py-0.5 bg-nectar-gold/10 text-nectar-gold border border-nectar-gold/25 text-2xs font-black rounded-full uppercase tracking-wider font-mono">
               {addon.categoryBadge}
             </span>
           </div>
 
           <div>
             <h3 className="text-sm font-black uppercase text-white tracking-wide mt-2">{addon.name}</h3>
-            <p className="text-[10px] text-white/50 leading-relaxed mt-2 line-clamp-4">{addon.description}</p>
+            <p className="text-2xs text-white/50 leading-relaxed mt-2 line-clamp-4">{addon.description}</p>
           </div>
         </div>
 
@@ -359,7 +359,7 @@ export default function TenantDashboardAddonsPage() {
               ${(price || 0).toLocaleString('es-MX')} MXN
             </span>
             {billingCycle === 'yearly' && savings > 0 && (
-              <p className="text-[7px] text-emerald-400 font-bold uppercase tracking-wider mt-0.5">
+              <p className="text-2xs text-emerald-400 font-bold uppercase tracking-wider mt-0.5">
                 Ahorro de ${savings.toLocaleString('es-MX')} MXN
               </p>
             )}
@@ -367,7 +367,7 @@ export default function TenantDashboardAddonsPage() {
           
           <button
             onClick={handleRedirectToMain}
-            className="px-4 py-2 text-background text-[8px] font-black uppercase tracking-widest rounded-lg hover:scale-105 active:scale-95 transition-all shadow-md cursor-pointer"
+            className="px-4 py-2 text-background text-2xs font-black uppercase tracking-widest rounded-lg hover:scale-105 active:scale-95 transition-all shadow-md cursor-pointer"
             style={{ backgroundColor: primaryColor }}
           >
             Activar Add-on
@@ -390,14 +390,14 @@ export default function TenantDashboardAddonsPage() {
         <div className="space-y-4">
           <div className="flex justify-between items-start">
             <span className="text-3xl">{addon.icon}</span>
-            <span className="px-2.5 py-0.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 text-[7px] font-black rounded-full uppercase tracking-wider font-mono">
+            <span className="px-2.5 py-0.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 text-2xs font-black rounded-full uppercase tracking-wider font-mono">
               ✔️ Activo
             </span>
           </div>
 
           <div>
             <h3 className="text-sm font-black uppercase text-white tracking-wide mt-2">{addon.name}</h3>
-            <p className="text-[10px] text-white/50 leading-relaxed mt-2 line-clamp-4">{addon.description}</p>
+            <p className="text-2xs text-white/50 leading-relaxed mt-2 line-clamp-4">{addon.description}</p>
           </div>
         </div>
 
@@ -411,7 +411,7 @@ export default function TenantDashboardAddonsPage() {
           
           <button
             onClick={() => router.push(`/portal-admin`)}
-            className="px-4 py-2 bg-white/5 border border-white/10 hover:bg-white/10 text-white text-[8px] font-black uppercase tracking-widest rounded-lg hover:scale-105 active:scale-95 transition-all cursor-pointer"
+            className="px-4 py-2 bg-white/5 border border-white/10 hover:bg-white/10 text-white text-2xs font-black uppercase tracking-widest rounded-lg hover:scale-105 active:scale-95 transition-all cursor-pointer"
           >
             Configurar
           </button>
@@ -445,14 +445,14 @@ export default function TenantDashboardAddonsPage() {
             <h1 className="text-2xl font-black uppercase tracking-tight">
               Catálogo de Módulos & Add-ons
             </h1>
-            <p className="text-[10px] uppercase tracking-widest text-white/45 mt-0.5">
+            <p className="text-2xs uppercase tracking-widest text-white/45 mt-0.5">
               Gestiona el equipamiento tecnológico de {tenantConfig.name}
             </p>
           </div>
 
           <button
             onClick={handleRedirectToMain}
-            className="px-6 py-3.5 bg-white/5 border border-white/10 hover:bg-white/10 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-lg"
+            className="px-6 py-3.5 bg-white/5 border border-white/10 hover:bg-white/10 text-white rounded-xl text-2xs font-black uppercase tracking-widest transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-lg"
           >
             💳 Comprar Add-ons en Panel Central
           </button>
@@ -463,7 +463,7 @@ export default function TenantDashboardAddonsPage() {
           <div className="flex gap-4">
             <button
               onClick={() => setActiveTab('pending')}
-              className={`px-5 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border cursor-pointer ${
+              className={`px-5 py-3 rounded-xl text-2xs font-black uppercase tracking-widest transition-all border cursor-pointer ${
                 activeTab === 'pending'
                   ? 'bg-white/5 text-white border-white/20'
                   : 'bg-transparent text-white/40 border-transparent hover:text-white/70'
@@ -474,7 +474,7 @@ export default function TenantDashboardAddonsPage() {
             </button>
             <button
               onClick={() => setActiveTab('active')}
-              className={`px-5 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border cursor-pointer ${
+              className={`px-5 py-3 rounded-xl text-2xs font-black uppercase tracking-widest transition-all border cursor-pointer ${
                 activeTab === 'active'
                   ? 'bg-white/5 text-white border-white/20'
                   : 'bg-transparent text-white/40 border-transparent hover:text-white/70'
@@ -489,7 +489,7 @@ export default function TenantDashboardAddonsPage() {
           <div className="inline-flex bg-white/5 border border-white/10 p-1 rounded-xl shadow-sm self-end sm:self-auto">
             <button
               onClick={() => setBillingCycle('monthly')}
-              className={`px-4 py-2 rounded-lg font-black uppercase tracking-widest text-[8px] transition-all duration-300 ${
+              className={`px-4 py-2 rounded-lg font-black uppercase tracking-widest text-2xs transition-all duration-300 ${
                 billingCycle === 'monthly'
                   ? 'bg-[#C68A1E] text-[#020403] shadow-md'
                   : 'text-white/60 hover:text-white hover:bg-white/5'
@@ -500,7 +500,7 @@ export default function TenantDashboardAddonsPage() {
             </button>
             <button
               onClick={() => setBillingCycle('yearly')}
-              className={`px-4 py-2 rounded-lg font-black uppercase tracking-widest text-[8px] transition-all duration-300 ${
+              className={`px-4 py-2 rounded-lg font-black uppercase tracking-widest text-2xs transition-all duration-300 ${
                 billingCycle === 'yearly'
                   ? 'bg-[#C68A1E] text-[#020403] shadow-md'
                   : 'text-white/60 hover:text-white hover:bg-white/5'
@@ -518,7 +518,7 @@ export default function TenantDashboardAddonsPage() {
             <div className="py-24 text-center border border-dashed border-white/10 rounded-[2.5rem] bg-white/[0.01]">
               <span className="text-4xl block mb-3">🎖️</span>
               <h3 className="text-sm font-black uppercase text-white tracking-widest">¡Todos los Módulos Activos!</h3>
-              <p className="text-[9px] text-white/40 uppercase tracking-wider mt-1.5 max-w-sm mx-auto leading-relaxed">
+              <p className="text-2xs text-white/40 uppercase tracking-wider mt-1.5 max-w-sm mx-auto leading-relaxed">
                 Has contratado e instalado todos los módulos de software disponibles de Néctar Labs.
               </p>
             </div>
@@ -531,7 +531,7 @@ export default function TenantDashboardAddonsPage() {
                     <h2 className="text-sm font-black uppercase tracking-widest text-white/80">
                       📦 Paquetes de Software Completos
                     </h2>
-                    <span className="text-[8px] font-mono px-2 py-0.5 rounded bg-white/5 border border-white/10 text-white/50 uppercase tracking-widest">
+                    <span className="text-2xs font-mono px-2 py-0.5 rounded bg-white/5 border border-white/10 text-white/50 uppercase tracking-widest">
                       {pendingPackages.length} pendientes
                     </span>
                   </div>
@@ -548,7 +548,7 @@ export default function TenantDashboardAddonsPage() {
                     <h2 className="text-sm font-black uppercase tracking-widest text-white/80">
                       🧩 Módulos & Funcionalidades Individuales
                     </h2>
-                    <span className="text-[8px] font-mono px-2 py-0.5 rounded bg-white/5 border border-white/10 text-white/50 uppercase tracking-widest">
+                    <span className="text-2xs font-mono px-2 py-0.5 rounded bg-white/5 border border-white/10 text-white/50 uppercase tracking-widest">
                       {pendingModules.length} pendientes
                     </span>
                   </div>
@@ -564,7 +564,7 @@ export default function TenantDashboardAddonsPage() {
             <div className="py-24 text-center border border-dashed border-white/10 rounded-[2.5rem] bg-white/[0.01]">
               <span className="text-4xl block mb-3">🏪</span>
               <h3 className="text-sm font-black uppercase text-white tracking-widest">Sin Add-ons Activos</h3>
-              <p className="text-[9px] text-white/40 uppercase tracking-wider mt-1.5 max-w-sm mx-auto leading-relaxed">
+              <p className="text-2xs text-white/40 uppercase tracking-wider mt-1.5 max-w-sm mx-auto leading-relaxed">
                 Aún no has activado add-ons en este portal. Ve a la sección de pendientes para equipar tu negocio.
               </p>
             </div>
@@ -577,7 +577,7 @@ export default function TenantDashboardAddonsPage() {
                     <h2 className="text-sm font-black uppercase tracking-widest text-white/80">
                       📦 Paquetes Activos en tu Plan
                     </h2>
-                    <span className="text-[8px] font-mono px-2 py-0.5 rounded bg-white/5 border border-white/10 text-white/50 uppercase tracking-widest">
+                    <span className="text-2xs font-mono px-2 py-0.5 rounded bg-white/5 border border-white/10 text-white/50 uppercase tracking-widest">
                       {activePackages.length} activos
                     </span>
                   </div>
@@ -594,7 +594,7 @@ export default function TenantDashboardAddonsPage() {
                     <h2 className="text-sm font-black uppercase tracking-widest text-white/80">
                       🧩 Módulos Individuales Activos
                     </h2>
-                    <span className="text-[8px] font-mono px-2 py-0.5 rounded bg-white/5 border border-white/10 text-white/50 uppercase tracking-widest">
+                    <span className="text-2xs font-mono px-2 py-0.5 rounded bg-white/5 border border-white/10 text-white/50 uppercase tracking-widest">
                       {activeModules.length} activos
                     </span>
                   </div>
@@ -610,10 +610,10 @@ export default function TenantDashboardAddonsPage() {
 
       {/* Footer copyright */}
       <footer className="max-w-6xl mx-auto w-full text-center mt-12 border-t border-white/5 pt-6">
-        <p className="text-[8px] font-bold text-white/30 uppercase tracking-widest leading-relaxed">
+        <p className="text-2xs font-bold text-white/30 uppercase tracking-widest leading-relaxed">
           {tenantConfig.footer_text || `© ${new Date().getFullYear()} ${tenantConfig.name}. Todos los derechos reservados.`}
         </p>
-        <p className="text-[7px] font-bold text-white/20 uppercase tracking-widest mt-1">
+        <p className="text-2xs font-bold text-white/20 uppercase tracking-widest mt-1">
           Infraestructura de Add-ons Proporcionada por Néctar Labs
         </p>
       </footer>

@@ -236,7 +236,7 @@ export default function ConsultationScheduler({ isOpen, onClose, initialAddonSlu
         {/* Encabezado del Modal */}
         <div className="p-6 sm:p-8 border-b border-card-border/80 dark:border-card-border/20 flex items-center justify-between relative z-10">
           <div>
-            <span className="text-[9px] text-nectar-gold font-black uppercase tracking-[0.3em] block mb-1">Agenda tu Sesión</span>
+            <span className="text-2xs text-nectar-gold font-black uppercase tracking-[0.3em] block mb-1">Agenda tu Sesión</span>
             <h2 className="text-xl sm:text-3xl font-black tracking-tight text-foreground">Consultoría Tecnológica</h2>
           </div>
           <button 
@@ -252,7 +252,7 @@ export default function ConsultationScheduler({ isOpen, onClose, initialAddonSlu
 
         {/* Stepper de Progreso */}
         {!success && (
-          <div className="px-6 sm:px-8 py-3 bg-foreground/5 border-b border-card-border/40 dark:border-card-border/10 flex justify-between items-center text-[10px] font-black uppercase tracking-wider text-foreground/40">
+          <div className="px-6 sm:px-8 py-3 bg-foreground/5 border-b border-card-border/40 dark:border-card-border/10 flex justify-between items-center text-2xs font-black uppercase tracking-wider text-foreground/40">
             <span className={step >= 1 ? 'text-nectar-gold' : ''}>1. Tipo</span>
             <svg className="w-3 h-3 text-foreground/20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -328,7 +328,7 @@ export default function ConsultationScheduler({ isOpen, onClose, initialAddonSlu
                             <span className="text-sm font-black text-foreground block">{opt.name}</span>
                             <p className="text-xs text-foreground/50 mt-2 leading-relaxed">{opt.desc}</p>
                           </div>
-                          <span className="text-[9px] font-black text-nectar-gold uppercase tracking-wider mt-4 block">
+                          <span className="text-2xs font-black text-nectar-gold uppercase tracking-wider mt-4 block">
                             {isSelected ? '✓ Seleccionado' : 'Seleccionar'}
                           </span>
                         </button>
@@ -348,7 +348,7 @@ export default function ConsultationScheduler({ isOpen, onClose, initialAddonSlu
 
                   {/* Pregunta 1 */}
                   <div className="space-y-3">
-                    <label className="text-[11px] font-black uppercase tracking-wider text-foreground/70 block">
+                    <label className="text-xs font-black uppercase tracking-wider text-foreground/70 block">
                       {INTERVIEW_QUESTIONS.queBuscas.question} <span className="text-nectar-gold">(Selección múltiple)</span>
                     </label>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -374,7 +374,7 @@ export default function ConsultationScheduler({ isOpen, onClose, initialAddonSlu
 
                   {/* Pregunta 2 */}
                   <div className="space-y-3">
-                    <label className="text-[11px] font-black uppercase tracking-wider text-foreground/70 block">
+                    <label className="text-xs font-black uppercase tracking-wider text-foreground/70 block">
                       {INTERVIEW_QUESTIONS.etapaProyecto.question}
                     </label>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -400,7 +400,7 @@ export default function ConsultationScheduler({ isOpen, onClose, initialAddonSlu
 
                   {/* Pregunta 3 */}
                   <div className="space-y-3">
-                    <label className="text-[11px] font-black uppercase tracking-wider text-foreground/70 block">
+                    <label className="text-xs font-black uppercase tracking-wider text-foreground/70 block">
                       {INTERVIEW_QUESTIONS.desafioPrincipal.question}
                     </label>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -483,7 +483,7 @@ export default function ConsultationScheduler({ isOpen, onClose, initialAddonSlu
                       </div>
 
                       {/* Etiquetas de Días de la semana */}
-                      <div className="grid grid-cols-7 gap-1 text-center text-[9px] font-black uppercase tracking-widest text-foreground/40 mb-2">
+                      <div className="grid grid-cols-7 gap-1 text-center text-2xs font-black uppercase tracking-widest text-foreground/40 mb-2">
                         <span>Dom</span>
                         <span>Lun</span>
                         <span>Mar</span>
@@ -501,7 +501,7 @@ export default function ConsultationScheduler({ isOpen, onClose, initialAddonSlu
 
                     {/* Horas Disponibles */}
                     <div className="lg:col-span-5 space-y-4">
-                      <span className="text-[10px] font-black uppercase tracking-wider text-foreground/55 block">Horarios Disponibles</span>
+                      <span className="text-2xs font-black uppercase tracking-wider text-foreground/55 block">Horarios Disponibles</span>
                       {date ? (
                         <div className="grid grid-cols-2 gap-2">
                           {TIME_SLOTS.map((t) => {
@@ -564,7 +564,7 @@ export default function ConsultationScheduler({ isOpen, onClose, initialAddonSlu
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-wider text-foreground/60 block">Nombre Completo *</label>
+                      <label className="text-2xs font-black uppercase tracking-wider text-foreground/60 block">Nombre Completo *</label>
                       <input 
                         type="text"
                         required
@@ -576,7 +576,7 @@ export default function ConsultationScheduler({ isOpen, onClose, initialAddonSlu
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-wider text-foreground/60 block">Correo Electrónico *</label>
+                      <label className="text-2xs font-black uppercase tracking-wider text-foreground/60 block">Correo Electrónico *</label>
                       <input 
                         type="email"
                         required
@@ -588,7 +588,7 @@ export default function ConsultationScheduler({ isOpen, onClose, initialAddonSlu
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-wider text-foreground/60 block">Teléfono de Contacto</label>
+                      <label className="text-2xs font-black uppercase tracking-wider text-foreground/60 block">Teléfono de Contacto</label>
                       <input 
                         type="tel"
                         value={phone}
@@ -599,7 +599,7 @@ export default function ConsultationScheduler({ isOpen, onClose, initialAddonSlu
                     </div>
 
                     <div className="space-y-2 sm:col-span-2">
-                      <label className="text-[10px] font-black uppercase tracking-wider text-foreground/60 block">Notas adicionales (Opcional)</label>
+                      <label className="text-2xs font-black uppercase tracking-wider text-foreground/60 block">Notas adicionales (Opcional)</label>
                       <textarea 
                         value={notes}
                         onChange={(e) => setNotes(e.target.value)}
@@ -612,7 +612,7 @@ export default function ConsultationScheduler({ isOpen, onClose, initialAddonSlu
 
                   {/* Resumen Final de la Cita */}
                   <div className="p-5 rounded-2xl bg-foreground/5 border border-card-border space-y-2.5 text-xs">
-                    <span className="text-[9px] font-black text-nectar-gold uppercase tracking-wider">Resumen de Cita</span>
+                    <span className="text-2xs font-black text-nectar-gold uppercase tracking-wider">Resumen de Cita</span>
                     <div className="flex justify-between">
                       <span className="text-foreground/50">Modalidad:</span>
                       <span className="font-bold text-foreground">

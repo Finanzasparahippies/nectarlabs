@@ -65,7 +65,7 @@ export default function VerifyEmailPage() {
       <div className="relative z-10 flex flex-col items-center text-center max-w-sm w-full">
         {/* Logo */}
         <div className="mb-12">
-          <span className="text-[10px] font-black uppercase tracking-[0.5em] text-[#C68A1E] opacity-60">
+          <span className="text-2xs font-black uppercase tracking-[0.5em] text-[#C68A1E] opacity-60">
             Néctar Labs
           </span>
         </div>
@@ -117,7 +117,7 @@ export default function VerifyEmailPage() {
             <p className="text-xs text-white/40 leading-relaxed mb-8">
               Tu correo ha sido confirmado exitosamente.<br />Te redirigiremos al inicio de sesión en un momento.
             </p>
-            <div className="flex items-center gap-2 text-emerald-400/60 text-[10px] font-bold uppercase tracking-widest">
+            <div className="flex items-center gap-2 text-emerald-400/60 text-2xs font-bold uppercase tracking-widest">
               <div className="w-3 h-3 border-2 border-t-emerald-400 border-emerald-400/20 rounded-full animate-spin" />
               Redirigiendo...
             </div>
@@ -140,7 +140,7 @@ export default function VerifyEmailPage() {
             </p>
             <button
               onClick={() => router.push('/login')}
-              className="px-8 py-3.5 bg-[#C68A1E] text-[#020403] text-[10px] font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 transition-all shadow-lg shadow-[#C68A1E]/20"
+              className="px-8 py-3.5 bg-[#C68A1E] text-[#020403] text-2xs font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 transition-all shadow-lg shadow-[#C68A1E]/20"
             >
               Ir al Inicio de Sesión
             </button>

@@ -89,10 +89,10 @@ export default function Navbar() {
 
           {/* Menú de Escritorio */}
           <div className="hidden md:flex items-center gap-10">
-            <a href="/#formula" className="text-[10px] font-black uppercase tracking-widest text-foreground opacity-60 hover:opacity-100 transition-opacity">Hoja de Ruta</a>
-            <a href="/#pricing" className="text-[10px] font-black uppercase tracking-widest text-foreground opacity-60 hover:opacity-100 transition-opacity">Planes</a>
-            <a href="/#addons" className="text-[10px] font-black uppercase tracking-widest text-foreground opacity-60 hover:opacity-100 transition-opacity">Add-ons</a>
-            <Link href="/stores" className="text-[10px] font-black uppercase tracking-widest text-foreground opacity-60 hover:opacity-100 transition-opacity">Tiendas</Link>
+            <a href="/#formula" className="text-2xs font-black uppercase tracking-widest text-foreground opacity-60 hover:opacity-100 transition-opacity">Hoja de Ruta</a>
+            <a href="/#pricing" className="text-2xs font-black uppercase tracking-widest text-foreground opacity-60 hover:opacity-100 transition-opacity">Planes</a>
+            <a href="/#addons" className="text-2xs font-black uppercase tracking-widest text-foreground opacity-60 hover:opacity-100 transition-opacity">Add-ons</a>
+            <Link href="/stores" className="text-2xs font-black uppercase tracking-widest text-foreground opacity-60 hover:opacity-100 transition-opacity">Tiendas</Link>
             
             {/* Dropdown de Instalables con Hover Bridge & ARIA Focus Safety */}
             <div 
@@ -112,7 +112,7 @@ export default function Navbar() {
                 aria-expanded={instalablesDropdownOpen}
                 aria-haspopup="true"
                 aria-label="Desplegar menú de aplicaciones instalables"
-                className="text-[10px] font-black uppercase tracking-widest text-nectar-gold hover:opacity-100 transition-all flex items-center gap-1.5 focus:outline-none focus:ring-1 focus:ring-nectar-gold/50 rounded-md px-1 cursor-pointer"
+                className="text-2xs font-black uppercase tracking-widest text-nectar-gold hover:opacity-100 transition-all flex items-center gap-1.5 focus:outline-none focus:ring-1 focus:ring-nectar-gold/50 rounded-md px-1 cursor-pointer"
               >
                 <span>Instalables</span>
                 <svg 
@@ -146,11 +146,11 @@ export default function Navbar() {
                         </svg>
                       </div>
                       <div>
-                        <div className="text-[11px] font-black uppercase tracking-wider text-foreground flex items-center gap-1.5">
+                        <div className="text-xs font-black uppercase tracking-wider text-foreground flex items-center gap-1.5">
                           NectarCast
-                          <span className="px-1.5 py-0.2 text-[7px] bg-nectar-gold/20 text-nectar-gold border border-nectar-gold/30 rounded font-bold">GRATIS</span>
+                          <span className="px-1.5 py-0.2 text-2xs bg-nectar-gold/20 text-nectar-gold border border-nectar-gold/30 rounded font-bold">GRATIS</span>
                         </div>
-                        <p className="text-[9px] text-muted leading-tight mt-0.5">Transmisión & Multimedia Desktop</p>
+                        <p className="text-2xs text-muted leading-tight mt-0.5">Transmisión & Multimedia Desktop</p>
                       </div>
                     </Link>
 
@@ -166,11 +166,11 @@ export default function Navbar() {
                         </svg>
                       </div>
                       <div>
-                        <div className="text-[11px] font-black uppercase tracking-wider text-foreground flex items-center gap-1.5">
+                        <div className="text-xs font-black uppercase tracking-wider text-foreground flex items-center gap-1.5">
                           NectarQ
-                          <span className="px-1.5 py-0.2 text-[7px] bg-nectar-gold/20 text-nectar-gold border border-nectar-gold/30 rounded font-bold">DESKTOP</span>
+                          <span className="px-1.5 py-0.2 text-2xs bg-nectar-gold/20 text-nectar-gold border border-nectar-gold/30 rounded font-bold">DESKTOP</span>
                         </div>
-                        <p className="text-[9px] text-muted leading-tight mt-0.5">Gestión de Filas & Cliente Nativo</p>
+                        <p className="text-2xs text-muted leading-tight mt-0.5">Gestión de Filas & Cliente Nativo</p>
                       </div>
                     </Link>
                   </div>
@@ -178,13 +178,13 @@ export default function Navbar() {
               )}
             </div>
 
-            <a href="/#seller-program" className="text-[10px] font-black uppercase tracking-widest text-nectar-gold/70 hover:text-nectar-gold transition-colors flex items-center gap-1.5 font-bold">
+            <a href="/#seller-program" className="text-2xs font-black uppercase tracking-widest text-nectar-gold/70 hover:text-nectar-gold transition-colors flex items-center gap-1.5 font-bold">
               <span className="w-1.5 h-1.5 rounded-full bg-nectar-gold animate-pulse" />
               Únete a Nosotros
             </a>
-            <Link href="/blog" className="text-[10px] font-black uppercase tracking-widest text-foreground opacity-60 hover:opacity-100 transition-opacity">Blog</Link>
+            <Link href="/blog" className="text-2xs font-black uppercase tracking-widest text-foreground opacity-60 hover:opacity-100 transition-opacity">Blog</Link>
             {mounted && isLoggedIn && (
-              <Link href="/dashboard" className="text-[10px] font-black uppercase tracking-widest text-nectar-gold font-bold">Dashboard</Link>
+              <Link href="/dashboard" className="text-2xs font-black uppercase tracking-widest text-nectar-gold font-bold">Dashboard</Link>
             )}
           </div>
 
@@ -196,23 +196,23 @@ export default function Navbar() {
             </div>
             {mounted && isLoggedIn && (
               <div className="hidden lg:flex flex-col items-end">
-                <span className="text-[9px] font-black uppercase tracking-widest text-nectar-gold/50">Sesión Activa</span>
-                <span className="text-[10px] font-black text-foreground/85">{userEmail}</span>
+                <span className="text-2xs font-black uppercase tracking-widest text-nectar-gold/50">Sesión Activa</span>
+                <span className="text-2xs font-black text-foreground/85">{userEmail}</span>
               </div>
             )}
             {!(mounted && isLoggedIn) ? (
               <div className="flex items-center gap-4">
-                <Link href="/login" className="px-6 py-2.5 text-[10px] font-black uppercase tracking-widest text-foreground hover:bg-foreground/5 rounded-xl transition-all">
+                <Link href="/login" className="px-6 py-2.5 text-2xs font-black uppercase tracking-widest text-foreground hover:bg-foreground/5 rounded-xl transition-all">
                   Entrar
                 </Link>
-                <Link href="/register" className="px-8 py-3 text-[10px] font-black uppercase tracking-widest bg-nectar-gold text-background rounded-xl hover:scale-105 transition-all shadow-xl shadow-nectar-gold/20 font-bold">
+                <Link href="/register" className="px-8 py-3 text-2xs font-black uppercase tracking-widest bg-nectar-gold text-background rounded-xl hover:scale-105 transition-all shadow-xl shadow-nectar-gold/20 font-bold">
                   Comenzar
                 </Link>
               </div>
             ) : (
               <button 
                 onClick={handleLogout}
-                className="px-6 py-2.5 text-[10px] font-black uppercase tracking-widest text-red-500/65 hover:text-red-500 transition-all border border-red-500/10 rounded-xl hover:bg-red-500/5 font-bold"
+                className="px-6 py-2.5 text-2xs font-black uppercase tracking-widest text-red-500/65 hover:text-red-500 transition-all border border-red-500/10 rounded-xl hover:bg-red-500/5 font-bold"
               >
                 Salir
               </button>
@@ -255,7 +255,7 @@ export default function Navbar() {
             
             {/* Instalables en Móvil */}
             <div className="flex flex-col gap-3 py-2 border-y border-card-border/50">
-              <span className="text-[9px] font-black uppercase tracking-widest text-nectar-gold/70">Instalables</span>
+              <span className="text-2xs font-black uppercase tracking-widest text-nectar-gold/70">Instalables</span>
               <Link href="/nectarcast" onClick={() => setMobileMenuOpen(false)} className="text-lg font-black uppercase tracking-widest text-nectar-gold hover:underline flex items-center justify-between">
                 <span>NectarCast</span>
                 <span className="px-2 py-0.5 text-xs bg-nectar-gold/20 text-nectar-gold border border-nectar-gold/30 rounded-lg font-bold">GRATIS</span>
@@ -277,7 +277,7 @@ export default function Navbar() {
             {mounted && isLoggedIn ? (
               <>
                 <div className="text-left mb-2">
-                  <p className="text-[9px] font-black uppercase tracking-widest text-nectar-gold/50">Sesión Activa</p>
+                  <p className="text-2xs font-black uppercase tracking-widest text-nectar-gold/50">Sesión Activa</p>
                   <p className="text-sm font-black text-foreground/80">{userEmail}</p>
                 </div>
                 <button 

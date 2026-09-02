@@ -195,7 +195,7 @@ export default function PartnersShowcase() {
     return (
       <div className="py-20 flex flex-col items-center justify-center">
         <div className="w-8 h-8 border-2 border-nectar-gold border-t-transparent rounded-full animate-spin mb-4"></div>
-        <p className="text-[9px] font-black uppercase tracking-widest opacity-25">Cargando Socios...</p>
+        <p className="text-2xs font-black uppercase tracking-widest opacity-25">Cargando Socios...</p>
       </div>
     );
   }
@@ -245,7 +245,7 @@ export default function PartnersShowcase() {
             className="w-1.5 h-1.5 rounded-full animate-pulse"
             style={{ backgroundColor: partner.accentColor }}
           ></span>
-          <span className="text-[8px] font-bold uppercase tracking-[0.2em] opacity-40">
+          <span className="text-2xs font-bold uppercase tracking-[0.2em] opacity-40">
             {partner.category}
           </span>
         </div>
@@ -272,7 +272,7 @@ export default function PartnersShowcase() {
               <polyline points="7 7 17 7 17 17"></polyline>
             </svg>
           </div>
-          <p className="text-[11px] text-foreground/50 leading-relaxed mt-3 font-medium pr-2 group-hover:text-foreground/75 transition-colors duration-300">
+          <p className="text-xs text-foreground/50 leading-relaxed mt-3 font-medium pr-2 group-hover:text-foreground/75 transition-colors duration-300">
             {partner.description}
           </p>
         </div>
@@ -287,7 +287,7 @@ export default function PartnersShowcase() {
       <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-nectar-forest/[0.02] rounded-full blur-[100px] -z-10 pointer-events-none"></div>
 
       <div className="w-full max-w-7xl text-center px-6 mb-16">
-        <span className="inline-block px-8 py-2.5 mb-6 text-[10px] font-black tracking-[0.5em] text-nectar-gold uppercase border border-nectar-gold/20 rounded-full bg-nectar-gold/5">
+        <span className="inline-block px-8 py-2.5 mb-6 text-2xs font-black tracking-[0.5em] text-nectar-gold uppercase border border-nectar-gold/20 rounded-full bg-nectar-gold/5">
           Socios Tecnológicos
         </span>
         <h2 className="text-4xl md:text-6xl font-black tracking-tight mb-6 text-foreground">

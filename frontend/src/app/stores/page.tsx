@@ -156,7 +156,7 @@ export default function StoresDirectory() {
 
         {/* Header */}
         <header className="mb-12 text-center max-w-2xl mx-auto">
-          <span className="inline-block px-5 py-1.5 mb-4 text-[10px] font-black tracking-[0.4em] text-nectar-gold uppercase border border-nectar-gold/25 rounded-full bg-nectar-gold/5">
+          <span className="inline-block px-5 py-1.5 mb-4 text-2xs font-black tracking-[0.4em] text-nectar-gold uppercase border border-nectar-gold/25 rounded-full bg-nectar-gold/5">
             Directorio Comercial
           </span>
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tight mb-4">
@@ -186,14 +186,14 @@ export default function StoresDirectory() {
             <div className="flex bg-background border border-card-border p-1 rounded-xl w-full sm:w-auto shrink-0 select-none">
               <button
                 onClick={() => setActiveTab('stores')}
-                className={`flex-1 sm:flex-initial px-5 py-2.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${activeTab === 'stores' ? 'bg-nectar-gold text-background' : 'text-foreground/60 hover:text-foreground'
+                className={`flex-1 sm:flex-initial px-5 py-2.5 rounded-lg text-2xs font-black uppercase tracking-widest transition-all ${activeTab === 'stores' ? 'bg-nectar-gold text-background' : 'text-foreground/60 hover:text-foreground'
                   }`}
               >
                 Tiendas
               </button>
               <button
                 onClick={() => setActiveTab('products')}
-                className={`flex-1 sm:flex-initial px-5 py-2.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${activeTab === 'products' ? 'bg-nectar-gold text-background' : 'text-foreground/60 hover:text-foreground'
+                className={`flex-1 sm:flex-initial px-5 py-2.5 rounded-lg text-2xs font-black uppercase tracking-widest transition-all ${activeTab === 'products' ? 'bg-nectar-gold text-background' : 'text-foreground/60 hover:text-foreground'
                   }`}
               >
                 Productos
@@ -207,7 +207,7 @@ export default function StoresDirectory() {
               <button
                 key={cat}
                 onClick={() => setSelectedCategory(cat)}
-                className={`px-4 py-2 border text-[9px] font-black uppercase tracking-wider rounded-full transition-all shrink-0 cursor-pointer ${selectedCategory === cat
+                className={`px-4 py-2 border text-2xs font-black uppercase tracking-wider rounded-full transition-all shrink-0 cursor-pointer ${selectedCategory === cat
                   ? 'border-nectar-gold bg-nectar-gold/10 text-nectar-gold'
                   : 'border-card-border bg-card-bg/40 text-foreground/50 hover:border-foreground/30 hover:text-foreground'
                   }`}
@@ -222,7 +222,7 @@ export default function StoresDirectory() {
         {loading ? (
           <div className="py-24 text-center">
             <div className="w-10 h-10 border-4 border-nectar-gold border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-30">Cargando directorio...</p>
+            <p className="text-2xs font-black uppercase tracking-[0.3em] opacity-30">Cargando directorio...</p>
           </div>
         ) : (
           <>
@@ -246,7 +246,7 @@ export default function StoresDirectory() {
                             <span className="text-xl font-bold italic text-nectar-gold/50">{tenant.name.charAt(0)}</span>
                           )}
                         </div>
-                        <span className="px-3.5 py-1 text-[8px] font-black uppercase tracking-widest text-nectar-gold border border-nectar-gold/20 rounded-full bg-nectar-gold/5">
+                        <span className="px-3.5 py-1 text-2xs font-black uppercase tracking-widest text-nectar-gold border border-nectar-gold/20 rounded-full bg-nectar-gold/5">
                           {tenant.store_category || 'General'}
                         </span>
                       </div>
@@ -254,7 +254,7 @@ export default function StoresDirectory() {
                       {/* Store info */}
                       <div>
                         <h3 className="text-lg font-black tracking-tight text-foreground">{tenant.name}</h3>
-                        <p className="text-[10px] font-bold text-nectar-gold tracking-widest uppercase mt-0.5">
+                        <p className="text-2xs font-bold text-nectar-gold tracking-widest uppercase mt-0.5">
                           {tenant.subdomain}.nectarlabs.dev
                         </p>
                         <p className="text-xs text-foreground/50 leading-relaxed mt-3 line-clamp-3">
@@ -269,17 +269,17 @@ export default function StoresDirectory() {
                         href={getTenantUrl(tenant)}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="w-full py-3 bg-foreground/5 group-hover:bg-nectar-gold text-foreground group-hover:text-background border border-card-border/85 group-hover:border-nectar-gold rounded-xl font-black uppercase tracking-widest text-[9px] flex items-center justify-center gap-2 transition-all duration-300"
+                        className="w-full py-3 bg-foreground/5 group-hover:bg-nectar-gold text-foreground group-hover:text-background border border-card-border/85 group-hover:border-nectar-gold rounded-xl font-black uppercase tracking-widest text-2xs flex items-center justify-center gap-2 transition-all duration-300"
                       >
                         <span>Visitar Tienda</span>
-                        <span className="text-[11px] group-hover:translate-x-1 transition-transform">→</span>
+                        <span className="text-xs group-hover:translate-x-1 transition-transform">→</span>
                       </a>
                     </div>
                   </div>
                 ))}
 
                 {filteredTenants.length === 0 && (
-                  <div className="col-span-full py-24 text-center border-2 border-dashed border-card-border rounded-3xl opacity-30 text-[10px] font-black uppercase tracking-wider">
+                  <div className="col-span-full py-24 text-center border-2 border-dashed border-card-border rounded-3xl opacity-30 text-2xs font-black uppercase tracking-wider">
                     Ninguna tienda coincide con los criterios de búsqueda.
                   </div>
                 )}
@@ -302,18 +302,18 @@ export default function StoresDirectory() {
                         ) : (
                           <span className="text-4xl filter grayscale opacity-25">📦</span>
                         )}
-                        <span className="absolute top-3 right-3 px-2.5 py-1 text-[7px] font-black uppercase tracking-wider text-nectar-gold border border-nectar-gold/15 bg-background/90 backdrop-blur-md rounded-full shadow-md">
+                        <span className="absolute top-3 right-3 px-2.5 py-1 text-2xs font-black uppercase tracking-wider text-nectar-gold border border-nectar-gold/15 bg-background/90 backdrop-blur-md rounded-full shadow-md">
                           {getTenantCategory(prod.tenant)}
                         </span>
                       </div>
 
                       {/* Product text details */}
                       <div className="space-y-1">
-                        <span className="text-[8px] font-black uppercase tracking-widest text-nectar-gold block">
+                        <span className="text-2xs font-black uppercase tracking-widest text-nectar-gold block">
                           {getTenantName(prod.tenant)}
                         </span>
                         <h3 className="font-bold text-sm text-foreground truncate">{prod.name}</h3>
-                        <p className="text-[10px] text-foreground/45 line-clamp-2 leading-relaxed min-h-[2.5rem]">
+                        <p className="text-2xs text-foreground/45 line-clamp-2 leading-relaxed min-h-[2.5rem]">
                           {prod.description || 'Sin descripción disponible.'}
                         </p>
                       </div>
@@ -322,7 +322,7 @@ export default function StoresDirectory() {
                     {/* Pricing & link */}
                     <div className="pt-4 border-t border-card-border mt-4 flex items-center justify-between gap-4">
                       <div className="flex flex-col">
-                        <span className="text-[8px] font-black uppercase tracking-widest text-foreground/30">Precio</span>
+                        <span className="text-2xs font-black uppercase tracking-widest text-foreground/30">Precio</span>
                         <span className="text-sm font-black text-foreground">${prod.price} MXN</span>
                       </div>
 
@@ -330,7 +330,7 @@ export default function StoresDirectory() {
                         href={getProductTenantUrl(prod.tenant)}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="px-4 py-2.5 bg-nectar-gold text-background rounded-lg font-black uppercase tracking-widest text-[8px] flex items-center gap-1 transition-all active:scale-95 shadow-md shadow-nectar-gold/10 hover:shadow-nectar-gold/25"
+                        className="px-4 py-2.5 bg-nectar-gold text-background rounded-lg font-black uppercase tracking-widest text-2xs flex items-center gap-1 transition-all active:scale-95 shadow-md shadow-nectar-gold/10 hover:shadow-nectar-gold/25"
                       >
                         Comprar 🚀
                       </a>
@@ -339,7 +339,7 @@ export default function StoresDirectory() {
                 ))}
 
                 {filteredProducts.length === 0 && (
-                  <div className="col-span-full py-24 text-center border-2 border-dashed border-card-border rounded-3xl opacity-30 text-[10px] font-black uppercase tracking-wider">
+                  <div className="col-span-full py-24 text-center border-2 border-dashed border-card-border rounded-3xl opacity-30 text-2xs font-black uppercase tracking-wider">
                     Ningún producto coincide con los criterios de búsqueda.
                   </div>
                 )}

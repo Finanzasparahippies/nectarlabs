@@ -293,7 +293,7 @@ export default function ProjectsPage() {
     return (
       <div className="min-h-screen bg-background text-foreground flex flex-col items-center justify-center">
         <div className="w-12 h-12 border-4 border-nectar-gold border-t-transparent rounded-full animate-spin mb-4"></div>
-        <div className="font-black uppercase tracking-[0.4em] opacity-20 text-[10px] animate-pulse">Cargando Proyectos...</div>
+        <div className="font-black uppercase tracking-[0.4em] opacity-20 text-2xs animate-pulse">Cargando Proyectos...</div>
       </div>
     );
   }
@@ -311,7 +311,7 @@ export default function ProjectsPage() {
             <h1 className="text-4xl md:text-6xl font-black tracking-tighter mb-2">
               Gestión de Proyectos
             </h1>
-            <p className="text-[10px] font-black uppercase tracking-[0.5em] text-nectar-gold opacity-80">
+            <p className="text-2xs font-black uppercase tracking-[0.5em] text-nectar-gold opacity-80">
               Infraestructura, Staging y Despliegue de Ingeniería
             </p>
           </div>
@@ -324,13 +324,13 @@ export default function ProjectsPage() {
                   setUserError('');
                   setIsUserModalOpen(true);
                 }}
-                className="px-8 py-4 border-2 border-nectar-gold text-nectar-gold hover:bg-nectar-gold hover:text-background font-black uppercase tracking-widest rounded-2xl hover:scale-105 transition-all text-[10px]"
+                className="px-8 py-4 border-2 border-nectar-gold text-nectar-gold hover:bg-nectar-gold hover:text-background font-black uppercase tracking-widest rounded-2xl hover:scale-105 transition-all text-2xs"
               >
                 + Nuevo Cliente
               </button>
               <button
                 onClick={() => { resetForm(); setEditingProject(null); setIsCreateModalOpen(true); }}
-                className="px-8 py-4 bg-nectar-gold text-background font-black uppercase tracking-widest rounded-2xl hover:scale-105 transition-all shadow-xl shadow-nectar-gold/20 text-[10px]"
+                className="px-8 py-4 bg-nectar-gold text-background font-black uppercase tracking-widest rounded-2xl hover:scale-105 transition-all shadow-xl shadow-nectar-gold/20 text-2xs"
               >
                 Nuevo Proyecto
               </button>
@@ -364,19 +364,19 @@ export default function ProjectsPage() {
                       <h3 className="text-3xl font-black tracking-tighter group-hover:text-nectar-gold transition-colors">{project.name}</h3>
                       <div className="flex flex-col gap-1">
                         {project.client_username && (
-                          <p className="text-[9px] font-bold text-nectar-gold/60 uppercase tracking-widest">
+                          <p className="text-2xs font-bold text-nectar-gold/60 uppercase tracking-widest">
                             Cliente: {project.client_username}
                           </p>
                         )}
                         {project.designer_email && (
-                          <p className="text-[9px] font-bold text-foreground/45 uppercase tracking-widest">
+                          <p className="text-2xs font-bold text-foreground/45 uppercase tracking-widest">
                             Diseñador: {project.designer_email}
                           </p>
                         )}
                       </div>
                     </div>
                     <div className="flex gap-2">
-                      <span className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold text-[8px] font-black uppercase tracking-widest rounded-full">{project.status}</span>
+                      <span className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold text-2xs font-black uppercase tracking-widest rounded-full">{project.status}</span>
                       {(isStaff || userRole === 'DESIGNER') && (
                         <button
                           onClick={() => handleEdit(project)}
@@ -390,7 +390,7 @@ export default function ProjectsPage() {
 
                   {/* Level of Development Progress */}
                   <div className="mb-8 relative z-10">
-                    <div className="flex justify-between text-[10px] font-black uppercase tracking-widest mb-3">
+                    <div className="flex justify-between text-2xs font-black uppercase tracking-widest mb-3">
                       <span className="opacity-40">Nivel de Desarrollo</span>
                       <span className="text-nectar-gold">{project.progress_percentage}%</span>
                     </div>
@@ -406,18 +406,18 @@ export default function ProjectsPage() {
                   <div className="space-y-6 mb-8 relative z-10">
                     {/* Development Hours */}
                     <div className="p-6 rounded-[2rem] bg-background/40 border border-card-border/50">
-                      <h4 className="text-[9px] font-black uppercase tracking-widest text-nectar-gold/85 mb-4">Consumo de Horas (Desarrollo)</h4>
+                      <h4 className="text-2xs font-black uppercase tracking-widest text-nectar-gold/85 mb-4">Consumo de Horas (Desarrollo)</h4>
                       <div className="grid grid-cols-3 gap-4 mb-4 text-center">
                         <div>
-                          <p className="text-[8px] font-bold opacity-45 uppercase tracking-wider">Plan Dev</p>
+                          <p className="text-2xs font-bold opacity-45 uppercase tracking-wider">Plan Dev</p>
                           <p className="text-lg font-black text-foreground">{formatHoursToHM(project.plan_hours || 0)}</p>
                         </div>
                         <div>
-                          <p className="text-[8px] font-bold opacity-45 uppercase tracking-wider">Consumido</p>
+                          <p className="text-2xs font-bold opacity-45 uppercase tracking-wider">Consumido</p>
                           <p className="text-lg font-black text-nectar-gold">{formatHoursToHM(liveUsedHours)}</p>
                         </div>
                         <div>
-                          <p className="text-[8px] font-bold opacity-45 uppercase tracking-wider">Restante</p>
+                          <p className="text-2xs font-bold opacity-45 uppercase tracking-wider">Restante</p>
                           <p className="text-lg font-black text-green-500">{formatHoursToHM(liveRemainingHours)}</p>
                         </div>
                       </div>
@@ -432,18 +432,18 @@ export default function ProjectsPage() {
                     {/* Design Hours (Show if project has designer plan hours or a designer) */}
                     {(project.designer_plan_hours || 0) > 0 && (
                       <div className="p-6 rounded-[2rem] bg-background/40 border border-card-border/50">
-                        <h4 className="text-[9px] font-black uppercase tracking-widest text-foreground/80 mb-4">Consumo de Horas (Diseño de Marca)</h4>
+                        <h4 className="text-2xs font-black uppercase tracking-widest text-foreground/80 mb-4">Consumo de Horas (Diseño de Marca)</h4>
                         <div className="grid grid-cols-3 gap-4 mb-4 text-center">
                           <div>
-                            <p className="text-[8px] font-bold opacity-45 uppercase tracking-wider">Plan Diseño</p>
+                            <p className="text-2xs font-bold opacity-45 uppercase tracking-wider">Plan Diseño</p>
                             <p className="text-lg font-black text-foreground">{formatHoursToHM(project.designer_plan_hours || 0)}</p>
                           </div>
                           <div>
-                            <p className="text-[8px] font-bold opacity-45 uppercase tracking-wider">Consumido</p>
+                            <p className="text-2xs font-bold opacity-45 uppercase tracking-wider">Consumido</p>
                             <p className="text-lg font-black text-nectar-gold">{formatHoursToHM(liveDesignUsedHours)}</p>
                           </div>
                           <div>
-                            <p className="text-[8px] font-bold opacity-45 uppercase tracking-wider">Restante</p>
+                            <p className="text-2xs font-bold opacity-45 uppercase tracking-wider">Restante</p>
                             <p className="text-lg font-black text-green-500">{formatHoursToHM(liveDesignRemainingHours)}</p>
                           </div>
                         </div>
@@ -461,11 +461,11 @@ export default function ProjectsPage() {
                   {canWork && (
                     <div className="p-6 rounded-[2rem] bg-nectar-gold/5 border border-nectar-gold/20 mb-8 relative z-10">
                       <div className="flex justify-between items-center mb-4">
-                        <h4 className="text-[10px] font-black uppercase tracking-widest text-nectar-gold">
+                        <h4 className="text-2xs font-black uppercase tracking-widest text-nectar-gold">
                           Cronómetro de Actividad {userRole === 'DESIGNER' ? '(Diseño)' : '(Desarrollo)'}
                         </h4>
                         {project.current_activity_start && (
-                          <span className="flex items-center gap-1 text-[8px] font-black text-red-500 uppercase tracking-widest animate-pulse">
+                          <span className="flex items-center gap-1 text-2xs font-black text-red-500 uppercase tracking-widest animate-pulse">
                             <span className="w-2 h-2 rounded-full bg-red-500"></span> En Vivo
                           </span>
                         )}
@@ -475,17 +475,17 @@ export default function ProjectsPage() {
                         <div className="space-y-4">
                           <div className="flex justify-between items-center bg-background/50 p-4 rounded-xl">
                             <div>
-                              <p className="text-[8px] font-bold opacity-50 uppercase">Descripción</p>
+                              <p className="text-2xs font-bold opacity-50 uppercase">Descripción</p>
                               <p className="text-xs font-black">{project.current_activity_description || 'Sin descripción'}</p>
                             </div>
                             <div className="text-right">
-                              <p className="text-[8px] font-bold opacity-50 uppercase">Tiempo Transcurrido</p>
+                              <p className="text-2xs font-bold opacity-50 uppercase">Tiempo Transcurrido</p>
                               <p className="text-lg font-mono font-black text-nectar-gold">{formatSeconds(liveElapsedSecs)}</p>
                             </div>
                           </div>
                           <button
                             onClick={() => handleStopActivity(project.id)}
-                            className="w-full py-4 bg-red-600 hover:bg-red-700 text-white font-black uppercase tracking-widest rounded-2xl text-[9px] hover:scale-[1.02] transition-all"
+                            className="w-full py-4 bg-red-600 hover:bg-red-700 text-white font-black uppercase tracking-widest rounded-2xl text-2xs hover:scale-[1.02] transition-all"
                           >
                             Detener y Registrar Actividad
                           </button>
@@ -501,7 +501,7 @@ export default function ProjectsPage() {
                           />
                           <button
                             onClick={() => handleStartActivity(project.id)}
-                            className="w-full py-4 bg-nectar-gold text-background font-black uppercase tracking-widest rounded-2xl text-[9px] hover:scale-[1.02] transition-all shadow-lg shadow-nectar-gold/10"
+                            className="w-full py-4 bg-nectar-gold text-background font-black uppercase tracking-widest rounded-2xl text-2xs hover:scale-[1.02] transition-all shadow-lg shadow-nectar-gold/10"
                           >
                             Iniciar Nueva Actividad
                           </button>
@@ -512,32 +512,32 @@ export default function ProjectsPage() {
 
                   {/* Project Advances / Deliveries */}
                   <div className="mb-8 relative z-10">
-                    <h4 className="text-[10px] font-black uppercase tracking-widest opacity-40 mb-4">Avances Entregados</h4>
+                    <h4 className="text-2xs font-black uppercase tracking-widest opacity-40 mb-4">Avances Entregados</h4>
 
                     {project.advances && project.advances.length > 0 ? (
                       <div className="space-y-3 max-h-40 overflow-y-auto pr-2">
                         {project.advances.map(adv => (
                           <div key={adv.id} className="p-4 rounded-xl bg-background/30 border border-card-border/50 text-xs">
                             <div className="flex justify-between items-center mb-1">
-                              <span className="px-2 py-0.5 bg-nectar-gold/20 text-nectar-gold font-black uppercase tracking-widest text-[8px] rounded">Avance {adv.milestone}%</span>
-                              <span className="text-[8px] opacity-40">{new Date(adv.delivered_at).toLocaleDateString()}</span>
+                              <span className="px-2 py-0.5 bg-nectar-gold/20 text-nectar-gold font-black uppercase tracking-widest text-2xs rounded">Avance {adv.milestone}%</span>
+                              <span className="text-2xs opacity-40">{new Date(adv.delivered_at).toLocaleDateString()}</span>
                             </div>
                             <h5 className="font-black text-foreground">{adv.title}</h5>
                             <p className="opacity-70 mt-1">{adv.description}</p>
                             {adv.delivered_by_email && (
-                              <p className="text-[7px] font-bold opacity-30 mt-1 uppercase">Por: {adv.delivered_by_email}</p>
+                              <p className="text-2xs font-bold opacity-30 mt-1 uppercase">Por: {adv.delivered_by_email}</p>
                             )}
                           </div>
                         ))}
                       </div>
                     ) : (
-                      <p className="text-[9px] font-bold uppercase tracking-widest opacity-20 text-center py-6">Sin avances registrados en el ciclo actual</p>
+                      <p className="text-2xs font-bold uppercase tracking-widest opacity-20 text-center py-6">Sin avances registrados en el ciclo actual</p>
                     )}
 
                     {/* Deliver Advance Section */}
                     {canWork && project.unlocked_milestones && project.unlocked_milestones.length > 0 && (
                       <div className="mt-4 p-4 rounded-2xl border border-dashed border-nectar-gold/40">
-                        <p className="text-[9px] font-black text-nectar-gold uppercase tracking-widest mb-3">Metas de Avance Disponibles</p>
+                        <p className="text-2xs font-black text-nectar-gold uppercase tracking-widest mb-3">Metas de Avance Disponibles</p>
 
                         <div className="flex gap-2 mb-3">
                           {project.unlocked_milestones.map(m => (
@@ -547,7 +547,7 @@ export default function ProjectsPage() {
                                 ...advanceForms,
                                 [project.id]: { milestone: m, title: '', description: '' }
                               })}
-                              className="px-3 py-2 bg-nectar-gold/10 hover:bg-nectar-gold/20 border border-nectar-gold/40 text-nectar-gold text-[8px] font-black uppercase tracking-widest rounded-xl transition-all"
+                              className="px-3 py-2 bg-nectar-gold/10 hover:bg-nectar-gold/20 border border-nectar-gold/40 text-nectar-gold text-2xs font-black uppercase tracking-widest rounded-xl transition-all"
                             >
                               Entregar {m}%
                             </button>
@@ -558,10 +558,10 @@ export default function ProjectsPage() {
                         {advanceForms[project.id] && (
                           <div className="space-y-3 bg-background/60 p-4 rounded-xl border border-card-border mt-3">
                             <div className="flex justify-between items-center">
-                              <span className="text-[8px] font-black uppercase tracking-widest text-nectar-gold">Formulario Avance {advanceForms[project.id]?.milestone}%</span>
+                              <span className="text-2xs font-black uppercase tracking-widest text-nectar-gold">Formulario Avance {advanceForms[project.id]?.milestone}%</span>
                               <button
                                 onClick={() => setAdvanceForms({ ...advanceForms, [project.id]: null })}
-                                className="text-[9px] font-bold text-red-500 uppercase"
+                                className="text-2xs font-bold text-red-500 uppercase"
                               >
                                 Cancelar
                               </button>
@@ -593,7 +593,7 @@ export default function ProjectsPage() {
 
                             <button
                               onClick={() => handleDeliverAdvance(project.id)}
-                              className="w-full py-3 bg-nectar-gold text-background font-black uppercase tracking-widest rounded-xl text-[8px] hover:scale-[1.02] transition-all"
+                              className="w-full py-3 bg-nectar-gold text-background font-black uppercase tracking-widest rounded-xl text-2xs hover:scale-[1.02] transition-all"
                             >
                               Enviar Avance al Cliente
                             </button>
@@ -606,17 +606,17 @@ export default function ProjectsPage() {
 
                 <div className="flex gap-2 mt-6">
                   {project.staging_url && (
-                    <a href={project.staging_url} target="_blank" className="flex-1 py-4 bg-card-border/50 hover:bg-foreground hover:text-background text-center rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all">
+                    <a href={project.staging_url} target="_blank" className="flex-1 py-4 bg-card-border/50 hover:bg-foreground hover:text-background text-center rounded-2xl text-2xs font-black uppercase tracking-widest transition-all">
                       Entorno Staging
                     </a>
                   )}
                   {project.production_url && (
-                    <a href={project.production_url} target="_blank" className="flex-1 py-4 border-2 border-nectar-gold text-nectar-gold hover:bg-nectar-gold hover:text-background text-center rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all">
+                    <a href={project.production_url} target="_blank" className="flex-1 py-4 border-2 border-nectar-gold text-nectar-gold hover:bg-nectar-gold hover:text-background text-center rounded-2xl text-2xs font-black uppercase tracking-widest transition-all">
                       Entorno Producción
                     </a>
                   )}
                   {!project.staging_url && !project.production_url && (
-                    <div className="w-full py-4 text-center opacity-20 text-[9px] font-black uppercase tracking-[0.2em]">Configurando Servidores...</div>
+                    <div className="w-full py-4 text-center opacity-20 text-2xs font-black uppercase tracking-[0.2em]">Configurando Servidores...</div>
                   )}
                 </div>
               </div>
@@ -653,13 +653,13 @@ export default function ProjectsPage() {
               <h2 className="text-4xl font-black tracking-tighter mb-4">
                 {editingProject ? 'Configurar Proyecto' : 'Desplegar Nuevo Proyecto'}
               </h2>
-              <p className="text-[10px] font-black uppercase tracking-widest text-nectar-gold opacity-80">Parámetros de infraestructura y despliegue</p>
+              <p className="text-2xs font-black uppercase tracking-widest text-nectar-gold opacity-80">Parámetros de infraestructura y despliegue</p>
             </header>
 
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-3">
-                  <label className="text-[9px] font-black uppercase tracking-widest opacity-40 ml-4">Nombre del Proyecto</label>
+                  <label className="text-2xs font-black uppercase tracking-widest opacity-40 ml-4">Nombre del Proyecto</label>
                   <input
                     type="text"
                     value={formData.name}
@@ -670,7 +670,7 @@ export default function ProjectsPage() {
                   />
                 </div>
                 <div className="space-y-3">
-                  <label className="text-[9px] font-black uppercase tracking-widest opacity-40 ml-4">Cliente</label>
+                  <label className="text-2xs font-black uppercase tracking-widest opacity-40 ml-4">Cliente</label>
                   <select
                     value={formData.client}
                     onChange={(e) => setFormData({ ...formData, client: e.target.value })}
@@ -688,7 +688,7 @@ export default function ProjectsPage() {
               {/* Dev Plan (Staff only) */}
               {isStaff && (
                 <div className="space-y-3">
-                  <label className="text-[9px] font-black uppercase tracking-widest opacity-40 ml-4">Plan Base del Proyecto (Desarrollo - Opcional)</label>
+                  <label className="text-2xs font-black uppercase tracking-widest opacity-40 ml-4">Plan Base del Proyecto (Desarrollo - Opcional)</label>
                   <select
                     value={formData.plan}
                     onChange={(e) => setFormData({ ...formData, plan: e.target.value ? parseInt(e.target.value) : '' })}
@@ -706,7 +706,7 @@ export default function ProjectsPage() {
               {isStaff && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-3">
-                    <label className="text-[9px] font-black uppercase tracking-widest opacity-40 ml-4">Diseñador Asignado (Opcional)</label>
+                    <label className="text-2xs font-black uppercase tracking-widest opacity-40 ml-4">Diseñador Asignado (Opcional)</label>
                     <select
                       value={formData.designer}
                       onChange={(e) => setFormData({ ...formData, designer: e.target.value })}
@@ -720,7 +720,7 @@ export default function ProjectsPage() {
                   </div>
 
                   <div className="space-y-3">
-                    <label className="text-[9px] font-black uppercase tracking-widest opacity-40 ml-4">Plan de Diseño (Opcional)</label>
+                    <label className="text-2xs font-black uppercase tracking-widest opacity-40 ml-4">Plan de Diseño (Opcional)</label>
                     <select
                       value={formData.designer_plan}
                       onChange={(e) => setFormData({ ...formData, designer_plan: e.target.value ? parseInt(e.target.value) : '' })}
@@ -737,7 +737,7 @@ export default function ProjectsPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-3">
-                  <label className="text-[9px] font-black uppercase tracking-widest opacity-40 ml-4">Estado</label>
+                  <label className="text-2xs font-black uppercase tracking-widest opacity-40 ml-4">Estado</label>
                   <select
                     value={formData.status}
                     onChange={(e) => setFormData({ ...formData, status: e.target.value })}
@@ -749,7 +749,7 @@ export default function ProjectsPage() {
                   </select>
                 </div>
                 <div className="space-y-3">
-                  <label className="text-[9px] font-black uppercase tracking-widest opacity-40 ml-4">Progreso (%)</label>
+                  <label className="text-2xs font-black uppercase tracking-widest opacity-40 ml-4">Progreso (%)</label>
                   <input
                     type="number"
                     value={formData.progress_percentage}
@@ -763,7 +763,7 @@ export default function ProjectsPage() {
               </div>
 
               <div className="space-y-3">
-                <label className="text-[9px] font-black uppercase tracking-widest opacity-40 ml-4">URL de Staging</label>
+                <label className="text-2xs font-black uppercase tracking-widest opacity-40 ml-4">URL de Staging</label>
                 <input
                   type="url"
                   value={formData.staging_url}
@@ -774,7 +774,7 @@ export default function ProjectsPage() {
               </div>
 
               <div className="space-y-3">
-                <label className="text-[9px] font-black uppercase tracking-widest opacity-40 ml-4">URL de Producción</label>
+                <label className="text-2xs font-black uppercase tracking-widest opacity-40 ml-4">URL de Producción</label>
                 <input
                   type="url"
                   value={formData.production_url}
@@ -817,7 +817,7 @@ export default function ProjectsPage() {
               <h2 className="text-3xl font-black tracking-tighter mb-2">
                 {isStaff ? 'Crear Usuario' : 'Crear Cliente'}
               </h2>
-              <p className="text-[9px] font-black uppercase tracking-widest text-nectar-gold opacity-80">
+              <p className="text-2xs font-black uppercase tracking-widest text-nectar-gold opacity-80">
                 {isStaff ? 'Registrar nueva cuenta con rol asignado' : 'Registrar cuenta rápidamente'}
               </p>
             </header>
@@ -830,7 +830,7 @@ export default function ProjectsPage() {
               )}
 
               <div className="space-y-2">
-                <label className="text-[9px] font-black uppercase tracking-widest opacity-40 ml-4">Nombre de Usuario (Username)</label>
+                <label className="text-2xs font-black uppercase tracking-widest opacity-40 ml-4">Nombre de Usuario (Username)</label>
                 <input
                   type="text"
                   value={userFormData.username}
@@ -842,7 +842,7 @@ export default function ProjectsPage() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-[9px] font-black uppercase tracking-widest opacity-40 ml-4">Correo Electrónico (Email)</label>
+                <label className="text-2xs font-black uppercase tracking-widest opacity-40 ml-4">Correo Electrónico (Email)</label>
                 <input
                   type="email"
                   value={userFormData.email}
@@ -854,7 +854,7 @@ export default function ProjectsPage() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-[9px] font-black uppercase tracking-widest opacity-40 ml-4">Contraseña</label>
+                <label className="text-2xs font-black uppercase tracking-widest opacity-40 ml-4">Contraseña</label>
                 <input
                   type="password"
                   value={userFormData.password}
@@ -867,7 +867,7 @@ export default function ProjectsPage() {
 
               {isStaff && (
                 <div className="space-y-2">
-                  <label className="text-[9px] font-black uppercase tracking-widest opacity-40 ml-4">Rol del Usuario</label>
+                  <label className="text-2xs font-black uppercase tracking-widest opacity-40 ml-4">Rol del Usuario</label>
                   <select 
                     value={userFormData.role}
                     onChange={(e) => setUserFormData({ ...userFormData, role: e.target.value })}

@@ -68,13 +68,13 @@ export default function BlogPage() {
             NECTAR <span className="text-nectar-gold">LABS</span>
           </Link>
           <div className="flex items-center gap-6">
-            <Link href="/" className="text-[10px] font-black uppercase tracking-widest opacity-60 hover:opacity-100 transition-all">
+            <Link href="/" className="text-2xs font-black uppercase tracking-widest opacity-60 hover:opacity-100 transition-all">
               Inicio
             </Link>
-            <Link href="/portfolio" className="text-[10px] font-black uppercase tracking-widest opacity-60 hover:opacity-100 transition-all">
+            <Link href="/portfolio" className="text-2xs font-black uppercase tracking-widest opacity-60 hover:opacity-100 transition-all">
               Portafolio
             </Link>
-            <Link href="/dashboard" className="px-5 py-2 bg-nectar-gold/10 hover:bg-nectar-gold text-nectar-gold hover:text-background border border-nectar-gold/20 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all">
+            <Link href="/dashboard" className="px-5 py-2 bg-nectar-gold/10 hover:bg-nectar-gold text-nectar-gold hover:text-background border border-nectar-gold/20 rounded-xl text-2xs font-black uppercase tracking-widest transition-all">
               Dashboard
             </Link>
           </div>
@@ -95,7 +95,7 @@ export default function BlogPage() {
         {loading ? (
           <div className="py-32 flex flex-col items-center justify-center">
             <div className="w-12 h-12 border-4 border-nectar-gold border-t-transparent rounded-full animate-spin mb-4"></div>
-            <p className="font-black uppercase tracking-[0.4em] opacity-20 text-[10px]">Cargando Conocimiento...</p>
+            <p className="font-black uppercase tracking-[0.4em] opacity-20 text-2xs">Cargando Conocimiento...</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-16">
@@ -110,7 +110,7 @@ export default function BlogPage() {
                         alt={featuredPost.title} 
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                       />
-                      <div className="absolute top-6 left-6 px-4 py-2 bg-background/80 backdrop-blur-md rounded-full text-[8px] font-black uppercase tracking-widest text-nectar-gold">
+                      <div className="absolute top-6 left-6 px-4 py-2 bg-background/80 backdrop-blur-md rounded-full text-2xs font-black uppercase tracking-widest text-nectar-gold">
                         Destacado
                       </div>
                     </div>
@@ -118,10 +118,10 @@ export default function BlogPage() {
                   
                   <div className="space-y-4">
                     <div className="flex gap-4 items-center">
-                      <span className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold text-[8px] font-black uppercase tracking-widest rounded-full">
+                      <span className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold text-2xs font-black uppercase tracking-widest rounded-full">
                         {featuredPost.category_name || "Tecnología"}
                       </span>
-                      <time className="text-[10px] font-bold opacity-40 uppercase">
+                      <time className="text-2xs font-bold opacity-40 uppercase">
                         {new Date(featuredPost.created_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}
                       </time>
                     </div>
@@ -134,7 +134,7 @@ export default function BlogPage() {
                     
                     <div className="flex flex-wrap gap-2 pt-4">
                       {featuredPost.tech_stack.map((tech, idx) => (
-                        <span key={idx} className="px-3 py-1 bg-foreground/5 text-foreground/60 text-[8px] font-bold rounded-lg uppercase">
+                        <span key={idx} className="px-3 py-1 bg-foreground/5 text-foreground/60 text-2xs font-bold rounded-lg uppercase">
                           {tech}
                         </span>
                       ))}
@@ -143,7 +143,7 @@ export default function BlogPage() {
                     <div className="pt-8">
                       <Link 
                         href={`/blog/${featuredPost.slug}`}
-                        className="inline-flex items-center gap-4 text-[10px] font-black uppercase tracking-widest text-nectar-gold hover:underline"
+                        className="inline-flex items-center gap-4 text-2xs font-black uppercase tracking-widest text-nectar-gold hover:underline"
                       >
                         Leer Artículo Completo <span>→</span>
                       </Link>
@@ -169,10 +169,10 @@ export default function BlogPage() {
                       
                       <div className="space-y-3">
                         <div className="flex gap-4 items-center">
-                          <span className="text-[8px] font-black uppercase tracking-widest text-nectar-gold">
+                          <span className="text-2xs font-black uppercase tracking-widest text-nectar-gold">
                             {post.category_name || "Tecnología"}
                           </span>
-                          <time className="text-[8px] font-bold opacity-40 uppercase">
+                          <time className="text-2xs font-bold opacity-40 uppercase">
                             {new Date(post.created_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
                           </time>
                         </div>
@@ -187,7 +187,7 @@ export default function BlogPage() {
                     <div className="pt-6">
                       <Link 
                         href={`/blog/${post.slug}`}
-                        className="text-[8px] font-black uppercase tracking-widest text-nectar-gold hover:underline"
+                        className="text-2xs font-black uppercase tracking-widest text-nectar-gold hover:underline"
                       >
                         Leer más <span>→</span>
                       </Link>
@@ -228,14 +228,14 @@ export default function BlogPage() {
                   <button 
                     type="submit" 
                     disabled={subscribing}
-                    className="w-full py-4 bg-nectar-gold text-background hover:scale-[1.02] disabled:opacity-50 text-center rounded-xl text-[9px] font-black uppercase tracking-widest transition-all shadow-lg shadow-nectar-gold/15"
+                    className="w-full py-4 bg-nectar-gold text-background hover:scale-[1.02] disabled:opacity-50 text-center rounded-xl text-2xs font-black uppercase tracking-widest transition-all shadow-lg shadow-nectar-gold/15"
                   >
                     {subscribing ? 'Suscribiendo...' : 'Suscribirse al Newsletter'}
                   </button>
                 </form>
 
                 {newsletterMsg.text && (
-                  <div className={`mt-4 p-4 rounded-xl text-[10px] font-bold ${newsletterMsg.type === 'success' ? 'bg-green-500/10 text-green-400' : 'bg-red-500/10 text-red-400'}`}>
+                  <div className={`mt-4 p-4 rounded-xl text-2xs font-bold ${newsletterMsg.type === 'success' ? 'bg-green-500/10 text-green-400' : 'bg-red-500/10 text-red-400'}`}>
                     {newsletterMsg.text}
                   </div>
                 )}
@@ -243,7 +243,7 @@ export default function BlogPage() {
 
               {/* Google AdSense Space */}
               <div className="p-8 rounded-[2.5rem] bg-card-bg/40 border border-dashed border-card-border flex flex-col items-center justify-center min-h-[250px] relative text-center">
-                <span className="text-[7px] font-black tracking-[0.4em] uppercase opacity-20 absolute top-4">Patrocinado</span>
+                <span className="text-2xs font-black tracking-[0.4em] uppercase opacity-20 absolute top-4">Patrocinado</span>
                 <div className="space-y-2 max-w-[200px]">
                   {/* Google AdSense Element */}
                   <ins className="adsbygoogle"
@@ -252,7 +252,7 @@ export default function BlogPage() {
                        data-ad-slot="auto"
                        data-ad-format="auto"
                        data-full-width-responsive="true"></ins>
-                  <p className="text-[8px] font-black uppercase tracking-widest opacity-25">Publicidad Responsiva</p>
+                  <p className="text-2xs font-black uppercase tracking-widest opacity-25">Publicidad Responsiva</p>
                 </div>
               </div>
             </aside>
@@ -261,7 +261,7 @@ export default function BlogPage() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-card-border/30 bg-card-bg/10 py-12 text-center text-[9px] font-black uppercase tracking-[0.2em] opacity-45">
+      <footer className="border-t border-card-border/30 bg-card-bg/10 py-12 text-center text-2xs font-black uppercase tracking-[0.2em] opacity-45">
         &copy; {new Date().getFullYear()} Néctar Labs. Todos los derechos reservados.
       </footer>
     </div>
