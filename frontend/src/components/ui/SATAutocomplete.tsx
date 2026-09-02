@@ -145,7 +145,7 @@ export default function SATAutocomplete({
             setIsOpen(true);
             setQuery(''); // Clear field on focus to allow typing and show all options
           }}
-          className="w-full bg-background border border-white/10 rounded-xl px-3 py-2 text-[10px] focus:outline-none focus:border-nectar-gold text-foreground admin-input font-mono"
+          className="w-full bg-background border border-white/10 rounded-xl px-3 py-2 text-2xs focus:outline-none focus:border-nectar-gold text-foreground admin-input font-mono"
         />
         {value && (
           <button
@@ -155,7 +155,7 @@ export default function SATAutocomplete({
               setSelectedLabel('');
               setQuery('');
             }}
-            className="absolute right-3 text-white/40 hover:text-white text-[9px] cursor-pointer"
+            className="absolute right-3 text-white/40 hover:text-white text-2xs cursor-pointer"
           >
             ✕
           </button>
@@ -165,12 +165,12 @@ export default function SATAutocomplete({
       {isOpen && (
         <div className="absolute left-0 right-0 mt-1.5 z-50 max-h-60 overflow-y-auto rounded-xl border border-white/10 bg-[#050a06]/95 backdrop-blur-md shadow-2xl py-1.5 custom-scrollbar autocomplete-dropdown">
           {loading ? (
-            <div className="flex items-center justify-center py-4 text-[8px] font-black uppercase tracking-wider sat-status text-white/40">
+            <div className="flex items-center justify-center py-4 text-2xs font-black uppercase tracking-wider sat-status text-white/40">
               <span className="w-3 h-3 rounded-full border-2 border-t-white border-white/10 animate-spin mr-2 sat-spinner"></span>
               Buscando catálogo...
             </div>
           ) : results.length === 0 ? (
-            <div className="py-3 px-4 text-[8px] font-black uppercase tracking-wider text-center sat-status text-white/30">
+            <div className="py-3 px-4 text-2xs font-black uppercase tracking-wider text-center sat-status text-white/30">
               No se encontraron resultados
             </div>
           ) : (
@@ -186,18 +186,18 @@ export default function SATAutocomplete({
                 >
                   <div className="flex justify-between items-center w-full">
                     <span 
-                      className="text-[9px] font-black font-mono tracking-wider sat-code text-white"
+                      className="text-2xs font-black font-mono tracking-wider sat-code text-white"
                       style={isSelected ? { color: primaryColor } : {}}
                     >
                       {item.code}
                     </span>
                     {isSelected && (
-                      <span className="text-[7px] font-black uppercase tracking-wider" style={{ color: primaryColor }}>
+                      <span className="text-2xs font-black uppercase tracking-wider" style={{ color: primaryColor }}>
                         Seleccionado
                       </span>
                     )}
                   </div>
-                  <span className="text-[8px] font-medium line-clamp-2 uppercase sat-label text-white/60">
+                  <span className="text-2xs font-medium line-clamp-2 uppercase sat-label text-white/60">
                     {itemLabel}
                   </span>
                 </button>

@@ -364,7 +364,7 @@ export default function SupportChatWidget() {
     <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end font-sans">
       {/* Expanded Chat Window */}
       {isOpen && (
-        <div className="bg-card-bg/95 dark:bg-card-bg/90 backdrop-blur-2xl border border-card-border rounded-[2rem] shadow-2xl mb-4 w-[360px] h-[500px] overflow-hidden flex flex-col animate-premium">
+        <div className="bg-card-bg/95 dark:bg-card-bg/90 backdrop-blur-2xl border border-card-border rounded-[2rem] shadow-2xl mb-4 w-full max-w-[22.5rem] h-[31.25rem] overflow-hidden flex flex-col animate-premium">
           {/* Header */}
           <div className="p-5 border-b border-card-border flex justify-between items-center bg-foreground/[0.02]">
             <div>
@@ -372,7 +372,7 @@ export default function SupportChatWidget() {
                 <span className="w-2.5 h-2.5 bg-nectar-gold rounded-full animate-pulse"></span>
                 <h4 className="font-black text-sm tracking-tight text-foreground uppercase">Soporte Técnico</h4>
               </div>
-              <p className="text-[9px] text-nectar-gold font-black uppercase tracking-widest mt-0.5">
+              <p className="text-2xs text-nectar-gold font-black uppercase tracking-widest mt-0.5">
                 {activeChat ? `Sesión #${activeChat.id} - ${activeChat.status}` : 'Ingeniería Néctar'}
               </p>
             </div>
@@ -380,16 +380,18 @@ export default function SupportChatWidget() {
             <div className="flex items-center gap-3">
               {activeChat && activeChat.status !== 'CLOSED' && (
                 <button
+                  type="button"
                   onClick={handleCloseChat}
                   title="Cerrar sesión de chat"
-                  className="text-[9px] font-black uppercase tracking-wider text-red-500 hover:bg-red-500/10 px-2.5 py-1.5 rounded-xl transition-all"
+                  className="text-2xs font-black uppercase tracking-wider text-red-500 hover:bg-red-500/10 px-2.5 py-1.5 rounded-xl transition-all cursor-pointer"
                 >
                   Finalizar
                 </button>
               )}
               <button
+                type="button"
                 onClick={() => setIsOpen(false)}
-                className="text-foreground/40 hover:text-foreground hover:bg-foreground/5 w-8 h-8 rounded-full flex items-center justify-center transition-all text-xl font-bold"
+                className="text-foreground/40 hover:text-foreground hover:bg-foreground/5 w-8 h-8 rounded-full flex items-center justify-center transition-all text-xl font-bold cursor-pointer"
               >
                 ×
               </button>
@@ -399,7 +401,7 @@ export default function SupportChatWidget() {
           {/* Chat Messages / Setup */}
           <div className="flex-1 overflow-y-auto p-5 space-y-4 custom-scrollbar relative">
             {widgetError && (
-              <div className="absolute top-2 left-2 right-2 bg-red-500/90 text-white text-[10px] font-bold p-2.5 rounded-xl text-center z-10 shadow-lg">
+              <div className="absolute top-2 left-2 right-2 bg-red-500/90 text-white text-2xs font-bold p-2.5 rounded-xl text-center z-10 shadow-lg">
                 {widgetError}
               </div>
             )}
@@ -410,21 +412,21 @@ export default function SupportChatWidget() {
                   ⚠️
                 </div>
                 <h5 className="font-black text-sm text-foreground uppercase tracking-wide">¿Cerrar Sesión de Chat?</h5>
-                <p className="text-[10px] text-muted max-w-xs mx-auto leading-relaxed">
+                <p className="text-2xs text-muted max-w-xs mx-auto leading-relaxed">
                   Esta acción finalizará tu conversación actual con soporte técnico. No podrás reactivar este mismo chat.
                 </p>
                 <div className="flex gap-3 w-full pt-4">
                   <button
                     type="button"
                     onClick={() => setShowCloseConfirm(false)}
-                    className="flex-1 py-2.5 bg-card-border hover:bg-card-border/80 text-foreground font-black uppercase tracking-widest text-[8px] rounded-xl transition-all cursor-pointer"
+                    className="flex-1 py-2.5 bg-card-border hover:bg-card-border/80 text-foreground font-black uppercase tracking-widest text-2xs rounded-xl transition-all cursor-pointer"
                   >
                     Cancelar
                   </button>
                   <button
                     type="button"
                     onClick={confirmCloseChat}
-                    className="flex-1 py-2.5 bg-red-500 hover:bg-red-600 text-white font-black uppercase tracking-widest text-[8px] rounded-xl transition-all cursor-pointer"
+                    className="flex-1 py-2.5 bg-red-500 hover:bg-red-600 text-white font-black uppercase tracking-widest text-2xs rounded-xl transition-all cursor-pointer"
                   >
                     Sí, Cerrar
                   </button>
@@ -440,13 +442,13 @@ export default function SupportChatWidget() {
                     </svg>
                   </div>
                   <h5 className="font-black text-sm text-foreground uppercase tracking-wide">Conversa con Néctar Labs</h5>
-                  <p className="text-[10px] text-muted max-w-xs mx-auto mt-1 leading-relaxed">
+                  <p className="text-2xs text-muted max-w-xs mx-auto mt-1 leading-relaxed">
                     Escribe tu nombre para hablar con nuestro asistente de IA o un ingeniero técnico.
                   </p>
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[8.5px] font-black uppercase tracking-wider text-muted">Nombre Completo</label>
+                  <label className="text-2xs font-black uppercase tracking-wider text-muted">Nombre Completo</label>
                   <input
                     type="text"
                     value={guestName}
@@ -460,7 +462,7 @@ export default function SupportChatWidget() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full py-3.5 bg-nectar-gold text-background font-black uppercase tracking-widest text-[9px] rounded-xl transition-all hover:scale-[1.01] active:scale-95 disabled:opacity-50 mt-4 cursor-pointer"
+                  className="w-full py-3.5 bg-nectar-gold text-background font-black uppercase tracking-widest text-2xs rounded-xl transition-all hover:scale-[1.01] active:scale-95 disabled:opacity-50 mt-4 cursor-pointer"
                 >
                   {isSubmitting ? 'Iniciando...' : 'Iniciar Conversación'}
                 </button>
@@ -477,9 +479,10 @@ export default function SupportChatWidget() {
                   Conéctate directamente con nuestro equipo de desarrollo para resolver dudas o problemas en tiempo real.
                 </p>
                 <button
+                  type="button"
                   onClick={handleStartChat}
                   disabled={isSubmitting}
-                  className="w-full py-4 bg-nectar-gold text-background hover:scale-[1.02] active:scale-95 transition-all font-black uppercase tracking-widest text-[10px] rounded-2xl shadow-xl shadow-nectar-gold/20 disabled:opacity-50"
+                  className="w-full py-4 bg-nectar-gold text-background hover:scale-[1.02] active:scale-95 transition-all font-black uppercase tracking-widest text-2xs rounded-2xl shadow-xl shadow-nectar-gold/20 disabled:opacity-50 cursor-pointer"
                 >
                   {isSubmitting ? 'Iniciando sesión...' : 'Iniciar Chat de Soporte'}
                 </button>
@@ -487,7 +490,7 @@ export default function SupportChatWidget() {
             ) : (
               <>
                 <div className="text-center pb-2">
-                  <span className="text-[8px] bg-foreground/5 text-muted px-3 py-1.5 rounded-full uppercase tracking-widest font-black">
+                  <span className="text-2xs bg-foreground/5 text-muted px-3 py-1.5 rounded-full uppercase tracking-widest font-black">
                     Sesión de Chat Iniciada
                   </span>
                 </div>
@@ -504,13 +507,13 @@ export default function SupportChatWidget() {
                         }`}>
                         {!isMine && (
                           <div className="flex items-center gap-1.5 mb-1">
-                            <span className="text-[8px] font-black uppercase tracking-wider text-nectar-gold">
+                            <span className="text-2xs font-black uppercase tracking-wider text-nectar-gold">
                               {isAI ? '🤖 Asistente IA' : isAgent ? '🛠️ Ingeniero Néctar' : (msg.sender_email?.split('@')[0] ?? 'Cliente')}
                             </span>
                           </div>
                         )}
                         <p className="text-xs font-medium leading-relaxed whitespace-pre-wrap">{msg.message}</p>
-                        <p className="text-[7px] font-bold text-right mt-1.5 opacity-40">
+                        <p className="text-2xs font-bold text-right mt-1.5 opacity-40">
                           {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </p>
                       </div>

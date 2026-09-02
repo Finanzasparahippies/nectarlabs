@@ -113,7 +113,7 @@ export default function CreateCustomerModal({
 
         <div>
           <span 
-            className="px-3 py-1 text-[8px] font-black uppercase tracking-widest rounded-full border"
+            className="px-3 py-1 text-2xs font-black uppercase tracking-widest rounded-full border"
             style={{ 
               backgroundColor: `${primaryColor}15`, 
               color: primaryColor,
@@ -125,14 +125,14 @@ export default function CreateCustomerModal({
           <h2 className="text-2xl font-black tracking-tighter mt-4 leading-none text-white">
             Nuevo Cliente / Usuario
           </h2>
-          <p className="text-[10px] opacity-40 uppercase tracking-widest mt-1 text-white/70">
+          <p className="text-2xs opacity-40 uppercase tracking-widest mt-1 text-white/70">
             Registra un nuevo cliente para este portal. El rol será asignado como Cliente.
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1.5">
-            <label className="text-[8px] font-black uppercase tracking-widest opacity-40 text-white/60">Email Principal *</label>
+            <label className="text-2xs font-black uppercase tracking-widest opacity-40 text-white/60">Email Principal *</label>
             <input
               type="email"
               required
@@ -144,7 +144,7 @@ export default function CreateCustomerModal({
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-[8px] font-black uppercase tracking-widest opacity-40 text-white/60">Nombre de Usuario (Opcional)</label>
+            <label className="text-2xs font-black uppercase tracking-widest opacity-40 text-white/60">Nombre de Usuario (Opcional)</label>
             <input
               type="text"
               placeholder="ej. clientejuan"
@@ -155,7 +155,7 @@ export default function CreateCustomerModal({
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-[8px] font-black uppercase tracking-widest opacity-40 text-white/60">Contraseña (Opcional)</label>
+            <label className="text-2xs font-black uppercase tracking-widest opacity-40 text-white/60">Contraseña (Opcional)</label>
             <input
               type="password"
               placeholder="••••••••"
@@ -168,7 +168,7 @@ export default function CreateCustomerModal({
           {showRoleSelect && (
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <label className="text-[8px] font-black uppercase tracking-widest opacity-40 text-white/60">Rol de Usuario</label>
+                <label className="text-2xs font-black uppercase tracking-widest opacity-40 text-white/60">Rol de Usuario</label>
                 <select
                   value={role}
                   onChange={(e) => setRole(e.target.value)}
@@ -183,7 +183,7 @@ export default function CreateCustomerModal({
 
               {!tenantId && (
                 <div className="space-y-1.5">
-                  <label className="text-[8px] font-black uppercase tracking-widest opacity-40 text-white/60">Asociar Inquilino</label>
+                  <label className="text-2xs font-black uppercase tracking-widest opacity-40 text-white/60">Asociar Inquilino</label>
                   <select
                     value={selectedTenantId}
                     onChange={(e) => setSelectedTenantId(e.target.value)}
@@ -209,7 +209,7 @@ export default function CreateCustomerModal({
               onChange={(e) => setEmailVerified(e.target.checked)}
               className="w-4 h-4 bg-black/30 border border-white/10 rounded accent-nectar-gold"
             />
-            <label htmlFor="reusableNewClientEmailVerified" className="text-[9px] font-black uppercase tracking-widest opacity-60 cursor-pointer text-white/80 select-none">
+            <label htmlFor="reusableNewClientEmailVerified" className="text-2xs font-black uppercase tracking-widest opacity-60 cursor-pointer text-white/80 select-none">
               Email Verificado
             </label>
           </div>
@@ -218,14 +218,14 @@ export default function CreateCustomerModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-5 py-3 border border-white/10 hover:bg-white/5 text-[9px] font-black uppercase tracking-widest rounded-xl transition-all cursor-pointer text-white/80"
+              className="px-5 py-3 border border-white/10 hover:bg-white/5 text-2xs font-black uppercase tracking-widest rounded-xl transition-all cursor-pointer text-white/80"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-6 py-3 text-[9px] font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 disabled:opacity-40 disabled:scale-100 transition-all font-bold shadow-lg cursor-pointer"
+              className="px-6 py-3 text-2xs font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 disabled:opacity-40 disabled:scale-100 transition-all font-bold shadow-lg cursor-pointer"
               style={{
                 backgroundColor: primaryColor,
                 color: '#000000',

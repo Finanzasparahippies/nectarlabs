@@ -9,6 +9,7 @@ from django.utils.http import urlsafe_base64_decode
 from django.utils.encoding import force_str
 from django.shortcuts import redirect
 from django.conf import settings
+from django.db import transaction
 
 from .serializers import UserSerializer, RegisterSerializer
 from .models import User
@@ -51,8 +52,12 @@ class RegisterView(generics.CreateAPIView):
     serializer_class = RegisterSerializer
 
     def perform_create(self, serializer):
-        user = serializer.save()
-        send_verification_email(user, self.request)
+        with transaction.atomic():
+            user = serializer.save()
+        try:
+            send_verification_email(user, self.request)
+        except Exception:
+            pass
 
 class VerifyEmailView(APIView):
     permission_classes = [permissions.AllowAny]
@@ -184,12 +189,13 @@ class UserViewSet(viewsets.ModelViewSet):
                     "detail": "El período de prueba está limitado a un máximo de 2 usuarios (el propietario y 1 colaborador). Por favor, actualiza tu plan para agregar más usuarios."
                 })
             
-        serializer.save(
-            role=role_to_assign,
-            is_staff=is_staff_to_assign,
-            is_superuser=False,
-            tenant=tenant_to_assign
-        )
+        with transaction.atomic():
+            serializer.save(
+                role=role_to_assign,
+                is_staff=is_staff_to_assign,
+                is_superuser=False,
+                tenant=tenant_to_assign
+            )
 
 
 class BecomeDriverView(APIView):
@@ -198,40 +204,41 @@ class BecomeDriverView(APIView):
     def post(self, request, *args, **kwargs):
         user = request.user
         
-        # Ensure 'DRIVER' is in additional_roles
-        if not isinstance(user.additional_roles, list):
-            user.additional_roles = []
-        if 'DRIVER' not in user.additional_roles:
-            user.additional_roles.append('DRIVER')
-            user.save(update_fields=['additional_roles'])
+        with transaction.atomic():
+            # Ensure 'DRIVER' is in additional_roles
+            if not isinstance(user.additional_roles, list):
+                user.additional_roles = []
+            if 'DRIVER' not in user.additional_roles:
+                user.additional_roles.append('DRIVER')
+                user.save(update_fields=['additional_roles'])
 
-        from apps.delivery.models import DriverProfile
-        driver_profile, created = DriverProfile.objects.get_or_create(
-            user=user,
-            defaults={
-                'name': user.get_full_name() or user.username,
-                'phone': user.phone or '',
-                'email': user.email,
-                'is_available': False,
-                'is_verified': False
-            }
-        )
+            from apps.delivery.models import DriverProfile
+            driver_profile, created = DriverProfile.objects.get_or_create(
+                user=user,
+                defaults={
+                    'name': user.get_full_name() or user.username,
+                    'phone': user.phone or '',
+                    'email': user.email,
+                    'is_available': False,
+                    'is_verified': False
+                }
+            )
 
-        vehicle_type = request.data.get('vehicle_type')
-        plate_number = request.data.get('plate_number')
-        license_photo = request.FILES.get('license_photo')
-        vehicle_photo = request.FILES.get('vehicle_photo')
+            vehicle_type = request.data.get('vehicle_type')
+            plate_number = request.data.get('plate_number')
+            license_photo = request.FILES.get('license_photo')
+            vehicle_photo = request.FILES.get('vehicle_photo')
 
-        if vehicle_type:
-            driver_profile.vehicle_type = vehicle_type
-        if plate_number:
-            driver_profile.plate_number = plate_number
-        if license_photo:
-            driver_profile.license_photo = license_photo
-        if vehicle_photo:
-            driver_profile.vehicle_photo = vehicle_photo
+            if vehicle_type:
+                driver_profile.vehicle_type = vehicle_type
+            if plate_number:
+                driver_profile.plate_number = plate_number
+            if license_photo:
+                driver_profile.license_photo = license_photo
+            if vehicle_photo:
+                driver_profile.vehicle_photo = vehicle_photo
 
-        driver_profile.save()
+            driver_profile.save()
 
         return Response({
             'success': True,

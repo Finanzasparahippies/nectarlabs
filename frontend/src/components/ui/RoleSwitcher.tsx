@@ -39,17 +39,18 @@ export default function RoleSwitcher({
 
   return (
     <div className="flex items-center space-x-2 bg-card-bg border border-card-border p-1.5 rounded-2xl shadow-lg z-50">
-      <span className="text-[8px] font-black uppercase tracking-widest text-white/40 px-3">
+      <span className="text-2xs font-black uppercase tracking-widest text-foreground/40 px-3">
         Modo Activo:
       </span>
       {allRoles.map((role) => (
         <button
           key={role}
+          type="button"
           onClick={() => onModeChange(role)}
-          className={`px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all duration-250 cursor-pointer ${
+          className={`px-4 py-2 rounded-xl text-2xs font-black uppercase tracking-wider transition-all duration-250 cursor-pointer ${
             activeMode === role
               ? 'bg-nectar-gold text-background shadow-md shadow-nectar-gold/15 scale-105'
-              : 'text-white/60 hover:text-white hover:bg-white/5'
+              : 'text-foreground/60 hover:text-foreground hover:bg-foreground/5'
           }`}
         >
           {getRoleLabel(role)}

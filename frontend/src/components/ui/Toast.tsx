@@ -31,8 +31,8 @@ export default function Toast({ message, type = 'success', onClose }: ToastProps
   return (
     <div className={`fixed bottom-6 right-6 z-50 flex items-center gap-3 px-6 py-4 rounded-2xl border backdrop-blur-md shadow-2xl animate-in fade-in slide-in-from-bottom-4 duration-300 ${colors[type]}`}>
       <span className="font-bold text-sm">{icons[type]}</span>
-      <p className="text-[10px] font-black uppercase tracking-wider">{message}</p>
-      <button onClick={onClose} className="ml-4 opacity-40 hover:opacity-100 transition-opacity text-[10px] font-bold">✕</button>
+      <p className="text-2xs font-black uppercase tracking-wider">{message}</p>
+      <button type="button" onClick={onClose} aria-label="Cerrar notificación" className="ml-4 opacity-40 hover:opacity-100 transition-opacity text-2xs font-bold cursor-pointer">✕</button>
     </div>
   );
 }
