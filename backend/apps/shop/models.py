@@ -255,6 +255,7 @@ class Order(models.Model):
         PENDING = 'PENDING', 'Pending'
         PAID = 'PAID', 'Paid'
         SHIPPED = 'SHIPPED', 'Shipped'
+        DELIVERED = 'DELIVERED', 'Delivered'
         CANCELLED = 'CANCELLED', 'Cancelled'
 
     tenant = models.ForeignKey(
@@ -288,16 +289,30 @@ class Order(models.Model):
     postal_code = models.CharField(max_length=10, default="", blank=True, null=True, verbose_name="Código Postal")
     country = models.CharField(max_length=100, default="MX", blank=True, null=True, verbose_name="País")
 
-    # Datos de la Guía Automatizada
-    shipping_provider = models.CharField(max_length=50, blank=True, null=True, help_text="Ej: FedEx, DHL")
-    tracking_number = models.CharField(max_length=100, blank=True, null=True)
+    # Datos de la Guía Automatizada (Envia.com / Carrier)
+    shipping_provider = models.CharField(max_length=50, blank=True, null=True, help_text="Ej: FedEx, DHL, Estafeta")
+    shipping_carrier_name = models.CharField(max_length=50, blank=True, null=True, help_text="Identificador Envia (fedex, dhl, etc.)")
+    shipping_service_name = models.CharField(max_length=100, blank=True, null=True, help_text="Servicio (express, ground, etc.)")
+    tracking_number = models.CharField(max_length=100, blank=True, null=True, db_index=True)
     tracking_url = models.URLField(max_length=500, blank=True, null=True)
     shipping_label_pdf = models.URLField(max_length=500, blank=True, null=True)
+    envia_shipment_id = models.CharField(max_length=100, blank=True, null=True, db_index=True)
+    shipping_error = models.TextField(blank=True, null=True, help_text="Detalle del fallo si la emisión de guía en Envia.com no tuvo éxito")
 
     # Costos detallados de envío
     shipping_cost = models.DecimalField(max_digits=10, decimal_places=2, default=0.00, help_text="Costo de envío cobrado al cliente (con margen)")
-    shipping_cost_base = models.DecimalField(max_digits=10, decimal_places=2, default=0.00, help_text="Costo base de Skydropx")
-    skydropx_rate_id = models.CharField(max_length=255, blank=True, null=True, help_text="ID de tarifa seleccionado")
+    shipping_cost_base = models.DecimalField(max_digits=10, decimal_places=2, default=0.00, help_text="Costo base courier")
+    shipping_cost_real = models.DecimalField(max_digits=10, decimal_places=2, default=0.00, help_text="Costo neto descontado por Envia.com")
+    shipping_cost_tenant = models.DecimalField(max_digits=10, decimal_places=2, default=0.00, help_text="Monto descontado de la billetera del tenant (Costo Real + $10 MXN)")
+    shipping_rate_id = models.CharField(max_length=255, blank=True, null=True, help_text="ID de tarifa seleccionado")
+
+    @property
+    def skydropx_rate_id(self):
+        return self.shipping_rate_id
+
+    @skydropx_rate_id.setter
+    def skydropx_rate_id(self, value):
+        self.shipping_rate_id = value
 
     def __str__(self):
         email_str = self.user.email if self.user else (self.user_email or "No Email")
@@ -706,3 +721,84 @@ class StripeEvent(models.Model):
 
     def __str__(self):
         return self.event_id
+
+
+class ShippingWalletTransaction(models.Model):
+    class TransactionType(models.TextChoices):
+        RECHARGE = 'RECHARGE', 'Recarga de Saldo'
+        LABEL_DEBIT = 'LABEL_DEBIT', 'Emisión de Guía'
+        SURCHARGE_DEBIT = 'SURCHARGE_DEBIT', 'Sobrepeso / Cargo Extra'
+        REFUND = 'REFUND', 'Reembolso / Cancelación de Guía'
+        ADJUSTMENT = 'ADJUSTMENT', 'Ajuste Administrativo'
+
+    tenant = models.ForeignKey(
+        'tenants.Tenant',
+        on_delete=models.CASCADE,
+        related_name='shipping_wallet_transactions'
+    )
+    order = models.ForeignKey(
+        'Order',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='wallet_transactions'
+    )
+    amount = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        help_text="Monto de la transacción (positivo para recarga/reembolso, negativo para cargos)"
+    )
+    balance_after = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        help_text="Saldo disponible en billetera inmediatamente después de la transacción"
+    )
+    transaction_type = models.CharField(
+        max_length=30,
+        choices=TransactionType.choices,
+        default=TransactionType.LABEL_DEBIT
+    )
+    reference_id = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        db_index=True,
+        help_text="ID de Stripe, shipment_id de Envia o tracking_number"
+    )
+    description = models.TextField(
+        blank=True,
+        default="",
+        help_text="Detalle explícito del concepto (desglose costo courier + comisión Nectar)"
+    )
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Transacción de Billetera de Envíos'
+        verbose_name_plural = 'Transacciones de Billetera de Envíos'
+
+    def __str__(self):
+        return f"[{self.transaction_type}] Tenant #{self.tenant_id} - ${self.amount} (Saldo: ${self.balance_after})"
+
+
+class EnviaWebhookEventLog(models.Model):
+    class Status(models.TextChoices):
+        PROCESSED = 'PROCESSED', 'Procesado'
+        IGNORED = 'IGNORED', 'Ignorado'
+        ERROR = 'ERROR', 'Error'
+
+    event_id = models.CharField(max_length=255, unique=True, db_index=True)
+    event_type = models.CharField(max_length=100, db_index=True)
+    tracking_number = models.CharField(max_length=100, blank=True, null=True, db_index=True)
+    payload = models.JSONField(default=dict)
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.PROCESSED)
+    error_message = models.TextField(blank=True, default="")
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Log de Webhook Envia.com'
+        verbose_name_plural = 'Logs de Webhook Envia.com'
+
+    def __str__(self):
+        return f"Envia Event {self.event_id} ({self.event_type}) - {self.status}"

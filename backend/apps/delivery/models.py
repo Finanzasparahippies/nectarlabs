@@ -208,11 +208,19 @@ class DeliveryOrder(models.Model):
     delivery_latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     delivery_longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
 
-    # Skydropx national shipment
-    skydropx_shipment_id = models.CharField(max_length=200, null=True, blank=True)
+    # Courier national shipment (Envia.com / Carrier)
+    courier_shipment_id = models.CharField(max_length=200, null=True, blank=True)
     tracking_number = models.CharField(max_length=200, null=True, blank=True)
     tracking_url = models.URLField(null=True, blank=True)
     courier = models.CharField(max_length=100, null=True, blank=True)
+
+    @property
+    def skydropx_shipment_id(self):
+        return self.courier_shipment_id
+
+    @skydropx_shipment_id.setter
+    def skydropx_shipment_id(self, val):
+        self.courier_shipment_id = val
 
     notes = models.TextField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -252,7 +260,7 @@ SHIPMENT_CATEGORY_CHOICES = [
 class StoreConfig(models.Model):
     """
     Admin-only configuration: origin details, box sizes, product category,
-    and Skydropx API key for national courier integration.
+    and Envia.com API key for national courier integration.
     """
     tenant = models.OneToOneField('tenants.Tenant', on_delete=models.CASCADE, related_name='store_config')
 
@@ -277,8 +285,17 @@ class StoreConfig(models.Model):
     offers_local_delivery = models.BooleanField(default=True)
     offers_national_shipping = models.BooleanField(default=False)
 
-    # Skydropx (national courier gateway)
-    skydropx_api_key = models.CharField(max_length=300, null=True, blank=True)
+    # Envia.com (national courier gateway)
+    envia_api_key = models.CharField(max_length=300, null=True, blank=True)
+
+    @property
+    def skydropx_api_key(self):
+        return self.envia_api_key
+
+    @skydropx_api_key.setter
+    def skydropx_api_key(self, val):
+        self.envia_api_key = val
+
     # Markup over courier rates (%)
     shipping_markup_percentage = models.DecimalField(max_digits=5, decimal_places=2, default=15.00)
 

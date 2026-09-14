@@ -99,6 +99,26 @@ class PACServiceBase:
         """Verifica el estado actual de la factura (timbrado/cancelado) en el PAC"""
         raise NotImplementedError()
 
+    def download_zip(self, invoice_id, organization_id=None):
+        """Descarga un ZIP con XML y PDF de la factura desde el PAC"""
+        raise NotImplementedError()
+
+    def send_invoice_email(self, invoice_id, email=None, organization_id=None):
+        """Envía por correo el CFDI timbrado mediante el servicio de email del PAC"""
+        raise NotImplementedError()
+
+    def delete_certificate(self, organization_id):
+        """Elimina el certificado CSD cargado en el PAC"""
+        raise NotImplementedError()
+
+    def invoice_receipt(self, organization_id, receipt_id, customer=None):
+        """Convierte un e-receipt individual en una factura CFDI 4.0"""
+        raise NotImplementedError()
+
+    def create_global_invoice_from_receipts(self, organization_id, from_date=None, to_date=None, periodicity='month'):
+        """Emite una factura global a público en general agrupando recibos abiertos"""
+        raise NotImplementedError()
+
 
 class MockPACService(PACServiceBase):
     """
@@ -262,16 +282,44 @@ class MockPACService(PACServiceBase):
             return "CANCELLED"
         return "PAID"
 
+    def download_zip(self, invoice_id, organization_id=None):
+        logger.info(f"[MockPAC] Descargando ZIP para invoice {invoice_id}")
+        return ContentFile(b"ZIP Mock Representation", name=f"{invoice_id}.zip")
+
+    def send_invoice_email(self, invoice_id, email=None, organization_id=None):
+        logger.info(f"[MockPAC] Enviando email para invoice {invoice_id} a {email}")
+        return True
+
+    def delete_certificate(self, organization_id):
+        logger.info(f"[MockPAC] Eliminando certificado para org {organization_id}")
+        return True
+
+    def invoice_receipt(self, organization_id, receipt_id, customer=None):
+        logger.info(f"[MockPAC] Facturando recibo {receipt_id} para org {organization_id}")
+        mock_uuid = str(uuid.uuid4())
+        return {"id": f"inv_mock_{uuid.uuid4().hex[:12]}", "uuid": mock_uuid, "status": "valid"}
+
+    def create_global_invoice_from_receipts(self, organization_id, from_date=None, to_date=None, periodicity='month'):
+        logger.info(f"[MockPAC] Factura global de recibos para org {organization_id}")
+        mock_uuid = str(uuid.uuid4())
+        return {"id": f"inv_mock_{uuid.uuid4().hex[:12]}", "uuid": mock_uuid, "status": "valid"}
+
 
 class FacturapiPACService(PACServiceBase):
     """
-    Integración real de la API REST del PAC Facturapi
+    Integración real de la API REST del PAC Facturapi v2
+    Soporta modo Multi-Tenant con Organizaciones Subordinadas y User Key de Plataforma.
     """
     def __init__(self):
         self.api_key = getattr(settings, 'PAC_API_KEY', '')
+        self.user_key = getattr(settings, 'FACTURAPI_USER_KEY', '')
         self.base_url = "https://www.facturapi.io/v2"
         self.headers = {
             "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json"
+        }
+        self.user_headers = {
+            "Authorization": f"Bearer {self.user_key or self.api_key}",
             "Content-Type": "application/json"
         }
 
@@ -282,21 +330,49 @@ class FacturapiPACService(PACServiceBase):
             h["Facturapi-Organization"] = organization_id
         return h
 
+    def _parse_facturapi_error(self, resp):
+        """Extrae el mensaje de error estructurado emitido por Facturapi o el SAT."""
+        try:
+            data = resp.json()
+            if isinstance(data, dict):
+                msg = data.get("message")
+                if not msg and "error" in data:
+                    err = data["error"]
+                    msg = err.get("message") if isinstance(err, dict) else str(err)
+                if data.get("details"):
+                    dets = data["details"]
+                    if isinstance(dets, list):
+                        msg = f"{msg or 'Error'} - " + "; ".join(str(d) for d in dets)
+                    elif isinstance(dets, dict):
+                        msg = f"{msg or 'Error'} - " + "; ".join(f"{k}: {v}" for k, v in dets.items())
+                if msg:
+                    return msg
+        except Exception:
+            pass
+        return resp.text or f"Error HTTP {resp.status_code}"
+
     def create_organization(self, tax_profile):
-        # 1. Crear organización en Facturapi v2 con su nombre comercial/fiscal
+        """
+        Crea una organización subordinada para el tenant usando la User Key de plataforma.
+        """
         url_create = f"{self.base_url}/organizations"
         create_payload = {
             "name": tax_profile.razon_social
         }
         try:
-            response = requests.post(url_create, json=create_payload, headers=self.headers, timeout=10)
+            response = requests.post(url_create, json=create_payload, headers=self.user_headers, timeout=15)
             if response.status_code not in [200, 201]:
-                raise PACError(f"Error al crear organización en Facturapi: {response.text}")
+                # Fallback con headers estándar
+                response = requests.post(url_create, json=create_payload, headers=self.headers, timeout=15)
+                if response.status_code not in [200, 201]:
+                    raise PACError(f"Error al crear organización en Facturapi: {self._parse_facturapi_error(response)}")
             org_id = response.json().get("id")
+        except PACError:
+            raise
         except Exception as e:
             raise PACError(f"Fallo de conexión al PAC al crear organización: {e}")
 
-        # 2. Configurar datos fiscales/legales vía PUT /organizations/{id}/legal en v2
+        # Configurar datos fiscales/legales vía PUT /organizations/{id}/legal
         url_legal = f"{self.base_url}/organizations/{org_id}/legal"
         legal_payload = {
             "name": tax_profile.razon_social,
@@ -308,39 +384,60 @@ class FacturapiPACService(PACServiceBase):
             }
         }
         try:
-            legal_resp = requests.put(url_legal, json=legal_payload, headers=self.headers, timeout=10)
+            legal_resp = requests.put(url_legal, json=legal_payload, headers=self.user_headers, timeout=15)
             if legal_resp.status_code not in [200, 201, 204]:
-                raise PACError(f"Error al configurar datos legales en Facturapi: {legal_resp.text}")
+                legal_resp = requests.put(url_legal, json=legal_payload, headers=self.headers, timeout=15)
+                if legal_resp.status_code not in [200, 201, 204]:
+                    raise PACError(f"Error al configurar datos legales en Facturapi: {self._parse_facturapi_error(legal_resp)}")
             return org_id
+        except PACError:
+            raise
         except Exception as e:
             raise PACError(f"Fallo de conexión al PAC al configurar datos legales: {e}")
 
     def upload_sello(self, organization_id, cer_file, key_file, password):
-        # En v2 el endpoint cambió de /sello a /certificate
+        """Sube y resguarda los sellos CSD (.cer, .key) en los HSM de Facturapi."""
         url = f"{self.base_url}/organizations/{organization_id}/certificate"
         files = {
             "cer": (cer_file.name, cer_file.read(), "application/x-x509-ca-cert"),
             "key": (key_file.name, key_file.read(), "application/octet-stream"),
         }
         data = {"password": password}
+        auth_token = self.user_key or self.api_key
         try:
-            response = requests.put(url, files=files, data=data, headers={"Authorization": f"Bearer {self.api_key}"}, timeout=15)
+            response = requests.put(url, files=files, data=data, headers={"Authorization": f"Bearer {auth_token}"}, timeout=20)
             if response.status_code not in [200, 201, 204]:
-                raise PACError(f"Error al subir sellos CSD a Facturapi: {response.text}")
+                raise PACError(f"Error al subir sellos CSD a Facturapi: {self._parse_facturapi_error(response)}")
             return True
         except PACError:
             raise 
         except Exception as e:
             raise PACError(f"Fallo de conexión para carga de sellos: {e}")
 
-    def get_certificate_status(self, organization_id):
+    def delete_certificate(self, organization_id):
+        """Elimina el certificado CSD cargado en el PAC para revocarlo o actualizarlo."""
         url = f"{self.base_url}/organizations/{organization_id}/certificate"
+        auth_token = self.user_key or self.api_key
         try:
-            response = requests.get(url, headers={"Authorization": f"Bearer {self.api_key}"}, timeout=10)
+            response = requests.delete(url, headers={"Authorization": f"Bearer {auth_token}"}, timeout=10)
+            if response.status_code not in [200, 204]:
+                raise PACError(f"Error al eliminar certificado en Facturapi: {self._parse_facturapi_error(response)}")
+            return True
+        except PACError:
+            raise
+        except Exception as e:
+            raise PACError(f"Fallo al eliminar certificado CSD: {e}")
+
+    def get_certificate_status(self, organization_id):
+        """Consulta vigencia, validez y número de serie del certificado CSD."""
+        url = f"{self.base_url}/organizations/{organization_id}/certificate"
+        auth_token = self.user_key or self.api_key
+        try:
+            response = requests.get(url, headers={"Authorization": f"Bearer {auth_token}"}, timeout=10)
             if response.status_code == 404:
                 return {"has_certificate": False, "valid_from": None, "valid_to": None, "serial": None}
             if response.status_code not in [200, 201]:
-                raise PACError(f"Error al consultar certificado en Facturapi: {response.text}")
+                raise PACError(f"Error al consultar certificado en Facturapi: {self._parse_facturapi_error(response)}")
             data = response.json()
             return {
                 "has_certificate": True,
@@ -353,8 +450,12 @@ class FacturapiPACService(PACServiceBase):
         except Exception as e:
             raise PACError(f"Fallo de conexión al consultar certificado: {e}")
 
-    def create_customer(self, organization_id, customer_data):
+    def create_customer(self, organization_id, customer_data, create_edit_link=False):
+        """Crea un cliente/receptor fiscal validando ante el SAT o generando edit_link de autofactura."""
         url = f"{self.base_url}/customers"
+        if create_edit_link:
+            url += "?createEditLink=true"
+
         payload = {
             "legal_name": customer_data.get("legal_name"),
             "tax_id": customer_data.get("rfc"),
@@ -366,8 +467,12 @@ class FacturapiPACService(PACServiceBase):
         try:
             response = requests.post(url, json=payload, headers=self._org_headers(organization_id), timeout=10)
             if response.status_code not in [200, 201]:
-                raise PACError(f"Error al crear cliente en Facturapi: {response.text}")
-            return response.json().get("id")
+                raise PACError(f"Error al crear cliente en Facturapi: {self._parse_facturapi_error(response)}")
+            res_data = response.json()
+            # Retorna el ID del cliente o dict si se solicitó edit_link
+            if create_edit_link:
+                return res_data
+            return res_data.get("id")
         except PACError:
             raise
         except Exception as e:
@@ -386,7 +491,7 @@ class FacturapiPACService(PACServiceBase):
         try:
             response = requests.put(url, json=payload, headers=self._org_headers(organization_id), timeout=10)
             if response.status_code not in [200, 201, 204]:
-                raise PACError(f"Error al actualizar cliente en Facturapi: {response.text}")
+                raise PACError(f"Error al actualizar cliente en Facturapi: {self._parse_facturapi_error(response)}")
             return True
         except PACError:
             raise
@@ -398,21 +503,22 @@ class FacturapiPACService(PACServiceBase):
         try:
             response = requests.delete(url, headers=self._org_headers(organization_id), timeout=10)
             if response.status_code not in [200, 204]:
-                raise PACError(f"Error al eliminar cliente en Facturapi: {response.text}")
+                raise PACError(f"Error al eliminar cliente en Facturapi: {self._parse_facturapi_error(response)}")
             return True
         except PACError:
             raise
         except Exception as e:
             raise PACError(f"Fallo de conexión al eliminar cliente: {e}")
 
-    def list_customers(self, organization_id):
-        url = f"{self.base_url}/customers"
+    def list_customers(self, organization_id, q=None, page=1, limit=50):
+        url = f"{self.base_url}/customers?page={page}&limit={limit}"
+        if q:
+            url += f"&q={requests.utils.quote(str(q))}"
         try:
             response = requests.get(url, headers=self._org_headers(organization_id), timeout=10)
             if response.status_code not in [200, 201]:
-                raise PACError(f"Error al listar clientes de Facturapi: {response.text}")
+                raise PACError(f"Error al listar clientes de Facturapi: {self._parse_facturapi_error(response)}")
             data = response.json()
-            # Facturapi v2 devuelve {data: [...], total_pages: N, page: N}
             return data.get("data", data) if isinstance(data, dict) else data
         except PACError:
             raise
@@ -430,7 +536,7 @@ class FacturapiPACService(PACServiceBase):
         try:
             response = requests.post(url, json=payload, headers=self._org_headers(organization_id), timeout=10)
             if response.status_code not in [200, 201]:
-                raise PACError(f"Error al crear producto en Facturapi: {response.text}")
+                raise PACError(f"Error al crear producto en Facturapi: {self._parse_facturapi_error(response)}")
             return response.json().get("id")
         except PACError:
             raise
@@ -448,7 +554,7 @@ class FacturapiPACService(PACServiceBase):
         try:
             response = requests.put(url, json=payload, headers=self._org_headers(organization_id), timeout=10)
             if response.status_code not in [200, 201, 204]:
-                raise PACError(f"Error al actualizar producto en Facturapi: {response.text}")
+                raise PACError(f"Error al actualizar producto en Facturapi: {self._parse_facturapi_error(response)}")
             return True
         except PACError:
             raise
@@ -460,7 +566,7 @@ class FacturapiPACService(PACServiceBase):
         try:
             response = requests.delete(url, headers=self._org_headers(organization_id), timeout=10)
             if response.status_code not in [200, 204]:
-                raise PACError(f"Error al eliminar producto en Facturapi: {response.text}")
+                raise PACError(f"Error al eliminar producto en Facturapi: {self._parse_facturapi_error(response)}")
             return True
         except PACError:
             raise
@@ -472,7 +578,7 @@ class FacturapiPACService(PACServiceBase):
         try:
             response = requests.get(url, headers=self._org_headers(organization_id), timeout=10)
             if response.status_code not in [200, 201]:
-                raise PACError(f"Error al listar productos en Facturapi: {response.text}")
+                raise PACError(f"Error al listar productos en Facturapi: {self._parse_facturapi_error(response)}")
             data = response.json()
             return data.get("data", data) if isinstance(data, dict) else data
         except PACError:
@@ -482,7 +588,6 @@ class FacturapiPACService(PACServiceBase):
 
     def create_receipt(self, organization_id, receipt_data):
         url = f"{self.base_url}/receipts"
-        # Mapeamos los conceptos redondeando el precio a 2 decimales
         desglose_items = []
         for item in receipt_data.get("items", []):
             prod = item.get("product", {})
@@ -504,7 +609,7 @@ class FacturapiPACService(PACServiceBase):
         try:
             response = requests.post(url, json=payload, headers=self._org_headers(organization_id), timeout=15)
             if response.status_code not in [200, 201]:
-                raise PACError(f"Error al crear recibo en Facturapi: {response.text}")
+                raise PACError(f"Error al crear recibo en Facturapi: {self._parse_facturapi_error(response)}")
             return response.json()
         except PACError:
             raise
@@ -516,7 +621,7 @@ class FacturapiPACService(PACServiceBase):
         try:
             response = requests.get(url, headers=self._org_headers(organization_id), timeout=10)
             if response.status_code not in [200, 201]:
-                raise PACError(f"Error al listar recibos en Facturapi: {response.text}")
+                raise PACError(f"Error al listar recibos en Facturapi: {self._parse_facturapi_error(response)}")
             data = response.json()
             return data.get("data", data) if isinstance(data, dict) else data
         except PACError:
@@ -529,12 +634,43 @@ class FacturapiPACService(PACServiceBase):
         try:
             response = requests.get(url, headers=self._org_headers(organization_id), timeout=10)
             if response.status_code not in [200, 201]:
-                raise PACError(f"Error al obtener recibo en Facturapi: {response.text}")
+                raise PACError(f"Error al obtener recibo en Facturapi: {self._parse_facturapi_error(response)}")
             return response.json()
         except PACError:
             raise
         except Exception as e:
             raise PACError(f"Fallo de conexión al obtener recibo: {e}")
+
+    def invoice_receipt(self, organization_id, receipt_id, customer=None):
+        """Convierte un e-receipt en factura CFDI oficial."""
+        url = f"{self.base_url}/receipts/{receipt_id}/invoice"
+        payload = {"customer": customer} if customer else {}
+        try:
+            response = requests.post(url, json=payload, headers=self._org_headers(organization_id), timeout=20)
+            if response.status_code not in [200, 201]:
+                raise PACError(f"Error al facturar recibo en Facturapi: {self._parse_facturapi_error(response)}")
+            return response.json()
+        except PACError:
+            raise
+        except Exception as e:
+            raise PACError(f"Fallo al facturar recibo: {e}")
+
+    def create_global_invoice_from_receipts(self, organization_id, from_date=None, to_date=None, periodicity='month'):
+        """Genera una factura global agrupando todos los recibos abiertos del periodo."""
+        url = f"{self.base_url}/receipts/global-invoice"
+        payload = {"periodicity": periodicity}
+        if from_date and to_date:
+            payload["from"] = from_date
+            payload["to"] = to_date
+        try:
+            response = requests.post(url, json=payload, headers=self._org_headers(organization_id), timeout=25)
+            if response.status_code not in [200, 201]:
+                raise PACError(f"Error al crear factura global en Facturapi: {self._parse_facturapi_error(response)}")
+            return response.json()
+        except PACError:
+            raise
+        except Exception as e:
+            raise PACError(f"Fallo al crear factura global: {e}")
 
     def create_retention(self, organization_id, retention_data):
         url = f"{self.base_url}/retentions"
@@ -569,7 +705,7 @@ class FacturapiPACService(PACServiceBase):
         try:
             response = requests.post(url, json=payload, headers=self._org_headers(organization_id), timeout=15)
             if response.status_code not in [200, 201]:
-                raise PACError(f"Error al crear retención en Facturapi: {response.text}")
+                raise PACError(f"Error al crear retención en Facturapi: {self._parse_facturapi_error(response)}")
             return response.json()
         except PACError:
             raise
@@ -581,7 +717,7 @@ class FacturapiPACService(PACServiceBase):
         try:
             response = requests.get(url, headers=self._org_headers(organization_id), timeout=10)
             if response.status_code not in [200, 201]:
-                raise PACError(f"Error al listar retenciones en Facturapi: {response.text}")
+                raise PACError(f"Error al listar retenciones en Facturapi: {self._parse_facturapi_error(response)}")
             data = response.json()
             return data.get("data", data) if isinstance(data, dict) else data
         except PACError:
@@ -589,15 +725,13 @@ class FacturapiPACService(PACServiceBase):
         except Exception as e:
             raise PACError(f"Fallo de conexión al listar retenciones: {e}")
 
-    def create_invoice(self, invoice, tax_profile, customer_info, items, is_parent_to_tenant=False):
-        # Para timbrar a nombre de la organización subordinada, Facturapi requiere el header "Facturapi-Organization"
+    def create_invoice(self, invoice, tax_profile, customer_info, items, is_parent_to_tenant=False, invoice_type="I", related_documents=None):
         headers = self.headers.copy()
         if not is_parent_to_tenant and tax_profile and tax_profile.facturapi_organization_id:
             headers["Facturapi-Organization"] = tax_profile.facturapi_organization_id
         
         url = f"{self.base_url}/invoices"
         
-        # Mapeamos los conceptos redondeando rigurosamente a 2 decimales usando aritmética decimal
         desglose_items = []
         for it in items:
             qty = Decimal(str(it['quantity']))
@@ -631,6 +765,7 @@ class FacturapiPACService(PACServiceBase):
             })
 
         payload = {
+            "type": invoice_type,
             "customer": {
                 "legal_name": customer_info.get("razon_social"),
                 "tax_id": customer_info.get("rfc"),
@@ -641,62 +776,67 @@ class FacturapiPACService(PACServiceBase):
                 }
             },
             "items": desglose_items,
-            "payment_form": customer_info.get("payment_form", "04"), # Tarjeta de crédito
-            "payment_method": "PUE",
-            "use": customer_info.get("use", "G03") # Gastos en general
+            "payment_form": customer_info.get("payment_form", "04"),
+            "payment_method": customer_info.get("payment_method", "PUE"),
+            "use": customer_info.get("use", "G03")
         }
 
+        if related_documents:
+            payload["related_documents"] = related_documents
+
         try:
-            response = requests.post(url, json=payload, headers=headers, timeout=20)
+            response = requests.post(url, json=payload, headers=headers, timeout=25)
             res_data = response.json()
             
             if response.status_code not in [200, 201]:
-                error_msg = res_data.get("message", response.text)
+                error_msg = self._parse_facturapi_error(response)
                 if "LCO" in error_msg or "lista de contribuyentes" in error_msg.lower() or "no activo" in error_msg.lower():
                     raise LCOSyncError(f"Sello digital no sincronizado en LCO: {error_msg}")
                 raise PACError(f"Error al timbrar factura en Facturapi: {error_msg}")
 
             invoice_id = res_data.get("id")
             uuid_sat = res_data.get("uuid")
+            is_livemode = bool(res_data.get("livemode", False))
 
-            # Descargar archivos XML y PDF de Facturapi para almacenarlos localmente/S3
             xml_resp = requests.get(f"{url}/{invoice_id}/xml", headers=headers, timeout=10)
             pdf_resp = requests.get(f"{url}/{invoice_id}/pdf", headers=headers, timeout=10)
 
             return {
                 "facturapi_invoice_id": invoice_id,
                 "uuid_sat": uuid_sat,
+                "is_livemode": is_livemode,
                 "xml_file": ContentFile(xml_resp.content, name=f"{uuid_sat}.xml"),
                 "pdf_file": ContentFile(pdf_resp.content, name=f"{uuid_sat}.pdf"),
             }
         except LCOSyncError:
             raise
+        except PACError:
+            raise
         except Exception as e:
             raise PACError(f"Error en flujo de timbrado Facturapi: {e}")
 
     def cancel_invoice(self, invoice, motive='02', substitution=None):
-        # Requiere el header de la organización correspondiente
         headers = self.headers.copy()
         if getattr(invoice, 'is_tenant_to_customer', False):
             tax_profile = getattr(invoice.tenant, 'tax_profile', None)
             if tax_profile and tax_profile.facturapi_organization_id:
                 headers["Facturapi-Organization"] = tax_profile.facturapi_organization_id
 
-        # CFDI 4.0 requires motive query param (e.g. 02 - Comprobante emitido con errores sin relación)
         url = f"{self.base_url}/invoices/{invoice.facturapi_invoice_id}?motive={motive}"
         if motive == '01' and substitution:
             url += f"&substitution={substitution.strip()}"
         try:
-            # Facturapi requiere DELETE para cancelar facturas
             response = requests.delete(url, headers=headers, timeout=15)
             res_data = response.json()
             if response.status_code != 200:
-                raise PACError(f"Error al solicitar cancelación: {res_data.get('message', response.text)}")
+                raise PACError(f"Error al solicitar cancelación: {self._parse_facturapi_error(response)}")
             
             sat_status = res_data.get("status")
             if sat_status == "cancelled":
                 return "CANCELLED"
             return "CANCEL_REQUESTED"
+        except PACError:
+            raise
         except Exception as e:
             raise PACError(f"Fallo al cancelar factura en Facturapi: {e}")
 
@@ -720,6 +860,34 @@ class FacturapiPACService(PACServiceBase):
         except Exception as e:
             logger.error(f"Error al verificar estado de la factura en el PAC: {e}")
             return invoice.status
+
+    def download_zip(self, invoice_id, organization_id=None):
+        """Descarga el paquete comprimido ZIP (XML + PDF) de la factura."""
+        url = f"{self.base_url}/invoices/{invoice_id}/zip"
+        try:
+            resp = requests.get(url, headers=self._org_headers(organization_id), timeout=15)
+            if resp.status_code != 200:
+                raise PACError(f"Error al descargar ZIP de factura: {self._parse_facturapi_error(resp)}")
+            return ContentFile(resp.content, name=f"{invoice_id}.zip")
+        except PACError:
+            raise
+        except Exception as e:
+            raise PACError(f"Fallo al descargar ZIP de factura: {e}")
+
+    def send_invoice_email(self, invoice_id, email=None, organization_id=None):
+        """Reenvía la factura timbrada al correo del receptor."""
+        url = f"{self.base_url}/invoices/{invoice_id}/email"
+        payload = {"email": email} if email else {}
+        try:
+            resp = requests.post(url, json=payload, headers=self._org_headers(organization_id), timeout=15)
+            if resp.status_code not in [200, 201, 204]:
+                raise PACError(f"Error al enviar factura por correo: {self._parse_facturapi_error(resp)}")
+            return True
+        except PACError:
+            raise
+        except Exception as e:
+            raise PACError(f"Fallo al enviar factura por correo: {e}")
+
 
 
 def get_pac_service():
@@ -790,6 +958,7 @@ def issue_invoice_for_installment(installment):
         )
         invoice.facturapi_invoice_id = res["facturapi_invoice_id"]
         invoice.uuid_sat = res["uuid_sat"]
+        invoice.is_livemode = res.get("is_livemode", False)
         invoice.xml_file.save(res["xml_file"].name, res["xml_file"], save=False)
         invoice.pdf_file.save(res["pdf_file"].name, res["pdf_file"], save=False)
         invoice.status = Invoice.Status.PAID

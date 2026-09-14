@@ -107,6 +107,7 @@ services:
     container_name: nectar_realtime
     image: nectar-labs-realtime:dev
     build: ./realtime
+    command: npm run dev
     volumes:
       - ./realtime:/app:z
       - /app/node_modules

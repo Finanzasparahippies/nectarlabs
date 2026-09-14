@@ -17,7 +17,9 @@ const nextConfig: NextConfig = {
     '*.localhost:3002'
   ],
   async rewrites() {
-    const rawBackendUrl = process.env.INTERNAL_API_URL || process.env.API_URL || 'http://backend:8000/api';
+    // Si no está definida en el entorno, en Docker se usa http://backend:8000/api y en host http://localhost:8001/api
+    const defaultBackendUrl = process.env.NODE_ENV === 'production' ? 'http://backend:8000/api' : 'http://localhost:8001/api';
+    const rawBackendUrl = process.env.INTERNAL_API_URL || process.env.API_URL || defaultBackendUrl;
     let cleanBackendUrl = rawBackendUrl.replace(/\/+$/, '');
     if (!cleanBackendUrl.endsWith('/api')) {
       cleanBackendUrl = `${cleanBackendUrl}/api`;

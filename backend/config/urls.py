@@ -19,7 +19,12 @@ from rest_framework_simplejwt.views import (
 )
 
 
-from apps.shop.views import PlanViewSet, ProductViewSet, ContractViewSet, PaymentInstallmentViewSet, AddOnViewSet, PromoCodeViewSet, SalesCommissionViewSet, ShopCheckoutView, GetShippingRatesView, AddOnSubscriptionViewSet, OrderStatusView, OrderViewSet
+from apps.shop.views import (
+    PlanViewSet, ProductViewSet, ContractViewSet, PaymentInstallmentViewSet, 
+    AddOnViewSet, PromoCodeViewSet, SalesCommissionViewSet, ShopCheckoutView, 
+    GetShippingRatesView, AddOnSubscriptionViewSet, OrderStatusView, OrderViewSet,
+    EnviaWebhookView, ShippingWalletRechargeView, ShippingWalletHistoryView, EnviaZipcodeValidationView
+)
 from apps.dashboard.views import ProjectViewSet, FAQViewSet, TimeLogViewSet, ProjectQuoteViewSet, LeadViewSet, LeadAppointmentViewSet
 from apps.blog.views import PostViewSet
 from apps.tickets.views import TicketViewSet, SupportChatViewSet
@@ -30,7 +35,8 @@ from apps.billing.views import (
     BuyEmailCreditsView, SATProductKeySearchView, SATUnitKeySearchView,
     UploadCSDView, CSDStatusView, FacturapiCustomerView,
     FacturapiProductView, FacturapiReceiptView, FacturapiRetentionView,
-    BuyShippingFundsView, SalesNoteViewSet
+    BuyShippingFundsView, SalesNoteViewSet, FacturapiInvoiceReceiptView,
+    FacturapiGlobalInvoiceView, StampTransactionsView
 )
 
 # ------------------------------------------------------------------------------
@@ -126,14 +132,24 @@ urlpatterns = [
     # CKEditor 5 para el editor de textos del Blog y del Newsletter
     path("ckeditor5/", include('django_ckeditor_5.urls')),
     
-    # Webhooks para integraciones de terceros (Pasarelas de Pago e Invoicing)
+    # Webhooks para integraciones de terceros (Pasarelas de Pago, Invoicing y Logística Envia)
     path('api/shop/stripe-webhook/', stripe_webhook, name='stripe_webhook'),
     path('api/shop/facturapi-webhook/', facturapi_webhook, name='facturapi_webhook'),
+    path('api/shop/shipping/webhooks/envia/', EnviaWebhookView.as_view(), name='envia_webhook'),
+    path('api/shop/shipping/webhooks/envia', EnviaWebhookView.as_view()),
+    path('api/shop/shipping/webhooks/envia-webhook/', EnviaWebhookView.as_view(), name='envia-webhook'),
+    path('api/shop/shipping/webhooks/ecommerceTracking/', EnviaWebhookView.as_view(), name='envia_webhook_ecommerce'),
+    path('api/shop/shipping/webhooks/ecommerceTracking', EnviaWebhookView.as_view()),
     
-    # Checkout y Cotización de tarifas de envío Skydropx
+    # Checkout y Cotización de tarifas de envío Envia.com (Multi-tenant)
     path('api/shop/checkout/', ShopCheckoutView.as_view(), name='shop_checkout'),
     path('api/shop/shipping-rates/', GetShippingRatesView.as_view(), name='shop_shipping_rates'),
     path('api/shop/order-status/', OrderStatusView.as_view(), name='shop_order_status'),
+
+    # Billetera de Envíos y Validación de Geocodes (Envia.com)
+    path('api/shop/shipping/wallet/recharge/', ShippingWalletRechargeView.as_view(), name='shipping_wallet_recharge'),
+    path('api/shop/shipping/wallet/history/', ShippingWalletHistoryView.as_view(), name='shipping_wallet_history'),
+    path('api/shop/shipping/geocodes/zipcode/', EnviaZipcodeValidationView.as_view(), name='envia_zipcode_validate'),
     
     # endpoints de facturación del SAT México (Facturapi)
     path('api/billing/tax-profile/', TaxProfileView.as_view(), name='billing_tax_profile'),
@@ -149,6 +165,7 @@ urlpatterns = [
     # Carga y estado del Certificado de Sello Digital (CSD) para timbrado
     path('api/billing/upload-csd/', UploadCSDView.as_view(), name='billing_upload_csd'),
     path('api/billing/csd-status/', CSDStatusView.as_view(), name='billing_csd_status'),
+    path('api/billing/stamp-transactions/', StampTransactionsView.as_view(), name='billing_stamp_transactions'),
     
     # Gestión de Clientes, Productos y Recibos Facturapi
     path('api/billing/facturapi-customers/', FacturapiCustomerView.as_view(), name='billing_facturapi_customers'),
@@ -156,6 +173,8 @@ urlpatterns = [
     path('api/billing/facturapi-products/', FacturapiProductView.as_view(), name='billing_facturapi_products'),
     path('api/billing/facturapi-products/<str:pac_product_id>/', FacturapiProductView.as_view(), name='billing_facturapi_product_detail'),
     path('api/billing/facturapi-receipts/', FacturapiReceiptView.as_view(), name='billing_facturapi_receipts'),
+    path('api/billing/facturapi-receipts/<str:receipt_id>/invoice/', FacturapiInvoiceReceiptView.as_view(), name='billing_facturapi_receipt_invoice'),
+    path('api/billing/facturapi-receipts/global-invoice/', FacturapiGlobalInvoiceView.as_view(), name='billing_facturapi_receipts_global_invoice'),
     path('api/billing/facturapi-retentions/', FacturapiRetentionView.as_view(), name='billing_facturapi_retentions'),
 ]
 

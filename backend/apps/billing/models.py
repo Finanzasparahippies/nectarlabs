@@ -99,6 +99,28 @@ class Invoice(models.Model):
         verbose_name="Factura de Inquilino a Cliente",
         help_text="Indica si la factura fue emitida por el inquilino a su propio cliente o por Néctar Labs al inquilino."
     )
+    is_livemode = models.BooleanField(
+        default=False,
+        verbose_name="CFDI emitido en Modo Producción SAT",
+        help_text="True si fue timbrado con la llave live ante el SAT; False si es sandbox/pruebas."
+    )
+    stamp_deducted = models.BooleanField(
+        default=False,
+        verbose_name="Timbre Deducido de Cartera",
+        help_text="Garantiza idempotencia en la deducción de la cartera de timbres del tenant."
+    )
+    invoice_type = models.CharField(
+        max_length=5,
+        default="I",
+        choices=[
+            ('I', 'Ingreso'),
+            ('E', 'Egreso / Nota de Crédito'),
+            ('P', 'Pago / Complemento'),
+            ('T', 'Traslado'),
+            ('G', 'Global'),
+        ],
+        verbose_name="Tipo de CFDI"
+    )
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -107,7 +129,34 @@ class Invoice(models.Model):
         ordering = ['-created_at']
 
     def __str__(self):
-        return f"CFDI {self.uuid_sat or 'Pendiente'} - {self.tenant.name} (${self.total})"
+        return f"CFDI [{self.invoice_type}] {self.uuid_sat or 'Pendiente'} - {self.tenant.name} (${self.total})"
+
+
+class StampTransaction(models.Model):
+    """
+    Registro inmutable de auditoría para cada movimiento en la cartera de timbres de un tenant.
+    """
+    class TransactionType(models.TextChoices):
+        CONSUMPTION = 'CONSUMPTION', 'Consumo por Timbrado'
+        REFUND = 'REFUND', 'Reembolso por Timbrado Fallido'
+        PURCHASE = 'PURCHASE', 'Compra de Paquete'
+        MONTHLY_RESET = 'MONTHLY_RESET', 'Reinicio Mensual de Cortesía'
+        MANUAL_ADJUSTMENT = 'MANUAL_ADJUSTMENT', 'Ajuste Manual'
+
+    tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name='stamp_transactions')
+    transaction_type = models.CharField(max_length=30, choices=TransactionType.choices, default=TransactionType.CONSUMPTION)
+    amount = models.IntegerField(help_text="Cantidad de timbres agregados (+) o consumidos (-)")
+    balance_before = models.PositiveIntegerField(default=0)
+    balance_after = models.PositiveIntegerField(default=0)
+    invoice = models.ForeignKey(Invoice, on_delete=models.SET_NULL, null=True, blank=True, related_name='stamp_transactions')
+    notes = models.CharField(max_length=255, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.tenant.name} - {self.transaction_type}: {self.amount:+d} (Saldo: {self.balance_after})"
 
 
 class SATProductKey(models.Model):

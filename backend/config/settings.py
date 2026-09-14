@@ -313,8 +313,12 @@ STRIPE_WEBHOOK_SECRET = env("STRIPE_WEBHOOK_SECRET", default="")
 # PAC FACTURACIÓN (FACTURAPI)
 # Emisión automática de comprobantes fiscales digitales por Internet (CFDI 4.0 SAT México).
 # ------------------------------------------------------------------------------
-PAC_PROVIDER = env("PAC_PROVIDER", default="mock")
-PAC_API_KEY = env("PAC_API_KEY", default=env("FACTURAPI_SECRET_KEY", default=""))
+PAC_PROVIDER = env("PAC_PROVIDER", default="facturapi" if ENVIRONMENT in ["production", "prod", "staging"] else "mock")
+PAC_ENVIRONMENT = env("PAC_ENVIRONMENT", default="production" if ENVIRONMENT in ["production", "prod"] else "sandbox").lower()
+PAC_LIVE_KEY = env("PAC_LIVE_KEY", default=env("FACTURAPI_LIVE_KEY", default=""))
+PAC_TEST_KEY = env("PAC_TEST_KEY", default=env("FACTURAPI_TEST_KEY", default=""))
+PAC_API_KEY = env("PAC_API_KEY", default=PAC_LIVE_KEY if PAC_ENVIRONMENT in ["production", "prod", "live"] else PAC_TEST_KEY)
+FACTURAPI_USER_KEY = env("FACTURAPI_USER_KEY", default="")
 FACTURAPI_WEBHOOK_SECRET = env("FACTURAPI_WEBHOOK_SECRET", default="")
 
 # ------------------------------------------------------------------------------
@@ -323,6 +327,21 @@ FACTURAPI_WEBHOOK_SECRET = env("FACTURAPI_WEBHOOK_SECRET", default="")
 # (para respuestas asíncronas tradicionales) como en Node.js (para streaming de WebSockets).
 # ------------------------------------------------------------------------------
 GROQ_API_KEY = env("GROQ_API_KEY", default="")
+
+# ------------------------------------------------------------------------------
+# LOGÍSTICA & ENVÍOS NACIONALES (ENVIA.COM)
+# Cotización automatizada, emisión de guías y webhooks multi-tenant con Envia.com.
+# ------------------------------------------------------------------------------
+ENVIA_ENVIRONMENT = env("ENVIA_ENVIRONMENT", default="production" if ENVIRONMENT in ["production", "prod"] else "sandbox").lower()
+ENVIA_PRODUCTION_TOKEN = env("ENVIA_PRODUCTION_TOKEN", default="cc366f6f1b56933bb179bd07c05c8e27b4bf65eb265440a6d59df37a9dfcfd77")
+ENVIA_SANDBOX_TOKEN = env("ENVIA_SANDBOX_TOKEN", default="56b96c6e971b6bd101f2c9dba8a8e27daa86db9c78b5e4bd3a8c50b211707cdf")
+ENVIA_WEBHOOK_SECRET = env("ENVIA_WEBHOOK_SECRET", default="nectar_envia_whsec_default")
+ENVIA_WEBHOOK_TOKENS = [
+    "92f5f4131d4cf33a641ffe984a1f6e595c01042ced5bd731b3d785a0f81944f1",  # Prod #4786 (https://nectarlabs.dev)
+    "e8551b6dcbaf49a74bed2c47daa6d73f657e8f2a96df45767276e281caa4dc44",  # Staging #1057 (/api/shop/shipping/webhooks/envia/)
+    "9151cd56d14ef7bc11991721597b147dc68980d0c34e2a6aafa43817d8427927",  # Staging #1058 (/api/shop/shipping/webhooks/ecommerceTracking)
+]
+
 
 
 # CORS / CSRF
@@ -359,15 +378,27 @@ if DEBUG:
         "http://127.0.0.1:8001",
         "http://127.0.0.1:8080",
         "http://*.localhost",
+        "http://*.localhost:3000",
+        "http://*.localhost:3002",
         "http://*.nectarlabs.localhost",
+        "http://*.nectarlabs.localhost:3000",
+        "http://*.nectarlabs.localhost:3002",
         "https://*.github.dev",
         "https://*.app.github.dev",
     ]
     for origin in dev_origins:
         if origin not in CSRF_TRUSTED_ORIGINS:
             CSRF_TRUSTED_ORIGINS.append(origin)
-        if origin not in CORS_ALLOWED_ORIGINS and not origin.startswith("http://*"):
+        if origin not in CORS_ALLOWED_ORIGINS and not origin.startswith("http://*") and not origin.startswith("https://*"):
             CORS_ALLOWED_ORIGINS.append(origin)
+
+    # Permitir regex en CORS para cualquier subdominio local de desarrollo (*.localhost y *.nectarlabs.localhost con cualquier puerto)
+    CORS_ALLOWED_ORIGIN_REGEXES = [
+        r"^http://.*\.localhost(:\d+)?$",
+        r"^http://.*\.nectarlabs\.localhost(:\d+)?$",
+        r"^http://localhost(:\d+)?$",
+        r"^http://127\.0\.0\.1(:\d+)?$",
+    ]
 
 # Dynamic FRONTEND_URL inclusion in CORS/CSRF
 if FRONTEND_URL:

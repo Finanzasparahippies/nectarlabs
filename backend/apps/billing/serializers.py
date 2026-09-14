@@ -46,8 +46,8 @@ class InvoiceSerializer(serializers.ModelSerializer):
         model = Invoice
         fields = [
             'id', 'tenant_name', 'stripe_invoice_id', 'facturapi_invoice_id', 'uuid_sat',
-            'total', 'status', 'status_display', 'xml_file', 'pdf_file', 
-            'xml_url', 'pdf_url', 'error_message', 'created_at', 'updated_at'
+            'total', 'status', 'status_display', 'invoice_type', 'is_livemode', 'stamp_deducted',
+            'xml_file', 'pdf_file', 'xml_url', 'pdf_url', 'error_message', 'created_at', 'updated_at'
         ]
         read_only_fields = fields
 
@@ -56,6 +56,20 @@ class InvoiceSerializer(serializers.ModelSerializer):
 
     def get_pdf_url(self, obj):
         return obj.pdf_file.url if obj.pdf_file else None
+
+
+class StampTransactionSerializer(serializers.ModelSerializer):
+    transaction_type_display = serializers.CharField(source='get_transaction_type_display', read_only=True)
+    tenant_name = serializers.CharField(source='tenant.name', read_only=True)
+
+    class Meta:
+        from .models import StampTransaction
+        model = StampTransaction
+        fields = [
+            'id', 'tenant_name', 'transaction_type', 'transaction_type_display',
+            'amount', 'balance_before', 'balance_after', 'invoice', 'notes', 'created_at'
+        ]
+        read_only_fields = fields
 
 
 class SATProductKeySerializer(serializers.ModelSerializer):

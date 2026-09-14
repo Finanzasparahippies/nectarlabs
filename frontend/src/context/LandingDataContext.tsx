@@ -82,14 +82,14 @@ const DEFAULT_ADDONS: Addon[] = [
     name: 'Paquete E-commerce Lite',
     categoryBadge: 'PAQUETE PRINCIPAL',
     description: 'Solución integral de comercio electrónico para marcas en crecimiento con envíos y facturación SAT.',
-    detailedDescription: 'Lanza tu canal de ventas en línea con control total de productos, cobro con tarjeta vía Stripe, cálculo automático de envíos nacionales Skydropx, facturación SAT y boletines masivos.',
+    detailedDescription: 'Lanza tu canal de ventas en línea con control total de productos, cobro con tarjeta en linea y seguro, cálculo automático de envíos nacionales, facturación y timbreado SAT 4.0 y boletines masivos.',
     monthlyPrice: 799,
     yearlyPrice: 7990,
     complexity: 'Alta',
     serverRequirements: 'Sincronización en tiempo real de inventarios y webhooks de pasarela.',
     technicalDetails: [
       'Tienda en línea completa con carrito y checkout optimizado',
-      'Integración nativa con Skydropx para guías de envío',
+      'Integración nativa con Envia.com para guías de envío',
       'Facturación SAT CFDI 4.0 automatizada (100 timbres)',
       'Boletines masivos con Campaigner Lite'
     ]
@@ -206,7 +206,7 @@ const LandingDataContext = createContext<LandingDataContextType>({
   addons: DEFAULT_ADDONS,
   loading: true,
   error: null,
-  refreshData: async () => {},
+  refreshData: async () => { },
 });
 
 export const LandingDataProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -302,23 +302,26 @@ export const LandingDataProvider: React.FC<{ children: ReactNode }> = ({ childre
       setPlans(newPlans);
       setAddons(newAddons);
 
-      if (typeof window !== 'undefined') {
-        try {
-          sessionStorage.setItem(
-            CACHE_KEY,
-            JSON.stringify({
-              timestamp: Date.now(),
-              tenants: newTenants,
-              plans: newPlans,
-              addons: newAddons,
-            })
-          );
-        } catch (e) {
-          console.warn('[LandingDataContext] Error al guardar en caché SWR:', e);
-        }
+      const failedEndpoints: string[] = [];
+      if (tenantsRes.status === 'rejected') {
+        failedEndpoints.push(`Tenants (${tenantsRes.reason?.message || tenantsRes.reason})`);
+      }
+      if (plansRes.status === 'rejected') {
+        failedEndpoints.push(`Planes (${plansRes.reason?.message || plansRes.reason})`);
+      }
+      if (addonsRes.status === 'rejected') {
+        failedEndpoints.push(`Add-ons (${addonsRes.reason?.message || addonsRes.reason})`);
+      }
+
+      if (failedEndpoints.length > 0) {
+        const errorMsg = `Error de sincronización con la API: ${failedEndpoints.join('; ')}`;
+        console.error(`[LandingDataContext] Fallo al consultar endpoints:`, failedEndpoints);
+        setError(errorMsg);
+      } else {
+        setError(null);
       }
     } catch (err: any) {
-      console.warn('[LandingDataContext] Degradación defensiva activada:', err);
+      console.error('[LandingDataContext Error]', err);
       setError(err.message || 'Error de sincronización con la API');
     } finally {
       setLoading(false);

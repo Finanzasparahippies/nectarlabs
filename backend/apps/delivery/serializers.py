@@ -160,7 +160,7 @@ class StoreConfigSerializer(serializers.ModelSerializer):
             'custom_box_height_cm', 'custom_box_weight_kg',
             'shipment_category',
             'offers_local_delivery', 'offers_national_shipping',
-            'skydropx_api_key',
+            'envia_api_key', 'skydropx_api_key',
             'shipping_markup_percentage',
             'origin_name', 'origin_phone', 'origin_street',
             'origin_suburb', 'origin_city', 'origin_state',
@@ -170,19 +170,25 @@ class StoreConfigSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'tenant', 'created_at', 'updated_at']
         extra_kwargs = {
             # Never send the API key value back to client — mask it
+            'envia_api_key': {'write_only': True},
             'skydropx_api_key': {'write_only': True}
         }
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
         # Indicate whether a key is stored without exposing it
-        data['has_skydropx_api_key'] = bool(instance.skydropx_api_key)
+        has_key = bool(instance.envia_api_key or instance.skydropx_api_key)
+        data['has_envia_api_key'] = has_key
+        data['has_skydropx_api_key'] = has_key
         return data
 
-    def validate_skydropx_api_key(self, value):
+    def validate_envia_api_key(self, value):
         user = self.context.get('request').user if self.context.get('request') else None
         if user and not (user.is_staff or user.role == 'ADMIN'):
-            current_val = getattr(self.instance, 'skydropx_api_key', None) if self.instance else None
+            current_val = getattr(self.instance, 'envia_api_key', None) if self.instance else None
             if current_val != value:
-                raise serializers.ValidationError("Solo el CEO o administradores de Nectar Labs pueden modificar la clave API de Skydropx.")
+                raise serializers.ValidationError("Solo el CEO o administradores de Nectar Labs pueden modificar la clave API de Envia.com.")
         return value
+
+    def validate_skydropx_api_key(self, value):
+        return self.validate_envia_api_key(value)

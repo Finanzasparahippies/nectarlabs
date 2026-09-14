@@ -16,7 +16,7 @@ def seed_addons():
             "name": "Paquete E-commerce Lite",
             "category_badge": "TIENDA EN LINEA",
             "description": "Todo para tu tienda en línea: Envíos con Locales y Nacionales, Facturación SAT, Tienda Online y Campaigner Lite.",
-            "detailed_description": "El paquete integral ideal para comenzar a vender en línea. Habilita de golpe las funciones de cotización y emisión de guías de envío nacionales de Skydropx, facturación fiscal automatizada CFDI 4.0 con 100 timbres base gratis al mes, y campañas de marketing por correo con campaigner lite sin costo.",
+            "detailed_description": "El paquete integral ideal para comenzar a vender en línea. Habilita de golpe las funciones de cotización y emisión de guías de envío nacionales de Envia.com, facturación fiscal automatizada CFDI 4.0 con 100 timbres base gratis al mes, y campañas de marketing por correo con campaigner lite sin costo.",
             "monthly_price": 799.00,
             "yearly_price": 7990.00,
             "origin_project": "nectarlabs-main",
@@ -46,7 +46,7 @@ def seed_addons():
             "technical_details": [
                 "Consola POS rápida con lector de barras",
                 "Sincronización de inventario en tiempo real",
-                "Acceso completo a Tienda + Envíos Skydropx",
+                "Acceso completo a Tienda + Envíos Envia.com",
                 "Facturación SAT con 100 timbres incluidos",
                 "Envio de tickets y facturas automaticamente",
                 "Pago adicional unico de $1600 MXN para el lector de codigos, caja registradora e impresora de tickets"
@@ -169,10 +169,10 @@ def seed_addons():
         },
         {
             "slug": "delivery-tracking",
-            "name": "Tienda + Envíos con Skydropx",
+            "name": "Tienda + Envíos con Envia.com",
             "category_badge": "LOGÍSTICA Y CONTROL",
             "description": "Configura tus almacenes de origen, cotiza envíos en tiempo real con margen de ganancia y emite guías automáticamente.",
-            "detailed_description": "Módulo de logística inteligente integrado. Registra las tarifas reales desde la API de Skydropx y les aplica tu margen (markup) del 15% o personalizado directamente en el checkout, automatizando la generación de etiquetas en pedidos pagados.",
+            "detailed_description": "Módulo de logística inteligente integrado. Registra las tarifas reales desde la API de Envia.com y les aplica la comisión fija de Néctar Labs ($10 MXN) más tu margen comercial directamente en el checkout, automatizando la generación de etiquetas en pedidos pagados.",
             "monthly_price": 249.00,
             "yearly_price": 2490.00,
             "origin_project": "losplacosones",

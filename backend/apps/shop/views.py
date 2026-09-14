@@ -183,6 +183,11 @@ class AddOnViewSet(viewsets.ModelViewSet):
     serializer_class = AddOnSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
+    def get_permissions(self):
+        if getattr(self, 'action', None) in ['list', 'retrieve']:
+            return [permissions.AllowAny()]
+        return super().get_permissions()
+
     def get_queryset(self):
         user = self.request.user
         if user and user.is_authenticated and (user.is_staff or getattr(user, 'role', None) == 'ADMIN'):
@@ -1573,10 +1578,22 @@ def stripe_webhook(request):
             if tenant_id and amount:
                 try:
                     from apps.tenants.models import Tenant
+                    from apps.shop.models import ShippingWalletTransaction
                     from decimal import Decimal
-                    tenant = Tenant.objects.get(id=tenant_id)
-                    tenant.shipping_wallet_balance = (tenant.shipping_wallet_balance or Decimal('0.00')) + Decimal(str(amount))
-                    tenant.save()
+                    with transaction.atomic():
+                        t_locked = Tenant.objects.select_for_update().get(id=tenant_id)
+                        recharge_amount = Decimal(str(amount))
+                        t_locked.shipping_wallet_balance = (t_locked.shipping_wallet_balance or Decimal('0.00')) + recharge_amount
+                        t_locked.save(update_fields=['shipping_wallet_balance'])
+
+                        ShippingWalletTransaction.objects.create(
+                            tenant=t_locked,
+                            amount=recharge_amount,
+                            balance_after=t_locked.shipping_wallet_balance,
+                            transaction_type=ShippingWalletTransaction.TransactionType.RECHARGE,
+                            reference_id=session.get('id', ''),
+                            description=f"Recarga directa de saldo vía Stripe Checkout (${recharge_amount} MXN)"
+                        )
                 except Exception as e:
                     import logging
                     logging.getLogger("apps").error(f"Error updating shipping wallet balance in webhook: {e}", exc_info=True)
@@ -1906,13 +1923,16 @@ def facturapi_webhook(request):
                 invoice = Invoice.objects.select_for_update().filter(id=invoice.id).first()
                 if invoice and invoice.status != Invoice.Status.PAID:
                     # Check if we should decrement stamp balance (if not already decremented)
-                    if invoice.status in [Invoice.Status.PENDING, Invoice.Status.FAILED]:
-                        tenant = invoice.tenant
-                        tenant.stamp_balance = max(0, tenant.stamp_balance - 1)
-                        tenant.save()
+                    if invoice.is_tenant_to_customer and not invoice.stamp_deducted:
+                        invoice.stamp_deducted = True
+                        invoice.tenant.atomic_deduct_stamp(
+                            invoice=invoice,
+                            description=f"Webhook invoice.created Facturapi ID {facturapi_invoice_id}"
+                        )
                     
                     invoice.status = Invoice.Status.PAID
                     invoice.uuid_sat = uuid_sat
+                    invoice.is_livemode = event_data.get('livemode', False)
                     invoice.error_message = None
                     if xml_file:
                         invoice.xml_file.save(xml_file.name, xml_file, save=False)
@@ -1946,10 +1966,21 @@ def facturapi_webhook(request):
         with transaction.atomic():
             invoice = Invoice.objects.select_for_update().filter(facturapi_invoice_id=facturapi_invoice_id).first()
             if invoice and invoice.status != Invoice.Status.FAILED:
+                # Si el timbre ya había sido deducido, reembolsarlo al balance del inquilino
+                if invoice.is_tenant_to_customer and invoice.stamp_deducted:
+                    invoice.stamp_deducted = False
+                    invoice.tenant.atomic_refund_stamp(
+                        invoice=invoice,
+                        description=f"Reembolso por fallo en Facturapi (ID {facturapi_invoice_id}): {message}"
+                    )
                 invoice.status = Invoice.Status.FAILED
                 invoice.error_message = message
-                invoice.save(update_fields=['status', 'error_message'])
+                invoice.save(update_fields=['status', 'error_message', 'stamp_deducted'])
                 logger.info(f"[facturapi_webhook] Marked invoice {facturapi_invoice_id} as FAILED: {message}")
+
+    elif event_type in ['certificate.expiring', 'certificate.expired']:
+        org_id = payload.get('organization')
+        logger.warning(f"[facturapi_webhook] Alerta de certificado CSD: {event_type} para organización {org_id}")
 
     return HttpResponse("OK", status=200)
 
@@ -2224,6 +2255,9 @@ class ShopCheckoutView(APIView):
         items_data = data.get('items', [])
         
         skydropx_rate_id = data.get('skydropx_rate_id')
+        shipping_rate_id = data.get('shipping_rate_id') or skydropx_rate_id
+        shipping_carrier_name = data.get('shipping_carrier_name') or data.get('carrier') or 'fedex'
+        shipping_service_name = data.get('shipping_service_name') or data.get('service') or 'standard'
         shipping_cost = data.get('shipping_cost')
         shipping_cost_base = data.get('shipping_cost_base')
         shipping_provider = data.get('shipping_provider', 'FedEx')
@@ -2231,7 +2265,7 @@ class ShopCheckoutView(APIView):
         if not all([email, full_name, street_and_number, suburb, city, state, postal_code, items_data]):
             return Response({"error": "Todos los campos de entrega e ítems son requeridos."}, status=status.HTTP_400_BAD_REQUEST)
 
-        if skydropx_rate_id is None or shipping_cost is None:
+        if shipping_rate_id is None or shipping_cost is None:
             return Response({"error": "Debes seleccionar una tarifa de envío válida."}, status=status.HTTP_400_BAD_REQUEST)
 
         total_products_amount = Decimal('0.00')
@@ -2284,6 +2318,7 @@ class ShopCheckoutView(APIView):
         })
 
         total_order_amount = total_products_amount + Decimal(str(shipping_cost))
+        base_cost_val = Decimal(str(shipping_cost_base or shipping_cost))
         order = Order.objects.create(
             tenant=tenant,
             user=request.user if request.user.is_authenticated else None,
@@ -2299,9 +2334,13 @@ class ShopCheckoutView(APIView):
             postal_code=postal_code,
             country=country,
             shipping_provider=shipping_provider,
+            shipping_carrier_name=shipping_carrier_name,
+            shipping_service_name=shipping_service_name,
             shipping_cost=Decimal(str(shipping_cost)),
-            shipping_cost_base=Decimal(str(shipping_cost_base or shipping_cost)),
-            skydropx_rate_id=skydropx_rate_id
+            shipping_cost_base=base_cost_val,
+            shipping_cost_real=base_cost_val,
+            shipping_cost_tenant=base_cost_val + Decimal('10.00'),
+            shipping_rate_id=shipping_rate_id
         )
 
         for item_data in order_items_to_prepare:
@@ -2639,4 +2678,311 @@ class OrderViewSet(viewsets.ModelViewSet):
                 {"detail": f"Error al consultar la API de Stripe del inquilino: {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# INTEGRACIÓN LOGÍSTICA ENVIA.COM: BILLETERA, GEOCODES & WEBHOOKS MULTI-TENANT
+# ──────────────────────────────────────────────────────────────────────────────
+from apps.shop.models import ShippingWalletTransaction, EnviaWebhookEventLog
+from apps.shop.shipping import (
+    EnviaClient,
+    verify_envia_webhook_signature,
+    verify_envia_webhook_bearer_token,
+    validate_tenant_logistics_access
+)
+
+
+class EnviaZipcodeValidationView(APIView):
+    """
+    Consulta pública y ligera a la Geocodes API de Envia.com para autocompletar
+    y validar códigos postales / colonias en tiempo real.
+    """
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request, *args, **kwargs):
+        country = request.query_params.get('country', 'MX')
+        zipcode = request.query_params.get('zipcode')
+
+        if not zipcode:
+            return Response({"error": "El parámetro 'zipcode' es requerido."}, status=status.HTTP_400_BAD_REQUEST)
+
+        client = EnviaClient()
+        result = client.validate_zipcode(country=country, zipcode=zipcode)
+        return Response(result, status=status.HTTP_200_OK if result.get("success", True) else status.HTTP_400_BAD_REQUEST)
+
+
+class ShippingWalletRechargeView(APIView):
+    """
+    Inicia una sesión de Stripe Checkout para recargar fondos en la billetera
+    del tenant para el pago automatizado de guías de envío.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        subdomain = request.data.get('subdomain')
+        amount_val = request.data.get('amount')
+
+        if not amount_val:
+            return Response({"error": "El monto a recargar es requerido."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            amount = Decimal(str(amount_val))
+            if amount < Decimal('250.00'):
+                return Response(
+                    {"error": "El monto mínimo de recarga es de $250.00 MXN."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        except Exception:
+            return Response({"error": "Monto de recarga inválido."}, status=status.HTTP_400_BAD_REQUEST)
+
+        tenant = None
+        if subdomain:
+            tenant = Tenant.objects.filter(subdomain=subdomain.lower()).first()
+        if not tenant:
+            tenant = getattr(request.user, "tenant", None) or Tenant.objects.filter(owner=request.user).first()
+
+        if not tenant:
+            return Response({"error": "No se encontró el inquilino correspondiente."}, status=status.HTTP_404_NOT_FOUND)
+
+        import stripe
+        stripe.api_key = settings.STRIPE_SECRET_KEY
+        frontend_url = settings.FRONTEND_URL
+
+        success_url = f"{frontend_url}/dashboard/addons?tab=shipping&wallet_recharge=success&session_id={{CHECKOUT_SESSION_ID}}"
+        cancel_url = f"{frontend_url}/dashboard/addons?tab=shipping&wallet_recharge=cancelled"
+
+        try:
+            session = stripe.checkout.Session.create(
+                payment_method_types=['card'],
+                line_items=[{
+                    'price_data': {
+                        'currency': 'mxn',
+                        'product_data': {
+                            'name': f"Recarga de Cartera de Envíos — {tenant.name}",
+                            'description': f"Abono de saldo para generación de guías logísticas ({tenant.subdomain}.nectarlabs.dev)",
+                        },
+                        'unit_amount': int(amount * 100),
+                    },
+                    'quantity': 1,
+                }],
+                mode='payment',
+                success_url=success_url,
+                cancel_url=cancel_url,
+                metadata={
+                    'type': 'shipping_funds_package',
+                    'tenant_id': str(tenant.id),
+                    'subdomain': tenant.subdomain,
+                    'amount': str(amount),
+                }
+            )
+            return Response({"checkout_url": session.url, "session_id": session.id})
+        except Exception as e:
+            logger.error(f"[Billetera/Stripe] Error creando sesión de recarga: {e}", exc_info=True)
+            return Response({"error": f"Error comunicando con Stripe: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class ShippingWalletHistoryView(APIView):
+    """
+    Retorna el estado de cuenta y movimientos (ledger) de la billetera de envíos del tenant.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        subdomain = request.query_params.get('subdomain')
+        tenant = None
+        if subdomain:
+            tenant = Tenant.objects.filter(subdomain=subdomain.lower()).first()
+        if not tenant:
+            tenant = getattr(request.user, "tenant", None) or Tenant.objects.filter(owner=request.user).first()
+
+        if not tenant:
+            return Response({"error": "Inquilino no identificado."}, status=status.HTTP_404_NOT_FOUND)
+
+        txs = ShippingWalletTransaction.objects.filter(tenant=tenant).order_by('-created_at')[:50]
+        tx_data = []
+        for t in txs:
+            tx_data.append({
+                "id": t.id,
+                "amount": float(t.amount),
+                "balance_after": float(t.balance_after),
+                "transaction_type": t.transaction_type,
+                "transaction_type_display": t.get_transaction_type_display(),
+                "reference_id": t.reference_id,
+                "description": t.description,
+                "created_at": t.created_at.isoformat()
+            })
+
+        return Response({
+            "balance": float(tenant.shipping_wallet_balance),
+            "minimum_required": 250.00,
+            "has_minimum_balance": tenant.shipping_wallet_balance >= Decimal("250.00"),
+            "platform_commission": float(getattr(tenant, "platform_shipping_fee", Decimal("10.00")) or Decimal("10.00")),
+            "transactions": tx_data
+        })
+
+
+class EnviaWebhookView(APIView):
+    """
+    Receptor seguro y multi-tenant de webhooks emitidos por Envia.com.
+    Procesa eventos con autenticación dual:
+    - Firmados con HMAC-SHA256 (Tipos 3, 4 y 5: simpleTracking, ecommerceTracking, surcharge).
+    - Autenticados mediante Bearer Token (Tipos 1 y 2: onShipmentStatusUpdate).
+    Normaliza formatos de payload (raíz vs data, camelCase vs snake_case).
+    """
+    authentication_classes = []
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request, *args, **kwargs):
+        raw_body = request.body
+        auth_header = request.headers.get("Authorization", "")
+        sig_header = request.headers.get("X-Webhook-Signature", "")
+        ts_header = request.headers.get("X-Webhook-Timestamp", "")
+        event_header = request.headers.get("X-Webhook-Event", "")
+        delivery_id = request.headers.get("X-Webhook-Id", "")
+
+        payload = request.data if isinstance(request.data, dict) else {}
+        data = payload.get("data", {}) if isinstance(payload.get("data"), dict) else {}
+
+        # 1. Validación de Autenticación
+        is_authenticated = False
+        if sig_header:
+            event_for_hmac = event_header or payload.get("type", "")
+            if verify_envia_webhook_signature(
+                raw_body=raw_body,
+                signature=sig_header,
+                timestamp=ts_header,
+                event_name=event_for_hmac
+            ):
+                is_authenticated = True
+            else:
+                logger.warning(f"[Envia/Webhook] Firma HMAC inválida.")
+                return Response({"error": "Firma HMAC inválida"}, status=status.HTTP_401_UNAUTHORIZED)
+        elif auth_header:
+            if verify_envia_webhook_bearer_token(auth_header):
+                is_authenticated = True
+            else:
+                logger.warning(f"[Envia/Webhook] Bearer Token no autorizado.")
+                return Response({"error": "Token de webhook no autorizado"}, status=status.HTTP_401_UNAUTHORIZED)
+        elif getattr(settings, "TESTING", False):
+            is_authenticated = True
+        else:
+            logger.warning("[Envia/Webhook] Rechazado: petición sin cabeceras de autenticación válidas.")
+            return Response({"error": "Credenciales de autenticación requeridas"}, status=status.HTTP_401_UNAUTHORIZED)
+
+        # 2. Normalización de Payload
+        tracking_number = (
+            data.get("tracking_number") or
+            data.get("trackingNumber") or
+            payload.get("trackingNumber") or
+            payload.get("tracking_number")
+        )
+
+        event_type = (
+            event_header or
+            payload.get("type") or
+            payload.get("event") or
+            ("surcharge" if data.get("surcharge_data") else "onShipmentStatusUpdate")
+        )
+
+        status_raw = str(
+            data.get("status") or
+            payload.get("status") or
+            data.get("status_description") or
+            ""
+        ).lower()
+
+        event_identifier = delivery_id or str(
+            data.get("surcharge_id") or
+            data.get("shipment_id") or
+            payload.get("shipmentId") or
+            f"{event_type}_{tracking_number}_{ts_header or status_raw}"
+        )
+
+        # 3. Idempotencia: Verificar si el evento ya fue procesado
+        existing_log = EnviaWebhookEventLog.objects.filter(event_id=event_identifier).first()
+        if existing_log and existing_log.status == EnviaWebhookEventLog.Status.PROCESSED:
+            return Response({"status": "already_processed"}, status=status.HTTP_200_OK)
+
+        # Registro inicial del evento
+        webhook_log, _ = EnviaWebhookEventLog.objects.get_or_create(
+            event_id=event_identifier,
+            defaults={
+                "event_type": event_type,
+                "tracking_number": tracking_number,
+                "payload": payload,
+                "status": EnviaWebhookEventLog.Status.PROCESSED
+            }
+        )
+
+        if not tracking_number:
+            return Response({"status": "ignored_no_tracking"}, status=status.HTTP_200_OK)
+
+        # 4. Localizar orden y aislar tenant
+        order = Order.objects.select_related("tenant").filter(tracking_number=tracking_number).first()
+        if not order:
+            logger.info(f"[Envia/Webhook] Guía {tracking_number} no pertenece a ninguna orden registrada.")
+            return Response({"status": "order_not_found"}, status=status.HTTP_200_OK)
+
+        tenant = order.tenant
+
+        # 5. Procesamiento por tipo de evento
+        try:
+            # Evento A: Actualización de Estado / Rastreo
+            if "surcharge" not in event_type:
+                if "delivered" in status_raw or status_raw == "entregado":
+                    order.status = Order.Status.DELIVERED
+                elif "cancelled" in status_raw or status_raw == "cancelado":
+                    order.status = Order.Status.CANCELLED
+                elif order.status != Order.Status.DELIVERED:
+                    order.status = Order.Status.SHIPPED
+                order.save(update_fields=["status"])
+                logger.info(f"[Envia/Webhook] Orden #{order.id} actualizada a '{order.status}' vía guía {tracking_number}.")
+
+            # Evento B: Cargo Adicional o Reembolso (surcharge)
+            else:
+                surcharge_data = data.get("surcharge_data", {})
+                tx_direction = surcharge_data.get("transaction_type", "surcharge")
+                amount = Decimal(str(surcharge_data.get("amount", "0.00")))
+                surcharge_type = surcharge_data.get("surcharge_type", "Sobrepeso")
+
+                if amount > 0 and tenant:
+                    with transaction.atomic():
+                        t_locked = Tenant.objects.select_for_update().get(id=tenant.id)
+                        if tx_direction == "surcharge":
+                            t_locked.shipping_wallet_balance -= amount
+                            t_locked.save(update_fields=["shipping_wallet_balance"])
+
+                            ShippingWalletTransaction.objects.create(
+                                tenant=t_locked,
+                                order=order,
+                                amount=-amount,
+                                balance_after=t_locked.shipping_wallet_balance,
+                                transaction_type=ShippingWalletTransaction.TransactionType.SURCHARGE_DEBIT,
+                                reference_id=str(data.get("surcharge_id") or tracking_number),
+                                description=f"Cargo extra por {surcharge_type} aplicado por Envia.com en guía #{tracking_number}"
+                            )
+                            logger.info(f"[Envia/Surcharge] Débito de ${amount} MXN aplicado a Tenant #{tenant.id}.")
+                        elif tx_direction == "refund":
+                            t_locked.shipping_wallet_balance += amount
+                            t_locked.save(update_fields=["shipping_wallet_balance"])
+
+                            ShippingWalletTransaction.objects.create(
+                                tenant=t_locked,
+                                order=order,
+                                amount=amount,
+                                balance_after=t_locked.shipping_wallet_balance,
+                                transaction_type=ShippingWalletTransaction.TransactionType.REFUND,
+                                reference_id=str(data.get("surcharge_id") or tracking_number),
+                                description=f"Reembolso de cargo extra por {surcharge_type} en guía #{tracking_number}"
+                            )
+                            logger.info(f"[Envia/Surcharge] Reembolso de ${amount} MXN aplicado a Tenant #{tenant.id}.")
+
+            return Response({"success": True, "processed": True}, status=status.HTTP_200_OK)
+
+        except Exception as err:
+            logger.error(f"[Envia/Webhook] Excepción procesando evento {event_identifier}: {err}", exc_info=True)
+            webhook_log.status = EnviaWebhookEventLog.Status.ERROR
+            webhook_log.error_message = str(err)
+            webhook_log.save(update_fields=["status", "error_message"])
+            return Response({"error": str(err)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 

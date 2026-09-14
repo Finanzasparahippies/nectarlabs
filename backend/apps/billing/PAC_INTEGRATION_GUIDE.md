@@ -1,162 +1,126 @@
-# Guía de Integración con Proveedor Autorizado de Certificación (PAC) - Néctar Labs
+# Guía de Integración con Facturapi v2 y Multi-Tenant — Néctar Labs
 
-Esta guía detalla el diseño técnico, las variables de entorno y los flujos necesarios para transicionar del **Mock PAC** (simulado) a un **PAC Real** autorizado por el SAT (a través de la integración nativa con **Facturapi**) para la emisión de facturas CFDI 4.0.
+Esta guía detalla la arquitectura técnica, las llaves de acceso, los endpoints y los flujos necesarios para operar la facturación CFDI 4.0 con **Facturapi v2** en **Local**, **Staging** y **Producción** utilizando el sistema de organizaciones subordinadas y la cartera de créditos de timbres fiscales de los tenants.
 
 ---
 
-## 🏗️ 1. Arquitectura de Facturación en Néctar Labs
+## 🏗️ 1. Arquitectura de Tres Llaves (Parent Account & Subordinated Orgs)
 
-El sistema implementa un patrón de diseño estratégico que separa la lógica del negocio de facturación del proveedor específico mediante la clase abstracta `PACServiceBase` en [services.py](file:///c:/Users/Agent/OneDrive/Documents/proyects/nectarlabs-main/backend/apps/billing/services.py).
-
-Actualmente hay dos implementaciones disponibles:
-1. **`MockPACService`**: Simula timbrados y cancelaciones para pruebas locales y CI/CD sin consumir créditos ni conectar al SAT.
-2. **`FacturapiPACService`**: Conexión real con la API REST de Facturapi para crear contribuyentes, subir sellos CSD y timbrar facturas oficiales.
+Néctar Labs opera como una plataforma SaaS multi-tenant mediante tres llaves maestras provistas por Facturapi:
 
 ```mermaid
 graph TD
-    A[get_pac_service] --> B{settings.PAC_PROVIDER}
-    B -- "mock" --> C[MockPACService]
-    B -- "facturapi" --> D[FacturapiPACService]
-    D --> E[API REST Facturapi / SAT]
+    A[Néctar Labs Matriz] -->|FACTURAPI_USER_KEY<br/>sk_user_*| B[Gestión Global de Organizaciones<br/>POST /v2/organizations]
+    A -->|PAC_TEST_KEY<br/>sk_test_*| C[Local y Staging<br/>PAC_ENVIRONMENT=test]
+    A -->|PAC_LIVE_KEY<br/>sk_live_*| D[Producción SAT<br/>PAC_ENVIRONMENT=live]
+    B --> E[Tenant A - Org Subordinada]
+    B --> F[Tenant B - Org Subordinada]
+    C -.->|Header: Facturapi-Organization| E
+    D -.->|Header: Facturapi-Organization| E
 ```
 
+### Definición y Propósito de las Llaves:
+1. **User Key (`FACTURAPI_USER_KEY` = `sk_user_*`)**:
+   - Llave de cuenta de usuario padre.
+   - **Obligatoria** para crear (`POST /v2/organizations`) y configurar datos fiscales (`PUT /v2/organizations/{id}/legal`) de organizaciones subordinadas.
+2. **Test Key (`PAC_TEST_KEY` = `sk_test_*`)**:
+   - Utilizada en ambientes `local` y `staging`.
+   - Permite timbrar con RFC genérico del SAT (`AAA010101AAA`) y certificados de prueba sin validez fiscal ni costo de timbres.
+3. **Live Key (`PAC_LIVE_KEY` = `sk_live_*`)**:
+   - Utilizada en ambiente `production` (`PAC_ENVIRONMENT=live`).
+   - Timbra ante el SAT en tiempo real utilizando los Certificados de Sello Digital (CSD) reales del negocio.
+   - Cada CFDI emitido descuenta un timbre de la cartera del tenant en Néctar Labs.
+
 ---
 
-## 🔑 2. Requisitos Previos en el SAT y Facturapi
+## ⚙️ 2. Variables de Entorno
 
-Para operar en producción (timbrado real):
-1. **Certificado de Sello Digital (CSD):**
-   - El cliente/negocio debe tramitar ante el SAT sus archivos de sello CSD (`.cer` y `.key`), junto con su contraseña.
-   - *Nota:* La firma electrónica (e.firma / FIEL) **no** sirve para timbrar facturas directamente; debe ser un CSD de tipo factura.
-2. **Cuenta en Facturapi:**
-   - Registrarse en [Facturapi](https://www.facturapi.com).
-   - Obtener la **API Key de Sandbox** (para pruebas de desarrollo) y la **API Key Live** (para producción real).
-
----
-
-## ⚙️ 3. Configuración en Néctar Labs
-
-### Paso 1: Configurar Variables de Entorno
-Edita tu archivo `.env` o las variables de entorno en Staging/Producción en el VPS añadiendo:
+Configuradas en `.env.local`, `.env.staging` y `.env.prod`:
 
 ```ini
-# Proveedor de facturación ('mock' o 'facturapi')
+# Proveedor PAC
 PAC_PROVIDER=facturapi
+PAC_ENVIRONMENT=test            # 'test' en local/staging, 'live' en prod
 
-# Llave secreta provista por Facturapi (comienza con 'sk_test_' o 'sk_live_')
-PAC_API_KEY=sk_test_tu_llave_secreta_aqui
-```
+# Llaves Facturapi
+FACTURAPI_USER_KEY=sk_user_tu_llave_usuario_facturapi
+PAC_TEST_KEY=sk_test_tu_llave_pruebas_facturapi
+PAC_LIVE_KEY=sk_live_tu_llave_produccion_facturapi
 
-### Paso 2: Validación en settings.py
-Verifica que en el archivo `backend/config/settings.py` se lean correctamente estas propiedades:
-
-```python
-PAC_PROVIDER = env("PAC_PROVIDER", default="mock")
-PAC_API_KEY = env("PAC_API_KEY", default="")
-```
-
-El inyector de dependencia `get_pac_service()` leerá automáticamente estos valores del archivo de configuración para instanciar la clase correcta.
-
----
-
-## 🔄 4. Flujo de Trabajo para un Negocio (BUSINESS)
-
-Cuando un negocio se registra en el ecosistema y activa la facturación:
-
-```mermaid
-sequenceDiagram
-    participant B as Business User
-    participant N as Nectar Backend
-    participant F as Facturapi (PAC)
-    participant S as SAT
-
-    B->>N: 1. Registra Datos Fiscales (RFC, Razón Social)
-    N->>F: 2. Crea Organización Co-emisora
-    F-->>N: Retorna facturapi_organization_id
-    N-->>B: Guarda ID en Perfil Fiscal
-
-    B->>N: 3. Sube archivos CSD (.cer, .key, contraseña)
-    N->>F: 4. Carga sellos a la Organización en el PAC
-    F->>S: Valida vigencia ante la LCO
-    F-->>N: Confirmación de carga exitosa
-    N-->>B: Sellos Listos para Timbrar
-```
-
-### Gestión del Retraso de Sincronización de Sellos (LCO)
-> [!IMPORTANT]
-> Cuando se tramita o sube un CSD nuevo en el SAT, la Lista de Contribuyentes Obligados (LCO) puede tardar **de 24 a 72 horas** en sincronizarse.
->
-> La integración en `FacturapiPACService` captura este caso y eleva una excepción del tipo `LCOSyncError`. Tu frontend debe mostrar un aviso amigable en lugar de un error de sistema si el timbrado falla debido a este retraso.
-
----
-
-## 🛠️ 5. Flujos de Código Clave
-
-### A. Emisión y Timbrado de Factura
-El método `create_invoice` del servicio se encarga de estructurar el JSON, redondear decimales para prevenir errores de cálculo del SAT y descargar localmente las representaciones XML y PDF timbradas:
-
-```python
-from apps.billing.services import get_pac_service, PACError, LCOSyncError
-
-pac = get_pac_service()
-
-try:
-    resultado = pac.create_invoice(
-        invoice=invoice_instance,
-        tax_profile=business_tax_profile,
-        customer_info={
-            "razon_social": "Cliente SA de CV",
-            "rfc": "XAXX010101000",
-            "regimen_fiscal": "601",
-            "codigo_postal": "01000",
-            "email": "cliente@example.com"
-        },
-        items=[
-            {
-                "quantity": 1,
-                "unit_price": 25000.00,
-                "description": "Desarrollo de Software Modular"
-            }
-        ]
-    )
-    
-    # El resultado contiene los archivos listos para guardar en DB
-    invoice_instance.facturapi_invoice_id = resultado["facturapi_invoice_id"]
-    invoice_instance.uuid_sat = resultado["uuid_sat"]
-    invoice_instance.xml_file = resultado["xml_file"]
-    invoice_instance.pdf_file = resultado["pdf_file"]
-    invoice_instance.status = "PAID"
-    invoice_instance.save()
-
-except LCOSyncError as e:
-    # Manejar retraso de sellos del SAT
-    logger.warning(f"Sello pendiente de sincronización: {e}")
-except PACError as e:
-    # Errores generales de timbrado
-    logger.error(f"Error de timbrado: {e}")
-```
-
-### B. Cancelación de CFDI
-Para cancelar una factura (la cual puede requerir la aprobación del cliente final si supera el monto límite del SAT), Facturapi retorna el estado de la cancelación:
-
-```python
-try:
-    estado_cancelacion = pac.cancel_invoice(invoice_instance)
-    if estado_cancelacion == "CANCELLED":
-        invoice_instance.status = "CANCELLED"
-    else:
-        # Requiere aceptación del receptor
-        invoice_instance.status = "CANCEL_REQUESTED"
-    invoice_instance.save()
-except PACError as e:
-    logger.error(f"Error al cancelar factura: {e}")
+# Webhook Secret para validación de firma HMAC SHA-256
+FACTURAPI_WEBHOOK_SECRET=tu_webhook_secret_aqui
 ```
 
 ---
 
-## 🚦 6. Verificación en Sandbox
+## 🔒 3. Seguridad de Sellos Digitales (CSD) y LCO
 
-Para comprobar que tu conexión funciona:
-1. Configura `PAC_PROVIDER=facturapi` y `PAC_API_KEY` con una llave de prueba (`sk_test_...`).
-2. Usa el RFC genérico de pruebas de Facturapi para simular la organización y clientes.
-3. Intenta generar una factura desde el Dashboard y verifica que se descargue el archivo `.xml` firmado y el `.pdf` con el sello digital de prueba.
+1. **Cero Almacenamiento Local de Llaves Privadas:**
+   - Los archivos `.cer`, `.key` y la contraseña se transmiten en memoria (`multipart/form-data`) directamente a los HSM de Facturapi en `/v2/organizations/{id}/certificate`.
+   - Django **nunca** guarda los archivos CSD en disco ni en base de datos.
+2. **Eliminación Segura:**
+   - `DELETE /api/billing/csd-status/` invoca `DELETE /v2/organizations/{id}/certificate` en Facturapi.
+3. **Manejo de Lista de Contribuyentes Obligados (LCO):**
+   - Cuando un negocio tramita o renueva su CSD en el SAT, la LCO puede demorar de **24 a 72 horas** en activarse.
+   - El sistema captura este fallo como `LCOSyncError` y marca la factura en estado `LCO_SYNC_PENDING` sin fallar el proceso de compra. Un worker en background reintenta el timbrado periódicamente.
+
+---
+
+## 📊 4. Cartera de Timbres y Prevención de Concurrencia
+
+Para evitar deducciones dobles o inconsistencias ante múltiples peticiones simultáneas:
+1. **Transacciones Atómicas con Bloqueo de Fila:**
+   - `Tenant.atomic_deduct_stamp()` y `Tenant.atomic_refund_stamp()` usan `select_for_update()`.
+2. **Registro Inmutable de Auditoría:**
+   - Cada movimiento genera un registro en el modelo `StampTransaction` con `transaction_type` (`CONSUMPTION`, `RECHARGE`, `REFUND`, `EXPIRED`, `BONUS`), `stamps_before` y `stamps_after`.
+3. **Protección Webhook:**
+   - Si la vista síncrona dedujo el timbre (`stamp_deducted = True`), el webhook `invoice.created` no vuelve a descontar.
+   - En caso de evento `invoice.failed`, si el timbre fue deducido previamente, el webhook ejecuta un reembolso automático (`atomic_refund_stamp`).
+
+---
+
+## 🚀 5. Catálogo Completo de Endpoints
+
+### Facturación CFDI
+- `GET /api/billing/invoices/`: Listado de facturas del tenant.
+- `POST /api/billing/invoices/issue-tenant-to-client/`: Emisión de factura a cliente final.
+- `POST /api/billing/invoices/issue-parent-to-tenant/`: Factura administrativa de Néctar Labs al inquilino.
+- `POST /api/billing/invoices/{id}/cancel/`: Solicitud de cancelación ante el SAT con motivo (`01`, `02`, `03`, `04`).
+- `POST /api/billing/invoices/{id}/retry/`: Reintento de timbrado para facturas fallidas o pendientes LCO.
+- `GET /api/billing/invoices/{id}/zip/`: Descarga directa del archivo comprimido ZIP con XML y PDF oficiales.
+- `POST /api/billing/invoices/{id}/send-email/`: Envío de factura por correo mediante la infraestructura de Facturapi.
+- `POST /api/billing/invoices/{id}/issue-credit-note/`: Emisión de nota de crédito (CFDI Tipo E) relacionada a la factura.
+
+### CSD y Perfil Fiscal
+- `GET, POST /api/billing/tax-profile/`: Configuración de datos fiscales y creación de organización en Facturapi.
+- `POST /api/billing/upload-csd/`: Subida de certificados `.cer` y `.key` con contraseña en memoria.
+- `GET, DELETE /api/billing/csd-status/`: Consulta de vigencia/número de serie y eliminación de CSD.
+
+### Catálogos y E-Receipts
+- `GET, POST /api/billing/facturapi-customers/`: CRUD de clientes fiscales del tenant.
+- `GET, POST /api/billing/facturapi-products/`: CRUD de productos/conceptos fiscales.
+- `GET, POST /api/billing/facturapi-receipts/`: Emisión de notas de venta digitales (sin timbrar ante SAT).
+- `POST /api/billing/facturapi-receipts/{receipt_id}/invoice/`: Facturación individual de una nota de venta existente.
+- `POST /api/billing/facturapi-receipts/global-invoice/`: Emisión de factura global consolidada por periodo.
+- `GET, POST /api/billing/facturapi-retentions/`: Emisión y consulta de CFDI de retenciones e información de pagos.
+
+### Cartera y Auditoría
+- `GET /api/billing/stamp-transactions/`: Historial inmutable de auditoría del balance de timbres.
+- `POST /api/billing/buy-stamps/`: Checkout Stripe para recarga de paquetes de 50, 100 o 500 timbres.
+
+---
+
+## 🧪 6. Diagnóstico y Pruebas con CLI (nectar.sh)
+
+Para validar la conectividad y las credenciales desde la terminal:
+
+```bash
+# Diagnóstico completo (User Key, Test Key y Live Key)
+./nectar.sh test-facturapi --check-all
+
+# Diagnóstico de ambiente actual (según PAC_ENVIRONMENT)
+./nectar.sh test-facturapi
+
+# Verificación de credenciales Live SAT
+./nectar.sh test-facturapi-live
+```

@@ -203,28 +203,31 @@ A continuación se detalla el manual de usuario (Tenant) y de administración (N
 
 ---
 
-### 3. Tienda + Envíos con Skydropx (Slug: `logistics-gps`)
+### 3. Tienda + Envíos con Envia.com (Slug: `logistics-gps`)
 * **Categoría**: LOGÍSTICA Y CONTROL
 * **Complejidad**: Muy Alta (Integración externa multitarifa)
-* **Requisitos Técnicos**: API de Skydropx + Modelos de Órdenes y Checkout en frontend.
+* **Requisitos Técnicos**: API de Envia.com + Billetera prepagada / Token propio + Modelos de Órdenes y Checkout en frontend.
 
 #### Funciones Disponibles Actualmente
-* Cotización automatizada de costos de envío a nivel nacional durante el checkout.
-* Regla de margen de ganancia (Markup) personalizable del 15% sobre las tarifas de paqueterías base.
-* Generación automatizada de etiquetas de envío (guías de FedEx, DHL, Estafeta) al marcar el pedido como pagado.
-* Envío de enlaces de rastreo al cliente final de manera inmediata.
+* Cotización automatizada de costos de envío a nivel nacional en tiempo real (Paquetexpress, FedEx, DHL, Redpack, Estafeta, etc.).
+* Billetera digital de envíos para tenants con recargas automáticas vía Stripe Checkout.
+* Margen de ganancia (Markup) configurable por el tenant sobre las tarifas de las paqueterías.
+* Generación automatizada de etiquetas de envío oficiales en PDF y asignación de tracking number al pedido.
+* Actualización de estados de entrega en tiempo real vía Webhooks (`/api/shop/shipping/webhooks/envia/`).
 
 #### Instrucciones de Uso para el Tenant (Dueño de la Colmena)
-1. **Configuración de Origen**: Entra a tu `/portal-admin` y navega a **Configuración > Envíos**. Registra la dirección fiscal y código postal del almacén de donde se enviarán las mercancías.
-2. **API Keys**: Introduce tus credenciales (Token) de Skydropx (desarrollo o producción).
+1. **Configuración de Origen**: Entra a tu `/portal-admin` y navega a **Configuración > Envíos**. Registra la dirección y código postal del almacén de donde se enviarán las mercancías.
+2. **Modo de Operación**:
+   * **Billetera de Envíos Néctar Labs**: Recarga saldo desde el dashboard usando tarjeta de crédito/débito. Las guías se descontarán de este balance automáticamente al generarse.
+   * **Cuenta Propia**: Si tienes cuenta directa con Envia.com, ingresa tu propio token de API.
 3. **Procesamiento de Órdenes**:
-   * En la sección de **Ventas/Pedidos**, haz clic en una orden confirmada como pagada.
-   * Haz clic en **Generar Guía de Envío**. El sistema contactará a Skydropx y descargará la etiqueta en PDF.
+   * En la sección de **Ventas/Pedidos**, abre un pedido confirmado como pagado.
+   * Haz clic en **Generar Guía**. El sistema contactará a Envia.com, generará el PDF y lo vinculará a la orden con su número de seguimiento.
    * Imprime la guía, pégala en el paquete y entrégala a la paquetería correspondiente.
 
 #### Instrucciones de Uso para el Admin (Néctar Labs)
 1. **Activación**: Habilita el addon `logistics-gps` en el contrato del cliente en Django Admin.
-2. **Monitoreo**: Supervisa los logs de conexión con la API de Skydropx para diagnosticar caídas o errores de autenticación con el token del cliente.
+2. **Diagnóstico y Pruebas**: Ejecuta `./nectar.sh test-envia` o `./nectar.sh test-envia-label` para validar la conectividad en Sandbox y Producción.
 
 ---
 
@@ -297,29 +300,35 @@ A continuación se detalla el manual de usuario (Tenant) y de administración (N
 
 ---
 
-### 7. Facturación SAT México (Slug: `mexico-invoicing`)
+### 7. Facturación SAT México (Slug: `facturacion-cfdi`)
 * **Categoría**: CONTABILIDAD Y FISCAL
-* **Complejidad**: Alta (Regulaciones gubernamentales)
-* **Requisitos Técnicos**: Facturapi API + Carga de certificados CSD (.cer y .key) con encriptación.
+* **Complejidad**: Alta (Regulaciones gubernamentales CFDI 4.0)
+* **Requisitos Técnicos**: Facturapi v2 API + Carga de certificados CSD (.cer y .key) en memoria + Cartera de timbres.
 
 #### Funciones Disponibles Actualmente
-* Creación e integración automática de organizaciones subordinadas en Facturapi.
-* Carga segura y almacenamiento encriptado de sellos digitales (CSD).
-* Generador de facturas oficiales bajo el estándar CFDI 4.0 del SAT.
-* Sincronización automática de bases de datos LCO del SAT para validar RFCs.
-* Descarga directa del archivo XML de timbrado y la versión imprimible en PDF.
+* Creación automática de organizaciones subordinadas en Facturapi con `FACTURAPI_USER_KEY`.
+* Carga segura en memoria de sellos digitales (CSD) sin almacenamiento en disco del servidor.
+* Generación de facturas oficiales CFDI 4.0 (Ingreso, Egreso/Nota de Crédito, Recibos y Factura Global).
+* Descarga directa de archivos XML, PDF y archivo comprimido ZIP.
+* Envío de facturas por correo electrónico mediante la infraestructura de Facturapi.
+* Cartera de timbres con auditoría inmutable de transacciones (`StampTransaction`) y protección contra concurrencia.
+* Sincronización automática con la LCO del SAT y reintento en segundo plano.
 
 #### Instrucciones de Uso para el Tenant (Dueño de la Colmena)
 1. **Configuración Fiscal**: En tu `/portal-admin`, ve a **Facturación SAT > Configurar**.
-2. **Subir Sellos**: Carga tus archivos `.cer` y `.key` vigentes de tus sellos CSD y digita la contraseña de los mismos. Rellena tu RFC, Razón Social, Dirección y Régimen Fiscal.
-3. **Timbrar Factura**:
+2. **Subir Sellos CSD**: Carga tus archivos `.cer` y `.key` vigentes de tus sellos CSD e introduce la contraseña. Rellena tu RFC, Razón Social, Código Postal y Régimen Fiscal.
+3. **Balance de Timbres**:
+   * Consulta tu balance actual de timbres en el panel de facturación.
+   * Si requieres más timbres, haz clic en **Comprar Timbres** y selecciona un paquete (50, 100 o 500 timbres) vía Stripe Checkout.
+4. **Timbrar Factura**:
    * En la lista de pedidos o abonos, haz clic en **Solicitar Factura**.
-   * Llena los datos del cliente (RFC, Uso de CFDI, Régimen del cliente).
-   * Haz clic en **Emitir CFDI**. El sistema validará con el SAT e inmediatamente te dará las opciones para descargar el PDF y XML de la factura.
+   * Confirma los datos fiscales del cliente final.
+   * Haz clic en **Emitir CFDI**. El sistema timbrará ante el SAT, descontará 1 timbre de tu balance de forma atómica y te entregará el PDF y XML listos para descargar o enviar por correo.
 
 #### Instrucciones de Uso para el Admin (Néctar Labs)
-1. **Configuración de Entorno**: Introduce la variable de entorno `FACTURAPI_SECRET_KEY` en el archivo `.env`.
-2. **Consumo de Timbres**: El plan incluye 20 timbres mensuales. A través de la tabla `TenantInvoicingQuota`, verifica el conteo de timbres emitidos y administra la recarga de paquetes de timbres extras si el cliente lo solicita.
+1. **Configuración de Entorno**: Verifica que `FACTURAPI_USER_KEY`, `PAC_TEST_KEY`, `PAC_LIVE_KEY` y `PAC_ENVIRONMENT` estén configurados.
+2. **Diagnóstico y Pruebas**: Ejecuta `./nectar.sh test-facturapi --check-all` para verificar la conectividad de las 3 llaves.
+3. **Auditoría**: Monitorea el historial de movimientos de timbres en el endpoint `/api/billing/stamp-transactions/`.
 
 ---
 

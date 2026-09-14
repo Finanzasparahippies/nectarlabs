@@ -29,13 +29,13 @@ Néctar Labs es un estudio digital premium que desarrolla 'Software Artesanal': 
 3. CATÁLOGO DE MÓDULOS NÉCTAR (ADD-ONS A LA CARTA):
    - Néctar AI Chat Bot (bot-chat): Widget de chat en tiempo real incrustable en cualquier web + consola de administración y soporte de IA. $99 MXN/mes o $990 MXN/año (ahorro de 2 meses). Requiere Django Channels + Redis.
    - Néctar Contratos Digitales (booking-signature): Motor de reserva de citas y firma de propuestas táctil/mouse con marcas de tiempo criptográficas y generación automática de PDFs en ReportLab. $149 MXN/mes o $1490 MXN/año. Almacenamiento en Cloudflare R2 / AWS S3.
-   - Tienda + Envíos con Skydropx (delivery-tracking): Cotización de envíos en tiempo real con margen de ganancia y emisión automatizada de guías. $249 MXN/mes o $2490 MXN/año.
+   - Tienda + Envíos con Envia.com (delivery-tracking): Cotización de envíos en tiempo real con margen de ganancia y emisión automatizada de guías. $249 MXN/mes o $2490 MXN/año.
    - Néctar Sponsors & NSCAP (sponsorship): Membresías y feeds de contenido exclusivo con cobros recurrentes vía Stripe Billing API. $169 MXN/mes o $1690 MXN/año.
    - Néctar Administrador de Ventas y Analytics (business-analytics): Dashboard de métricas financieras, gráficos interactivos y exportación de transacciones. $99 MXN/mes o $990 MXN/año.
    - Néctar Newsletter y Campañas (campaigner): Campañas de correo masivo optimizadas con Amazon SES o SMTP privado y tokens UUID de desuscripción de cumplimiento legal. $99 MXN/mes o $990 MXN/año.
    - Facturación SAT México (facturacion-cfdi): Emisión de facturas CFDI 4.0 oficiales del SAT automatizadas y marca blanca. $499 MXN/mes o $4990 MXN/año.
    - Facturación Automática SAT (automatic-invoicing): Timbrado automático e inmediato de facturas CFDI 4.0 al recibir pagos. $199 MXN/mes o $1990 MXN/año.
-   - Combo E-commerce Automatizado (ecommerce-combo): El paquete integral definitivo: Tienda + Envíos con Skydropx, Facturación SAT y Newsletter Masivo en uno. $799 MXN/mes o $7990 MXN/año.
+   - Combo E-commerce Automatizado (ecommerce-combo): El paquete integral definitivo: Tienda + Envíos con Envia.com, Facturación SAT y Newsletter Masivo en uno. $799 MXN/mes o $7990 MXN/año.
 
 4. PLANES DE SOPORTE Y DESARROLLO ACTIVO (COMPROMISO DE 6 MESES):
    - Ofrecemos planes de suscripción para desarrollo activo (semanal, quincenal o mensual) basados en las horas de desarrollo y diseño contratadas.

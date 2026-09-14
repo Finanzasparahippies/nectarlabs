@@ -27,8 +27,17 @@ export function getApiBaseUrl(): string {
     }
   }
 
-  // 3. Navegador (Local, Staging, Producción, Codespaces):
-  // Usar la ruta relativa /api para aprovechar el proxy perimetral del origen activo (Next.js rewrites / Nginx)
+  // 3. Navegador en entorno local (localhost, 127.0.0.1 o subdominios *.localhost):
+  // Si el frontend está ejecutándose en localhost:3002 o localhost:3000 fuera de un proxy Nginx
+  // o si no se especificó un rewrites activo hacia backend interno, conectarse directamente a http://localhost:8001/api
+  const hostname = window.location.hostname;
+  const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1' || hostname.endsWith('.localhost');
+  if (isLocalhost) {
+    const backendPort = process.env.NEXT_PUBLIC_BACKEND_PORT || '8001';
+    return `http://${hostname}:${backendPort}/api`;
+  }
+
+  // 4. Staging, Producción o Proxies (Nginx / Next.js rewrites):
   return "/api";
 }
 
@@ -242,7 +251,7 @@ export async function fetcher(endpoint: string, options: FetcherOptions = {}): P
             })
             .join(' | ');
         }
-        throw new Error(errMsg || `HTTP Error ${res.status}`);
+        throw new Error(errMsg || `HTTP Error ${res.status} al solicitar ${fullUrl}`);
       }
 
       if (res.status === 204) return null;
@@ -251,10 +260,11 @@ export async function fetcher(endpoint: string, options: FetcherOptions = {}): P
       if (attempt < retries && (err.name === 'TypeError' || err.message?.includes('fetch'))) {
         attempt++;
         const backoff = retryDelay * Math.pow(2, attempt - 1);
-        console.warn(`[API/fetcher] Fallo de red en ${cleanEndpoint}. Reintento ${attempt}/${retries} en ${backoff}ms...`);
+        console.warn(`[API/fetcher] Fallo de conexión en ${fullUrl || cleanEndpoint}. Reintento ${attempt}/${retries} en ${backoff}ms...`);
         await new Promise(resolve => setTimeout(resolve, backoff));
         continue;
       }
+      console.error(`[API/fetcher Error] Endpoint fallido: ${fullUrl || cleanEndpoint} | Detalle: ${err?.message || err}`);
       throw err;
     }
   }

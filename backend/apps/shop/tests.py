@@ -6,6 +6,7 @@ from rest_framework.test import APITestCase
 from apps.shop.models import Plan, Contract, PaymentInstallment, AddOn, PromoCode, SalesCommission, AddOnSubscription
 from apps.tenants.models import Tenant
 from datetime import date, timedelta
+from decimal import Decimal
 from unittest.mock import patch, MagicMock
 
 User = get_user_model()
@@ -1271,33 +1272,38 @@ class StripePlanInstallmentCheckoutTests(APITestCase):
         self.assertNotIn('product_data', line_item_price_data)
 
 
-class SkydropxAndStripeIdempotencyTests(APITestCase):
+class EnviaAndStripeIdempotencyTests(APITestCase):
     def setUp(self):
         self.ceo = User.objects.create_user(
-            username="saul_ceo_skydropx",
-            email="saul_skydropx@nectarlabs.dev",
+            username="saul_ceo_envia",
+            email="saul_envia@nectarlabs.dev",
             password="securepassword",
             role=User.Role.ADMIN,
             is_staff=True
         )
         self.client_user = User.objects.create_user(
-            username="client_skydropx",
-            email="client_skydropx@example.com",
+            username="client_envia",
+            email="client_envia@example.com",
             password="clientpassword",
             role=User.Role.BUSINESS
         )
-        # Create a Tenant
+        # Create a Tenant with wallet balance and commission
         self.tenant = Tenant.objects.create(
             owner=self.client_user,
-            name="Skydropx Workspace",
-            subdomain="skydropx-workspace",
+            name="Envia Workspace",
+            subdomain="envia-workspace",
             shipping_markup_percentage=15.00,
-            is_active=True
+            platform_shipping_fee=Decimal("10.00"),
+            shipping_wallet_balance=Decimal("500.00"),
+            is_active=True,
+            trial_ends_at=timezone.now() + timedelta(days=14)
         )
 
-    def test_get_shipping_rates_applies_markup(self):
+    def test_get_shipping_rates_applies_nectar_commission_and_markup(self):
         """
-        Verify that get_shipping_rates calculates the total amount with the tenant's shipping_markup_percentage.
+        Verifica que get_shipping_rates calcula:
+        1. Costo Tenant = Costo Base Envia + Comisión fija de Néctar Labs ($10.00 MXN)
+        2. Total Comprador = Costo Tenant * (1 + markup/100)
         """
         from apps.shop.shipping import get_shipping_rates
         destination = {
@@ -1309,27 +1315,230 @@ class SkydropxAndStripeIdempotencyTests(APITestCase):
             "zip_code": "83150"
         }
         
-        # In testing mode (TESTING=True), it will trigger mock rates with round(base_cost * (1 + markup/100), 2)
+        # En modo testing:
+        # mock_base_1 = 115.00, nectar_fee = 10.00 -> tenant_cost = 125.00 -> total = 125.00 * 1.15 = 143.75
+        # mock_base_2 = 175.00, nectar_fee = 10.00 -> tenant_cost = 185.00 -> total = 185.00 * 1.15 = 212.75
         rates = get_shipping_rates(destination, tenant=self.tenant)
         self.assertEqual(len(rates), 2)
         
-        # Rate 1: base_cost_1 = 120.00. Total = 120.00 * 1.15 = 138.00
-        self.assertEqual(rates[0]["amount"], 120.00)
-        self.assertEqual(rates[0]["total_amount"], 138.00)
+        self.assertEqual(rates[0]["amount"], 115.00)
+        self.assertEqual(rates[0]["nectar_fee"], 10.00)
+        self.assertEqual(rates[0]["tenant_cost"], 125.00)
+        self.assertEqual(rates[0]["total_amount"], 143.75)
         
-        # Rate 2: base_cost_2 = 180.00. Total = 180.00 * 1.15 = 207.00
-        self.assertEqual(rates[1]["amount"], 180.00)
-        self.assertEqual(rates[1]["total_amount"], 207.00)
+        self.assertEqual(rates[1]["amount"], 175.00)
+        self.assertEqual(rates[1]["nectar_fee"], 10.00)
+        self.assertEqual(rates[1]["tenant_cost"], 185.00)
+        self.assertEqual(rates[1]["total_amount"], 212.75)
 
-        # Update markup to 20% and check rates
+        # Actualizar markup a 20%
         self.tenant.shipping_markup_percentage = 20.00
         self.tenant.save()
         
         rates = get_shipping_rates(destination, tenant=self.tenant)
-        # Rate 1: base_cost_1 = 120.00. Total = 120.00 * 1.20 = 144.00
-        self.assertEqual(rates[0]["total_amount"], 144.00)
-        # Rate 2: base_cost_2 = 180.00. Total = 180.00 * 1.20 = 216.00
-        self.assertEqual(rates[1]["total_amount"], 216.00)
+        # Rate 1: 125.00 * 1.20 = 150.00
+        self.assertEqual(rates[0]["total_amount"], 150.00)
+        # Rate 2: 185.00 * 1.20 = 222.00
+        self.assertEqual(rates[1]["total_amount"], 222.00)
+
+    def test_generate_shipping_label_deducts_wallet_and_logs_ledger(self):
+        """
+        Verifica que emitir una guía descuente de la billetera del tenant (Costo Base + $10 MXN)
+        y registre la transacción en ShippingWalletTransaction.
+        """
+        from apps.shop.models import Order, ShippingWalletTransaction
+        from apps.shop.shipping import generate_shipping_label
+        from decimal import Decimal
+
+        initial_balance = Decimal("500.00")
+        self.tenant.shipping_wallet_balance = initial_balance
+        self.tenant.save()
+
+        order = Order.objects.create(
+            tenant=self.tenant,
+            user=self.client_user,
+            total=Decimal("300.00"),
+            shipping_cost_base=Decimal("115.00"),
+            shipping_rate_id="rate_envia_mock_fedex",
+            full_name="Cliente Prueba",
+            postal_code="83150",
+            status=Order.Status.PAID
+        )
+
+        success = generate_shipping_label(order)
+        self.assertTrue(success)
+
+        self.tenant.refresh_from_db()
+        # Costo debitado: 115.00 + 10.00 = 125.00
+        expected_balance = initial_balance - Decimal("125.00")
+        self.assertEqual(self.tenant.shipping_wallet_balance, expected_balance)
+
+        order.refresh_from_db()
+        self.assertEqual(order.status, Order.Status.SHIPPED)
+        self.assertTrue(order.tracking_number.startswith(f"ENVIA-{self.tenant.subdomain.upper()}"))
+        self.assertEqual(order.shipping_cost_real, Decimal("115.00"))
+        self.assertEqual(order.shipping_cost_tenant, Decimal("125.00"))
+
+        # Validar Ledger
+        tx = ShippingWalletTransaction.objects.filter(order=order).first()
+        self.assertIsNotNone(tx)
+        self.assertEqual(tx.amount, Decimal("-125.00"))
+        self.assertEqual(tx.balance_after, expected_balance)
+        self.assertEqual(tx.transaction_type, ShippingWalletTransaction.TransactionType.LABEL_DEBIT)
+
+    def test_envia_webhook_tracking_and_surcharge(self):
+        """
+        Verifica el procesamiento del webhook de Envia:
+        1. Actualización de tracking (tracking.simple).
+        2. Cargo por sobrepeso (surcharge) descontado atómicamente de la billetera.
+        3. Idempotencia ante retransmisiones del webhook.
+        """
+        from apps.shop.models import Order, EnviaWebhookEventLog, ShippingWalletTransaction
+        from decimal import Decimal
+
+        order = Order.objects.create(
+            tenant=self.tenant,
+            user=self.client_user,
+            total=Decimal("300.00"),
+            tracking_number="ENVIA-TRACK-99999",
+            status=Order.Status.SHIPPED
+        )
+
+        webhook_url = reverse('envia-webhook')
+
+        # 1. Evento tracking.simple -> DELIVERED
+        payload_tracking = {
+            "type": "tracking.simple",
+            "data": {
+                "tracking_number": "ENVIA-TRACK-99999",
+                "status": "delivered",
+                "status_code": "001"
+            }
+        }
+        res = self.client.post(
+            webhook_url,
+            payload_tracking,
+            format='json',
+            HTTP_X_WEBHOOK_EVENT="tracking.simple",
+            HTTP_X_WEBHOOK_ID="wh_track_001"
+        )
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        order.refresh_from_db()
+        self.assertEqual(order.status, Order.Status.DELIVERED)
+
+        # Verificar log de webhook
+        log = EnviaWebhookEventLog.objects.filter(event_id="wh_track_001").first()
+        self.assertIsNotNone(log)
+        self.assertEqual(log.status, EnviaWebhookEventLog.Status.PROCESSED)
+
+        # Idempotencia: reenviar mismo evento
+        res_dup = self.client.post(
+            webhook_url,
+            payload_tracking,
+            format='json',
+            HTTP_X_WEBHOOK_EVENT="tracking.simple",
+            HTTP_X_WEBHOOK_ID="wh_track_001"
+        )
+        self.assertEqual(res_dup.status_code, status.HTTP_200_OK)
+        self.assertEqual(res_dup.data.get("status"), "already_processed")
+
+        # 2. Evento surcharge -> Débito por sobrepeso
+        prev_balance = self.tenant.shipping_wallet_balance
+        payload_surcharge = {
+            "type": "surcharge",
+            "data": {
+                "tracking_number": "ENVIA-TRACK-99999",
+                "surcharge_id": "sur_98765",
+                "surcharge_data": {
+                    "transaction_type": "surcharge",
+                    "amount": 35.50,
+                    "surcharge_type": "Sobrepeso 1.5kg"
+                }
+            }
+        }
+        res_sur = self.client.post(
+            webhook_url,
+            payload_surcharge,
+            format='json',
+            HTTP_X_WEBHOOK_EVENT="surcharge",
+            HTTP_X_WEBHOOK_ID="sur_98765"
+        )
+        self.assertEqual(res_sur.status_code, status.HTTP_200_OK)
+
+        self.tenant.refresh_from_db()
+        self.assertEqual(self.tenant.shipping_wallet_balance, prev_balance - Decimal("35.50"))
+
+        sur_tx = ShippingWalletTransaction.objects.filter(reference_id="sur_98765").first()
+        self.assertIsNotNone(sur_tx)
+        self.assertEqual(sur_tx.transaction_type, ShippingWalletTransaction.TransactionType.SURCHARGE_DEBIT)
+        self.assertEqual(sur_tx.amount, Decimal("-35.50"))
+
+    def test_envia_webhook_bearer_auth_and_legacy_payload(self):
+        """
+        Verifica la ingesta de webhooks reales registrados en Envia (Tipo 1 onShipmentStatusUpdate):
+        - Autenticación con Header Authorization: Bearer <auth_token>
+        - Payload con claves en la raíz en camelCase: trackingNumber, carrierName, status
+        - Soporte para endpoint ecommerceTracking
+        """
+        from apps.shop.models import Order, EnviaWebhookEventLog
+        from decimal import Decimal
+
+        order = Order.objects.create(
+            tenant=self.tenant,
+            user=self.client_user,
+            total=Decimal("250.00"),
+            tracking_number="ENVIA-LEGACY-777",
+            status=Order.Status.SHIPPED
+        )
+
+        # Usar auth_token registrado en staging
+        token = "e8551b6dcbaf49a74bed2c47daa6d73f657e8f2a96df45767276e281caa4dc44"
+        webhook_url = reverse('envia_webhook')
+
+        payload = {
+            "carrierName": "paquetexpress",
+            "trackingNumber": "ENVIA-LEGACY-777",
+            "status": "Delivered"
+        }
+
+        # 1. Petición válida con Bearer token
+        res = self.client.post(
+            webhook_url,
+            payload,
+            format='json',
+            HTTP_AUTHORIZATION=f"Bearer {token}"
+        )
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        order.refresh_from_db()
+        self.assertEqual(order.status, Order.Status.DELIVERED)
+
+        # 2. Petición al endpoint alternativo ecommerceTracking
+        ecommerce_url = reverse('envia_webhook_ecommerce')
+        payload_eco = {
+            "carrierName": "fedex",
+            "trackingNumber": "ENVIA-LEGACY-777",
+            "status": "Cancelled"
+        }
+        token_eco = "9151cd56d14ef7bc11991721597b147dc68980d0c34e2a6aafa43817d8427927"
+        res_eco = self.client.post(
+            ecommerce_url,
+            payload_eco,
+            format='json',
+            HTTP_AUTHORIZATION=f"Bearer {token_eco}"
+        )
+        self.assertEqual(res_eco.status_code, status.HTTP_200_OK)
+        order.refresh_from_db()
+        self.assertEqual(order.status, Order.Status.CANCELLED)
+
+        # 3. Petición con Bearer token no autorizado
+        res_unauth = self.client.post(
+            webhook_url,
+            payload,
+            format='json',
+            HTTP_AUTHORIZATION="Bearer token_invalido_malicioso"
+        )
+        self.assertEqual(res_unauth.status_code, status.HTTP_401_UNAUTHORIZED)
+
 
     @patch('stripe.Product.create')
     @patch('stripe.Product.list')

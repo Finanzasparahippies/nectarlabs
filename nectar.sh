@@ -248,6 +248,11 @@ show_help() {
     echo "  install-frontend-prod    - Install npm packages in Production container"
     echo ""
     echo "=== UTILITIES ==="
+    echo "  test-facturapi [args...] - Run Facturapi connectivity check (Dev) e.g. test-facturapi --check-all"
+    echo "  test-facturapi-live      - Run Facturapi Live key check (Dev)"
+    echo "  test-envia [args...]     - Run Envia.com diagnostics/quotes (Dev) e.g. test-envia --env sandbox"
+    echo "  test-envia-label         - Run Envia.com test label generation (Sandbox)"
+    echo "  test-envia-prod          - Run Envia.com diagnostics/quotes (Production)"
     echo "  reload-nginx / reload-nginx-staging - Reload Nginx reverse proxy configuration in real-time"
     echo "  clean [--all|-a]        - Safe Docker cleanup (cache, networks, volumes)"
     echo "  help                     - Show this help screen"
@@ -604,6 +609,28 @@ case $COMMAND in
             exit 1
         fi
         run_django_cmd_staging provision_tenant --slug="$SLUG" --action=remove
+        ;;
+
+    # ── ENVIA LOGISTICS ──
+    test-envia)
+        run_django_cmd_dev test_envia "$@"
+        ;;
+    test-envia-label)
+        run_django_cmd_dev test_envia --env sandbox --generate-label "$@"
+        ;;
+    test-envia-prod)
+        run_django_cmd_dev test_envia --env production "$@"
+        ;;
+    test-envia-staging)
+        run_django_cmd_staging test_envia "$@"
+        ;;
+
+    # ── FACTURAPI CFDI ──
+    test-facturapi)
+        run_django_cmd_dev test_facturapi "$@"
+        ;;
+    test-facturapi-live)
+        run_django_cmd_dev test_facturapi --live "$@"
         ;;
 
     # ── UTILITIES ──

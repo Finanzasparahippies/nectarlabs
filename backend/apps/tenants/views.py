@@ -17,7 +17,7 @@ class TenantViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_permissions(self):
-        if self.action == 'list':
+        if getattr(self, 'action', None) in ['list', 'retrieve']:
             return [permissions.AllowAny()]
         return super().get_permissions()
 
@@ -29,7 +29,7 @@ class TenantViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         if user.is_anonymous:
-            return Tenant.objects.select_related('owner').filter(is_active=True).order_by('-created_at')
+            return Tenant.objects.select_related('owner').prefetch_related('pages', 'nav_items').filter(is_active=True).order_by('-created_at')
         if user.is_staff or user.role == 'ADMIN':
             if self.request.query_params.get('all') == 'true':
                 return Tenant.objects.select_related('owner').filter(is_active=True).order_by('-created_at')

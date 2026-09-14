@@ -127,8 +127,14 @@ class Tenant(models.Model):
         help_text="Contexto personalizado que se le inyecta al bot de soporte de IA."
     )
     
-    # Skydropx Integration
-    skydropx_api_key = models.CharField(max_length=255, blank=True, null=True)
+    # Logistics Integration (Envia.com multi-tenant)
+    envia_api_key = models.CharField(max_length=255, blank=True, null=True)
+    platform_shipping_fee = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=Decimal('10.00'),
+        help_text="Comisión fija de Néctar Labs por guía emitida (MXN)"
+    )
     shipping_origin_name = models.CharField(max_length=255, blank=True, null=True, default="")
     shipping_origin_phone = models.CharField(max_length=20, blank=True, null=True, default="")
     shipping_origin_street = models.TextField(blank=True, null=True, default="")
@@ -136,7 +142,15 @@ class Tenant(models.Model):
     shipping_origin_city = models.CharField(max_length=255, blank=True, null=True, default="")
     shipping_origin_state = models.CharField(max_length=100, blank=True, null=True, default="")
     shipping_origin_zip_code = models.CharField(max_length=10, blank=True, null=True, default="")
-    shipping_markup_percentage = models.DecimalField(max_digits=5, decimal_places=2, default=15.00, help_text="Porcentaje de ganancia sobre el costo de Skydropx")
+    shipping_markup_percentage = models.DecimalField(max_digits=5, decimal_places=2, default=15.00, help_text="Porcentaje de ganancia sobre el costo del courier hacia el comprador")
+
+    @property
+    def skydropx_api_key(self):
+        return self.envia_api_key
+
+    @skydropx_api_key.setter
+    def skydropx_api_key(self, value):
+        self.envia_api_key = value
 
     # Ambassador plan stamps tracking
     stamps_used_this_month = models.PositiveIntegerField(default=0)
@@ -228,17 +242,100 @@ class Tenant(models.Model):
             return True
         return self.stamp_balance > 0
 
-    def consume_stamp(self):
-        self.reset_stamps_if_new_month()
-        if not self.is_in_trial and self.is_ambassador and self.stamps_used_this_month < 20:
-            self.stamps_used_this_month += 1
-            self.save(update_fields=['stamps_used_this_month'])
-            return True
-        if self.stamp_balance > 0:
-            self.stamp_balance -= 1
-            self.save(update_fields=['stamp_balance'])
-            return True
-        return False
+    def consume_stamp(self, invoice=None, notes="Consumo por timbrado CFDI"):
+        success, _ = Tenant.atomic_deduct_stamp(self.id, invoice=invoice, notes=notes)
+        if success:
+            self.refresh_from_db(fields=['stamp_balance', 'stamps_used_this_month'])
+        return success
+
+    @classmethod
+    def atomic_deduct_stamp(cls, tenant_id, invoice=None, notes="Consumo por timbrado CFDI"):
+        from django.db import transaction
+        from apps.billing.models import StampTransaction
+        with transaction.atomic():
+            tenant = cls.objects.select_for_update().get(id=tenant_id)
+            tenant.reset_stamps_if_new_month()
+            bal_before = tenant.stamp_balance
+            
+            # Cortesía mensual embajador primero
+            if not tenant.is_in_trial and tenant.is_ambassador and tenant.stamps_used_this_month < 20:
+                tenant.stamps_used_this_month += 1
+                tenant.save(update_fields=['stamps_used_this_month'])
+                try:
+                    StampTransaction.objects.create(
+                        tenant=tenant,
+                        transaction_type=StampTransaction.TransactionType.CONSUMPTION,
+                        amount=-1,
+                        balance_before=bal_before,
+                        balance_after=bal_before,
+                        invoice=invoice,
+                        notes=f"{notes} (Cortesía Embajador {tenant.stamps_used_this_month}/20)"
+                    )
+                except Exception:
+                    pass
+                return True, bal_before
+
+            if tenant.stamp_balance > 0:
+                tenant.stamp_balance -= 1
+                tenant.save(update_fields=['stamp_balance'])
+                bal_after = tenant.stamp_balance
+                try:
+                    StampTransaction.objects.create(
+                        tenant=tenant,
+                        transaction_type=StampTransaction.TransactionType.CONSUMPTION,
+                        amount=-1,
+                        balance_before=bal_before,
+                        balance_after=bal_after,
+                        invoice=invoice,
+                        notes=notes
+                    )
+                except Exception:
+                    pass
+                return True, bal_after
+
+            return False, bal_before
+
+    @classmethod
+    def atomic_refund_stamp(cls, tenant_id, invoice=None, notes="Reembolso de timbre por error en PAC/SAT"):
+        from django.db import transaction
+        from apps.billing.models import StampTransaction
+        with transaction.atomic():
+            tenant = cls.objects.select_for_update().get(id=tenant_id)
+            bal_before = tenant.stamp_balance
+            
+            if not tenant.is_in_trial and tenant.is_ambassador and tenant.stamps_used_this_month > 0:
+                tenant.stamps_used_this_month -= 1
+                tenant.save(update_fields=['stamps_used_this_month'])
+                try:
+                    StampTransaction.objects.create(
+                        tenant=tenant,
+                        transaction_type=StampTransaction.TransactionType.REFUND,
+                        amount=1,
+                        balance_before=bal_before,
+                        balance_after=bal_before,
+                        invoice=invoice,
+                        notes=f"{notes} (Restitución Cortesía Embajador)"
+                    )
+                except Exception:
+                    pass
+                return True, bal_before
+
+            tenant.stamp_balance += 1
+            tenant.save(update_fields=['stamp_balance'])
+            bal_after = tenant.stamp_balance
+            try:
+                StampTransaction.objects.create(
+                    tenant=tenant,
+                    transaction_type=StampTransaction.TransactionType.REFUND,
+                    amount=1,
+                    balance_before=bal_before,
+                    balance_after=bal_after,
+                    invoice=invoice,
+                    notes=notes
+                )
+            except Exception:
+                pass
+            return True, bal_after
 
     @property
     def has_active_plan_contract(self):

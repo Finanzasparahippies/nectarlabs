@@ -16,10 +16,12 @@ def normalize_text(text):
         return ""
     normalized = unicodedata.normalize('NFKD', str(text))
     return "".join(c for c in normalized if not unicodedata.combining(c)).lower()
+from django.http import HttpResponse
+from django.db import transaction
 from apps.tenants.models import Tenant
 from apps.tenants.permissions import HasAddOnPermission
-from .models import TaxProfile, Invoice, SATProductKey, SATUnitKey
-from .serializers import TaxProfileSerializer, InvoiceSerializer, SATProductKeySerializer, SATUnitKeySerializer
+from .models import TaxProfile, Invoice, SATProductKey, SATUnitKey, StampTransaction
+from .serializers import TaxProfileSerializer, InvoiceSerializer, SATProductKeySerializer, SATUnitKeySerializer, StampTransactionSerializer
 from .services import get_pac_service, PACError, LCOSyncError
 
 logger = logging.getLogger(__name__)
@@ -538,21 +540,24 @@ class InvoiceViewSet(BillingTenantMixin, viewsets.ModelViewSet):
             )
             invoice.facturapi_invoice_id = res["facturapi_invoice_id"]
             invoice.uuid_sat = res["uuid_sat"]
+            invoice.is_livemode = res.get("is_livemode", False)
             invoice.xml_file.save(res["xml_file"].name, res["xml_file"], save=False)
             invoice.pdf_file.save(res["pdf_file"].name, res["pdf_file"], save=False)
             invoice.status = Invoice.Status.PAID
             invoice.error_message = None
+            invoice.stamp_deducted = True
             invoice.save()
             
-            tenant.consume_stamp()
+            tenant.atomic_deduct_stamp(invoice=invoice, description=f"Emisión CFDI folio {invoice.uuid_sat}")
             
             return Response(InvoiceSerializer(invoice).data, status=status.HTTP_201_CREATED)
         except LCOSyncError as e:
             invoice.status = Invoice.Status.LCO_SYNC_PENDING
             invoice.error_message = str(e)
+            invoice.stamp_deducted = True
             invoice.save()
             
-            tenant.consume_stamp()
+            tenant.atomic_deduct_stamp(invoice=invoice, description=f"Emisión CFDI pendiente LCO ID {invoice.id}")
             
             return Response(InvoiceSerializer(invoice).data, status=status.HTTP_202_ACCEPTED)
         except PACError as e:
@@ -596,8 +601,8 @@ class InvoiceViewSet(BillingTenantMixin, viewsets.ModelViewSet):
         tenant = invoice.tenant
         is_parent = not invoice.is_tenant_to_customer
 
-        # Check stamp balance if we are retrying a FAILED invoice
-        if original_status == Invoice.Status.FAILED and not is_parent:
+        # Check stamp balance if we are retrying a FAILED invoice and stamp was not previously deducted
+        if original_status == Invoice.Status.FAILED and not is_parent and not invoice.stamp_deducted:
             if not tenant.has_available_stamps():
                 return Response({"error": "No tienes timbres suficientes en tu balance para reintentar esta factura."}, status=400)
 
@@ -640,6 +645,7 @@ class InvoiceViewSet(BillingTenantMixin, viewsets.ModelViewSet):
             )
             invoice.facturapi_invoice_id = res["facturapi_invoice_id"]
             invoice.uuid_sat = res["uuid_sat"]
+            invoice.is_livemode = res.get("is_livemode", False)
             
             # Asignar archivos descargados del PAC
             invoice.xml_file.save(res["xml_file"].name, res["xml_file"], save=False)
@@ -647,10 +653,10 @@ class InvoiceViewSet(BillingTenantMixin, viewsets.ModelViewSet):
             
             invoice.status = Invoice.Status.PAID
             invoice.error_message = None
+            if not is_parent and not invoice.stamp_deducted:
+                invoice.stamp_deducted = True
+                tenant.atomic_deduct_stamp(invoice=invoice, description=f"Reintento exitoso CFDI folio {invoice.uuid_sat}")
             invoice.save()
-
-            if original_status == Invoice.Status.FAILED and not is_parent:
-                tenant.consume_stamp()
 
             # Enviar el correo de confirmación de facturación
             try:
@@ -668,10 +674,10 @@ class InvoiceViewSet(BillingTenantMixin, viewsets.ModelViewSet):
         except LCOSyncError as e:
             invoice.status = Invoice.Status.LCO_SYNC_PENDING
             invoice.error_message = str(e)
-            invoice.save(update_fields=['status', 'error_message'])
-
-            if original_status == Invoice.Status.FAILED and not is_parent:
-                tenant.consume_stamp()
+            if not is_parent and not invoice.stamp_deducted:
+                invoice.stamp_deducted = True
+                tenant.atomic_deduct_stamp(invoice=invoice, description=f"Reintento pendiente LCO ID {invoice.id}")
+            invoice.save(update_fields=['status', 'error_message', 'stamp_deducted'])
 
             return Response({"error": f"Sello no activo (SAT LCO). Reintentando más tarde automáticamente: {e}"}, status=400)
             
@@ -688,6 +694,96 @@ class InvoiceViewSet(BillingTenantMixin, viewsets.ModelViewSet):
                 )
             detail_msg = f"Fallo de timbrado en el PAC: {e}"
             return Response({"error": detail_msg, "detail": detail_msg}, status=400)
+
+    @action(detail=True, methods=['get'], url_path='zip')
+    def download_zip(self, request, pk=None):
+        invoice = self.get_object()
+        if not invoice.facturapi_invoice_id:
+            return Response({"error": "La factura no cuenta con un identificador de Facturapi."}, status=400)
+        pac = get_pac_service()
+        try:
+            zip_bytes = pac.download_zip(invoice.facturapi_invoice_id)
+            filename = f"factura_{invoice.uuid_sat or invoice.id}.zip"
+            response = HttpResponse(zip_bytes, content_type='application/zip')
+            response['Content-Disposition'] = f'attachment; filename="{filename}"'
+            return response
+        except PACError as e:
+            return Response({"error": f"Error al descargar ZIP de Facturapi: {e}"}, status=400)
+
+    @action(detail=True, methods=['post'], url_path='send-email')
+    def send_email(self, request, pk=None):
+        invoice = self.get_object()
+        if not invoice.facturapi_invoice_id:
+            return Response({"error": "La factura no cuenta con un identificador de Facturapi."}, status=400)
+        email = request.data.get('email')
+        pac = get_pac_service()
+        try:
+            res = pac.send_invoice_email(invoice.facturapi_invoice_id, email=email)
+            return Response({"status": "ok", "message": "Factura enviada por correo exitosamente.", "result": res})
+        except PACError as e:
+            return Response({"error": f"Error al enviar correo vía Facturapi: {e}"}, status=400)
+
+    @action(detail=True, methods=['post'], url_path='issue-credit-note')
+    def issue_credit_note(self, request, pk=None):
+        invoice = self.get_object()
+        if invoice.status != Invoice.Status.PAID:
+            return Response({"error": "Solo se pueden emitir notas de crédito para facturas timbradas y pagadas."}, status=400)
+        tenant = invoice.tenant
+        if not tenant.has_available_stamps():
+            return Response({"error": "No tienes timbres suficientes en tu balance para emitir la nota de crédito."}, status=400)
+
+        profile = getattr(tenant, 'tax_profile', None)
+        if not profile or not profile.facturapi_organization_id:
+            return Response({"error": "Perfil fiscal u organización Facturapi no disponible."}, status=400)
+
+        reason = request.data.get('reason', 'Devolución o descuento sobre factura')
+        items = request.data.get('items')
+        total = request.data.get('total')
+        if not items or total is None:
+            return Response({"error": "Los campos 'items' y 'total' son obligatorios para la nota de crédito."}, status=400)
+
+        customer_info = request.data.get('customer_info')
+        if not customer_info:
+            return Response({"error": "El campo 'customer_info' es obligatorio."}, status=400)
+
+        credit_note = Invoice.objects.create(
+            tenant=tenant,
+            total=total,
+            is_tenant_to_customer=True,
+            invoice_type='credit_note',
+            status=Invoice.Status.PENDING
+        )
+
+        pac = get_pac_service()
+        try:
+            res = pac.create_invoice(
+                invoice=credit_note,
+                tax_profile=profile,
+                customer_info=customer_info,
+                items=items,
+                is_parent_to_tenant=False,
+                type="E",
+                relation={
+                    "type": "01",
+                    "invoices": [invoice.facturapi_invoice_id]
+                }
+            )
+            credit_note.facturapi_invoice_id = res["facturapi_invoice_id"]
+            credit_note.uuid_sat = res["uuid_sat"]
+            credit_note.is_livemode = res.get("is_livemode", False)
+            credit_note.xml_file.save(res["xml_file"].name, res["xml_file"], save=False)
+            credit_note.pdf_file.save(res["pdf_file"].name, res["pdf_file"], save=False)
+            credit_note.status = Invoice.Status.PAID
+            credit_note.stamp_deducted = True
+            credit_note.save()
+
+            tenant.atomic_deduct_stamp(invoice=credit_note, description=f"Nota de crédito folio {credit_note.uuid_sat} vinculada a {invoice.uuid_sat}")
+            return Response(InvoiceSerializer(credit_note).data, status=status.HTTP_201_CREATED)
+        except PACError as e:
+            credit_note.status = Invoice.Status.FAILED
+            credit_note.error_message = str(e)
+            credit_note.save()
+            return Response({"error": f"Fallo al emitir nota de crédito en el PAC: {e}"}, status=400)
 
 
 class BuyEmailCreditsView(BillingTenantMixin, APIView):
@@ -857,6 +953,18 @@ class CSDStatusView(BillingTenantMixin, APIView):
                 "serial": None,
                 "detail": str(e)
             })
+
+    def delete(self, request):
+        tenant = self.get_tenant()
+        profile = TaxProfile.objects.filter(tenant=tenant).first()
+        if not profile or not profile.facturapi_organization_id:
+            return Response({"error": "No hay organización registrada en el PAC."}, status=400)
+        pac = get_pac_service()
+        try:
+            pac.delete_certificate(profile.facturapi_organization_id)
+            return Response({"status": "ok", "message": "Certificado CSD eliminado exitosamente en Facturapi."})
+        except PACError as e:
+            return Response({"error": f"Error al eliminar certificado CSD en Facturapi: {e}"}, status=400)
 
 
 class FacturapiBaseView(BillingTenantMixin, APIView):
@@ -1112,25 +1220,110 @@ class FacturapiReceiptView(FacturapiBaseView):
         except (PACError, PermissionDenied) as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Si es un tenant, verificar balance de timbres
-        if tenant and not tenant.has_available_stamps():
-            return Response(
-                {"error": "No tienes timbres suficientes en tu balance. Adquiere un paquete de timbres para continuar."},
-                status=400
-            )
-
         data = request.data
         if not data.get("items"):
             return Response({"error": "El campo 'items' es obligatorio."}, status=400)
 
         pac = get_pac_service()
         try:
+            # La creación de un recibo (e-receipt/nota de venta) no timbra ante el SAT
             res = pac.create_receipt(org_id, data)
-            if tenant:
-                tenant.consume_stamp()
             return Response(res, status=status.HTTP_201_CREATED)
         except PACError as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class FacturapiInvoiceReceiptView(FacturapiBaseView):
+    """
+    Convierte un recibo (nota de venta de Facturapi) existente en una factura electrónica CFDI ante el SAT.
+    Deduce 1 timbre fiscal del inquilino de forma atómica.
+    """
+    def post(self, request, receipt_id):
+        try:
+            org_id, tenant = self.get_organization_id_and_tenant(request)
+        except (PACError, PermissionDenied) as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+        if tenant and not tenant.has_available_stamps():
+            return Response({"error": "No tienes timbres suficientes en tu balance para facturar este recibo."}, status=400)
+
+        customer_info = request.data.get("customer") or request.data.get("customer_info")
+        payment_form = request.data.get("payment_form", "01")
+        use = request.data.get("use", "G03")
+
+        pac = get_pac_service()
+        try:
+            invoice_res = pac.invoice_receipt(
+                organization_id=org_id,
+                receipt_id=receipt_id,
+                customer_info=customer_info,
+                payment_form=payment_form,
+                use=use
+            )
+            # Registrar factura localmente si tenant existe
+            if tenant:
+                inv = Invoice.objects.create(
+                    tenant=tenant,
+                    facturapi_invoice_id=invoice_res.get("id"),
+                    uuid_sat=invoice_res.get("uuid"),
+                    total=invoice_res.get("total", 0),
+                    status=Invoice.Status.PAID,
+                    is_tenant_to_customer=True,
+                    is_livemode=invoice_res.get("livemode", False),
+                    stamp_deducted=True
+                )
+                tenant.atomic_deduct_stamp(invoice=inv, description=f"Facturación de recibo {receipt_id} (UUID {inv.uuid_sat})")
+
+            return Response(invoice_res, status=status.HTTP_201_CREATED)
+        except PACError as e:
+            return Response({"error": f"Error al facturar recibo en el PAC: {e}"}, status=400)
+
+
+class FacturapiGlobalInvoiceView(FacturapiBaseView):
+    """
+    Crea una Factura Global periódica (público en general) agrupando múltiples recibos abiertos.
+    Deduce 1 timbre fiscal por la factura global consolidada.
+    """
+    def post(self, request):
+        try:
+            org_id, tenant = self.get_organization_id_and_tenant(request)
+        except (PACError, PermissionDenied) as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+        if tenant and not tenant.has_available_stamps():
+            return Response({"error": "No tienes timbres suficientes en tu balance para emitir la factura global."}, status=400)
+
+        receipt_ids = request.data.get("receipt_ids", [])
+        periodicity = request.data.get("periodicity", "day")
+        month = request.data.get("month")
+        year = request.data.get("year")
+
+        pac = get_pac_service()
+        try:
+            global_inv_res = pac.create_global_invoice_from_receipts(
+                organization_id=org_id,
+                receipt_ids=receipt_ids,
+                periodicity=periodicity,
+                month=month,
+                year=year
+            )
+            if tenant:
+                inv = Invoice.objects.create(
+                    tenant=tenant,
+                    facturapi_invoice_id=global_inv_res.get("id"),
+                    uuid_sat=global_inv_res.get("uuid"),
+                    total=global_inv_res.get("total", 0),
+                    status=Invoice.Status.PAID,
+                    is_tenant_to_customer=True,
+                    invoice_type='global',
+                    is_livemode=global_inv_res.get("livemode", False),
+                    stamp_deducted=True
+                )
+                tenant.atomic_deduct_stamp(invoice=inv, description=f"Factura global de recibos (UUID {inv.uuid_sat})")
+
+            return Response(global_inv_res, status=status.HTTP_201_CREATED)
+        except PACError as e:
+            return Response({"error": f"Error al generar factura global en Facturapi: {e}"}, status=400)
 
 
 class FacturapiRetentionView(FacturapiBaseView):
@@ -1170,7 +1363,7 @@ class FacturapiRetentionView(FacturapiBaseView):
         try:
             res = pac.create_retention(org_id, data)
             if tenant:
-                tenant.consume_stamp()
+                tenant.atomic_deduct_stamp(description=f"Retención fiscal Facturapi ID {res.get('id')}")
             return Response(res, status=status.HTTP_201_CREATED)
         except PACError as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
@@ -1212,12 +1405,12 @@ class BuyShippingFundsView(BillingTenantMixin, APIView):
                 line_items=line_items,
                 mode='payment',
                 allow_promotion_codes=True,
-                success_url=f"{frontend_url}/tenants/{tenant.subdomain}/admin?tab=shipping&payment=success&amount={amount}",
-                cancel_url=f"{frontend_url}/tenants/{tenant.subdomain}/admin?tab=shipping&payment=cancel",
+                success_url=f"{frontend_url}/tenants/{tenant.subdomain}/admin?tab=shipping-wallet&payment=success&amount={amount}",
+                cancel_url=f"{frontend_url}/tenants/{tenant.subdomain}/admin?tab=shipping-wallet&payment=cancel",
                 metadata={
                     'tenant_id': str(tenant.id),
-                    'amount': amount,
-                    'type': 'shipping_funds_package'
+                    'amount': str(amount),
+                    'type': 'shipping_wallet_recharge'
                 }
             )
             return Response({'url': session.url}, status=status.HTTP_200_OK)
@@ -1229,6 +1422,11 @@ from .models import SalesNote, SalesNoteItem
 from .serializers import SalesNoteSerializer
 
 class SalesNoteViewSet(viewsets.ModelViewSet):
+    """
+    Módulo de Notas de Venta del POS y Autofacturación para Clientes Finales.
+    Permite generar tickets rápidos en el mostrador e imprimirlos con código QR.
+    Los clientes pueden escanear el QR o ingresar a /facturar con su folio para emitir su propio CFDI.
+    """
     serializer_class = SalesNoteSerializer
     queryset = SalesNote.objects.all()
 
@@ -1359,15 +1557,17 @@ class SalesNoteViewSet(viewsets.ModelViewSet):
             )
             local_invoice.facturapi_invoice_id = res["facturapi_invoice_id"]
             local_invoice.uuid_sat = res["uuid_sat"]
+            local_invoice.is_livemode = res.get("is_livemode", False)
             local_invoice.xml_file.save(res["xml_file"].name, res["xml_file"], save=False)
             local_invoice.pdf_file.save(res["pdf_file"].name, res["pdf_file"], save=False)
             local_invoice.status = Invoice.Status.PAID
+            local_invoice.stamp_deducted = True
             local_invoice.save()
             
             sales_note.status = SalesNote.Status.INVOICED
             sales_note.save(update_fields=['status'])
             
-            tenant.consume_stamp()
+            tenant.atomic_deduct_stamp(invoice=local_invoice, description=f"Autofactura POS folio {sales_note.folio} (UUID {local_invoice.uuid_sat})")
             
             return Response({
                 "status": "success",
@@ -1383,3 +1583,21 @@ class SalesNoteViewSet(viewsets.ModelViewSet):
             local_invoice.save()
             return Response({"error": f"Fallo al timbrar factura ante el SAT: {str(e)}"}, status=400)
 
+
+class StampTransactionsView(BillingTenantMixin, APIView):
+    """
+    Auditoría inmutable del balance de timbres del inquilino.
+    Retorna el historial completo de consumos, recargas y reembolsos.
+    """
+    permission_classes = [permissions.IsAuthenticated, HasAddOnPermission]
+    addon_slug = 'facturacion-cfdi'
+
+    def get(self, request):
+        tenant = self.get_tenant()
+        transactions = StampTransaction.objects.filter(tenant=tenant).order_by('-created_at')[:100]
+        serializer = StampTransactionSerializer(transactions, many=True)
+        return Response({
+            "stamp_balance": tenant.stamp_balance,
+            "free_stamps_left": tenant.free_stamps_left,
+            "transactions": serializer.data
+        })

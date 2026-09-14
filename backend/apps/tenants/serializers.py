@@ -7,10 +7,12 @@ class TenantSerializer(serializers.ModelSerializer):
     owner_email = serializers.SerializerMethodField()
     
     custom_smtp_password = serializers.CharField(write_only=True, required=False, allow_blank=True, allow_null=True)
+    envia_api_key = serializers.CharField(write_only=True, required=False, allow_blank=True, allow_null=True)
     skydropx_api_key = serializers.CharField(write_only=True, required=False, allow_blank=True, allow_null=True)
     stripe_secret_key = serializers.CharField(write_only=True, required=False, allow_blank=True, allow_null=True)
     
     has_custom_smtp_password = serializers.SerializerMethodField()
+    has_envia_api_key = serializers.SerializerMethodField()
     has_skydropx_api_key = serializers.SerializerMethodField()
     has_stripe_secret_key = serializers.SerializerMethodField()
     is_ambassador = serializers.ReadOnlyField()
@@ -41,7 +43,8 @@ class TenantSerializer(serializers.ModelSerializer):
             'custom_smtp_host', 'custom_smtp_port', 'custom_smtp_username', 'custom_smtp_password',
             'custom_smtp_use_tls', 'custom_smtp_from_email', 'has_custom_smtp_password',
             
-            # Skydropx
+            # Envia.com & Logistics
+            'envia_api_key', 'has_envia_api_key', 'platform_shipping_fee',
             'skydropx_api_key', 'has_skydropx_api_key', 'shipping_markup_percentage',
             'shipping_origin_name', 'shipping_origin_phone', 'shipping_origin_street',
             'shipping_origin_suburb', 'shipping_origin_city', 'shipping_origin_state', 'shipping_origin_zip_code',
@@ -59,7 +62,7 @@ class TenantSerializer(serializers.ModelSerializer):
             'id', 'owner', 'api_key', 'created_at', 'updated_at', 
             'is_ambassador', 'free_stamps_left', 'stamps_used_this_month', 'stamps_last_reset',
             'subscriber_count', 'has_active_plan_contract', 'is_addons_only', 'trial_ends_at', 'server_time',
-            'shipping_wallet_balance'
+            'shipping_wallet_balance', 'platform_shipping_fee'
         ]
 
     def get_owner_email(self, obj):
@@ -68,8 +71,11 @@ class TenantSerializer(serializers.ModelSerializer):
     def get_has_custom_smtp_password(self, obj):
         return bool(obj.custom_smtp_password)
 
+    def get_has_envia_api_key(self, obj):
+        return bool(getattr(obj, 'envia_api_key', None) or getattr(obj, 'skydropx_api_key', None))
+
     def get_has_skydropx_api_key(self, obj):
-        return bool(obj.skydropx_api_key)
+        return self.get_has_envia_api_key(obj)
 
     def get_has_stripe_secret_key(self, obj):
         return bool(obj.stripe_secret_key)
@@ -256,7 +262,9 @@ class TenantPublicSerializer(serializers.ModelSerializer):
             # Pollen/Nectar Falling settings
             'pollen_active', 'pollen_icon', 'pollen_color', 'pollen_count', 'pollen_blur',
             # Custom CSS/JS & Frontend Mode
-            'frontend_mode', 'custom_css', 'custom_js', 'custom_backend_url', 'custom_frontend_url'
+            'frontend_mode', 'custom_css', 'custom_js', 'custom_backend_url', 'custom_frontend_url',
+            # Public Pages & Navigation
+            'pages', 'navigation_menu'
         ]
 
     def get_logo_url(self, obj):
