@@ -638,10 +638,22 @@ export default function TenantPortalPage() {
 
   if (tenantConfig.frontend_mode !== 'NATIVE' && isCustomFrontendMode && tenantConfig.custom_frontend_url && isValidExternalFrontendUrl(tenantConfig.custom_frontend_url)) {
     return (
-      <div className="w-screen h-screen overflow-hidden bg-[#020403]">
+      <div className="w-screen h-screen overflow-hidden bg-[#020403] relative flex flex-col">
+        {/* Floating Quick-Access Bar for Standalone Portals */}
+        <header className="h-10 bg-black/80 backdrop-blur-md border-b border-white/10 px-4 flex items-center justify-between z-50 text-xs text-white/70">
+          <span className="font-semibold text-white truncate max-w-xs">{tenantConfig.name}</span>
+          <a
+            href={tenantConfig.custom_frontend_url}
+            target="_blank"
+            rel="noreferrer"
+            className="hover:text-amber-400 transition-colors flex items-center gap-1.5 font-medium"
+          >
+            Abrir en ventana completa ↗
+          </a>
+        </header>
         <iframe
           src={tenantConfig.custom_frontend_url}
-          className="w-full h-full border-none"
+          className="w-full flex-1 border-none"
           title={`${tenantConfig.name} Portal`}
           sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
         />
@@ -649,14 +661,18 @@ export default function TenantPortalPage() {
     );
   }
 
-  // Soporte para Código 100% Aislado (Standalone / Fuera de Plantillas Nectar-Labs)
+  // Soporte para Código 100% Aislado (Standalone / Fuera de Plantillas Nectar-Labs con aislamiento real de estilos)
   const homePage = tenantConfig.pages?.find((p) => p.is_homepage || p.slug === 'home') || tenantConfig.pages?.[0];
   if (homePage && (homePage.is_standalone_isolated || homePage.page_type === 'ISOLATED_CODE') && homePage.custom_html) {
     return (
-      <div 
-        className="w-screen h-screen overflow-auto bg-[#020403]"
-        dangerouslySetInnerHTML={{ __html: homePage.custom_html }}
-      />
+      <div className="w-screen h-screen overflow-hidden bg-[#020403]">
+        <iframe
+          srcDoc={homePage.custom_html}
+          className="w-full h-full border-none"
+          title={`${tenantConfig.name} Portal Aislado`}
+          sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
+        />
+      </div>
     );
   }
 

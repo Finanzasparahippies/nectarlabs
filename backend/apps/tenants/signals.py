@@ -85,3 +85,54 @@ def handle_tenant_nav_item_change(sender, instance, **kwargs):
     """
     if instance.tenant:
         invalidate_tenant_cache(instance.tenant)
+
+
+# -------------------------------------------------------------------------
+# Habilitación Dinámica de CORS para Dominios Personalizados (Escenarios 1 y 3B)
+# -------------------------------------------------------------------------
+try:
+    from corsheaders.signals import check_request_enabled
+    from django.core.cache import cache
+
+    @receiver(check_request_enabled)
+    def cors_allow_tenants_custom_domains(sender, request, **kwargs):
+        """
+        Permite dinámicamente el origen CORS si corresponde al dominio personalizado
+        o frontend externo de un Tenant activo (Escenarios 1 y 3B).
+        """
+        origin = request.headers.get("origin")
+        if not origin:
+            return False
+
+        clean_host = origin.replace("https://", "").replace("http://", "").split(":")[0].lower()
+        if clean_host in {"localhost", "127.0.0.1", "nectarlabs.dev", "staging.nectarlabs.dev"}:
+            return True
+
+        cache_key = f"cors_tenant_origin_{clean_host}"
+        allowed = cache.get(cache_key)
+        if allowed is not None:
+            return allowed
+
+        # Escenario 1: Dominio personalizado propio
+        is_allowed = Tenant.objects.filter(
+            custom_domain__iexact=clean_host,
+            is_active=True,
+            use_custom_domain=True
+        ).exists()
+
+        # Escenario 3B: Frontend externo personalizado (BYO Frontend)
+        if not is_allowed:
+            is_allowed = Tenant.objects.filter(
+                custom_frontend_url__icontains=clean_host,
+                is_active=True
+            ).exists()
+
+        # Mapeo canónico para proyectos autónomos (ej. staging.kores.vip o kores.vip)
+        if not is_allowed and ("kores.vip" in clean_host):
+            is_allowed = True
+
+        cache.set(cache_key, is_allowed, timeout=300)
+        return is_allowed
+except ImportError:
+    pass
+

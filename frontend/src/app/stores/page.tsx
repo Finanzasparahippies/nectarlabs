@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import Link from 'next/link';
 import { fetcher } from '@/lib/api';
+import { getTenantPublicUrl } from '@/lib/tenantUrls';
 
 interface TenantStore {
   id: string;
@@ -67,24 +68,7 @@ export default function StoresDirectory() {
   }, []);
 
   const getTenantUrl = (tenant: TenantStore) => {
-    if (tenant.use_custom_domain && tenant.custom_domain) {
-      return `https://${tenant.custom_domain}`;
-    }
-    if (typeof window !== 'undefined') {
-      const host = window.location.host;
-      const protocol = window.location.protocol;
-      if (host.includes('localhost') || host.includes('127.0.0.1')) {
-        const port = host.split(':')[1];
-        if (port) return `${protocol}//${host}/tenants/${tenant.subdomain}`;
-        return `${protocol}//${tenant.subdomain}.localhost`;
-      }
-      let baseDomain = 'nectarlabs.dev';
-      if (host.includes('staging.nectarlabs.dev')) {
-        baseDomain = 'staging.nectarlabs.dev';
-      }
-      return `${protocol}//${tenant.subdomain}.${baseDomain}`;
-    }
-    return '#';
+    return getTenantPublicUrl(tenant);
   };
 
   // Category filter mapping for partial matches

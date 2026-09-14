@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { fetcher } from '../../lib/api';
+import { getTenantPublicUrl } from '../../lib/tenantUrls';
 
 interface Tenant {
   id: string;
@@ -169,7 +170,7 @@ export default function PartnersShowcase() {
           name: t.name,
           category: getPremiumCategory(t.name),
           description: getCustomDesc(t.name),
-          domain: (t.use_custom_domain && t.custom_domain) ? t.custom_domain : `${t.subdomain}.nectarlabs.dev`,
+          domain: getTenantPublicUrl(t).replace(/^https?:\/\//, ''),
           accentColor: accentColor,
           logo: logoNode,
         };

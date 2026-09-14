@@ -29,7 +29,7 @@ from apps.dashboard.views import ProjectViewSet, FAQViewSet, TimeLogViewSet, Pro
 from apps.blog.views import PostViewSet
 from apps.tickets.views import TicketViewSet, SupportChatViewSet
 from apps.users.views import UserViewSet
-from apps.tenants.views import TenantViewSet, TenantPageViewSet, public_config, guest_auth
+from apps.tenants.views import TenantViewSet, TenantPageViewSet, public_config, guest_auth, resolve_host
 from apps.billing.views import (
     TaxProfileView, InvoiceViewSet, BillingInfoView, BuyStampsView,
     BuyEmailCreditsView, SATProductKeySearchView, SATUnitKeySearchView,
@@ -98,6 +98,7 @@ urlpatterns = [
     
     # Configuración de Tenant y Autenticación de Invitados (Multi-tenancy)
     path('api/tenants/public-config/', public_config, name='tenant_public_config'),
+    path('api/tenants/resolve-host/', resolve_host, name='tenant_resolve_host'),
     path('api/tenants/guest-auth/', guest_auth, name='tenant_guest_auth'),
     
     # Flujo de verificación de cuenta por correo electrónico (Auth)

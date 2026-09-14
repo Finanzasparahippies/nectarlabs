@@ -394,11 +394,34 @@ if DEBUG:
 
     # Permitir regex en CORS para cualquier subdominio local de desarrollo (*.localhost y *.nectarlabs.localhost con cualquier puerto)
     CORS_ALLOWED_ORIGIN_REGEXES = [
-        r"^http://.*\.localhost(:\d+)?$",
-        r"^http://.*\.nectarlabs\.localhost(:\d+)?$",
-        r"^http://localhost(:\d+)?$",
-        r"^http://127\.0\.0\.1(:\d+)?$",
+        r"^https?://.*\.nectarlabs\.dev$",
+        r"^https?://.*\.staging\.nectarlabs\.dev$",
+        r"^https?://.*-staging\.nectarlabs\.dev$",
+        r"^https?://.*\.kores\.vip$",
+        r"^https?://kores\.vip$",
+        r"^https?://.*\.localhost(:\d+)?$",
+        r"^https?://.*\.nectarlabs\.localhost(:\d+)?$",
+        r"^https?://localhost(:\d+)?$",
+        r"^https?://127\.0\.0\.1(:\d+)?$",
+        r"^https?://.*\.github\.dev$",
+        r"^https?://.*\.app\.github\.dev$",
     ]
+
+# CORS Headers permitidos (soporte multi-tenant con headers de identificación explícitos)
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+    'x-tenant-id',
+    'x-tenant-subdomain',
+    'x-tenant-domain',
+]
 
 # Dynamic FRONTEND_URL inclusion in CORS/CSRF
 if FRONTEND_URL:

@@ -101,10 +101,10 @@ def get_tenant_from_request(request):
     """
     from .models import Tenant
 
-    tenant_id = request.query_params.get('tenant_id') or getattr(request, 'data', {}).get('tenant_id')
-    api_key = request.query_params.get('api_key') or getattr(request, 'data', {}).get('api_key')
-    subdomain = request.query_params.get('subdomain')
-    host_param = request.query_params.get('host')
+    tenant_id = request.query_params.get('tenant_id') or getattr(request, 'data', {}).get('tenant_id') or request.META.get('HTTP_X_TENANT_ID')
+    api_key = request.query_params.get('api_key') or getattr(request, 'data', {}).get('api_key') or request.META.get('HTTP_X_API_KEY')
+    subdomain = request.query_params.get('subdomain') or request.META.get('HTTP_X_TENANT_SUBDOMAIN')
+    host_param = request.query_params.get('host') or request.META.get('HTTP_X_TENANT_DOMAIN')
     
     # 1. Búsqueda por tenant_id (UUID)
     if tenant_id:
@@ -191,7 +191,28 @@ def get_tenant_from_request(request):
                             return tenant
 
 
-    # 4. Fallback por Referer
+    # 5. Fallback por Origin (peticiones CORS de frontends externos o dominios personalizados)
+    origin = request.META.get('HTTP_ORIGIN')
+    if origin:
+        try:
+            from urllib.parse import urlparse
+            parsed_orig = urlparse(origin)
+            orig_host = parsed_orig.netloc.split(':')[0].lower()
+            if orig_host.startswith('www.'):
+                orig_host = orig_host[4:]
+            tenant = Tenant.objects.filter(custom_domain__iexact=orig_host, is_active=True).first()
+            if not tenant and orig_host.startswith('staging.'):
+                tenant = Tenant.objects.filter(custom_domain__iexact=orig_host[8:], is_active=True).first()
+            if not tenant:
+                first_part = orig_host.split('.')[0]
+                if first_part not in {'localhost', 'staging', 'www', 'nectarlabs'}:
+                    tenant = Tenant.objects.filter(subdomain__iexact=first_part, is_active=True).first()
+            if tenant:
+                return tenant
+        except Exception:
+            pass
+
+    # 6. Fallback por Referer
     referer = request.META.get('HTTP_REFERER')
     if referer:
         try:
@@ -201,6 +222,8 @@ def get_tenant_from_request(request):
             if ref_host.startswith('www.'):
                 ref_host = ref_host[4:]
             tenant = Tenant.objects.filter(custom_domain__iexact=ref_host, is_active=True).first()
+            if not tenant and ref_host.startswith('staging.'):
+                tenant = Tenant.objects.filter(custom_domain__iexact=ref_host[8:], is_active=True).first()
             if not tenant:
                 first_part = ref_host.split('.')[0]
                 if first_part not in {'localhost', 'staging', 'www', 'nectarlabs'}:

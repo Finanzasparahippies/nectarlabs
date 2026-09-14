@@ -279,6 +279,55 @@ def public_config(request):
     return Response(data)
 
 
+@api_view(['GET'])
+@permission_classes([permissions.AllowAny])
+def resolve_host(request):
+    """
+    Endpoint ultrarrápido (<1ms, Redis cached) para resolución de Tenants en tiempo de ejecución.
+    Invocado por el middleware de Next.js (proxy.ts) para enrutamiento zero-touch.
+    Parámetros:
+      - host: Nombre de dominio o subdominio entrante (ej: sushilo.nectarlabs.dev, mitienda.com, staging.kores.vip)
+    """
+    from .utils import get_tenant_from_request
+    host = request.query_params.get('host') or request.META.get('HTTP_HOST') or ''
+    clean_host = host.split(':')[0].strip().lower()
+
+    if not clean_host:
+        return Response({'error': 'Host parameter is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+    cache_key = f"resolve_tenant_host_{clean_host}"
+    cached_payload = cache.get(cache_key)
+    if cached_payload is not None:
+        if cached_payload is False:
+            return Response({'error': 'Tenant not found', 'host': clean_host}, status=status.HTTP_404_NOT_FOUND)
+        return Response(cached_payload)
+
+    tenant = get_tenant_from_request(request)
+
+    if not tenant or not tenant.is_active:
+        cache.set(cache_key, False, 60)
+        return Response({'error': 'Tenant not found', 'host': clean_host}, status=status.HTTP_404_NOT_FOUND)
+
+    has_isolated_code = tenant.pages.filter(page_type=TenantPage.PageType.ISOLATED_CODE, is_published=True).exists()
+
+    payload = {
+        'id': str(tenant.id),
+        'subdomain': tenant.subdomain,
+        'name': tenant.name,
+        'frontend_mode': tenant.frontend_mode,
+        'use_custom_domain': tenant.use_custom_domain,
+        'custom_domain': tenant.custom_domain,
+        'custom_frontend_url': tenant.custom_frontend_url,
+        'has_isolated_code': has_isolated_code,
+        'theme_color': tenant.theme_color,
+        'accent_color': tenant.accent_color,
+        'logo_url': tenant.logo_url,
+    }
+
+    cache.set(cache_key, payload, 600)
+    return Response(payload)
+
+
 
 @api_view(['POST'])
 @permission_classes([permissions.AllowAny])

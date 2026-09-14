@@ -7,11 +7,11 @@ import type { NextRequest } from 'next/server';
 // para Next.js v16.2.4+, interceptando todas las peticiones entrantes.
 // ==============================================================================
 
-export function proxy(request: NextRequest) {
-  return middleware(request);
+export async function proxy(request: NextRequest) {
+  return await middleware(request);
 }
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const url = request.nextUrl.clone();
   const rawHost = request.headers.get('x-forwarded-host') || request.headers.get('host') || '';
   const hostname = rawHost.split(',')[0].trim();
@@ -90,47 +90,69 @@ export function middleware(request: NextRequest) {
     isSystemDomain = true;
   }
 
-  // 3. ENRUTAMIENTO DINÁMICO DE SUBDOMINIOS (COLMENAS DE SOCIOS)
-  // Si no es un dominio del sistema principal, extrae el identificador (subdominio o subdominio en staging)
+  // 3. ENRUTAMIENTO DINÁMICO DE SUBDOMINIOS Y DOMINIOS PERSONALIZADOS (COLMENAS DE SOCIOS)
   if (!isSystemDomain) {
-    let identifier = hostname.toLowerCase().split(':')[0];
+    const isNectarSubdomain = hostname.includes('.nectarlabs.dev') || hostname.includes('.localhost');
+    let tenantSlug = hostname.toLowerCase().split(':')[0];
 
-    // Extrae la parte izquierda del subdominio de acuerdo al entorno de ejecución
+    // Si es subdominio de Nectar Labs o localhost, extrae el slug directamente de forma síncrona
     if (hostname.includes('.staging.nectarlabs.dev')) {
-      identifier = hostname.split('.staging.nectarlabs.dev')[0];
+      tenantSlug = hostname.split('.staging.nectarlabs.dev')[0];
     } else if (hostname.includes('.nectarlabs.dev')) {
-      identifier = hostname.split('.nectarlabs.dev')[0];
+      tenantSlug = hostname.split('.nectarlabs.dev')[0];
     } else if (hostname.includes('.localhost:3000')) {
-      identifier = hostname.split('.localhost:3000')[0];
+      tenantSlug = hostname.split('.localhost:3000')[0];
     } else if (hostname.includes('.localhost:3002')) {
-      identifier = hostname.split('.localhost:3002')[0];
+      tenantSlug = hostname.split('.localhost:3002')[0];
     } else if (hostname.includes('.localhost')) {
-      identifier = hostname.split('.localhost')[0];
+      tenantSlug = hostname.split('.localhost')[0];
     }
 
-    // Limpiar prefijos de staging, prod o www en dominios personalizados (ej: staging.kores.vip -> kores)
-    if (identifier.startsWith('www.')) {
-      identifier = identifier.substring(4);
+    // Limpiar prefijo www
+    if (tenantSlug.startsWith('www.')) {
+      tenantSlug = tenantSlug.substring(4);
     }
-    if (identifier.startsWith('staging.') && identifier.includes('.')) {
-      identifier = identifier.substring(8);
+
+    // Si es un dominio personalizado propio que apunta a Nectar Labs (ej: tiendachic.com, staging.kores.vip)
+    if (!isNectarSubdomain && cleanHost.includes('.')) {
+      try {
+        const backendApi = process.env.INTERNAL_API_URL || process.env.API_URL || (process.env.NODE_ENV === 'production' ? 'http://backend:8000' : 'http://localhost:8001');
+        const cleanApi = backendApi.replace(/\/api$/, '').replace(/\/$/, '');
+        const res = await fetch(`${cleanApi}/api/tenants/resolve-host/?host=${encodeURIComponent(cleanHost)}`, {
+          next: { revalidate: 300 }
+        });
+        if (res.ok) {
+          const tenantInfo = await res.json();
+          if (tenantInfo && tenantInfo.subdomain) {
+            tenantSlug = tenantInfo.subdomain;
+          }
+        }
+      } catch {
+        // En caso de fallo de red interna, conserva fallback al host
+      }
     }
-    if (identifier.startsWith('prod.') && identifier.includes('.')) {
-      identifier = identifier.substring(5);
-    }
-    if (identifier.includes('.')) {
-      identifier = identifier.split('.')[0];
+
+    if (tenantSlug.includes('.')) {
+      tenantSlug = tenantSlug.split('.')[0];
     }
 
     // Filtra palabras reservadas para evitar colisiones
-    if (identifier !== 'www' && identifier !== 'api' && identifier !== 'admin' && identifier !== 'staging') {
+    if (tenantSlug !== 'www' && tenantSlug !== 'api' && tenantSlug !== 'admin' && tenantSlug !== 'staging') {
       // Enrutamiento especial aislado para el curso-python SPA en frontend/public/cursos/ingeniero-python
-      if (identifier === 'curso-python') {
+      if (tenantSlug === 'curso-python') {
         url.pathname = `/cursos/ingeniero-python/index.html`;
         return NextResponse.rewrite(url);
       }
+      // Redirección canónica de defensa en profundidad para proyectos dedicados autónomos (ej: Kōres)
+      if (tenantSlug === 'kores' || tenantSlug === 'kores-mexico') {
+        const isStaging = hostname.includes('staging');
+        const targetOrigin = isStaging ? 'https://staging.kores.vip' : 'https://kores.vip';
+        if (!hostname.includes('kores.vip')) {
+          return NextResponse.redirect(`${targetOrigin}${url.pathname}`);
+        }
+      }
       // REESCRITURA INTERNA: Redirige la petición a la carpeta `/tenants/[subdomain]/...`
-      url.pathname = `/tenants/${identifier}${url.pathname}`;
+      url.pathname = `/tenants/${tenantSlug}${url.pathname}`;
       return NextResponse.rewrite(url);
     }
   }
