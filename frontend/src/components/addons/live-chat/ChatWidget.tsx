@@ -309,8 +309,7 @@ export default function ChatWidget({
 
       {/* Chat Window */}
       {isOpen && (
-        <div className="backdrop-blur-2xl border rounded-[2rem] shadow-2xl mb-4 w-[370px] overflow-hidden flex flex-col transition-all duration-300 widget-window widget-border"
-          className="h-[32.5rem]">
+        <div className="backdrop-blur-2xl border rounded-[2rem] shadow-2xl mb-4 w-[370px] h-[32.5rem] overflow-hidden flex flex-col transition-all duration-300 widget-window widget-border">
           
           {/* Header */}
           <div className="p-4 border-b flex justify-between items-center bg-white/[0.01] widget-header widget-border">
