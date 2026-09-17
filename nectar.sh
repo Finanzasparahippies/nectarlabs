@@ -74,6 +74,46 @@ is_container_running() {
     fi
 }
 
+# Helper function to auto-detect the active running backend container (Staging, Prod, or Dev)
+get_active_backend_container() {
+    if is_container_running "nectar_backend_staging"; then
+        echo "nectar_backend_staging"
+    elif is_container_running "nectar_backend_prod"; then
+        echo "nectar_backend_prod"
+    elif is_container_running "nectar_backend"; then
+        echo "nectar_backend"
+    else
+        echo ""
+    fi
+}
+
+# Sincroniza módulos y comandos de paquetería al contenedor en caliente para ejecución inmediata
+sync_logistics_to_container() {
+    local c_name=$1
+    if [ -n "$c_name" ] && [ -d "backend/apps/shop" ]; then
+        $DOCKER_BIN exec "$c_name" mkdir -p /app/apps/shop/management/commands /app/apps/shop/logistics 2>/dev/null || true
+        $DOCKER_BIN cp backend/apps/shop/management/commands/test_logistics.py "$c_name":/app/apps/shop/management/commands/ 2>/dev/null || true
+        $DOCKER_BIN cp backend/apps/shop/management/commands/test_envia.py "$c_name":/app/apps/shop/management/commands/ 2>/dev/null || true
+        $DOCKER_BIN cp backend/apps/shop/logistics/. "$c_name":/app/apps/shop/logistics/ 2>/dev/null || true
+        $DOCKER_BIN cp backend/apps/shop/shipping.py "$c_name":/app/apps/shop/shipping.py 2>/dev/null || true
+    fi
+}
+
+# Helper universal para comandos de paquetería y utilidades (auto-detecta contenedor activo)
+run_django_cmd_auto() {
+    local tty_flag=""
+    if [ -t 0 ]; then
+        tty_flag="-it"
+    fi
+    local active_container=$(get_active_backend_container)
+    if [ -n "$active_container" ]; then
+        sync_logistics_to_container "$active_container"
+        $DOCKER_BIN exec $tty_flag "$active_container" python manage.py "$@"
+    else
+        run_django_cmd_dev "$@"
+    fi
+}
+
 # Helper function to run Django manage.py commands in Dev
 run_django_cmd_dev() {
     local tty_flag=""
@@ -81,6 +121,7 @@ run_django_cmd_dev() {
         tty_flag="-it"
     fi
     if is_container_running "nectar_backend"; then
+        sync_logistics_to_container "nectar_backend"
         $DOCKER_BIN exec $tty_flag nectar_backend python manage.py "$@"
     elif $COMPOSE_BIN ps 2>/dev/null | grep -q "backend"; then
         $COMPOSE_BIN exec $tty_flag backend python manage.py "$@"
@@ -96,6 +137,7 @@ run_django_cmd_staging() {
         tty_flag="-it"
     fi
     if is_container_running "nectar_backend_staging"; then
+        sync_logistics_to_container "nectar_backend_staging"
         $DOCKER_BIN exec $tty_flag nectar_backend_staging python manage.py "$@"
     elif $COMPOSE_BIN -f docker-compose.staging.yml ps 2>/dev/null | grep -q "backend-staging"; then
         $COMPOSE_BIN -f docker-compose.staging.yml exec $tty_flag backend-staging python manage.py "$@"
@@ -113,6 +155,7 @@ run_django_cmd_prod() {
     if is_container_running "nectar_backend_prod" || is_container_running "nectar_backend"; then
         local c_name="nectar_backend"
         if is_container_running "nectar_backend_prod"; then c_name="nectar_backend_prod"; fi
+        sync_logistics_to_container "$c_name"
         $DOCKER_BIN exec $tty_flag $c_name python manage.py "$@"
     elif $COMPOSE_BIN -f docker-compose.prod.yml ps 2>/dev/null | grep -q "backend"; then
         $COMPOSE_BIN -f docker-compose.prod.yml exec $tty_flag backend python manage.py "$@"
@@ -615,7 +658,7 @@ case $COMMAND in
 
     # ── LOGISTICS & MULTI-CARRIER ──
     test-logistics)
-        run_django_cmd_dev test_logistics "$@"
+        run_django_cmd_auto test_logistics "$@"
         ;;
     test-logistics-prod)
         run_django_cmd_prod test_logistics "$@"
@@ -626,10 +669,10 @@ case $COMMAND in
 
     # ── ENVIA LOGISTICS ──
     test-envia)
-        run_django_cmd_dev test_envia "$@"
+        run_django_cmd_auto test_envia "$@"
         ;;
     test-envia-label)
-        run_django_cmd_dev test_envia --env sandbox --generate-label "$@"
+        run_django_cmd_auto test_envia --env sandbox --generate-label "$@"
         ;;
     test-envia-prod)
         run_django_cmd_prod test_envia --env production "$@"
@@ -638,10 +681,10 @@ case $COMMAND in
         run_django_cmd_staging test_envia "$@"
         ;;
     test-envia-webhook)
-        run_django_cmd_dev test_envia --env sandbox --test-webhook "$@"
+        run_django_cmd_auto test_envia --env sandbox --test-webhook "$@"
         ;;
     test-envia-balance)
-        run_django_cmd_dev test_envia --check-balance "$@"
+        run_django_cmd_auto test_envia --check-balance "$@"
         ;;
 
     # ── FACTURAPI CFDI ──
