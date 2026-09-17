@@ -96,6 +96,7 @@ sync_logistics_to_container() {
         $DOCKER_BIN cp backend/apps/shop/management/commands/test_envia.py "$c_name":/app/apps/shop/management/commands/ 2>/dev/null || true
         $DOCKER_BIN cp backend/apps/shop/logistics/. "$c_name":/app/apps/shop/logistics/ 2>/dev/null || true
         $DOCKER_BIN cp backend/apps/shop/shipping.py "$c_name":/app/apps/shop/shipping.py 2>/dev/null || true
+        $DOCKER_BIN cp backend/config/settings.py "$c_name":/app/config/settings.py 2>/dev/null || true
     fi
 }
 

@@ -76,6 +76,7 @@ class SkydropxProvider(BaseShippingProvider):
 
         self.client_id = (client_id or tenant_key or master_key or "").strip()
         self.client_secret = (client_secret or tenant_secret or master_secret or "").strip()
+        self.last_error: Optional[str] = None
 
         env_urls = SKYDROPX_PRO_ENDPOINTS.get(self.environment, SKYDROPX_PRO_ENDPOINTS["staging"])
         self.base_url = env_urls["base"]
@@ -89,7 +90,6 @@ class SkydropxProvider(BaseShippingProvider):
     def is_mock(self) -> bool:
         return bool(
             not self.client_id or
-            not self.client_secret or
             self.client_id in ["mock_key", ""] or
             getattr(settings, "TESTING", False)
         )
@@ -98,6 +98,10 @@ class SkydropxProvider(BaseShippingProvider):
         """Adquiere o renueva token OAuth2 Bearer con margen de seguridad en caché de Django."""
         if self.is_mock:
             return "mock_bearer_token"
+
+        if not self.client_secret:
+            # Si solo se proporcionó API Key sin Secret, se opera en modo Token directo
+            return None
 
         cache_key = f"nectar_skydropx_oauth_token_{self.environment}_{self.client_id[:8]}"
         if not force_refresh:
@@ -110,8 +114,15 @@ class SkydropxProvider(BaseShippingProvider):
             "client_id": self.client_id,
             "client_secret": self.client_secret
         }
+
+        # Intento 1: Form-URL-Encoded (RFC 6749 estándar OAuth2)
         try:
-            res = requests.post(self.oauth_url, json=payload, timeout=8)
+            res = requests.post(
+                self.oauth_url,
+                data=payload,
+                headers={"Content-Type": "application/x-www-form-urlencoded", "Accept": "application/json"},
+                timeout=8
+            )
             if res.status_code == 200:
                 data = res.json()
                 token = data.get("access_token")
@@ -120,15 +131,35 @@ class SkydropxProvider(BaseShippingProvider):
                 if token:
                     cache.set(cache_key, token, timeout=ttl)
                     return token
+
+            # Intento 2: JSON payload (fallback específico)
+            res_json = requests.post(
+                self.oauth_url,
+                json=payload,
+                headers={"Content-Type": "application/json", "Accept": "application/json"},
+                timeout=8
+            )
+            if res_json.status_code == 200:
+                data = res_json.json()
+                token = data.get("access_token")
+                expires_in = int(data.get("expires_in", 7200))
+                ttl = max(60, expires_in - 300)
+                if token:
+                    cache.set(cache_key, token, timeout=ttl)
+                    return token
+
+            self.last_error = f"OAuth2 HTTP {res.status_code}: {res.text[:250]}"
             logger.error(f"[SkydropxProvider] Error OAuth2 ({res.status_code}): {res.text[:200]}")
         except Exception as e:
+            self.last_error = f"Excepción OAuth2: {e}"
             logger.error(f"[SkydropxProvider] Excepción solicitando token OAuth2: {e}")
         return None
 
     def _headers(self, force_refresh: bool = False) -> Dict[str, str]:
         token = self._get_access_token(force_refresh=force_refresh)
+        auth_val = f"Bearer {token}" if token else f"Token token={self.client_id}"
         return {
-            "Authorization": f"Bearer {token}" if token else f"Bearer {self.client_id}",
+            "Authorization": auth_val,
             "Content-Type": "application/json",
             "Accept": "application/json",
             "User-Agent": "NectarLabs-MultiTenantLogistics/2.5 (+https://nectarlabs.dev)",
@@ -262,6 +293,37 @@ class SkydropxProvider(BaseShippingProvider):
                             if rates:
                                 raw_rates = rates
                                 break
+            else:
+                self.last_error = f"Pro API HTTP {res.status_code}: {res.text[:200]}"
+                logger.warning(f"[SkydropxProvider] Quotation respondió HTTP {res.status_code}: {res.text[:200]}")
+
+            # Fallback a Skydropx Standard API (api.skydropx.com/v1/shipments) si Pro no devolvió tarifas
+            if not raw_rates:
+                legacy_url = "https://api.skydropx.com/v1/shipments"
+                legacy_headers = {
+                    "Authorization": f"Token token={self.client_id}",
+                    "Content-Type": "application/json"
+                }
+                legacy_payload = {
+                    "zip_from": orig_cp,
+                    "zip_to": dest_cp,
+                    "parcel": {
+                        "weight": float(parcels_payload[0].get("weight", 1.0)),
+                        "height": float(parcels_payload[0].get("height", 10.0)),
+                        "width": float(parcels_payload[0].get("width", 15.0)),
+                        "length": float(parcels_payload[0].get("length", 20.0))
+                    }
+                }
+                try:
+                    leg_res = requests.post(legacy_url, json=legacy_payload, headers=legacy_headers, timeout=8)
+                    if leg_res.status_code in [200, 201]:
+                        leg_body = leg_res.json()
+                        raw_rates = leg_body.get("rates", []) or leg_body.get("data", {}).get("rates", [])
+                    else:
+                        prev_err = self.last_error or f"Pro HTTP {res.status_code}"
+                        self.last_error = f"{prev_err} | Standard HTTP {leg_res.status_code}: {leg_res.text[:150]}"
+                except Exception as leg_e:
+                    logger.warning(f"[SkydropxProvider] Fallback Standard API error: {leg_e}")
 
             normalized: List[NormalizedRate] = []
             for r in raw_rates:

@@ -610,17 +610,17 @@ LOGGING = {
 # ------------------------------------------------------------------------------
 # LOGÍSTICA & ENVÍOS MULTI-TENANT (ENVIA.COM & SKYDROPX PRO)
 # ------------------------------------------------------------------------------
-ENVIA_ENVIRONMENT = os.environ.get("ENVIA_ENVIRONMENT", "sandbox").lower()
-ENVIA_PRODUCTION_TOKEN = os.environ.get("ENVIA_PRODUCTION_TOKEN", "")
-ENVIA_SANDBOX_TOKEN = os.environ.get("ENVIA_SANDBOX_TOKEN", "")
-ENVIA_WEBHOOK_SECRET = os.environ.get("ENVIA_WEBHOOK_SECRET", "")
-ENVIA_WEBHOOK_TOKENS = [t.strip() for t in os.environ.get("ENVIA_WEBHOOK_TOKENS", "").split(",") if t.strip()]
+ENVIA_ENVIRONMENT = env("ENVIA_ENVIRONMENT", default=os.environ.get("ENVIA_ENVIRONMENT", "sandbox")).lower()
+ENVIA_PRODUCTION_TOKEN = env("ENVIA_PRODUCTION_TOKEN", default=os.environ.get("ENVIA_PRODUCTION_TOKEN", os.environ.get("ENVIA_PROD_TOKEN", "")))
+ENVIA_SANDBOX_TOKEN = env("ENVIA_SANDBOX_TOKEN", default=os.environ.get("ENVIA_SANDBOX_TOKEN", os.environ.get("ENVIA_API_KEY", "")))
+ENVIA_WEBHOOK_SECRET = env("ENVIA_WEBHOOK_SECRET", default=os.environ.get("ENVIA_WEBHOOK_SECRET", ""))
+ENVIA_WEBHOOK_TOKENS = [t.strip() for t in env("ENVIA_WEBHOOK_TOKENS", default=os.environ.get("ENVIA_WEBHOOK_TOKENS", "")).split(",") if t.strip()]
 
-SKYDROPX_ENVIRONMENT = os.environ.get("SKYDROPX_ENVIRONMENT", "staging").lower()
-SKYDROPX_PROD_API_KEY = os.environ.get("SKYDROPX_PROD_API_KEY", "")
-SKYDROPX_PROD_API_SECRET = os.environ.get("SKYDROPX_PROD_API_SECRET", "")
-SKYDROPX_SANDBOX_API_KEY = os.environ.get("SKYDROPX_SANDBOX_API_KEY", "")
-SKYDROPX_SANDBOX_API_SECRET = os.environ.get("SKYDROPX_SANDBOX_API_SECRET", "")
-SKYDROPX_WEBHOOK_SECRET = os.environ.get("SKYDROPX_WEBHOOK_SECRET", "")
+SKYDROPX_ENVIRONMENT = env("SKYDROPX_ENVIRONMENT", default=os.environ.get("SKYDROPX_ENVIRONMENT", "staging")).lower()
+SKYDROPX_PROD_API_KEY = env("SKYDROPX_PROD_API_KEY", default=os.environ.get("SKYDROPX_PROD_API_KEY", ""))
+SKYDROPX_PROD_API_SECRET = env("SKYDROPX_PROD_API_SECRET", default=os.environ.get("SKYDROPX_PROD_API_SECRET", ""))
+SKYDROPX_SANDBOX_API_KEY = env("SKYDROPX_SANDBOX_API_KEY", default=os.environ.get("SKYDROPX_SANDBOX_API_KEY", os.environ.get("SKYDROPX_API_KEY", os.environ.get("SKYDROPX_STAGING_API_KEY", ""))))
+SKYDROPX_SANDBOX_API_SECRET = env("SKYDROPX_SANDBOX_API_SECRET", default=os.environ.get("SKYDROPX_SANDBOX_API_SECRET", os.environ.get("SKYDROPX_API_SECRET", os.environ.get("SKYDROPX_STAGING_API_SECRET", ""))))
+SKYDROPX_WEBHOOK_SECRET = env("SKYDROPX_WEBHOOK_SECRET", default=os.environ.get("SKYDROPX_WEBHOOK_SECRET", ""))
 
 MIN_SHIPPING_WALLET_BALANCE = Decimal(os.environ.get("MIN_SHIPPING_WALLET_BALANCE", "300.00"))

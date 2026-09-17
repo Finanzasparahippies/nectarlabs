@@ -110,7 +110,25 @@ class EnviaProvider(BaseShippingProvider):
 
             tenant_cost = base_cost + self.nectar_fee
             buyer_cost = round(tenant_cost * self.markup_factor, 2)
-            days = int(r.get("deliveryEstimate", {}).get("days") or r.get("deliveryDays") or 3)
+
+            # Robust parsing of deliveryEstimate / deliveryDays (handles dict, str, int)
+            deliv_est = r.get("deliveryEstimate")
+            days_val = None
+            if isinstance(deliv_est, dict):
+                days_val = deliv_est.get("days")
+            elif isinstance(deliv_est, (int, float)):
+                days_val = deliv_est
+            elif isinstance(deliv_est, str):
+                first_num = ''.join([c for c in deliv_est.split()[0] if c.isdigit()])
+                days_val = int(first_num) if first_num else None
+
+            if not days_val:
+                days_val = r.get("deliveryDays")
+
+            try:
+                days = int(days_val or 3)
+            except Exception:
+                days = 3
 
             normalized.append(
                 NormalizedRate(

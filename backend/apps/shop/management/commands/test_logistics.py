@@ -224,6 +224,13 @@ class Command(BaseCommand):
                         )
                 else:
                     self.stdout.write(self.style.WARNING("⚠ No se obtuvieron tarifas para Skydropx Pro."))
+                    if getattr(skx_prov, "last_error", None):
+                        self.stdout.write(self.style.NOTICE(f"   • Diagnóstico API:  {skx_prov.last_error}"))
+                    client_id_masked = f"{skx_prov.client_id[:6]}...{skx_prov.client_id[-4:]}" if len(skx_prov.client_id) > 10 else (skx_prov.client_id or "NO CONFIGURADO")
+                    has_secret = "Sí (Configurado)" if skx_prov.client_secret else "No (Vacío - Modo API Key directo)"
+                    self.stdout.write(f"   • Client ID:        {client_id_masked}")
+                    self.stdout.write(f"   • Client Secret:    {has_secret}")
+                    self.stdout.write(f"   • Ambiente activo:  {skx_prov.environment}")
             except Exception as e:
                 self.stderr.write(self.style.ERROR(f"❌ Error evaluando Skydropx Pro: {e}"))
 
