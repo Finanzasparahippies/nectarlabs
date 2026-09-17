@@ -511,31 +511,6 @@ class SkydropxProvider(BaseShippingProvider):
                 carrier_name = str(carrier_raw or "Skydropx").capitalize()
                 carrier_slug = carrier_name.lower()
 
-                # Resolver nombre de servicio o modalidad
-                service_raw = (
-                    attrs.get("service_level_name") or
-                    attrs.get("service_name") or
-                    attrs.get("service_level_code") or
-                    attrs.get("service_level") or
-                    attrs.get("service") or
-                    attrs.get("name") or
-                    attrs.get("description") or
-                    r.get("service_level_name") or
-                    r.get("service_name") or
-                    r.get("service_level") or
-                    r.get("service")
-                )
-                if isinstance(service_raw, dict):
-                    service_raw = service_raw.get("name") or service_raw.get("description") or service_raw.get("code")
-
-                service_name = str(service_raw or "Standard")
-
-                rate_uuid = str(r.get("id") or attrs.get("id") or "")
-                rate_id = f"skydropx:{carrier_slug}:{service_name}:{base_cost}:{rate_uuid}"
-
-                tenant_cost = base_cost + self.nectar_fee
-                buyer_cost = round(tenant_cost * self.markup_factor, 2)
-
                 # Días hábiles
                 days_raw = str(
                     attrs.get("days") or
@@ -548,6 +523,47 @@ class SkydropxProvider(BaseShippingProvider):
                     days = int(days_raw)
                 except Exception:
                     days = 3
+
+                # Resolver nombre de servicio o modalidad (evitando etiquetas genéricas)
+                service_candidates = [
+                    attrs.get("service_name"),
+                    attrs.get("description"),
+                    attrs.get("service_level_name"),
+                    attrs.get("service_level_code"),
+                    attrs.get("service_level"),
+                    attrs.get("service"),
+                    r.get("service_name"),
+                    r.get("description"),
+                    r.get("service_level_name"),
+                    r.get("service_level"),
+                    r.get("service")
+                ]
+                service_raw = None
+                for cand in service_candidates:
+                    if isinstance(cand, dict):
+                        cand = cand.get("name") or cand.get("description") or cand.get("code")
+                    if cand and str(cand).strip() and str(cand).strip().lower() not in ["standard", "none"]:
+                        service_raw = str(cand).strip()
+                        break
+
+                if not service_raw:
+                    base_srv = str(attrs.get("service_level_name") or r.get("service_level_name") or "Standard").strip()
+                    if days == 1 and base_srv.lower() == "standard":
+                        service_raw = "Express (Día Siguiente)"
+                    elif days <= 2 and base_srv.lower() == "standard":
+                        service_raw = "Prioritario (2 días)"
+                    elif days >= 5 and base_srv.lower() == "standard":
+                        service_raw = f"Terrestre ({days} días)"
+                    else:
+                        service_raw = base_srv
+
+                service_name = service_raw or "Standard"
+
+                rate_uuid = str(r.get("id") or attrs.get("id") or "")
+                rate_id = f"skydropx:{carrier_slug}:{service_name}:{base_cost}:{rate_uuid}"
+
+                tenant_cost = base_cost + self.nectar_fee
+                buyer_cost = round(tenant_cost * self.markup_factor, 2)
 
                 normalized.append(
                     NormalizedRate(

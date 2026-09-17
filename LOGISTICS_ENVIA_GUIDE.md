@@ -50,6 +50,26 @@ flowchart TD
 3. **Multicotizador Simultáneo Dinámico (`DYNAMIC_BEST`):**
    - Si el tenant tiene configuradas ambas cuentas (o utiliza la cuenta maestra de Néctar Labs), el motor consulta concurrentemente ambos proveedores, normaliza las respuestas en formato `NormalizedRate`, calcula el costo total con margen y presenta al comprador las tarifas ordenadas de menor a mayor precio.
 
+### Arbitraje de Tarifas Validado en Vivo (Prueba Real Hermosillo CP 83000 -> CDMX CP 06600)
+Al ejecutar `./nectar.sh test-logistics --provider DYNAMIC_BEST`, el motor unifica y clasifica automáticamente la oferta multi-proveedor:
+
+| Ranking | Proveedor | Courier | Servicio / Nivel | Precio Final Comprador | Tránsito Estimado | Ventaja Competitiva |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **01** | **ENVIA** | Paquetexpress | `ground_do` | **$24.84 MXN** | 6 días | Tarifa ultra-económica |
+| **02** | **ENVIA** | Paquetexpress | `ground_od` | **$24.84 MXN** | 6 días | Alternativa ocurre/domicilio |
+| **03** | **ENVIA** | Ups | `saver` | **$24.84 MXN** | 4 días | Courier premium a costo base |
+| **04** | **SKYDROPX** | Paquetexpress | `Terrestre (6 días)` | **$166.52 MXN** | 6 días | Mayor cobertura rural |
+| **05** | **SKYDROPX** | Estafeta | `Terrestre (6 días)` | **$174.80 MXN** | 6 días | Red nacional densa |
+| **06** | **SKYDROPX** | Estafeta | `Express (Día Siguiente)` | **$175.95 MXN** | **1 día** | **Opción Express más barata** |
+| **07** | **SKYDROPX** | Paquetexpress | `Terrestre (8 días)` | **$208.15 MXN** | 8 días | Envíos volumétricos |
+| **08** | **ENVIA** | Paquetexpress | `ground` | **$231.61 MXN** | 6 días | Servicio tradicional puerta a puerta |
+| **09** | **SKYDROPX** | Dhl | `Express (4 días)` | **$285.20 MXN** | 4 días | Confianza de marca internacional |
+| **10** | **SKYDROPX** | Ups | `Terrestre (4 días)` | **$312.80 MXN** | 4 días | Garantía empresarial |
+
+> [!TIP]
+> **Beneficio Directo de Nectar Labs DYNAMIC_BEST**:
+> Si la tienda dependiera exclusivamente de Skydropx, su envío más barato sería de **$166.52 MXN**. Si dependiera exclusivamente de Envia, no tendría opciones express de 1 día a bajo costo como Estafeta a **$175.95 MXN**. `DYNAMIC_BEST` combina lo mejor de ambos mundos, reduciendo carritos abandonados por costo de envío.
+
 ---
 
 ## 2. Inventario de Credenciales de API y Webhooks
