@@ -248,6 +248,8 @@ show_help() {
     echo "  install-frontend-prod    - Install npm packages in Production container"
     echo ""
     echo "=== UTILITIES ==="
+    echo "  test-logistics [args...] - Run Multi-Carrier logistics diagnostics (Dev) e.g. test-logistics --provider DYNAMIC_BEST --origin 83000 --dest 06600"
+    echo "  test-logistics-prod      - Run Multi-Carrier logistics diagnostics in Production"
     echo "  test-facturapi [args...] - Run Facturapi connectivity check (Dev) e.g. test-facturapi --check-all"
     echo "  test-facturapi-live      - Run Facturapi Live key check (Dev)"
     echo "  test-envia [args...]     - Run Envia.com diagnostics/quotes (Dev) e.g. test-envia --env sandbox"
@@ -611,6 +613,17 @@ case $COMMAND in
         run_django_cmd_staging provision_tenant --slug="$SLUG" --action=remove
         ;;
 
+    # ── LOGISTICS & MULTI-CARRIER ──
+    test-logistics)
+        run_django_cmd_dev test_logistics "$@"
+        ;;
+    test-logistics-prod)
+        run_django_cmd_prod test_logistics "$@"
+        ;;
+    test-logistics-staging)
+        run_django_cmd_staging test_logistics "$@"
+        ;;
+
     # ── ENVIA LOGISTICS ──
     test-envia)
         run_django_cmd_dev test_envia "$@"
@@ -619,7 +632,7 @@ case $COMMAND in
         run_django_cmd_dev test_envia --env sandbox --generate-label "$@"
         ;;
     test-envia-prod)
-        run_django_cmd_dev test_envia --env production "$@"
+        run_django_cmd_prod test_envia --env production "$@"
         ;;
     test-envia-staging)
         run_django_cmd_staging test_envia "$@"

@@ -54,38 +54,39 @@ def get_shipping_rates(
     - Si 'SKYDROPX': cotiza únicamente con Skydropx Pro.
     - Aplica comisión de Nectar Labs ($10.00 MXN) y markup comercial del tenant al comprador final.
     """
-    if not tenant:
-        return []
+    # Si no se especifica tenant, opera en modo Master Hub (Néctar Labs Global PaaS)
+    origin_zip = "83000"
+    if tenant:
+        if not validate_tenant_logistics_access(tenant):
+            logger.warning(f"[Logística/Router] Tenant #{tenant.id} sin acceso al módulo de paquetería.")
+            return []
 
-    if not validate_tenant_logistics_access(tenant):
-        logger.warning(f"[Logística/Router] Tenant #{tenant.id} sin acceso al módulo de paquetería.")
-        return []
-
-    # Validar saldo mínimo operativo si utiliza cuenta corporativa de Nectar Labs
-    has_custom_keys = bool(
-        getattr(tenant, "envia_api_key", None) or
-        (getattr(tenant, "skydropx_client_id", None) and getattr(tenant, "skydropx_client_secret", None))
-    )
-    min_required_balance = getattr(settings, "MIN_SHIPPING_WALLET_BALANCE", Decimal("300.00"))
-    if not has_custom_keys and tenant.shipping_wallet_balance < min_required_balance:
-        logger.warning(
-            f"[Logística/Router] Saldo insuficiente en billetera para Tenant #{tenant.id} "
-            f"(${tenant.shipping_wallet_balance} MXN < ${min_required_balance} MXN)."
+        # Validar saldo mínimo operativo si utiliza cuenta corporativa de Nectar Labs
+        has_custom_keys = bool(
+            getattr(tenant, "envia_api_key", None) or
+            (getattr(tenant, "skydropx_client_id", None) and getattr(tenant, "skydropx_client_secret", None))
         )
-        return []
+        min_required_balance = getattr(settings, "MIN_SHIPPING_WALLET_BALANCE", Decimal("300.00"))
+        if not has_custom_keys and tenant.shipping_wallet_balance < min_required_balance:
+            logger.warning(
+                f"[Logística/Router] Saldo insuficiente en billetera para Tenant #{tenant.id} "
+                f"(${tenant.shipping_wallet_balance} MXN < ${min_required_balance} MXN)."
+            )
+            return []
+        origin_zip = str(tenant.shipping_origin_zip_code or "83000")
 
-    # Preparar Dirección de Origen del Inquilino
+    # Preparar Dirección de Origen del Inquilino o Hub Maestro Nectar Labs
     origin_address = {
-        "name": tenant.shipping_origin_name or "Bodega Central",
-        "company": tenant.name or "Nectar Store",
-        "email": getattr(tenant.owner, "email", "envios@nectarlabs.dev") if getattr(tenant, "owner", None) else "envios@nectarlabs.dev",
-        "phone": tenant.shipping_origin_phone or "6621000000",
-        "street": tenant.shipping_origin_street or "Av. Central 100",
+        "name": (tenant.shipping_origin_name if tenant else None) or "Bodega Central Nectar Labs",
+        "company": (tenant.name if tenant else None) or "Nectar Labs",
+        "email": getattr(tenant.owner, "email", "envios@nectarlabs.dev") if (tenant and getattr(tenant, "owner", None)) else "envios@nectarlabs.dev",
+        "phone": (tenant.shipping_origin_phone if tenant else None) or "6621000000",
+        "street": (tenant.shipping_origin_street if tenant else None) or "Av. Central 100",
         "number": "100",
-        "district": tenant.shipping_origin_suburb or "Centro",
-        "city": tenant.shipping_origin_city or "Hermosillo",
-        "state": (tenant.shipping_origin_state or "SO")[:2].upper(),
-        "postalCode": str(tenant.shipping_origin_zip_code or "83000"),
+        "district": (tenant.shipping_origin_suburb if tenant else None) or "Centro",
+        "city": (tenant.shipping_origin_city if tenant else None) or "Hermosillo",
+        "state": (tenant.shipping_origin_state or "SO")[:2].upper() if tenant else "SO",
+        "postalCode": origin_zip,
         "country": "MX"
     }
 
