@@ -30,6 +30,12 @@ SKYDROPX_PRO_ENDPOINTS = {
         "base": "https://app.skydropx.com/api/v1",
         "oauth": "https://app.skydropx.com/api/v1/oauth/token",
     },
+    "prod": {
+        "base": "https://app.skydropx.com/api/v1",
+        "oauth": "https://app.skydropx.com/api/v1/oauth/token",
+    }
+}
+
 MEXICO_STATES = {
     "AG": "Aguascalientes", "BC": "Baja California", "BS": "Baja California Sur",
     "CM": "Campeche", "CS": "Chiapas", "CH": "Chihuahua", "CO": "Coahuila",
