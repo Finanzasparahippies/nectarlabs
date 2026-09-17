@@ -287,7 +287,12 @@ class UsersAppTests(APITestCase):
         
         # List users (should see staff and customer, but not admin/business since they are outside tenant)
         url = "/api/users/"
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        user_list = response.data.get('results', response.data) if isinstance(response.data, dict) else response.data
+        user_ids = [u['id'] for u in user_list]
         self.assertNotIn(self.admin_user.id, user_ids)
+        self.assertIn(self.customer_user.id, user_ids)
 
 
 from apps.users.utils import get_frontend_base_url, send_verification_email

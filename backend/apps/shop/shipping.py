@@ -55,7 +55,7 @@ def get_envia_master_token() -> str:
     return getattr(settings, "ENVIA_SANDBOX_TOKEN", os.environ.get("ENVIA_SANDBOX_TOKEN", os.environ.get("ENVIA_API_KEY", "")))
 
 def get_envia_webhook_secret() -> str:
-    return getattr(settings, "ENVIA_WEBHOOK_SECRET", os.environ.get("ENVIA_WEBHOOK_SECRET", "nectar_envia_whsec_default"))
+    return getattr(settings, "ENVIA_WEBHOOK_SECRET", os.environ.get("ENVIA_WEBHOOK_SECRET", ""))
 
 def verify_envia_webhook_bearer_token(auth_header: str) -> bool:
     """
@@ -224,7 +224,7 @@ class EnviaClient:
                 }
             }
             try:
-                res = requests.post(url, json=payload, headers=self._headers(), timeout=12)
+                res = requests.post(url, json=payload, headers=self._headers(), timeout=20)
                 if res.status_code in [200, 201]:
                     data = res.json()
                     rates = data.get("data", [])
@@ -263,7 +263,7 @@ class EnviaClient:
         }
 
         try:
-            res = requests.post(url, json=payload, headers=self._headers(), timeout=15)
+            res = requests.post(url, json=payload, headers=self._headers(), timeout=25)
             if res.status_code in [200, 201]:
                 return res.json()
             logger.error(f"[Envia/Generate] Error generando etiqueta ({res.status_code}): {res.text}")
@@ -381,10 +381,11 @@ def get_shipping_rates(destination: Dict[str, Any], parcel: Optional[Dict[str, A
             }
         ]
 
-    # Validar saldo mínimo de $250.00 MXN para cotizar si utiliza cuenta de Néctar Labs
-    if not custom_key and tenant.shipping_wallet_balance < Decimal("300.00"):
+    # Validar saldo mínimo operativo de $300.00 MXN para cotizar si utiliza cuenta corporativa de Néctar Labs
+    min_required_balance = getattr(settings, "MIN_SHIPPING_WALLET_BALANCE", Decimal("300.00"))
+    if not custom_key and tenant.shipping_wallet_balance < min_required_balance:
         logger.warning(
-            f"[Logística/Envia] Saldo insuficiente en billetera para Tenant #{tenant.id} (${tenant.shipping_wallet_balance} MXN < $250.00 MXN)."
+            f"[Logística/Envia] Saldo insuficiente en billetera para Tenant #{tenant.id} (${tenant.shipping_wallet_balance} MXN < ${min_required_balance} MXN)."
         )
         return []
 
@@ -525,96 +526,96 @@ def generate_shipping_label(order) -> bool:
             return True
 
     # Flujo Real en Producción / Sandbox
+    min_required = getattr(settings, "MIN_SHIPPING_WALLET_BALANCE", Decimal("300.00"))
+    if using_corporate_key:
+        if tenant.shipping_wallet_balance < min_required:
+            logger.error(f"[Logística/Envia] Saldo por debajo del mínimo operativo de ${min_required} MXN para Tenant #{tenant.id}.")
+            return False
+
+        if tenant.shipping_wallet_balance < costo_tenant:
+            logger.error(
+                f"[Logística/Envia] Saldo insuficiente para Tenant #{tenant.id}. Requiere ${costo_tenant} MXN, Disponible: ${tenant.shipping_wallet_balance} MXN."
+            )
+            return False
+
+    # Parsear carrier y service desde shipping_rate_id o campos de orden
+    carrier = order.shipping_carrier_name or "fedex"
+    service = order.shipping_service_name or "express"
+    if order.shipping_rate_id and ":" in order.shipping_rate_id:
+        parts = order.shipping_rate_id.split(":")
+        carrier = parts[0]
+        service = parts[1]
+
+    # Preparar direcciones
+    origin_address = {
+        "name": tenant.shipping_origin_name or "Néctar Labs Bodega",
+        "company": tenant.name or "Nectar Store",
+        "email": getattr(tenant.owner, "email", "envios@nectarlabs.dev") if getattr(tenant, "owner", None) else "envios@nectarlabs.dev",
+        "phone": tenant.shipping_origin_phone or "6621000000",
+        "street": tenant.shipping_origin_street or "Av. Central 100",
+        "number": "100",
+        "district": tenant.shipping_origin_suburb or "Centro",
+        "city": tenant.shipping_origin_city or "Hermosillo",
+        "state": (tenant.shipping_origin_state or "SO")[:2].upper(),
+        "postalCode": str(tenant.shipping_origin_zip_code or "83000"),
+        "country": "MX"
+    }
+
+    destination_address = {
+        "name": order.full_name or "Cliente",
+        "company": "",
+        "email": order.user_email or (order.user.email if order.user else "cliente@example.com"),
+        "phone": order.phone or "6620000000",
+        "street": order.street_and_number or "Calle Principal",
+        "number": "1",
+        "district": order.suburb or "Centro",
+        "city": order.city or "Hermosillo",
+        "state": (order.state or "SO")[:2].upper(),
+        "postalCode": str(order.postal_code or "83000"),
+        "country": (order.country or "MX")[:2].upper()
+    }
+
+    package_data = {
+        "content": f"Pedido #{order.id}",
+        "amount": 1,
+        "type": "box",
+        "weight": 1,
+        "length": 25,
+        "height": 15,
+        "width": 20
+    }
+
+    # Llamada a la API externa de Envia.com ejecutada FUERA del bloqueo de base de datos
+    client = EnviaClient(api_key=api_key)
+    label_res = client.generate_label(
+        origin=origin_address,
+        destination=destination_address,
+        packages=[package_data],
+        carrier=carrier,
+        service=service
+    )
+
+    data_list = label_res.get("data", [])
+    if not data_list or not isinstance(data_list, list):
+        err_msg = str(label_res.get("error") or label_res.get("message") or label_res)
+        logger.error(f"[Logística/Envia] Error al emitir etiqueta para Orden #{order.id}: {err_msg}")
+        order.shipping_error = err_msg
+        order.save(update_fields=["shipping_error"])
+        return False
+
+    label_info = data_list[0]
+    tracking_number = label_info.get("trackingNumber")
+    label_url = label_info.get("label")
+    shipment_id = str(label_info.get("shipmentId") or label_info.get("id") or "")
+    carrier_confirmed = label_info.get("carrier") or carrier
+
+    # Descuento atómico e inmutable en billetera y actualización de orden
     with transaction.atomic():
         from apps.tenants.models import Tenant
         from apps.shop.models import ShippingWalletTransaction
 
-        t_locked = Tenant.objects.select_for_update().get(id=tenant.id)
-
-        # Si usa cuenta maestra corporativa, validar saldo mínimo y saldo suficiente
         if using_corporate_key:
-            if t_locked.shipping_wallet_balance < Decimal("250.00"):
-                logger.error(f"[Logística/Envia] Saldo por debajo del mínimo de $250.00 MXN para Tenant #{tenant.id}.")
-                return False
-
-            if t_locked.shipping_wallet_balance < costo_tenant:
-                logger.error(
-                    f"[Logística/Envia] Saldo insuficiente para Tenant #{tenant.id}. Requiere ${costo_tenant} MXN, Disponible: ${t_locked.shipping_wallet_balance} MXN."
-                )
-                return False
-
-        # Parsear carrier y service desde shipping_rate_id o campos de orden
-        carrier = order.shipping_carrier_name or "fedex"
-        service = order.shipping_service_name or "express"
-        if order.shipping_rate_id and ":" in order.shipping_rate_id:
-            parts = order.shipping_rate_id.split(":")
-            carrier = parts[0]
-            service = parts[1]
-
-        # Preparar direcciones
-        origin_address = {
-            "name": tenant.shipping_origin_name or "Néctar Labs Bodega",
-            "company": tenant.name or "Nectar Store",
-            "email": getattr(tenant.owner, "email", "envios@nectarlabs.dev") if getattr(tenant, "owner", None) else "envios@nectarlabs.dev",
-            "phone": tenant.shipping_origin_phone or "6621000000",
-            "street": tenant.shipping_origin_street or "Av. Central 100",
-            "number": "100",
-            "district": tenant.shipping_origin_suburb or "Centro",
-            "city": tenant.shipping_origin_city or "Hermosillo",
-            "state": (tenant.shipping_origin_state or "SO")[:2].upper(),
-            "postalCode": str(tenant.shipping_origin_zip_code or "83000"),
-            "country": "MX"
-        }
-
-        destination_address = {
-            "name": order.full_name or "Cliente",
-            "company": "",
-            "email": order.user_email or (order.user.email if order.user else "cliente@example.com"),
-            "phone": order.phone or "6620000000",
-            "street": order.street_and_number or "Calle Principal",
-            "number": "1",
-            "district": order.suburb or "Centro",
-            "city": order.city or "Hermosillo",
-            "state": (order.state or "SO")[:2].upper(),
-            "postalCode": str(order.postal_code or "83000"),
-            "country": (order.country or "MX")[:2].upper()
-        }
-
-        package_data = {
-            "content": f"Pedido #{order.id}",
-            "amount": 1,
-            "type": "box",
-            "weight": 1,
-            "length": 25,
-            "height": 15,
-            "width": 20
-        }
-
-        client = EnviaClient(api_key=api_key)
-        label_res = client.generate_label(
-            origin=origin_address,
-            destination=destination_address,
-            packages=[package_data],
-            carrier=carrier,
-            service=service
-        )
-
-        data_list = label_res.get("data", [])
-        if not data_list or not isinstance(data_list, list):
-            err_msg = str(label_res.get("error") or label_res.get("message") or label_res)
-            logger.error(f"[Logística/Envia] Error al emitir etiqueta para Orden #{order.id}: {err_msg}")
-            order.shipping_error = err_msg
-            order.save(update_fields=["shipping_error"])
-            return False
-
-        label_info = data_list[0]
-        tracking_number = label_info.get("trackingNumber")
-        label_url = label_info.get("label")
-        shipment_id = str(label_info.get("shipmentId") or label_info.get("id") or "")
-        carrier_confirmed = label_info.get("carrier") or carrier
-
-        # Descuento definitivo en billetera
-        if using_corporate_key:
+            t_locked = Tenant.objects.select_for_update().get(id=tenant.id)
             t_locked.shipping_wallet_balance -= costo_tenant
             t_locked.save(update_fields=["shipping_wallet_balance"])
 
@@ -640,8 +641,8 @@ def generate_shipping_label(order) -> bool:
         order.status = "SHIPPED"
         order.save()
 
-        logger.info(f"[Logística/Envia] Guía emitida con éxito para orden #{order.id}. Tracking: {tracking_number}")
-        return True
+    logger.info(f"[Logística/Envia] Guía emitida con éxito para orden #{order.id}. Tracking: {tracking_number}")
+    return True
 
 
 def verify_envia_webhook_signature(raw_body: bytes, signature: str, timestamp: str, event_name: str) -> bool:

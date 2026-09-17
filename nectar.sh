@@ -624,6 +624,12 @@ case $COMMAND in
     test-envia-staging)
         run_django_cmd_staging test_envia "$@"
         ;;
+    test-envia-webhook)
+        run_django_cmd_dev test_envia --env sandbox --test-webhook "$@"
+        ;;
+    test-envia-balance)
+        run_django_cmd_dev test_envia --check-balance "$@"
+        ;;
 
     # ── FACTURAPI CFDI ──
     test-facturapi)

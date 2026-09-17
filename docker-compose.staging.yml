@@ -16,8 +16,8 @@ services:
     environment:
       - DJANGO_SETTINGS_MODULE=config.settings
       - DEBUG=True
-      - REALTIME_INTERNAL_URL=http://realtime:4001
-      - REALTIME_INTERNAL_SECRET=nectar-internal-secret
+      - REALTIME_INTERNAL_URL=${REALTIME_INTERNAL_URL:-http://realtime:4001}
+      - REALTIME_INTERNAL_SECRET=${REALTIME_INTERNAL_SECRET:-}
 
     logging:
       driver: "json-file"
@@ -80,7 +80,7 @@ services:
     environment:
       - PORT=4000
       - INTERNAL_PORT=4001
-      - INTERNAL_SECRET=nectar-internal-secret
+      - INTERNAL_SECRET=${INTERNAL_SECRET:-${REALTIME_INTERNAL_SECRET:-}}
       - DJANGO_SECRET_KEY=${SECRET_KEY:-}
     depends_on:
       - redis

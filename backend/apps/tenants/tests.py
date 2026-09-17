@@ -833,7 +833,8 @@ class TenantTrialLimitsTests(BaseTenantAddonTestCase):
         success = generate_shipping_label(order)
         self.assertTrue(success)
         self.tenant_a.refresh_from_db()
-        self.assertEqual(self.tenant_a.shipping_wallet_balance, Decimal('150.00'))
+        # 300.00 - (150.00 costo base + 10.00 platform_shipping_fee) = 140.00
+        self.assertEqual(self.tenant_a.shipping_wallet_balance, Decimal('140.00'))
 
     def test_live_chat_limits(self):
         """5. Live Chat limit to 5 chats and AI assistant to 50 messages."""

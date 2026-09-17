@@ -149,6 +149,7 @@ class AssignDriverRequestSerializer(serializers.Serializer):
 # ──────────────────────────────────────────────
 class StoreConfigSerializer(serializers.ModelSerializer):
     available_box_sizes_list = serializers.ReadOnlyField(source='get_available_box_sizes_list')
+    skydropx_api_key = serializers.CharField(write_only=True, required=False, allow_null=True, allow_blank=True)
 
     class Meta:
         model = StoreConfig
@@ -171,7 +172,6 @@ class StoreConfigSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             # Never send the API key value back to client — mask it
             'envia_api_key': {'write_only': True},
-            'skydropx_api_key': {'write_only': True}
         }
 
     def to_representation(self, instance):

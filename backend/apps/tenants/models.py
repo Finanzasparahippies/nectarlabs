@@ -13,6 +13,15 @@ from django.db import models
 from django.conf import settings
 from django.utils import timezone
 
+class class_or_instance_method:
+    def __init__(self, fn):
+        self.fn = fn
+    def __get__(self, instance, owner):
+        if instance is None:
+            return lambda *args, **kwargs: self.fn(owner, *args, **kwargs)
+        return lambda *args, **kwargs: self.fn(instance, *args, **kwargs)
+
+
 class Tenant(models.Model):
     """
     Entidad principal de Inquilino (Negocio / Cliente) en la arquitectura multi-tenant de Nectar Labs.
@@ -248,10 +257,23 @@ class Tenant(models.Model):
             self.refresh_from_db(fields=['stamp_balance', 'stamps_used_this_month'])
         return success
 
-    @classmethod
-    def atomic_deduct_stamp(cls, tenant_id, invoice=None, notes="Consumo por timbrado CFDI"):
+    @class_or_instance_method
+    def atomic_deduct_stamp(self_or_cls, *args, invoice=None, notes=None, description=None, **kwargs):
         from django.db import transaction
         from apps.billing.models import StampTransaction
+
+        effective_notes = description or notes or kwargs.get('notes') or "Consumo por timbrado CFDI"
+        effective_invoice = invoice or kwargs.get('invoice')
+
+        if isinstance(self_or_cls, type):
+            tenant_id = args[0] if args else kwargs.get('tenant_id')
+            tenant_obj = None
+            cls = self_or_cls
+        else:
+            tenant_id = self_or_cls.id
+            tenant_obj = self_or_cls
+            cls = self_or_cls.__class__
+
         with transaction.atomic():
             tenant = cls.objects.select_for_update().get(id=tenant_id)
             tenant.reset_stamps_if_new_month()
@@ -268,11 +290,13 @@ class Tenant(models.Model):
                         amount=-1,
                         balance_before=bal_before,
                         balance_after=bal_before,
-                        invoice=invoice,
-                        notes=f"{notes} (Cortesía Embajador {tenant.stamps_used_this_month}/20)"
+                        invoice=effective_invoice,
+                        notes=f"{effective_notes} (Cortesía Embajador {tenant.stamps_used_this_month}/20)"
                     )
                 except Exception:
                     pass
+                if tenant_obj:
+                    tenant_obj.refresh_from_db(fields=['stamp_balance', 'stamps_used_this_month'])
                 return True, bal_before
 
             if tenant.stamp_balance > 0:
@@ -286,19 +310,34 @@ class Tenant(models.Model):
                         amount=-1,
                         balance_before=bal_before,
                         balance_after=bal_after,
-                        invoice=invoice,
-                        notes=notes
+                        invoice=effective_invoice,
+                        notes=effective_notes
                     )
                 except Exception:
                     pass
+                if tenant_obj:
+                    tenant_obj.refresh_from_db(fields=['stamp_balance', 'stamps_used_this_month'])
                 return True, bal_after
 
             return False, bal_before
 
-    @classmethod
-    def atomic_refund_stamp(cls, tenant_id, invoice=None, notes="Reembolso de timbre por error en PAC/SAT"):
+    @class_or_instance_method
+    def atomic_refund_stamp(self_or_cls, *args, invoice=None, notes=None, description=None, **kwargs):
         from django.db import transaction
         from apps.billing.models import StampTransaction
+
+        effective_notes = description or notes or kwargs.get('notes') or "Reembolso de timbre por error en PAC/SAT"
+        effective_invoice = invoice or kwargs.get('invoice')
+
+        if isinstance(self_or_cls, type):
+            tenant_id = args[0] if args else kwargs.get('tenant_id')
+            tenant_obj = None
+            cls = self_or_cls
+        else:
+            tenant_id = self_or_cls.id
+            tenant_obj = self_or_cls
+            cls = self_or_cls.__class__
+
         with transaction.atomic():
             tenant = cls.objects.select_for_update().get(id=tenant_id)
             bal_before = tenant.stamp_balance
@@ -313,11 +352,13 @@ class Tenant(models.Model):
                         amount=1,
                         balance_before=bal_before,
                         balance_after=bal_before,
-                        invoice=invoice,
-                        notes=f"{notes} (Restitución Cortesía Embajador)"
+                        invoice=effective_invoice,
+                        notes=f"{effective_notes} (Restitución Cortesía Embajador)"
                     )
                 except Exception:
                     pass
+                if tenant_obj:
+                    tenant_obj.refresh_from_db(fields=['stamp_balance', 'stamps_used_this_month'])
                 return True, bal_before
 
             tenant.stamp_balance += 1
@@ -330,11 +371,13 @@ class Tenant(models.Model):
                     amount=1,
                     balance_before=bal_before,
                     balance_after=bal_after,
-                    invoice=invoice,
-                    notes=notes
+                    invoice=effective_invoice,
+                    notes=effective_notes
                 )
             except Exception:
                 pass
+            if tenant_obj:
+                tenant_obj.refresh_from_db(fields=['stamp_balance', 'stamps_used_this_month'])
             return True, bal_after
 
     @property

@@ -783,6 +783,7 @@ class ShippingWalletTransaction(models.Model):
 
 class EnviaWebhookEventLog(models.Model):
     class Status(models.TextChoices):
+        RECEIVED = 'RECEIVED', 'Recibido'
         PROCESSED = 'PROCESSED', 'Procesado'
         IGNORED = 'IGNORED', 'Ignorado'
         ERROR = 'ERROR', 'Error'
@@ -791,7 +792,7 @@ class EnviaWebhookEventLog(models.Model):
     event_type = models.CharField(max_length=100, db_index=True)
     tracking_number = models.CharField(max_length=100, blank=True, null=True, db_index=True)
     payload = models.JSONField(default=dict)
-    status = models.CharField(max_length=20, choices=Status.choices, default=Status.PROCESSED)
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.RECEIVED)
     error_message = models.TextField(blank=True, default="")
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
 

@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 from django.utils import timezone
+from django.test import override_settings
 from rest_framework import status
 from rest_framework.test import APITestCase
 from apps.shop.models import Plan, Contract, PaymentInstallment, AddOn, PromoCode, SalesCommission, AddOnSubscription
@@ -1473,6 +1474,13 @@ class EnviaAndStripeIdempotencyTests(APITestCase):
         self.assertEqual(sur_tx.transaction_type, ShippingWalletTransaction.TransactionType.SURCHARGE_DEBIT)
         self.assertEqual(sur_tx.amount, Decimal("-35.50"))
 
+    @override_settings(
+        ENVIA_WEBHOOK_TOKENS=[
+            "mock_staging_status_token",
+            "mock_staging_eco_token",
+            "mock_prod_eco_token",
+        ]
+    )
     def test_envia_webhook_bearer_auth_and_legacy_payload(self):
         """
         Verifica la ingesta de webhooks reales registrados en Envia (Tipo 1 onShipmentStatusUpdate):
@@ -1491,8 +1499,8 @@ class EnviaAndStripeIdempotencyTests(APITestCase):
             status=Order.Status.SHIPPED
         )
 
-        # Usar auth_token registrado en staging
-        token = "e8551b6dcbaf49a74bed2c47daa6d73f657e8f2a96df45767276e281caa4dc44"
+        # Usar auth_token registrado de prueba
+        token = "mock_staging_status_token"
         webhook_url = reverse('envia_webhook')
 
         payload = {
@@ -1519,7 +1527,7 @@ class EnviaAndStripeIdempotencyTests(APITestCase):
             "trackingNumber": "ENVIA-LEGACY-777",
             "status": "Cancelled"
         }
-        token_eco = "9151cd56d14ef7bc11991721597b147dc68980d0c34e2a6aafa43817d8427927"
+        token_eco = "mock_staging_eco_token"
         res_eco = self.client.post(
             ecommerce_url,
             payload_eco,
@@ -1530,7 +1538,24 @@ class EnviaAndStripeIdempotencyTests(APITestCase):
         order.refresh_from_db()
         self.assertEqual(order.status, Order.Status.CANCELLED)
 
-        # 3. Petición con Bearer token no autorizado
+        # 3. Petición al endpoint ecommerceTracking con Token alternativo
+        prod_eco_token = "mock_prod_eco_token"
+        payload_prod = {
+            "carrierName": "estafeta",
+            "trackingNumber": "ENVIA-LEGACY-777",
+            "status": "Delivered"
+        }
+        res_prod = self.client.post(
+            ecommerce_url,
+            payload_prod,
+            format='json',
+            HTTP_AUTHORIZATION=f"Bearer {prod_eco_token}"
+        )
+        self.assertEqual(res_prod.status_code, status.HTTP_200_OK)
+        order.refresh_from_db()
+        self.assertEqual(order.status, Order.Status.DELIVERED)
+
+        # 4. Petición con Bearer token no autorizado
         res_unauth = self.client.post(
             webhook_url,
             payload,
@@ -1538,6 +1563,67 @@ class EnviaAndStripeIdempotencyTests(APITestCase):
             HTTP_AUTHORIZATION="Bearer token_invalido_malicioso"
         )
         self.assertEqual(res_unauth.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_stripe_webhook_wallet_recharge_idempotency(self):
+        """
+        Verifica que el webhook de Stripe:
+        1. Abone saldo correctamente con metadata 'shipping_funds_package'.
+        2. Abone saldo correctamente con metadata 'shipping_wallet_recharge'.
+        3. Sea 100% idempotente y no duplique saldo ante reintentos del mismo session_id.
+        """
+        from apps.shop.views import stripe_webhook
+        from apps.shop.models import ShippingWalletTransaction
+        from decimal import Decimal
+        from unittest.mock import patch
+
+        initial_balance = Decimal("300.00")
+        self.tenant.shipping_wallet_balance = initial_balance
+        self.tenant.save()
+
+        # Simular evento de Stripe checkout.session.completed para shipping_wallet_recharge
+        event_recharge = {
+            "id": "evt_test_wallet_001",
+            "type": "checkout.session.completed",
+            "data": {
+                "object": {
+                    "id": "cs_test_wallet_session_123",
+                    "metadata": {
+                        "type": "shipping_wallet_recharge",
+                        "tenant_id": str(self.tenant.id),
+                        "amount": "500.00"
+                    }
+                }
+            }
+        }
+
+        with patch('stripe.Webhook.construct_event', return_value=event_recharge):
+            # Primera llamada: Debe acreditar +$500.00 MXN
+            res1 = self.client.post(
+                reverse('stripe_webhook'),
+                event_recharge,
+                format='json',
+                HTTP_STRIPE_SIGNATURE="mock_signature"
+            )
+            self.assertEqual(res1.status_code, status.HTTP_200_OK)
+
+            self.tenant.refresh_from_db()
+            self.assertEqual(self.tenant.shipping_wallet_balance, initial_balance + Decimal("500.00"))
+
+            # Segunda llamada (reintento con mismo session.id): Idempotente, no debe alterar el saldo
+            res2 = self.client.post(
+                reverse('stripe_webhook'),
+                event_recharge,
+                format='json',
+                HTTP_STRIPE_SIGNATURE="mock_signature"
+            )
+            self.assertEqual(res2.status_code, status.HTTP_200_OK)
+
+            self.tenant.refresh_from_db()
+            self.assertEqual(self.tenant.shipping_wallet_balance, initial_balance + Decimal("500.00"))
+
+            # Validar que solo existe un registro en el ledger
+            tx_count = ShippingWalletTransaction.objects.filter(reference_id="cs_test_wallet_session_123").count()
+            self.assertEqual(tx_count, 1)
 
 
     @patch('stripe.Product.create')

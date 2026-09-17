@@ -2,6 +2,7 @@ from pathlib import Path
 import environ
 import os
 from datetime import timedelta
+from decimal import Decimal
 
 # ==============================================================================
 # CONFIGURACIÓN DEL ENTORNO Y DIRECTORIOS BASE
@@ -277,7 +278,7 @@ EMAIL_BILLING = env("EMAIL_BILLING", default="Nectar Labs Facturación <facturac
 # Configura el puente interno para que Django notifique eventos al microservicio Node.js.
 # ------------------------------------------------------------------------------
 REALTIME_INTERNAL_URL = env("REALTIME_INTERNAL_URL", default="http://realtime:4001")
-REALTIME_INTERNAL_SECRET = env("REALTIME_INTERNAL_SECRET", default="nectar-internal-secret")
+REALTIME_INTERNAL_SECRET = env("REALTIME_INTERNAL_SECRET", default="dev-realtime-internal-secret" if (DEBUG or TESTING) else "")
 
 
 # ------------------------------------------------------------------------------
@@ -333,14 +334,28 @@ GROQ_API_KEY = env("GROQ_API_KEY", default="")
 # Cotización automatizada, emisión de guías y webhooks multi-tenant con Envia.com.
 # ------------------------------------------------------------------------------
 ENVIA_ENVIRONMENT = env("ENVIA_ENVIRONMENT", default="production" if ENVIRONMENT in ["production", "prod"] else "sandbox").lower()
-ENVIA_PRODUCTION_TOKEN = env("ENVIA_PRODUCTION_TOKEN", default="cc366f6f1b56933bb179bd07c05c8e27b4bf65eb265440a6d59df37a9dfcfd77")
-ENVIA_SANDBOX_TOKEN = env("ENVIA_SANDBOX_TOKEN", default="56b96c6e971b6bd101f2c9dba8a8e27daa86db9c78b5e4bd3a8c50b211707cdf")
-ENVIA_WEBHOOK_SECRET = env("ENVIA_WEBHOOK_SECRET", default="nectar_envia_whsec_default")
-ENVIA_WEBHOOK_TOKENS = [
-    "92f5f4131d4cf33a641ffe984a1f6e595c01042ced5bd731b3d785a0f81944f1",  # Prod #4786 (https://nectarlabs.dev)
-    "e8551b6dcbaf49a74bed2c47daa6d73f657e8f2a96df45767276e281caa4dc44",  # Staging #1057 (/api/shop/shipping/webhooks/envia/)
-    "9151cd56d14ef7bc11991721597b147dc68980d0c34e2a6aafa43817d8427927",  # Staging #1058 (/api/shop/shipping/webhooks/ecommerceTracking)
+ENVIA_PRODUCTION_TOKEN = env("ENVIA_PRODUCTION_TOKEN", default="")
+ENVIA_SANDBOX_TOKEN = env("ENVIA_SANDBOX_TOKEN", default="")
+ENVIA_WEBHOOK_SECRET = env("ENVIA_WEBHOOK_SECRET", default="")
+ENVIA_WEBHOOK_TOKENS = [t.strip() for t in env("ENVIA_WEBHOOK_TOKENS", default="").split(",") if t.strip()] + [
+    t.strip() for t in env("ENVIA_WEBHOOK_TOKENS_EXTRA", default="").split(",") if t.strip()
 ]
+
+# Configuración de fallback seguro para entorno de testing automatizado
+if TESTING:
+    if not ENVIA_SANDBOX_TOKEN:
+        ENVIA_SANDBOX_TOKEN = "envia_test_sandbox_token"
+    if not ENVIA_WEBHOOK_SECRET:
+        ENVIA_WEBHOOK_SECRET = "envia_test_webhook_secret"
+    if not ENVIA_WEBHOOK_TOKENS:
+        ENVIA_WEBHOOK_TOKENS = [
+            "mock_staging_status_token",
+            "mock_staging_eco_token",
+            "mock_prod_eco_token",
+        ]
+
+# Saldo mínimo operativo de cartera ($300.00 MXN para timbrado SAT y emisión de guías de envío)
+MIN_SHIPPING_WALLET_BALANCE = Decimal(env("MIN_SHIPPING_WALLET_BALANCE", default="300.00"))
 
 
 

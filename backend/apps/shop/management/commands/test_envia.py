@@ -36,11 +36,30 @@ class Command(BaseCommand):
             action='store_true',
             help="Genera una guía de prueba en Sandbox (no ejecutable en Producción sin confirmación)"
         )
+        parser.add_argument(
+            '--test-webhook',
+            action='store_true',
+            help="Prueba el envío de un evento de webhook simulado desde Envia.com (/ship/webhooktest/)"
+        )
+        parser.add_argument(
+            '--webhook-url',
+            type=str,
+            default=None,
+            help="URL específica de webhook a probar (por defecto usa la URL del ambiente)"
+        )
+        parser.add_argument(
+            '--check-balance',
+            action='store_true',
+            help="Audita el saldo de cartera de los inquilinos y valida el umbral mínimo operativo de $300.00 MXN"
+        )
 
     def handle(self, *args, **options):
         forced_env = options.get('env')
         target_carrier = options.get('carrier')
         should_generate = options.get('generate_label')
+        should_test_wh = options.get('test_webhook')
+        custom_wh_url = options.get('webhook_url')
+        should_check_bal = options.get('check_balance')
 
         if forced_env:
             settings.ENVIA_ENVIRONMENT = forced_env
@@ -142,5 +161,51 @@ class Command(BaseCommand):
                     self.stdout.write(self.style.ERROR(f"✗ Fallo emitiendo guía: {label_res}"))
         else:
             self.stdout.write(self.style.NOTICE("\n[3/3] Emisión de guía omitida (usa --generate-label para emitir guía en sandbox)."))
+
+        # 4. Prueba Oficial de Webhook (POST /ship/webhooktest/)
+        if should_test_wh:
+            import requests
+            target_url = custom_wh_url or (
+                "https://nectarlabs.dev/api/shop/shipping/webhooks/envia/" if env_is_prod
+                else "https://staging.nectarlabs.dev/api/shop/shipping/webhooks/envia/"
+            )
+            self.stdout.write(self.style.MIGRATE_HEADING(f"\n[4/4] Disparando evento de prueba de webhook hacia {target_url}..."))
+            try:
+                wh_test_url = f"{get_envia_shipping_base_url()}/ship/webhooktest/"
+                wh_payload = {
+                    "tracking_number": "01168669765",
+                    "carrier": carrier_to_quote,
+                    "webhook_url": target_url
+                }
+                res = requests.post(
+                    wh_test_url,
+                    headers={
+                        "Authorization": f"Bearer {token}",
+                        "Content-Type": "application/json"
+                    },
+                    json=wh_payload,
+                    timeout=15
+                )
+                self.stdout.write(f"• Código HTTP Envia: {res.status_code}")
+                self.stdout.write(f"• Respuesta Envia:    {res.text}")
+                if res.status_code in [200, 201]:
+                    self.stdout.write(self.style.SUCCESS("✓ Disparo de webhook simulado exitoso desde Envia."))
+                else:
+                    self.stdout.write(self.style.WARNING(f"⚠ Envia reportó código no 200: {res.status_code}"))
+            except Exception as e:
+                self.stdout.write(self.style.ERROR(f"✗ Error invocando test de webhook: {e}"))
+
+        # 5. Auditoría de Saldos de Inquilinos
+        if should_check_bal:
+            from apps.tenants.models import Tenant
+            min_b = getattr(settings, "MIN_SHIPPING_WALLET_BALANCE", Decimal("300.00"))
+            self.stdout.write(self.style.MIGRATE_HEADING(f"\n[Auditoría] Verificando saldos de cartera (Umbral Mínimo: ${min_b} MXN)..."))
+            tenants = Tenant.objects.filter(is_active=True).order_by('id')[:25]
+            for t in tenants:
+                bal = t.shipping_wallet_balance or Decimal("0.00")
+                has_min = bal >= min_b
+                st = "✓ ÓPTIMO" if has_min else "⚠ BAJO SALDO"
+                color = self.style.SUCCESS if has_min else self.style.WARNING
+                self.stdout.write(color(f"   • Tenant #{t.id} ({t.subdomain}): ${bal} MXN — {st}"))
 
         self.stdout.write(self.style.SUCCESS(f"\nDiagnóstico completado con éxito.\n"))

@@ -653,9 +653,10 @@ class InvoiceViewSet(BillingTenantMixin, viewsets.ModelViewSet):
             
             invoice.status = Invoice.Status.PAID
             invoice.error_message = None
-            if not is_parent and not invoice.stamp_deducted:
+            if not is_parent and not invoice.stamp_deducted and original_status != Invoice.Status.LCO_SYNC_PENDING:
                 invoice.stamp_deducted = True
                 tenant.atomic_deduct_stamp(invoice=invoice, description=f"Reintento exitoso CFDI folio {invoice.uuid_sat}")
+            invoice.stamp_deducted = True
             invoice.save()
 
             # Enviar el correo de confirmación de facturación
@@ -674,9 +675,10 @@ class InvoiceViewSet(BillingTenantMixin, viewsets.ModelViewSet):
         except LCOSyncError as e:
             invoice.status = Invoice.Status.LCO_SYNC_PENDING
             invoice.error_message = str(e)
-            if not is_parent and not invoice.stamp_deducted:
+            if not is_parent and not invoice.stamp_deducted and original_status != Invoice.Status.LCO_SYNC_PENDING:
                 invoice.stamp_deducted = True
                 tenant.atomic_deduct_stamp(invoice=invoice, description=f"Reintento pendiente LCO ID {invoice.id}")
+            invoice.stamp_deducted = True
             invoice.save(update_fields=['status', 'error_message', 'stamp_deducted'])
 
             return Response({"error": f"Sello no activo (SAT LCO). Reintentando más tarde automáticamente: {e}"}, status=400)
@@ -1220,14 +1222,22 @@ class FacturapiReceiptView(FacturapiBaseView):
         except (PACError, PermissionDenied) as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
+        # Si es un tenant, verificar balance de timbres
+        if tenant and not tenant.has_available_stamps():
+            return Response(
+                {"error": "No tienes timbres suficientes en tu balance. Adquiere un paquete de timbres para continuar."},
+                status=400
+            )
+
         data = request.data
         if not data.get("items"):
             return Response({"error": "El campo 'items' es obligatorio."}, status=400)
 
         pac = get_pac_service()
         try:
-            # La creación de un recibo (e-receipt/nota de venta) no timbra ante el SAT
             res = pac.create_receipt(org_id, data)
+            if tenant:
+                tenant.atomic_deduct_stamp(description=f"Emisión de recibo Facturapi ID {res.get('id')}")
             return Response(res, status=status.HTTP_201_CREATED)
         except PACError as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
@@ -1376,11 +1386,16 @@ class BuyShippingFundsView(BillingTenantMixin, APIView):
         tenant = self.get_tenant()
         amount_val = request.data.get('amount')
         try:
-            amount = float(amount_val)
-            if amount <= 0:
-                raise ValueError()
-        except (ValueError, TypeError):
-            return Response({"error": "El monto a agregar debe ser un número positivo."}, status=400)
+            from decimal import Decimal
+            amount = Decimal(str(amount_val))
+            min_recharge = getattr(settings, "MIN_SHIPPING_WALLET_BALANCE", Decimal("300.00"))
+            if amount < min_recharge:
+                return Response(
+                    {"error": f"El monto mínimo de recarga es de ${min_recharge} MXN."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        except (ValueError, TypeError, Exception):
+            return Response({"error": "El monto a agregar es inválido."}, status=status.HTTP_400_BAD_REQUEST)
             
         stripe.api_key = settings.STRIPE_SECRET_KEY
         

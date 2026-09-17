@@ -65,6 +65,8 @@ services:
       - .env.prod
     environment:
       - PORT=4000
+      - INTERNAL_PORT=4001
+      - INTERNAL_SECRET=${INTERNAL_SECRET:-${REALTIME_INTERNAL_SECRET:-}}
       - DJANGO_SECRET_KEY=${SECRET_KEY:-}
     restart: always
     depends_on:

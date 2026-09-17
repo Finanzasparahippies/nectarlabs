@@ -226,3 +226,20 @@ cache.clear()
 print('✓ Caché de Redis invalidada exitosamente.')
 "
 ```
+
+---
+
+## 6. Motor Logístico Multi-Tenant (Envia.com PaaS)
+
+Cada inquilino cuenta con una cartera virtual unificada para facturación SAT y emisión de guías de paquetería con Envia.com.
+
+* **Guía Operativa Detallada:** Consulte [LOGISTICS_ENVIA_GUIDE.md](file:///home/saulvillecruz/proyectos/repositorios/Nectar-Labs/LOGISTICS_ENVIA_GUIDE.md).
+* **Saldo Mínimo Requerido:** `$300.00 MXN` en `Tenant.shipping_wallet_balance`.
+* **Diagnóstico Operativo:**
+  ```bash
+  # Diagnóstico completo en Sandbox con prueba de webhook
+  ./nectar.sh manage test_envia --env sandbox --test-webhook
+  
+  # Auditoría de saldos de todos los inquilinos
+  ./nectar.sh manage test_envia --check-balance
+  ```
