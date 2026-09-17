@@ -75,6 +75,82 @@ def _format_skydropx_address(addr: Dict[str, Any], default_cp: str = "83000") ->
     }
 
 
+def _extract_quotation_id(body: Any) -> Optional[str]:
+    """Extrae de forma resiliente el identificador de la cotización en Skydropx Pro."""
+    if not isinstance(body, dict):
+        return None
+    data = body.get("data")
+    if isinstance(data, dict) and data.get("id"):
+        return str(data["id"])
+    if body.get("id"):
+        return str(body["id"])
+    if isinstance(data, list) and data and isinstance(data[0], dict) and data[0].get("id"):
+        return str(data[0]["id"])
+    quot = body.get("quotation")
+    if isinstance(quot, dict) and quot.get("id"):
+        return str(quot["id"])
+    return None
+
+
+def _extract_rates(body: Any) -> List[Dict[str, Any]]:
+    """
+    Extrae las tarifas de múltiples esquemas soportados por Skydropx Pro:
+    - JSON:API estándar (data.attributes.rates)
+    - Dict anidado (data.rates, quotation.rates)
+    - Raíz plana (rates)
+    - Colección de recursos en data (data = [rate1, rate2, ...])
+    - Recursos incluidos (included = [rate1, ...])
+    """
+    if not isinstance(body, dict):
+        return []
+
+    # 1. Esquema JSON:API estándar: data -> attributes -> rates
+    data = body.get("data")
+    if isinstance(data, dict):
+        attrs = data.get("attributes")
+        if isinstance(attrs, dict):
+            r = attrs.get("rates")
+            if isinstance(r, list) and r:
+                return r
+        r = data.get("rates")
+        if isinstance(r, list) and r:
+            return r
+
+    # 2. Raíz plana: rates
+    root_rates = body.get("rates")
+    if isinstance(root_rates, list) and root_rates:
+        return root_rates
+
+    # 3. Anidado bajo objeto quotation
+    quot = body.get("quotation")
+    if isinstance(quot, dict):
+        if isinstance(quot.get("rates"), list) and quot["rates"]:
+            return quot["rates"]
+        attrs = quot.get("attributes")
+        if isinstance(attrs, dict) and isinstance(attrs.get("rates"), list) and attrs["rates"]:
+            return attrs["rates"]
+
+    # 4. Lista directa en 'data'
+    if isinstance(data, list) and data:
+        if isinstance(data[0], dict):
+            if data[0].get("attributes", {}).get("rates"):
+                return data[0]["attributes"]["rates"]
+            if data[0].get("type") in ["rates", "rate"] or data[0].get("total_price") or data[0].get("amount"):
+                return data
+
+    # 5. Side-loading en 'included'
+    included = body.get("included")
+    if isinstance(included, list):
+        inc_rates = [
+            item for item in included
+            if isinstance(item, dict) and item.get("type") in ["rates", "rate", "quotation_rate"]
+        ]
+        if inc_rates:
+            return inc_rates
+
+    return []
+
+
 class SkydropxProvider(BaseShippingProvider):
     """
     Proveedor logístico oficial para Skydropx Pro (Paquetexpress, DHL, Estafeta, FedEx, Redpack, etc.).
@@ -310,28 +386,44 @@ class SkydropxProvider(BaseShippingProvider):
                 res = requests.post(url, json=payload, headers=self._headers(force_refresh=True), timeout=15)
 
             raw_rates = []
-            if res.status_code in [200, 201]:
-                body = res.json()
-                raw_rates = body.get("rates") or body.get("data", {}).get("rates", [])
-            elif res.status_code == 202:
-                # Sondeo asíncrono si Skydropx devuelve procesamiento diferido
-                quote_data = res.json()
-                quotation_id = quote_data.get("id") or quote_data.get("data", {}).get("id")
-                if quotation_id:
-                    for delay in [0.8, 1.5, 2.5]:
+            quotation_id = None
+            is_completed = False
+
+            if res.status_code in [200, 201, 202]:
+                try:
+                    body = res.json()
+                    quotation_id = _extract_quotation_id(body)
+                    raw_rates = _extract_rates(body)
+                    if isinstance(body.get("data"), dict):
+                        is_completed = bool(body["data"].get("attributes", {}).get("is_completed", False))
+                    elif isinstance(body.get("quotation"), dict):
+                        is_completed = bool(body["quotation"].get("is_completed", False))
+                except Exception as parse_e:
+                    logger.warning(f"[SkydropxProvider] Error parseando respuesta JSON inicial: {parse_e}")
+                    body = {}
+
+                # Sondeo asíncrono (Polling): Skydropx Pro calcula tarifas de paqueterías en background
+                # Si no hay tarifas aún o is_completed es False, consultamos GET /quotations/{quotation_id}
+                if (not raw_rates or not is_completed) and quotation_id:
+                    for delay in [1.0, 1.5, 2.0, 2.5]:
                         time.sleep(delay)
-                        poll_res = requests.get(f"{url}/{quotation_id}", headers=self._headers(), timeout=10)
-                        if poll_res.status_code == 200:
-                            p_data = poll_res.json()
-                            rates = p_data.get("rates") or p_data.get("data", {}).get("rates", [])
-                            if rates:
-                                raw_rates = rates
-                                break
+                        try:
+                            poll_res = requests.get(f"{url}/{quotation_id}", headers=self._headers(), timeout=10)
+                            if poll_res.status_code == 200:
+                                p_data = poll_res.json()
+                                rates = _extract_rates(p_data)
+                                if rates:
+                                    raw_rates = rates
+                                    p_attrs = p_data.get("data", {}).get("attributes", {}) if isinstance(p_data.get("data"), dict) else {}
+                                    if p_attrs.get("is_completed"):
+                                        break
+                        except Exception as poll_e:
+                            logger.warning(f"[SkydropxProvider] Error durante polling de cotización {quotation_id}: {poll_e}")
             else:
-                self.last_error = f"Pro API HTTP {res.status_code}: {res.text[:200]}"
+                self.last_error = f"Pro API HTTP {res.status_code}: {res.text[:250]}"
                 logger.warning(f"[SkydropxProvider] Quotation respondió HTTP {res.status_code}: {res.text[:200]}")
 
-            # Fallback a Skydropx Standard API (api.skydropx.com/v1/shipments) si Pro no devolvió tarifas
+            # Fallback a Skydropx Standard API si Pro no devolvió tarifas
             if not raw_rates:
                 legacy_url = "https://api.skydropx.com/v1/shipments"
                 legacy_headers = {
@@ -352,31 +444,75 @@ class SkydropxProvider(BaseShippingProvider):
                     leg_res = requests.post(legacy_url, json=legacy_payload, headers=legacy_headers, timeout=8)
                     if leg_res.status_code in [200, 201]:
                         leg_body = leg_res.json()
-                        raw_rates = leg_body.get("rates", []) or leg_body.get("data", {}).get("rates", [])
+                        raw_rates = _extract_rates(leg_body)
                     else:
                         prev_err = self.last_error or f"Pro HTTP {res.status_code}"
                         self.last_error = f"{prev_err} | Standard HTTP {leg_res.status_code}: {leg_res.text[:150]}"
                 except Exception as leg_e:
                     logger.warning(f"[SkydropxProvider] Fallback Standard API error: {leg_e}")
 
+            if not raw_rates and not self.last_error:
+                diag = f"HTTP {res.status_code}"
+                if quotation_id:
+                    diag += f" (ID: {quotation_id}, completado={is_completed})"
+                self.last_error = f"Sin tarifas disponibles para la ruta CP {orig_cp} -> CP {dest_cp} [{diag}]"
+
             normalized: List[NormalizedRate] = []
             for r in raw_rates:
-                raw_price = r.get("total_price") or r.get("total_or_subtotal_amount") or r.get("price") or 0.00
-                base_cost = Decimal(str(raw_price))
+                attrs = r.get("attributes", {}) if isinstance(r.get("attributes"), dict) else {}
+                raw_price = (
+                    attrs.get("amount") or
+                    attrs.get("total_price") or
+                    attrs.get("total_or_subtotal_amount") or
+                    attrs.get("price") or
+                    r.get("total_price") or
+                    r.get("total_or_subtotal_amount") or
+                    r.get("amount") or
+                    r.get("price") or
+                    0.00
+                )
+                try:
+                    base_cost = Decimal(str(raw_price))
+                except Exception:
+                    continue
+
                 if base_cost <= Decimal("0.00"):
                     continue
 
-                carrier_name = str(r.get("provider") or "Courier").capitalize()
+                carrier_name = str(
+                    attrs.get("carrier_name") or
+                    attrs.get("carrier") or
+                    attrs.get("provider") or
+                    r.get("carrier") or
+                    r.get("provider") or
+                    "Courier"
+                ).capitalize()
                 carrier_slug = carrier_name.lower()
-                service_name = str(r.get("service_level_name") or r.get("service_level") or "Standard")
-                rate_uuid = str(r.get("id") or "")
+
+                service_name = str(
+                    attrs.get("service_level_name") or
+                    attrs.get("service") or
+                    attrs.get("service_name") or
+                    r.get("service_level_name") or
+                    r.get("service_level") or
+                    r.get("service") or
+                    "Standard"
+                )
+
+                rate_uuid = str(r.get("id") or attrs.get("id") or "")
                 rate_id = f"skydropx:{carrier_slug}:{service_name}:{base_cost}:{rate_uuid}"
 
                 tenant_cost = base_cost + self.nectar_fee
                 buyer_cost = round(tenant_cost * self.markup_factor, 2)
 
                 # Días hábiles
-                days_raw = str(r.get("days") or "3").split()[0]
+                days_raw = str(
+                    attrs.get("days") or
+                    attrs.get("delivery_days") or
+                    r.get("days") or
+                    r.get("delivery_days") or
+                    "3"
+                ).split()[0]
                 try:
                     days = int(days_raw)
                 except Exception:
@@ -401,7 +537,8 @@ class SkydropxProvider(BaseShippingProvider):
 
             return normalized
         except Exception as e:
-            logger.error(f"[SkydropxProvider] Error al cotizar: {e}")
+            self.last_error = f"Excepción en SkydropxProvider: {e}"
+            logger.error(f"[SkydropxProvider] Error al cotizar: {e}", exc_info=True)
             return []
 
     def generate_label(
@@ -470,10 +607,29 @@ class SkydropxProvider(BaseShippingProvider):
             if res.status_code in [200, 201]:
                 body = res.json()
                 shipment_data = body.get("data") or body.get("shipment") or body
-                tracking = shipment_data.get("tracking_number")
-                label_url = shipment_data.get("label_url")
-                shipment_id = str(shipment_data.get("id") or "")
-                carrier_res = shipment_data.get("carrier") or carrier
+                attrs = shipment_data.get("attributes", {}) if isinstance(shipment_data, dict) else {}
+
+                tracking = (
+                    attrs.get("tracking_number") or
+                    attrs.get("trackingNumber") or
+                    shipment_data.get("tracking_number") or
+                    shipment_data.get("trackingNumber")
+                )
+                label_url = (
+                    attrs.get("label_url") or
+                    attrs.get("label") or
+                    attrs.get("url") or
+                    shipment_data.get("label_url") or
+                    shipment_data.get("label") or
+                    shipment_data.get("url")
+                )
+                shipment_id = str(shipment_data.get("id") or attrs.get("id") or "")
+                carrier_res = (
+                    attrs.get("carrier") or
+                    attrs.get("carrier_name") or
+                    shipment_data.get("carrier") or
+                    carrier
+                )
 
                 return LabelResult(
                     success=True,
@@ -491,27 +647,43 @@ class SkydropxProvider(BaseShippingProvider):
             elif res.status_code == 202:
                 # Sondeo de guía asíncrona
                 body = res.json()
-                shipment_id = str(body.get("id") or body.get("data", {}).get("id") or "")
+                s_data = body.get("data") or body.get("shipment") or body
+                s_attrs = s_data.get("attributes", {}) if isinstance(s_data, dict) else {}
+                shipment_id = str(s_data.get("id") or s_attrs.get("id") or body.get("id") or "")
                 if shipment_id:
                     for delay in [1.5, 2.5, 4.0]:
                         time.sleep(delay)
                         poll_res = requests.get(f"{url}/{shipment_id}", headers=self._headers(), timeout=12)
                         if poll_res.status_code == 200:
-                            s_data = poll_res.json()
-                            status = str(s_data.get("status") or "").lower()
-                            if status in ["completed", "success", "paid"] or s_data.get("tracking_number"):
+                            p_data = poll_res.json()
+                            p_ship = p_data.get("data") or p_data.get("shipment") or p_data
+                            p_attrs = p_ship.get("attributes", {}) if isinstance(p_ship, dict) else {}
+
+                            status = str(p_attrs.get("status") or p_ship.get("status") or "").lower()
+                            tracking = (
+                                p_attrs.get("tracking_number") or
+                                p_attrs.get("trackingNumber") or
+                                p_ship.get("tracking_number")
+                            )
+                            if status in ["completed", "success", "paid", "ready"] or tracking:
+                                label_url = (
+                                    p_attrs.get("label_url") or
+                                    p_attrs.get("label") or
+                                    p_ship.get("label_url") or
+                                    p_ship.get("label")
+                                )
                                 return LabelResult(
                                     success=True,
-                                    tracking_number=s_data.get("tracking_number"),
-                                    tracking_url=f"https://app.skydropx.com/tracking/{s_data.get('tracking_number')}",
-                                    label_url=s_data.get("label_url"),
+                                    tracking_number=tracking,
+                                    tracking_url=f"https://app.skydropx.com/tracking/{tracking}" if tracking else None,
+                                    label_url=label_url,
                                     shipment_id=shipment_id,
-                                    carrier=s_data.get("carrier") or carrier,
+                                    carrier=p_attrs.get("carrier") or p_ship.get("carrier") or carrier,
                                     service=service,
                                     cost_real=cost_base,
                                     cost_tenant=cost_tenant,
                                     provider_type="SKYDROPX",
-                                    raw_response=s_data
+                                    raw_response=p_data
                                 )
 
             err_msg = res.text[:250]
