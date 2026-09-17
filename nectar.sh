@@ -98,6 +98,7 @@ sync_logistics_to_container() {
         $DOCKER_BIN cp backend/apps/shop/shipping.py "$c_name":/app/apps/shop/shipping.py 2>/dev/null || true
         $DOCKER_BIN cp backend/apps/shop/views.py "$c_name":/app/apps/shop/views.py 2>/dev/null || true
         $DOCKER_BIN cp backend/apps/shop/models.py "$c_name":/app/apps/shop/models.py 2>/dev/null || true
+        $DOCKER_BIN cp backend/apps/shop/tests.py "$c_name":/app/apps/shop/tests.py 2>/dev/null || true
         $DOCKER_BIN cp backend/apps/shop/migrations/. "$c_name":/app/apps/shop/migrations/ 2>/dev/null || true
         $DOCKER_BIN cp backend/apps/tenants/. "$c_name":/app/apps/tenants/ 2>/dev/null || true
         $DOCKER_BIN cp backend/apps/tenants/migrations/. "$c_name":/app/apps/tenants/migrations/ 2>/dev/null || true
@@ -357,7 +358,12 @@ case $COMMAND in
         run_django_cmd_dev shell "$@"
         ;;
     test|test-dev)
-        run_django_cmd_dev test "$@"
+        if [ "$1" = "test_logistics" ] || [ "$1" = "test-logistics" ]; then
+            shift
+            run_django_cmd_auto test_logistics "$@"
+        else
+            run_django_cmd_dev test "$@"
+        fi
         ;;
     pycheck)
         echo "Running Python syntax check (py_compile)..."
@@ -499,7 +505,12 @@ case $COMMAND in
         run_django_cmd_staging collectstatic --no-input "$@"
         ;;
     test-staging)
-        run_django_cmd_staging test "$@"
+        if [ "$1" = "test_logistics" ] || [ "$1" = "test-logistics" ]; then
+            shift
+            run_django_cmd_staging test_logistics "$@"
+        else
+            run_django_cmd_staging test "$@"
+        fi
         ;;
     pycheck-staging)
         echo "Running Python syntax check (py_compile) in Staging..."

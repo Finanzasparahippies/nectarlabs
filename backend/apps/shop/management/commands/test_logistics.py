@@ -24,14 +24,14 @@ class Command(BaseCommand):
         parser.add_argument(
             '--provider',
             type=str,
-            default='DYNAMIC_BEST',
-            help="Proveedor a evaluar: 'DYNAMIC_BEST', 'ALL', 'ENVIA' o 'SKYDROPX' (no sensible a mayúsculas)"
+            default=None,
+            help="Proveedor a evaluar: 'DYNAMIC_BEST', 'ALL', 'ENVIA' o 'SKYDROPX' (por defecto: el configurado por el tenant o DYNAMIC_BEST)"
         )
         parser.add_argument(
             '--origin',
             type=str,
-            default='83000',
-            help="Código postal de origen (por defecto: 83000 - Hermosillo, Sonora)"
+            default=None,
+            help="Código postal de origen (por defecto: bodega del inquilino o 83000 - Hermosillo, Sonora)"
         )
         parser.add_argument(
             '--dest',
@@ -142,16 +142,63 @@ class Command(BaseCommand):
             settings.ENVIA_ENVIRONMENT = norm_env
             settings.SKYDROPX_ENVIRONMENT = norm_env if norm_env == 'production' else 'staging'
 
-        # Resolver tenant si se especificó
+        # Resolver tenant si se especificó (soporta UUID, subdominio, dominio personalizado o nombre)
         tenant = None
         if tenant_identifier:
-            if str(tenant_identifier).isdigit():
-                tenant = Tenant.objects.filter(id=int(tenant_identifier)).first()
-            else:
-                tenant = Tenant.objects.filter(subdomain=tenant_identifier).first()
+            import uuid
+            raw_ident = str(tenant_identifier).strip()
+            
+            # 1. UUID directo
+            try:
+                tenant = Tenant.objects.filter(id=uuid.UUID(raw_ident)).first()
+            except (ValueError, TypeError):
+                pass
+
+            # 2. Subdominio exacto (limpiando sufijos locales o de nectarlabs)
+            if not tenant:
+                clean_sub = raw_ident.lower().replace(".nectarlabs.dev", "").replace(".nectarlabs.localhost", "")
+                tenant = Tenant.objects.filter(subdomain__iexact=clean_sub).first()
+
+            # 3. Dominio personalizado exacto (ej. msambar.com, kores.vip)
+            if not tenant:
+                clean_domain = raw_ident.lower().replace("http://", "").replace("https://", "").split("/")[0]
+                tenant = Tenant.objects.filter(custom_domain__iexact=clean_domain).first()
+
+            # 4. Búsqueda por coincidencia en nombre comercial
+            if not tenant:
+                tenant = Tenant.objects.filter(name__icontains=raw_ident).first()
+
             if not tenant:
                 self.stderr.write(self.style.ERROR(f"❌ Inquilino '{tenant_identifier}' no encontrado en base de datos."))
                 return
+
+        # Determinar proveedor: si el usuario no especificó --provider, tomar el preferido del tenant
+        raw_provider = options.get('provider')
+        if not raw_provider and tenant and tenant.preferred_shipping_provider:
+            provider_choice = tenant.preferred_shipping_provider
+        elif raw_provider:
+            clean_prov = raw_provider.strip().upper()
+            if clean_prov in ['ALL', 'DYNAMIC', 'DYNAMIC_BEST']:
+                provider_choice = 'DYNAMIC_BEST'
+            elif clean_prov in ['ENVIA', 'ENVIA.COM']:
+                provider_choice = 'ENVIA'
+            elif clean_prov in ['SKYDROPX', 'SKYDROP', 'SKYDROPX_PRO']:
+                provider_choice = 'SKYDROPX'
+            else:
+                provider_choice = clean_prov
+        else:
+            provider_choice = 'DYNAMIC_BEST'
+
+        # Determinar origen: si el usuario no pasó --origin, tomar la bodega física del tenant
+        raw_origin = options.get('origin')
+        if raw_origin:
+            origin_cp = str(raw_origin).strip()
+        elif tenant and tenant.shipping_origin_zip_code:
+            origin_cp = str(tenant.shipping_origin_zip_code).strip()
+        elif tenant and getattr(tenant, 'postal_code', None):
+            origin_cp = str(tenant.postal_code).strip()
+        else:
+            origin_cp = '83000'
 
         custom_markup = options.get('markup')
         if custom_markup is not None:
@@ -164,22 +211,32 @@ class Command(BaseCommand):
         self.stdout.write(self.style.MIGRATE_HEADING("📦 DIAGNÓSTICO DE LOGÍSTICA MULTI-PROVEEDOR NECTAR LABS"))
         self.stdout.write(self.style.MIGRATE_HEADING("=" * 70))
         self.stdout.write(f"• Modalidad / Proveedor: {provider_choice}")
-        self.stdout.write(f"• Origen (C.P.):         {origin_cp} (Hermosillo, Sonora)")
-        self.stdout.write(f"• Destino (C.P.):        {dest_cp}")
         self.stdout.write(f"• Inquilino:             {tenant.name if tenant else 'Néctar Labs Master Platform (PaaS Hub)'}")
+        if tenant:
+            domain_label = tenant.custom_domain if tenant.custom_domain else f"{tenant.subdomain}.nectarlabs.dev"
+            self.stdout.write(f"• Dominio / Subdominio:  {domain_label}")
+            if tenant.envia_api_key or tenant.skydropx_client_id:
+                self.stdout.write(f"• Modo de Credenciales:  BYO Keys (Propias del Inquilino)")
+            else:
+                self.stdout.write(f"• Modo de Credenciales:  Cuenta Maestra Nectar Labs (Saldo: ${tenant.shipping_wallet_balance} MXN)")
+        
+        origin_city = (tenant.shipping_origin_city if tenant and tenant.shipping_origin_city else "Hermosillo")
+        origin_state = (tenant.shipping_origin_state if tenant and tenant.shipping_origin_state else "Sonora")
+        self.stdout.write(f"• Origen (C.P.):         {origin_cp} ({origin_city}, {origin_state})")
+        self.stdout.write(f"• Destino (C.P.):        {dest_cp}")
         active_markup = tenant.shipping_markup_percentage if tenant else Decimal('0.00')
         self.stdout.write(f"• Margen Comercial:      {active_markup}%")
         if target_carrier:
             self.stdout.write(f"• Courier Objetivo:      {target_carrier.upper()}")
 
         origin_data = {
-            "name": (tenant.shipping_origin_name if tenant else None) or "Néctar Labs Bodega Central",
-            "company": (tenant.name if tenant else None) or "Nectar Labs",
-            "phone": "6621000000",
-            "street": "Av. Central 100",
-            "district": "Centro",
-            "city": "Hermosillo",
-            "state": "SO",
+            "name": (tenant.shipping_origin_name if tenant and tenant.shipping_origin_name else "Néctar Labs Bodega Central"),
+            "company": (tenant.name if tenant else "Nectar Labs"),
+            "phone": (tenant.shipping_origin_phone if tenant and tenant.shipping_origin_phone else "6621000000"),
+            "street": (tenant.shipping_origin_street if tenant and tenant.shipping_origin_street else "Av. Central 100"),
+            "district": (tenant.shipping_origin_suburb if tenant and tenant.shipping_origin_suburb else "Centro"),
+            "city": origin_city,
+            "state": (tenant.shipping_origin_state if tenant and tenant.shipping_origin_state else "SO"),
             "postalCode": origin_cp,
             "country": "MX"
         }
