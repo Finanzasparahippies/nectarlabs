@@ -289,15 +289,23 @@ class Order(models.Model):
     postal_code = models.CharField(max_length=10, default="", blank=True, null=True, verbose_name="Código Postal")
     country = models.CharField(max_length=100, default="MX", blank=True, null=True, verbose_name="País")
 
-    # Datos de la Guía Automatizada (Envia.com / Carrier)
-    shipping_provider = models.CharField(max_length=50, blank=True, null=True, help_text="Ej: FedEx, DHL, Estafeta")
-    shipping_carrier_name = models.CharField(max_length=50, blank=True, null=True, help_text="Identificador Envia (fedex, dhl, etc.)")
+    # Datos de la Guía Automatizada (Envia.com / Skydropx Pro / Carrier)
+    shipping_provider_type = models.CharField(
+        max_length=20,
+        choices=[('ENVIA', 'Envia.com'), ('SKYDROPX', 'Skydropx Pro')],
+        default='ENVIA',
+        help_text="Proveedor logístico que emitió la guía"
+    )
+    shipping_provider = models.CharField(max_length=50, blank=True, null=True, help_text="Ej: FedEx, DHL, Estafeta, Paquetexpress")
+    shipping_carrier_name = models.CharField(max_length=50, blank=True, null=True, help_text="Identificador courier (fedex, dhl, etc.)")
     shipping_service_name = models.CharField(max_length=100, blank=True, null=True, help_text="Servicio (express, ground, etc.)")
     tracking_number = models.CharField(max_length=100, blank=True, null=True, db_index=True)
     tracking_url = models.URLField(max_length=500, blank=True, null=True)
     shipping_label_pdf = models.URLField(max_length=500, blank=True, null=True)
     envia_shipment_id = models.CharField(max_length=100, blank=True, null=True, db_index=True)
-    shipping_error = models.TextField(blank=True, null=True, help_text="Detalle del fallo si la emisión de guía en Envia.com no tuvo éxito")
+    skydropx_shipment_id = models.CharField(max_length=100, blank=True, null=True, db_index=True)
+    shipping_error = models.TextField(blank=True, null=True, help_text="Detalle del fallo si la emisión de guía no tuvo éxito")
+    request_shipping_invoice = models.BooleanField(default=False, help_text="Solicitud del comprador para facturar el costo de envío (CFDI 4.0)")
 
     # Costos detallados de envío
     shipping_cost = models.DecimalField(max_digits=10, decimal_places=2, default=0.00, help_text="Costo de envío cobrado al cliente (con margen)")
@@ -803,3 +811,28 @@ class EnviaWebhookEventLog(models.Model):
 
     def __str__(self):
         return f"Envia Event {self.event_id} ({self.event_type}) - {self.status}"
+
+
+class SkydropxWebhookEventLog(models.Model):
+    class Status(models.TextChoices):
+        RECEIVED = 'RECEIVED', 'Recibido'
+        PROCESSED = 'PROCESSED', 'Procesado'
+        IGNORED = 'IGNORED', 'Ignorado'
+        ERROR = 'ERROR', 'Error'
+
+    event_id = models.CharField(max_length=255, unique=True, db_index=True)
+    event_type = models.CharField(max_length=100, db_index=True)
+    tracking_number = models.CharField(max_length=100, blank=True, null=True, db_index=True)
+    shipment_id = models.CharField(max_length=100, blank=True, null=True, db_index=True)
+    payload = models.JSONField(default=dict)
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.RECEIVED)
+    error_message = models.TextField(blank=True, default="")
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Log de Webhook Skydropx'
+        verbose_name_plural = 'Logs de Webhook Skydropx'
+
+    def __str__(self):
+        return f"Skydropx Event {self.event_id} ({self.event_type}) - {self.status}"

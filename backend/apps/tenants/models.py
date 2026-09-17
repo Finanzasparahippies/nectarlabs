@@ -136,8 +136,27 @@ class Tenant(models.Model):
         help_text="Contexto personalizado que se le inyecta al bot de soporte de IA."
     )
     
-    # Logistics Integration (Envia.com multi-tenant)
-    envia_api_key = models.CharField(max_length=255, blank=True, null=True)
+    # Logistics Integration (Envia.com & Skydropx Pro Multi-Tenant)
+    class ShippingProvider(models.TextChoices):
+        ENVIA = 'ENVIA', 'Envia.com'
+        SKYDROPX = 'SKYDROPX', 'Skydropx Pro'
+        DYNAMIC_BEST = 'DYNAMIC_BEST', 'Multicotizador Dinámico (Mejor Tarifa)'
+
+    preferred_shipping_provider = models.CharField(
+        max_length=20,
+        choices=ShippingProvider.choices,
+        default=ShippingProvider.DYNAMIC_BEST,
+        help_text="Proveedor preferido o multicotizador simultáneo entre proveedores"
+    )
+    envia_api_key = models.CharField(max_length=255, blank=True, null=True, help_text="API Token propio de Envia.com (BYO Key)")
+    skydropx_client_id = models.CharField(max_length=255, blank=True, null=True, help_text="Client ID de Skydropx Pro (BYO Key)")
+    skydropx_client_secret = models.CharField(max_length=255, blank=True, null=True, help_text="Client Secret de Skydropx Pro (BYO Key)")
+    skydropx_webhook_secret = models.CharField(max_length=255, blank=True, null=True, help_text="Secret/Token para webhook de Skydropx")
+    auto_invoice_shipping = models.BooleanField(
+        default=False,
+        help_text="Timbrar automáticamente el flete con Facturapi al confirmar la orden (opcional)"
+    )
+
     platform_shipping_fee = models.DecimalField(
         max_digits=5,
         decimal_places=2,
@@ -155,11 +174,11 @@ class Tenant(models.Model):
 
     @property
     def skydropx_api_key(self):
-        return self.envia_api_key
+        return self.skydropx_client_id or self.envia_api_key
 
     @skydropx_api_key.setter
     def skydropx_api_key(self, value):
-        self.envia_api_key = value
+        self.skydropx_client_id = value
 
     # Ambassador plan stamps tracking
     stamps_used_this_month = models.PositiveIntegerField(default=0)

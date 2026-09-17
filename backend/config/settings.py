@@ -607,5 +607,20 @@ LOGGING = {
     },
 }
 
+# ------------------------------------------------------------------------------
+# LOGÍSTICA & ENVÍOS MULTI-TENANT (ENVIA.COM & SKYDROPX PRO)
+# ------------------------------------------------------------------------------
+ENVIA_ENVIRONMENT = os.environ.get("ENVIA_ENVIRONMENT", "sandbox").lower()
+ENVIA_PRODUCTION_TOKEN = os.environ.get("ENVIA_PRODUCTION_TOKEN", "")
+ENVIA_SANDBOX_TOKEN = os.environ.get("ENVIA_SANDBOX_TOKEN", "")
+ENVIA_WEBHOOK_SECRET = os.environ.get("ENVIA_WEBHOOK_SECRET", "")
+ENVIA_WEBHOOK_TOKENS = [t.strip() for t in os.environ.get("ENVIA_WEBHOOK_TOKENS", "").split(",") if t.strip()]
 
+SKYDROPX_ENVIRONMENT = os.environ.get("SKYDROPX_ENVIRONMENT", "staging").lower()
+SKYDROPX_PROD_API_KEY = os.environ.get("SKYDROPX_PROD_API_KEY", "")
+SKYDROPX_PROD_API_SECRET = os.environ.get("SKYDROPX_PROD_API_SECRET", "")
+SKYDROPX_SANDBOX_API_KEY = os.environ.get("SKYDROPX_SANDBOX_API_KEY", "")
+SKYDROPX_SANDBOX_API_SECRET = os.environ.get("SKYDROPX_SANDBOX_API_SECRET", "")
+SKYDROPX_WEBHOOK_SECRET = os.environ.get("SKYDROPX_WEBHOOK_SECRET", "")
 
+MIN_SHIPPING_WALLET_BALANCE = Decimal(os.environ.get("MIN_SHIPPING_WALLET_BALANCE", "300.00"))
