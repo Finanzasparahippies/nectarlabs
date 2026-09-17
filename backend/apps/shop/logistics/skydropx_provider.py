@@ -66,8 +66,12 @@ def _format_skydropx_address(addr: Dict[str, Any], default_cp: str = "83000") ->
         "area_level1": state_name,
         "area_level2": city,
         "area_level3": district,
-        "country_code": country,
-        "street": street
+        "province": state_name,
+        "city": city,
+        "district": district,
+        "street": street,
+        "street1": street,
+        "country_code": country
     }
 
 
@@ -283,8 +287,12 @@ class SkydropxProvider(BaseShippingProvider):
                 "length": 20.0,
                 "width": 15.0,
                 "height": 10.0
+            }]
+
         address_from = _format_skydropx_address(origin, default_cp="83000")
         address_to = _format_skydropx_address(destination, default_cp="06600")
+        orig_cp = str(address_from.get("postal_code") or "83000")
+        dest_cp = str(address_to.get("postal_code") or "06600")
 
         payload = {
             "quotation": {
