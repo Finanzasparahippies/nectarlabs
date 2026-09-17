@@ -2148,24 +2148,39 @@ class GetShippingRatesView(APIView):
     def post(self, request, *args, **kwargs):
         tenant_id = request.data.get('tenant_id')
         subdomain = request.data.get('subdomain')
+        tenant_slug = request.data.get('tenant_slug') or request.headers.get('X-Tenant-Slug')
+        api_key = request.headers.get('X-Tenant-API-Key') or request.headers.get('X-Nectar-Org-Key') or request.data.get('api_key')
         tenant = None
         
-        if tenant_id:
+        if api_key:
+            tenant = Tenant.objects.filter(api_key=api_key, is_active=True).first()
+        if not tenant and tenant_slug:
+            tenant = Tenant.objects.filter(slug=tenant_slug.strip().lower(), is_active=True).first()
+        if not tenant and tenant_id:
             tenant = Tenant.objects.filter(id=tenant_id, is_active=True).first()
-        elif subdomain:
-            tenant = Tenant.objects.filter(subdomain=subdomain.lower(), is_active=True).first()
+        if not tenant and subdomain:
+            tenant = Tenant.objects.filter(subdomain=subdomain.strip().lower(), is_active=True).first()
 
         if not tenant:
             return Response({"error": "No se pudo identificar un inquilino (tenant) válido."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Enforce minimum balance of $300 MXN for quotations and labels
+        # Si el inquilino no tiene credenciales propias (BYO Keys), validar saldo mínimo en cartera corporativa
+        has_custom_keys = bool(tenant.envia_api_key or tenant.skydropx_client_id)
         min_required = getattr(settings, "MIN_SHIPPING_WALLET_BALANCE", Decimal("300.00"))
-        if tenant.shipping_wallet_balance < min_required:
+        if not has_custom_keys and tenant.shipping_wallet_balance < min_required:
             return Response({
-                "error": f"Saldo insuficiente en tu Cartera de Envíos. Se requiere un saldo mínimo de ${min_required} MXN para cotizar y generar guías."
+                "error": f"Saldo insuficiente en tu Cartera de Envíos. Se requiere un saldo mínimo de ${min_required} MXN para cotizar con la cuenta corporativa."
             }, status=status.HTTP_400_BAD_REQUEST)
 
         destination = request.data.get('destination')
+        if not destination and (request.data.get('zip_code') or request.data.get('destination_zip') or request.data.get('postal_code')):
+            destination = {
+                'zip_code': request.data.get('zip_code') or request.data.get('destination_zip') or request.data.get('postal_code'),
+                'city': request.data.get('city', ''),
+                'state': request.data.get('state', ''),
+                'country': request.data.get('country', 'MX')
+            }
+
         if not destination or not (destination.get('zip_code') or destination.get('postal_code')):
             return Response({"error": "La dirección de destino con código postal es obligatoria."}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -2608,7 +2623,27 @@ class OrderViewSet(viewsets.ModelViewSet):
         existing_order = Order.objects.filter(tenant=tenant, stripe_payment_intent=f"EXTERNAL_{external_order_id}").first()
         if existing_order:
             return Response({"detail": "Orden ya sincronizada previa.", "order_id": existing_order.id}, status=status.HTTP_200_OK)
-            
+
+        shipping_rate_id = request.data.get('shipping_rate_id', '')
+        shipping_provider_type = request.data.get('shipping_provider_type')
+        if not shipping_provider_type and shipping_rate_id:
+            if shipping_rate_id.startswith('skydropx_') or shipping_rate_id.startswith('skydrop_'):
+                shipping_provider_type = 'SKYDROPX'
+            elif shipping_rate_id.startswith('envia_') or shipping_rate_id.isdigit():
+                shipping_provider_type = 'ENVIA'
+
+        shipping_cost = Decimal(str(request.data.get('shipping_cost', '0.00')))
+        shipping_carrier = request.data.get('shipping_carrier', '')
+        shipping_service_level = request.data.get('shipping_service_level', '')
+        request_shipping_invoice = bool(request.data.get('request_shipping_invoice', False))
+
+        street_and_number = request.data.get('street_and_number') or request.data.get('address') or request.data.get('delivery_address', '')
+        postal_code = request.data.get('postal_code') or request.data.get('zip_code', '')
+        city = request.data.get('city', '')
+        state = request.data.get('state', '')
+        colony = request.data.get('colony') or request.data.get('neighborhood', '')
+        country = request.data.get('country', 'MX')
+
         order = Order.objects.create(
             tenant=tenant,
             user_email=user_email,
@@ -2617,7 +2652,19 @@ class OrderViewSet(viewsets.ModelViewSet):
             payment_method=request.data.get('payment_method', 'STRIPE'),
             stripe_payment_intent=f"EXTERNAL_{external_order_id}",
             full_name=full_name,
-            phone=phone
+            phone=phone,
+            street_and_number=street_and_number,
+            postal_code=postal_code,
+            city=city,
+            state=state,
+            colony=colony,
+            country=country,
+            shipping_rate_id=shipping_rate_id,
+            shipping_provider_type=shipping_provider_type,
+            shipping_cost=shipping_cost,
+            shipping_carrier=shipping_carrier,
+            shipping_service_level=shipping_service_level,
+            request_shipping_invoice=request_shipping_invoice
         )
         
         for item in items_data:
@@ -2646,8 +2693,26 @@ class OrderViewSet(viewsets.ModelViewSet):
                 quantity=p_qty,
                 price=p_price
             )
+
+        # Generación opcional inmediata de guía de envío si viene solicitada
+        auto_label = bool(request.data.get('auto_generate_label', False))
+        label_data = None
+        if auto_label and shipping_rate_id:
+            from .shipping import generate_shipping_label
+            label_result = generate_shipping_label(order)
+            if label_result:
+                label_data = {
+                    "tracking_number": label_result.tracking_number,
+                    "tracking_url": label_result.tracking_url,
+                    "label_url": label_result.label_url,
+                    "provider": label_result.provider
+                }
             
-        return Response({"detail": "Orden externa sincronizada exitosamente con Nectar Labs.", "order_id": order.id}, status=status.HTTP_201_CREATED)
+        return Response({
+            "detail": "Orden externa sincronizada exitosamente con Nectar Labs.",
+            "order_id": order.id,
+            "label": label_data
+        }, status=status.HTTP_201_CREATED)
 
     @action(detail=True, methods=['post'], url_path='verify-stripe-payment')
     def verify_stripe_payment(self, request, pk=None):
@@ -2697,11 +2762,12 @@ class OrderViewSet(viewsets.ModelViewSet):
 # ──────────────────────────────────────────────────────────────────────────────
 # INTEGRACIÓN LOGÍSTICA ENVIA.COM: BILLETERA, GEOCODES & WEBHOOKS MULTI-TENANT
 # ──────────────────────────────────────────────────────────────────────────────
-from apps.shop.models import ShippingWalletTransaction, EnviaWebhookEventLog
+from apps.shop.models import ShippingWalletTransaction, EnviaWebhookEventLog, SkydropxWebhookEventLog
 from apps.shop.shipping import (
     EnviaClient,
     verify_envia_webhook_signature,
     verify_envia_webhook_bearer_token,
+    verify_skydropx_webhook,
     validate_tenant_logistics_access
 )
 
@@ -3015,6 +3081,124 @@ class EnviaWebhookView(APIView):
         except Exception as err:
             logger.error(f"[Envia/Webhook] Excepción procesando evento {event_identifier}: {err}", exc_info=True)
             webhook_log.status = EnviaWebhookEventLog.Status.ERROR
+            webhook_log.error_message = str(err)
+            webhook_log.save(update_fields=["status", "error_message"])
+            return Response({"error": str(err)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class SkydropxWebhookView(APIView):
+    """
+    Receptor oficial de Webhooks para Skydropx Pro API v1.
+    Soporta:
+    - Autenticación mediante X-Skydropx-Token, X-Skydropx-Signature o Bearer Token.
+    - Idempotencia con SkydropxWebhookEventLog.
+    - Actualización de estado en tiempo real ('shipped', 'delivered', 'in_transit').
+    - Procesamiento de auditorías físicas y sobrepeso (extra charges) con débito atómico en la billetera virtual.
+    """
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request, *args, **kwargs):
+        auth_token = (
+            request.headers.get("X-Skydropx-Token") or
+            request.headers.get("X-Skydropx-Signature") or
+            request.headers.get("Authorization") or
+            ""
+        )
+
+        payload = request.data if isinstance(request.data, dict) else {}
+        data = payload.get("data", {}) if isinstance(payload.get("data"), dict) else payload
+
+        raw_tracking = data.get("tracking_number") or payload.get("tracking_number") or ""
+        tracking_number = str(raw_tracking).strip()
+        shipment_id = str(data.get("id") or payload.get("id") or payload.get("shipment_id") or "")
+        event_name = str(payload.get("event") or payload.get("type") or "tracking.updated").lower()
+
+        # Localizar orden para validar secretos específicos de tenant (BYO Key)
+        order = None
+        if tracking_number:
+            order = Order.objects.select_related("tenant").filter(tracking_number=tracking_number).first()
+        if not order and shipment_id:
+            order = Order.objects.select_related("tenant").filter(skydropx_shipment_id=shipment_id).first()
+
+        tenant = order.tenant if order else None
+
+        # Validación de autenticación
+        if not getattr(settings, "TESTING", False):
+            if not verify_skydropx_webhook(auth_token, tenant=tenant):
+                logger.warning(f"[Skydropx/Webhook] Petición no autorizada rechazada.")
+                return Response({"error": "No autorizado"}, status=status.HTTP_401_UNAUTHORIZED)
+
+        # Identificador único de evento para Idempotencia
+        event_id = str(payload.get("id") or payload.get("event_id") or f"{event_name}_{tracking_number or shipment_id}_{payload.get('created_at', '')}")
+
+        existing_log = SkydropxWebhookEventLog.objects.filter(event_id=event_id).first()
+        if existing_log and existing_log.status == SkydropxWebhookEventLog.Status.PROCESSED:
+            return Response({"status": "already_processed"}, status=status.HTTP_200_OK)
+
+        webhook_log, _ = SkydropxWebhookEventLog.objects.get_or_create(
+            event_id=event_id,
+            defaults={
+                "event_type": event_name,
+                "tracking_number": tracking_number,
+                "shipment_id": shipment_id,
+                "payload": payload,
+                "status": SkydropxWebhookEventLog.Status.RECEIVED
+            }
+        )
+
+        if not order:
+            webhook_log.status = SkydropxWebhookEventLog.Status.IGNORED
+            webhook_log.error_message = "No se encontró orden asociada en Nectar Labs"
+            webhook_log.save(update_fields=["status", "error_message"])
+            return Response({"status": "order_not_found"}, status=status.HTTP_200_OK)
+
+        try:
+            order_status = str(data.get("status") or "").lower()
+
+            # 1. Transiciones de estado de orden
+            if any(term in event_name or term in order_status for term in ["delivered", "entregado"]):
+                order.status = "DELIVERED"
+                order.save(update_fields=["status"])
+                logger.info(f"[Skydropx/Webhook] Orden #{order.id} marcada como ENTREGADA.")
+            elif any(term in event_name or term in order_status for term in ["in_transit", "en_transito", "shipped", "en_ruta"]):
+                if order.status != "DELIVERED":
+                    order.status = "SHIPPED"
+                    order.save(update_fields=["status"])
+                    logger.info(f"[Skydropx/Webhook] Orden #{order.id} marcada como ENVIADA.")
+
+            # 2. Manejo de Sobrepeso / Auditoría Courier (Extra Charges)
+            raw_extra_charge = data.get("extra_charges") or data.get("surcharge") or data.get("overweight_cost")
+            if raw_extra_charge:
+                try:
+                    surcharge_amount = Decimal(str(raw_extra_charge))
+                except Exception:
+                    surcharge_amount = Decimal("0.00")
+
+                if surcharge_amount > Decimal("0.00") and tenant:
+                    with transaction.atomic():
+                        from apps.tenants.models import Tenant
+                        t_locked = Tenant.objects.select_for_update().get(id=tenant.id)
+                        t_locked.shipping_wallet_balance -= surcharge_amount
+                        t_locked.save(update_fields=["shipping_wallet_balance"])
+
+                        ShippingWalletTransaction.objects.create(
+                            tenant=t_locked,
+                            order=order,
+                            amount=-surcharge_amount,
+                            balance_after=t_locked.shipping_wallet_balance,
+                            transaction_type=ShippingWalletTransaction.TransactionType.SURCHARGE_DEBIT,
+                            reference_id=str(event_id),
+                            description=f"Cargo por sobrepeso/auditoría Skydropx Pro en guía #{tracking_number}"
+                        )
+                        logger.info(f"[Skydropx/Surcharge] Débito de ${surcharge_amount} MXN aplicado a Tenant #{tenant.id}.")
+
+            webhook_log.status = SkydropxWebhookEventLog.Status.PROCESSED
+            webhook_log.save(update_fields=["status"])
+            return Response({"success": True, "processed": True}, status=status.HTTP_200_OK)
+
+        except Exception as err:
+            logger.error(f"[Skydropx/Webhook] Error procesando evento {event_id}: {err}", exc_info=True)
+            webhook_log.status = SkydropxWebhookEventLog.Status.ERROR
             webhook_log.error_message = str(err)
             webhook_log.save(update_fields=["status", "error_message"])
             return Response({"error": str(err)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

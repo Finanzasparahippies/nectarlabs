@@ -1,65 +1,83 @@
-# 📦 Nectar Labs — Guía Integral de Logística Multi-Tenant & Envia.com
+# 📦 Nectar Labs — Guía Integral de Logística Multi-Tenant & Multi-Carrier (Envia.com & Skydropx Pro)
 
-Documentación técnica maestra para el aprovisionamiento, operación, auditoría y mantenimiento de la infraestructura de envíos automatizados y billetera de cartera de **Néctar Labs**, integrando **Envia.com API v1**.
+Documentación técnica maestra para el aprovisionamiento, operación, auditoría y mantenimiento de la infraestructura agnóstica de envíos automatizados, multicotizador dinámico y billetera de cartera de **Néctar Labs**, integrando **Envia.com API v1**, **Skydropx Pro API v1/v2** y **Facturapi (CFDI 4.0)**.
 
 ---
 
-## 1. Arquitectura del Motor Logístico Multi-Tenant
+## 1. Arquitectura del Motor Logístico Multi-Tenant & Multi-Carrier
 
-Néctar Labs ofrece logística como servicio de plataforma (**PaaS**) a través de una arquitectura multi-inquilino desacoplada con dos modalidades operativas:
+Néctar Labs ofrece logística agnóstica como servicio de plataforma (**PaaS**) a través de una arquitectura desacoplada escalable a cientos de inquilinos con tres modalidades operativas y soporte multi-carrier simultáneo:
 
 ```mermaid
 flowchart TD
-    Tenant[Colmena / Inquilino] --> CheckMode{¿Tiene API Key propia?}
+    Tenant[Inquilino / Tenant Multi-Tenant] --> Router[Logistics Router: Dynamic / Preferred Provider]
     
-    CheckMode -->|Sí: BYO Key| CustomKey[Cuenta Envia Propia del Tenant]
-    CheckMode -->|No: PaaS Nectar| MasterKey[Billetera Virtual Néctar Labs]
+    Router --> ModeChoice{Estrategia del Tenant}
+    ModeChoice -->|DYNAMIC_BEST| DualQuote[Cotización Simultánea Envia + Skydropx]
+    ModeChoice -->|ENVIA| EnviaOnly[Proveedor Fijo: Envia.com]
+    ModeChoice -->|SKYDROPX| SkydropOnly[Proveedor Fijo: Skydropx Pro]
     
-    CustomKey --> EnviaShip[API Envia.com: /ship/generate]
+    DualQuote --> BestRank[Ranking por Menor Precio para Comprador]
     
-    MasterKey --> CheckBal{Saldo Cartera >= $300 MXN}
-    CheckBal -->|No: Saldo Insuficiente| Block[Bloqueo Operativo / Alerta]
-    CheckBal -->|Sí: Saldo Válido| EnviaShip
+    BestRank --> CheckMode{¿Tiene Credenciales Propias (BYO)?}
+    EnviaOnly --> CheckMode
+    SkydropOnly --> CheckMode
     
-    EnviaShip --> LabelPDF[Guía Generada + Tracking]
+    CheckMode -->|Sí: BYO Key/Secret| CustomAccount[Cuenta Directa del Inquilino]
+    CheckMode -->|No: PaaS Nectar Labs| MasterAccount[Cuenta Corporativa Maestra Nectar Labs]
+    
+    MasterAccount --> CheckBal{Saldo Cartera >= $300 MXN}
+    CheckBal -->|No: Saldo Insuficiente| Block[Bloqueo Operativo / Alerta Preventiva]
+    CheckBal -->|Sí: Saldo Válido| GenerateLabel[Generación de Guía de Envío]
+    CustomAccount --> GenerateLabel
+    
+    GenerateLabel --> LabelPDF[Guía PDF + Tracking URL]
     LabelPDF --> Deduct[Débito Atómico en Ledger: ShippingWalletTransaction]
     
-    EnviaWH[Envia.com Webhook Engine] -->|Tracking / Status / Surcharges| DualAuth{Autenticación Dual}
-    DualAuth -->|HMAC-SHA256: Tipo 3/4/5| ProcessEvent[Normalización y Actualización de Orden]
-    DualAuth -->|Bearer Token: Tipo 1/2| ProcessEvent
+    GenerateLabel --> InvoiceCheck{auto_invoice_shipping / request_shipping_invoice}
+    InvoiceCheck -->|Sí: Opcional| Facturapi[Facturapi SAT CFDI 4.0: Clave 78102200]
+    InvoiceCheck -->|No: Por Defecto| SkipInvoice[No Timbrar Automáticamente]
 ```
 
 ### Modalidades Operativas
 1. **Cuenta Maestra Néctar Labs (PaaS - Por Defecto):**
-   - El socio no necesita negociar con transportistas (FedEx, DHL, Paquetexpress, Estafeta).
-   - Néctar Labs financia la cuenta corporativa en Envia.com.
-   - El inquilino recarga saldo en su billetera virtual (`Tenant.shipping_wallet_balance`).
+   - El socio comercial no necesita negociar ni firmar contratos individuales con transportistas (FedEx, DHL, Paquetexpress, Estafeta, Redpack).
+   - Néctar Labs financia las cuentas corporativas maestras en Envia.com y Skydropx Pro.
+   - El inquilino recarga saldo en su billetera virtual (`Tenant.shipping_wallet_balance >= $300.00 MXN`).
    - Se cobra el costo real del courier más la comisión de servicio configurada (`Tenant.platform_shipping_fee`, por defecto `$10.00 MXN`).
-2. **Bring Your Own Key (BYO Key):**
-   - Si el inquilino configura su propia clave (`tenant.shipping_envia_api_key`), las etiquetas se emiten con cargo directo a su cuenta de Envia.com y solo se liquida la comisión de plataforma.
+2. **Bring Your Own Key / Secret (BYO Key):**
+   - Si el inquilino configura sus propias claves (`tenant.envia_api_key` o `tenant.skydropx_client_id` / `tenant.skydropx_client_secret`), las etiquetas se emiten con cargo directo a sus cuentas externas y solo se liquida la comisión de plataforma.
+3. **Multicotizador Simultáneo Dinámico (`DYNAMIC_BEST`):**
+   - Si el tenant tiene configuradas ambas cuentas (o utiliza la cuenta maestra de Néctar Labs), el motor consulta concurrentemente ambos proveedores, normaliza las respuestas en formato `NormalizedRate`, calcula el costo total con margen y presenta al comprador las tarifas ordenadas de menor a mayor precio.
 
 ---
 
-## 2. Inventario de Webhooks y Credenciales en Vivo
+## 2. Inventario de Credenciales de API y Webhooks
 
-### Credenciales de API Maestras
-Las credenciales maestras deben definirse exclusivamente en los archivos `.env` respectivos (`.env.prod`, `.env.staging`, `.env.local`):
-* **Producción:** Variable `ENVIA_PRODUCTION_TOKEN` en `.env.prod`
-  - Shipping Base: `https://api.envia.com`
-  - Queries Base: `https://queries.envia.com`
-  - Geocodes Base: `https://geocodes.envia.com`
-* **Sandbox / Staging:** Variable `ENVIA_SANDBOX_TOKEN` en `.env.staging` y `.env.local`
-  - Shipping Base: `https://api-test.envia.com`
-  - Queries Base: `https://queries.test.envia.com`
-  - Geocodes Base: `https://geocodes.envia.com`
+### Variables de Entorno Maestras (.env)
+```ini
+# Envia.com
+ENVIA_ENVIRONMENT=sandbox # 'sandbox' o 'production'
+ENVIA_SANDBOX_TOKEN=tu_token_sandbox_envia
+ENVIA_PROD_TOKEN=tu_token_produccion_envia
+ENVIA_WEBHOOK_TOKENS=["token_1", "token_2"]
 
-### Webhooks Registrados en Envia.com
-| Ambiente | ID Webhook | Tipo Evento | URL del Receptor | Variable de Autenticación |
-| :--- | :--- | :--- | :--- | :--- |
-| **Producción** | `#4786` | `onShipmentStatusUpdate` | `https://nectarlabs.dev/api/shop/shipping/webhooks/envia/` | Configurado en `ENVIA_WEBHOOK_TOKENS` (`.env.prod`) |
-| **Producción** | `#4808` | `ecommerceTracking` | `https://nectarlabs.dev/api/shop/shipping/webhooks/ecommerceTracking` | Configurado en `ENVIA_WEBHOOK_TOKENS` (`.env.prod`) |
-| **Staging** | `#1057` | `onShipmentStatusUpdate` | `https://staging.nectarlabs.dev/api/shop/shipping/webhooks/envia/` | Configurado en `ENVIA_WEBHOOK_TOKENS` (`.env.staging`) |
-| **Staging** | `#1058` | `ecommerceTracking` | `https://staging.nectarlabs.dev/api/shop/shipping/webhooks/ecommerceTracking` | Configurado en `ENVIA_WEBHOOK_TOKENS` (`.env.staging`) |
+# Skydropx Pro
+SKYDROPX_ENVIRONMENT=staging # 'staging' o 'production'
+SKYDROPX_SANDBOX_API_KEY=tu_client_id_staging
+SKYDROPX_SANDBOX_API_SECRET=tu_client_secret_staging
+SKYDROPX_PROD_API_KEY=tu_client_id_prod
+SKYDROPX_PROD_API_SECRET=tu_client_secret_prod
+SKYDROPX_WEBHOOK_SECRET=tu_hmac_webhook_secret_skydropx
+```
+
+### Webhooks Registrados
+| Proveedor | Evento | URL del Receptor | Método de Autenticación |
+| :--- | :--- | :--- | :--- |
+| **Envia.com** | `onShipmentStatusUpdate` | `/api/shop/shipping/webhooks/envia/` | Header Bearer / Token |
+| **Envia.com** | `ecommerceTracking` | `/api/shop/shipping/webhooks/ecommerceTracking` | Header Bearer / Token |
+| **Skydropx Pro** | `shipment.created` / `status_changed` / `surcharge` | `/api/shop/shipping/webhooks/skydropx/` | HMAC-SHA256 (`HTTP_X_SKYDROPX_HMAC_SHA256`) |
+| **Skydropx Pro (Alt)** | Formato sin slash | `/api/shop/shipping/webhooks/skydropx` | HMAC-SHA256 (`HTTP_X_SKYDROPX_HMAC_SHA256`) |
 
 > [!NOTE]
 > **Compatibilidad de Slashes:** El router de URLs de Django soporta de forma nativa tanto la variante con barra final (`/ecommerceTracking/`) como sin barra (`/ecommerceTracking`), previniendo redirecciones HTTP 301 que degraden o pierdan el cuerpo JSON del webhook.
@@ -78,23 +96,32 @@ Antes de realizar recargas de saldo real en la cuenta corporativa de Producción
 ### Comandos de Diagnóstico Operativo (CLI)
 
 ```bash
-# 1. Cotizar en Sandbox (Hermosillo -> CDMX con Paquetexpress)
+# === DIAGNÓSTICO UNIFICADO MULTI-CARRIER ===
+# 1. Multicotización dinámica en vivo (DYNAMIC_BEST: compara Envia y Skydropx)
+./nectar.sh manage test_logistics --provider DYNAMIC_BEST --origin 83000 --dest 06600
+
+# 2. Cotización y diagnóstico específico de Skydropx Pro
+./nectar.sh manage test_logistics --provider SKYDROPX --origin 83000 --dest 06600
+
+# 3. Cotización y diagnóstico específico de Envia.com
+./nectar.sh manage test_logistics --provider ENVIA --origin 83000 --dest 06600
+
+# 4. Probar emisión de guía de prueba en Sandbox (sin consumo de saldo real)
+./nectar.sh manage test_logistics --provider SKYDROPX --generate-label
+./nectar.sh manage test_logistics --provider ENVIA --generate-label
+
+# === COMANDOS ESPECÍFICOS ENVIA.COM ===
+# 5. Cotizar en Sandbox Envia (Hermosillo -> CDMX con Paquetexpress)
 ./nectar.sh manage test_envia --env sandbox
 
-# 2. Emitir una guía real de prueba en Sandbox (genera PDF en S3)
+# 6. Emitir una guía real de prueba en Sandbox Envia (genera PDF en S3)
 ./nectar.sh manage test_envia --env sandbox --generate-label
 
-# 3. Disparar un evento de webhook de prueba hacia Staging
+# 7. Disparar un evento de webhook de prueba hacia Staging
 ./nectar.sh manage test_envia --env sandbox --test-webhook
 
-# 4. Probar webhook contra una URL específica
-./nectar.sh manage test_envia --env sandbox --test-webhook --webhook-url https://staging.nectarlabs.dev/api/shop/shipping/webhooks/ecommerceTracking
-
-# 5. Auditar saldos de billetera de todos los inquilinos (valida umbral de $300 MXN)
+# 8. Auditar saldos de billetera de todos los inquilinos (valida umbral de $300 MXN)
 ./nectar.sh manage test_envia --check-balance
-
-# 6. Validar cotización en vivo en Producción (solo cotiza tarifas reales, no emite guía)
-./nectar.sh manage test_envia --env production
 ```
 
 ---

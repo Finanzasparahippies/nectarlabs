@@ -23,7 +23,7 @@ from apps.shop.views import (
     PlanViewSet, ProductViewSet, ContractViewSet, PaymentInstallmentViewSet, 
     AddOnViewSet, PromoCodeViewSet, SalesCommissionViewSet, ShopCheckoutView, 
     GetShippingRatesView, AddOnSubscriptionViewSet, OrderStatusView, OrderViewSet,
-    EnviaWebhookView, ShippingWalletRechargeView, ShippingWalletHistoryView, EnviaZipcodeValidationView
+    EnviaWebhookView, SkydropxWebhookView, ShippingWalletRechargeView, ShippingWalletHistoryView, EnviaZipcodeValidationView
 )
 from apps.dashboard.views import ProjectViewSet, FAQViewSet, TimeLogViewSet, ProjectQuoteViewSet, LeadViewSet, LeadAppointmentViewSet
 from apps.blog.views import PostViewSet
@@ -133,7 +133,7 @@ urlpatterns = [
     # CKEditor 5 para el editor de textos del Blog y del Newsletter
     path("ckeditor5/", include('django_ckeditor_5.urls')),
     
-    # Webhooks para integraciones de terceros (Pasarelas de Pago, Invoicing y Logística Envia)
+    # Webhooks para integraciones de terceros (Pasarelas de Pago, Invoicing y Logística Envia/Skydropx)
     path('api/shop/stripe-webhook/', stripe_webhook, name='stripe_webhook'),
     path('api/shop/facturapi-webhook/', facturapi_webhook, name='facturapi_webhook'),
     path('api/shop/shipping/webhooks/envia/', EnviaWebhookView.as_view(), name='envia_webhook'),
@@ -141,6 +141,8 @@ urlpatterns = [
     path('api/shop/shipping/webhooks/envia-webhook/', EnviaWebhookView.as_view(), name='envia-webhook'),
     path('api/shop/shipping/webhooks/ecommerceTracking/', EnviaWebhookView.as_view(), name='envia_webhook_ecommerce'),
     path('api/shop/shipping/webhooks/ecommerceTracking', EnviaWebhookView.as_view()),
+    path('api/shop/shipping/webhooks/skydropx/', SkydropxWebhookView.as_view(), name='skydropx_webhook'),
+    path('api/shop/shipping/webhooks/skydropx', SkydropxWebhookView.as_view()),
     
     # Checkout y Cotización de tarifas de envío Envia.com (Multi-tenant)
     path('api/shop/checkout/', ShopCheckoutView.as_view(), name='shop_checkout'),
