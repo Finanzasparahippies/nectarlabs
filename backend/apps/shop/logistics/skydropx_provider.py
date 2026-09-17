@@ -199,6 +199,7 @@ class SkydropxProvider(BaseShippingProvider):
         self.nectar_fee = Decimal(str(getattr(tenant, "platform_shipping_fee", "10.00") or "10.00")) if tenant else Decimal("10.00")
         markup = Decimal(str(getattr(tenant, "shipping_markup_percentage", "15.00") or "15.00")) if tenant else Decimal("15.00")
         self.markup_factor = Decimal("1.00") + (markup / Decimal("100.00"))
+        self.last_error: Optional[str] = None
 
     @property
     def is_mock(self) -> bool:
@@ -457,11 +458,19 @@ class SkydropxProvider(BaseShippingProvider):
                 except Exception as leg_e:
                     logger.warning(f"[SkydropxProvider] Fallback Standard API error: {leg_e}")
 
-            if not raw_rates and not self.last_error:
-                diag = f"HTTP {res.status_code}"
-                if quotation_id:
-                    diag += f" (ID: {quotation_id}, completado={is_completed})"
-                self.last_error = f"Sin tarifas disponibles para la ruta CP {orig_cp} -> CP {dest_cp} [{diag}]"
+            if not raw_rates:
+                pkg_type_used = parcels_payload[0].get("package_type", "box") if parcels_payload else "box"
+                weight_used = float(parcels_payload[0].get("weight", 1.0)) if parcels_payload else 1.0
+                if pkg_type_used == "pallet" or weight_used > 70.0:
+                    self.last_error = (
+                        f"Los couriers estándar de Skydropx no cotizan tarimas/pallets ni paquetes > 70 kg "
+                        f"({weight_used} kg, '{pkg_type_used}'). Envia.com sí cotizó vía Paquetexpress LTL."
+                    )
+                elif not self.last_error:
+                    diag = f"HTTP {res.status_code}"
+                    if quotation_id:
+                        diag += f" (ID: {quotation_id}, completado={is_completed})"
+                    self.last_error = f"Sin tarifas disponibles para la ruta CP {orig_cp} -> CP {dest_cp} [{diag}]"
 
             # Mapa de couriers desde included (JSON:API)
             carrier_map = {}
