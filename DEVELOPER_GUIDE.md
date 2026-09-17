@@ -126,7 +126,7 @@ El script `./nectar.sh` verifica automáticamente la existencia de la red `prod_
 | `./nectar.sh up-prod` | Inicia el entorno de Producción |
 | `./nectar.sh provision-tenant <slug>` | Aprovisiona y levanta contenedores dinámicos dedicados por Tenant (BYO Stack) |
 | `./nectar.sh deprovision-tenant <slug>` | Detiene y remueve los contenedores del Tenant especificado |
-| `./nectar.sh test-logistics` | Diagnóstico integral multi-carrier (DYNAMIC_BEST, Envia.com y Skydropx Pro) |
+| `./nectar.sh test-logistics` | Diagnóstico integral multi-carrier con selector de empaques (`--package-type envelope|box|pallet`, `--weight`, `--length`, etc.) |
 | `./nectar.sh test-envia` | Diagnóstico y emisión de guías de prueba en Sandbox para Envia.com |
 | `./nectar.sh clean` | Limpia de forma segura caché y redes e imágenes huérfanas |
 

@@ -91,11 +91,15 @@ get_active_backend_container() {
 sync_logistics_to_container() {
     local c_name=$1
     if [ -n "$c_name" ] && [ -d "backend/apps/shop" ]; then
-        $DOCKER_BIN exec "$c_name" mkdir -p /app/apps/shop/management/commands /app/apps/shop/logistics 2>/dev/null || true
+        $DOCKER_BIN exec "$c_name" mkdir -p /app/apps/shop/management/commands /app/apps/shop/logistics /app/apps/tenants/migrations /app/apps/shop/migrations 2>/dev/null || true
         $DOCKER_BIN cp backend/apps/shop/management/commands/test_logistics.py "$c_name":/app/apps/shop/management/commands/ 2>/dev/null || true
         $DOCKER_BIN cp backend/apps/shop/management/commands/test_envia.py "$c_name":/app/apps/shop/management/commands/ 2>/dev/null || true
         $DOCKER_BIN cp backend/apps/shop/logistics/. "$c_name":/app/apps/shop/logistics/ 2>/dev/null || true
         $DOCKER_BIN cp backend/apps/shop/shipping.py "$c_name":/app/apps/shop/shipping.py 2>/dev/null || true
+        $DOCKER_BIN cp backend/apps/shop/models.py "$c_name":/app/apps/shop/models.py 2>/dev/null || true
+        $DOCKER_BIN cp backend/apps/shop/migrations/. "$c_name":/app/apps/shop/migrations/ 2>/dev/null || true
+        $DOCKER_BIN cp backend/apps/tenants/. "$c_name":/app/apps/tenants/ 2>/dev/null || true
+        $DOCKER_BIN cp backend/apps/tenants/migrations/. "$c_name":/app/apps/tenants/migrations/ 2>/dev/null || true
         $DOCKER_BIN cp backend/config/settings.py "$c_name":/app/config/settings.py 2>/dev/null || true
     fi
 }

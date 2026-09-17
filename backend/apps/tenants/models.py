@@ -172,6 +172,102 @@ class Tenant(models.Model):
     shipping_origin_zip_code = models.CharField(max_length=10, blank=True, null=True, default="")
     shipping_markup_percentage = models.DecimalField(max_digits=5, decimal_places=2, default=15.00, help_text="Porcentaje de ganancia sobre el costo del courier hacia el comprador")
 
+    # Configuración de Empaque por Defecto (Prevalece en Envia.com y Skydropx Pro)
+    class PackageType(models.TextChoices):
+        BOX = 'BOX', 'Caja Estándar (20x15x10 cm, 1 kg)'
+        ENVELOPE = 'ENVELOPE', 'Sobre / Documentos (30x20x2 cm, 0.3 kg)'
+        SMALL_BOX = 'SMALL_BOX', 'Caja Pequeña (15x15x10 cm, 0.5 kg)'
+        MEDIUM_BOX = 'MEDIUM_BOX', 'Caja Mediana (30x25x20 cm, 2.0 kg)'
+        LARGE_BOX = 'LARGE_BOX', 'Caja Grande (50x40x30 cm, 5.0 kg)'
+        PALLET = 'PALLET', 'Tarima / Pallet (120x100x150 cm, 150 kg)'
+        CUSTOM = 'CUSTOM', 'Personalizado'
+
+    default_package_type = models.CharField(
+        max_length=20,
+        choices=PackageType.choices,
+        default=PackageType.BOX,
+        help_text="Tipo de empaque predeterminado para cotizaciones y guías (Caja, Sobre, Tarima)"
+    )
+    default_package_weight = models.DecimalField(
+        max_digits=6,
+        decimal_places=2,
+        default=Decimal('1.00'),
+        help_text="Peso predeterminado del paquete en kilogramos (kg)"
+    )
+    default_package_length = models.DecimalField(
+        max_digits=6,
+        decimal_places=2,
+        default=Decimal('20.00'),
+        help_text="Largo predeterminado en centímetros (cm)"
+    )
+    default_package_width = models.DecimalField(
+        max_digits=6,
+        decimal_places=2,
+        default=Decimal('15.00'),
+        help_text="Ancho predeterminado en centímetros (cm)"
+    )
+    default_package_height = models.DecimalField(
+        max_digits=6,
+        decimal_places=2,
+        default=Decimal('10.00'),
+        help_text="Alto predeterminado en centímetros (cm)"
+    )
+    default_package_content = models.CharField(
+        max_length=255,
+        default="Mercancía general",
+        blank=True,
+        null=True,
+        help_text="Descripción genérica del contenido del envío"
+    )
+    default_declared_value = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=Decimal('500.00'),
+        help_text="Valor declarado por defecto en MXN"
+    )
+
+    def get_default_package(self) -> dict:
+        """
+        Retorna el empaque unificado por defecto del inquilino, mapeado tanto
+        para la especificación de Envia.com como de Skydropx Pro.
+        """
+        pkg_type = self.default_package_type or 'BOX'
+        weight = float(self.default_package_weight or 1.0)
+        length = float(self.default_package_length or 20.0)
+        width = float(self.default_package_width or 15.0)
+        height = float(self.default_package_height or 10.0)
+        content = self.default_package_content or "Mercancía general"
+        declared_val = float(self.default_declared_value or 500.0)
+
+        if pkg_type == 'ENVELOPE':
+            envia_type = 'envelope'
+            skydropx_type = 'envelope'
+        elif pkg_type == 'PALLET':
+            envia_type = 'pallet'
+            skydropx_type = 'pallet'
+        else:
+            envia_type = 'box'
+            skydropx_type = 'box'
+
+        return {
+            "type": envia_type,
+            "package_type": skydropx_type,
+            "system_type": pkg_type,
+            "content": content,
+            "amount": 1,
+            "declaredValue": declared_val,
+            "declared_value": declared_val,
+            "weight": max(0.01, weight),
+            "length": max(1.0, length),
+            "width": max(1.0, width),
+            "height": max(1.0, height),
+            "dimensions": {
+                "length": max(1.0, length),
+                "width": max(1.0, width),
+                "height": max(1.0, height)
+            }
+        }
+
     @property
     def skydropx_api_key(self):
         return self.skydropx_client_id or self.envia_api_key

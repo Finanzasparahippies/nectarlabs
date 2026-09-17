@@ -346,13 +346,17 @@ class SkydropxProvider(BaseShippingProvider):
             width = float(p.get("width", dims.get("width", 15.0)))
             height = float(p.get("height", dims.get("height", 10.0)))
             weight = float(p.get("weight", 1.0))
+            raw_pkg_type = str(p.get("package_type") or p.get("type") or "box").lower()
+            if raw_pkg_type not in ["box", "envelope", "pallet"]:
+                raw_pkg_type = "box"
             parcels_payload.append({
-                "weight": max(0.1, weight),
+                "weight": max(0.01, weight),
                 "distance_unit": "CM",
                 "mass_unit": "KG",
                 "length": max(1.0, length),
                 "width": max(1.0, width),
-                "height": max(1.0, height)
+                "height": max(1.0, height),
+                "package_type": raw_pkg_type
             })
 
         if not parcels_payload:
@@ -362,7 +366,8 @@ class SkydropxProvider(BaseShippingProvider):
                 "mass_unit": "KG",
                 "length": 20.0,
                 "width": 15.0,
-                "height": 10.0
+                "height": 10.0,
+                "package_type": "box"
             }]
 
         address_from = _format_skydropx_address(origin, default_cp="83000")

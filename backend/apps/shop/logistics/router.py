@@ -41,6 +41,149 @@ def get_shipping_provider(tenant, provider_type: Optional[str] = None) -> BaseSh
     return EnviaProvider(tenant=tenant)
 
 
+PACKAGE_TYPE_PRESETS = {
+    'BOX': {'type': 'box', 'package_type': 'box', 'length': 20.0, 'width': 15.0, 'height': 10.0, 'weight': 1.0, 'name': 'Caja Estándar'},
+    'ENVELOPE': {'type': 'envelope', 'package_type': 'envelope', 'length': 30.0, 'width': 20.0, 'height': 2.0, 'weight': 0.3, 'name': 'Sobre / Documentos'},
+    'SMALL_BOX': {'type': 'box', 'package_type': 'box', 'length': 15.0, 'width': 15.0, 'height': 10.0, 'weight': 0.5, 'name': 'Caja Pequeña'},
+    'MEDIUM_BOX': {'type': 'box', 'package_type': 'box', 'length': 30.0, 'width': 25.0, 'height': 20.0, 'weight': 2.0, 'name': 'Caja Mediana'},
+    'LARGE_BOX': {'type': 'box', 'package_type': 'box', 'length': 50.0, 'width': 40.0, 'height': 30.0, 'weight': 5.0, 'name': 'Caja Grande'},
+    'PALLET': {'type': 'pallet', 'package_type': 'pallet', 'length': 120.0, 'width': 100.0, 'height': 150.0, 'weight': 150.0, 'name': 'Tarima / Pallet'},
+}
+
+
+def resolve_package_for_tenant(tenant=None, parcel: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    """
+    Resuelve, normaliza y valida la configuración de empaque para que prevalezca
+    de forma idéntica y estricta en Envia.com y Skydropx Pro.
+    
+    1. Si el tenant tiene configurado su empaque por defecto (BOX, ENVELOPE, PALLET, etc.),
+       se toman sus dimensiones y tipo base.
+    2. Si el checkout o caller envía un `parcel` explícito, sus valores sobreescriben
+       los campos especificados, rellenando los campos ausentes desde el tenant.
+    3. Garantiza la estructura requerida por ambas plataformas:
+       - Envia.com: `type` ('box', 'envelope', 'pallet', 'full_truck_load'), `dimensions`, `declaredValue`, `weight`
+       - Skydropx Pro: `package_type` ('box', 'envelope', 'pallet'), `length`, `width`, `height`, `weight`
+    """
+    # 1. Base por defecto del Tenant o del Sistema
+    if tenant and hasattr(tenant, 'get_default_package'):
+        base = tenant.get_default_package()
+    else:
+        base = {
+            "type": "box",
+            "package_type": "box",
+            "system_type": "BOX",
+            "content": "Mercancía general",
+            "amount": 1,
+            "declaredValue": 500.0,
+            "declared_value": 500.0,
+            "weight": 1.0,
+            "length": 20.0,
+            "width": 15.0,
+            "height": 10.0,
+            "dimensions": {"length": 20.0, "width": 15.0, "height": 10.0}
+        }
+
+    if not parcel or not isinstance(parcel, dict):
+        return base
+
+    # 2. Si se proporcionó un parcel explícito, aplicar overrides defensivos
+    dims = parcel.get("dimensions") if isinstance(parcel.get("dimensions"), dict) else {}
+
+    raw_type = str(
+        parcel.get("type") or
+        parcel.get("package_type") or
+        parcel.get("packageType") or
+        base.get("type") or
+        "box"
+    ).lower()
+
+    upper_type = raw_type.upper()
+    if upper_type in PACKAGE_TYPE_PRESETS:
+        preset = PACKAGE_TYPE_PRESETS[upper_type]
+        envia_type = preset["type"]
+        skydropx_type = preset["package_type"]
+        default_len = preset["length"]
+        default_wid = preset["width"]
+        default_hei = preset["height"]
+        default_wei = preset["weight"]
+    elif "sobre" in raw_type or "envelope" in raw_type:
+        envia_type = "envelope"
+        skydropx_type = "envelope"
+        default_len = 30.0
+        default_wid = 20.0
+        default_hei = 2.0
+        default_wei = 0.3
+    elif "tarima" in raw_type or "pallet" in raw_type:
+        envia_type = "pallet"
+        skydropx_type = "pallet"
+        default_len = 120.0
+        default_wid = 100.0
+        default_hei = 150.0
+        default_wei = 150.0
+    else:
+        envia_type = "box"
+        skydropx_type = "box"
+        default_len = base.get("length", 20.0)
+        default_wid = base.get("width", 15.0)
+        default_hei = base.get("height", 10.0)
+        default_wei = base.get("weight", 1.0)
+
+    try:
+        length = float(parcel.get("length") or dims.get("length") or default_len)
+    except Exception:
+        length = default_len
+
+    try:
+        width = float(parcel.get("width") or dims.get("width") or default_wid)
+    except Exception:
+        width = default_wid
+
+    try:
+        height = float(parcel.get("height") or dims.get("height") or default_hei)
+    except Exception:
+        height = default_hei
+
+    try:
+        weight = float(parcel.get("weight") or default_wei)
+    except Exception:
+        weight = default_wei
+
+    try:
+        dec_val = float(parcel.get("declaredValue") or parcel.get("declared_value") or base.get("declaredValue", 500.0))
+    except Exception:
+        dec_val = 500.0
+
+    content = str(parcel.get("content") or base.get("content") or "Mercancía general").strip()
+    try:
+        amount = int(parcel.get("amount") or 1)
+    except Exception:
+        amount = 1
+
+    clean_len = max(1.0, length)
+    clean_wid = max(1.0, width)
+    clean_hei = max(1.0, height)
+    clean_wei = max(0.01, weight)
+
+    return {
+        "type": envia_type,
+        "package_type": skydropx_type,
+        "system_type": upper_type if upper_type in PACKAGE_TYPE_PRESETS else "CUSTOM",
+        "content": content or "Mercancía general",
+        "amount": max(1, amount),
+        "declaredValue": dec_val,
+        "declared_value": dec_val,
+        "weight": clean_wei,
+        "length": clean_len,
+        "width": clean_wid,
+        "height": clean_hei,
+        "dimensions": {
+            "length": clean_len,
+            "width": clean_wid,
+            "height": clean_hei
+        }
+    }
+
+
 def get_shipping_rates(
     destination: Dict[str, Any],
     parcel: Optional[Dict[str, Any]] = None,
@@ -106,16 +249,8 @@ def get_shipping_rates(
         "country": (destination.get("country") or "MX")[:2].upper()
     }
 
-    # Normalizar dimensiones y peso de paquete
-    package_data = parcel or {
-        "content": "Mercancía general",
-        "amount": 1,
-        "type": "box",
-        "weight": 1.0,
-        "length": 25.0,
-        "height": 15.0,
-        "width": 20.0
-    }
+    # Resolver empaque homogéneo según la configuración del tenant y parcel recibido
+    package_data = resolve_package_for_tenant(tenant=tenant, parcel=parcel)
 
     pref_provider = getattr(tenant, "preferred_shipping_provider", "DYNAMIC_BEST") or "DYNAMIC_BEST"
     all_rates: List[NormalizedRate] = []
@@ -232,15 +367,31 @@ def generate_shipping_label(order) -> bool:
         "country": (order.country or "MX")[:2].upper()
     }
 
-    package_data = {
-        "content": f"Pedido #{order.id}",
-        "amount": 1,
-        "type": "box",
-        "weight": 1.0,
-        "length": 25.0,
-        "height": 15.0,
-        "width": 20.0
-    }
+    # Resolver empaque desde el snapshot de la orden o configuración del tenant
+    order_parcel = None
+    if getattr(order, 'shipping_package_dimensions', None) and isinstance(order.shipping_package_dimensions, dict):
+        order_parcel = dict(order.shipping_package_dimensions)
+        if getattr(order, 'shipping_package_weight', None):
+            order_parcel['weight'] = float(order.shipping_package_weight)
+        if getattr(order, 'shipping_package_type', None):
+            order_parcel['type'] = order.shipping_package_type
+
+    package_data = resolve_package_for_tenant(tenant=tenant, parcel=order_parcel)
+    package_data['content'] = f"Pedido #{order.id}"
+
+    # Guardar snapshot del empaque utilizado en la orden
+    try:
+        order.shipping_package_type = package_data.get("package_type", "box")
+        order.shipping_package_weight = Decimal(str(package_data.get("weight", 1.0)))
+        order.shipping_package_dimensions = {
+            "length": package_data.get("length", 20.0),
+            "width": package_data.get("width", 15.0),
+            "height": package_data.get("height", 10.0),
+            "type": package_data.get("type", "box"),
+            "package_type": package_data.get("package_type", "box")
+        }
+    except Exception:
+        pass
 
     # Despacho hacia el proveedor instanciado (EJECUTADO FUERA DEL LOCK DE BASE DE DATOS)
     provider = SkydropxProvider(tenant=tenant) if provider_type == "SKYDROPX" else EnviaProvider(tenant=tenant)

@@ -307,6 +307,28 @@ class Order(models.Model):
     shipping_error = models.TextField(blank=True, null=True, help_text="Detalle del fallo si la emisión de guía no tuvo éxito")
     request_shipping_invoice = models.BooleanField(default=False, help_text="Solicitud del comprador para facturar el costo de envío (CFDI 4.0)")
 
+    # Snapshot del empaque utilizado
+    shipping_package_type = models.CharField(
+        max_length=20,
+        default='box',
+        blank=True,
+        null=True,
+        help_text="Tipo de empaque usado para esta orden (box, envelope, pallet)"
+    )
+    shipping_package_weight = models.DecimalField(
+        max_digits=6,
+        decimal_places=2,
+        default=Decimal('1.00'),
+        blank=True,
+        null=True,
+        help_text="Peso declarado del paquete al emitir la guía (kg)"
+    )
+    shipping_package_dimensions = models.JSONField(
+        default=dict,
+        blank=True,
+        help_text="Dimensiones {length, width, height} en cm usadas para la cotización y guía"
+    )
+
     # Costos detallados de envío
     shipping_cost = models.DecimalField(max_digits=10, decimal_places=2, default=0.00, help_text="Costo de envío cobrado al cliente (con margen)")
     shipping_cost_base = models.DecimalField(max_digits=10, decimal_places=2, default=0.00, help_text="Costo base courier")

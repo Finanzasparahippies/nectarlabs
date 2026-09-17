@@ -72,7 +72,108 @@ Al ejecutar `./nectar.sh test-logistics --provider DYNAMIC_BEST`, el motor unifi
 
 ---
 
-## 2. Inventario de Credenciales de API y Webhooks
+## 2. Anatomía de Tarifas y Glosario Operativo de Servicios
+
+### ¿La cotización de Envia / Paquetexpress cubre la guía completamente?
+**SÍ, la tarifa cotizada es el importe total y definitivo por la emisión de la guía física.**
+
+#### A. ¿Qué incluye exactamente la cotización (`totalPrice`)?
+Cuando el API de Envia.com o Skydropx Pro retorna el campo `totalPrice` / `total_price`, este valor engloba el 100% de los rubros requeridos para la emisión y transporte del paquete:
+1. **Flete Base (*Line-Haul Freight*):** Costo de traslado del paquete entre el origen y destino.
+2. **Cargo por Combustible (*Fuel Surcharge*):** Recargo porcentual dinámico oficial de la paquetería.
+3. **Seguro Ordinario Declarado:** Cobertura de responsabilidad básica de ley (hasta el límite de UMA estándar sin declaración de valor comercial extraordinario).
+4. **Impuesto al Valor Agregado (IVA 16%):** Todos los valores en Néctar Labs se gestionan netos con impuestos incluidos.
+5. **Comisión de Intermediación del Broker:** Tarifa preferencial negociada por Envia / Skydropx.
+
+Al momento de generar la guía física (`POST /ship/generate/` en Envia o `POST /shipments` en Skydropx), se descuenta de la Cartera de Envíos del inquilino exactamente el monto base cotizado más la cuota de plataforma Néctar Labs (`$10.00 MXN`). **No existen cargos ocultos ni cuotas sorpresa de emisión.**
+
+> [!WARNING]
+> **Condición de Invariabilidad (Prevención de Ajustes por Sobrepeso):**
+> La tarifa cotizada se mantiene 100% fija si el paquete físico entregado al transportista coincide con las dimensiones (L x A x Al en cm) y el peso (kg) declarados en el carrito de compras.
+> * Si el paquete supera el peso báscula o el peso volumétrico $\left(\frac{\text{Largo} \times \text{Ancho} \times \text{Alto}}{5000}\right)$ en la banda de escaneo del transportista, la paquetería emitirá un ajuste diferido por sobrepeso (*adjustment / reweigh surcharge*), el cual es notificado por webhook y descontado automáticamente del saldo del inquilino.
+
+---
+
+### B. Glosario de Modalidades de Entrega: Domicilio vs. Ocurre
+
+En el mercado logístico mexicano, las paqueterías diferencian sus rutas según el punto de recolección y entrega utilizando las siglas **D** (*Domicilio*) y **O** (*Ocurre / Sucursal*):
+
+| Código Técnico API | Nivel de Servicio en Néctar Labs | Recolección (Origen) | Entrega (Destino) | Explicación Operativa |
+| :--- | :--- | :--- | :--- | :--- |
+| `ground` (o `dd`) | **Terrestre a Domicilio** | **Domicilio** (Bodega Remitente) | **Domicilio** (Puerta del Comprador) | **Servicio tradicional puerta a puerta.** El transportista recolecta en el almacén del vendedor y entrega directamente en la dirección del comprador. |
+| `ground_do` | **Terrestre (Domicilio a Sucursal Ocurre)** | **Domicilio** (Bodega Remitente) | **Sucursal Ocurre** (Oficina Courier) | El transportista recolecta en la tienda/bodega, pero el paquete viaja a una **oficina o sucursal física ("Ocurre")** de la paquetería donde el comprador debe acudir con identificación oficial a recogerlo. |
+| `ground_od` | **Terrestre (Sucursal a Domicilio)** | **Sucursal Ocurre** (Depósito en Mostrador) | **Domicilio** (Puerta del Comprador) | El vendedor deposita el paquete directamente en el mostrador de la paquetería (*drop-off*), y la paquetería realiza la entrega final en el domicilio del comprador. |
+| `ground_oo` | **Terrestre (Sucursal a Sucursal)** | **Sucursal Ocurre** (Depósito) | **Sucursal Ocurre** (Retiro) | Servicio económico punto a punto entre sucursales de paquetería. |
+| `saver` | **Express Saver Aéreo (UPS)** | Domicilio | Domicilio | Servicio express aéreo garantizado de UPS con entrega en 1 a 4 días hábiles. |
+| `express` | **Express Día Siguiente (Estafeta / DHL)** | Domicilio | Domicilio | Entrega urgente garantizada para el día hábil siguiente. |
+| `standard` | **Estándar Terrestre** | Domicilio | Domicilio | Servicio regular terrestre de cobertura nacional amplia. |
+
+---
+
+### C. ¿Por qué aparecieron tarifas de $11.60 MXN en el diagnóstico de prueba?
+
+En el resultado de la prueba:
+`[2] [ENVIA] Paquetexpress (ground_do) Base: $ 11.60 | Total Comprador: $ 24.84 MXN`
+
+1. **Tarifa Fija de Pruebas en Sandbox:** En el ambiente Sandbox (`api-test.envia.com`), las modalidades especializadas como `ground_do`, `ground_od` y `saver` tienen configurada una tarifa base dummy de prueba: **$10.00 MXN + 16% IVA ($1.60) = $11.60 MXN**.
+2. **Precios Reales en Producción:** En ambiente de Producción, las opciones de Ocurre (`ground_do` y `ground_od`) cotizan con tarifas comerciales reales, típicamente **10% a 20% más bajas** que el servicio `ground` completo ($191.40 MXN) debido al ahorro operativo en la última milla o en la recolección.
+3. **Fórmula de Desglose en Néctar Labs:**
+   $$\text{Costo Inquilino} = \text{Costo Base Courier (\$11.60)} + \text{Néctar Platform Fee (\$10.00)} = \$21.60\text{ MXN}$$
+   $$\text{Total Comprador} = \text{Costo Inquilino (\$21.60)} \times \text{Markup (1.15)} = \$24.84\text{ MXN}$$
+
+---
+
+### D. Configuración Multi-Tenant de Tipos de Empaque (Prevalencia en Envia y Skydropx)
+
+Cada tienda o inquilino (`Tenant`) tiene la capacidad de configurar el tipo y dimensiones de empaque predeterminados para sus despachos habituales. Esta configuración es persistente y se traduce automáticamente a las especificaciones requeridas por cada plataforma:
+
+#### 1. Catálogo de Empaques y Presets Soportados
+
+| Clave Preset | Denominación en Néctar Labs | Dimensiones Base (L x An x Al) | Peso Base | Mapeo Envia.com | Mapeo Skydropx Pro | Caso de Uso Recomendado |
+| :--- | :--- | :---: | :---: | :---: | :---: | :--- |
+| `BOX` | **Caja Estándar** *(Default)* | 20 x 15 x 10 cm | 1.00 kg | `type: "box"` | `package_type: "box"` | Comercio general, calzado, electrónicos. |
+| `ENVELOPE` | **Sobre / Documentos** | 30 x 20 x 2 cm | 0.30 kg | `type: "envelope"` | `package_type: "envelope"` | Joyería, cosméticos planos, papelería, ropa ligera. |
+| `SMALL_BOX` | **Caja Pequeña** | 15 x 15 x 10 cm | 0.50 kg | `type: "box"` | `package_type: "box"` | Accesorios, botellas pequeñas, gadgets. |
+| `MEDIUM_BOX` | **Caja Mediana** | 30 x 25 x 20 cm | 2.00 kg | `type: "box"` | `package_type: "box"` | Ropa múltiple, paquetes medianos. |
+| `LARGE_BOX` | **Caja Grande** | 50 x 40 x 30 cm | 5.00 kg | `type: "box"` | `package_type: "box"` | Envíos voluminosos, electrodomésticos. |
+| `PALLET` | **Tarima / Pallet (LTL)** | 120 x 100 x 150 cm | 150.00 kg | `type: "pallet"` | `package_type: "pallet"` | Carga pesada industrial, distribución B2B. |
+| `CUSTOM` | **Personalizado** | Definido por Inquilino | Definido por Inquilino | Según `type` | Según `package_type` | Productos atípicos con medidas específicas. |
+
+#### 2. Campos Configurables en el Modelo `Tenant`
+
+* `default_package_type`: Selector del preset (`BOX`, `ENVELOPE`, `SMALL_BOX`, `MEDIUM_BOX`, `LARGE_BOX`, `PALLET`, `CUSTOM`).
+* `default_package_weight`: Peso predeterminado en kilogramos (`DecimalField`, default `1.00` kg).
+* `default_package_length`: Largo en cm (`DecimalField`, default `20.00` cm).
+* `default_package_width`: Ancho en cm (`DecimalField`, default `15.00` cm).
+* `default_package_height`: Alto en cm (`DecimalField`, default `10.00` cm).
+* `default_package_content`: Descripción del contenido (default `"Mercancía general"`).
+* `default_declared_value`: Valor declarado básico para aseguramiento (default `$500.00 MXN`).
+
+#### 3. Motor de Resolución Homogéneo (`resolve_package_for_tenant`)
+
+El router central (`apps/shop/logistics/router.py`) implementa la función `resolve_package_for_tenant(tenant, parcel)` que asegura:
+1. **Invariabilidad Multi-Carrier:** El payload se formatea simultáneamente con `type` para Envia.com y `package_type` para Skydropx Pro, asegurando que ambas APIs coticen exactamente el mismo paquete.
+2. **Prioridad del Carrito / Checkout:** Si el proceso de checkout envía un `parcel` específico derivado de los productos del carrito, este sobrescribe los valores del empaque predeterminado.
+3. **Auditoría y Snapshot en la Orden:** Al generar la guía (`generate_shipping_label`), los campos `shipping_package_type`, `shipping_package_weight` y `shipping_package_dimensions` quedan grabados permanentemente en la orden `Order` para trazabilidad y aclaraciones de sobrepeso.
+
+#### 4. Diagnóstico de Empaques en CLI
+
+Permite comprobar cotizaciones en vivo variando el empaque:
+
+```bash
+# Probar cotización con sobre / sobre documentos
+./nectar.sh test-logistics --provider DYNAMIC_BEST --package-type envelope
+
+# Probar cotización con tarima / carga pallet
+./nectar.sh test-logistics --provider DYNAMIC_BEST --package-type pallet
+
+# Probar empaque personalizado con medidas y peso exactos
+./nectar.sh test-logistics --provider DYNAMIC_BEST --package-type custom --weight 4.5 --length 35 --width 25 --height 15
+```
+
+---
+
+## 3. Inventario de Credenciales de API y Webhooks
 
 ### Variables de Entorno Maestras (.env)
 ```ini
@@ -104,7 +205,7 @@ SKYDROPX_WEBHOOK_SECRET=tu_hmac_webhook_secret_skydropx
 
 ---
 
-## 3. Protocolo de Pruebas en Sandbox sin Consumo de Saldo
+## 4. Protocolo de Pruebas en Sandbox sin Consumo de Saldo
 
 Antes de realizar recargas de saldo real en la cuenta corporativa de Producción, todo el ciclo de vida debe verificarse en el entorno de pruebas de Envia.com.
 
@@ -147,7 +248,7 @@ Antes de realizar recargas de saldo real en la cuenta corporativa de Producción
 
 ---
 
-## 4. Gestión de Billetera y Recargas de Saldo Multi-Tenant
+## 5. Gestión de Billetera y Recargas de Saldo Multi-Tenant
 
 ### A. Políticas Financieras & Reglas de Negocio
 * **Saldo Mínimo Operativo (`MIN_SHIPPING_WALLET_BALANCE = $300.00 MXN`):**
@@ -189,7 +290,7 @@ sequenceDiagram
 
 ---
 
-## 5. Matriz de Errores Silenciosos y Protocolo de Resolución
+## 6. Matriz de Errores Silenciosos y Protocolo de Resolución
 
 | Síntoma / Error Silencioso | Causa Raíz | Solución Implementada |
 | :--- | :--- | :--- |
@@ -206,7 +307,7 @@ sequenceDiagram
 
 ---
 
-## 6. Lista de Verificación para Puesta en Marcha (Go-Live)
+## 7. Lista de Verificación para Puesta en Marcha (Go-Live)
 
 - [x] Claves de API configuradas en `.env.prod` y `.env.staging` (Envia.com y Skydropx Pro).
 - [x] Cuatro tokens de webhook registrados en `ENVIA_WEBHOOK_TOKENS`.

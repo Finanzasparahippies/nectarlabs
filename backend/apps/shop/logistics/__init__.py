@@ -15,6 +15,8 @@ from .router import (
     get_shipping_rates,
     generate_shipping_label,
     validate_tenant_logistics_access,
+    resolve_package_for_tenant,
+    PACKAGE_TYPE_PRESETS,
 )
 
 __all__ = [
@@ -27,4 +29,6 @@ __all__ = [
     "get_shipping_rates",
     "generate_shipping_label",
     "validate_tenant_logistics_access",
+    "resolve_package_for_tenant",
+    "PACKAGE_TYPE_PRESETS",
 ]

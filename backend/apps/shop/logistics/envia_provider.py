@@ -105,8 +105,26 @@ class EnviaProvider(BaseShippingProvider):
 
             carrier_slug = str(r.get("carrier") or "courier").lower()
             carrier_name = carrier_slug.capitalize()
-            service_name = str(r.get("service") or "Standard")
-            rate_id = f"envia:{carrier_slug}:{service_name}:{base_cost}"
+            service_code = str(r.get("service") or "Standard")
+            rate_id = f"envia:{carrier_slug}:{service_code}:{base_cost}"
+
+            # Mapeo de siglas técnicas de Envia a nombres descriptivos para el comprador
+            ENVIA_SERVICE_DESCRIPTIONS = {
+                "ground": "Terrestre a Domicilio",
+                "ground_do": "Terrestre (Domicilio a Sucursal Ocurre)",
+                "ground_od": "Terrestre (Sucursal a Domicilio)",
+                "ground_oo": "Terrestre (Sucursal a Sucursal)",
+                "express": "Express (Día Siguiente)",
+                "saver": "Express Saver Aéreo",
+                "standard": "Estándar Terrestre",
+                "economy": "Económico Terrestre",
+            }
+            display_service = (
+                r.get("serviceDescription")
+                or r.get("service_description")
+                or ENVIA_SERVICE_DESCRIPTIONS.get(service_code.lower())
+                or service_code
+            )
 
             tenant_cost = base_cost + self.nectar_fee
             buyer_cost = round(tenant_cost * self.markup_factor, 2)
@@ -146,7 +164,7 @@ class EnviaProvider(BaseShippingProvider):
                     id=rate_id,
                     provider=carrier_name,
                     carrier=carrier_slug,
-                    service_level_name=service_name,
+                    service_level_name=display_service,
                     days=days,
                     amount=base_cost,
                     nectar_fee=self.nectar_fee,

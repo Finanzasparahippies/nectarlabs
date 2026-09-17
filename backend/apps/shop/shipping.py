@@ -107,14 +107,18 @@ class EnviaClient:
             weight = float(p.get("weight", 1.0))
             declared_val = float(p.get("declaredValue", p.get("declared_value", 500.0)))
             raw_content = p.get("content", "Mercancia general")
+            raw_type = str(p.get("type") or p.get("package_type") or "box").lower()
+            if raw_type not in ["box", "envelope", "pallet", "full_truck_load"]:
+                raw_type = "box"
+
             formatted.append({
-                "type": p.get("type", "box"),
+                "type": raw_type,
                 "content": _clean_envia_str(raw_content) or "Mercancia general",
                 "amount": int(p.get("amount", 1)),
                 "declaredValue": declared_val,
                 "lengthUnit": "CM",
                 "weightUnit": "KG",
-                "weight": max(0.1, weight),
+                "weight": max(0.01, weight),
                 "dimensions": {
                     "length": max(1.0, length),
                     "width": max(1.0, width),

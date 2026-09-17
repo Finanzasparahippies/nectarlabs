@@ -11,6 +11,8 @@ from apps.shop.logistics import (
     EnviaProvider,
     SkydropxProvider,
     get_shipping_rates,
+    resolve_package_for_tenant,
+    PACKAGE_TYPE_PRESETS,
 )
 from apps.tenants.models import Tenant
 
@@ -70,6 +72,42 @@ class Command(BaseCommand):
             '--confirm-prod',
             action='store_true',
             help="Confirmación obligatoria para permitir generación de guía real en Producción"
+        )
+        parser.add_argument(
+            '--package-type',
+            type=str,
+            default=None,
+            help="Tipo de empaque: BOX, ENVELOPE, SMALL_BOX, MEDIUM_BOX, LARGE_BOX, PALLET, CUSTOM"
+        )
+        parser.add_argument(
+            '--weight',
+            type=float,
+            default=None,
+            help="Peso del paquete en kilogramos (kg)"
+        )
+        parser.add_argument(
+            '--length',
+            type=float,
+            default=None,
+            help="Largo del paquete en centímetros (cm)"
+        )
+        parser.add_argument(
+            '--width',
+            type=float,
+            default=None,
+            help="Ancho del paquete en centímetros (cm)"
+        )
+        parser.add_argument(
+            '--height',
+            type=float,
+            default=None,
+            help="Alto del paquete en centímetros (cm)"
+        )
+        parser.add_argument(
+            '--content',
+            type=str,
+            default=None,
+            help="Descripción del contenido del paquete"
         )
 
     def handle(self, *args, **options):
@@ -142,14 +180,32 @@ class Command(BaseCommand):
             "zip_code": dest_cp,
             "country": "MX"
         }
-        parcel_data = {
-            "content": "Muestra Operativa Nectar Labs",
-            "amount": 1,
-            "weight": 1.0,
-            "length": 20.0,
-            "width": 15.0,
-            "height": 10.0
-        }
+        # Preparar y resolver empaque unificado (prevalece en Envia y Skydropx)
+        explicit_parcel = {}
+        if options.get('package_type'):
+            explicit_parcel['package_type'] = options.get('package_type')
+            explicit_parcel['type'] = options.get('package_type')
+        if options.get('weight') is not None:
+            explicit_parcel['weight'] = options.get('weight')
+        if options.get('length') is not None:
+            explicit_parcel['length'] = options.get('length')
+        if options.get('width') is not None:
+            explicit_parcel['width'] = options.get('width')
+        if options.get('height') is not None:
+            explicit_parcel['height'] = options.get('height')
+        if options.get('content') is not None:
+            explicit_parcel['content'] = options.get('content')
+
+        parcel_data = resolve_package_for_tenant(
+            tenant=tenant,
+            parcel=explicit_parcel if explicit_parcel else None
+        )
+
+        self.stdout.write(
+            f"• Empaque Seleccionado:  {parcel_data.get('system_type', 'BOX')} "
+            f"({parcel_data.get('length')}x{parcel_data.get('width')}x{parcel_data.get('height')} cm, "
+            f"{parcel_data.get('weight')} kg) -> Envia: '{parcel_data.get('type')}', Skydropx: '{parcel_data.get('package_type')}'"
+        )
 
         # ── 1. EVALUACIÓN ENVIA.COM ──
         if provider_choice in ['DYNAMIC_BEST', 'ENVIA']:
@@ -181,8 +237,8 @@ class Command(BaseCommand):
                         self.stdout.write(self.style.ERROR("❌ Emisión cancelada: En Producción se requiere --confirm-prod."))
                     else:
                         carrier_to_use = target_carrier or (rates[0].carrier if rates else "paquetexpress")
-                        service_to_use = rates[0].service_level_name if rates else "ground"
-                        self.stdout.write(self.style.MIGRATE_HEADING(f"\nGenerando guía de prueba en Envia ({carrier_to_use})..."))
+                        service_to_use = (rates[0].raw_data.get("service") if (rates and rates[0].raw_data) else "ground")
+                        self.stdout.write(self.style.MIGRATE_HEADING(f"\nGenerando guía de prueba en Envia ({carrier_to_use} - {service_to_use})..."))
                         res = envia_prov.client.generate_label(
                             origin=origin_data,
                             destination=dest_data,

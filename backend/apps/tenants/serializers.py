@@ -46,6 +46,10 @@ class TenantSerializer(serializers.ModelSerializer):
             # Envia.com & Logistics
             'envia_api_key', 'has_envia_api_key', 'platform_shipping_fee',
             'skydropx_api_key', 'has_skydropx_api_key', 'shipping_markup_percentage',
+            'preferred_shipping_provider', 'auto_invoice_shipping',
+            'default_package_type', 'default_package_weight', 'default_package_length',
+            'default_package_width', 'default_package_height', 'default_package_content',
+            'default_declared_value',
             'shipping_origin_name', 'shipping_origin_phone', 'shipping_origin_street',
             'shipping_origin_suburb', 'shipping_origin_city', 'shipping_origin_state', 'shipping_origin_zip_code',
             
