@@ -2146,23 +2146,33 @@ class GetShippingRatesView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def post(self, request, *args, **kwargs):
-        tenant_id = request.data.get('tenant_id')
-        subdomain = request.data.get('subdomain')
-        tenant_slug = request.data.get('tenant_slug') or request.headers.get('X-Tenant-Slug')
-        api_key = request.headers.get('X-Tenant-API-Key') or request.headers.get('X-Nectar-Org-Key') or request.data.get('api_key')
-        tenant = None
-        
-        if api_key:
-            tenant = Tenant.objects.filter(api_key=api_key, is_active=True).first()
-        if not tenant and tenant_slug:
-            tenant = Tenant.objects.filter(slug=tenant_slug.strip().lower(), is_active=True).first()
-        if not tenant and tenant_id:
-            tenant = Tenant.objects.filter(id=tenant_id, is_active=True).first()
-        if not tenant and subdomain:
-            tenant = Tenant.objects.filter(subdomain=subdomain.strip().lower(), is_active=True).first()
+        # 1. Resolver Tenant dinámicamente desde middleware o dominio/subdominio (Host/Origin/Referer)
+        tenant = getattr(request, 'tenant', None)
+        if not tenant:
+            from apps.tenants.utils import get_tenant_from_request
+            tenant = get_tenant_from_request(request)
+
+        # 2. Fallbacks secundarios por parámetros explícitos (API Key, slug, id, subdomain)
+        if not tenant:
+            tenant_id = request.data.get('tenant_id') or request.query_params.get('tenant_id')
+            subdomain = request.data.get('subdomain') or request.query_params.get('subdomain')
+            tenant_slug = request.data.get('tenant_slug') or request.headers.get('X-Tenant-Slug')
+            api_key = request.headers.get('X-Tenant-API-Key') or request.headers.get('X-Nectar-Org-Key') or request.data.get('api_key')
+            
+            if api_key:
+                tenant = Tenant.objects.filter(api_key=api_key, is_active=True).first()
+            if not tenant and tenant_slug:
+                tenant = Tenant.objects.filter(slug=tenant_slug.strip().lower(), is_active=True).first()
+            if not tenant and tenant_id:
+                try:
+                    tenant = Tenant.objects.filter(id=tenant_id, is_active=True).first()
+                except Exception:
+                    pass
+            if not tenant and subdomain:
+                tenant = Tenant.objects.filter(subdomain=subdomain.strip().lower(), is_active=True).first()
 
         if not tenant:
-            return Response({"error": "No se pudo identificar un inquilino (tenant) válido."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "No se pudo identificar un inquilino (tenant) válido para cotizar envíos."}, status=status.HTTP_400_BAD_REQUEST)
 
         # Si el inquilino no tiene credenciales propias (BYO Keys), validar saldo mínimo en cartera corporativa
         has_custom_keys = bool(tenant.envia_api_key or tenant.skydropx_client_id)
@@ -3045,34 +3055,45 @@ class EnviaWebhookView(APIView):
                 if amount > 0 and tenant:
                     with transaction.atomic():
                         t_locked = Tenant.objects.select_for_update().get(id=tenant.id)
+                        surch_id = str(data.get("surcharge_id") or tracking_number)
+                        idemp_key = f"envia_surcharge_{surch_id}_{tx_direction}"
+
                         if tx_direction == "surcharge":
-                            t_locked.shipping_wallet_balance -= amount
-                            t_locked.save(update_fields=["shipping_wallet_balance"])
+                            existing_tx = ShippingWalletTransaction.objects.filter(idempotency_key=idemp_key).first()
+                            if not existing_tx:
+                                t_locked.shipping_wallet_balance -= amount
+                                t_locked.save(update_fields=["shipping_wallet_balance"])
 
-                            ShippingWalletTransaction.objects.create(
-                                tenant=t_locked,
-                                order=order,
-                                amount=-amount,
-                                balance_after=t_locked.shipping_wallet_balance,
-                                transaction_type=ShippingWalletTransaction.TransactionType.SURCHARGE_DEBIT,
-                                reference_id=str(data.get("surcharge_id") or tracking_number),
-                                description=f"Cargo extra por {surcharge_type} aplicado por Envia.com en guía #{tracking_number}"
-                            )
-                            logger.info(f"[Envia/Surcharge] Débito de ${amount} MXN aplicado a Tenant #{tenant.id}.")
+                                ShippingWalletTransaction.objects.create(
+                                    tenant=t_locked,
+                                    order=order,
+                                    amount=-amount,
+                                    balance_after=t_locked.shipping_wallet_balance,
+                                    transaction_type=ShippingWalletTransaction.TransactionType.SURCHARGE_DEBIT,
+                                    reference_id=surch_id,
+                                    idempotency_key=idemp_key,
+                                    adjustment_fee=amount,
+                                    description=f"Cargo extra por {surcharge_type} aplicado por Envia.com en guía #{tracking_number}"
+                                )
+                                logger.info(f"[Envia/Surcharge] Débito de ${amount} MXN aplicado a Tenant #{tenant.id}.")
                         elif tx_direction == "refund":
-                            t_locked.shipping_wallet_balance += amount
-                            t_locked.save(update_fields=["shipping_wallet_balance"])
+                            existing_tx = ShippingWalletTransaction.objects.filter(idempotency_key=idemp_key).first()
+                            if not existing_tx:
+                                t_locked.shipping_wallet_balance += amount
+                                t_locked.save(update_fields=["shipping_wallet_balance"])
 
-                            ShippingWalletTransaction.objects.create(
-                                tenant=t_locked,
-                                order=order,
-                                amount=amount,
-                                balance_after=t_locked.shipping_wallet_balance,
-                                transaction_type=ShippingWalletTransaction.TransactionType.REFUND,
-                                reference_id=str(data.get("surcharge_id") or tracking_number),
-                                description=f"Reembolso de cargo extra por {surcharge_type} en guía #{tracking_number}"
-                            )
-                            logger.info(f"[Envia/Surcharge] Reembolso de ${amount} MXN aplicado a Tenant #{tenant.id}.")
+                                ShippingWalletTransaction.objects.create(
+                                    tenant=t_locked,
+                                    order=order,
+                                    amount=amount,
+                                    balance_after=t_locked.shipping_wallet_balance,
+                                    transaction_type=ShippingWalletTransaction.TransactionType.REFUND,
+                                    reference_id=surch_id,
+                                    idempotency_key=idemp_key,
+                                    adjustment_fee=-amount,
+                                    description=f"Reembolso de cargo extra por {surcharge_type} en guía #{tracking_number}"
+                                )
+                                logger.info(f"[Envia/Surcharge] Reembolso de ${amount} MXN aplicado a Tenant #{tenant.id}.")
 
             webhook_log.status = EnviaWebhookEventLog.Status.PROCESSED
             webhook_log.save(update_fields=["status"])
@@ -3178,19 +3199,24 @@ class SkydropxWebhookView(APIView):
                     with transaction.atomic():
                         from apps.tenants.models import Tenant
                         t_locked = Tenant.objects.select_for_update().get(id=tenant.id)
-                        t_locked.shipping_wallet_balance -= surcharge_amount
-                        t_locked.save(update_fields=["shipping_wallet_balance"])
+                        idemp_key = f"skydropx_surcharge_{event_id}"
+                        existing_tx = ShippingWalletTransaction.objects.filter(idempotency_key=idemp_key).first()
+                        if not existing_tx:
+                            t_locked.shipping_wallet_balance -= surcharge_amount
+                            t_locked.save(update_fields=["shipping_wallet_balance"])
 
-                        ShippingWalletTransaction.objects.create(
-                            tenant=t_locked,
-                            order=order,
-                            amount=-surcharge_amount,
-                            balance_after=t_locked.shipping_wallet_balance,
-                            transaction_type=ShippingWalletTransaction.TransactionType.SURCHARGE_DEBIT,
-                            reference_id=str(event_id),
-                            description=f"Cargo por sobrepeso/auditoría Skydropx Pro en guía #{tracking_number}"
-                        )
-                        logger.info(f"[Skydropx/Surcharge] Débito de ${surcharge_amount} MXN aplicado a Tenant #{tenant.id}.")
+                            ShippingWalletTransaction.objects.create(
+                                tenant=t_locked,
+                                order=order,
+                                amount=-surcharge_amount,
+                                balance_after=t_locked.shipping_wallet_balance,
+                                transaction_type=ShippingWalletTransaction.TransactionType.SURCHARGE_DEBIT,
+                                reference_id=str(event_id),
+                                idempotency_key=idemp_key,
+                                adjustment_fee=surcharge_amount,
+                                description=f"Cargo por sobrepeso/auditoría Skydropx Pro en guía #{tracking_number}"
+                            )
+                            logger.info(f"[Skydropx/Surcharge] Débito de ${surcharge_amount} MXN aplicado a Tenant #{tenant.id}.")
 
             webhook_log.status = SkydropxWebhookEventLog.Status.PROCESSED
             webhook_log.save(update_fields=["status"])

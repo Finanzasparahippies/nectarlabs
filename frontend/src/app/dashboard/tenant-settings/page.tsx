@@ -54,6 +54,29 @@ interface Tenant {
   store_category?: string;
   custom_frontend_url?: string;
   custom_backend_url?: string;
+  preferred_shipping_provider?: string;
+  shipping_markup_percentage?: string | number;
+  auto_invoice_shipping?: boolean;
+  shipping_wallet_balance?: string | number;
+  platform_shipping_fee?: string | number;
+  default_package_type?: string;
+  default_package_weight?: string | number;
+  default_package_length?: string | number;
+  default_package_width?: string | number;
+  default_package_height?: string | number;
+  default_package_content?: string;
+  default_declared_value?: string | number;
+  shipping_origin_name?: string;
+  shipping_origin_phone?: string;
+  shipping_origin_street?: string;
+  shipping_origin_suburb?: string;
+  shipping_origin_city?: string;
+  shipping_origin_state?: string;
+  shipping_origin_zip_code?: string;
+  envia_api_key?: string;
+  has_envia_api_key?: boolean;
+  skydropx_api_key?: string;
+  has_skydropx_api_key?: boolean;
 }
 
 interface Product {
@@ -89,7 +112,7 @@ export default function TenantSettingsPage() {
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [origin, setOrigin] = useState('https://nectarlabs.dev');
-  const [activeSubTab, setActiveSubTab] = useState<'branding' | 'colors' | 'products' | 'users' | 'contracts'>('branding');
+  const [activeSubTab, setActiveSubTab] = useState<'branding' | 'colors' | 'products' | 'users' | 'contracts' | 'logistics'>('branding');
 
   // DNS verification states
   const [isValidatingDomain, setIsValidatingDomain] = useState(false);
@@ -137,6 +160,37 @@ export default function TenantSettingsPage() {
   const [editStoreCategory, setEditStoreCategory] = useState('General');
   const [editCustomFrontendUrl, setEditCustomFrontendUrl] = useState('');
   const [editCustomBackendUrl, setEditCustomBackendUrl] = useState('');
+
+  // Logistics & Courier States
+  const [editPreferredShippingProvider, setEditPreferredShippingProvider] = useState('DYNAMIC_BEST');
+  const [editShippingMarkupPercentage, setEditShippingMarkupPercentage] = useState('0.00');
+  const [editAutoInvoiceShipping, setEditAutoInvoiceShipping] = useState(false);
+  const [editDefaultPackageType, setEditDefaultPackageType] = useState('BOX');
+  const [editDefaultPackageWeight, setEditDefaultPackageWeight] = useState('1.00');
+  const [editDefaultPackageLength, setEditDefaultPackageLength] = useState('20.00');
+  const [editDefaultPackageWidth, setEditDefaultPackageWidth] = useState('15.00');
+  const [editDefaultPackageHeight, setEditDefaultPackageHeight] = useState('10.00');
+  const [editDefaultPackageContent, setEditDefaultPackageContent] = useState('Mercancía general');
+  const [editDefaultDeclaredValue, setEditDefaultDeclaredValue] = useState('500.00');
+  const [editShippingOriginName, setEditShippingOriginName] = useState('');
+  const [editShippingOriginPhone, setEditShippingOriginPhone] = useState('');
+  const [editShippingOriginStreet, setEditShippingOriginStreet] = useState('');
+  const [editShippingOriginSuburb, setEditShippingOriginSuburb] = useState('');
+  const [editShippingOriginCity, setEditShippingOriginCity] = useState('');
+  const [editShippingOriginState, setEditShippingOriginState] = useState('');
+  const [editShippingOriginZipCode, setEditShippingOriginZipCode] = useState('');
+  const [editEnviaApiKey, setEditEnviaApiKey] = useState('');
+  const [editSkydropxApiKey, setEditSkydropxApiKey] = useState('');
+  const [hasEnviaApiKey, setHasEnviaApiKey] = useState(false);
+  const [hasSkydropxApiKey, setHasSkydropxApiKey] = useState(false);
+  const [shippingWalletBalance, setShippingWalletBalance] = useState('0.00');
+  const [platformShippingFee, setPlatformShippingFee] = useState('10.00');
+
+  // Real-time Quote Tester States
+  const [testZipCode, setTestZipCode] = useState('06600');
+  const [isTestingQuote, setIsTestingQuote] = useState(false);
+  const [testQuoteResult, setTestQuoteResult] = useState<any | null>(null);
+  const [testQuoteError, setTestQuoteError] = useState<string | null>(null);
 
   // Undo History & Custom Particle settings
   const [historyLength, setHistoryLength] = useState(0);
@@ -383,6 +437,33 @@ export default function TenantSettingsPage() {
     setEditCustomBackendUrl(tenant.custom_backend_url || '');
     setDomainValidationResult(null);
 
+    // Populate logistics fields
+    setEditPreferredShippingProvider(tenant.preferred_shipping_provider || 'DYNAMIC_BEST');
+    setEditShippingMarkupPercentage(tenant.shipping_markup_percentage !== undefined ? String(tenant.shipping_markup_percentage) : '0.00');
+    setEditAutoInvoiceShipping(Boolean(tenant.auto_invoice_shipping));
+    setEditDefaultPackageType(tenant.default_package_type || 'BOX');
+    setEditDefaultPackageWeight(tenant.default_package_weight ? String(tenant.default_package_weight) : '1.00');
+    setEditDefaultPackageLength(tenant.default_package_length ? String(tenant.default_package_length) : '20.00');
+    setEditDefaultPackageWidth(tenant.default_package_width ? String(tenant.default_package_width) : '15.00');
+    setEditDefaultPackageHeight(tenant.default_package_height ? String(tenant.default_package_height) : '10.00');
+    setEditDefaultPackageContent(tenant.default_package_content || 'Mercancía general');
+    setEditDefaultDeclaredValue(tenant.default_declared_value ? String(tenant.default_declared_value) : '500.00');
+    setEditShippingOriginName(tenant.shipping_origin_name || '');
+    setEditShippingOriginPhone(tenant.shipping_origin_phone || '');
+    setEditShippingOriginStreet(tenant.shipping_origin_street || '');
+    setEditShippingOriginSuburb(tenant.shipping_origin_suburb || '');
+    setEditShippingOriginCity(tenant.shipping_origin_city || '');
+    setEditShippingOriginState(tenant.shipping_origin_state || '');
+    setEditShippingOriginZipCode(tenant.shipping_origin_zip_code || '');
+    setEditEnviaApiKey(tenant.envia_api_key || '');
+    setEditSkydropxApiKey(tenant.skydropx_api_key || '');
+    setHasEnviaApiKey(Boolean(tenant.has_envia_api_key));
+    setHasSkydropxApiKey(Boolean(tenant.has_skydropx_api_key));
+    setShippingWalletBalance(tenant.shipping_wallet_balance !== undefined ? String(tenant.shipping_wallet_balance) : '0.00');
+    setPlatformShippingFee(tenant.platform_shipping_fee !== undefined ? String(tenant.platform_shipping_fee) : '10.00');
+    setTestQuoteResult(null);
+    setTestQuoteError(null);
+
     undoStackRef.current = [];
     setHistoryLength(0);
   };
@@ -471,6 +552,31 @@ export default function TenantSettingsPage() {
       formData.append('invoicing_mode', editInvoicingMode);
       formData.append('store_category', editStoreCategory);
 
+      // Logistics & Couriers
+      formData.append('preferred_shipping_provider', editPreferredShippingProvider);
+      formData.append('shipping_markup_percentage', editShippingMarkupPercentage || '0.00');
+      formData.append('auto_invoice_shipping', String(editAutoInvoiceShipping));
+      formData.append('default_package_type', editDefaultPackageType);
+      formData.append('default_package_weight', editDefaultPackageWeight || '1.00');
+      formData.append('default_package_length', editDefaultPackageLength || '20.00');
+      formData.append('default_package_width', editDefaultPackageWidth || '15.00');
+      formData.append('default_package_height', editDefaultPackageHeight || '10.00');
+      formData.append('default_package_content', editDefaultPackageContent.trim() || 'Mercancía general');
+      formData.append('default_declared_value', editDefaultDeclaredValue || '500.00');
+      formData.append('shipping_origin_name', editShippingOriginName.trim());
+      formData.append('shipping_origin_phone', editShippingOriginPhone.trim());
+      formData.append('shipping_origin_street', editShippingOriginStreet.trim());
+      formData.append('shipping_origin_suburb', editShippingOriginSuburb.trim());
+      formData.append('shipping_origin_city', editShippingOriginCity.trim());
+      formData.append('shipping_origin_state', editShippingOriginState.trim().toUpperCase());
+      formData.append('shipping_origin_zip_code', editShippingOriginZipCode.trim());
+      if (editEnviaApiKey.trim()) {
+        formData.append('envia_api_key', editEnviaApiKey.trim());
+      }
+      if (editSkydropxApiKey.trim()) {
+        formData.append('skydropx_api_key', editSkydropxApiKey.trim());
+      }
+
       if (userRole === 'ADMIN' || isStaff) {
         formData.append('custom_frontend_url', editCustomFrontendUrl.trim());
         formData.append('custom_backend_url', editCustomBackendUrl.trim());
@@ -495,6 +601,72 @@ export default function TenantSettingsPage() {
       showToast(err.message || 'Error al guardar los cambios.', 'error');
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handlePackageTypeChange = (type: string) => {
+    setEditDefaultPackageType(type);
+    if (type === 'BOX') {
+      setEditDefaultPackageLength('20.00');
+      setEditDefaultPackageWidth('15.00');
+      setEditDefaultPackageHeight('10.00');
+      setEditDefaultPackageWeight('1.00');
+    } else if (type === 'ENVELOPE') {
+      setEditDefaultPackageLength('30.00');
+      setEditDefaultPackageWidth('20.00');
+      setEditDefaultPackageHeight('2.00');
+      setEditDefaultPackageWeight('0.30');
+    } else if (type === 'SMALL_BOX') {
+      setEditDefaultPackageLength('15.00');
+      setEditDefaultPackageWidth('15.00');
+      setEditDefaultPackageHeight('10.00');
+      setEditDefaultPackageWeight('0.50');
+    } else if (type === 'MEDIUM_BOX') {
+      setEditDefaultPackageLength('30.00');
+      setEditDefaultPackageWidth('25.00');
+      setEditDefaultPackageHeight('20.00');
+      setEditDefaultPackageWeight('2.00');
+    } else if (type === 'LARGE_BOX') {
+      setEditDefaultPackageLength('50.00');
+      setEditDefaultPackageWidth('40.00');
+      setEditDefaultPackageHeight('30.00');
+      setEditDefaultPackageWeight('5.00');
+    } else if (type === 'PALLET') {
+      setEditDefaultPackageLength('120.00');
+      setEditDefaultPackageWidth('100.00');
+      setEditDefaultPackageHeight('150.00');
+      setEditDefaultPackageWeight('150.00');
+    }
+  };
+
+  const handleTestQuote = async () => {
+    if (!selectedTenant) return;
+    const cleanZip = testZipCode.trim();
+    if (!cleanZip || cleanZip.length < 4) {
+      showToast('Ingresa un código postal de destino válido (ej. 06600).', 'error');
+      return;
+    }
+
+    setIsTestingQuote(true);
+    setTestQuoteResult(null);
+    setTestQuoteError(null);
+    try {
+      const res = await fetcher(`/tenants/${selectedTenant.id}/test-shipping-quote/`, {
+        method: 'POST',
+        body: JSON.stringify({ dest_zip: cleanZip }),
+      });
+      if (res && res.success) {
+        setTestQuoteResult(res);
+        showToast(`Cotización exitosa: ${res.rates_count || 0} tarifas disponibles.`, 'success');
+      } else {
+        setTestQuoteError(res?.error || 'Error al cotizar tarifas.');
+        showToast(res?.error || 'Error al cotizar tarifas.', 'error');
+      }
+    } catch (err: any) {
+      setTestQuoteError(err.message || 'Error al conectar con el cotizador de envíos.');
+      showToast(err.message || 'Error al cotizar tarifas.', 'error');
+    } finally {
+      setIsTestingQuote(false);
     }
   };
 
@@ -836,6 +1008,14 @@ export default function TenantSettingsPage() {
                   >
                     Contratos
                     {activeSubTab === 'contracts' && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-nectar-gold"></span>}
+                  </button>
+                  <button
+                    onClick={() => setActiveSubTab('logistics')}
+                    className={`pb-3 text-2xs font-black uppercase tracking-widest relative transition-all whitespace-nowrap ${activeSubTab === 'logistics' ? 'text-nectar-gold' : 'text-foreground/45 hover:text-foreground'
+                      }`}
+                  >
+                    Logística & Envíos
+                    {activeSubTab === 'logistics' && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-nectar-gold"></span>}
                   </button>
                 </div>
 
@@ -1900,6 +2080,555 @@ export default function TenantSettingsPage() {
                       </div>
                     </div>
                     <CustomContractsManager tenantId={selectedTenant.id} primaryColor={selectedTenant.theme_color || '#C68A1E'} />
+                  </div>
+                )}
+                {activeSubTab === 'logistics' && selectedTenant && (
+                  <div className="space-y-8 animate-in fade-in duration-300">
+                    <form onSubmit={handleSaveSettings} className="space-y-8">
+                      {/* Header */}
+                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-card-border pb-4">
+                        <div>
+                          <h4 className="text-xs font-black uppercase tracking-widest text-nectar-gold">Logística y Couriers Multi-Tenant</h4>
+                          <p className="text-2xs text-foreground/45 uppercase tracking-wider mt-1">
+                            Configura couriers, bodegas de origen, medidas de paquetes y márgenes comerciales
+                          </p>
+                        </div>
+                        <button
+                          type="submit"
+                          disabled={isSubmitting}
+                          className="px-6 py-3 bg-nectar-gold hover:bg-nectar-gold/90 text-background font-black uppercase tracking-widest text-2xs rounded-xl transition-all shadow-lg hover:scale-105 active:scale-95 disabled:opacity-50 cursor-pointer"
+                        >
+                          {isSubmitting ? 'Guardando...' : 'Guardar Logística'}
+                        </button>
+                      </div>
+
+                      {/* Status Cards / Overview */}
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="bg-background border border-card-border rounded-2xl p-5 flex flex-col justify-between">
+                          <span className="text-2xs font-black uppercase tracking-widest text-foreground/40">Billetera de Envíos</span>
+                          <div className="my-2">
+                            <span className="text-2xl font-black text-foreground">${Number(shippingWalletBalance || 0).toFixed(2)}</span>
+                            <span className="text-xs text-foreground/40 ml-1 font-bold">MXN</span>
+                          </div>
+                          <span className={`text-2xs font-bold uppercase tracking-wider ${Number(shippingWalletBalance || 0) >= 300 ? 'text-emerald-400' : 'text-amber-400'}`}>
+                            {Number(shippingWalletBalance || 0) >= 300 ? '● Saldo Operativo Activo' : '▲ Mínimo $300 requerido para cuenta matriz'}
+                          </span>
+                        </div>
+
+                        <div className="bg-background border border-card-border rounded-2xl p-5 flex flex-col justify-between">
+                          <span className="text-2xs font-black uppercase tracking-widest text-foreground/40">Tarifa Servicio Néctar Labs</span>
+                          <div className="my-2">
+                            <span className="text-2xl font-black text-nectar-gold">${Number(platformShippingFee || 10).toFixed(2)}</span>
+                            <span className="text-xs text-foreground/40 ml-1 font-bold">MXN / Guía</span>
+                          </div>
+                          <span className="text-2xs text-foreground/40 font-bold uppercase tracking-wider">
+                            Cuota fija por emisión de guía
+                          </span>
+                        </div>
+
+                        <div className="bg-background border border-card-border rounded-2xl p-5 flex flex-col justify-between">
+                          <span className="text-2xs font-black uppercase tracking-widest text-foreground/40">Margen Comercial Tienda</span>
+                          <div className="my-2">
+                            <span className="text-2xl font-black text-emerald-400">+{Number(editShippingMarkupPercentage || 0).toFixed(2)}%</span>
+                          </div>
+                          <span className="text-2xs text-foreground/40 font-bold uppercase tracking-wider">
+                            Ganancia que cobras a tu cliente final
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Modalidad de Courier y Proveedor */}
+                      <div className="bg-background/40 border border-card-border rounded-2xl p-6 space-y-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="w-2 h-2 rounded-full bg-nectar-gold animate-ping"></div>
+                          <h5 className="text-xs font-black uppercase tracking-wider text-foreground">Proveedor Logístico Activo</h5>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <label className={`cursor-pointer border rounded-2xl p-5 flex flex-col justify-between transition-all ${
+                            editPreferredShippingProvider === 'DYNAMIC_BEST'
+                              ? 'border-nectar-gold bg-nectar-gold/5 ring-1 ring-nectar-gold'
+                              : 'border-card-border bg-background hover:border-foreground/20'
+                          }`}>
+                            <div className="flex items-center justify-between mb-3">
+                              <span className="text-xs font-black uppercase text-foreground">Dynamic Best</span>
+                              <input
+                                type="radio"
+                                name="shipping_provider"
+                                value="DYNAMIC_BEST"
+                                checked={editPreferredShippingProvider === 'DYNAMIC_BEST'}
+                                onChange={(e) => setEditPreferredShippingProvider(e.target.value)}
+                                className="accent-nectar-gold"
+                              />
+                            </div>
+                            <p className="text-2xs text-foreground/50 leading-relaxed">
+                              ⚡ Multicotizador inteligente simultáneo. Consulta Envia.com y Skydropx Pro y ofrece automáticamente la opción más barata y rápida.
+                            </p>
+                            <span className="mt-3 inline-block text-3xs font-black uppercase px-2 py-1 rounded bg-nectar-gold/15 text-nectar-gold w-fit">
+                              Recomendado
+                            </span>
+                          </label>
+
+                          <label className={`cursor-pointer border rounded-2xl p-5 flex flex-col justify-between transition-all ${
+                            editPreferredShippingProvider === 'ENVIA'
+                              ? 'border-nectar-gold bg-nectar-gold/5 ring-1 ring-nectar-gold'
+                              : 'border-card-border bg-background hover:border-foreground/20'
+                          }`}>
+                            <div className="flex items-center justify-between mb-3">
+                              <span className="text-xs font-black uppercase text-foreground">Envia.com</span>
+                              <input
+                                type="radio"
+                                name="shipping_provider"
+                                value="ENVIA"
+                                checked={editPreferredShippingProvider === 'ENVIA'}
+                                onChange={(e) => setEditPreferredShippingProvider(e.target.value)}
+                                className="accent-nectar-gold"
+                              />
+                            </div>
+                            <p className="text-2xs text-foreground/50 leading-relaxed">
+                              🌐 Paquetexpress, DHL, Estafeta, UPS, Redpack y tarifas de carga consolidada (LTL / Tarimas).
+                            </p>
+                          </label>
+
+                          <label className={`cursor-pointer border rounded-2xl p-5 flex flex-col justify-between transition-all ${
+                            editPreferredShippingProvider === 'SKYDROPX'
+                              ? 'border-nectar-gold bg-nectar-gold/5 ring-1 ring-nectar-gold'
+                              : 'border-card-border bg-background hover:border-foreground/20'
+                          }`}>
+                            <div className="flex items-center justify-between mb-3">
+                              <span className="text-xs font-black uppercase text-foreground">Skydropx Pro</span>
+                              <input
+                                type="radio"
+                                name="shipping_provider"
+                                value="SKYDROPX"
+                                checked={editPreferredShippingProvider === 'SKYDROPX'}
+                                onChange={(e) => setEditPreferredShippingProvider(e.target.value)}
+                                className="accent-nectar-gold"
+                              />
+                            </div>
+                            <p className="text-2xs text-foreground/50 leading-relaxed">
+                              🚀 API v1 Skydropx Pro con cobertura nacional y cotización express garantizada día siguiente.
+                            </p>
+                          </label>
+                        </div>
+
+                        <div className="pt-2 flex items-center gap-3">
+                          <input
+                            type="checkbox"
+                            id="auto_invoice_shipping"
+                            checked={editAutoInvoiceShipping}
+                            onChange={(e) => setEditAutoInvoiceShipping(e.target.checked)}
+                            className="w-4 h-4 rounded border-card-border accent-nectar-gold cursor-pointer"
+                          />
+                          <label htmlFor="auto_invoice_shipping" className="text-xs text-foreground font-bold cursor-pointer">
+                            Auto-timbrado de envíos en Facturapi (CFDI 4.0 con clave SAT 78102200)
+                          </label>
+                        </div>
+                      </div>
+
+                      {/* Margen Comercial del Tenant & Simulador de Desglose */}
+                      <div className="bg-background/40 border border-card-border rounded-2xl p-6 space-y-4">
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                          <h5 className="text-xs font-black uppercase tracking-wider text-foreground">Margen Comercial sobre Envíos</h5>
+                          <span className="text-2xs text-foreground/40 font-bold">Por defecto: 0.00% (costo directo sin sobreprecio)</span>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                          <div className="space-y-2">
+                            <label className="text-2xs font-black uppercase tracking-widest text-foreground/40">
+                              Porcentaje de Ganancia Comercial (%)
+                            </label>
+                            <div className="flex items-center bg-background border border-card-border rounded-xl px-4 py-3 focus-within:border-nectar-gold transition-all">
+                              <input
+                                type="number"
+                                min="0"
+                                max="100"
+                                step="0.5"
+                                value={editShippingMarkupPercentage}
+                                onChange={(e) => setEditShippingMarkupPercentage(e.target.value)}
+                                placeholder="0.00"
+                                className="flex-1 bg-transparent text-xs text-foreground focus:outline-none"
+                              />
+                              <span className="text-xs font-black text-emerald-400 pl-2">% Ganancia</span>
+                            </div>
+                            <p className="text-3xs text-foreground/40 leading-relaxed">
+                              Define el porcentaje extra que se cobrará al comprador sobre el costo neto de la paquetería + fee de plataforma.
+                            </p>
+                          </div>
+
+                          {/* Interactive Math Box */}
+                          <div className="bg-background border border-card-border rounded-xl p-4 text-2xs space-y-2">
+                            <span className="font-black uppercase tracking-wider text-foreground/50 block mb-1">
+                              Simulación con Guía de $150 MXN:
+                            </span>
+                            <div className="flex justify-between text-foreground/60">
+                              <span>Tarifa Base Courier:</span>
+                              <span className="font-mono font-bold">$150.00 MXN</span>
+                            </div>
+                            <div className="flex justify-between text-foreground/60">
+                              <span>Fee Néctar Labs:</span>
+                              <span className="font-mono font-bold">+$10.00 MXN</span>
+                            </div>
+                            <div className="flex justify-between border-t border-card-border pt-1 font-bold text-foreground">
+                              <span>Costo para tu Tienda:</span>
+                              <span className="font-mono text-nectar-gold">$160.00 MXN</span>
+                            </div>
+                            <div className="flex justify-between text-emerald-400 font-bold">
+                              <span>Tu Ganancia ({Number(editShippingMarkupPercentage || 0).toFixed(1)}%):</span>
+                              <span className="font-mono">
+                                +${(160 * (Number(editShippingMarkupPercentage || 0) / 100)).toFixed(2)} MXN
+                              </span>
+                            </div>
+                            <div className="flex justify-between border-t border-card-border pt-2 text-xs font-black text-foreground">
+                              <span>Total Cobrado al Comprador:</span>
+                              <span className="font-mono text-emerald-400">
+                                ${(160 * (1 + Number(editShippingMarkupPercentage || 0) / 100)).toFixed(2)} MXN
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Almacén de Origen (Bodega Remitente) */}
+                      <div className="bg-background/40 border border-card-border rounded-2xl p-6 space-y-4">
+                        <div className="flex justify-between items-center">
+                          <h5 className="text-xs font-black uppercase tracking-wider text-foreground">Bodega o Almacén de Origen (Remitente)</h5>
+                          <span className="text-2xs font-bold text-foreground/40">Código Postal base para cotizar</span>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-1">
+                            <label className="text-2xs font-black uppercase tracking-widest text-foreground/40">Nombre del Almacén / Remitente</label>
+                            <input
+                              type="text"
+                              value={editShippingOriginName}
+                              onChange={(e) => setEditShippingOriginName(e.target.value)}
+                              placeholder="Ej. Bodega Central Ms Ambar"
+                              className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-foreground focus:outline-none focus:border-nectar-gold transition-all"
+                            />
+                          </div>
+
+                          <div className="space-y-1">
+                            <label className="text-2xs font-black uppercase tracking-widest text-foreground/40">Teléfono de Contacto (10 dígitos)</label>
+                            <input
+                              type="tel"
+                              value={editShippingOriginPhone}
+                              onChange={(e) => setEditShippingOriginPhone(e.target.value)}
+                              placeholder="Ej. 6621000000"
+                              className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-foreground focus:outline-none focus:border-nectar-gold transition-all"
+                            />
+                          </div>
+
+                          <div className="md:col-span-2 space-y-1">
+                            <label className="text-2xs font-black uppercase tracking-widest text-foreground/40">Calle y Número Exterior / Interior</label>
+                            <input
+                              type="text"
+                              value={editShippingOriginStreet}
+                              onChange={(e) => setEditShippingOriginStreet(e.target.value)}
+                              placeholder="Ej. Blvd. Kino 456 Int. 3"
+                              className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-foreground focus:outline-none focus:border-nectar-gold transition-all"
+                            />
+                          </div>
+
+                          <div className="space-y-1">
+                            <label className="text-2xs font-black uppercase tracking-widest text-foreground/40">Colonia o Barrio</label>
+                            <input
+                              type="text"
+                              value={editShippingOriginSuburb}
+                              onChange={(e) => setEditShippingOriginSuburb(e.target.value)}
+                              placeholder="Ej. Pitic"
+                              className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-foreground focus:outline-none focus:border-nectar-gold transition-all"
+                            />
+                          </div>
+
+                          <div className="space-y-1">
+                            <label className="text-2xs font-black uppercase tracking-widest text-foreground/40">Ciudad o Municipio</label>
+                            <input
+                              type="text"
+                              value={editShippingOriginCity}
+                              onChange={(e) => setEditShippingOriginCity(e.target.value)}
+                              placeholder="Ej. Hermosillo"
+                              className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-foreground focus:outline-none focus:border-nectar-gold transition-all"
+                            />
+                          </div>
+
+                          <div className="space-y-1">
+                            <label className="text-2xs font-black uppercase tracking-widest text-foreground/40">Estado (2 Letras MX ej. SO, CDMX, JAL)</label>
+                            <input
+                              type="text"
+                              maxLength={10}
+                              value={editShippingOriginState}
+                              onChange={(e) => setEditShippingOriginState(e.target.value.toUpperCase())}
+                              placeholder="Ej. SO"
+                              className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-foreground focus:outline-none focus:border-nectar-gold transition-all"
+                            />
+                          </div>
+
+                          <div className="space-y-1">
+                            <label className="text-2xs font-black uppercase tracking-widest text-foreground/40">Código Postal de Origen (5 dígitos)</label>
+                            <input
+                              type="text"
+                              maxLength={5}
+                              value={editShippingOriginZipCode}
+                              onChange={(e) => setEditShippingOriginZipCode(e.target.value)}
+                              placeholder="Ej. 83000"
+                              className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-foreground focus:outline-none focus:border-nectar-gold transition-all"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Perfil de Empaque Predeterminado */}
+                      <div className="bg-background/40 border border-card-border rounded-2xl p-6 space-y-4">
+                        <div className="flex justify-between items-center">
+                          <h5 className="text-xs font-black uppercase tracking-wider text-foreground">Empaque Predeterminado (Homogéneo Envia & Skydropx)</h5>
+                          <span className="text-2xs font-bold text-nectar-gold">{editDefaultPackageType}</span>
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-2xs font-black uppercase tracking-widest text-foreground/40">Plantilla / Preset de Empaque</label>
+                          <select
+                            value={editDefaultPackageType}
+                            onChange={(e) => handlePackageTypeChange(e.target.value)}
+                            className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-foreground focus:outline-none focus:border-nectar-gold transition-all cursor-pointer"
+                          >
+                            <option value="BOX">Caja Estándar (20x15x10 cm, 1.0 kg)</option>
+                            <option value="ENVELOPE">Sobre / Documentos (30x20x2 cm, 0.3 kg)</option>
+                            <option value="SMALL_BOX">Caja Pequeña (15x15x10 cm, 0.5 kg)</option>
+                            <option value="MEDIUM_BOX">Caja Mediana (30x25x20 cm, 2.0 kg)</option>
+                            <option value="LARGE_BOX">Caja Grande (50x40x30 cm, 5.0 kg)</option>
+                            <option value="PALLET">Tarima / Pallet LTL (120x100x150 cm, 150 kg)</option>
+                            <option value="CUSTOM">Personalizado (Medidas Libres)</option>
+                          </select>
+                        </div>
+
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                          <div className="space-y-1">
+                            <label className="text-2xs font-black uppercase tracking-widest text-foreground/40">Peso (kg)</label>
+                            <input
+                              type="number"
+                              min="0.1"
+                              step="0.1"
+                              value={editDefaultPackageWeight}
+                              onChange={(e) => setEditDefaultPackageWeight(e.target.value)}
+                              className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-foreground focus:outline-none focus:border-nectar-gold transition-all"
+                            />
+                          </div>
+
+                          <div className="space-y-1">
+                            <label className="text-2xs font-black uppercase tracking-widest text-foreground/40">Largo (cm)</label>
+                            <input
+                              type="number"
+                              min="1"
+                              step="0.5"
+                              value={editDefaultPackageLength}
+                              onChange={(e) => setEditDefaultPackageLength(e.target.value)}
+                              className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-foreground focus:outline-none focus:border-nectar-gold transition-all"
+                            />
+                          </div>
+
+                          <div className="space-y-1">
+                            <label className="text-2xs font-black uppercase tracking-widest text-foreground/40">Ancho (cm)</label>
+                            <input
+                              type="number"
+                              min="1"
+                              step="0.5"
+                              value={editDefaultPackageWidth}
+                              onChange={(e) => setEditDefaultPackageWidth(e.target.value)}
+                              className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-foreground focus:outline-none focus:border-nectar-gold transition-all"
+                            />
+                          </div>
+
+                          <div className="space-y-1">
+                            <label className="text-2xs font-black uppercase tracking-widest text-foreground/40">Alto (cm)</label>
+                            <input
+                              type="number"
+                              min="1"
+                              step="0.5"
+                              value={editDefaultPackageHeight}
+                              onChange={(e) => setEditDefaultPackageHeight(e.target.value)}
+                              className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-foreground focus:outline-none focus:border-nectar-gold transition-all"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div className="space-y-1">
+                            <label className="text-2xs font-black uppercase tracking-widest text-foreground/40">Valor Declarado ($ MXN)</label>
+                            <input
+                              type="number"
+                              min="0"
+                              step="50"
+                              value={editDefaultDeclaredValue}
+                              onChange={(e) => setEditDefaultDeclaredValue(e.target.value)}
+                              className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-foreground focus:outline-none focus:border-nectar-gold transition-all"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-2xs font-black uppercase tracking-widest text-foreground/40">Descripción de Contenido</label>
+                            <input
+                              type="text"
+                              value={editDefaultPackageContent}
+                              onChange={(e) => setEditDefaultPackageContent(e.target.value)}
+                              placeholder="Ej. Artículos de belleza, joyería, ropa"
+                              className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-foreground focus:outline-none focus:border-nectar-gold transition-all"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Credenciales Propias (BYO Keys - Opcional) */}
+                      <details className="bg-background/20 border border-card-border rounded-2xl p-6 group">
+                        <summary className="cursor-pointer list-none flex justify-between items-center text-xs font-black uppercase tracking-wider text-foreground select-none">
+                          <span>Credenciales Propias de Couriers (Opcional - BYO Keys)</span>
+                          <span className="text-foreground/40 group-open:rotate-180 transition-transform">▼</span>
+                        </summary>
+
+                        <div className="mt-4 pt-4 border-t border-card-border space-y-4">
+                          <p className="text-2xs text-foreground/50 leading-relaxed">
+                            Por defecto, tus envíos se emiten a través de la cuenta corporativa de Néctar Labs. Si cuentas con tus propios convenios comerciales con Envia.com o Skydropx Pro, puedes ingresar tus credenciales directas a continuación:
+                          </p>
+
+                          <div className="space-y-1">
+                            <label className="text-2xs font-black uppercase tracking-widest text-foreground/40">Token de API Envia.com</label>
+                            <input
+                              type="password"
+                              value={editEnviaApiKey}
+                              onChange={(e) => setEditEnviaApiKey(e.target.value)}
+                              placeholder={hasEnviaApiKey ? '•••••••••••••••• (Configurado)' : 'Ingresa tu Token de Envia.com'}
+                              className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-foreground focus:outline-none focus:border-nectar-gold transition-all font-mono"
+                            />
+                          </div>
+
+                          <div className="space-y-1">
+                            <label className="text-2xs font-black uppercase tracking-widest text-foreground/40">API Key / Token Skydropx Pro</label>
+                            <input
+                              type="password"
+                              value={editSkydropxApiKey}
+                              onChange={(e) => setEditSkydropxApiKey(e.target.value)}
+                              placeholder={hasSkydropxApiKey ? '•••••••••••••••• (Configurado)' : 'Ingresa tu API Key de Skydropx Pro'}
+                              className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-foreground focus:outline-none focus:border-nectar-gold transition-all font-mono"
+                            />
+                          </div>
+                        </div>
+                      </details>
+
+                      {/* Botón Principal Guardar */}
+                      <button
+                        type="submit"
+                        disabled={isSubmitting}
+                        className="w-full py-4 bg-nectar-gold hover:bg-nectar-gold/90 text-background font-black uppercase tracking-widest text-2xs rounded-xl transition-all hover:scale-[1.01] active:scale-95 disabled:opacity-50 shadow-xl cursor-pointer"
+                      >
+                        {isSubmitting ? 'Guardando...' : 'Guardar y Aplicar Configuración Logística'}
+                      </button>
+                    </form>
+
+                    {/* Live Quote Diagnostic Sandbox */}
+                    <div className="border border-nectar-gold/30 bg-nectar-gold/5 rounded-3xl p-6 sm:p-8 space-y-6">
+                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-card-border pb-4">
+                        <div>
+                          <span className="text-3xs font-black uppercase tracking-widest text-nectar-gold px-2 py-0.5 rounded bg-nectar-gold/10">
+                            Diagnostic Sandbox
+                          </span>
+                          <h4 className="text-xs font-black uppercase tracking-widest text-foreground mt-2">
+                            Simulador de Cotización en Tiempo Real
+                          </h4>
+                          <p className="text-2xs text-foreground/50 mt-1">
+                            Prueba cómo cotizan las paqueterías con tus datos guardados desde Origen (CP {editShippingOriginZipCode || '83000'}) hacia cualquier destino
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col sm:flex-row gap-4">
+                        <div className="flex-1 space-y-1">
+                          <label className="text-2xs font-black uppercase tracking-widest text-foreground/40">Código Postal Destino (ej. 06600 CDMX)</label>
+                          <input
+                            type="text"
+                            maxLength={5}
+                            value={testZipCode}
+                            onChange={(e) => setTestZipCode(e.target.value)}
+                            placeholder="06600"
+                            className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-xs text-foreground focus:outline-none focus:border-nectar-gold transition-all font-mono"
+                          />
+                        </div>
+                        <div className="sm:self-end">
+                          <button
+                            type="button"
+                            onClick={handleTestQuote}
+                            disabled={isTestingQuote}
+                            className="w-full sm:w-auto px-8 py-3 bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase tracking-widest text-2xs rounded-xl transition-all disabled:opacity-50 cursor-pointer shadow-lg hover:scale-105 active:scale-95"
+                          >
+                            {isTestingQuote ? 'Cotizando en Vivo...' : '⚡ Probar Cotización en Vivo'}
+                          </button>
+                        </div>
+                      </div>
+
+                      {testQuoteError && (
+                        <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-xs">
+                          {testQuoteError}
+                        </div>
+                      )}
+
+                      {testQuoteResult && testQuoteResult.rates && (
+                        <div className="space-y-4 pt-2">
+                          <div className="flex justify-between items-center text-2xs font-bold text-foreground/60">
+                            <span>
+                              {testQuoteResult.rates.length} tarifas encontradas desde CP {testQuoteResult.origin_zip} a CP {testQuoteResult.destination_zip}
+                            </span>
+                            <span className="text-nectar-gold uppercase">Modalidad: {testQuoteResult.provider}</span>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {testQuoteResult.rates.map((rate: any, index: number) => (
+                              <div
+                                key={rate.id || index}
+                                className="bg-background border border-card-border hover:border-nectar-gold/50 rounded-2xl p-5 flex flex-col justify-between transition-all shadow-md space-y-3"
+                              >
+                                <div className="flex justify-between items-start">
+                                  <div>
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-xs font-black uppercase text-foreground">{rate.provider || rate.carrier}</span>
+                                      <span className="text-3xs uppercase px-1.5 py-0.5 rounded bg-foreground/10 text-foreground/60 font-mono font-bold">
+                                        {rate.source_provider || 'COURIER'}
+                                      </span>
+                                    </div>
+                                    <span className="text-2xs text-foreground/50 block mt-0.5">
+                                      {rate.service_level_name || 'Servicio Estándar'}
+                                    </span>
+                                  </div>
+                                  <span className="text-3xs font-black uppercase px-2 py-1 rounded bg-emerald-500/10 text-emerald-400">
+                                    {rate.days} {typeof rate.days === 'number' ? (rate.days === 1 ? 'día' : 'días') : ''}
+                                  </span>
+                                </div>
+
+                                <div className="border-t border-card-border/60 pt-3 space-y-1 text-3xs text-foreground/60">
+                                  <div className="flex justify-between">
+                                    <span>Costo Base Courier:</span>
+                                    <span className="font-mono">${Number(rate.amount || 0).toFixed(2)} MXN</span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span>Fee Néctar Labs:</span>
+                                    <span className="font-mono">+${Number(rate.nectar_fee || 10).toFixed(2)} MXN</span>
+                                  </div>
+                                  {Number(rate.tenant_markup || 0) > 0 && (
+                                    <div className="flex justify-between text-emerald-400 font-bold">
+                                      <span>Margen Tienda:</span>
+                                      <span className="font-mono">+${Number(rate.tenant_markup || 0).toFixed(2)} MXN</span>
+                                    </div>
+                                  )}
+                                  <div className="flex justify-between border-t border-card-border/60 pt-2 text-xs font-black text-foreground">
+                                    <span>Total al Comprador:</span>
+                                    <span className="font-mono text-nectar-gold">
+                                      ${Number(rate.total_buyer || rate.total_amount || 0).toFixed(2)} MXN
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>

@@ -197,7 +197,7 @@ class SkydropxProvider(BaseShippingProvider):
         self.oauth_url = env_urls["oauth"]
 
         self.nectar_fee = Decimal(str(getattr(tenant, "platform_shipping_fee", "10.00") or "10.00")) if tenant else Decimal("10.00")
-        markup = Decimal(str(getattr(tenant, "shipping_markup_percentage", "15.00") or "15.00")) if tenant else Decimal("15.00")
+        markup = Decimal(str(getattr(tenant, "shipping_markup_percentage", "0.00") or "0.00")) if tenant else Decimal("0.00")
         self.markup_factor = Decimal("1.00") + (markup / Decimal("100.00"))
         self.last_error: Optional[str] = None
 

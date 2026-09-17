@@ -170,7 +170,7 @@ class Tenant(models.Model):
     shipping_origin_city = models.CharField(max_length=255, blank=True, null=True, default="")
     shipping_origin_state = models.CharField(max_length=100, blank=True, null=True, default="")
     shipping_origin_zip_code = models.CharField(max_length=10, blank=True, null=True, default="")
-    shipping_markup_percentage = models.DecimalField(max_digits=5, decimal_places=2, default=15.00, help_text="Porcentaje de ganancia sobre el costo del courier hacia el comprador")
+    shipping_markup_percentage = models.DecimalField(max_digits=5, decimal_places=2, default=0.00, help_text="Porcentaje de ganancia sobre el costo del courier hacia el comprador")
 
     # Configuración de Empaque por Defecto (Prevalece en Envia.com y Skydropx Pro)
     class PackageType(models.TextChoices):

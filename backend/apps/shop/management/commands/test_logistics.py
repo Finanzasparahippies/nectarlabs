@@ -109,6 +109,12 @@ class Command(BaseCommand):
             default=None,
             help="Descripción del contenido del paquete"
         )
+        parser.add_argument(
+            '--markup',
+            type=float,
+            default=None,
+            help="Porcentaje de ganancia comercial del inquilino (ej. 0.0 o 15.0)"
+        )
 
     def handle(self, *args, **options):
         raw_provider = (options.get('provider') or 'DYNAMIC_BEST').strip().upper()
@@ -147,6 +153,13 @@ class Command(BaseCommand):
                 self.stderr.write(self.style.ERROR(f"❌ Inquilino '{tenant_identifier}' no encontrado en base de datos."))
                 return
 
+        custom_markup = options.get('markup')
+        if custom_markup is not None:
+            if not tenant:
+                tenant = Tenant(name="Test Tenant", shipping_markup_percentage=Decimal(str(custom_markup)))
+            else:
+                tenant.shipping_markup_percentage = Decimal(str(custom_markup))
+
         self.stdout.write(self.style.MIGRATE_HEADING("\n" + "=" * 70))
         self.stdout.write(self.style.MIGRATE_HEADING("📦 DIAGNÓSTICO DE LOGÍSTICA MULTI-PROVEEDOR NECTAR LABS"))
         self.stdout.write(self.style.MIGRATE_HEADING("=" * 70))
@@ -154,6 +167,8 @@ class Command(BaseCommand):
         self.stdout.write(f"• Origen (C.P.):         {origin_cp} (Hermosillo, Sonora)")
         self.stdout.write(f"• Destino (C.P.):        {dest_cp}")
         self.stdout.write(f"• Inquilino:             {tenant.name if tenant else 'Néctar Labs Master Platform (PaaS Hub)'}")
+        active_markup = tenant.shipping_markup_percentage if tenant else Decimal('0.00')
+        self.stdout.write(f"• Margen Comercial:      {active_markup}%")
         if target_carrier:
             self.stdout.write(f"• Courier Objetivo:      {target_carrier.upper()}")
 

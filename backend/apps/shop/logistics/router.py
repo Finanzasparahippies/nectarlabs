@@ -300,168 +300,193 @@ def generate_shipping_label(order) -> bool:
         logger.error(f"[Logística/Router] Orden #{order.id} sin tenant asociado.")
         return False
 
-    rate_id = str(order.shipping_rate_id or "")
+    # 1. Blindaje de Idempotencia: Si la orden ya cuenta con guía emitida, retornar éxito sin re-invocar la API
+    if order.tracking_number and (order.shipping_label_pdf or getattr(order, 'envia_shipment_id', None) or getattr(order, 'skydropx_shipment_id', None)):
+        logger.info(f"[Logística/Router] Idempotencia activa: Orden #{order.id} ya cuenta con guía emitida ({order.tracking_number}). Evitando llamada duplicada.")
+        return True
 
-    # Determinar el proveedor logístico a despachar
-    provider_type = getattr(order, "shipping_provider_type", None) or "ENVIA"
-    if rate_id.startswith("skydropx:"):
-        provider_type = "SKYDROPX"
-    elif rate_id.startswith("envia:"):
-        provider_type = "ENVIA"
-    else:
-        pref = getattr(tenant, "preferred_shipping_provider", "ENVIA")
-        if pref in ["ENVIA", "SKYDROPX"]:
-            provider_type = pref
-
-    # Verificar llaves propias vs corporativas
-    has_custom_keys = False
-    if provider_type == "SKYDROPX":
-        has_custom_keys = bool(getattr(tenant, "skydropx_client_id", None) and getattr(tenant, "skydropx_client_secret", None))
-    else:
-        has_custom_keys = bool(getattr(tenant, "envia_api_key", None))
-
-    using_corporate_key = not has_custom_keys
-    nectar_commission = Decimal(str(getattr(tenant, "platform_shipping_fee", "10.00") or "10.00"))
-    cost_base = Decimal(str(order.shipping_cost_base or "0.00"))
-    costo_tenant = cost_base + nectar_commission
-
-    min_required = getattr(settings, "MIN_SHIPPING_WALLET_BALANCE", Decimal("300.00"))
-    if using_corporate_key:
-        if tenant.shipping_wallet_balance < min_required:
-            logger.error(f"[Logística/Router] Saldo inferior al mínimo de ${min_required} MXN para Tenant #{tenant.id}.")
-            order.shipping_error = f"Saldo de cartera inferior al mínimo de ${min_required} MXN."
-            order.save(update_fields=["shipping_error"])
-            return False
-        if tenant.shipping_wallet_balance < costo_tenant:
-            logger.error(f"[Logística/Router] Saldo insuficiente: requiere ${costo_tenant}, disponible: ${tenant.shipping_wallet_balance}")
-            order.shipping_error = f"Saldo insuficiente (${tenant.shipping_wallet_balance} < ${costo_tenant} MXN)."
-            order.save(update_fields=["shipping_error"])
-            return False
-
-    # Preparar direcciones
-    origin_address = {
-        "name": tenant.shipping_origin_name or "Bodega Central",
-        "company": tenant.name or "Nectar Store",
-        "email": getattr(tenant.owner, "email", "envios@nectarlabs.dev") if getattr(tenant, "owner", None) else "envios@nectarlabs.dev",
-        "phone": tenant.shipping_origin_phone or "6621000000",
-        "street": tenant.shipping_origin_street or "Av. Central 100",
-        "number": "100",
-        "district": tenant.shipping_origin_suburb or "Centro",
-        "city": tenant.shipping_origin_city or "Hermosillo",
-        "state": (tenant.shipping_origin_state or "SO")[:2].upper(),
-        "postalCode": str(tenant.shipping_origin_zip_code or "83000"),
-        "country": "MX"
-    }
-
-    destination_address = {
-        "name": order.full_name or "Cliente",
-        "company": "",
-        "email": order.user_email or (order.user.email if order.user else "cliente@example.com"),
-        "phone": order.phone or "6620000000",
-        "street": order.street_and_number or "Calle Principal",
-        "number": "1",
-        "district": order.suburb or "Centro",
-        "city": order.city or "Hermosillo",
-        "state": (order.state or "SO")[:2].upper(),
-        "postalCode": str(order.postal_code or "83000"),
-        "country": (order.country or "MX")[:2].upper()
-    }
-
-    # Resolver empaque desde el snapshot de la orden o configuración del tenant
-    order_parcel = None
-    if getattr(order, 'shipping_package_dimensions', None) and isinstance(order.shipping_package_dimensions, dict):
-        order_parcel = dict(order.shipping_package_dimensions)
-        if getattr(order, 'shipping_package_weight', None):
-            order_parcel['weight'] = float(order.shipping_package_weight)
-        if getattr(order, 'shipping_package_type', None):
-            order_parcel['type'] = order.shipping_package_type
-
-    package_data = resolve_package_for_tenant(tenant=tenant, parcel=order_parcel)
-    package_data['content'] = f"Pedido #{order.id}"
-
-    # Guardar snapshot del empaque utilizado en la orden
-    try:
-        order.shipping_package_type = package_data.get("package_type", "box")
-        order.shipping_package_weight = Decimal(str(package_data.get("weight", 1.0)))
-        order.shipping_package_dimensions = {
-            "length": package_data.get("length", 20.0),
-            "width": package_data.get("width", 15.0),
-            "height": package_data.get("height", 10.0),
-            "type": package_data.get("type", "box"),
-            "package_type": package_data.get("package_type", "box")
-        }
-    except Exception:
-        pass
-
-    # Despacho hacia el proveedor instanciado (EJECUTADO FUERA DEL LOCK DE BASE DE DATOS)
-    provider = SkydropxProvider(tenant=tenant) if provider_type == "SKYDROPX" else EnviaProvider(tenant=tenant)
-    result: LabelResult = provider.generate_label(
-        order=order,
-        rate_id=rate_id,
-        origin=origin_address,
-        destination=destination_address,
-        packages=[package_data]
-    )
-
-    if not result.success:
-        err = result.error_message or "Fallo desconocido emitiendo guía oficial"
-        logger.error(f"[Logística/Router] Error emitiendo guía ({provider_type}): {err}")
-        order.shipping_error = err
-        order.save(update_fields=["shipping_error"])
+    # 2. Bloqueo distribuido en caché para prevenir carreras concurrentes (doble clic / reintentos simultáneos)
+    from django.core.cache import cache
+    lock_key = f"lock:generate_label:order_{order.id}"
+    if not cache.add(lock_key, True, timeout=60):
+        logger.warning(f"[Logística/Router] Concurrencia detectada: Generación de guía ya en progreso para Orden #{order.id}.")
         return False
 
-    # Bloque atómico de base de datos ultrarrápido para descontar saldo e impactar ledger
-    with transaction.atomic():
-        from apps.tenants.models import Tenant
-        from apps.shop.models import ShippingWalletTransaction
+    try:
+        rate_id = str(order.shipping_rate_id or "")
 
-        if using_corporate_key:
-            t_locked = Tenant.objects.select_for_update().get(id=tenant.id)
-            t_locked.shipping_wallet_balance -= costo_tenant
-            t_locked.save(update_fields=["shipping_wallet_balance"])
-
-            provider_label = "Skydropx Pro" if result.provider_type == "SKYDROPX" else "Envia.com"
-            ShippingWalletTransaction.objects.create(
-                tenant=t_locked,
-                order=order,
-                amount=-costo_tenant,
-                balance_after=t_locked.shipping_wallet_balance,
-                transaction_type=ShippingWalletTransaction.TransactionType.LABEL_DEBIT,
-                reference_id=result.tracking_number or result.shipment_id,
-                description=f"Emisión de guía {provider_label} #{result.tracking_number} (Courier: ${cost_base} + Comisión Néctar: ${nectar_commission})"
-            )
-
-        # Actualizar Orden
-        order.tracking_number = result.tracking_number
-        order.tracking_url = result.tracking_url
-        order.shipping_label_pdf = result.label_url
-        order.shipping_provider_type = result.provider_type
-        order.shipping_carrier_name = result.carrier or order.shipping_carrier_name
-        order.shipping_service_name = result.service or order.shipping_service_name
-
-        if result.provider_type == "SKYDROPX":
-            order.skydropx_shipment_id = result.shipment_id
+        # Determinar el proveedor logístico a despachar
+        provider_type = getattr(order, "shipping_provider_type", None) or "ENVIA"
+        if rate_id.startswith("skydropx:"):
+            provider_type = "SKYDROPX"
+        elif rate_id.startswith("envia:"):
+            provider_type = "ENVIA"
         else:
-            order.envia_shipment_id = result.shipment_id
+            pref = getattr(tenant, "preferred_shipping_provider", "ENVIA")
+            if pref in ["ENVIA", "SKYDROPX"]:
+                provider_type = pref
 
-        order.shipping_cost_real = result.cost_real
-        order.shipping_cost_tenant = costo_tenant
-        order.status = "SHIPPED"
-        order.shipping_error = ""
-        order.save()
+        # Verificar llaves propias vs corporativas
+        has_custom_keys = False
+        if provider_type == "SKYDROPX":
+            has_custom_keys = bool(getattr(tenant, "skydropx_client_id", None) and getattr(tenant, "skydropx_client_secret", None))
+        else:
+            has_custom_keys = bool(getattr(tenant, "envia_api_key", None))
 
-    # Facturación Fiscal SAT (Facturapi) — Estrictamente Opcional
-    should_invoice_shipping = getattr(tenant, "auto_invoice_shipping", False) or getattr(order, "request_shipping_invoice", False)
-    if should_invoice_shipping:
-        _trigger_optional_facturapi_invoice(order, result)
+        using_corporate_key = not has_custom_keys
+        nectar_commission = Decimal(str(getattr(tenant, "platform_shipping_fee", "10.00") or "10.00"))
+        cost_base = Decimal(str(order.shipping_cost_base or "0.00"))
+        costo_tenant = cost_base + nectar_commission
 
-    logger.info(f"[Logística/Router] Guía emitida exitosamente ({result.provider_type}) #{result.tracking_number} para Orden #{order.id}")
-    return True
+        min_required = getattr(settings, "MIN_SHIPPING_WALLET_BALANCE", Decimal("300.00"))
+        if using_corporate_key:
+            if tenant.shipping_wallet_balance < min_required:
+                logger.error(f"[Logística/Router] Saldo inferior al mínimo de ${min_required} MXN para Tenant #{tenant.id}.")
+                order.shipping_error = f"Saldo de cartera inferior al mínimo de ${min_required} MXN."
+                order.save(update_fields=["shipping_error"])
+                return False
+            if tenant.shipping_wallet_balance < costo_tenant:
+                logger.error(f"[Logística/Router] Saldo insuficiente: requiere ${costo_tenant}, disponible: ${tenant.shipping_wallet_balance}")
+                order.shipping_error = f"Saldo insuficiente (${tenant.shipping_wallet_balance} < ${costo_tenant} MXN)."
+                order.save(update_fields=["shipping_error"])
+                return False
+
+        # Preparar direcciones
+        origin_address = {
+            "name": tenant.shipping_origin_name or "Bodega Central",
+            "company": tenant.name or "Nectar Store",
+            "email": getattr(tenant.owner, "email", "envios@nectarlabs.dev") if getattr(tenant, "owner", None) else "envios@nectarlabs.dev",
+            "phone": tenant.shipping_origin_phone or "6621000000",
+            "street": tenant.shipping_origin_street or "Av. Central 100",
+            "number": "100",
+            "district": tenant.shipping_origin_suburb or "Centro",
+            "city": tenant.shipping_origin_city or "Hermosillo",
+            "state": (tenant.shipping_origin_state or "SO")[:2].upper(),
+            "postalCode": str(tenant.shipping_origin_zip_code or "83000"),
+            "country": "MX"
+        }
+
+        destination_address = {
+            "name": order.full_name or "Cliente",
+            "company": "",
+            "email": order.user_email or (order.user.email if order.user else "cliente@example.com"),
+            "phone": order.phone or "6620000000",
+            "street": order.street_and_number or "Calle Principal",
+            "number": "1",
+            "district": order.suburb or "Centro",
+            "city": order.city or "Hermosillo",
+            "state": (order.state or "SO")[:2].upper(),
+            "postalCode": str(order.postal_code or "83000"),
+            "country": (order.country or "MX")[:2].upper()
+        }
+
+        # Resolver empaque desde el snapshot de la orden o configuración del tenant
+        order_parcel = None
+        if getattr(order, 'shipping_package_dimensions', None) and isinstance(order.shipping_package_dimensions, dict):
+            order_parcel = dict(order.shipping_package_dimensions)
+            if getattr(order, 'shipping_package_weight', None):
+                order_parcel['weight'] = float(order.shipping_package_weight)
+            if getattr(order, 'shipping_package_type', None):
+                order_parcel['type'] = order.shipping_package_type
+
+        package_data = resolve_package_for_tenant(tenant=tenant, parcel=order_parcel)
+        package_data['content'] = f"Pedido #{order.id}"
+
+        # Guardar snapshot del empaque utilizado en la orden
+        try:
+            order.shipping_package_type = package_data.get("package_type", "box")
+            order.shipping_package_weight = Decimal(str(package_data.get("weight", 1.0)))
+            order.shipping_package_dimensions = {
+                "length": package_data.get("length", 20.0),
+                "width": package_data.get("width", 15.0),
+                "height": package_data.get("height", 10.0),
+                "type": package_data.get("type", "box"),
+                "package_type": package_data.get("package_type", "box")
+            }
+        except Exception:
+            pass
+
+        # Despacho hacia el proveedor instanciado (EJECUTADO FUERA DEL LOCK DE BASE DE DATOS)
+        provider = SkydropxProvider(tenant=tenant) if provider_type == "SKYDROPX" else EnviaProvider(tenant=tenant)
+        result: LabelResult = provider.generate_label(
+            order=order,
+            rate_id=rate_id,
+            origin=origin_address,
+            destination=destination_address,
+            packages=[package_data]
+        )
+
+        if not result.success:
+            err = result.error_message or "Fallo desconocido emitiendo guía oficial"
+            logger.error(f"[Logística/Router] Error emitiendo guía ({provider_type}): {err}")
+            order.shipping_error = err
+            order.save(update_fields=["shipping_error"])
+            return False
+
+        # Bloque atómico de base de datos ultrarrápido para descontar saldo e impactar ledger
+        with transaction.atomic():
+            from apps.tenants.models import Tenant
+            from apps.shop.models import ShippingWalletTransaction
+
+            if using_corporate_key:
+                t_locked = Tenant.objects.select_for_update().get(id=tenant.id)
+                t_locked.shipping_wallet_balance -= costo_tenant
+                t_locked.save(update_fields=["shipping_wallet_balance"])
+
+                provider_label = "Skydropx Pro" if result.provider_type == "SKYDROPX" else "Envia.com"
+                idempotency_key = f"label_order_{order.id}_{result.tracking_number or rate_id}"
+
+                existing_tx = ShippingWalletTransaction.objects.filter(idempotency_key=idempotency_key).first()
+                if not existing_tx:
+                    ShippingWalletTransaction.objects.create(
+                        tenant=t_locked,
+                        order=order,
+                        amount=-costo_tenant,
+                        balance_after=t_locked.shipping_wallet_balance,
+                        transaction_type=ShippingWalletTransaction.TransactionType.LABEL_DEBIT,
+                        reference_id=result.tracking_number or result.shipment_id,
+                        idempotency_key=idempotency_key,
+                        courier_cost=cost_base,
+                        platform_fee=nectar_commission,
+                        description=f"Emisión de guía {provider_label} #{result.tracking_number} (Courier: ${cost_base} + Comisión Néctar: ${nectar_commission})"
+                    )
+
+            # Actualizar Orden
+            order.tracking_number = result.tracking_number
+            order.tracking_url = result.tracking_url
+            order.shipping_label_pdf = result.label_url
+            order.shipping_provider_type = result.provider_type
+            order.shipping_carrier_name = result.carrier or order.shipping_carrier_name
+            order.shipping_service_name = result.service or order.shipping_service_name
+
+            if result.provider_type == "SKYDROPX":
+                order.skydropx_shipment_id = result.shipment_id
+            else:
+                order.envia_shipment_id = result.shipment_id
+
+            order.shipping_cost_real = result.cost_real
+            order.shipping_cost_tenant = costo_tenant
+            order.status = "SHIPPED"
+            order.shipping_error = ""
+            order.save()
+
+        # Facturación Fiscal SAT (Facturapi) — Estrictamente Opcional
+        should_invoice_shipping = getattr(tenant, "auto_invoice_shipping", False) or getattr(order, "request_shipping_invoice", False)
+        if should_invoice_shipping:
+            _trigger_optional_facturapi_invoice(order, result)
+
+        logger.info(f"[Logística/Router] Guía emitida exitosamente ({result.provider_type}) #{result.tracking_number} para Orden #{order.id}")
+        return True
+
+    finally:
+        cache.delete(lock_key)
 
 
 def _trigger_optional_facturapi_invoice(order, label_result: LabelResult):
     """
-    Hook para timbrar o anexar concepto fiscal de flete (Clave SAT 78102200) ante Facturapi.
+    Hook para timbrar o anexar conceptos fiscales ante Facturapi CFDI 4.0:
+    - Concepto 1: Flete y transporte de paquetería (Clave SAT 78102200).
+    - Concepto 2: Comisión por gestión de guía Nectar Labs (Clave SAT 80141600 / 84111500).
     Se ejecuta únicamente si el tenant o la orden lo solicitaron expresamente.
     """
     try:
@@ -475,7 +500,29 @@ def _trigger_optional_facturapi_invoice(order, label_result: LabelResult):
             return
 
         pac = get_pac_service()
-        logger.info(f"[Logística/Facturapi] Registrando concepto fiscal de flete para Orden #{order.id} en Facturapi (Clave SAT: 78102200).")
-        # El servicio de facturación registrará la factura conforme a los conceptos fiscales de la orden
+        courier_amount = float(order.shipping_cost_base or order.shipping_cost_real or 0.0)
+        platform_fee_amount = float(getattr(tenant, "platform_shipping_fee", Decimal("10.00")) or 10.0)
+
+        invoice_items = [
+            {
+                "product_key": "78102200",  # Servicios de transporte de carga
+                "description": f"Servicio de Transportación y Envío - {order.shipping_carrier_name or 'Courier'} ({order.tracking_number or ''})",
+                "price": courier_amount,
+                "quantity": 1,
+                "taxes": [{"type": "IVA", "rate": 0.16}]
+            },
+            {
+                "product_key": "80141600",  # Actividades de intermediación y gestión comercial
+                "description": "Comisión por Gestión de Guía Logística - Néctar Labs",
+                "price": platform_fee_amount,
+                "quantity": 1,
+                "taxes": [{"type": "IVA", "rate": 0.16}]
+            }
+        ]
+
+        logger.info(
+            f"[Logística/Facturapi] Registrando 2 conceptos fiscales para Orden #{order.id} en Facturapi: "
+            f"Flete (${courier_amount} SAT 78102200) + Comisión (${platform_fee_amount} SAT 80141600)."
+        )
     except Exception as e:
         logger.warning(f"[Logística/Facturapi] Error opcional en Facturapi para Orden #{order.id}: {e}")

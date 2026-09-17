@@ -795,6 +795,32 @@ class ShippingWalletTransaction(models.Model):
         db_index=True,
         help_text="ID de Stripe, shipment_id de Envia o tracking_number"
     )
+    idempotency_key = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        unique=True,
+        db_index=True,
+        help_text="Clave de idempotencia única para prevenir cargos o emisiones duplicadas"
+    )
+    courier_cost = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=Decimal('0.00'),
+        help_text="Costo base cobrado por el transportista / paquetería"
+    )
+    platform_fee = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=Decimal('0.00'),
+        help_text="Comisión por gestión de guía cobrada por Nectar Labs ($10.00 MXN)"
+    )
+    adjustment_fee = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=Decimal('0.00'),
+        help_text="Cargo o ajuste por sobrepeso o discrepancia de medidas"
+    )
     description = models.TextField(
         blank=True,
         default="",

@@ -134,6 +134,43 @@ class TenantViewSet(viewsets.ModelViewSet):
                 'message': f'Error durante la comprobación: {str(e)}'
             })
 
+    @action(detail=True, methods=['post'], url_path='test-shipping-quote')
+    def test_shipping_quote(self, request, pk=None):
+        """
+        Permite al inquilino simular y probar una cotización en tiempo real desde el dashboard
+        utilizando su configuración de empaque, origen, margen y proveedor preferido.
+        """
+        tenant = self.get_object()
+        dest_zip = str(request.data.get('dest_zip') or request.data.get('destination_zip') or request.data.get('postal_code') or '').strip()
+        if not dest_zip:
+            return Response({'error': 'El código postal de destino es requerido.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        from apps.shop.logistics.router import get_shipping_rates
+        destination = {
+            'postalCode': dest_zip,
+            'zip_code': dest_zip,
+            'country': 'MX'
+        }
+        
+        parcel = request.data.get('parcel')
+        try:
+            rates = get_shipping_rates(destination=destination, parcel=parcel, tenant=tenant)
+            return Response({
+                'success': True,
+                'origin_zip': tenant.shipping_origin_zip_code or "83000",
+                'destination_zip': dest_zip,
+                'provider': tenant.preferred_shipping_provider,
+                'package_type': tenant.default_package_type,
+                'markup_percentage': float(tenant.shipping_markup_percentage),
+                'rates_count': len(rates),
+                'rates': rates
+            }, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({
+                'success': False,
+                'error': str(e)
+            }, status=status.HTTP_400_BAD_REQUEST)
+
     @action(detail=True, methods=['get', 'post', 'put', 'patch', 'delete'], url_path='proxy/(?P<sub_path>.*)')
     def backend_proxy(self, request, pk=None, sub_path=None):
         """

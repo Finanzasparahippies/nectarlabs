@@ -1401,12 +1401,23 @@ class EnviaAndStripeIdempotencyTests(APITestCase):
         self.assertEqual(order.shipping_cost_real, Decimal("115.00"))
         self.assertEqual(order.shipping_cost_tenant, Decimal("125.00"))
 
-        # Validar Ledger
+        # Validar Ledger con desglose explícito de conceptos (Courier Base + Fee Néctar)
         tx = ShippingWalletTransaction.objects.filter(order=order).first()
         self.assertIsNotNone(tx)
         self.assertEqual(tx.amount, Decimal("-125.00"))
         self.assertEqual(tx.balance_after, expected_balance)
         self.assertEqual(tx.transaction_type, ShippingWalletTransaction.TransactionType.LABEL_DEBIT)
+        self.assertEqual(tx.courier_cost, Decimal("115.00"))
+        self.assertEqual(tx.platform_fee, Decimal("10.00"))
+        self.assertIsNotNone(tx.idempotency_key)
+
+        # 2. Prueba de Idempotencia Estricta: segunda invocación no genera cobro doble ni duplicidad de registros
+        initial_tx_count = ShippingWalletTransaction.objects.filter(order=order).count()
+        second_call = generate_shipping_label(order)
+        self.assertTrue(second_call)
+        self.tenant.refresh_from_db()
+        self.assertEqual(self.tenant.shipping_wallet_balance, expected_balance)
+        self.assertEqual(ShippingWalletTransaction.objects.filter(order=order).count(), initial_tx_count)
 
     def test_envia_webhook_tracking_and_surcharge(self):
         """
@@ -1494,6 +1505,121 @@ class EnviaAndStripeIdempotencyTests(APITestCase):
         self.assertIsNotNone(sur_tx)
         self.assertEqual(sur_tx.transaction_type, ShippingWalletTransaction.TransactionType.SURCHARGE_DEBIT)
         self.assertEqual(sur_tx.amount, Decimal("-35.50"))
+        self.assertEqual(sur_tx.adjustment_fee, Decimal("35.50"))
+        self.assertEqual(sur_tx.idempotency_key, "envia_surcharge_sur_98765_surcharge")
+
+        # Idempotencia: reenviar el mismo evento de surcharge no genera cobro doble ni transacciones duplicadas
+        res_sur_dup = self.client.post(
+            webhook_url,
+            payload_surcharge,
+            format='json',
+            HTTP_X_WEBHOOK_EVENT="surcharge",
+            HTTP_X_WEBHOOK_ID="sur_98765"
+        )
+        self.assertEqual(res_sur_dup.status_code, status.HTTP_200_OK)
+        self.tenant.refresh_from_db()
+        self.assertEqual(self.tenant.shipping_wallet_balance, prev_balance - Decimal("35.50"))
+        self.assertEqual(ShippingWalletTransaction.objects.filter(reference_id="sur_98765").count(), 1)
+
+    def test_idempotency_key_database_unique_constraint(self):
+        """
+        Verifica a nivel de base de datos que el campo idempotency_key en ShippingWalletTransaction
+        posee restricción UNIQUE y previene inserciones concurrentes duplicadas vía IntegrityError.
+        """
+        from apps.shop.models import ShippingWalletTransaction
+        from django.db.utils import IntegrityError
+        from decimal import Decimal
+
+        idemp_key = "test_unique_idemp_key_12345"
+        ShippingWalletTransaction.objects.create(
+            tenant=self.tenant,
+            amount=Decimal("-10.00"),
+            balance_after=Decimal("290.00"),
+            transaction_type=ShippingWalletTransaction.TransactionType.LABEL_DEBIT,
+            idempotency_key=idemp_key
+        )
+
+        with self.assertRaises(IntegrityError):
+            ShippingWalletTransaction.objects.create(
+                tenant=self.tenant,
+                amount=Decimal("-10.00"),
+                balance_after=Decimal("280.00"),
+                transaction_type=ShippingWalletTransaction.TransactionType.LABEL_DEBIT,
+                idempotency_key=idemp_key
+            )
+
+    def test_generate_label_distributed_lock_concurrency(self):
+        """
+        Verifica que generate_shipping_label adquiera y respete el lock distribuido en Redis/Caché
+        (lock:generate_label:order_{id}), evitando ejecuciones paralelas que generen doble cobro.
+        """
+        from apps.shop.models import Order, ShippingWalletTransaction
+        from apps.shop.shipping import generate_shipping_label
+        from django.core.cache import cache
+        from decimal import Decimal
+
+        order = Order.objects.create(
+            tenant=self.tenant,
+            user=self.client_user,
+            total=Decimal("300.00"),
+            shipping_cost_base=Decimal("115.00"),
+            shipping_rate_id="rate_lock_test",
+            status=Order.Status.PAID
+        )
+
+        lock_key = f"lock:generate_label:order_{order.id}"
+        cache.set(lock_key, True, timeout=60)
+        try:
+            success = generate_shipping_label(order)
+            self.assertFalse(success)
+            self.assertEqual(ShippingWalletTransaction.objects.filter(order=order).count(), 0)
+            order.refresh_from_db()
+            self.assertEqual(order.status, Order.Status.PAID)
+        finally:
+            cache.delete(lock_key)
+
+    @patch('apps.shop.views.get_shipping_rates')
+    def test_get_shipping_rates_resolves_custom_domain(self, mock_get_shipping_rates):
+        """
+        Verifica que GetShippingRatesView resuelva el inquilino correspondiente a través del
+        header Host de dominio personalizado (ej: msambar.com), utilizando la configuración
+        y el origen del tenant de forma transparente sin requerir tenant_id manual.
+        """
+        from decimal import Decimal
+
+        self.tenant.custom_domain = "msambar.com"
+        self.tenant.postal_code = "83000"
+        self.tenant.shipping_wallet_balance = Decimal("500.00")
+        self.tenant.shipping_markup_percentage = Decimal("0.00")
+        self.tenant.save()
+
+        mock_get_shipping_rates.return_value = [
+            {
+                "provider": "ENVIA",
+                "carrier": "fedex",
+                "service": "Express",
+                "total_price": 120.0,
+                "currency": "MXN",
+                "rate_id": "rate_mock_domain_123"
+            }
+        ]
+
+        url = reverse('shop_shipping_rates')
+        payload = {
+            "destination": {
+                "zip_code": "06600",
+                "city": "Ciudad de México",
+                "state": "CDMX",
+                "country": "MX"
+            }
+        }
+
+        res = self.client.post(url, payload, format='json', HTTP_HOST="msambar.com")
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+
+        mock_get_shipping_rates.assert_called_once()
+        call_kwargs = mock_get_shipping_rates.call_args[1]
+        self.assertEqual(call_kwargs.get("tenant"), self.tenant)
 
     @override_settings(
         ENVIA_WEBHOOK_TOKENS=[
