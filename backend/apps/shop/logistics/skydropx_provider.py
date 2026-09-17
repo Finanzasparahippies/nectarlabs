@@ -374,7 +374,8 @@ class SkydropxProvider(BaseShippingProvider):
             "quotation": {
                 "address_from": address_from,
                 "address_to": address_to,
-                "parcels": parcels_payload
+                "parcels": parcels_payload,
+                "currency": "MXN"
             }
         }
 

@@ -208,7 +208,7 @@ class EnviaClient:
         formatted_packages = self._format_packages(packages)
 
         carriers_to_try = [carrier] if carrier else (
-            ["paquetexpress", "sendex", "ups"] if not is_envia_production() else ["fedex", "dhl", "estafeta", "paquetexpress", "redpack"]
+            ["paquetexpress", "sendex", "ups", "dhl", "fedex"] if not is_envia_production() else ["fedex", "dhl", "estafeta", "paquetexpress", "redpack", "ups", "sendex"]
         )
 
         aggregated_rates: List[Dict[str, Any]] = []
@@ -221,6 +221,9 @@ class EnviaClient:
                 "shipment": {
                     "type": 1,
                     "carrier": c
+                },
+                "settings": {
+                    "currency": "MXN"
                 }
             }
             try:
