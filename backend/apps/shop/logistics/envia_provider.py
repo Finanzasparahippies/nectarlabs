@@ -111,7 +111,7 @@ class EnviaProvider(BaseShippingProvider):
             tenant_cost = base_cost + self.nectar_fee
             buyer_cost = round(tenant_cost * self.markup_factor, 2)
 
-            # Robust parsing of deliveryEstimate / deliveryDays (handles dict, str, int)
+            # Robust parsing of deliveryEstimate / deliveryDays (handles dict, date string, range, int)
             deliv_est = r.get("deliveryEstimate")
             days_val = None
             if isinstance(deliv_est, dict):
@@ -119,8 +119,19 @@ class EnviaProvider(BaseShippingProvider):
             elif isinstance(deliv_est, (int, float)):
                 days_val = deliv_est
             elif isinstance(deliv_est, str):
-                first_num = ''.join([c for c in deliv_est.split()[0] if c.isdigit()])
-                days_val = int(first_num) if first_num else None
+                import re
+                if re.match(r'^\d{4}-\d{2}-\d{2}', deliv_est.strip()):
+                    try:
+                        from datetime import datetime, date
+                        est_date = datetime.strptime(deliv_est.strip()[:10], "%Y-%m-%d").date()
+                        diff = (est_date - date.today()).days
+                        days_val = max(1, diff)
+                    except Exception:
+                        days_val = 3
+                else:
+                    nums = [int(n) for n in re.findall(r'\d+', deliv_est)]
+                    valid_nums = [n for n in nums if 1 <= n <= 30]
+                    days_val = valid_nums[-1] if valid_nums else None
 
             if not days_val:
                 days_val = r.get("deliveryDays")

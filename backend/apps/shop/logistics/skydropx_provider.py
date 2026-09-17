@@ -30,11 +30,39 @@ SKYDROPX_PRO_ENDPOINTS = {
         "base": "https://app.skydropx.com/api/v1",
         "oauth": "https://app.skydropx.com/api/v1/oauth/token",
     },
-    "prod": {
-        "base": "https://app.skydropx.com/api/v1",
-        "oauth": "https://app.skydropx.com/api/v1/oauth/token",
-    }
+MEXICO_STATES = {
+    "AG": "Aguascalientes", "BC": "Baja California", "BS": "Baja California Sur",
+    "CM": "Campeche", "CS": "Chiapas", "CH": "Chihuahua", "CO": "Coahuila",
+    "CL": "Colima", "CX": "Ciudad de México", "DF": "Ciudad de México",
+    "CDMX": "Ciudad de México", "DG": "Durango", "GT": "Guanajuato",
+    "GR": "Guerrero", "HG": "Hidalgo", "JA": "Jalisco", "EM": "Estado de México",
+    "MEX": "Estado de México", "MI": "Michoacán", "MO": "Morelos",
+    "NA": "Nayarit", "NL": "Nuevo León", "OA": "Oaxaca", "PU": "Puebla",
+    "QT": "Querétaro", "QR": "Quintana Roo", "SL": "San Luis Potosí",
+    "SI": "Sinaloa", "SO": "Sonora", "TB": "Tabasco", "TM": "Tamaulipas",
+    "TL": "Tlaxcala", "VE": "Veracruz", "YU": "Yucatán", "ZA": "Zacatecas"
 }
+
+
+def _format_skydropx_address(addr: Dict[str, Any], default_cp: str = "83000") -> Dict[str, Any]:
+    cp = str(addr.get("postal_code") or addr.get("postalCode") or addr.get("zip_code") or addr.get("zip") or default_cp).strip()
+    raw_state = str(addr.get("state") or addr.get("area_level1") or ("Sonora" if cp.startswith("83") else "Ciudad de México")).strip()
+    state_name = MEXICO_STATES.get(raw_state.upper(), raw_state)
+
+    city = str(addr.get("city") or addr.get("area_level2") or ("Hermosillo" if cp.startswith("83") else "Ciudad de México")).strip()
+    district = str(addr.get("district") or addr.get("suburb") or addr.get("area_level3") or "Centro").strip()
+    street = str(addr.get("street") or addr.get("street_and_number") or "Av. Principal 100").strip()
+    country = str(addr.get("country") or addr.get("country_code") or "MX")[:2].upper()
+
+    return {
+        "postal_code": cp,
+        "zip": cp,
+        "area_level1": state_name,
+        "area_level2": city,
+        "area_level3": district,
+        "country_code": country,
+        "street": street
+    }
 
 
 class SkydropxProvider(BaseShippingProvider):
@@ -249,21 +277,13 @@ class SkydropxProvider(BaseShippingProvider):
                 "length": 20.0,
                 "width": 15.0,
                 "height": 10.0
-            }]
-
-        orig_cp = str(origin.get("postalCode") or origin.get("zip_code") or origin.get("postal_code") or "83000")
-        dest_cp = str(destination.get("postalCode") or destination.get("zip_code") or destination.get("postal_code") or "83000")
+        address_from = _format_skydropx_address(origin, default_cp="83000")
+        address_to = _format_skydropx_address(destination, default_cp="06600")
 
         payload = {
             "quotation": {
-                "address_from": {
-                    "zip": orig_cp,
-                    "country_code": (origin.get("country") or "MX")[:2].upper()
-                },
-                "address_to": {
-                    "zip": dest_cp,
-                    "country_code": (destination.get("country") or "MX")[:2].upper()
-                },
+                "address_from": address_from,
+                "address_to": address_to,
                 "parcels": parcels_payload
             }
         }
