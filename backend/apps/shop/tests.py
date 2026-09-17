@@ -1297,7 +1297,8 @@ class EnviaAndStripeIdempotencyTests(APITestCase):
             platform_shipping_fee=Decimal("10.00"),
             shipping_wallet_balance=Decimal("500.00"),
             is_active=True,
-            trial_ends_at=timezone.now() + timedelta(days=14)
+            trial_ends_at=timezone.now() + timedelta(days=14),
+            preferred_shipping_provider=Tenant.ShippingProvider.ENVIA
         )
 
     def test_get_shipping_rates_applies_nectar_commission_and_markup(self):
@@ -1341,6 +1342,26 @@ class EnviaAndStripeIdempotencyTests(APITestCase):
         self.assertEqual(rates[0]["total_amount"], 150.00)
         # Rate 2: 185.00 * 1.20 = 222.00
         self.assertEqual(rates[1]["total_amount"], 222.00)
+
+    def test_get_shipping_rates_dynamic_best_aggregates_both_providers(self):
+        """
+        Verifica que get_shipping_rates con DYNAMIC_BEST agrega tarifas de ambos proveedores
+        (2 de Envia.com + 3 de Skydropx Pro = 5 tarifas).
+        """
+        from apps.shop.shipping import get_shipping_rates
+        self.tenant.preferred_shipping_provider = Tenant.ShippingProvider.DYNAMIC_BEST
+        self.tenant.save()
+
+        destination = {
+            "name": "Destinatario Test",
+            "street": "Calle Destino 789",
+            "suburb": "Pitic",
+            "city": "Hermosillo",
+            "state": "Sonora",
+            "zip_code": "83150"
+        }
+        rates = get_shipping_rates(destination, tenant=self.tenant)
+        self.assertEqual(len(rates), 5)
 
     def test_generate_shipping_label_deducts_wallet_and_logs_ledger(self):
         """

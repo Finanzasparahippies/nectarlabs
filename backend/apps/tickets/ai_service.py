@@ -279,19 +279,19 @@ def generate_ai_reply(chat, new_message_text: str) -> str | None:
         str: El texto de la respuesta generada.
         None: Si la IA está deshabilitada (sin API key) o falla.
     """
-    api_key = getattr(settings, 'GROQ_API_KEY', '') or ''
-    if not api_key:
-        logger.debug("GROQ_API_KEY no configurada — IA desactivada.")
-        return None
-
     try:
-        tenant = chat.tenant
-        if tenant and tenant.is_in_trial:
+        tenant = getattr(chat, 'tenant', None)
+        if tenant and getattr(tenant, 'is_in_trial', False):
             from apps.tickets.models import SupportChatMessage
             total_ai_messages = SupportChatMessage.objects.filter(chat__tenant=tenant, is_ai_message=True).count()
             if total_ai_messages >= 50:
                 logger.warning(f"[AI/Limit] Límite de 50 respuestas de IA alcanzado para el tenant {tenant} en periodo de prueba.")
                 return "Lo siento, el asistente virtual ha alcanzado su límite de mensajes en este periodo de prueba. Por favor, contacta a un administrador o actualiza tu suscripción."
+
+        api_key = getattr(settings, 'GROQ_API_KEY', '') or ''
+        if not api_key:
+            logger.debug("GROQ_API_KEY no configurada — IA desactivada.")
+            return None
 
         from groq import Groq
 

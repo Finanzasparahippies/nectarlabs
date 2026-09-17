@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 from django.utils import timezone
+from django.test import override_settings
 from rest_framework import status
 from rest_framework.test import APITestCase
 from unittest.mock import patch, MagicMock
@@ -14,6 +15,8 @@ from apps.billing.services import get_pac_service, MockPACService, LCOSyncError,
 
 User = get_user_model()
 
+
+@override_settings(FACTURAPI_WEBHOOK_SECRET="")
 class BillingSystemTests(APITestCase):
     def setUp(self):
         # Create users
