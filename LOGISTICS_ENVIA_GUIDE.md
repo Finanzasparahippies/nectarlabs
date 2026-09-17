@@ -95,31 +95,32 @@ Antes de realizar recargas de saldo real en la cuenta corporativa de Producción
 
 ### Comandos de Diagnóstico Operativo (CLI)
 
+`nectar.sh` cuenta con comandos nativos que sincronizan en caliente (`sync_logistics_to_container`) el código al contenedor activo (`nectar_backend` o `nectar_backend_staging`) sin necesidad de reconstruir imágenes Docker:
+
 ```bash
 # === DIAGNÓSTICO UNIFICADO MULTI-CARRIER ===
-# 1. Multicotización dinámica en vivo (DYNAMIC_BEST: compara Envia y Skydropx)
-./nectar.sh manage test_logistics --provider DYNAMIC_BEST --origin 83000 --dest 06600
+# 1. Multicotización dinámica en vivo (DYNAMIC_BEST: compara Envia.com y Skydropx Pro en simultáneo)
+./nectar.sh test-logistics --provider DYNAMIC_BEST --origin 83000 --dest 06600
 
-# 2. Cotización y diagnóstico específico de Skydropx Pro
-./nectar.sh manage test_logistics --provider SKYDROPX --origin 83000 --dest 06600
+# 2. Cotización y diagnóstico específico de Skydropx Pro (Sondeo asíncrono OAuth2 + JSON:API)
+./nectar.sh test-logistics --provider SKYDROPX --origin 83000 --dest 06600
 
-# 3. Cotización y diagnóstico específico de Envia.com
-./nectar.sh manage test_logistics --provider ENVIA --origin 83000 --dest 06600
+# 3. Cotización y diagnóstico específico de Envia.com (Sandbox o Producción)
+./nectar.sh test-logistics --provider ENVIA --origin 83000 --dest 06600
 
-# 4. Probar emisión de guía de prueba en Sandbox (sin consumo de saldo real)
-./nectar.sh manage test_logistics --provider SKYDROPX --generate-label
-./nectar.sh manage test_logistics --provider ENVIA --generate-label
+# 4. Probar emisión de guía física de prueba en Sandbox (Genera PDF en AWS S3 sin costo financiero)
+./nectar.sh test-logistics --provider SKYDROPX --generate-label
+./nectar.sh test-logistics --provider ENVIA --generate-label
+
+# 5. Filtrar por transportista específico o evaluar inquilino concreto
+./nectar.sh test-logistics --provider DYNAMIC_BEST --carrier paquetexpress
+./nectar.sh test-logistics --provider DYNAMIC_BEST --tenant demo-store
+
+# === SHORTCUTS POR AMBIENTE ===
+./nectar.sh test-logistics-staging --provider DYNAMIC_BEST
+./nectar.sh test-logistics-prod --provider DYNAMIC_BEST
 
 # === COMANDOS ESPECÍFICOS ENVIA.COM ===
-# 5. Cotizar en Sandbox Envia (Hermosillo -> CDMX con Paquetexpress)
-./nectar.sh manage test_envia --env sandbox
-
-# 6. Emitir una guía real de prueba en Sandbox Envia (genera PDF en S3)
-./nectar.sh manage test_envia --env sandbox --generate-label
-
-# 7. Disparar un evento de webhook de prueba hacia Staging
-./nectar.sh manage test_envia --env sandbox --test-webhook
-
 # 8. Auditar saldos de billetera de todos los inquilinos (valida umbral de $300 MXN)
 ./nectar.sh manage test_envia --check-balance
 ```
@@ -178,16 +179,21 @@ sequenceDiagram
 | **Webhooks fallidos nunca reintentados** | El log de eventos se guardaba prematuramente como `PROCESSED`. | Se agregó el estado `RECEIVED`. Solo pasa a `PROCESSED` tras ejecución exitosa o `ERROR` ante fallas. |
 | **Bloqueo del Event Loop / DB en alta demanda** | `generate_shipping_label` mantenía el lock de base de datos durante la petición HTTP a Envia. | Se ejecuta la llamada HTTP fuera de la transacción atómica; el lock se adquiere únicamente para el ajuste de balance. |
 | **Error 400 en Envia: `Malformed UTF-8`** | Caracteres acentuados en colonias o nombres de clientes. | Normalización automática en `_format_address` sustituyendo tildes y caracteres especiales. |
+| **HTTP 422 en Skydropx Pro: `address_from incompleto`** | Skydropx Pro exige división territorial mexicana estricta. | `_format_skydropx_address` autogenera `area_level1` (Estado), `area_level2` (Municipio) y `area_level3` (Colonia). |
+| **0 tarifas en Skydropx Pro tras HTTP 200** | Las paqueterías cotizan en background (`is_completed: false`). | Sondeo asíncrono progresivo en `GET /quotations/{id}` hasta `is_completed: true` y extracción en `data.attributes.rates`. |
+| **Falla en `deliveryEstimate` de Envia.com** | El API devolvió un string de rango de días en lugar de diccionario. | Parser defensivo con soporte para rangos numéricos, enteros y fechas ISO. |
+| **Nombre de Courier como "Courier" genérico** | Skydropx Pro desacopla metadatos del transportista en `relationships`. | Extracción automática a través de `carrier_map` derivado del bloque JSON:API `included`. |
 
 ---
 
 ## 6. Lista de Verificación para Puesta en Marcha (Go-Live)
 
-- [x] Claves de API configuradas en `.env.prod` y `.env.staging`.
+- [x] Claves de API configuradas en `.env.prod` y `.env.staging` (Envia.com y Skydropx Pro).
 - [x] Cuatro tokens de webhook registrados en `ENVIA_WEBHOOK_TOKENS`.
 - [x] Migración de modelo aplicada: `0039_alter_enviawebhookeventlog_status.py`.
 - [x] Validación de saldo mínimo fijada en `$300.00 MXN`.
 - [x] Emisión de prueba en Sandbox verificada con `test_envia --env sandbox --generate-label`.
 - [x] Prueba de webhook en Sandbox validada con `test_envia --env sandbox --test-webhook`.
-- [x] Cotización de tarifas en vivo verificada en Producción con `test_envia --env production`.
-- [x] Fondear la cuenta corporativa maestra de Envia.com en `https://ship.envia.com` para permitir emisión real de envíos a clientes finales.
+- [x] Cotización Skydropx Pro validada en Staging vía `./nectar.sh test-logistics --provider SKYDROPX`.
+- [x] Multicotización dinámica en vivo verificada con `./nectar.sh test-logistics --provider DYNAMIC_BEST`.
+- [x] Fondear la cuenta corporativa maestra de Envia.com (`https://ship.envia.com`) y Skydropx Pro para despachos en producción.

@@ -457,6 +457,16 @@ class SkydropxProvider(BaseShippingProvider):
                     diag += f" (ID: {quotation_id}, completado={is_completed})"
                 self.last_error = f"Sin tarifas disponibles para la ruta CP {orig_cp} -> CP {dest_cp} [{diag}]"
 
+            # Mapa de couriers desde included (JSON:API)
+            carrier_map = {}
+            for inc in (body.get("included") or []):
+                if isinstance(inc, dict) and inc.get("type") in ["carrier", "carriers", "courier", "provider"]:
+                    c_id = str(inc.get("id"))
+                    c_attrs = inc.get("attributes", {}) if isinstance(inc.get("attributes"), dict) else {}
+                    c_name = c_attrs.get("name") or c_attrs.get("carrier_name") or inc.get("name")
+                    if c_name:
+                        carrier_map[c_id] = str(c_name).strip()
+
             normalized: List[NormalizedRate] = []
             for r in raw_rates:
                 attrs = r.get("attributes", {}) if isinstance(r.get("attributes"), dict) else {}
@@ -479,25 +489,46 @@ class SkydropxProvider(BaseShippingProvider):
                 if base_cost <= Decimal("0.00"):
                     continue
 
-                carrier_name = str(
+                # Resolver nombre del courier desde relaciones, atributos o códigos
+                rel_carrier_id = str(r.get("relationships", {}).get("carrier", {}).get("data", {}).get("id") or "")
+                carrier_raw = (
+                    carrier_map.get(rel_carrier_id) or
                     attrs.get("carrier_name") or
+                    attrs.get("provider_name") or
+                    attrs.get("carrier_code") or
+                    attrs.get("provider_code") or
                     attrs.get("carrier") or
                     attrs.get("provider") or
+                    r.get("carrier_name") or
+                    r.get("provider_name") or
+                    r.get("carrier_code") or
                     r.get("carrier") or
-                    r.get("provider") or
-                    "Courier"
-                ).capitalize()
+                    r.get("provider")
+                )
+                if isinstance(carrier_raw, dict):
+                    carrier_raw = carrier_raw.get("name") or carrier_raw.get("code") or carrier_raw.get("description")
+
+                carrier_name = str(carrier_raw or "Skydropx").capitalize()
                 carrier_slug = carrier_name.lower()
 
-                service_name = str(
+                # Resolver nombre de servicio o modalidad
+                service_raw = (
                     attrs.get("service_level_name") or
-                    attrs.get("service") or
                     attrs.get("service_name") or
+                    attrs.get("service_level_code") or
+                    attrs.get("service_level") or
+                    attrs.get("service") or
+                    attrs.get("name") or
+                    attrs.get("description") or
                     r.get("service_level_name") or
+                    r.get("service_name") or
                     r.get("service_level") or
-                    r.get("service") or
-                    "Standard"
+                    r.get("service")
                 )
+                if isinstance(service_raw, dict):
+                    service_raw = service_raw.get("name") or service_raw.get("description") or service_raw.get("code")
+
+                service_name = str(service_raw or "Standard")
 
                 rate_uuid = str(r.get("id") or attrs.get("id") or "")
                 rate_id = f"skydropx:{carrier_slug}:{service_name}:{base_cost}:{rate_uuid}"
