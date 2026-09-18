@@ -747,7 +747,7 @@ case $COMMAND in
                 cp docker/nginx/production.conf /var/www/prod-nginx/nginx/default.conf 2>/dev/null || sudo cp docker/nginx/production.conf /var/www/prod-nginx/nginx/default.conf 2>/dev/null || true
                 echo "✓ Archivo copiado a /var/www/prod-nginx/nginx/default.conf"
             fi
-            $DOCKER_BIN cp docker/nginx/production.conf prod_nginx:/etc/nginx/conf.d/default.conf 2>/dev/null || true
+            cat docker/nginx/production.conf | $DOCKER_BIN exec -i prod_nginx sh -c 'cat > /etc/nginx/conf.d/default.conf' 2>/dev/null || true
         fi
         if is_container_running "prod_nginx"; then
             $DOCKER_BIN exec prod_nginx nginx -t && $DOCKER_BIN exec prod_nginx nginx -s reload
