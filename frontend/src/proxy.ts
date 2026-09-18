@@ -182,8 +182,7 @@ export async function middleware(request: NextRequest) {
       url.pathname.startsWith('/autofactura/');
 
     if (isMatrixCoreRoute) {
-      url.pathname = `/tenants/${tenantSlug}${url.pathname}`;
-      return NextResponse.rewrite(url);
+      return NextResponse.next();
     }
 
     // 2d. Inquilinos con Microservicio Frontend Autónomo (Zero-Downtime Proxy)

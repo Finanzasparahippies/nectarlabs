@@ -21,8 +21,9 @@ class HasAddOnPermission(permissions.BasePermission):
         if tenant_id:
             try:
                 tenant = Tenant.objects.filter(id=uuid.UUID(str(tenant_id))).first()
-            except (ValueError, TypeError):
-                pass
+            except (ValueError, TypeError) as err:
+                import logging
+                logging.getLogger(__name__).debug("UUID no válido para tenant_id en verificación de permisos: %s (%s)", tenant_id, err)
         elif subdomain:
             tenant = Tenant.objects.filter(subdomain=subdomain.lower()).first()
 

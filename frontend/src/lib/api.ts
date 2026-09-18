@@ -60,14 +60,18 @@ export function getStoredToken(): string | null {
     if (localToken && localToken !== 'null' && localToken !== 'undefined' && localToken.trim() !== '') {
       return localToken;
     }
-  } catch { }
+  } catch (err) {
+    console.warn('[Auth] No se pudo acceder a localStorage para leer el token:', err);
+  }
 
   try {
     const match = document.cookie.match(/(?:^|; )\s*token\s*=\s*([^;]+)/);
     if (match && match[1] && match[1] !== 'null' && match[1] !== 'undefined' && match[1].trim() !== '') {
       return decodeURIComponent(match[1]);
     }
-  } catch { }
+  } catch (err) {
+    console.warn('[Auth] No se pudo acceder a document.cookie para leer el token:', err);
+  }
 
   return null;
 }
@@ -86,7 +90,8 @@ export function isTokenExpired(token: string | null): boolean {
       return payload.exp <= nowInSeconds;
     }
     return false;
-  } catch {
+  } catch (err) {
+    console.warn('[Auth] Error analizando payload de token JWT:', err);
     return true;
   }
 }
@@ -165,7 +170,9 @@ export async function fetcher(endpoint: string, options: FetcherOptions = {}): P
         try {
           localStorage.clear();
           document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-        } catch { }
+        } catch (storageErr) {
+          console.error('[Auth] Error al limpiar almacenamiento de sesión expirada:', storageErr);
+        }
         window.location.href = getMainDomainUrl('/login');
       }
       return null;
@@ -225,7 +232,9 @@ export async function fetcher(endpoint: string, options: FetcherOptions = {}): P
           try {
             localStorage.clear();
             document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-          } catch { }
+          } catch (storageErr) {
+            console.error('[Auth] Error al limpiar almacenamiento tras respuesta 401:', storageErr);
+          }
           window.location.href = getMainDomainUrl('/login');
         }
         return null;

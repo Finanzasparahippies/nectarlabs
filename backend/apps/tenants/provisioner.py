@@ -217,8 +217,8 @@ def call_docker_api_json(method, path, body=None):
             # Intento 1: Parseo directo
             try:
                 return True, json.loads(raw_body)
-            except Exception:
-                pass
+            except Exception as json_err:
+                logger.debug(f"Parseo directo de JSON no exitoso ({json_err}), intentando búsqueda por delimitadores...")
 
             # Intento 2: Buscar inicio de objeto o array JSON
             json_start = min(
@@ -311,8 +311,8 @@ def inspect_compose_containers(compose_path: str, env: str = 'staging') -> dict:
                     if isinstance(svc_val, dict):
                         c_name = svc_val.get('container_name')
                     services_found.append((svc_key, c_name or svc_key))
-    except Exception:
-        pass
+    except Exception as yaml_err:
+        logger.warning(f"Error parseando {compose_path} vía PyYAML ({yaml_err}). Aplicando parser de contingencia por líneas.")
 
     # Intento 2: Fallback línea por línea (tolerante a fallos de sintaxis o dependencias)
     if not services_found:
@@ -618,6 +618,60 @@ def reload_nginx_proxy():
     return ActionResult(success, msg, status_code=200 if success else 404)
 
 
+def ensure_container_connected_to_network(container_name: str, network_name: str = NETWORK_NAME) -> tuple:
+    """
+    Garantiza que un contenedor esté conectado a la red Docker compartida (prod_network).
+    Maneja con resiliencia tanto el socket Unix de Docker API como el fallback de CLI,
+    detectando si ya está conectado (409 / already connected) e informando errores reales
+    sin ningún 'pass' ciego o silencioso.
+    """
+    if not container_name:
+        return False, "Nombre de contenedor inválido"
+
+    # Intento 1: Vía Docker Socket API
+    try:
+        ok, resp = call_docker_api("POST", f"/v1.41/networks/{network_name}/connect", body={"Container": container_name})
+        if ok:
+            logger.info(f"Contenedor '{container_name}' conectado exitosamente a red '{network_name}' vía Docker API.")
+            return True, f"Conectado a {network_name}"
+
+        lower_resp = resp.lower()
+        if "already exists in network" in lower_resp or "already attached" in lower_resp or "409" in lower_resp:
+            logger.debug(f"Contenedor '{container_name}' ya se encuentra conectado a la red '{network_name}'.")
+            return True, f"Ya conectado a {network_name}"
+
+        logger.warning(
+            f"Fallo al conectar contenedor '{container_name}' a red '{network_name}' vía Socket API ({resp}). "
+            f"Intentando fallback vía CLI..."
+        )
+    except Exception as e:
+        logger.warning(
+            f"Excepción comunicando con Socket API para conectar '{container_name}' a red '{network_name}': {e}. "
+            f"Intentando fallback vía CLI...",
+            exc_info=True
+        )
+
+    # Intento 2: Fallback vía Docker CLI
+    try:
+        ok_sh, out_sh = execute_shell_cmd(["docker", "network", "connect", network_name, container_name])
+        if ok_sh:
+            logger.info(f"Contenedor '{container_name}' conectado exitosamente a red '{network_name}' vía CLI.")
+            return True, f"Conectado a {network_name} vía CLI"
+
+        lower_out = out_sh.lower()
+        if "already exists in network" in lower_out or "already attached" in lower_out:
+            logger.debug(f"Contenedor '{container_name}' ya conectado a '{network_name}' (CLI comprobado).")
+            return True, f"Ya conectado a {network_name}"
+
+        err_msg = f"No se pudo conectar contenedor '{container_name}' a red '{network_name}': {out_sh}"
+        logger.error(err_msg)
+        return False, err_msg
+    except Exception as e:
+        err_msg = f"Error crítico al ejecutar fallback CLI para conectar '{container_name}' a red '{network_name}': {e}"
+        logger.error(err_msg, exc_info=True)
+        return False, err_msg
+
+
 def _execute_single_container_action(container_name: str, action: str) -> ActionResult:
     valid_actions = {'start', 'stop', 'restart', 'reload_nginx', 'reload-nginx'}
     if action not in valid_actions:
@@ -639,12 +693,20 @@ def _execute_single_container_action(container_name: str, action: str) -> Action
     try:
         ok, resp = call_docker_api("POST", f"/v1.41/containers/{container_name}/{action}")
         if ok:
+            if action in ('start', 'restart'):
+                ok_net, msg_net = ensure_container_connected_to_network(container_name)
+                if not ok_net:
+                    logger.warning(f"Advertencia en post-{action} de {container_name}: {msg_net}")
             return ActionResult(True, f"Acción '{action}' ejecutada con éxito en {container_name}", status_code=200)
         if "404" in resp or "No such container" in resp:
             return ActionResult(False, f"El contenedor '{container_name}' no existe en el daemon de Docker. Debes ejecutar 'deploy' primero para construirlo e iniciarlo.", status_code=400)
         
         ok_sh, out_sh = execute_shell_cmd(["docker", action, container_name])
         if ok_sh:
+            if action in ('start', 'restart'):
+                ok_net, msg_net = ensure_container_connected_to_network(container_name)
+                if not ok_net:
+                    logger.warning(f"Advertencia en post-{action} de {container_name} (CLI): {msg_net}")
             return ActionResult(True, f"Acción '{action}' completada vía CLI en {container_name}", status_code=200)
         return ActionResult(False, f"Error ejecutando '{action}' en {container_name}: {resp}", status_code=502)
     except socket.timeout:
@@ -953,8 +1015,12 @@ def deploy_tenant_containers(tenant_or_slug, env='staging', user=None, force_reb
                 if fe_after["exists"] and not fe_after["running"]:
                     execute_container_action(frontend_name, 'start')
 
-                call_docker_api("POST", f"/v1.41/networks/{NETWORK_NAME}/connect", body={"Container": backend_name})
-                call_docker_api("POST", f"/v1.41/networks/{NETWORK_NAME}/connect", body={"Container": frontend_name})
+                ok_be_net, msg_be_net = ensure_container_connected_to_network(backend_name)
+                if not ok_be_net:
+                    log(f"[!] Advertencia conectando backend a red '{NETWORK_NAME}': {msg_be_net}")
+                ok_fe_net, msg_fe_net = ensure_container_connected_to_network(frontend_name)
+                if not ok_fe_net:
+                    log(f"[!] Advertencia conectando frontend a red '{NETWORK_NAME}': {msg_fe_net}")
 
                 # Asignar URLs internas de red para el proxy dinámico
                 if names.get("is_standalone_repo"):

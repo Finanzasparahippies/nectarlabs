@@ -8,10 +8,13 @@ para Facturación CFDI 4.0 y monedero de envíos.
 """
 
 import uuid
+import logging
 from decimal import Decimal
 from django.db import models
 from django.conf import settings
 from django.utils import timezone
+
+logger = logging.getLogger(__name__)
 
 class class_or_instance_method:
     def __init__(self, fn):
@@ -67,8 +70,8 @@ class Tenant(models.Model):
         if self.favicon:
             try:
                 return self.favicon.url
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning(f"No se pudo resolver favicon.url para el inquilino {self.subdomain}: {e}")
         if self.favicon_url:
             return self.favicon_url
         return "/favicon.ico"
@@ -80,8 +83,8 @@ class Tenant(models.Model):
         if self.logo:
             try:
                 return self.logo.url
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning(f"No se pudo resolver logo.url para el inquilino {self.subdomain}: {e}")
         return self.logo_url or ""
 
     welcome_message = models.TextField(default="¡Hola! ¿En qué podemos ayudarte hoy?")
@@ -466,8 +469,8 @@ class Tenant(models.Model):
                         invoice=effective_invoice,
                         notes=f"{effective_notes} (Cortesía Embajador {tenant.stamps_used_this_month}/20)"
                     )
-                except Exception:
-                    pass
+                except Exception as e:
+                    logger.error(f"Error al registrar StampTransaction de consumo embajador para tenant {tenant.subdomain}: {e}", exc_info=True)
                 if tenant_obj:
                     tenant_obj.refresh_from_db(fields=['stamp_balance', 'stamps_used_this_month'])
                 return True, bal_before
@@ -486,8 +489,8 @@ class Tenant(models.Model):
                         invoice=effective_invoice,
                         notes=effective_notes
                     )
-                except Exception:
-                    pass
+                except Exception as e:
+                    logger.error(f"Error al registrar StampTransaction de consumo para tenant {tenant.subdomain}: {e}", exc_info=True)
                 if tenant_obj:
                     tenant_obj.refresh_from_db(fields=['stamp_balance', 'stamps_used_this_month'])
                 return True, bal_after
@@ -544,8 +547,8 @@ class Tenant(models.Model):
                         invoice=effective_invoice,
                         notes=f"{effective_notes} (Restitución Cortesía Embajador)"
                     )
-                except Exception:
-                    pass
+                except Exception as e:
+                    logger.error(f"Error al registrar StampTransaction de reembolso embajador para tenant {tenant.subdomain}: {e}", exc_info=True)
                 if tenant_obj:
                     tenant_obj.refresh_from_db(fields=['stamp_balance', 'stamps_used_this_month'])
                 return True, bal_before
@@ -563,8 +566,8 @@ class Tenant(models.Model):
                     invoice=effective_invoice,
                     notes=effective_notes
                 )
-            except Exception:
-                pass
+            except Exception as e:
+                logger.error(f"Error al registrar StampTransaction de reembolso para tenant {tenant.subdomain}: {e}", exc_info=True)
             if tenant_obj:
                 tenant_obj.refresh_from_db(fields=['stamp_balance', 'stamps_used_this_month'])
             return True, bal_after

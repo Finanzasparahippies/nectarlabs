@@ -404,8 +404,8 @@ def generate_shipping_label(order) -> bool:
                 "type": package_data.get("type", "box"),
                 "package_type": package_data.get("package_type", "box")
             }
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"[Logística/Router] Error al asignar shipping_package_dimensions para la orden {order.id}: {e}")
 
         # Despacho hacia el proveedor instanciado (EJECUTADO FUERA DEL LOCK DE BASE DE DATOS)
         provider = SkydropxProvider(tenant=tenant) if provider_type == "SKYDROPX" else EnviaProvider(tenant=tenant)

@@ -2179,8 +2179,8 @@ class GetShippingRatesView(APIView):
             if not tenant and tenant_id:
                 try:
                     tenant = Tenant.objects.filter(id=tenant_id, is_active=True).first()
-                except Exception:
-                    pass
+                except Exception as e:
+                    logger.warning(f"Error resolviendo tenant por tenant_id={tenant_id} en cotización de envíos: {e}")
             if not tenant and subdomain:
                 tenant = Tenant.objects.filter(subdomain=subdomain.strip().lower(), is_active=True).first()
 

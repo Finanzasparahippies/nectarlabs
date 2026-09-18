@@ -56,8 +56,9 @@ class RegisterView(generics.CreateAPIView):
             user = serializer.save()
         try:
             send_verification_email(user, self.request)
-        except Exception:
-            pass
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).error(f"Fallo al enviar correo de verificación para {user.email}: {e}", exc_info=True)
 
 class VerifyEmailView(APIView):
     permission_classes = [permissions.AllowAny]

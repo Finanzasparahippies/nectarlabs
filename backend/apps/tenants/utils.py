@@ -112,8 +112,8 @@ def get_tenant_from_request(request):
             tenant = Tenant.objects.filter(id=uuid.UUID(str(tenant_id)), is_active=True).first()
             if tenant:
                 return tenant
-        except (ValueError, TypeError):
-            pass
+        except (ValueError, TypeError) as err:
+            logger.debug("Identificador tenant_id no es un UUID válido: %s (%s)", tenant_id, err)
 
     # 2. Búsqueda por api_key (UUID)
     if api_key:
@@ -121,8 +121,8 @@ def get_tenant_from_request(request):
             tenant = Tenant.objects.filter(api_key=uuid.UUID(str(api_key)), is_active=True).first()
             if tenant:
                 return tenant
-        except (ValueError, TypeError):
-            pass
+        except (ValueError, TypeError) as err:
+            logger.debug("Identificador api_key no es un UUID válido: %s (%s)", api_key, err)
 
     # 3. Búsqueda por parámetro subdomain (con resolución flexible de alias y ambientes)
     if subdomain:
@@ -238,8 +238,8 @@ def get_tenant_from_request(request):
                     tenant = Tenant.objects.filter(subdomain__iexact=first_part, is_active=True).first()
             if tenant:
                 return tenant
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"Error resolviendo tenant vía X-Original-Host ({orig_host}): {e}")
 
     # 6. Fallback por Referer
     referer = request.META.get('HTTP_REFERER')
@@ -259,8 +259,8 @@ def get_tenant_from_request(request):
                     tenant = Tenant.objects.filter(subdomain__iexact=first_part, is_active=True).first()
             if tenant:
                 return tenant
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"Error resolviendo tenant vía HTTP_REFERER ({referer}): {e}")
 
     return None
 
