@@ -1255,6 +1255,23 @@ class TenantUnifiedWalletAndOrchestrationTests(BaseTenantAddonTestCase):
         self.assertIn('text/event-stream', response['Content-Type'])
         self.assertEqual(response['X-Accel-Buffering'], 'no')
 
+    def test_tenant_admin_wallet_display_and_badge(self):
+        """Verifica que los métodos del Django Admin no lancen ValueError al formatear SafeString."""
+        from django.contrib.admin.sites import site
+        from apps.tenants.admin import TenantAdmin
+        from apps.tenants.models import Tenant
+
+        admin_instance = TenantAdmin(Tenant, site)
+        self.tenant_a.wallet_balance = Decimal('1250.75')
+        self.tenant_a.save()
+
+        badge_html = admin_instance.wallet_badge(self.tenant_a)
+        self.assertIn('$1,250.75 MXN', str(badge_html))
+
+        display_html = admin_instance.wallet_balance_display(self.tenant_a)
+        self.assertIn('$1,250.75 MXN', str(display_html))
+
+
 
 
 

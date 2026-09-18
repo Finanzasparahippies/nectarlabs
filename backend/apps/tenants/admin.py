@@ -1,7 +1,9 @@
+from decimal import Decimal
 from django.contrib import admin, messages
 from django.utils.html import format_html
 from django.urls import path, reverse
 from django.http import HttpResponseRedirect
+
 from .models import Tenant, TenantPage, TenantNavItem, TenantWalletTransaction, TenantDeployment
 from .provisioner import (
     get_tenant_containers_status,
@@ -163,23 +165,27 @@ class TenantAdmin(admin.ModelAdmin):
     favicon_preview.short_description = "Vista Previa de Favicon"
 
     def wallet_badge(self, obj):
-        bal = obj.wallet_balance
+        bal = obj.wallet_balance or Decimal('0.00')
         color = '#10B981' if bal > 0 else '#EF4444'
+        formatted_bal = f"${bal:,.2f} MXN"
         return format_html(
-            '<span style="background:{}; color:#fff; padding:3px 8px; border-radius:12px; font-weight:700; font-size:12px;">${:,.2f} MXN</span>',
-            color, bal
+            '<span style="background:{}; color:#fff; padding:3px 8px; border-radius:12px; font-weight:700; font-size:12px;">{}</span>',
+            color, formatted_bal
         )
     wallet_badge.short_description = "Billetera"
 
     def wallet_balance_display(self, obj):
+        bal = obj.wallet_balance or Decimal('0.00')
+        formatted_bal = f"${bal:,.2f} MXN"
         return format_html(
             '<div style="font-size:18px; font-weight:700; color:#10B981; padding:8px 0;">'
-            'Saldo Disponible: ${:,.2f} MXN'
+            'Saldo Disponible: {}'
             '<span style="font-size:12px; color:#888; margin-left:12px; font-weight:normal;">(Timbres CFDI + Envíos + SES)</span>'
             '</div>',
-            obj.wallet_balance
+            formatted_bal
         )
     wallet_balance_display.short_description = "Saldo de Billetera Unificada"
+
 
     def container_health_badge(self, obj):
         status = get_tenant_containers_status(obj, env='staging')
