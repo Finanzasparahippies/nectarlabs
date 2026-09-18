@@ -548,7 +548,7 @@ def sync_nginx_configuration():
         "/var/www/nginx/default.conf",
         "/var/www/prod-nginx/default.conf",
     ]
-    stg_server_name = "server_name staging.nectarlabs.dev www.staging.nectarlabs.dev *.staging.nectarlabs.dev staging.* *.staging.* ~^staging\\..+$ ~^.+\\.staging\\..+$ ~^.+-staging\\..+$;"
+    stg_server_name = "server_name staging.nectarlabs.dev www.staging.nectarlabs.dev *.staging.nectarlabs.dev ~^staging\\..+$ ~^.+\\.staging\\..+$ ~^.+-staging\\..+$;"
 
     modified = False
     for path in target_files:
