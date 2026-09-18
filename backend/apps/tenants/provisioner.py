@@ -168,6 +168,36 @@ def execute_shell_cmd(cmd, cwd=None, timeout=300):
         return False, str(e)
 
 
+def dechunk_http_body(raw_body: str) -> str:
+    """
+    Decodifica el cuerpo de una respuesta HTTP chunked proveniente del socket Unix de Docker.
+    """
+    if not raw_body:
+        return ""
+    result = []
+    idx = 0
+    body_len = len(raw_body)
+    while idx < body_len:
+        eol = raw_body.find("\r\n", idx)
+        if eol == -1:
+            break
+        chunk_size_str = raw_body[idx:eol].strip().split(';')[0]
+        try:
+            chunk_size = int(chunk_size_str, 16)
+        except ValueError:
+            return raw_body
+        
+        if chunk_size == 0:
+            break
+            
+        chunk_data_start = eol + 2
+        chunk_data_end = chunk_data_start + chunk_size
+        result.append(raw_body[chunk_data_start:chunk_data_end])
+        idx = chunk_data_end + 2
+        
+    return "".join(result) if result else raw_body
+
+
 def call_docker_api_json(method, path, body=None):
     """
     Realiza una petición a la API de Docker y deserializa la respuesta JSON si existe.
@@ -179,39 +209,51 @@ def call_docker_api_json(method, path, body=None):
     try:
         parts = raw_resp.split("\r\n\r\n", 1)
         if len(parts) > 1 and parts[1].strip():
-            body_str = parts[1].strip()
-            # Manejo de Transfer-Encoding: chunked si aplica
-            if body_str.startswith("{") or body_str.startswith("["):
-                return True, json.loads(body_str)
-            # Intentar encontrar el primer '{' o '['
+            raw_body = parts[1].strip()
+            headers = parts[0].lower()
+            if "transfer-encoding: chunked" in headers or "transfer-encoding:chunked" in headers:
+                raw_body = dechunk_http_body(raw_body)
+
+            # Intento 1: Parseo directo
+            try:
+                return True, json.loads(raw_body)
+            except Exception:
+                pass
+
+            # Intento 2: Buscar inicio de objeto o array JSON
             json_start = min(
-                body_str.find("{") if "{" in body_str else 999999,
-                body_str.find("[") if "[" in body_str else 999999
+                raw_body.find("{") if "{" in raw_body else 999999,
+                raw_body.find("[") if "[" in raw_body else 999999
             )
             if json_start < 999999:
-                return True, json.loads(body_str[json_start:])
+                clean_slice = raw_body[json_start:]
+                # En caso de bytes de terminación trailing
+                json_end = max(clean_slice.rfind("}"), clean_slice.rfind("]"))
+                if json_end != -1:
+                    clean_slice = clean_slice[:json_end + 1]
+                return True, json.loads(clean_slice)
     except Exception as e:
-        logger.debug(f"No se pudo parsear JSON de respuesta Docker: {e}")
+        logger.debug(f"No se pudo parsear JSON de respuesta Docker ({path}): {e}")
     
     return True, {"raw": raw_resp}
 
 
 def get_container_info(container_name):
     """
-    Consulta información detallada y estado de ejecución de un contenedor vía Docker socket.
+    Consulta información detallada y estado de ejecución de un contenedor vía Docker socket o CLI.
     """
     ok, data = call_docker_api_json("GET", f"/v1.41/containers/{container_name}/json")
-    if not ok or "error" in data:
-        # Fallback a shell si estuviera disponible
+    if not ok or not isinstance(data, dict) or "State" not in data or "error" in data:
+        # Fallback a docker inspect CLI (robusto ante chunking o variaciones de API)
         ok_sh, out_sh = execute_shell_cmd(["docker", "inspect", container_name])
         if ok_sh:
             try:
                 parsed = json.loads(out_sh)
-                if parsed and isinstance(parsed, list):
+                if parsed and isinstance(parsed, list) and len(parsed) > 0:
                     data = parsed[0]
                     ok = True
-            except Exception:
-                pass
+            except Exception as inspect_err:
+                logger.debug(f"Error parseando docker inspect CLI para {container_name}: {inspect_err}")
                 
     if not ok or not isinstance(data, dict) or "State" not in data:
         return {
