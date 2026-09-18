@@ -545,6 +545,17 @@ def resolve_host(request):
     fav_url = request.build_absolute_uri(tenant.favicon.url) if tenant.favicon else (tenant.favicon_url or '/favicon.ico')
     lg_url = request.build_absolute_uri(tenant.logo.url) if tenant.logo else (tenant.logo_url or '')
 
+    custom_fe = tenant.custom_frontend_url
+    if not custom_fe:
+        try:
+            from .provisioner import get_tenant_container_names
+            env_req = 'staging' if 'staging' in clean_host else 'prod'
+            names = get_tenant_container_names(tenant, env=env_req)
+            if names.get('is_standalone_repo') and names.get('frontend'):
+                custom_fe = f"http://{names['frontend']}:3000"
+        except Exception as prov_err:
+            logger.warning(f"Error resolviendo custom_frontend_url para {tenant.subdomain}: {prov_err}")
+
     payload = {
         'id': str(tenant.id),
         'subdomain': tenant.subdomain,
@@ -552,7 +563,8 @@ def resolve_host(request):
         'frontend_mode': tenant.frontend_mode,
         'use_custom_domain': tenant.use_custom_domain,
         'custom_domain': tenant.custom_domain,
-        'custom_frontend_url': tenant.custom_frontend_url,
+        'custom_frontend_url': custom_fe,
+        'is_standalone_repo': getattr(tenant, 'is_standalone_repo', False) or bool(custom_fe),
         'has_isolated_code': has_isolated_code,
         'theme_color': tenant.theme_color,
         'accent_color': tenant.accent_color,

@@ -200,6 +200,16 @@ def get_tenant_from_request(request):
                             if tenant:
                                 return tenant
 
+                            # Mapeo de alias y acrónimos conocidos entre dominios y subdominios cortos
+                            if cand in ['finanzasparahippies', 'finanzas-para-hippies', 'finanzas']:
+                                tenant = Tenant.objects.filter(subdomain__iexact='fph', is_active=True).first()
+                                if tenant:
+                                    return tenant
+                            if cand == 'fph':
+                                tenant = Tenant.objects.filter(custom_domain__icontains='finanzasparahippies', is_active=True).first()
+                                if tenant:
+                                    return tenant
+
 
     # 5. Fallback por Origin (peticiones CORS de frontends externos o dominios personalizados)
     origin = request.META.get('HTTP_ORIGIN')
