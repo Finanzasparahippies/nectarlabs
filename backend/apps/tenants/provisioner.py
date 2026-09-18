@@ -557,20 +557,44 @@ def sync_nginx_configuration():
                 with open(path, 'r', encoding='utf-8') as f:
                     content = f.read()
 
-                if "server_name staging.nectarlabs.dev" in content and "staging.*" not in content:
+                new_content = content
+                if "server_name staging.nectarlabs.dev" in new_content and "staging.*" not in new_content:
                     import re
                     new_content = re.sub(
                         r'server_name\s+staging\.nectarlabs\.dev[^\;]*\;',
                         stg_server_name,
-                        content
+                        new_content
                     )
-                    if new_content != content:
-                        with open(path, 'w', encoding='utf-8') as f:
-                            f.write(new_content)
-                        logger.info(f"Configuración de Nginx en {path} actualizada automáticamente para soporte multi-tenant staging.")
-                        modified = True
+                # Desactivar bloqueador de IP cruda si causa Empty Reply (444) en pruebas locales
+                if 'if ($host ~* "^[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+$")' in new_content:
+                    import re
+                    new_content = re.sub(
+                        r'if\s*\(\$host\s*~\*\s*"[^\"]*"\)\s*\{\s*return\s*444\s*;\s*\}',
+                        '# Bloqueador de IP cruda deshabilitado para permitir healthchecks internos',
+                        new_content
+                    )
+
+                if new_content != content:
+                    with open(path, 'w', encoding='utf-8') as f:
+                        f.write(new_content)
+                    logger.info(f"Configuración de Nginx en {path} actualizada automáticamente para soporte multi-tenant staging.")
+                    modified = True
             except Exception as e:
-                logger.warning(f"Error sincronizando {path}: {e}")
+                logger.warning(f"Error sincronizando archivo Nginx {path}: {e}", exc_info=True)
+
+    # Copiar configuración al contenedor de Nginx activo si está corriendo
+    candidates = ['prod_nginx', 'prod-nginx', 'nectar_nginx_staging', 'nectar_nginx']
+    for c_name in candidates:
+        try:
+            info = get_container_info(c_name)
+            if info.get("running"):
+                for path in target_files:
+                    if os.path.exists(path):
+                        execute_shell_cmd(["docker", "cp", path, f"{c_name}:/etc/nginx/conf.d/default.conf"])
+                        break
+        except Exception as cp_err:
+            logger.warning(f"Error copiando archivo de configuración a {c_name}: {cp_err}", exc_info=True)
+
     return modified
 
 

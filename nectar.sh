@@ -556,7 +556,16 @@ case $COMMAND in
         run_npm_cmd_staging install "$@"
         ;;
     reload-nginx|reload-nginx-staging)
-        echo "Reloading Nginx Reverse Proxy (prod_nginx)..."
+        echo "Sincronizando configuración de Nginx Reverse Proxy..."
+        if [ -f "docker/nginx/production.conf" ]; then
+            if [ -d "/var/www/prod-nginx/nginx" ]; then
+                cp -f docker/nginx/production.conf /var/www/prod-nginx/nginx/default.conf 2>/dev/null || sudo cp -f docker/nginx/production.conf /var/www/prod-nginx/nginx/default.conf 2>/dev/null || true
+            fi
+            if is_container_running "prod_nginx"; then
+                $DOCKER_BIN cp docker/nginx/production.conf prod_nginx:/etc/nginx/conf.d/default.conf 2>/dev/null || true
+            fi
+        fi
+        echo "Recargando Nginx Reverse Proxy (prod_nginx)..."
         if is_container_running "prod_nginx"; then
             $DOCKER_BIN exec prod_nginx nginx -s reload
             echo "Nginx reloaded successfully!"
