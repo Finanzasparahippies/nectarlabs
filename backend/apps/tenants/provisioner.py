@@ -538,12 +538,54 @@ def get_tenant_containers_status(tenant_or_slug, env='staging', environment=None
     }
 
 
+def sync_nginx_configuration():
+    """
+    Sincroniza y asegura que la configuración de Nginx en /var/www soporte comodines
+    y expresiones regulares para tenants en Staging sin intervención manual vía terminal.
+    """
+    target_files = [
+        "/var/www/prod-nginx/nginx/default.conf",
+        "/var/www/nginx/default.conf",
+        "/var/www/prod-nginx/default.conf",
+    ]
+    stg_server_name = "server_name staging.nectarlabs.dev www.staging.nectarlabs.dev *.staging.nectarlabs.dev *-staging.nectarlabs.dev staging.* *.staging.* ~^staging\\..+$ ~^.+\\.staging\\..+$ ~^.+-staging\\..+$;"
+
+    modified = False
+    for path in target_files:
+        if os.path.exists(path):
+            try:
+                with open(path, 'r', encoding='utf-8') as f:
+                    content = f.read()
+
+                if "server_name staging.nectarlabs.dev" in content and "staging.*" not in content:
+                    import re
+                    new_content = re.sub(
+                        r'server_name\s+staging\.nectarlabs\.dev[^\;]*\;',
+                        stg_server_name,
+                        content
+                    )
+                    if new_content != content:
+                        with open(path, 'w', encoding='utf-8') as f:
+                            f.write(new_content)
+                        logger.info(f"Configuración de Nginx en {path} actualizada automáticamente para soporte multi-tenant staging.")
+                        modified = True
+            except Exception as e:
+                logger.warning(f"Error sincronizando {path}: {e}")
+    return modified
+
+
 def reload_nginx_proxy():
     """
     Recarga la configuración de Nginx en caliente sin SSH ni tiempo de inactividad.
     Inspecciona contenedores activos (prod_nginx, nectar_nginx_staging, prod-nginx, nectar_nginx)
     y ejecuta 'nginx -s reload' vía Docker Socket (/exec) o CLI.
     """
+    # Sincronizar archivo de configuración en volumen compartido si es necesario
+    try:
+        sync_nginx_configuration()
+    except Exception as e:
+        logger.warning(f"sync_nginx_configuration omitido: {e}")
+
     candidates = ['prod_nginx', 'prod-nginx', 'nectar_nginx_staging', 'nectar_nginx']
     reloaded = []
     for c_name in candidates:

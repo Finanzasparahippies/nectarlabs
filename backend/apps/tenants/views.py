@@ -127,17 +127,21 @@ class TenantViewSet(viewsets.ModelViewSet):
                 'message': res.get('message', ''),
                 'error': res.get('error') if not res.get('success') else None,
                 'logs': res.get('logs', '')
+            }, status=res.status_code)
+
         if action_name in ('reload_nginx', 'reload-nginx'):
             from .provisioner import reload_nginx_proxy
             res = reload_nginx_proxy()
+            is_success = res.get('success', False) if isinstance(res, dict) else getattr(res, 'success', bool(res))
+            msg = res.get('message', '') if isinstance(res, dict) else getattr(res, 'message', str(res))
+            status_code = getattr(res, 'status_code', (status.HTTP_200_OK if is_success else status.HTTP_500_INTERNAL_SERVER_ERROR))
             return Response({
-                'success': res.get('success', False),
-                'message': res.get('message', ''),
-                'error': res.get('error') if not res.get('success') else None,
+                'success': is_success,
+                'message': msg,
                 'action': action_name,
                 'target': target,
                 'env': env
-            }, status=res.status_code)
+            }, status=status_code)
 
         from .provisioner import execute_container_action
         res = execute_container_action(tenant, target, action_name, environment=env)
