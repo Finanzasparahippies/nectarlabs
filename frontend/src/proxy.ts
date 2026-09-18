@@ -98,6 +98,8 @@ export async function middleware(request: NextRequest) {
     // Si es subdominio de Nectar Labs o localhost, extrae el slug directamente de forma síncrona
     if (hostname.includes('.staging.nectarlabs.dev')) {
       tenantSlug = hostname.split('.staging.nectarlabs.dev')[0];
+    } else if (hostname.includes('-staging.nectarlabs.dev')) {
+      tenantSlug = hostname.split('-staging.nectarlabs.dev')[0];
     } else if (hostname.includes('.nectarlabs.dev')) {
       tenantSlug = hostname.split('.nectarlabs.dev')[0];
     } else if (hostname.includes('.localhost:3000')) {
@@ -117,7 +119,7 @@ export async function middleware(request: NextRequest) {
 
     // Resolución dinámica de inquilino y endpoints personalizados vía backend
     try {
-      const backendApi = process.env.INTERNAL_API_URL || process.env.API_URL || (process.env.NODE_ENV === 'production' ? 'http://backend:8000' : 'http://localhost:8001');
+      const backendApi = process.env.INTERNAL_API_URL || process.env.API_URL || (process.env.NODE_ENV === 'production' ? 'http://backend:8000' : 'http://nectar_backend_staging:8000');
       const cleanApi = backendApi.replace(/\/api$/, '').replace(/\/$/, '');
       const res = await fetch(`${cleanApi}/api/tenants/resolve-host/?host=${encodeURIComponent(cleanHost)}`, {
         next: { revalidate: 300 }

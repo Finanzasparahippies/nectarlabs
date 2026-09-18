@@ -177,25 +177,28 @@ def get_tenant_from_request(request):
                 if tenant:
                     return tenant
 
-            # 4d. Extraer primer token relevante si es subdominio (ej: tenanta.nectarlabs.dev -> tenanta, staging.kores.vip -> kores)
+            # 4d. Extraer primer token relevante si es subdominio (ej: tenanta.nectarlabs.dev -> tenanta, staging.kores.vip -> kores, kores-staging.nectarlabs.dev -> kores)
             if '.' in clean_host_no_port:
                 parts = clean_host_no_port.split('.')
                 ignored_tokens = {'www', 'api', 'admin', 'staging', 'nectarlabs', 'dev', 'localhost', 'com', 'vip', 'mx', 'org', 'net'}
                 for part in parts:
                     if part and part not in ignored_tokens:
-                        tenant = Tenant.objects.filter(subdomain__iexact=part, is_active=True).first()
-                        if tenant:
-                            return tenant
-                        # Coincidencia con sufijo regional o prefijo (ej: kores -> kores-mexico)
-                        tenant = Tenant.objects.filter(subdomain__istartswith=f"{part}-", is_active=True).first()
-                        if tenant:
-                            return tenant
-                        tenant = Tenant.objects.filter(custom_domain__icontains=part, is_active=True).first()
-                        if tenant:
-                            return tenant
-                        tenant = Tenant.objects.filter(subdomain__icontains=part, is_active=True).first()
-                        if tenant:
-                            return tenant
+                        clean_part = part.replace('-staging', '').replace('-prod', '').replace('-dev', '')
+                        candidates = [part] if clean_part == part else [part, clean_part]
+                        for cand in candidates:
+                            tenant = Tenant.objects.filter(subdomain__iexact=cand, is_active=True).first()
+                            if tenant:
+                                return tenant
+                            # Coincidencia con sufijo regional o prefijo (ej: kores -> kores-mexico)
+                            tenant = Tenant.objects.filter(subdomain__istartswith=f"{cand}-", is_active=True).first()
+                            if tenant:
+                                return tenant
+                            tenant = Tenant.objects.filter(custom_domain__icontains=cand, is_active=True).first()
+                            if tenant:
+                                return tenant
+                            tenant = Tenant.objects.filter(subdomain__icontains=cand, is_active=True).first()
+                            if tenant:
+                                return tenant
 
 
     # 5. Fallback por Origin (peticiones CORS de frontends externos o dominios personalizados)

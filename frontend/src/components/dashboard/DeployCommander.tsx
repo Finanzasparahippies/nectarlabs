@@ -87,6 +87,20 @@ export default function DeployCommander() {
 
   const apiBase = getApiBaseUrl();
 
+  const getTenantSiteUrl = useCallback((tenant: TenantItem, env: string) => {
+    if (tenant.custom_domain) {
+      if (env === 'staging') {
+        return tenant.custom_domain.startsWith('staging.')
+          ? `https://${tenant.custom_domain}`
+          : `https://staging.${tenant.custom_domain}`;
+      }
+      return `https://${tenant.custom_domain.replace(/^staging\./, '')}`;
+    }
+    return env === 'staging'
+      ? `https://${tenant.subdomain}-staging.nectarlabs.dev`
+      : `https://${tenant.subdomain}.nectarlabs.dev`;
+  }, []);
+
   // 1. Fetch Tenant List
   const fetchTenants = useCallback(async () => {
     try {
@@ -473,7 +487,7 @@ export default function DeployCommander() {
               {selectedTenant && (
                 <div className="flex flex-wrap items-center gap-2 text-xs">
                   <span className="px-3 py-1.5 rounded-xl bg-background/50 border border-card-border font-mono text-nectar-gold">
-                    {selectedTenant.subdomain}.staging.nectarlabs.dev
+                    {selectedEnv === 'staging' ? `${selectedTenant.subdomain}-staging.nectarlabs.dev` : `${selectedTenant.subdomain}.nectarlabs.dev`}
                   </span>
                   {selectedTenant.custom_domain && (
                     <span className="px-3 py-1.5 rounded-xl bg-background/50 border border-card-border font-mono text-foreground/70">
@@ -584,10 +598,10 @@ export default function DeployCommander() {
             Detener Suite
           </button>
 
-          {/* Direct Link to Staging Preview */}
+          {/* Direct Link to Staging/Prod Preview */}
           {selectedTenant && (
             <a
-              href={`https://${selectedTenant.subdomain}.staging.nectarlabs.dev`}
+              href={getTenantSiteUrl(selectedTenant, selectedEnv)}
               target="_blank"
               rel="noreferrer"
               className="px-5 py-3 rounded-2xl bg-background/80 border border-card-border hover:border-nectar-gold text-nectar-gold font-black text-xs uppercase tracking-wider transition-all flex items-center gap-2"
