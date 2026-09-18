@@ -174,7 +174,7 @@ export async function middleware(request: NextRequest) {
     }
 
     // 2c. Rutas del Núcleo Matriz Néctar Labs (/portal-admin, /autofactura)
-    // NUNCA se delegan al microservicio externo del inquilino, siempre se resuelven en la consola central
+    // NUNCA se delegan al microservicio externo del inquilino, siempre se resuelven en la consola central (/tenants/[slug]/portal-admin)
     const isMatrixCoreRoute =
       url.pathname === '/portal-admin' ||
       url.pathname.startsWith('/portal-admin/') ||
@@ -182,7 +182,8 @@ export async function middleware(request: NextRequest) {
       url.pathname.startsWith('/autofactura/');
 
     if (isMatrixCoreRoute) {
-      return NextResponse.next();
+      url.pathname = `/tenants/${tenantSlug}${url.pathname}`;
+      return NextResponse.rewrite(url);
     }
 
     // 2d. Inquilinos con Microservicio Frontend Autónomo (Zero-Downtime Proxy)
