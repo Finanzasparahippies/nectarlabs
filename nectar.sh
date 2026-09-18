@@ -739,6 +739,34 @@ case $COMMAND in
         run_django_cmd_auto tenant_deploy "$1" --action=status
         ;;
 
+    # ── NGINX REVERSE PROXY ──
+    reload-nginx|nginx-reload)
+        echo "🔄 Actualizando configuración de Nginx y recargando servicio..."
+        if [ -f "docker/nginx/production.conf" ]; then
+            if [ -d "/var/www/prod-nginx/nginx" ]; then
+                cp docker/nginx/production.conf /var/www/prod-nginx/nginx/default.conf 2>/dev/null || sudo cp docker/nginx/production.conf /var/www/prod-nginx/nginx/default.conf 2>/dev/null || true
+                echo "✓ Archivo copiado a /var/www/prod-nginx/nginx/default.conf"
+            fi
+            $DOCKER_BIN cp docker/nginx/production.conf prod_nginx:/etc/nginx/conf.d/default.conf 2>/dev/null || true
+        fi
+        if is_container_running "prod_nginx"; then
+            $DOCKER_BIN exec prod_nginx nginx -t && $DOCKER_BIN exec prod_nginx nginx -s reload
+            echo "✓ Nginx (prod_nginx) recargado exitosamente."
+        elif is_container_running "nectar_nginx"; then
+            $DOCKER_BIN exec nectar_nginx nginx -t && $DOCKER_BIN exec nectar_nginx nginx -s reload
+            echo "✓ Nginx (nectar_nginx) recargado exitosamente."
+        else
+            echo "⚠️ No se detectó contenedor prod_nginx en ejecución."
+        fi
+        # Conectar contenedores de inquilinos a la red de producción/staging
+        for c in fph_frontend_staging fph_backend_staging fph_frontend fph_backend; do
+            if is_container_running "$c"; then
+                $DOCKER_BIN network connect prod_network "$c" 2>/dev/null || true
+                echo "✓ Contenedor $c verificado en red compartida prod_network"
+            fi
+        done
+        ;;
+
     # ── UTILITIES ──
     clean)
         echo "Starting comprehensive and safe VPS cleanup..."

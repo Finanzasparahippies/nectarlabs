@@ -676,9 +676,8 @@ def ensure_container_connected_to_network(container_name: str, network_name: str
                 ok_v, c_v = call_docker_api_json("GET", f"/v1.41/containers/{container_name}/json")
                 if ok_v and isinstance(c_v, dict) and network_name in c_v.get("NetworkSettings", {}).get("Networks", {}):
                     logger.info(f"Contenedor '{container_name}' confirmado en red '{network_name}'.")
-                    return True, f"Ya conectado a {network_name}"
-            except Exception:
-                pass
+            except Exception as conf_err:
+                logger.debug(f"Verificación post-intento de red para '{container_name}': {conf_err}")
             return True, f"Ya conectado a {network_name}"
 
         logger.warning(
