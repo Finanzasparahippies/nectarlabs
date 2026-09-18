@@ -34,11 +34,15 @@ LOGS_DIR = BASE_DIR / 'logs'
 LOGS_DIR.mkdir(parents=True, exist_ok=True)
 
 # Hosts autorizados para procesar peticiones HTTP (soporte multi-tenant con dominios personalizados).
-ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["*", "localhost", "127.0.0.1", "backend"])
+ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["*", "localhost", "127.0.0.1", "backend", "backend-staging"])
 
 # Permite dinámicamente las peticiones en subdominios y dominios personalizados para la arquitectura multi-tenant:
 if "*" not in ALLOWED_HOSTS:
     ALLOWED_HOSTS.append("*")
+if "backend-staging" not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append("backend-staging")
+if "backend" not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append("backend")
 if ".nectarlabs.dev" not in ALLOWED_HOSTS:
     ALLOWED_HOSTS.append(".nectarlabs.dev")
 if ".staging.nectarlabs.dev" not in ALLOWED_HOSTS:

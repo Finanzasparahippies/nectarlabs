@@ -112,11 +112,16 @@ export async function middleware(request: NextRequest) {
   // Resolución dinámica de inquilino y contenedor autónomo vía API Django
   try {
     const isStaging = cleanHost.includes('staging');
-    const defaultBackend = isStaging ? 'http://nectar_backend_staging:8000' : 'http://nectar_backend:8000';
+    const defaultBackend = isStaging ? 'http://backend-staging:8000' : 'http://backend:8000';
     const backendApi = process.env.INTERNAL_API_URL || process.env.API_URL || defaultBackend;
-    const cleanApi = backendApi.replace(/\/api$/, '').replace(/\/$/, '');
+    let cleanApi = backendApi.replace(/\/api$/, '').replace(/\/$/, '');
+    cleanApi = cleanApi.replace('nectar_backend_staging', 'backend-staging').replace('nectar_backend', 'backend');
 
     const res = await fetch(`${cleanApi}/api/tenants/resolve-host/?host=${encodeURIComponent(cleanHost)}`, {
+      headers: {
+        'Host': 'localhost',
+        'X-Forwarded-Host': cleanHost,
+      },
       next: { revalidate: 180 }
     });
 
