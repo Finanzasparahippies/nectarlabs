@@ -11,6 +11,7 @@ import json
 import time
 import logging
 import subprocess
+import shutil
 from contextlib import contextmanager
 from django.conf import settings
 from django.core.cache import cache
@@ -139,9 +140,9 @@ def call_docker_api(method, path, body=None):
 
 def execute_shell_cmd(cmd, cwd=None, timeout=300):
     """
-    Fallback para ejecutar comandos de shell si el binario local estuviese disponible.
+    Ejecuta comandos del sistema capturando exhaustivamente stdout y stderr.
     """
-    logger.info(f"Ejecutando comando PaaS: {' '.join(cmd) if isinstance(cmd, list) else cmd}")
+    logger.info(f"Ejecutando comando PaaS: {' '.join(cmd) if isinstance(cmd, list) else cmd} en {cwd}")
     try:
         res = subprocess.run(
             cmd,
@@ -151,9 +152,16 @@ def execute_shell_cmd(cmd, cwd=None, timeout=300):
             text=True,
             timeout=timeout
         )
+        combined_parts = []
+        if res.stdout and res.stdout.strip():
+            combined_parts.append(res.stdout.strip())
+        if res.stderr and res.stderr.strip():
+            combined_parts.append(res.stderr.strip())
+        output_str = "\n".join(combined_parts) if combined_parts else f"Proceso finalizó con código {res.returncode}"
+
         if res.returncode != 0:
-            return False, res.stderr
-        return True, res.stdout
+            return False, output_str
+        return True, output_str
     except FileNotFoundError as fnf:
         return False, f"Binario no disponible en contenedor: {fnf}"
     except Exception as e:
@@ -544,6 +552,28 @@ def deploy_tenant_containers(tenant_or_slug, env='staging', user=None, force_reb
                     deployment.finished_at = timezone.now()
                     deployment.save(update_fields=['status', 'output_logs', 'finished_at'])
                     return ActionResult(False, err_msg, status_code=500, logs="".join(logs))
+
+                # Verificar y asegurar la existencia de archivo de variables de entorno para Docker Compose
+                target_env_file = os.path.join(repo_dir, f".env.{effective_env}")
+                if not os.path.exists(target_env_file):
+                    env_example = os.path.join(repo_dir, ".env.example")
+                    env_fallback = os.path.join(repo_dir, ".env")
+                    if os.path.exists(env_example):
+                        log(f"Aviso: Creando '{target_env_file}' desde .env.example para satisfacer docker compose...")
+                        shutil.copyfile(env_example, target_env_file)
+                    elif os.path.exists(env_fallback):
+                        log(f"Aviso: Creando '{target_env_file}' desde .env para satisfacer docker compose...")
+                        shutil.copyfile(env_fallback, target_env_file)
+                    else:
+                        with open(target_env_file, "w") as f:
+                            f.write(f"# Auto-generated {effective_env} environment\nENVIRONMENT={effective_env}\n")
+
+                # Diagnóstico de disponibilidad de Docker CLI dentro del contenedor orquestador
+                ok_ver, out_ver = execute_shell_cmd(["docker", "--version"])
+                if ok_ver:
+                    log(f"Herramienta de orquestación activa: {out_ver}")
+                else:
+                    log(f"⚠️ Aviso Docker CLI: {out_ver}")
 
                 log(f"Ruta de orquestación de proyecto: {repo_dir} (compose: {compose_path})")
 
