@@ -62,7 +62,7 @@ class TenantSerializer(serializers.ModelSerializer):
             'subscriber_count',
 
             # Custom CSS/JS & Frontend Mode
-            'frontend_mode', 'custom_css', 'custom_js', 'custom_backend_url', 'custom_frontend_url'
+            'frontend_mode', 'custom_css', 'custom_js', 'custom_backend_url', 'custom_frontend_url', 'is_standalone_repo'
         ]
         read_only_fields = [
             'id', 'owner', 'api_key', 'created_at', 'updated_at', 
@@ -271,7 +271,7 @@ class TenantPublicSerializer(serializers.ModelSerializer):
             # Pollen/Nectar Falling settings
             'pollen_active', 'pollen_icon', 'pollen_color', 'pollen_count', 'pollen_blur',
             # Custom CSS/JS & Frontend Mode
-            'frontend_mode', 'custom_css', 'custom_js', 'custom_backend_url', 'custom_frontend_url',
+            'frontend_mode', 'custom_css', 'custom_js', 'custom_backend_url', 'custom_frontend_url', 'is_standalone_repo',
             # Public Pages & Navigation
             'pages', 'navigation_menu'
         ]

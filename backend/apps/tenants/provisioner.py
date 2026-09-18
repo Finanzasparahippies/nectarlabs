@@ -291,28 +291,227 @@ def get_container_info(container_name):
     }
 
 
+def inspect_compose_containers(compose_path: str, env: str = 'staging') -> dict:
+    """
+    Introspecciona un archivo docker-compose (YAML o scan de líneas) para descubrir
+    los nombres de contenedor o servicios declarados para backend y frontend.
+    """
+    if not os.path.exists(compose_path):
+        return {}
+
+    services_found = []
+    # Intento 1: YAML parser estándar
+    try:
+        import yaml
+        with open(compose_path, 'r', encoding='utf-8', errors='ignore') as f:
+            data = yaml.safe_load(f)
+            if isinstance(data, dict) and 'services' in data and isinstance(data['services'], dict):
+                for svc_key, svc_val in data['services'].items():
+                    c_name = None
+                    if isinstance(svc_val, dict):
+                        c_name = svc_val.get('container_name')
+                    services_found.append((svc_key, c_name or svc_key))
+    except Exception:
+        pass
+
+    # Intento 2: Fallback línea por línea (tolerante a fallos de sintaxis o dependencias)
+    if not services_found:
+        try:
+            with open(compose_path, 'r', encoding='utf-8', errors='ignore') as f:
+                current_svc = None
+                in_services = False
+                for line in f:
+                    stripped = line.strip()
+                    raw_indent = len(line) - len(line.lstrip())
+                    if stripped == 'services:':
+                        in_services = True
+                        continue
+                    if in_services:
+                        if raw_indent == 0 and stripped and not stripped.startswith('#'):
+                            in_services = False
+                            continue
+                        if raw_indent in (2, 4) and stripped.endswith(':') and not stripped.startswith('#'):
+                            svc_name = stripped[:-1].strip()
+                            if svc_name not in ['networks', 'volumes', 'build', 'environment', 'ports', 'depends_on', 'restart', 'logging']:
+                                current_svc = svc_name
+                                services_found.append((current_svc, current_svc))
+                        if current_svc and 'container_name:' in stripped:
+                            c_name = stripped.split('container_name:')[1].strip().strip('"').strip("'")
+                            for idx, (s, c) in enumerate(services_found):
+                                if s == current_svc:
+                                    services_found[idx] = (s, c_name)
+        except Exception as e:
+            logger.debug(f"Error parseando docker compose en {compose_path}: {e}")
+
+    result = {}
+    for svc, c_name in services_found:
+        svc_lower = svc.lower()
+        c_lower = c_name.lower()
+        if any(term in svc_lower or term in c_lower for term in ['backend', 'api', 'django', 'server', 'core']):
+            if 'backend' not in result:
+                result['backend'] = c_name
+        elif any(term in svc_lower or term in c_lower for term in ['front', 'next', 'web', 'client', 'ui']):
+            if 'frontend' not in result:
+                result['frontend'] = c_name
+
+    return result
+
+
+def resolve_tenant_deployment_spec(tenant_or_slug, env='staging'):
+    """
+    Motor PaaS v2 de resolución y autodescubrimiento de repositorios y contenedores para inquilinos.
+    Prioridades:
+    1. Atributos explícitos en BD (Tenant.deployment_repo_path, deployment_backend_container...)
+    2. Autodescubrimiento heurístico de directorios en /var/www/ y /var/www/tenants/
+    3. Introspección dinámica de docker-compose para extraer nombres de contenedor
+    4. Mapeo backwards-compatible para Kōres (premium-ties) y FPH (Finanzasparahippies / FPH-Hub)
+    5. Fallback a convención estándar multi-tenant nativo (tenant_{slug}_backend_{env})
+    """
+    from .models import Tenant
+
+    tenant = None
+    if isinstance(tenant_or_slug, Tenant):
+        tenant = tenant_or_slug
+        slug = tenant.subdomain
+    elif hasattr(tenant_or_slug, 'subdomain'):
+        slug = tenant_or_slug.subdomain
+        tenant = tenant_or_slug
+    else:
+        slug = str(tenant_or_slug)
+        tenant = Tenant.objects.filter(subdomain__iexact=slug).first()
+
+    slug_clean = slug.lower().strip()
+    tenant_name = (tenant.name if tenant else '').strip()
+
+    # 1. Chequeo de configuración explícita en Tenant DB
+    explicit_repo = getattr(tenant, 'deployment_repo_path', None) if tenant else None
+    explicit_be = getattr(tenant, 'deployment_backend_container', None) if tenant else None
+    explicit_fe = getattr(tenant, 'deployment_frontend_container', None) if tenant else None
+    is_standalone_db = getattr(tenant, 'is_standalone_repo', False) if tenant else False
+
+    # 2. Generar lista priorizada de directorios candidatos
+    candidates = []
+    if explicit_repo:
+        candidates.append(explicit_repo)
+
+    # Candidatos específicos para FPH / Finanzas Para Hippies
+    if slug_clean in ['fph', 'fph-hub', 'finanzasparahippies', 'finanzas-para-hippies'] or 'finanzas' in slug_clean or 'hippies' in slug_clean or 'finanzas' in tenant_name.lower():
+        candidates.extend([
+            "/var/www/Finanzasparahippies",
+            "/var/www/finanzasparahippies",
+            "/var/www/FPH-Hub",
+            "/var/www/fph-hub",
+            "/var/www/fph",
+            "/var/www/FinanzasParaHippies",
+            os.path.join(TENANTS_BASE_DIR, "Finanzasparahippies"),
+            os.path.join(TENANTS_BASE_DIR, "fph"),
+        ])
+
+    # Candidatos específicos para Kōres (Luxury Hair Ties / Premium Ties)
+    if slug_clean in ['kores', 'kores-vip', 'kores-mexico', 'kores_mexico', 'premium-ties', 'premium_ties'] or 'kores' in slug_clean:
+        candidates.extend([
+            "/var/www/premium-ties",
+            "/var/www/premium_ties",
+            "/var/www/kores",
+            "/var/www/kores-mexico",
+            os.path.join(TENANTS_BASE_DIR, "premium-ties"),
+            os.path.join(TENANTS_BASE_DIR, "kores"),
+        ])
+
+    # Candidatos genéricos para cualquier inquilino
+    candidates.extend([
+        f"/var/www/{slug_clean}",
+        f"/var/www/{slug_clean.replace('-', '_')}",
+        f"/var/www/{slug_clean.replace('_', '-')}",
+        f"/var/www/{slug_clean.capitalize()}",
+        f"/var/www/{slug_clean.title()}",
+        os.path.join(TENANTS_BASE_DIR, slug_clean),
+    ])
+
+    if tenant_name:
+        condensed_name = "".join(ch for ch in tenant_name if ch.isalnum())
+        hyphen_name = tenant_name.replace(" ", "-").lower()
+        candidates.extend([
+            f"/var/www/{condensed_name}",
+            f"/var/www/{hyphen_name}",
+            os.path.join(TENANTS_BASE_DIR, condensed_name),
+            os.path.join(TENANTS_BASE_DIR, hyphen_name),
+        ])
+
+    # Eliminar duplicados preservando el orden de prioridad
+    seen = set()
+    unique_candidates = [c for c in candidates if c and not (c in seen or seen.add(c))]
+
+    # 3. Buscar el primer directorio candidato que realmente exista en el sistema
+    resolved_repo = None
+    found_compose_path = None
+    is_standalone = is_standalone_db
+
+    for candidate in unique_candidates:
+        if os.path.exists(candidate):
+            resolved_repo = candidate
+            compose_files = [
+                os.path.join(candidate, f"docker-compose.{env}.yml"),
+                os.path.join(candidate, "docker-compose.yml"),
+                os.path.join(candidate, "docker-compose.yaml"),
+            ]
+            for cf in compose_files:
+                if os.path.exists(cf):
+                    found_compose_path = cf
+                    is_standalone = True
+                    break
+            if found_compose_path:
+                break
+
+    # Si no se encontró ningún directorio existente en disco, usar el primer candidato prioritario
+    if not resolved_repo:
+        resolved_repo = unique_candidates[0] if unique_candidates else os.path.join(TENANTS_BASE_DIR, slug_clean)
+
+    # 4. Introspección de compose para extraer nombres de contenedor
+    backend_name = explicit_be
+    frontend_name = explicit_fe
+
+    if found_compose_path and (not backend_name or not frontend_name):
+        introspected = inspect_compose_containers(found_compose_path, env=env)
+        if not backend_name and 'backend' in introspected:
+            backend_name = introspected['backend']
+        if not frontend_name and 'frontend' in introspected:
+            frontend_name = introspected['frontend']
+
+    # 5. Fallback por patrones conocidos si no se descubrieron por compose o BD
+    if not backend_name or not frontend_name:
+        if slug_clean in ['fph', 'fph-hub', 'finanzasparahippies', 'finanzas-para-hippies'] or 'finanzas' in slug_clean or 'hippies' in slug_clean:
+            is_standalone = True
+            backend_name = backend_name or f"fph_backend_{env}"
+            frontend_name = frontend_name or f"fph_frontend_{env}"
+            if not resolved_repo or not os.path.exists(resolved_repo):
+                resolved_repo = "/var/www/Finanzasparahippies"
+        elif slug_clean in ['kores', 'kores-vip', 'kores-mexico', 'kores_mexico'] or 'kores' in slug_clean:
+            is_standalone = True
+            backend_name = backend_name or f"premium_ties_backend_{env}"
+            frontend_name = frontend_name or f"premium_ties_frontend_{env}"
+            if not resolved_repo or not os.path.exists(resolved_repo):
+                resolved_repo = "/var/www/premium-ties"
+        else:
+            backend_name = backend_name or f"tenant_{slug_clean}_backend_{env}"
+            frontend_name = frontend_name or f"tenant_{slug_clean}_frontend_{env}"
+
+    return {
+        "backend": backend_name,
+        "frontend": frontend_name,
+        "is_standalone_repo": is_standalone,
+        "repo_dir": resolved_repo,
+        "compose_path": found_compose_path,
+        "searched_candidates": unique_candidates[:6]
+    }
+
+
 def get_tenant_container_names(tenant_or_slug, env='staging'):
     """
-    Determina los nombres de contenedores estándar para un inquilino según su slug y entorno.
+    Determina los nombres de contenedores estándar y ruta de proyecto para un inquilino.
+    Delega en resolve_tenant_deployment_spec para soporte dinámico y autodescubrimiento.
     """
-    slug = tenant_or_slug.subdomain if hasattr(tenant_or_slug, 'subdomain') else str(tenant_or_slug)
-    slug_lower = slug.lower().strip()
-    
-    # Soporte unificado para Kōres (Luxury Hair Ties / Premium Ties)
-    if slug_lower in ['kores', 'kores-vip', 'kores-mexico', 'kores_mexico'] or 'kores' in slug_lower:
-        return {
-            "backend": f"premium_ties_backend_{env}",
-            "frontend": f"premium_ties_frontend_{env}",
-            "is_standalone_repo": True,
-            "repo_dir": "/var/www/premium-ties"
-        }
-        
-    return {
-        "backend": f"tenant_{slug_lower}_backend_{env}",
-        "frontend": f"tenant_{slug_lower}_frontend_{env}",
-        "is_standalone_repo": False,
-        "repo_dir": os.path.join(TENANTS_BASE_DIR, slug_lower)
-    }
+    return resolve_tenant_deployment_spec(tenant_or_slug, env=env)
 
 
 def get_tenant_containers_status(tenant_or_slug, env='staging', environment=None):
@@ -555,13 +754,15 @@ def deploy_tenant_containers(tenant_or_slug, env='staging', user=None, force_reb
                     log(f"Resultado Frontend: {fe_after['status']} (running={fe_after['running']})")
 
                     if names.get("is_standalone_repo"):
-                        public_domain = tenant.custom_domain or f"{tenant.subdomain}.nectarlabs.dev"
-                        prefix = "staging." if effective_env == 'staging' and not public_domain.startswith('staging.') else ""
-                        tenant.custom_frontend_url = f"https://{prefix}{public_domain}"
-                    else:
                         tenant.custom_frontend_url = f"http://{frontend_name}:3000"
-                    tenant.custom_backend_url = f"http://{backend_name}:8000/api"
-                    tenant.save(update_fields=['custom_frontend_url', 'custom_backend_url'])
+                        tenant.custom_backend_url = f"http://{backend_name}:8000/api"
+                        tenant.is_standalone_repo = True
+                        tenant.frontend_mode = 'CUSTOM_STANDALONE'
+                        tenant.save(update_fields=['custom_frontend_url', 'custom_backend_url', 'is_standalone_repo', 'frontend_mode'])
+                    else:
+                        tenant.is_standalone_repo = False
+                        tenant.frontend_mode = 'NATIVE'
+                        tenant.save(update_fields=['is_standalone_repo', 'frontend_mode'])
                     invalidate_tenant_cache(tenant)
 
                     deployment.status = TenantDeployment.Status.SUCCESS
@@ -572,7 +773,11 @@ def deploy_tenant_containers(tenant_or_slug, env='staging', user=None, force_reb
 
                 repo_dir = names["repo_dir"]
                 if not os.path.exists(repo_dir):
-                    err_msg = f"El directorio del proyecto '{repo_dir}' no existe o no está montado en el contenedor."
+                    candidates_str = ", ".join(names.get("searched_candidates", [repo_dir]))
+                    err_msg = (
+                        f"El directorio del proyecto '{repo_dir}' no existe o no está montado en el contenedor. "
+                        f"(Rutas evaluadas: {candidates_str}). Configura 'deployment_repo_path' en el Tenant o monta la carpeta en Docker."
+                    )
                     log(f"❌ {err_msg}")
                     deployment.status = TenantDeployment.Status.FAILED
                     deployment.output_logs = "".join(logs)
@@ -663,9 +868,16 @@ def deploy_tenant_containers(tenant_or_slug, env='staging', user=None, force_reb
                 call_docker_api("POST", f"/v1.41/networks/{NETWORK_NAME}/connect", body={"Container": frontend_name})
 
                 # Asignar URLs internas de red para el proxy dinámico
-                tenant.custom_frontend_url = f"http://{frontend_name}:3000"
-                tenant.custom_backend_url = f"http://{backend_name}:8000/api"
-                tenant.save(update_fields=['custom_frontend_url', 'custom_backend_url'])
+                if names.get("is_standalone_repo"):
+                    tenant.custom_frontend_url = f"http://{frontend_name}:3000"
+                    tenant.custom_backend_url = f"http://{backend_name}:8000/api"
+                    tenant.is_standalone_repo = True
+                    tenant.frontend_mode = 'CUSTOM_STANDALONE'
+                    tenant.save(update_fields=['custom_frontend_url', 'custom_backend_url', 'is_standalone_repo', 'frontend_mode'])
+                else:
+                    tenant.is_standalone_repo = False
+                    tenant.frontend_mode = 'NATIVE'
+                    tenant.save(update_fields=['is_standalone_repo', 'frontend_mode'])
                 invalidate_tenant_cache(tenant)
 
                 log("[✓] Despliegue concluido con éxito. Caché Redis invalidada.")

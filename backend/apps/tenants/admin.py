@@ -126,6 +126,10 @@ class TenantAdmin(admin.ModelAdmin):
             'fields': ('custom_css', 'custom_js', 'custom_backend_url', 'custom_frontend_url'),
             'classes': ('collapse',),
         }),
+        ('Orquestación y Despliegue Autónomo (Zero-SSH)', {
+            'fields': ('is_standalone_repo', 'deployment_repo_path', 'deployment_backend_container', 'deployment_frontend_container'),
+            'classes': ('collapse',),
+        }),
         ('Campañas de Email & SMTP Personalizado', {
             'fields': (
                 'newsletter_plan', 'newsletter_extra_credits', 'newsletter_sent_this_month',

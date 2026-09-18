@@ -353,6 +353,30 @@ class Tenant(models.Model):
     custom_backend_url = models.CharField(max_length=500, blank=True, null=True, help_text="URL de backend personalizada (acepta rutas relativas o URLs absolutas) para redirigir peticiones API")
     custom_frontend_url = models.CharField(max_length=500, blank=True, null=True, help_text="URL de frontend personalizada (acepta rutas relativas o URLs absolutas) para enmascarar en iframe")
 
+    # Configuración de Orquestación y Despliegue Autónomo (Zero-SSH)
+    deployment_repo_path = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        help_text="Ruta absoluta al repositorio en el servidor (ej: /var/www/Finanzasparahippies). Si se deja vacío, se autodescubrirá en /var/www."
+    )
+    deployment_backend_container = models.CharField(
+        max_length=150,
+        blank=True,
+        null=True,
+        help_text="Nombre explícito del contenedor backend en Docker (ej: fph_backend_staging). Si está vacío, se detecta desde compose."
+    )
+    deployment_frontend_container = models.CharField(
+        max_length=150,
+        blank=True,
+        null=True,
+        help_text="Nombre explícito del contenedor frontend en Docker (ej: fph_frontend_staging). Si está vacío, se detecta desde compose."
+    )
+    is_standalone_repo = models.BooleanField(
+        default=False,
+        help_text="Indica si este tenant opera con stack Docker dedicado autónomo en lugar de la plantilla nativa compartida."
+    )
+
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

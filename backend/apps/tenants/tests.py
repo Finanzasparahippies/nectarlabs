@@ -1269,6 +1269,45 @@ class TenantUnifiedWalletAndOrchestrationTests(BaseTenantAddonTestCase):
         self.assertEqual(names_mexico["frontend"], "premium_ties_frontend_staging")
         self.assertTrue(names_mexico["is_standalone_repo"])
 
+    def test_fph_standalone_container_resolution(self):
+        """Verifica que fph resuelva correctamente a los contenedores y directorio de Finanzas Para Hippies."""
+        from apps.tenants.provisioner import get_tenant_container_names
+
+        names_fph = get_tenant_container_names("fph", env="staging")
+        self.assertEqual(names_fph["backend"], "fph_backend_staging")
+        self.assertEqual(names_fph["frontend"], "fph_frontend_staging")
+        self.assertTrue(names_fph["is_standalone_repo"])
+        self.assertIn("/var/www/Finanzasparahippies", names_fph["searched_candidates"])
+
+    def test_tenant_custom_repo_db_override(self):
+        """Verifica que los campos explícitos de Tenant prevalezcan sobre cualquier autodescubrimiento."""
+        from apps.tenants.provisioner import get_tenant_container_names
+        from apps.tenants.models import Tenant
+
+        custom_tenant = Tenant.objects.create(
+            name="Custom Store",
+            subdomain="custom-store",
+            owner=self.owner_a,
+            deployment_repo_path="/var/www/custom-project",
+            deployment_backend_container="my_custom_be_prod",
+            deployment_frontend_container="my_custom_fe_prod",
+            is_standalone_repo=True
+        )
+        names = get_tenant_container_names(custom_tenant, env="production")
+        self.assertEqual(names["repo_dir"], "/var/www/custom-project")
+        self.assertEqual(names["backend"], "my_custom_be_prod")
+        self.assertEqual(names["frontend"], "my_custom_fe_prod")
+        self.assertTrue(names["is_standalone_repo"])
+
+    def test_native_tenant_container_resolution(self):
+        """Verifica que un tenant estándar sin stack dedicado resuelva a la convención nativa no autónoma."""
+        from apps.tenants.provisioner import get_tenant_container_names
+
+        names_std = get_tenant_container_names("standard-tenant", env="staging")
+        self.assertEqual(names_std["backend"], "tenant_standard-tenant_backend_staging")
+        self.assertEqual(names_std["frontend"], "tenant_standard-tenant_frontend_staging")
+        self.assertFalse(names_std["is_standalone_repo"])
+
     def test_container_action_missing_container_returns_actionable_error(self):
         """Verifica que una acción sobre contenedor no existente devuelva 400 con mensaje claro en lugar de un 404 confuso."""
         self.client.force_authenticate(user=self.owner_a)

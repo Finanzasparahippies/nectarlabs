@@ -1014,6 +1014,22 @@ export default function TenantAdminPage() {
     return () => document.removeEventListener('click', handleClickOutside);
   }, []);
 
+  // Inmediata extracción y almacenamiento del token SSO desde la URL
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const tokenParam = urlParams.get('token');
+      if (tokenParam) {
+        localStorage.setItem('token', tokenParam);
+        console.log('[SSO] Token SSO extraído exitosamente de la URL y persistido en localStorage');
+        urlParams.delete('token');
+        const queryStr = urlParams.toString();
+        const newUrl = window.location.pathname + (queryStr ? `?${queryStr}` : '');
+        window.history.replaceState({}, '', newUrl);
+      }
+    }
+  }, []);
+
   // Parse Subdomain from Route or Hostname
   useEffect(() => {
     if (rawSubdomain) {
@@ -1038,11 +1054,33 @@ export default function TenantAdminPage() {
 
       if (parsed && parsed !== 'www' && parsed !== 'api' && parsed !== 'admin' && parsed !== 'staging') {
         setSubdomain(parsed);
+      } else if (hostname) {
+        // Soporte de Dominios Personalizados (BYO Domain, ej: staging.kores.vip o kores.vip)
+        fetch(`/api/tenants/resolve-host/?host=${encodeURIComponent(hostname)}`)
+          .then((res) => (res.ok ? res.json() : null))
+          .then((data) => {
+            if (data && data.subdomain) {
+              setSubdomain(data.subdomain);
+            } else {
+              const cleanHost = hostname.replace(/^staging\./, '').split(':')[0];
+              const candidate = cleanHost.split('.')[0];
+              if (candidate && candidate !== 'www') {
+                setSubdomain(candidate);
+              }
+            }
+          })
+          .catch(() => {
+            const cleanHost = hostname.replace(/^staging\./, '').split(':')[0];
+            const candidate = cleanHost.split('.')[0];
+            if (candidate && candidate !== 'www') {
+              setSubdomain(candidate);
+            }
+          });
       }
     }
   }, [rawSubdomain]);
 
-  // Load and check credentials, extracting token for cross-subdomain SSO first
+  // Load and check credentials
   useEffect(() => {
     if (!subdomain) {
       console.log(`[SSO] useEffect[subdomain]: subdomain is empty, returning`);
@@ -1051,26 +1089,13 @@ export default function TenantAdminPage() {
 
     console.log(`[SSO] useEffect[subdomain]: subdomain = ${subdomain}`);
 
-    // Retrieve token from query params if present and store it in local storage (cross-subdomain session transfer)
-    if (typeof window !== 'undefined') {
-      const urlParams = new URLSearchParams(window.location.search);
-      const tokenParam = urlParams.get('token');
-      console.log(`[SSO] useEffect[subdomain]: token in URL = ${tokenParam ? `${tokenParam.substring(0, 15)}...` : 'none'}`);
-      if (tokenParam) {
-        localStorage.setItem('token', tokenParam);
-        console.log(`[SSO] useEffect[subdomain]: saved token from URL to localStorage`);
-        urlParams.delete('token');
-        const queryStr = urlParams.toString();
-        const newUrl = window.location.pathname + (queryStr ? `?${queryStr}` : '');
-        window.history.replaceState({}, '', newUrl);
-      }
-      console.log(`[SSO] useEffect[subdomain]: current token in localStorage = ${localStorage.getItem('token') ? `${localStorage.getItem('token')?.substring(0, 15)}...` : 'none'}`);
-    }
-
     const loadAdminData = async () => {
       try {
         // Fetch public tenant info to resolve owner ID and name
-        const res = await fetch(`/api/tenants/public-config/?subdomain=${subdomain}`);
+        let res = await fetch(`/api/tenants/public-config/?subdomain=${subdomain}`);
+        if (!res.ok && typeof window !== 'undefined') {
+          res = await fetch(`/api/tenants/public-config/?host=${encodeURIComponent(window.location.hostname)}`);
+        }
         if (!res.ok) throw new Error('Portal no encontrado o inactivo');
         const config: TenantConfig = await res.json();
         setTenantConfig(config);

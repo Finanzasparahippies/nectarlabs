@@ -165,8 +165,16 @@ export async function middleware(request: NextRequest) {
         return NextResponse.rewrite(url);
       }
 
-      // REESCRITURA AUTÓNOMA: Si el inquilino posee un frontend dedicado en la red Docker
-      if (customFrontendUrl) {
+      // Si la ruta solicitada es un servicio central o consola administrativa de Nectar Labs (/portal-admin, /autofactura),
+      // DEBE ser atendida directamente por el portal unificado de Nectar Labs en /tenants/[subdomain]/...
+      const isMatrixCoreRoute =
+        url.pathname === '/portal-admin' ||
+        url.pathname.startsWith('/portal-admin/') ||
+        url.pathname === '/autofactura' ||
+        url.pathname.startsWith('/autofactura/');
+
+      // REESCRITURA AUTÓNOMA: Si el inquilino posee un frontend dedicado en la red Docker y NO es una ruta central
+      if (customFrontendUrl && !isMatrixCoreRoute) {
         try {
           const targetUrl = new URL(url.pathname + url.search, customFrontendUrl);
           return NextResponse.rewrite(targetUrl);

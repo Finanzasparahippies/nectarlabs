@@ -497,6 +497,11 @@ export default function DeployCommander() {
                   <span className="px-3 py-1.5 rounded-xl bg-background/50 border border-card-border font-mono text-foreground/60">
                     Billetera: ${Number(selectedTenant.wallet_balance || 0).toFixed(2)} MXN
                   </span>
+                  {statusData?.names?.repo_dir && (
+                    <span className="px-3 py-1.5 rounded-xl bg-background/50 border border-card-border font-mono text-foreground/60 text-2xs truncate max-w-[260px]" title="Ruta física de orquestación en el servidor remoto">
+                      📂 {statusData.names.repo_dir}
+                    </span>
+                  )}
                 </div>
               )}
             </div>
