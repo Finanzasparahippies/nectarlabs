@@ -295,10 +295,20 @@ export default function DeployCommander() {
           message: '⚠️ Docker Daemon no disponible en el servidor remoto (Socket Unix inaccesible).'
         });
       } else if (!res.ok) {
+        const errorMsg = data.error || data.message || `Error (${res.status}) al ejecutar acción '${action}'.`;
         setBannerNotice({
           type: 'error',
-          message: data.error || data.message || `Error al ejecutar acción '${action}'.`
+          message: errorMsg
         });
+        setLogs((prev) => [
+          ...prev,
+          {
+            id: Math.random().toString(),
+            timestamp: new Date().toLocaleTimeString(),
+            text: `❌ [ERROR ${res.status}] ${action.toUpperCase()} (${target}) -> ${errorMsg}`,
+            stream: 'stderr'
+          }
+        ]);
       } else {
         setBannerNotice({
           type: 'success',

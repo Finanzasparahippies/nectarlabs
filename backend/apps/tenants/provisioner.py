@@ -87,8 +87,10 @@ def get_active_docker_socket():
                 s.connect(path)
                 s.close()
                 return path
-            except Exception:
-                pass
+            except (socket.error, OSError) as sock_err:
+                logger.debug(f"Socket candidate {path} no conectable: {sock_err}")
+            except Exception as e:
+                logger.warning(f"Error inesperado al probar socket Unix {path}: {e}")
     return None
 
 
@@ -244,8 +246,10 @@ def get_tenant_container_names(tenant_or_slug, env='staging'):
     Determina los nombres de contenedores estándar para un inquilino según su slug y entorno.
     """
     slug = tenant_or_slug.subdomain if hasattr(tenant_or_slug, 'subdomain') else str(tenant_or_slug)
+    slug_lower = slug.lower().strip()
     
-    if slug in ['kores', 'kores-vip']:
+    # Soporte unificado para Kōres (Luxury Hair Ties / Premium Ties)
+    if slug_lower in ['kores', 'kores-vip', 'kores-mexico', 'kores_mexico'] or 'kores' in slug_lower:
         return {
             "backend": f"premium_ties_backend_{env}",
             "frontend": f"premium_ties_frontend_{env}",
@@ -254,10 +258,10 @@ def get_tenant_container_names(tenant_or_slug, env='staging'):
         }
         
     return {
-        "backend": f"tenant_{slug}_backend_{env}",
-        "frontend": f"tenant_{slug}_frontend_{env}",
+        "backend": f"tenant_{slug_lower}_backend_{env}",
+        "frontend": f"tenant_{slug_lower}_frontend_{env}",
         "is_standalone_repo": False,
-        "repo_dir": os.path.join(TENANTS_BASE_DIR, slug)
+        "repo_dir": os.path.join(TENANTS_BASE_DIR, slug_lower)
     }
 
 
@@ -288,21 +292,25 @@ def get_tenant_containers_status(tenant_or_slug, env='staging', environment=None
 def _execute_single_container_action(container_name: str, action: str) -> ActionResult:
     valid_actions = {'start', 'stop', 'restart'}
     if action not in valid_actions:
-        return ActionResult(False, f"Acción '{action}' no permitida. Válidas: {list(valid_actions)}", status_code=400)
+        return ActionResult(False, f"Acción '{action}' no permitida. Permitidas: {sorted(list(valid_actions))}", status_code=400)
 
-    sock_path = get_active_docker_socket()
-    if not sock_path:
-        ok_sh, out_sh = execute_shell_cmd(["docker", action, container_name])
-        if ok_sh:
-            return ActionResult(True, f"Contenedor {container_name} {action} ejecutado con éxito vía CLI", status_code=200)
-        return ActionResult(False, "Docker daemon no disponible (Socket Unix inaccesible)", status_code=503)
+    # 1. Verificar primero existencia del contenedor para evitar fallos ciegos y errores 502 confusos
+    info = get_container_info(container_name)
+    if not info.get("exists"):
+        return ActionResult(
+            False, 
+            f"El contenedor '{container_name}' no existe en el daemon de Docker. Debes ejecutar 'deploy' primero para construirlo e iniciarlo.",
+            status_code=400
+        )
 
+    # 2. Ejecutar acción vía Socket Unix o CLI
     try:
         ok, resp = call_docker_api("POST", f"/v1.41/containers/{container_name}/{action}")
         if ok:
             return ActionResult(True, f"Acción '{action}' ejecutada con éxito en {container_name}", status_code=200)
         if "404" in resp or "No such container" in resp:
-            return ActionResult(False, f"Contenedor '{container_name}' no existe en el daemon de Docker", status_code=404)
+            return ActionResult(False, f"El contenedor '{container_name}' no existe en el daemon de Docker. Debes ejecutar 'deploy' primero para construirlo e iniciarlo.", status_code=400)
+        
         ok_sh, out_sh = execute_shell_cmd(["docker", action, container_name])
         if ok_sh:
             return ActionResult(True, f"Acción '{action}' completada vía CLI en {container_name}", status_code=200)
@@ -310,6 +318,7 @@ def _execute_single_container_action(container_name: str, action: str) -> Action
     except socket.timeout:
         return ActionResult(False, f"Timeout de comunicación con Docker daemon al ejecutar {action} en {container_name}", status_code=504)
     except Exception as e:
+        logger.error(f"Excepción al ejecutar {action} en {container_name}: {e}", exc_info=True)
         return ActionResult(False, f"Error de comunicación con Docker: {str(e)}", status_code=503)
 
 
@@ -495,7 +504,12 @@ def deploy_tenant_containers(tenant_or_slug, env='staging', user=None, force_reb
                     log(f"Resultado Backend: {be_after['status']} (running={be_after['running']})")
                     log(f"Resultado Frontend: {fe_after['status']} (running={fe_after['running']})")
 
-                    tenant.custom_frontend_url = f"http://{frontend_name}:3000"
+                    if names.get("is_standalone_repo"):
+                        public_domain = tenant.custom_domain or f"{tenant.subdomain}.nectarlabs.dev"
+                        prefix = "staging." if effective_env == 'staging' and not public_domain.startswith('staging.') else ""
+                        tenant.custom_frontend_url = f"https://{prefix}{public_domain}"
+                    else:
+                        tenant.custom_frontend_url = f"http://{frontend_name}:3000"
                     tenant.custom_backend_url = f"http://{backend_name}:8000/api"
                     tenant.save(update_fields=['custom_frontend_url', 'custom_backend_url'])
                     invalidate_tenant_cache(tenant)
@@ -530,7 +544,12 @@ def deploy_tenant_containers(tenant_or_slug, env='staging', user=None, force_reb
                 call_docker_api("POST", f"/v1.41/networks/{NETWORK_NAME}/connect", body={"Container": backend_name})
                 call_docker_api("POST", f"/v1.41/networks/{NETWORK_NAME}/connect", body={"Container": frontend_name})
 
-                tenant.custom_frontend_url = f"http://{frontend_name}:3000"
+                if names.get("is_standalone_repo"):
+                    public_domain = tenant.custom_domain or f"{tenant.subdomain}.nectarlabs.dev"
+                    prefix = "staging." if effective_env == 'staging' and not public_domain.startswith('staging.') else ""
+                    tenant.custom_frontend_url = f"https://{prefix}{public_domain}"
+                else:
+                    tenant.custom_frontend_url = f"http://{frontend_name}:3000"
                 tenant.custom_backend_url = f"http://{backend_name}:8000/api"
                 tenant.save(update_fields=['custom_frontend_url', 'custom_backend_url'])
                 invalidate_tenant_cache(tenant)

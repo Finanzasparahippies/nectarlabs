@@ -1246,14 +1246,39 @@ class TenantUnifiedWalletAndOrchestrationTests(BaseTenantAddonTestCase):
         self.assertIn("frontend", res.data)
 
     def test_stream_logs_endpoint_format_and_headers(self):
-        """Verifica que el endpoint stream-logs retorne headers SSE apropiados para tiempo real."""
+        """Verifica que el endpoint stream-logs retorne headers SSE apropiados para tiempo real, incluso con Accept text/event-stream."""
         self.client.force_authenticate(user=self.owner_a)
         url = reverse('tenant-stream-logs', kwargs={'pk': str(self.tenant_a.id)})
 
-        response = self.client.get(url, {'target': 'backend', 'env': 'staging', 'tail': '10'})
+        # Probar con header Accept estándar de EventSource del navegador
+        response = self.client.get(
+            url, 
+            {'target': 'backend', 'env': 'staging', 'tail': '10'},
+            HTTP_ACCEPT='text/event-stream'
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn('text/event-stream', response['Content-Type'])
         self.assertEqual(response['X-Accel-Buffering'], 'no')
+
+    def test_kores_mexico_standalone_container_resolution(self):
+        """Verifica que kores-mexico resuelva correctamente a los contenedores autónomos de premium_ties."""
+        from apps.tenants.provisioner import get_tenant_container_names
+
+        names_mexico = get_tenant_container_names("kores-mexico", env="staging")
+        self.assertEqual(names_mexico["backend"], "premium_ties_backend_staging")
+        self.assertEqual(names_mexico["frontend"], "premium_ties_frontend_staging")
+        self.assertTrue(names_mexico["is_standalone_repo"])
+
+    def test_container_action_missing_container_returns_actionable_error(self):
+        """Verifica que una acción sobre contenedor no existente devuelva 400 con mensaje claro en lugar de un 404 confuso."""
+        self.client.force_authenticate(user=self.owner_a)
+        url = reverse('tenant-container-action', kwargs={'pk': str(self.tenant_a.id)})
+
+        res = self.client.post(url, {'action': 'start', 'target': 'frontend', 'env': 'staging'})
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertFalse(res.data['success'])
+        self.assertIn('error', res.data)
+        self.assertIn("deploy", res.data['error'].lower())
 
     def test_tenant_admin_wallet_display_and_badge(self):
         """Verifica que los métodos del Django Admin no lancen ValueError al formatear SafeString."""

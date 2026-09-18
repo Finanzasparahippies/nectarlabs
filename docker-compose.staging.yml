@@ -10,7 +10,7 @@ services:
     volumes:
       - ./backend:/app:Z
       - ./backend/logs:/app/logs:Z
-      - ${DOCKER_SOCK:-./docker/dummy_sock}:/var/run/docker.sock:z
+      - ${DOCKER_SOCK:-/var/run/docker.sock}:/var/run/docker.sock:z
     env_file:
       - .env.staging
     environment:
@@ -45,6 +45,12 @@ services:
     environment:
       - NEXT_PUBLIC_API_URL=https://staging.nectarlabs.dev/api
       - API_URL=http://backend-staging:8000/api
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:3000 2>/dev/null || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
     logging:
       driver: "json-file"
       options:

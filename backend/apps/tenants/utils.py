@@ -177,7 +177,7 @@ def get_tenant_from_request(request):
                 if tenant:
                     return tenant
 
-            # 4d. Extraer primer token relevante si es subdominio (ej: tenanta.nectarlabs.dev -> tenanta)
+            # 4d. Extraer primer token relevante si es subdominio (ej: tenanta.nectarlabs.dev -> tenanta, staging.kores.vip -> kores)
             if '.' in clean_host_no_port:
                 parts = clean_host_no_port.split('.')
                 ignored_tokens = {'www', 'api', 'admin', 'staging', 'nectarlabs', 'dev', 'localhost', 'com', 'vip', 'mx', 'org', 'net'}
@@ -186,7 +186,14 @@ def get_tenant_from_request(request):
                         tenant = Tenant.objects.filter(subdomain__iexact=part, is_active=True).first()
                         if tenant:
                             return tenant
+                        # Coincidencia con sufijo regional o prefijo (ej: kores -> kores-mexico)
+                        tenant = Tenant.objects.filter(subdomain__istartswith=f"{part}-", is_active=True).first()
+                        if tenant:
+                            return tenant
                         tenant = Tenant.objects.filter(custom_domain__icontains=part, is_active=True).first()
+                        if tenant:
+                            return tenant
+                        tenant = Tenant.objects.filter(subdomain__icontains=part, is_active=True).first()
                         if tenant:
                             return tenant
 

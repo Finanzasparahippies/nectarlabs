@@ -126,14 +126,22 @@ export async function middleware(request: NextRequest) {
           if (tenantInfo && tenantInfo.subdomain) {
             tenantSlug = tenantInfo.subdomain;
           }
+        } else {
+          console.warn(`[MultiTenant Proxy] resolve-host devolvió estado ${res.status} para ${cleanHost}`);
         }
-      } catch {
-        // En caso de fallo de red interna, conserva fallback al host
+      } catch (err) {
+        console.error(`[MultiTenant Proxy] Fallo de conexión al resolver host ${cleanHost}:`, err);
       }
     }
 
     if (tenantSlug.includes('.')) {
-      tenantSlug = tenantSlug.split('.')[0];
+      // Si el host tiene prefijo staging (ej: staging.kores.vip), extraer el identificador de marca 'kores'
+      if (tenantSlug.startsWith('staging.')) {
+        const parts = tenantSlug.split('.');
+        tenantSlug = parts[1] || parts[0];
+      } else {
+        tenantSlug = tenantSlug.split('.')[0];
+      }
     }
 
     // Filtra palabras reservadas para evitar colisiones

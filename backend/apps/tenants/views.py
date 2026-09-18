@@ -1,11 +1,14 @@
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
+from rest_framework.renderers import BaseRenderer, JSONRenderer
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from django.http import StreamingHttpResponse
 from rest_framework_simplejwt.tokens import RefreshToken
 import uuid
+import json
+import logging
 
 from django.core.cache import cache
 from .models import Tenant, TenantPage, TenantNavItem, TenantWalletTransaction, TenantDeployment
@@ -14,9 +17,25 @@ from .serializers import (
     TenantWalletTransactionSerializer, TenantDeploymentSerializer
 )
 
+logger = logging.getLogger(__name__)
+
 ALLOWED_ACTIONS = {'start', 'stop', 'restart', 'status', 'deploy'}
 ALLOWED_TARGETS = {'all', 'frontend', 'backend'}
 ALLOWED_ENVIRONMENTS = {'staging', 'production'}
+
+
+class ServerSentEventRenderer(BaseRenderer):
+    """
+    Renderer especializado para Server-Sent Events (SSE).
+    Satisface la negociación de contenidos de DRF ante solicitudes 'Accept: text/event-stream'.
+    """
+    media_type = 'text/event-stream'
+    format = 'event-stream'
+
+    def render(self, data, accepted_media_type=None, renderer_context=None):
+        if isinstance(data, (dict, list)):
+            return json.dumps(data)
+        return data or ""
 
 
 User = get_user_model()
@@ -103,19 +122,32 @@ class TenantViewSet(viewsets.ModelViewSet):
             force_rebuild = bool(request.data.get('force_rebuild', False))
             from .provisioner import deploy_tenant_containers
             res = deploy_tenant_containers(tenant, env=env, user=request.user, force_rebuild=force_rebuild)
-            return Response({'success': res.get('success'), 'message': res.get('message'), 'logs': res.get('logs', '')}, status=res.status_code)
+            return Response({
+                'success': res.get('success', False),
+                'message': res.get('message', ''),
+                'error': res.get('error') if not res.get('success') else None,
+                'logs': res.get('logs', '')
+            }, status=res.status_code)
 
         from .provisioner import execute_container_action
         res = execute_container_action(tenant, target, action_name, environment=env)
+        # Evitar código 404 para errores de contenedor que simulen endpoint no encontrado
+        resp_status = status.HTTP_400_BAD_REQUEST if res.status_code == 404 else res.status_code
         return Response({
-            'success': res.get('success'),
-            'message': res.get('message'),
+            'success': res.get('success', False),
+            'message': res.get('message', ''),
+            'error': res.get('error') or (res.get('message') if not res.get('success') else None),
             'action': action_name,
             'target': target,
             'env': env
-        }, status=res.status_code)
+        }, status=resp_status)
 
-    @action(detail=True, methods=['get'], url_path='stream-logs')
+    @action(
+        detail=True,
+        methods=['get'],
+        url_path='stream-logs',
+        renderer_classes=[ServerSentEventRenderer, JSONRenderer]
+    )
     def stream_logs(self, request, pk=None):
         """
         Transmite logs en tiempo real vía Server-Sent Events (SSE) evitando sondeos repetitivos por polling.
@@ -126,13 +158,14 @@ class TenantViewSet(viewsets.ModelViewSet):
             token_param = request.query_params.get('token')
             if token_param:
                 from rest_framework_simplejwt.tokens import AccessToken
+                from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
                 try:
                     validated_token = AccessToken(token_param)
                     user_id = validated_token.get('user_id')
                     User = get_user_model()
                     user = User.objects.filter(id=user_id).first()
-                except Exception:
-                    pass
+                except (TokenError, InvalidToken, Exception) as token_err:
+                    logger.warning(f"Error al validar token de stream_logs: {token_err}")
 
         if not user or not user.is_authenticated:
             return Response({'error': 'Autenticación requerida para stream de logs.'}, status=status.HTTP_401_UNAUTHORIZED)
