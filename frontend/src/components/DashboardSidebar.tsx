@@ -696,8 +696,11 @@ function DashboardSidebarContent() {
                         onClick={(e) => {
                           e.preventDefault();
                           const token = typeof window !== 'undefined' ? localStorage.getItem('token') : '';
-                          const tokenParam = token ? `?token=${encodeURIComponent(token)}` : '';
-                          window.open(`${tenantUrl}/portal-admin${tokenParam}`, '_blank', 'noopener,noreferrer');
+                          const tokenParam = token ? `token=${encodeURIComponent(token)}` : '';
+                          const subParam = `subdomain=${encodeURIComponent(tenant.subdomain)}`;
+                          const queryParts = [tokenParam, subParam].filter(Boolean).join('&');
+                          const queryStr = queryParts ? `?${queryParts}` : '';
+                          window.open(`${tenantUrl}/portal-admin${queryStr}`, '_blank', 'noopener,noreferrer');
                         }}
                         className="flex items-center justify-between py-2 pr-6 text-foreground/50 hover:text-nectar-gold transition-all duration-300 text-2xs font-black uppercase tracking-widest hover:translate-x-1 group/sub w-full text-left bg-transparent border-0 cursor-pointer"
                       >

@@ -19,7 +19,7 @@ from .serializers import (
 
 logger = logging.getLogger(__name__)
 
-ALLOWED_ACTIONS = {'start', 'stop', 'restart', 'status', 'deploy'}
+ALLOWED_ACTIONS = {'start', 'stop', 'restart', 'status', 'deploy', 'reload_nginx', 'reload-nginx'}
 ALLOWED_TARGETS = {'all', 'frontend', 'backend'}
 ALLOWED_ENVIRONMENTS = {'staging', 'production'}
 
@@ -127,6 +127,16 @@ class TenantViewSet(viewsets.ModelViewSet):
                 'message': res.get('message', ''),
                 'error': res.get('error') if not res.get('success') else None,
                 'logs': res.get('logs', '')
+        if action_name in ('reload_nginx', 'reload-nginx'):
+            from .provisioner import reload_nginx_proxy
+            res = reload_nginx_proxy()
+            return Response({
+                'success': res.get('success', False),
+                'message': res.get('message', ''),
+                'error': res.get('error') if not res.get('success') else None,
+                'action': action_name,
+                'target': target,
+                'env': env
             }, status=res.status_code)
 
         from .provisioner import execute_container_action

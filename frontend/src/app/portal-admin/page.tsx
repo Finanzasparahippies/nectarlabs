@@ -26,18 +26,25 @@ function PortalAdminResolver() {
           }
         }
 
-        // 2. Extraer o resolver subdominio a partir del hostname
-        let subdomain = '';
-        if (rawHost.includes('.nectarlabs.dev')) {
-          subdomain = rawHost.split('.nectarlabs.dev')[0].replace('staging.', '').replace('www.', '');
-        } else if (rawHost.includes('kores')) {
-          subdomain = 'kores';
-        } else if (rawHost.includes('finanzas') || rawHost.includes('fph')) {
-          subdomain = 'fph';
+        // 2. Extraer o resolver subdominio a partir de query params o hostname
+        let subdomain = searchParams.get('subdomain') || searchParams.get('tenant') || '';
+
+        if (!subdomain) {
+          if (rawHost.includes('.nectarlabs.dev')) {
+            const rawSub = rawHost.split('.nectarlabs.dev')[0].replace('staging.', '').replace('www.', '').trim();
+            if (rawSub && rawSub !== 'staging' && rawSub !== 'www') {
+              subdomain = rawSub;
+            }
+          } else if (rawHost.includes('kores')) {
+            subdomain = 'kores';
+          } else if (rawHost.includes('finanzas') || rawHost.includes('fph')) {
+            subdomain = 'fph';
+          }
         }
 
-        // Si aún no se deduce, consultar resolve-host en la API
-        if (!subdomain) {
+        // Si aún no se deduce y no es host del sistema matriz, consultar resolve-host en la API
+        const systemHosts = ['staging.nectarlabs.dev', 'nectarlabs.dev', 'www.nectarlabs.dev', 'localhost', '127.0.0.1'];
+        if (!subdomain && !systemHosts.includes(rawHost)) {
           try {
             const res = await fetch(`/api/tenants/resolve-host/?host=${encodeURIComponent(rawHost)}`);
             if (res.ok) {
@@ -51,8 +58,8 @@ function PortalAdminResolver() {
           }
         }
 
-        // Si se resolvió el tenant, redirigir a la ruta canónica
-        if (subdomain) {
+        // Si se resolvió el tenant (excluyendo palabras del sistema), redirigir a la ruta canónica
+        if (subdomain && !['staging', 'www', 'nectarlabs'].includes(subdomain.toLowerCase())) {
           setStatus('redirecting');
           router.replace(`/tenants/${subdomain}/portal-admin${search}`);
         } else {

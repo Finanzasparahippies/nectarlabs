@@ -3042,8 +3042,11 @@ function DashboardPageOriginal() {
                               <button
                                 onClick={() => {
                                   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : '';
-                                  const tokenParam = token ? `?token=${encodeURIComponent(token)}` : '';
-                                  window.open(`${domain}/portal-admin${tokenParam}`, '_blank', 'noopener,noreferrer');
+                                  const tokenParam = token ? `token=${encodeURIComponent(token)}` : '';
+                                  const subParam = `subdomain=${encodeURIComponent(tenant.subdomain)}`;
+                                  const queryParts = [tokenParam, subParam].filter(Boolean).join('&');
+                                  const queryStr = queryParts ? `?${queryParts}` : '';
+                                  window.open(`${domain}/portal-admin${queryStr}`, '_blank', 'noopener,noreferrer');
                                 }}
                                 className="flex-1 min-w-[90px] py-2 bg-foreground hover:bg-foreground/90 text-background text-center rounded-xl text-2xs font-black uppercase tracking-widest transition-all cursor-pointer font-bold flex items-center justify-center border border-transparent font-bold"
                               >

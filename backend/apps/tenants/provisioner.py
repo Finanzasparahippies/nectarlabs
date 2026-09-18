@@ -538,10 +538,51 @@ def get_tenant_containers_status(tenant_or_slug, env='staging', environment=None
     }
 
 
+def reload_nginx_proxy():
+    """
+    Recarga la configuración de Nginx en caliente sin SSH ni tiempo de inactividad.
+    Inspecciona contenedores activos (prod_nginx, nectar_nginx_staging, prod-nginx, nectar_nginx)
+    y ejecuta 'nginx -s reload' vía Docker Socket (/exec) o CLI.
+    """
+    candidates = ['prod_nginx', 'prod-nginx', 'nectar_nginx_staging', 'nectar_nginx']
+    reloaded = []
+    for c_name in candidates:
+        try:
+            info = get_container_info(c_name)
+            if info.get("running"):
+                # Intento 1: Docker CLI directo
+                ok_cli, out_cli = execute_shell_cmd(["docker", "exec", c_name, "nginx", "-s", "reload"])
+                if ok_cli:
+                    logger.info(f"Nginx ({c_name}) recargado exitosamente vía CLI.")
+                    reloaded.append(c_name)
+                    continue
+
+                # Intento 2: Docker Socket Engine API (/exec)
+                ok_exec, exec_resp = call_docker_api_json("POST", f"/v1.41/containers/{c_name}/exec", body={
+                    "AttachStdout": True,
+                    "AttachStderr": True,
+                    "Cmd": ["nginx", "-s", "reload"]
+                })
+                if ok_exec and isinstance(exec_resp, dict) and "Id" in exec_resp:
+                    exec_id = exec_resp["Id"]
+                    call_docker_api("POST", f"/v1.41/exec/{exec_id}/start", body={"Detach": True, "Tty": False})
+                    logger.info(f"Nginx ({c_name}) recargado exitosamente vía Docker API Socket.")
+                    reloaded.append(c_name)
+        except Exception as e:
+            logger.warning(f"No se pudo recargar Nginx en {c_name}: {e}")
+
+    success = len(reloaded) > 0
+    msg = f"Nginx recargado exitosamente en: {', '.join(reloaded)}" if success else "No se detectaron contenedores de Nginx en ejecución"
+    return ActionResult(success, msg, status_code=200 if success else 404)
+
+
 def _execute_single_container_action(container_name: str, action: str) -> ActionResult:
-    valid_actions = {'start', 'stop', 'restart'}
+    valid_actions = {'start', 'stop', 'restart', 'reload_nginx', 'reload-nginx'}
     if action not in valid_actions:
         return ActionResult(False, f"Acción '{action}' no permitida. Permitidas: {sorted(list(valid_actions))}", status_code=400)
+
+    if action in ('reload_nginx', 'reload-nginx'):
+        return reload_nginx_proxy()
 
     # 1. Verificar primero existencia del contenedor para evitar fallos ciegos y errores 502 confusos
     info = get_container_info(container_name)
@@ -573,7 +614,7 @@ def _execute_single_container_action(container_name: str, action: str) -> Action
 
 def execute_container_action(target_or_container, action_or_target, action=None, environment='staging', env=None, **kwargs):
     """
-    Ejecuta start, stop o restart sobre contenedores individuales o la suite de un tenant.
+    Ejecuta start, stop, restart o reload_nginx sobre contenedores individuales o la suite de un tenant.
     Soporta dos firmas:
       1. execute_container_action(container_name, action)
       2. execute_container_action(tenant, target, action, environment='staging')
@@ -583,6 +624,8 @@ def execute_container_action(target_or_container, action_or_target, action=None,
         tenant = target_or_container
         target = action_or_target
         act = action
+        if act in ('reload_nginx', 'reload-nginx'):
+            return reload_nginx_proxy()
         names = get_tenant_container_names(tenant, env=effective_env)
         if target in ('frontend', 'backend'):
             c_name = names[target]
@@ -599,6 +642,8 @@ def execute_container_action(target_or_container, action_or_target, action=None,
     else:
         container_name = str(target_or_container)
         act = action_or_target
+        if act in ('reload_nginx', 'reload-nginx'):
+            return reload_nginx_proxy()
         return _execute_single_container_action(container_name, act)
 
 
@@ -764,6 +809,8 @@ def deploy_tenant_containers(tenant_or_slug, env='staging', user=None, force_reb
                         tenant.frontend_mode = 'NATIVE'
                         tenant.save(update_fields=['is_standalone_repo', 'frontend_mode'])
                     invalidate_tenant_cache(tenant)
+                    ok_ng, msg_ng = reload_nginx_proxy()
+                    log(f"Recarga de Nginx Proxy Ingress: {msg_ng}")
 
                     deployment.status = TenantDeployment.Status.SUCCESS
                     deployment.output_logs = "".join(logs)
@@ -879,8 +926,10 @@ def deploy_tenant_containers(tenant_or_slug, env='staging', user=None, force_reb
                     tenant.frontend_mode = 'NATIVE'
                     tenant.save(update_fields=['is_standalone_repo', 'frontend_mode'])
                 invalidate_tenant_cache(tenant)
+                ok_ng, msg_ng = reload_nginx_proxy()
+                log(f"Recarga de Nginx Proxy Ingress: {msg_ng}")
 
-                log("[✓] Despliegue concluido con éxito. Caché Redis invalidada.")
+                log("[✓] Despliegue concluido con éxito. Caché Redis invalidada y Nginx sincronizado.")
                 deployment.status = TenantDeployment.Status.SUCCESS
                 deployment.output_logs = "".join(logs)
                 deployment.finished_at = timezone.now()

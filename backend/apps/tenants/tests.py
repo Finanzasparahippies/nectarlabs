@@ -13,6 +13,7 @@ from apps.sponsorship.models import SponsorshipTier, SponsorTarget, SponsorshipU
 from decimal import Decimal
 from django.utils import timezone
 from datetime import timedelta
+from unittest.mock import patch
 
 class TenantsCoreTests(BaseTenantAddonTestCase):
     def test_tenant_branding_customization(self):
@@ -1226,6 +1227,20 @@ class TenantUnifiedWalletAndOrchestrationTests(BaseTenantAddonTestCase):
         res = self.client.post(url, {'action': 'start', 'target': 'all', 'env': 'qa_sandbox'})
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("Entorno", res.data['error'])
+
+    @patch('apps.tenants.provisioner.reload_nginx_proxy')
+    def test_container_action_reload_nginx(self, mock_reload):
+        """Verifica que la acción reload_nginx invoque reload_nginx_proxy sin SSH."""
+        from apps.tenants.provisioner import ActionResult
+        mock_reload.return_value = ActionResult(True, "Nginx recargado exitosamente en: prod_nginx", status_code=200)
+        self.client.force_authenticate(user=self.owner_a)
+        url = reverse('tenant-container-action', kwargs={'pk': str(self.tenant_a.id)})
+
+        res = self.client.post(url, {'action': 'reload_nginx', 'target': 'all', 'env': 'staging'})
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertTrue(res.data['success'])
+        self.assertIn("prod_nginx", res.data['message'])
+        mock_reload.assert_called_once()
 
     def test_container_action_status_and_permissions(self):
         """Verifica consulta de estado y restricción de permisos para usuarios no propietarios."""
