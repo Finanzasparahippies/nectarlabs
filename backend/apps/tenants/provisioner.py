@@ -521,11 +521,29 @@ def deploy_tenant_containers(tenant_or_slug, env='staging', user=None, force_reb
                     return ActionResult(True, f"Contenedores {backend_name} y {frontend_name} iniciados correctamente.", status_code=200, logs="".join(logs))
 
                 repo_dir = names["repo_dir"]
+                if not os.path.exists(repo_dir):
+                    err_msg = f"El directorio del proyecto '{repo_dir}' no existe o no está montado en el contenedor."
+                    log(f"❌ {err_msg}")
+                    deployment.status = TenantDeployment.Status.FAILED
+                    deployment.output_logs = "".join(logs)
+                    deployment.finished_at = timezone.now()
+                    deployment.save(update_fields=['status', 'output_logs', 'finished_at'])
+                    return ActionResult(False, err_msg, status_code=500, logs="".join(logs))
+
                 compose_file = f"docker-compose.{effective_env}.yml"
                 compose_path = os.path.join(repo_dir, compose_file)
 
                 if not os.path.exists(compose_path):
                     compose_path = os.path.join(repo_dir, "docker-compose.yml")
+
+                if not os.path.exists(compose_path):
+                    err_msg = f"No se encontró archivo compose válido en '{repo_dir}'."
+                    log(f"❌ {err_msg}")
+                    deployment.status = TenantDeployment.Status.FAILED
+                    deployment.output_logs = "".join(logs)
+                    deployment.finished_at = timezone.now()
+                    deployment.save(update_fields=['status', 'output_logs', 'finished_at'])
+                    return ActionResult(False, err_msg, status_code=500, logs="".join(logs))
 
                 log(f"Ruta de orquestación de proyecto: {repo_dir} (compose: {compose_path})")
 
@@ -537,19 +555,43 @@ def deploy_tenant_containers(tenant_or_slug, env='staging', user=None, force_reb
                 log(f"Salida de ejecución Compose:\n{out_cmd}")
 
                 if not ok_cmd:
-                    log(f"Aviso en ejecución compose directa: {out_cmd}. Intentando arranque vía Docker socket...")
+                    log("Aviso: 'docker compose' falló. Intentando con 'docker-compose' (plugin clásico)...")
+                    runner_cmd_hyphen = ["docker-compose", "-f", compose_path, "up", "-d"]
+                    if force_rebuild:
+                        runner_cmd_hyphen.append("--build")
+                    ok_hyphen, out_hyphen = execute_shell_cmd(runner_cmd_hyphen, cwd=repo_dir, timeout=600)
+                    if ok_hyphen:
+                        ok_cmd = True
+                        out_cmd = out_hyphen
+                        log(f"Salida Compose fallback:\n{out_hyphen}")
+
+                # Verificar inmediatamente si los contenedores fueron instanciados en Docker
+                be_after = get_container_info(backend_name)
+                fe_after = get_container_info(frontend_name)
+
+                log(f"Estado post-ejecución Backend ({backend_name}): {be_after['status']} (running={be_after['running']})")
+                log(f"Estado post-ejecución Frontend ({frontend_name}): {fe_after['status']} (running={fe_after['running']})")
+
+                if not be_after["exists"] and not fe_after["exists"]:
+                    err_msg = f"El despliegue falló: ningún contenedor fue creado. Detalle: {out_cmd.strip() or 'Sin salida CLI'}"
+                    log(f"❌ {err_msg}")
+                    deployment.status = TenantDeployment.Status.FAILED
+                    deployment.output_logs = "".join(logs)
+                    deployment.finished_at = timezone.now()
+                    deployment.save(update_fields=['status', 'output_logs', 'finished_at'])
+                    return ActionResult(False, err_msg, status_code=500, logs="".join(logs))
+
+                # Si existen pero no están corriendo, intentar arranque explícito
+                if be_after["exists"] and not be_after["running"]:
                     execute_container_action(backend_name, 'start')
+                if fe_after["exists"] and not fe_after["running"]:
                     execute_container_action(frontend_name, 'start')
 
                 call_docker_api("POST", f"/v1.41/networks/{NETWORK_NAME}/connect", body={"Container": backend_name})
                 call_docker_api("POST", f"/v1.41/networks/{NETWORK_NAME}/connect", body={"Container": frontend_name})
 
-                if names.get("is_standalone_repo"):
-                    public_domain = tenant.custom_domain or f"{tenant.subdomain}.nectarlabs.dev"
-                    prefix = "staging." if effective_env == 'staging' and not public_domain.startswith('staging.') else ""
-                    tenant.custom_frontend_url = f"https://{prefix}{public_domain}"
-                else:
-                    tenant.custom_frontend_url = f"http://{frontend_name}:3000"
+                # Asignar URLs internas de red para el proxy dinámico
+                tenant.custom_frontend_url = f"http://{frontend_name}:3000"
                 tenant.custom_backend_url = f"http://{backend_name}:8000/api"
                 tenant.save(update_fields=['custom_frontend_url', 'custom_backend_url'])
                 invalidate_tenant_cache(tenant)
@@ -559,7 +601,7 @@ def deploy_tenant_containers(tenant_or_slug, env='staging', user=None, force_reb
                 deployment.output_logs = "".join(logs)
                 deployment.finished_at = timezone.now()
                 deployment.save(update_fields=['status', 'output_logs', 'finished_at'])
-                return ActionResult(True, "Despliegue y arranque completados exitosamente", status_code=200, logs="".join(logs))
+                return ActionResult(True, f"Despliegue y arranque de {backend_name} y {frontend_name} completados exitosamente.", status_code=200, logs="".join(logs))
 
             except Exception as e:
                 log(f"❌ Error crítico en orquestación: {e}")

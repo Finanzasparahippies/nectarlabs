@@ -113,23 +113,28 @@ export async function middleware(request: NextRequest) {
       tenantSlug = tenantSlug.substring(4);
     }
 
-    // Si es un dominio personalizado propio que apunta a Nectar Labs (ej: tiendachic.com, staging.kores.vip)
-    if (!isNectarSubdomain && cleanHost.includes('.')) {
-      try {
-        const backendApi = process.env.INTERNAL_API_URL || process.env.API_URL || (process.env.NODE_ENV === 'production' ? 'http://backend:8000' : 'http://localhost:8001');
-        const cleanApi = backendApi.replace(/\/api$/, '').replace(/\/$/, '');
-        const res = await fetch(`${cleanApi}/api/tenants/resolve-host/?host=${encodeURIComponent(cleanHost)}`, {
-          next: { revalidate: 300 }
-        });
-        if (res.ok) {
-          const tenantInfo = await res.json();
-          if (tenantInfo && tenantInfo.subdomain) {
-            tenantSlug = tenantInfo.subdomain;
-          }
-        } else {
-          console.warn(`[MultiTenant Proxy] resolve-host devolvió estado ${res.status} para ${cleanHost}`);
+    let customFrontendUrl: string | null = null;
+
+    // Resolución dinámica de inquilino y endpoints personalizados vía backend
+    try {
+      const backendApi = process.env.INTERNAL_API_URL || process.env.API_URL || (process.env.NODE_ENV === 'production' ? 'http://backend:8000' : 'http://localhost:8001');
+      const cleanApi = backendApi.replace(/\/api$/, '').replace(/\/$/, '');
+      const res = await fetch(`${cleanApi}/api/tenants/resolve-host/?host=${encodeURIComponent(cleanHost)}`, {
+        next: { revalidate: 300 }
+      });
+      if (res.ok) {
+        const tenantInfo = await res.json();
+        if (tenantInfo && tenantInfo.subdomain) {
+          tenantSlug = tenantInfo.subdomain;
         }
-      } catch (err) {
+        if (tenantInfo && tenantInfo.custom_frontend_url && typeof tenantInfo.custom_frontend_url === 'string' && tenantInfo.custom_frontend_url.startsWith('http')) {
+          customFrontendUrl = tenantInfo.custom_frontend_url;
+        }
+      } else if (!isNectarSubdomain) {
+        console.warn(`[MultiTenant Proxy] resolve-host devolvió estado ${res.status} para ${cleanHost}`);
+      }
+    } catch (err) {
+      if (!isNectarSubdomain) {
         console.error(`[MultiTenant Proxy] Fallo de conexión al resolver host ${cleanHost}:`, err);
       }
     }
@@ -158,7 +163,17 @@ export async function middleware(request: NextRequest) {
         return NextResponse.rewrite(url);
       }
 
-      // REESCRITURA INTERNA: Redirige la petición a la carpeta `/tenants/[subdomain]/...`
+      // REESCRITURA AUTÓNOMA: Si el inquilino posee un frontend dedicado en la red Docker
+      if (customFrontendUrl) {
+        try {
+          const targetUrl = new URL(url.pathname + url.search, customFrontendUrl);
+          return NextResponse.rewrite(targetUrl);
+        } catch (rewriteErr) {
+          console.warn(`[MultiTenant Proxy] Error enrutando a ${customFrontendUrl}:`, rewriteErr);
+        }
+      }
+
+      // REESCRITURA INTERNA: Redirige la petición a la plantilla consolidada `/tenants/[subdomain]/...`
       url.pathname = `/tenants/${tenantSlug}${url.pathname}`;
       return NextResponse.rewrite(url);
     }

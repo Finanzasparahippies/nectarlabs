@@ -11,6 +11,7 @@ services:
       - ./backend:/app:Z
       - ./backend/logs:/app/logs:Z
       - ${DOCKER_SOCK:-/var/run/docker.sock}:/var/run/docker.sock:z
+      - /var/www:/var/www:z
     env_file:
       - .env.staging
     environment:

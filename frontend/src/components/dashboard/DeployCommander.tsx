@@ -79,6 +79,7 @@ export default function DeployCommander() {
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [deployments, setDeployments] = useState<DeploymentLog[]>([]);
   const [autoScroll, setAutoScroll] = useState(true);
+  const [copiedLogs, setCopiedLogs] = useState(false);
   const [streamConnected, setStreamConnected] = useState(false);
   const [isMobileTerminalOpen, setIsMobileTerminalOpen] = useState(false);
   const terminalEndRef = useRef<HTMLDivElement>(null);
@@ -258,6 +259,39 @@ export default function DeployCommander() {
       terminalEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [logs, deployments, autoScroll]);
+
+  // Copy Logs with asynchronous clipboard API and fallback
+  const handleCopyLogs = async () => {
+    const textToCopy =
+      terminalTab === 'pipeline'
+        ? deployments.map((d) => d.output_logs).join('\n---\n')
+        : logs.map((l) => `[${l.timestamp}] ${l.text}`).join('\n');
+
+    if (!textToCopy) {
+      setBannerNotice({ type: 'info', message: 'No hay logs para copiar.' });
+      return;
+    }
+
+    try {
+      if (typeof navigator !== 'undefined' && navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(textToCopy);
+      } else {
+        const textarea = document.createElement('textarea');
+        textarea.value = textToCopy;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+      }
+      setCopiedLogs(true);
+      setBannerNotice({ type: 'info', message: '📋 Logs copiados al portapapeles exitosamente.' });
+      setTimeout(() => setCopiedLogs(false), 2500);
+    } catch (err) {
+      console.error('Error al copiar logs:', err);
+    }
+  };
 
   // Execute Container Action (start, stop, restart, deploy)
   const handleExecuteAction = async (action: 'start' | 'stop' | 'restart' | 'deploy', target: 'all' | 'frontend' | 'backend' = 'all') => {
@@ -584,15 +618,25 @@ export default function DeployCommander() {
                 className={`px-3 py-1 rounded-full text-2xs font-black uppercase tracking-widest border flex items-center gap-1.5 ${
                   statusData?.frontend?.running
                     ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                    : 'bg-rose-500/10 text-rose-400 border-rose-500/20'
+                    : statusData?.frontend?.exists
+                    ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                    : 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20'
                 }`}
               >
                 <span
                   className={`w-2 h-2 rounded-full ${
-                    statusData?.frontend?.running ? 'bg-emerald-400 animate-ping' : 'bg-rose-400'
+                    statusData?.frontend?.running
+                      ? 'bg-emerald-400 animate-ping'
+                      : statusData?.frontend?.exists
+                      ? 'bg-amber-400'
+                      : 'bg-zinc-500'
                   }`}
                 ></span>
-                {statusData?.frontend?.status?.toUpperCase() || 'OFFLINE'}
+                {statusData?.frontend?.running
+                  ? 'RUNNING'
+                  : statusData?.frontend?.exists
+                  ? (statusData?.frontend?.status?.toUpperCase() || 'DETENIDO')
+                  : 'NO CREADO'}
               </span>
             </div>
 
@@ -635,19 +679,30 @@ export default function DeployCommander() {
 
           {/* Quick Container Buttons */}
           <div className="pt-6 border-t border-card-border flex items-center justify-end gap-2">
-            <button
-              onClick={() => handleExecuteAction('start', 'frontend')}
-              disabled={activeAction !== null || statusData?.frontend?.running}
-              className="px-4 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20 font-bold text-xs uppercase tracking-wider disabled:opacity-40 transition-all flex items-center gap-1.5"
-            >
-              {activeAction === 'start-frontend' && (
-                <span className="w-2.5 h-2.5 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin"></span>
-              )}
-              Iniciar
-            </button>
+            {!statusData?.frontend?.exists ? (
+              <button
+                onClick={() => setIsDeployModalOpen(true)}
+                disabled={activeAction !== null}
+                className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500/20 to-nectar-gold/20 border border-nectar-gold/40 text-nectar-gold hover:bg-nectar-gold/30 font-bold text-xs uppercase tracking-wider transition-all flex items-center gap-1.5"
+              >
+                <span>🚀</span>
+                Desplegar
+              </button>
+            ) : (
+              <button
+                onClick={() => handleExecuteAction('start', 'frontend')}
+                disabled={activeAction !== null || statusData?.frontend?.running}
+                className="px-4 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20 font-bold text-xs uppercase tracking-wider disabled:opacity-40 transition-all flex items-center gap-1.5"
+              >
+                {activeAction === 'start-frontend' && (
+                  <span className="w-2.5 h-2.5 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin"></span>
+                )}
+                Iniciar
+              </button>
+            )}
             <button
               onClick={() => handleExecuteAction('restart', 'frontend')}
-              disabled={activeAction !== null}
+              disabled={activeAction !== null || !statusData?.frontend?.exists}
               className="px-4 py-2 rounded-xl bg-background/80 border border-card-border hover:border-nectar-gold text-foreground/80 hover:text-foreground font-bold text-xs uppercase tracking-wider disabled:opacity-40 transition-all flex items-center gap-1.5"
             >
               {activeAction === 'restart-frontend' && (
@@ -685,15 +740,25 @@ export default function DeployCommander() {
                 className={`px-3 py-1 rounded-full text-2xs font-black uppercase tracking-widest border flex items-center gap-1.5 ${
                   statusData?.backend?.running
                     ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                    : 'bg-rose-500/10 text-rose-400 border-rose-500/20'
+                    : statusData?.backend?.exists
+                    ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                    : 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20'
                 }`}
               >
                 <span
                   className={`w-2 h-2 rounded-full ${
-                    statusData?.backend?.running ? 'bg-emerald-400 animate-ping' : 'bg-rose-400'
+                    statusData?.backend?.running
+                      ? 'bg-emerald-400 animate-ping'
+                      : statusData?.backend?.exists
+                      ? 'bg-amber-400'
+                      : 'bg-zinc-500'
                   }`}
                 ></span>
-                {statusData?.backend?.status?.toUpperCase() || 'OFFLINE'}
+                {statusData?.backend?.running
+                  ? 'RUNNING'
+                  : statusData?.backend?.exists
+                  ? (statusData?.backend?.status?.toUpperCase() || 'DETENIDO')
+                  : 'NO CREADO'}
               </span>
             </div>
 
@@ -736,19 +801,30 @@ export default function DeployCommander() {
 
           {/* Quick Container Buttons */}
           <div className="pt-6 border-t border-card-border flex items-center justify-end gap-2">
-            <button
-              onClick={() => handleExecuteAction('start', 'backend')}
-              disabled={activeAction !== null || statusData?.backend?.running}
-              className="px-4 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20 font-bold text-xs uppercase tracking-wider disabled:opacity-40 transition-all flex items-center gap-1.5"
-            >
-              {activeAction === 'start-backend' && (
-                <span className="w-2.5 h-2.5 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin"></span>
-              )}
-              Iniciar
-            </button>
+            {!statusData?.backend?.exists ? (
+              <button
+                onClick={() => setIsDeployModalOpen(true)}
+                disabled={activeAction !== null}
+                className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500/20 to-nectar-gold/20 border border-nectar-gold/40 text-nectar-gold hover:bg-nectar-gold/30 font-bold text-xs uppercase tracking-wider transition-all flex items-center gap-1.5"
+              >
+                <span>🚀</span>
+                Desplegar
+              </button>
+            ) : (
+              <button
+                onClick={() => handleExecuteAction('start', 'backend')}
+                disabled={activeAction !== null || statusData?.backend?.running}
+                className="px-4 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20 font-bold text-xs uppercase tracking-wider disabled:opacity-40 transition-all flex items-center gap-1.5"
+              >
+                {activeAction === 'start-backend' && (
+                  <span className="w-2.5 h-2.5 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin"></span>
+                )}
+                Iniciar
+              </button>
+            )}
             <button
               onClick={() => handleExecuteAction('restart', 'backend')}
-              disabled={activeAction !== null}
+              disabled={activeAction !== null || !statusData?.backend?.exists}
               className="px-4 py-2 rounded-xl bg-background/80 border border-card-border hover:border-nectar-gold text-foreground/80 hover:text-foreground font-bold text-xs uppercase tracking-wider disabled:opacity-40 transition-all flex items-center gap-1.5"
             >
               {activeAction === 'restart-backend' && (
@@ -846,18 +922,25 @@ export default function DeployCommander() {
               Limpiar
             </button>
             <button
-              onClick={() => {
-                const textToCopy =
-                  terminalTab === 'pipeline'
-                    ? deployments.map((d) => d.output_logs).join('\n---\n')
-                    : logs.map((l) => `[${l.timestamp}] ${l.text}`).join('\n');
-                navigator.clipboard.writeText(textToCopy);
-                setBannerNotice({ type: 'info', message: '📋 Logs copiados al portapapeles.' });
-              }}
+              onClick={handleCopyLogs}
               title="Copiar logs al portapapeles"
-              className="px-2.5 py-1 rounded-lg bg-zinc-900 text-zinc-400 hover:text-zinc-200 border border-zinc-800 transition-all"
+              className={`px-3 py-1 rounded-lg border font-mono transition-all flex items-center gap-1.5 ${
+                copiedLogs
+                  ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40 shadow-lg shadow-emerald-500/10 scale-105'
+                  : 'bg-zinc-900 text-zinc-400 hover:text-zinc-200 border-zinc-800'
+              }`}
             >
-              Copiar
+              {copiedLogs ? (
+                <>
+                  <span className="text-emerald-400 font-bold">✓</span>
+                  <span className="font-bold text-emerald-300">¡Copiado!</span>
+                </>
+              ) : (
+                <>
+                  <span>📋</span>
+                  <span>Copiar</span>
+                </>
+              )}
             </button>
           </div>
         </div>

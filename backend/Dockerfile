@@ -12,6 +12,9 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y \
     build-essential \
     libpq-dev \
+    curl \
+    docker.io \
+    docker-compose-v2 \
     --no-install-recommends && \
     rm -rf /var/lib/apt/lists/*
 
