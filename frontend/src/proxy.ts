@@ -220,3 +220,5 @@ export const config = {
     '/((?!api|contract|widget.js).*)',
   ],
 };
+
+export default proxy;
