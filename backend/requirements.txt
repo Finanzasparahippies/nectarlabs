@@ -24,4 +24,5 @@ groq>=0.9.0
 redis>=5.0.0
 pypdf==4.2.0
 docker>=7.0.0
+pyyaml>=6.0
 

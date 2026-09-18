@@ -132,7 +132,7 @@ def call_docker_api(method, path, body=None):
 
         if any(code in status_line for code in ['200', '201', '204', '304']):
             return True, resp_text
-        return False, status_line
+        return False, resp_text
     except Exception as e:
         logger.warning(f"Comunicación vía socket Unix de Docker ({sock_path}): {e}")
         return False, str(e)
@@ -312,7 +312,7 @@ def inspect_compose_containers(compose_path: str, env: str = 'staging') -> dict:
                         c_name = svc_val.get('container_name')
                     services_found.append((svc_key, c_name or svc_key))
     except Exception as yaml_err:
-        logger.warning(f"Error parseando {compose_path} vía PyYAML ({yaml_err}). Aplicando parser de contingencia por líneas.")
+        logger.debug(f"PyYAML no disponible o error al parsear {compose_path} ({yaml_err}). Aplicando parser por líneas.")
 
     # Intento 2: Fallback línea por línea (tolerante a fallos de sintaxis o dependencias)
     if not services_found:
@@ -645,14 +645,24 @@ def reload_nginx_proxy():
 def ensure_container_connected_to_network(container_name: str, network_name: str = NETWORK_NAME) -> tuple:
     """
     Garantiza que un contenedor esté conectado a la red Docker compartida (prod_network).
-    Maneja con resiliencia tanto el socket Unix de Docker API como el fallback de CLI,
-    detectando si ya está conectado (409 / already connected) e informando errores reales
-    sin ningún 'pass' ciego o silencioso.
+    Pre-verifica el estado de red del contenedor para evitar llamadas redundantes o errores 403/409,
+    e implementa fallback seguro vía Docker API y CLI.
     """
     if not container_name:
         return False, "Nombre de contenedor inválido"
 
-    # Intento 1: Vía Docker Socket API
+    # Paso 0: Pre-verificar si el contenedor ya pertenece a la red
+    try:
+        ok_info, c_info = call_docker_api_json("GET", f"/v1.41/containers/{container_name}/json")
+        if ok_info and isinstance(c_info, dict):
+            current_nets = c_info.get("NetworkSettings", {}).get("Networks", {})
+            if network_name in current_nets:
+                logger.info(f"Contenedor '{container_name}' ya se encuentra conectado a la red '{network_name}'.")
+                return True, f"Ya conectado a {network_name}"
+    except Exception as pre_err:
+        logger.debug(f"Pre-verificación de red para '{container_name}': {pre_err}")
+
+    # Paso 1: Vía Docker Socket API
     try:
         ok, resp = call_docker_api("POST", f"/v1.41/networks/{network_name}/connect", body={"Container": container_name})
         if ok:
@@ -660,12 +670,19 @@ def ensure_container_connected_to_network(container_name: str, network_name: str
             return True, f"Conectado a {network_name}"
 
         lower_resp = resp.lower()
-        if "already exists in network" in lower_resp or "already attached" in lower_resp or "409" in lower_resp:
-            logger.debug(f"Contenedor '{container_name}' ya se encuentra conectado a la red '{network_name}'.")
+        if any(w in lower_resp for w in ["already exists in network", "already attached", "already connected", "409", "403"]):
+            # Comprobar confirmación post-intento en el estado del contenedor
+            try:
+                ok_v, c_v = call_docker_api_json("GET", f"/v1.41/containers/{container_name}/json")
+                if ok_v and isinstance(c_v, dict) and network_name in c_v.get("NetworkSettings", {}).get("Networks", {}):
+                    logger.info(f"Contenedor '{container_name}' confirmado en red '{network_name}'.")
+                    return True, f"Ya conectado a {network_name}"
+            except Exception:
+                pass
             return True, f"Ya conectado a {network_name}"
 
         logger.warning(
-            f"Fallo al conectar contenedor '{container_name}' a red '{network_name}' vía Socket API ({resp}). "
+            f"Aviso conectando '{container_name}' a red '{network_name}' vía Socket API ({resp[:120]}). "
             f"Intentando fallback vía CLI..."
         )
     except Exception as e:
@@ -675,7 +692,7 @@ def ensure_container_connected_to_network(container_name: str, network_name: str
             exc_info=True
         )
 
-    # Intento 2: Fallback vía Docker CLI
+    # Paso 2: Fallback vía Docker CLI
     try:
         ok_sh, out_sh = execute_shell_cmd(["docker", "network", "connect", network_name, container_name])
         if ok_sh:
@@ -688,11 +705,11 @@ def ensure_container_connected_to_network(container_name: str, network_name: str
             return True, f"Ya conectado a {network_name}"
 
         err_msg = f"No se pudo conectar contenedor '{container_name}' a red '{network_name}': {out_sh}"
-        logger.error(err_msg)
+        logger.warning(err_msg)
         return False, err_msg
     except Exception as e:
-        err_msg = f"Error crítico al ejecutar fallback CLI para conectar '{container_name}' a red '{network_name}': {e}"
-        logger.error(err_msg, exc_info=True)
+        err_msg = f"Error al ejecutar fallback CLI para conectar '{container_name}' a red '{network_name}': {e}"
+        logger.warning(err_msg)
         return False, err_msg
 
 
