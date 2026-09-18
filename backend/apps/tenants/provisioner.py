@@ -8,9 +8,12 @@ import os
 import sys
 import socket
 import json
+import time
 import logging
 import subprocess
+from contextlib import contextmanager
 from django.conf import settings
+from django.core.cache import cache
 from .models import Tenant
 
 logger = logging.getLogger(__name__)
@@ -18,6 +21,52 @@ logger = logging.getLogger(__name__)
 DOCKER_SOCKET_PATH = getattr(settings, 'DOCKER_SOCKET_PATH', '/var/run/docker.sock')
 TENANTS_BASE_DIR = getattr(settings, 'TENANTS_BASE_DIR', '/var/www/tenants')
 NETWORK_NAME = getattr(settings, 'SHARED_DOCKER_NETWORK', 'prod_network')
+LOCK_TIMEOUT_SECONDS = 300
+
+
+class ActionResult(dict):
+    """
+    Estructura de retorno universal para acciones PaaS y orquestación.
+    Compatible con desempacado de tuplas (ok, msg), acceso por clave .get() y atributos.
+    """
+    def __init__(self, success: bool, message: str, status_code: int = 200, logs: str = ""):
+        super().__init__(
+            success=success,
+            message=message,
+            error=message if not success else None,
+            status_code=status_code,
+            logs=logs
+        )
+        self.success = success
+        self.message = message
+        self.error = message if not success else None
+        self.status_code = status_code
+        self.logs = logs
+
+    def __iter__(self):
+        return iter((self.success, self.message))
+
+
+class DeploymentLockError(Exception):
+    """Excepción lanzada cuando una operación concurrente intenta desplegar el mismo tenant."""
+    pass
+
+
+@contextmanager
+def tenant_deployment_lock(tenant_id, timeout=LOCK_TIMEOUT_SECONDS):
+    """
+    Candado distribuido por Inquilino (Mutex) respaldado por caché (Redis o DB/LocMem).
+    Previene carreras críticas si se presiona el botón de deploy repetidamente.
+    """
+    lock_key = f"lock:deploy:{tenant_id}"
+    acquired = cache.add(lock_key, "locked", timeout=timeout)
+    if not acquired:
+        raise DeploymentLockError(f"Ya existe una operación de orquestación o despliegue en progreso para este inquilino.")
+    try:
+        yield
+    finally:
+        cache.delete(lock_key)
+
 
 
 def get_active_docker_socket():
@@ -109,50 +158,429 @@ def execute_shell_cmd(cmd, cwd=None, timeout=300):
         return False, str(e)
 
 
+def call_docker_api_json(method, path, body=None):
+    """
+    Realiza una petición a la API de Docker y deserializa la respuesta JSON si existe.
+    """
+    ok, raw_resp = call_docker_api(method, path, body=body)
+    if not ok:
+        return False, {"error": raw_resp}
+    
+    try:
+        parts = raw_resp.split("\r\n\r\n", 1)
+        if len(parts) > 1 and parts[1].strip():
+            body_str = parts[1].strip()
+            # Manejo de Transfer-Encoding: chunked si aplica
+            if body_str.startswith("{") or body_str.startswith("["):
+                return True, json.loads(body_str)
+            # Intentar encontrar el primer '{' o '['
+            json_start = min(
+                body_str.find("{") if "{" in body_str else 999999,
+                body_str.find("[") if "[" in body_str else 999999
+            )
+            if json_start < 999999:
+                return True, json.loads(body_str[json_start:])
+    except Exception as e:
+        logger.debug(f"No se pudo parsear JSON de respuesta Docker: {e}")
+    
+    return True, {"raw": raw_resp}
+
+
+def get_container_info(container_name):
+    """
+    Consulta información detallada y estado de ejecución de un contenedor vía Docker socket.
+    """
+    ok, data = call_docker_api_json("GET", f"/v1.41/containers/{container_name}/json")
+    if not ok or "error" in data:
+        # Fallback a shell si estuviera disponible
+        ok_sh, out_sh = execute_shell_cmd(["docker", "inspect", container_name])
+        if ok_sh:
+            try:
+                parsed = json.loads(out_sh)
+                if parsed and isinstance(parsed, list):
+                    data = parsed[0]
+                    ok = True
+            except Exception:
+                pass
+                
+    if not ok or not isinstance(data, dict) or "State" not in data:
+        return {
+            "name": container_name,
+            "exists": False,
+            "status": "not_found",
+            "running": False,
+            "uptime": "N/A",
+            "ip": None,
+            "error": data.get("error", "Contenedor no existe") if isinstance(data, dict) else "No encontrado"
+        }
+        
+    state = data.get("State", {})
+    running = state.get("Running", False)
+    status_str = state.get("Status", "unknown")
+    started_at = state.get("StartedAt", "")
+    
+    # Redes e IP interna
+    networks = data.get("NetworkSettings", {}).get("Networks", {})
+    ip_addr = None
+    if NETWORK_NAME in networks:
+        ip_addr = networks[NETWORK_NAME].get("IPAddress")
+    elif networks:
+        first_net = next(iter(networks.values()))
+        ip_addr = first_net.get("IPAddress")
+        
+    return {
+        "name": container_name,
+        "exists": True,
+        "status": status_str,
+        "running": running,
+        "started_at": started_at,
+        "ip": ip_addr,
+        "id": data.get("Id", "")[:12],
+    }
+
+
+def get_tenant_container_names(tenant_or_slug, env='staging'):
+    """
+    Determina los nombres de contenedores estándar para un inquilino según su slug y entorno.
+    """
+    slug = tenant_or_slug.subdomain if hasattr(tenant_or_slug, 'subdomain') else str(tenant_or_slug)
+    
+    if slug in ['kores', 'kores-vip']:
+        return {
+            "backend": f"premium_ties_backend_{env}",
+            "frontend": f"premium_ties_frontend_{env}",
+            "is_standalone_repo": True,
+            "repo_dir": "/var/www/premium-ties"
+        }
+        
+    return {
+        "backend": f"tenant_{slug}_backend_{env}",
+        "frontend": f"tenant_{slug}_frontend_{env}",
+        "is_standalone_repo": False,
+        "repo_dir": os.path.join(TENANTS_BASE_DIR, slug)
+    }
+
+
+def get_tenant_containers_status(tenant_or_slug, env='staging', environment=None):
+    """
+    Retorna el estado consolidado de salud de los contenedores de backend y frontend de un tenant.
+    """
+    effective_env = environment or env or 'staging'
+    names = get_tenant_container_names(tenant_or_slug, env=effective_env)
+    be_info = get_container_info(names["backend"])
+    fe_info = get_container_info(names["frontend"])
+    
+    all_running = be_info["running"] and fe_info["running"]
+    any_running = be_info["running"] or fe_info["running"]
+    
+    overall_status = "healthy" if all_running else ("degraded" if any_running else "offline")
+    
+    return {
+        "overall_status": overall_status,
+        "is_online": all_running,
+        "backend": be_info,
+        "frontend": fe_info,
+        "env": effective_env,
+        "names": names
+    }
+
+
+def _execute_single_container_action(container_name: str, action: str) -> ActionResult:
+    valid_actions = {'start', 'stop', 'restart'}
+    if action not in valid_actions:
+        return ActionResult(False, f"Acción '{action}' no permitida. Válidas: {list(valid_actions)}", status_code=400)
+
+    sock_path = get_active_docker_socket()
+    if not sock_path:
+        ok_sh, out_sh = execute_shell_cmd(["docker", action, container_name])
+        if ok_sh:
+            return ActionResult(True, f"Contenedor {container_name} {action} ejecutado con éxito vía CLI", status_code=200)
+        return ActionResult(False, "Docker daemon no disponible (Socket Unix inaccesible)", status_code=503)
+
+    try:
+        ok, resp = call_docker_api("POST", f"/v1.41/containers/{container_name}/{action}")
+        if ok:
+            return ActionResult(True, f"Acción '{action}' ejecutada con éxito en {container_name}", status_code=200)
+        if "404" in resp or "No such container" in resp:
+            return ActionResult(False, f"Contenedor '{container_name}' no existe en el daemon de Docker", status_code=404)
+        ok_sh, out_sh = execute_shell_cmd(["docker", action, container_name])
+        if ok_sh:
+            return ActionResult(True, f"Acción '{action}' completada vía CLI en {container_name}", status_code=200)
+        return ActionResult(False, f"Error ejecutando '{action}' en {container_name}: {resp}", status_code=502)
+    except socket.timeout:
+        return ActionResult(False, f"Timeout de comunicación con Docker daemon al ejecutar {action} en {container_name}", status_code=504)
+    except Exception as e:
+        return ActionResult(False, f"Error de comunicación con Docker: {str(e)}", status_code=503)
+
+
+def execute_container_action(target_or_container, action_or_target, action=None, environment='staging', env=None, **kwargs):
+    """
+    Ejecuta start, stop o restart sobre contenedores individuales o la suite de un tenant.
+    Soporta dos firmas:
+      1. execute_container_action(container_name, action)
+      2. execute_container_action(tenant, target, action, environment='staging')
+    """
+    effective_env = env or environment or 'staging'
+    if action is not None:
+        tenant = target_or_container
+        target = action_or_target
+        act = action
+        names = get_tenant_container_names(tenant, env=effective_env)
+        if target in ('frontend', 'backend'):
+            c_name = names[target]
+            return _execute_single_container_action(c_name, act)
+        elif target == 'all':
+            ok_fe = _execute_single_container_action(names['frontend'], act)
+            ok_be = _execute_single_container_action(names['backend'], act)
+            combined_ok = ok_fe.success and ok_be.success
+            status_code = 200 if combined_ok else (ok_fe.status_code if not ok_fe.success else ok_be.status_code)
+            msg = f"Frontend: {ok_fe.message} | Backend: {ok_be.message}"
+            return ActionResult(combined_ok, msg, status_code=status_code)
+        else:
+            return ActionResult(False, f"Target '{target}' no reconocido. Válidos: frontend, backend, all", status_code=400)
+    else:
+        container_name = str(target_or_container)
+        act = action_or_target
+        return _execute_single_container_action(container_name, act)
+
+
+def get_container_logs(container_name, tail=100):
+    """
+    Extrae los últimos registros de logs de stdout y stderr del contenedor vía Docker API.
+    """
+    ok, resp = call_docker_api("GET", f"/v1.41/containers/{container_name}/logs?stdout=1&stderr=1&tail={tail}&timestamps=1")
+    if ok and resp:
+        parts = resp.split("\r\n\r\n", 1)
+        return parts[1] if len(parts) > 1 else resp
+        
+    ok_sh, out_sh = execute_shell_cmd(["docker", "logs", "--tail", str(tail), container_name])
+    if ok_sh:
+        return out_sh
+        
+    return "No hay logs disponibles o el contenedor aún no ha sido creado."
+
+
+def stream_container_logs(container_name, tail=100, follow=True):
+    """
+    Generador para Server-Sent Events (SSE) que transmite logs de Docker en tiempo real.
+    Emite frames formateados como 'data: {...}\\n\\n' y comentarios de latido ': ping\\n\\n'.
+    """
+    sock_path = get_active_docker_socket()
+    if not sock_path:
+        # Fallback si no hay socket directo: emitir logs estáticos
+        logs = get_container_logs(container_name, tail=tail)
+        for line in logs.splitlines():
+            if line:
+                yield f"data: {json.dumps({'text': line, 'stream': 'stdout'})}\n\n"
+        yield f"data: {json.dumps({'text': '⚠️ Modo estático: Socket Unix de Docker no accesible para streaming interactivo.', 'stream': 'system'})}\n\n"
+        return
+
+    try:
+        s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        s.settimeout(8.0)
+        s.connect(sock_path)
+        follow_param = "1" if follow else "0"
+        req = f"GET /v1.41/containers/{container_name}/logs?stdout=1&stderr=1&follow={follow_param}&tail={tail}&timestamps=1 HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n"
+        s.sendall(req.encode('utf-8'))
+
+        buffer = b""
+        headers_done = False
+        while not headers_done:
+            chunk = s.recv(1024)
+            if not chunk:
+                break
+            buffer += chunk
+            if b"\r\n\r\n" in buffer:
+                parts = buffer.split(b"\r\n\r\n", 1)
+                buffer = parts[1]
+                headers_done = True
+
+        s.settimeout(2.5)
+        last_ping = time.time()
+
+        while True:
+            try:
+                if time.time() - last_ping > 12:
+                    yield ": ping\n\n"
+                    last_ping = time.time()
+
+                chunk = s.recv(4096)
+                if not chunk:
+                    break
+                buffer += chunk
+
+                while len(buffer) >= 8:
+                    stream_type = buffer[0]
+                    if stream_type in (1, 2) and buffer[1:4] == b'\x00\x00\x00':
+                        frame_size = int.from_bytes(buffer[4:8], byteorder='big')
+                        if len(buffer) < 8 + frame_size:
+                            break
+                        payload = buffer[8:8 + frame_size].decode('utf-8', errors='replace')
+                        buffer = buffer[8 + frame_size:]
+                        for line in payload.splitlines():
+                            if line:
+                                yield f"data: {json.dumps({'text': line, 'stream': 'stderr' if stream_type == 2 else 'stdout'})}\n\n"
+                    else:
+                        line = buffer.decode('utf-8', errors='replace')
+                        buffer = b""
+                        for l in line.splitlines():
+                            if l:
+                                yield f"data: {json.dumps({'text': l, 'stream': 'stdout'})}\n\n"
+                        break
+            except socket.timeout:
+                yield ": ping\n\n"
+                last_ping = time.time()
+                if not follow:
+                    break
+                continue
+            except Exception as e:
+                yield f"data: {json.dumps({'text': f'⚠️ Fin de stream: {str(e)}', 'stream': 'system'})}\n\n"
+                break
+        s.close()
+    except Exception as err:
+        yield f"data: {json.dumps({'text': f'❌ No se pudo conectar a los logs del contenedor {container_name}: {str(err)}', 'stream': 'system'})}\n\n"
+
+
+def deploy_tenant_containers(tenant_or_slug, env='staging', user=None, force_rebuild=False, environment=None):
+    """
+    Orquestador maestro de despliegue remoto sin SSH con protección de candado distribuido.
+    Crea un registro de auditoría en TenantDeployment, arranca o construye los contenedores
+    vinculados a la red prod_network y actualiza el estado y URLs del Tenant.
+    """
+    from django.utils import timezone
+    from .models import Tenant, TenantDeployment
+    from .utils import invalidate_tenant_cache
+
+    effective_env = environment or env or 'staging'
+    tenant = tenant_or_slug if isinstance(tenant_or_slug, Tenant) else Tenant.objects.filter(subdomain=tenant_or_slug).first()
+    if not tenant:
+        return ActionResult(False, "Tenant no encontrado en base de datos", status_code=404)
+
+    try:
+        with tenant_deployment_lock(tenant.id):
+            names = get_tenant_container_names(tenant, env=effective_env)
+            backend_name = names["backend"]
+            frontend_name = names["frontend"]
+
+            deployment = TenantDeployment.objects.create(
+                tenant=tenant,
+                environment=effective_env,
+                action=TenantDeployment.Action.DEPLOY if force_rebuild else TenantDeployment.Action.START,
+                status=TenantDeployment.Status.IN_PROGRESS,
+                output_logs=f"[{timezone.now().isoformat()}] Iniciando orquestación remota para {tenant.subdomain} ({effective_env})...\n",
+                triggered_by=user
+            )
+
+            logs = [deployment.output_logs]
+
+            def log(msg):
+                entry = f"[{timezone.now().strftime('%H:%M:%S')}] {msg}\n"
+                logs.append(entry)
+                logger.info(entry.strip())
+
+            try:
+                be_status = get_container_info(backend_name)
+                fe_status = get_container_info(frontend_name)
+
+                log(f"Estado previo Backend ({backend_name}): {be_status['status']}")
+                log(f"Estado previo Frontend ({frontend_name}): {fe_status['status']}")
+
+                if be_status["exists"] and fe_status["exists"] and not force_rebuild:
+                    log("Contenedores ya existen en el daemon de Docker. Arrancando...")
+                    execute_container_action(backend_name, 'start')
+                    execute_container_action(frontend_name, 'start')
+
+                    be_after = get_container_info(backend_name)
+                    fe_after = get_container_info(frontend_name)
+                    log(f"Resultado Backend: {be_after['status']} (running={be_after['running']})")
+                    log(f"Resultado Frontend: {fe_after['status']} (running={fe_after['running']})")
+
+                    tenant.custom_frontend_url = f"http://{frontend_name}:3000"
+                    tenant.custom_backend_url = f"http://{backend_name}:8000/api"
+                    tenant.save(update_fields=['custom_frontend_url', 'custom_backend_url'])
+                    invalidate_tenant_cache(tenant)
+
+                    deployment.status = TenantDeployment.Status.SUCCESS
+                    deployment.output_logs = "".join(logs)
+                    deployment.finished_at = timezone.now()
+                    deployment.save(update_fields=['status', 'output_logs', 'finished_at'])
+                    return ActionResult(True, f"Contenedores {backend_name} y {frontend_name} iniciados correctamente.", status_code=200, logs="".join(logs))
+
+                repo_dir = names["repo_dir"]
+                compose_file = f"docker-compose.{effective_env}.yml"
+                compose_path = os.path.join(repo_dir, compose_file)
+
+                if not os.path.exists(compose_path):
+                    compose_path = os.path.join(repo_dir, "docker-compose.yml")
+
+                log(f"Ruta de orquestación de proyecto: {repo_dir} (compose: {compose_path})")
+
+                runner_cmd = ["docker", "compose", "-f", compose_path, "up", "-d"]
+                if force_rebuild:
+                    runner_cmd.append("--build")
+
+                ok_cmd, out_cmd = execute_shell_cmd(runner_cmd, cwd=repo_dir, timeout=600)
+                log(f"Salida de ejecución Compose:\n{out_cmd}")
+
+                if not ok_cmd:
+                    log(f"Aviso en ejecución compose directa: {out_cmd}. Intentando arranque vía Docker socket...")
+                    execute_container_action(backend_name, 'start')
+                    execute_container_action(frontend_name, 'start')
+
+                call_docker_api("POST", f"/v1.41/networks/{NETWORK_NAME}/connect", body={"Container": backend_name})
+                call_docker_api("POST", f"/v1.41/networks/{NETWORK_NAME}/connect", body={"Container": frontend_name})
+
+                tenant.custom_frontend_url = f"http://{frontend_name}:3000"
+                tenant.custom_backend_url = f"http://{backend_name}:8000/api"
+                tenant.save(update_fields=['custom_frontend_url', 'custom_backend_url'])
+                invalidate_tenant_cache(tenant)
+
+                log("[✓] Despliegue concluido con éxito. Caché Redis invalidada.")
+                deployment.status = TenantDeployment.Status.SUCCESS
+                deployment.output_logs = "".join(logs)
+                deployment.finished_at = timezone.now()
+                deployment.save(update_fields=['status', 'output_logs', 'finished_at'])
+                return ActionResult(True, "Despliegue y arranque completados exitosamente", status_code=200, logs="".join(logs))
+
+            except Exception as e:
+                log(f"❌ Error crítico en orquestación: {e}")
+                deployment.status = TenantDeployment.Status.FAILED
+                deployment.output_logs = "".join(logs)
+                deployment.finished_at = timezone.now()
+                deployment.save(update_fields=['status', 'output_logs', 'finished_at'])
+                return ActionResult(False, str(e), status_code=500, logs="".join(logs))
+
+    except DeploymentLockError as dle:
+        return ActionResult(False, str(dle), status_code=409)
+
+
 def provision_tenant_containers(tenant_slug, action='build'):
     """
-    Aprovisiona, detiene o remueve contenedores dedicados por Tenant vía Docker API / Socket Unix.
-    Acciones soportadas: 'build', 'start', 'stop', 'remove'
+    Función de compatibilidad con llamadas anteriores.
+    Delega a deploy_tenant_containers o execute_container_action.
     """
-    backend_name = f"tenant_{tenant_slug}_backend"
-    frontend_name = f"tenant_{tenant_slug}_frontend"
-
-    if action == 'stop':
-        logger.info(f"Deteniendo contenedores del tenant '{tenant_slug}'...")
-        call_docker_api("POST", f"/v1.41/containers/{backend_name}/stop")
-        call_docker_api("POST", f"/v1.41/containers/{frontend_name}/stop")
-        return True, f"Contenedores '{backend_name}' y '{frontend_name}' detenidos con éxito"
-
-    elif action == 'remove':
-        logger.info(f"Removiendo contenedores del tenant '{tenant_slug}'...")
-        ok_be, _ = call_docker_api("DELETE", f"/v1.41/containers/{backend_name}?force=true")
-        ok_fe, _ = call_docker_api("DELETE", f"/v1.41/containers/{frontend_name}?force=true")
-
-        execute_shell_cmd(["docker", "rm", "-f", backend_name, frontend_name])
-        return True, f"Contenedores '{backend_name}' y '{frontend_name}' removidos con éxito"
-
+    from .models import Tenant
     tenant = Tenant.objects.filter(subdomain=tenant_slug).first()
     if not tenant:
-        logger.error(f"No se encontró el tenant con subdominio '{tenant_slug}' en la base de datos.")
-        return False, "Tenant no encontrado en la base de datos"
+        return False, "Tenant no encontrado"
+        
+    names = get_tenant_container_names(tenant, env='staging')
+    
+    if action == 'stop':
+        execute_container_action(names["backend"], 'stop')
+        execute_container_action(names["frontend"], 'stop')
+        return True, f"Contenedores {names['backend']} y {names['frontend']} detenidos"
+        
+    elif action == 'remove':
+        call_docker_api("DELETE", f"/v1.41/containers/{names['backend']}?force=true")
+        call_docker_api("DELETE", f"/v1.41/containers/{names['frontend']}?force=true")
+        return True, f"Contenedores {names['backend']} y {names['frontend']} removidos"
+        
+    elif action in ['build', 'start']:
+        return deploy_tenant_containers(tenant, env='staging', force_rebuild=(action == 'build'))
+        
+    return False, f"Acción '{action}' desconocida"
 
-    tenant_dir = os.path.join(TENANTS_BASE_DIR, tenant_slug)
-    if not os.path.exists(tenant_dir):
-        if tenant_slug in ['kores', 'kores-vip'] and os.path.exists('/var/www/premium-ties'):
-            tenant_dir = '/var/www/premium-ties'
-        else:
-            os.makedirs(tenant_dir, exist_ok=True)
-
-    if action in ['build', 'start']:
-        logger.info(f"== Aprovisionando contenedores para '{tenant_slug}' ==")
-
-        tenant.custom_frontend_url = f"http://{frontend_name}:3000"
-        tenant.custom_backend_url = f"http://{backend_name}:8000/api"
-        tenant.save(update_fields=['custom_frontend_url', 'custom_backend_url'])
-        logger.info(f"[✓] Registro de tenant '{tenant_slug}' vinculado a upstreams dinámicos.")
-        return True, "Aprovisionamiento completado con éxito"
-
-    return False, "Acción desconocida"
 
 
 def request_ssl_certificate(domain, email="soporte@nectarlabs.dev"):

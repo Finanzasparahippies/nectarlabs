@@ -23,13 +23,13 @@ export async function middleware(request: NextRequest) {
   }
 
   // 1. FILTRADO DE RUTAS DEL SISTEMA (EXCLUSIONES)
-  // Ignora llamadas a la API de Django, archivos estáticos o compilaciones internas de Next.js
+  // Ignora llamadas a la API de Django, compilaciones internas de Next.js o rutas especiales
   if (
     url.pathname.startsWith('/api') ||
     url.pathname.startsWith('/_next') ||
     url.pathname.startsWith('/static') ||
     url.pathname.startsWith('/contract') ||
-    url.pathname.includes('.') // Excluir archivos estáticos como favicon.ico, logotipos, widget.js
+    (url.pathname.includes('.') && url.pathname !== '/favicon.ico')
   ) {
     return NextResponse.next();
   }
@@ -143,14 +143,13 @@ export async function middleware(request: NextRequest) {
         url.pathname = `/cursos/ingeniero-python/index.html`;
         return NextResponse.rewrite(url);
       }
-      // Redirección canónica de defensa en profundidad para proyectos dedicados autónomos (ej: Kōres)
-      if (tenantSlug === 'kores' || tenantSlug === 'kores-mexico') {
-        const isStaging = hostname.includes('staging');
-        const targetOrigin = isStaging ? 'https://staging.kores.vip' : 'https://kores.vip';
-        if (!hostname.includes('kores.vip')) {
-          return NextResponse.redirect(`${targetOrigin}${url.pathname}`);
-        }
+
+      // Si el cliente solicita el favicon.ico del portal del inquilino, reescribir al endpoint dinámico del backend
+      if (url.pathname === '/favicon.ico') {
+        url.pathname = `/api/tenants/${tenantSlug}/favicon.ico`;
+        return NextResponse.rewrite(url);
       }
+
       // REESCRITURA INTERNA: Redirige la petición a la carpeta `/tenants/[subdomain]/...`
       url.pathname = `/tenants/${tenantSlug}${url.pathname}`;
       return NextResponse.rewrite(url);
@@ -163,6 +162,7 @@ export async function middleware(request: NextRequest) {
 // Configuración del matcher de rutas
 export const config = {
   matcher: [
-    '/((?!api|_next/static|_next/image|favicon.ico|widget.js|.*\\.).*)',
+    '/favicon.ico',
+    '/((?!api|_next/static|_next/image|widget.js|.*\\.).*)',
   ],
 };

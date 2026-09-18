@@ -67,11 +67,12 @@ def send_newsletter_email(subject, template_name, context, recipient_list, tenan
             
             # Verificar si el saldo es suficiente (solo si NO está en periodo de prueba)
             if not tenant.is_in_trial:
-                if tenant.shipping_wallet_balance < cost:
+                available_balance = max(tenant.wallet_balance, tenant.shipping_wallet_balance)
+                if available_balance < cost:
                     raise ValueError(
                         f"Saldo insuficiente en tu Cartera Digital para realizar este envío. "
                         f"El costo de enviar a {len(recipient_list)} destinatarios es de ${cost:.2f} MXN "
-                        f"y tu saldo actual es de ${tenant.shipping_wallet_balance:.2f} MXN. "
+                        f"y tu saldo actual es de ${available_balance:.2f} MXN. "
                         f"Por favor recarga saldo en la sección de Facturación."
                     )
 
@@ -165,9 +166,12 @@ def send_newsletter_email(subject, template_name, context, recipient_list, tenan
                 update_fields = []
                 if not has_byo_smtp:
                     if not tenant.is_in_trial:
-                        from decimal import Decimal
-                        tenant.shipping_wallet_balance = Decimal(str(tenant.shipping_wallet_balance)) - cost
-                        update_fields.append('shipping_wallet_balance')
+                        tenant.atomic_debit_wallet(
+                            amount=cost,
+                            service_type='EMAIL_SES',
+                            description=f"Campaña de correo a {len(recipient_list)} destinatarios",
+                            metadata={'recipients_count': len(recipient_list), 'template': template_name}
+                        )
                     
                     tenant.newsletter_sent_this_month += len(recipient_list)
                     update_fields.append('newsletter_sent_this_month')

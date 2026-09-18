@@ -24,6 +24,7 @@ interface TenantConfig {
   name: string;
   subdomain: string;
   logo_url: string | null;
+  favicon_url?: string | null;
   welcome_message: string;
   portal_title: string | null;
   footer_text: string | null;
@@ -298,6 +299,15 @@ export default function TenantPortalPage() {
   useEffect(() => {
     if (tenantConfig) {
       document.title = tenantConfig.portal_title || `${tenantConfig.name} - Portal Oficial`;
+      if (tenantConfig.favicon_url) {
+        let link: HTMLLinkElement | null = document.querySelector("link[rel*='icon']");
+        if (!link) {
+          link = document.createElement('link');
+          link.rel = 'shortcut icon';
+          document.head.appendChild(link);
+        }
+        link.href = tenantConfig.favicon_url;
+      }
     }
   }, [tenantConfig]);
 

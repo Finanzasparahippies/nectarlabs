@@ -340,14 +340,15 @@ def generate_shipping_label(order) -> bool:
 
         min_required = getattr(settings, "MIN_SHIPPING_WALLET_BALANCE", Decimal("300.00"))
         if using_corporate_key:
-            if tenant.shipping_wallet_balance < min_required:
+            effective_balance = max(tenant.wallet_balance, tenant.shipping_wallet_balance)
+            if effective_balance < min_required:
                 logger.error(f"[Logística/Router] Saldo inferior al mínimo de ${min_required} MXN para Tenant #{tenant.id}.")
                 order.shipping_error = f"Saldo de cartera inferior al mínimo de ${min_required} MXN."
                 order.save(update_fields=["shipping_error"])
                 return False
-            if tenant.shipping_wallet_balance < costo_tenant:
-                logger.error(f"[Logística/Router] Saldo insuficiente: requiere ${costo_tenant}, disponible: ${tenant.shipping_wallet_balance}")
-                order.shipping_error = f"Saldo insuficiente (${tenant.shipping_wallet_balance} < ${costo_tenant} MXN)."
+            if effective_balance < costo_tenant:
+                logger.error(f"[Logística/Router] Saldo insuficiente: requiere ${costo_tenant}, disponible: ${effective_balance}")
+                order.shipping_error = f"Saldo insuficiente (${effective_balance} < ${costo_tenant} MXN)."
                 order.save(update_fields=["shipping_error"])
                 return False
 
@@ -431,7 +432,8 @@ def generate_shipping_label(order) -> bool:
             if using_corporate_key:
                 t_locked = Tenant.objects.select_for_update().get(id=tenant.id)
                 t_locked.shipping_wallet_balance -= costo_tenant
-                t_locked.save(update_fields=["shipping_wallet_balance"])
+                t_locked.wallet_balance = t_locked.shipping_wallet_balance
+                t_locked.save(update_fields=["shipping_wallet_balance", "wallet_balance"])
 
                 provider_label = "Skydropx Pro" if result.provider_type == "SKYDROPX" else "Envia.com"
                 idempotency_key = f"label_order_{order.id}_{result.tracking_number or rate_id}"

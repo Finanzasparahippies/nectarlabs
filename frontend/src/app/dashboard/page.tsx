@@ -21,6 +21,12 @@ const BusinessCommander = dynamic(
   { ssr: false }
 );
 
+const DeployCommander = dynamic(
+  () => import('../../components/dashboard/DeployCommander'),
+  { ssr: false }
+);
+
+
 const DriverPortal = dynamic(() => import('../../components/addons/logistics-gps/DriverPortal'), { ssr: false });
 const DriverStatsDashboard = dynamic(() => import('../../components/addons/logistics-gps/DriverStatsDashboard'), { ssr: false });
 const InteractiveTutorial = dynamic(() => import('../../components/ui/InteractiveTutorial'), { ssr: false });
@@ -294,10 +300,12 @@ function DashboardPageOriginal() {
   };
   const searchParams = useSearchParams();
   const tabParam = searchParams.get('tab');
-  const activeTab: 'overview' | 'business' | 'hire-plan' | 'billing-global' | 'marketing' | 'driver-stats' | 'custom-contracts' =
-    tabParam === 'business' || tabParam === 'hire-plan' || tabParam === 'billing-global' || tabParam === 'marketing' || tabParam === 'driver-stats' || tabParam === 'custom-contracts'
+  const activeTab: 'overview' | 'business' | 'hire-plan' | 'billing-global' | 'marketing' | 'driver-stats' | 'custom-contracts' | 'deploys' =
+    tabParam === 'business' || tabParam === 'hire-plan' || tabParam === 'billing-global' || tabParam === 'marketing' || tabParam === 'driver-stats' || tabParam === 'custom-contracts' || tabParam === 'deploys'
       ? tabParam
       : 'overview';
+
+
 
   useEffect(() => {
     const scroll = searchParams.get('scroll');
@@ -834,7 +842,7 @@ function DashboardPageOriginal() {
         <header className="mb-16">
           <h1 className="text-4xl md:text-6xl font-black tracking-tighter mb-2">
             {isDriver ? (activeTab === 'driver-stats' ? 'Resumen de Entregas' : 'Panel de Repartidor') :
-              isCEO ? (activeTab === 'business' ? 'Control de Negocio' : 'Consola del CEO') :
+              isCEO ? (activeTab === 'deploys' ? 'Despliegues Zero-SSH' : activeTab === 'business' ? 'Control de Negocio' : 'Consola del CEO') :
                 isDeveloper ? 'Consola de Ingeniería' :
                   isDesigner ? 'Centro de Diseño' :
                     isSales ? 'Consola de Ventas' :
@@ -842,11 +850,12 @@ function DashboardPageOriginal() {
           </h1>
           <p className="text-2xs font-black uppercase tracking-[0.5em] text-nectar-gold opacity-80">
             {isDriver ? (activeTab === 'driver-stats' ? 'Ganancias, Historial de Viajes e Indicadores' : 'Consola de Entregas y GPS en Vivo') :
-              isCEO ? (activeTab === 'business' ? 'Consola Financiera y de Infraestructura' : 'Panel de Operaciones Néctar Labs') :
+              isCEO ? (activeTab === 'deploys' ? 'Orquestación de Contenedores y Telemetría en Tiempo Real' : activeTab === 'business' ? 'Consola Financiera y de Infraestructura' : 'Panel de Operaciones Néctar Labs') :
                 isDeveloper ? 'Workspace de Desarrollo y Soporte' :
                   isDesigner ? 'Activos y Proyectos Creativos' :
                     isSales ? 'Comisiones, Referidos y Métricas de Rendimiento' :
                       activeTab === 'hire-plan' ? 'Elige tu Plan de Ingeniería Dedicado' : 'Workspace / Cliente Principal'}
+
           </p>
         </header>
 
@@ -1118,10 +1127,13 @@ function DashboardPageOriginal() {
             </div>
             <FacturapiManager primaryColor="#C68A1E" />
           </div>
+        ) : activeTab === 'deploys' && isCEO ? (
+          <DeployCommander />
         ) : activeTab === 'marketing' && isCEO ? (
           <MarketingManager primaryColor="#C68A1E" showToast={showToast} />
         ) : activeTab === 'business' && isCEO ? (
           <BusinessCommander stats={businessStats} installments={installments} setInstallments={setInstallments} />
+
         ) : activeTab === 'hire-plan' && isClient ? (
           <div className="space-y-12 animate-fadeIn">
             <section className="p-10 rounded-[3rem] bg-card-bg border border-card-border shadow-xl relative overflow-hidden">

@@ -3,12 +3,21 @@ from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
+from django.http import StreamingHttpResponse
 from rest_framework_simplejwt.tokens import RefreshToken
 import uuid
 
 from django.core.cache import cache
-from .models import Tenant, TenantPage, TenantNavItem
-from .serializers import TenantSerializer, TenantPublicSerializer
+from .models import Tenant, TenantPage, TenantNavItem, TenantWalletTransaction, TenantDeployment
+from .serializers import (
+    TenantSerializer, TenantPublicSerializer,
+    TenantWalletTransactionSerializer, TenantDeploymentSerializer
+)
+
+ALLOWED_ACTIONS = {'start', 'stop', 'restart', 'status', 'deploy'}
+ALLOWED_TARGETS = {'all', 'frontend', 'backend'}
+ALLOWED_ENVIRONMENTS = {'staging', 'production'}
+
 
 User = get_user_model()
 
@@ -17,9 +26,10 @@ class TenantViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_permissions(self):
-        if getattr(self, 'action', None) in ['list', 'retrieve']:
+        if getattr(self, 'action', None) in ['list', 'retrieve', 'stream_logs']:
             return [permissions.AllowAny()]
         return super().get_permissions()
+
 
     def get_serializer_class(self):
         if self.request.user.is_anonymous:
@@ -48,6 +58,158 @@ class TenantViewSet(viewsets.ModelViewSet):
             'detail': 'API Key successfully regenerated.',
             'api_key': str(tenant.api_key)
         })
+
+    @action(detail=True, methods=['post'], url_path='deploy')
+    def deploy(self, request, pk=None):
+        tenant = self.get_object()
+        if tenant.owner != request.user and not (request.user.is_staff or request.user.role == 'ADMIN'):
+            return Response({'error': 'Permiso denegado para orquestar contenedores.'}, status=status.HTTP_403_FORBIDDEN)
+        env = request.data.get('env', 'staging')
+        if env not in ALLOWED_ENVIRONMENTS:
+            return Response({'error': f"Entorno inválido '{env}'. Válidos: {sorted(list(ALLOWED_ENVIRONMENTS))}"}, status=status.HTTP_400_BAD_REQUEST)
+        force_rebuild = bool(request.data.get('force_rebuild', False))
+        from .provisioner import deploy_tenant_containers
+        res = deploy_tenant_containers(tenant, env=env, user=request.user, force_rebuild=force_rebuild)
+        status_code = getattr(res, 'status_code', (status.HTTP_200_OK if res.get('success') else status.HTTP_500_INTERNAL_SERVER_ERROR))
+        return Response({'success': res.get('success'), 'message': res.get('message'), 'logs': res.get('logs', '')}, status=status_code)
+
+    @action(detail=True, methods=['post'], url_path='container-action')
+    def container_action(self, request, pk=None):
+        """
+        Ejecuta acciones PaaS (start, stop, restart, deploy, status) sobre los contenedores de un tenant
+        con validación estricta de listas blancas y protección contra race-conditions.
+        """
+        tenant = self.get_object()
+        if tenant.owner != request.user and not (request.user.is_staff or request.user.role == 'ADMIN'):
+            return Response({'error': 'Permiso denegado para orquestar contenedores.'}, status=status.HTTP_403_FORBIDDEN)
+
+        action_name = request.data.get('action')
+        target = request.data.get('target', 'all')
+        env = request.data.get('env', 'staging')
+
+        if action_name not in ALLOWED_ACTIONS:
+            return Response({'error': f"Acción '{action_name}' inválida. Permitidas: {sorted(list(ALLOWED_ACTIONS))}"}, status=status.HTTP_400_BAD_REQUEST)
+        if target not in ALLOWED_TARGETS:
+            return Response({'error': f"Target '{target}' inválido. Permitidos: {sorted(list(ALLOWED_TARGETS))}"}, status=status.HTTP_400_BAD_REQUEST)
+        if env not in ALLOWED_ENVIRONMENTS:
+            return Response({'error': f"Entorno '{env}' inválido. Permitidos: {sorted(list(ALLOWED_ENVIRONMENTS))}"}, status=status.HTTP_400_BAD_REQUEST)
+
+        if action_name == 'status':
+            from .provisioner import get_tenant_containers_status
+            status_info = get_tenant_containers_status(tenant, env=env)
+            return Response(status_info, status=status.HTTP_200_OK)
+
+        if action_name == 'deploy':
+            force_rebuild = bool(request.data.get('force_rebuild', False))
+            from .provisioner import deploy_tenant_containers
+            res = deploy_tenant_containers(tenant, env=env, user=request.user, force_rebuild=force_rebuild)
+            return Response({'success': res.get('success'), 'message': res.get('message'), 'logs': res.get('logs', '')}, status=res.status_code)
+
+        from .provisioner import execute_container_action
+        res = execute_container_action(tenant, target, action_name, environment=env)
+        return Response({
+            'success': res.get('success'),
+            'message': res.get('message'),
+            'action': action_name,
+            'target': target,
+            'env': env
+        }, status=res.status_code)
+
+    @action(detail=True, methods=['get'], url_path='stream-logs')
+    def stream_logs(self, request, pk=None):
+        """
+        Transmite logs en tiempo real vía Server-Sent Events (SSE) evitando sondeos repetitivos por polling.
+        Soporta autenticación estándar por cabecera Bearer y compatibilidad nativa con EventSource vía ?token=<jwt>.
+        """
+        user = request.user
+        if not user or user.is_anonymous:
+            token_param = request.query_params.get('token')
+            if token_param:
+                from rest_framework_simplejwt.tokens import AccessToken
+                try:
+                    validated_token = AccessToken(token_param)
+                    user_id = validated_token.get('user_id')
+                    User = get_user_model()
+                    user = User.objects.filter(id=user_id).first()
+                except Exception:
+                    pass
+
+        if not user or not user.is_authenticated:
+            return Response({'error': 'Autenticación requerida para stream de logs.'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        tenant = get_object_or_404(Tenant, pk=pk)
+        if tenant.owner != user and not (user.is_staff or getattr(user, 'role', '') == 'ADMIN'):
+            return Response({'error': 'Permiso denegado.'}, status=status.HTTP_403_FORBIDDEN)
+
+
+        target = request.query_params.get('target', 'backend')
+        env = request.query_params.get('env', 'staging')
+        tail_param = request.query_params.get('tail', '100')
+        try:
+            tail = min(max(int(tail_param), 10), 1000)
+        except (ValueError, TypeError):
+            tail = 100
+
+        if target not in ('frontend', 'backend'):
+            return Response({'error': f"Target '{target}' no es válido para streaming. Debe ser 'frontend' o 'backend'"}, status=status.HTTP_400_BAD_REQUEST)
+        if env not in ALLOWED_ENVIRONMENTS:
+            return Response({'error': f"Entorno '{env}' no permitido"}, status=status.HTTP_400_BAD_REQUEST)
+
+        from .provisioner import get_tenant_container_names, stream_container_logs
+        names = get_tenant_container_names(tenant, env=env)
+        container_name = names.get(target, names['backend'])
+
+        response = StreamingHttpResponse(
+            stream_container_logs(container_name, tail=tail, follow=True),
+            content_type="text/event-stream"
+        )
+        response['Cache-Control'] = 'no-cache, no-transform'
+        response['X-Accel-Buffering'] = 'no'
+        return response
+
+    @action(detail=True, methods=['get'], url_path='container-status')
+    def container_status(self, request, pk=None):
+        tenant = self.get_object()
+        env = request.query_params.get('env', 'staging')
+        if env not in ALLOWED_ENVIRONMENTS:
+            return Response({'error': f"Entorno inválido '{env}'"}, status=status.HTTP_400_BAD_REQUEST)
+        from .provisioner import get_tenant_containers_status
+        status_info = get_tenant_containers_status(tenant, env=env)
+        return Response(status_info)
+
+    @action(detail=True, methods=['get'], url_path='deploy-logs')
+    def deploy_logs(self, request, pk=None):
+        tenant = self.get_object()
+        deployments = tenant.deployments.order_by('-created_at')[:10]
+        return Response(TenantDeploymentSerializer(deployments, many=True).data)
+
+    @action(detail=True, methods=['get'], url_path='wallet-transactions')
+    def wallet_transactions(self, request, pk=None):
+        tenant = self.get_object()
+        if tenant.owner != request.user and not (request.user.is_staff or request.user.role == 'ADMIN'):
+            return Response({'error': 'Permiso denegado.'}, status=status.HTTP_403_FORBIDDEN)
+        txs = tenant.wallet_transactions.order_by('-created_at')[:50]
+        return Response(TenantWalletTransactionSerializer(txs, many=True).data)
+
+    @action(detail=True, methods=['post'], url_path='wallet-recharge')
+    def wallet_recharge(self, request, pk=None):
+        tenant = self.get_object()
+        if not (request.user.is_staff or request.user.role == 'ADMIN'):
+            return Response({'error': 'Solo administradores pueden recargar saldo directamente.'}, status=status.HTTP_403_FORBIDDEN)
+        from decimal import Decimal
+        try:
+            amount = Decimal(str(request.data.get('amount', 0)))
+        except Exception:
+            return Response({'error': 'Monto inválido.'}, status=status.HTTP_400_BAD_REQUEST)
+        if amount <= 0:
+            return Response({'error': 'El monto debe ser mayor a cero.'}, status=status.HTTP_400_BAD_REQUEST)
+        ok, new_bal, tx = tenant.atomic_credit_wallet(
+            amount=amount,
+            service_type='RECHARGE',
+            description=request.data.get('description', 'Recarga administrativa'),
+            reference_id=request.data.get('reference_id', '')
+        )
+        return Response({'success': ok, 'new_balance': new_bal})
 
     @action(detail=True, methods=['post'], url_path='start-trial')
     def start_trial(self, request, pk=None):
@@ -347,6 +509,9 @@ def resolve_host(request):
 
     has_isolated_code = tenant.pages.filter(page_type=TenantPage.PageType.ISOLATED_CODE, is_published=True).exists()
 
+    fav_url = request.build_absolute_uri(tenant.favicon.url) if tenant.favicon else (tenant.favicon_url or '/favicon.ico')
+    lg_url = request.build_absolute_uri(tenant.logo.url) if tenant.logo else (tenant.logo_url or '')
+
     payload = {
         'id': str(tenant.id),
         'subdomain': tenant.subdomain,
@@ -358,11 +523,33 @@ def resolve_host(request):
         'has_isolated_code': has_isolated_code,
         'theme_color': tenant.theme_color,
         'accent_color': tenant.accent_color,
-        'logo_url': tenant.logo_url,
+        'logo_url': lg_url,
+        'favicon_url': fav_url,
+        'wallet_balance': float(tenant.wallet_balance),
     }
 
     cache.set(cache_key, payload, 600)
     return Response(payload)
+
+
+@api_view(['GET'])
+@permission_classes([permissions.AllowAny])
+def tenant_favicon(request, subdomain):
+    """
+    Entrega o redirige al favicon oficial del inquilino con cabeceras de caché perimetral.
+    """
+    from django.http import HttpResponseRedirect
+    tenant = Tenant.objects.filter(subdomain=subdomain, is_active=True).first()
+    if tenant and tenant.favicon:
+        resp = HttpResponseRedirect(tenant.favicon.url)
+        resp['Cache-Control'] = 'public, max-age=86400, must-revalidate'
+        return resp
+    elif tenant and tenant.favicon_url:
+        resp = HttpResponseRedirect(tenant.favicon_url)
+        resp['Cache-Control'] = 'public, max-age=86400, must-revalidate'
+        return resp
+    return HttpResponseRedirect('/favicon.ico')
+
 
 
 

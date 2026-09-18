@@ -1085,3 +1085,176 @@ class TenantAddOnPermissionsAndMatrixTests(BaseTenantAddonTestCase):
         self.assertEqual(response_invoice.status_code, status.HTTP_200_OK)
 
 
+class TenantUnifiedWalletAndOrchestrationTests(BaseTenantAddonTestCase):
+    """
+    Suite de pruebas integrales para Billetera Unificada, Favicon Dinámico
+    y Orquestación Zero-SSH de Contenedores.
+    """
+
+    def test_favicon_url_generation_and_fallback(self):
+        """Verifica que favicon_url resuelva correctamente a partir de URL, imagen o fallback."""
+        # 1. Fallback estándar cuando no hay favicon
+        self.tenant_a.favicon = None
+        self.tenant_a.favicon_url = None
+        self.tenant_a.save()
+        self.assertEqual(self.tenant_a.get_favicon_url(), "/favicon.ico")
+
+        # 2. Asignación de favicon_url externo
+        self.tenant_a.favicon_url = "https://cdn.example.com/partner_favicon.ico"
+        self.tenant_a.save()
+        self.assertEqual(self.tenant_a.get_favicon_url(), "https://cdn.example.com/partner_favicon.ico")
+
+        # 3. Serializador público incluye favicon_url
+        response = self.client.get(
+            reverse('tenant_public_config'),
+            {'subdomain': self.tenant_a.subdomain}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['favicon_url'], "https://cdn.example.com/partner_favicon.ico")
+
+    def test_tenant_favicon_endpoint_redirects(self):
+        """Verifica el endpoint GET /api/tenants/<subdomain>/favicon.ico."""
+        self.tenant_a.favicon_url = "https://cdn.example.com/kores.ico"
+        self.tenant_a.save()
+
+        url = f"/api/tenants/{self.tenant_a.subdomain}/favicon.ico"
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
+        self.assertEqual(response['Location'], "https://cdn.example.com/kores.ico")
+
+    def test_unified_wallet_atomic_debit_credit(self):
+        """Verifica operaciones atómicas de crédito, débito y prevención de sobregiro."""
+        from apps.tenants.models import TenantWalletTransaction
+
+        self.tenant_a.wallet_balance = Decimal('50.00')
+        self.tenant_a.shipping_wallet_balance = Decimal('50.00')
+        self.tenant_a.save()
+
+        # 1. Abono exitoso
+        success, new_bal, tx = self.tenant_a.atomic_credit_wallet(
+            amount=Decimal('100.00'),
+            service_type=TenantWalletTransaction.ServiceType.RECHARGE,
+            description="Recarga prueba"
+        )
+        self.assertTrue(success)
+        self.assertEqual(new_bal, Decimal('150.00'))
+        self.assertEqual(self.tenant_a.wallet_balance, Decimal('150.00'))
+        self.assertEqual(self.tenant_a.shipping_wallet_balance, Decimal('150.00'))
+
+        # 2. Débito exitoso por servicio CFDI
+        success, new_bal, tx = self.tenant_a.atomic_debit_wallet(
+            amount=Decimal('25.50'),
+            service_type=TenantWalletTransaction.ServiceType.INVOICING_CFDI,
+            description="Timbrado masivo"
+        )
+        self.assertTrue(success)
+        self.assertEqual(new_bal, Decimal('124.50'))
+        self.assertEqual(self.tenant_a.wallet_balance, Decimal('124.50'))
+
+        # 3. Prevención de sobregiro (fondos insuficientes)
+        success, bal_blocked, _ = self.tenant_a.atomic_debit_wallet(
+            amount=Decimal('500.00'),
+            service_type=TenantWalletTransaction.ServiceType.SHIPPING_LABEL,
+            description="Intento sobregiro"
+        )
+        self.assertFalse(success)
+        self.assertEqual(bal_blocked, Decimal('124.50'))
+        self.assertEqual(self.tenant_a.wallet_balance, Decimal('124.50'))
+
+    def test_cfdi_deduct_stamp_falls_back_to_unified_wallet(self):
+        """Verifica que si no hay timbres fiscales, se deduzca $1.00 de la billetera unificada."""
+        self.tenant_a.stamp_balance = 0
+        self.tenant_a.wallet_balance = Decimal('10.00')
+        self.tenant_a.shipping_wallet_balance = Decimal('10.00')
+        self.tenant_a.trial_ends_at = None
+        self.tenant_a.save()
+
+        # Consumo de timbre sin timbres en balance -> Debe descontar $1.00 de wallet_balance
+        success, bal = self.tenant_a.atomic_deduct_stamp(description="Test CFDI Wallet Fallback")
+        self.assertTrue(success)
+        self.tenant_a.refresh_from_db()
+        self.assertEqual(self.tenant_a.wallet_balance, Decimal('9.00'))
+        self.assertEqual(self.tenant_a.stamp_balance, 0)
+
+    def test_docker_provisioner_safe_status_reporting(self):
+        """Verifica que el provisioner de contenedores responda de manera segura sin crash si docker no está activo."""
+        from apps.tenants.provisioner import get_tenant_containers_status
+
+        status_result = get_tenant_containers_status(self.tenant_a, environment="staging")
+        self.assertIn("frontend", status_result)
+        self.assertIn("backend", status_result)
+        self.assertIn("is_online", status_result)
+        self.assertIn(self.tenant_a.subdomain, status_result["frontend"]["name"])
+
+        # Verificar caso autónomo especial (Kores / Premium-Ties)
+        from apps.tenants.provisioner import get_tenant_container_names
+        kores_names = get_tenant_container_names("kores", env="staging")
+        self.assertEqual(kores_names["frontend"], "premium_ties_frontend_staging")
+        self.assertEqual(kores_names["backend"], "premium_ties_backend_staging")
+
+    def test_deploy_lock_prevention_concurrency(self):
+        """Verifica que el candado distribuido evite despliegues simultáneos retornando 409 Conflict."""
+        from django.core.cache import cache
+        from apps.tenants.provisioner import tenant_deployment_lock, DeploymentLockError
+
+        # 1. Adquirir lock manualmente
+        with tenant_deployment_lock(self.tenant_a.id):
+            # Intentar adquirir nuevamente dentro del mismo lock
+            with self.assertRaises(DeploymentLockError):
+                with tenant_deployment_lock(self.tenant_a.id):
+                    pass
+
+        # 2. Verificar que tras salir del bloque el lock sea liberado
+        self.assertIsNone(cache.get(f"lock:deploy:{self.tenant_a.id}"))
+
+    def test_container_action_whitelist_validation(self):
+        """Verifica validación estricta de listas blancas para acciones PaaS y prevención de inyección."""
+        self.client.force_authenticate(user=self.owner_a)
+        url = reverse('tenant-container-action', kwargs={'pk': str(self.tenant_a.id)})
+
+        # 1. Acción prohibida / injection attempt
+        res = self.client.post(url, {'action': 'rm -rf /; reboot', 'target': 'all', 'env': 'staging'})
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("inválida", res.data['error'])
+
+        # 2. Target prohibido
+        res = self.client.post(url, {'action': 'start', 'target': 'malicious_target', 'env': 'staging'})
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("Target", res.data['error'])
+
+        # 3. Entorno prohibido
+        res = self.client.post(url, {'action': 'start', 'target': 'all', 'env': 'qa_sandbox'})
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("Entorno", res.data['error'])
+
+    def test_container_action_status_and_permissions(self):
+        """Verifica consulta de estado y restricción de permisos para usuarios no propietarios."""
+        url = reverse('tenant-container-action', kwargs={'pk': str(self.tenant_a.id)})
+
+        # 1. Usuario ajeno (owner_b) -> 404 Not Found (aislamiento multitenant) o 403
+        self.client.force_authenticate(user=self.owner_b)
+        res = self.client.post(url, {'action': 'status', 'target': 'all', 'env': 'staging'})
+        self.assertIn(res.status_code, [status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND])
+
+
+        # 2. Propietario (owner_a) -> 200 OK con info estructurada
+        self.client.force_authenticate(user=self.owner_a)
+        res = self.client.post(url, {'action': 'status', 'target': 'all', 'env': 'staging'})
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertIn("overall_status", res.data)
+        self.assertIn("backend", res.data)
+        self.assertIn("frontend", res.data)
+
+    def test_stream_logs_endpoint_format_and_headers(self):
+        """Verifica que el endpoint stream-logs retorne headers SSE apropiados para tiempo real."""
+        self.client.force_authenticate(user=self.owner_a)
+        url = reverse('tenant-stream-logs', kwargs={'pk': str(self.tenant_a.id)})
+
+        response = self.client.get(url, {'target': 'backend', 'env': 'staging', 'tail': '10'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('text/event-stream', response['Content-Type'])
+        self.assertEqual(response['X-Accel-Buffering'], 'no')
+
+
+
+

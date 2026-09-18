@@ -1595,7 +1595,8 @@ def stripe_webhook(request):
                             t_locked = Tenant.objects.select_for_update().get(id=tenant_id)
                             recharge_amount = Decimal(str(amount))
                             t_locked.shipping_wallet_balance = (t_locked.shipping_wallet_balance or Decimal('0.00')) + recharge_amount
-                            t_locked.save(update_fields=['shipping_wallet_balance'])
+                            t_locked.wallet_balance = t_locked.shipping_wallet_balance
+                            t_locked.save(update_fields=['shipping_wallet_balance', 'wallet_balance'])
 
                             ShippingWalletTransaction.objects.create(
                                 tenant=t_locked,
@@ -1604,6 +1605,18 @@ def stripe_webhook(request):
                                 transaction_type=ShippingWalletTransaction.TransactionType.RECHARGE,
                                 reference_id=session_id,
                                 description=f"Recarga directa de saldo vía Stripe Checkout (${recharge_amount} MXN)"
+                            )
+                            # Registrar también en transacciones de billetera unificada
+                            from apps.tenants.models import TenantWalletTransaction
+                            TenantWalletTransaction.objects.create(
+                                tenant=t_locked,
+                                service_type=TenantWalletTransaction.ServiceType.RECHARGE,
+                                amount=recharge_amount,
+                                balance_before=t_locked.shipping_wallet_balance - recharge_amount,
+                                balance_after=t_locked.shipping_wallet_balance,
+                                description=f"Recarga directa de saldo vía Stripe Checkout (${recharge_amount} MXN)",
+                                reference_id=session_id,
+                                metadata={'provider': 'stripe', 'session_id': session_id}
                             )
                             import logging
                             logging.getLogger("apps").info(f"[Billetera/Stripe] Saldo abonado exitosamente a Tenant #{tenant_id}: +${recharge_amount} MXN. Nuevo saldo: ${t_locked.shipping_wallet_balance} MXN.")
@@ -2177,7 +2190,8 @@ class GetShippingRatesView(APIView):
         # Si el inquilino no tiene credenciales propias (BYO Keys), validar saldo mínimo en cartera corporativa
         has_custom_keys = bool(tenant.envia_api_key or tenant.skydropx_client_id)
         min_required = getattr(settings, "MIN_SHIPPING_WALLET_BALANCE", Decimal("300.00"))
-        if not has_custom_keys and tenant.shipping_wallet_balance < min_required:
+        effective_balance = max(tenant.wallet_balance, tenant.shipping_wallet_balance)
+        if not has_custom_keys and effective_balance < min_required:
             return Response({
                 "error": f"Saldo insuficiente en tu Cartera de Envíos. Se requiere un saldo mínimo de ${min_required} MXN para cotizar con la cuenta corporativa."
             }, status=status.HTTP_400_BAD_REQUEST)
@@ -2904,10 +2918,14 @@ class ShippingWalletHistoryView(APIView):
                 "created_at": t.created_at.isoformat()
             })
 
+        effective_bal = max(tenant.wallet_balance, tenant.shipping_wallet_balance)
         return Response({
-            "balance": float(tenant.shipping_wallet_balance),
+            "balance": float(effective_bal),
+            "wallet_balance": float(tenant.wallet_balance),
+            "shipping_wallet_balance": float(tenant.shipping_wallet_balance),
+            "stamp_balance": tenant.stamp_balance,
             "minimum_required": float(min_required),
-            "has_minimum_balance": tenant.shipping_wallet_balance >= min_required,
+            "has_minimum_balance": effective_bal >= min_required,
             "platform_commission": float(getattr(tenant, "platform_shipping_fee", Decimal("10.00")) or Decimal("10.00")),
             "transactions": tx_data
         })

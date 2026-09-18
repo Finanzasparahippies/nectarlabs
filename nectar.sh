@@ -297,6 +297,13 @@ show_help() {
     echo "  seed-plans-prod          - Seed plans table in Production database"
     echo "  install-frontend-prod    - Install npm packages in Production container"
     echo ""
+    echo "=== MULTI-TENANT & ZERO-SSH ORCHESTRATION ==="
+    echo "  tenant-deploy <slug> [--action=deploy|start|stop|restart|status] [--env=staging|production]"
+    echo "                           - Zero-SSH remote container deploy/orchestration"
+    echo "  tenant-wallet <slug> [--balance | --credit <amount> | --debit <amount>] [--history]"
+    echo "                           - Manage Unified Wallet (CFDI, Shipping, SES)"
+    echo "  tenant-status <slug>     - Quick inspection of tenant containers & health"
+    echo ""
     echo "=== UTILITIES ==="
     echo "  test-logistics [args...] - Run Multi-Carrier logistics diagnostics (Dev) e.g. test-logistics --provider DYNAMIC_BEST --origin 83000 --dest 06600"
     echo "  test-logistics-prod      - Run Multi-Carrier logistics diagnostics in Production"
@@ -710,6 +717,17 @@ case $COMMAND in
         ;;
     test-facturapi-live)
         run_django_cmd_dev test_facturapi --live "$@"
+        ;;
+
+    # ── MULTI-TENANT & ORCHESTRATION ──
+    tenant-deploy)
+        run_django_cmd_auto tenant_deploy "$@"
+        ;;
+    tenant-wallet)
+        run_django_cmd_auto tenant_wallet "$@"
+        ;;
+    tenant-status)
+        run_django_cmd_auto tenant_deploy "$1" --action=status
         ;;
 
     # ── UTILITIES ──

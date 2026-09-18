@@ -57,6 +57,33 @@ class Tenant(models.Model):
     # Customization & Branding fields
     logo = models.ImageField(upload_to="tenant_logos/", blank=True, null=True)
     logo_url = models.URLField(blank=True, null=True)
+    favicon = models.ImageField(upload_to="tenant_favicons/", blank=True, null=True, verbose_name="Favicon del Portal (.ico, .png, .svg)")
+    favicon_url = models.URLField(blank=True, null=True, verbose_name="URL externa de Favicon")
+
+    def get_favicon_url(self) -> str:
+        """
+        Retorna la URL final del favicon (archivo subido, URL remota o fallback /favicon.ico).
+        """
+        if self.favicon:
+            try:
+                return self.favicon.url
+            except Exception:
+                pass
+        if self.favicon_url:
+            return self.favicon_url
+        return "/favicon.ico"
+
+    def get_logo_url(self) -> str:
+        """
+        Retorna la URL final del logo del inquilino (archivo subido o URL externa).
+        """
+        if self.logo:
+            try:
+                return self.logo.url
+            except Exception:
+                pass
+        return self.logo_url or ""
+
     welcome_message = models.TextField(default="¡Hola! ¿En qué podemos ayudarte hoy?")
     portal_title = models.CharField(max_length=150, blank=True, null=True)
     footer_text = models.TextField(blank=True, null=True)
@@ -124,6 +151,13 @@ class Tenant(models.Model):
         decimal_places=2,
         default=Decimal('0.00'),
         help_text="Saldo disponible para pagar guías de envío de Skydropx en Néctar Labs."
+    )
+    wallet_balance = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=Decimal('0.00'),
+        verbose_name="Billetera Unificada Nectar Labs (MXN)",
+        help_text="Saldo universal para timbrado CFDI (Facturapi), paquetería (Envia/Skydropx) y Amazon SES."
     )
     trial_ends_at = models.DateTimeField(
         blank=True,
@@ -434,6 +468,22 @@ class Tenant(models.Model):
                     tenant_obj.refresh_from_db(fields=['stamp_balance', 'stamps_used_this_month'])
                 return True, bal_after
 
+            # Respaldo de Billetera Unificada: Si no hay timbres prepagados, debitar $1.00 MXN de la billetera unificada
+            wallet_funds = max(tenant.wallet_balance, tenant.shipping_wallet_balance)
+            stamp_cost = Decimal('1.00')
+            if wallet_funds >= stamp_cost:
+                success, new_bal, _ = tenant.atomic_debit_wallet(
+                    amount=stamp_cost,
+                    service_type='INVOICING_CFDI',
+                    description=f"{effective_notes} (Cobro por timbre en Billetera Unificada)",
+                    reference_id=str(getattr(effective_invoice, 'uuid_sat', '') or getattr(effective_invoice, 'id', '') or ''),
+                    metadata={'cost_mxn': str(stamp_cost)}
+                )
+                if success:
+                    if tenant_obj:
+                        tenant_obj.refresh_from_db(fields=['stamp_balance', 'stamps_used_this_month', 'wallet_balance', 'shipping_wallet_balance'])
+                    return True, bal_before
+
             return False, bal_before
 
     @class_or_instance_method
@@ -494,6 +544,85 @@ class Tenant(models.Model):
             if tenant_obj:
                 tenant_obj.refresh_from_db(fields=['stamp_balance', 'stamps_used_this_month'])
             return True, bal_after
+
+    @class_or_instance_method
+    def atomic_debit_wallet(self_or_cls, *args, amount=Decimal('0.00'), service_type='OTHER', description='', reference_id='', metadata=None, **kwargs):
+        """
+        Deduce saldo de la billetera unificada de forma atómica e idempotente con bloqueo a nivel de fila.
+        Retorna (success: bool, new_balance: Decimal, tx: TenantWalletTransaction or None).
+        """
+        from django.db import transaction
+        
+        amount = Decimal(str(amount))
+        if amount <= 0:
+            return True, Decimal('0.00'), None
+            
+        tenant_id = args[0] if (isinstance(self_or_cls, type) and args) else (self_or_cls.id if hasattr(self_or_cls, 'id') else kwargs.get('tenant_id'))
+        tenant_obj = None if isinstance(self_or_cls, type) else self_or_cls
+        cls = self_or_cls if isinstance(self_or_cls, type) else self_or_cls.__class__
+        
+        with transaction.atomic():
+            tenant = cls.objects.select_for_update().get(id=tenant_id)
+            effective_balance = max(tenant.wallet_balance, tenant.shipping_wallet_balance)
+            if effective_balance < amount:
+                return False, effective_balance, None
+                
+            bal_before = effective_balance
+            bal_after = bal_before - amount
+            tenant.wallet_balance = bal_after
+            tenant.shipping_wallet_balance = bal_after
+            tenant.save(update_fields=['wallet_balance', 'shipping_wallet_balance'])
+            
+            tx = TenantWalletTransaction.objects.create(
+                tenant=tenant,
+                service_type=service_type,
+                amount=-amount,
+                balance_before=bal_before,
+                balance_after=bal_after,
+                description=description or f"Consumo por servicio {service_type}",
+                reference_id=str(reference_id or ''),
+                metadata=metadata or {}
+            )
+            if tenant_obj:
+                tenant_obj.refresh_from_db(fields=['wallet_balance', 'shipping_wallet_balance'])
+            return True, bal_after, tx
+
+    @class_or_instance_method
+    def atomic_credit_wallet(self_or_cls, *args, amount=Decimal('0.00'), service_type='RECHARGE', description='', reference_id='', metadata=None, **kwargs):
+        """
+        Abona fondos a la billetera unificada de forma atómica e inmutable.
+        """
+        from django.db import transaction
+        
+        amount = Decimal(str(amount))
+        if amount <= 0:
+            return False, Decimal('0.00'), None
+            
+        tenant_id = args[0] if (isinstance(self_or_cls, type) and args) else (self_or_cls.id if hasattr(self_or_cls, 'id') else kwargs.get('tenant_id'))
+        tenant_obj = None if isinstance(self_or_cls, type) else self_or_cls
+        cls = self_or_cls if isinstance(self_or_cls, type) else self_or_cls.__class__
+        
+        with transaction.atomic():
+            tenant = cls.objects.select_for_update().get(id=tenant_id)
+            bal_before = max(tenant.wallet_balance, tenant.shipping_wallet_balance)
+            bal_after = bal_before + amount
+            tenant.wallet_balance = bal_after
+            tenant.shipping_wallet_balance = bal_after
+            tenant.save(update_fields=['wallet_balance', 'shipping_wallet_balance'])
+            
+            tx = TenantWalletTransaction.objects.create(
+                tenant=tenant,
+                service_type=service_type,
+                amount=amount,
+                balance_before=bal_before,
+                balance_after=bal_after,
+                description=description or "Abono a Billetera Unificada",
+                reference_id=str(reference_id or ''),
+                metadata=metadata or {}
+            )
+            if tenant_obj:
+                tenant_obj.refresh_from_db(fields=['wallet_balance', 'shipping_wallet_balance'])
+            return True, bal_after, tx
 
     @property
     def has_active_plan_contract(self):
@@ -690,5 +819,77 @@ class TenantNavItem(models.Model):
 
     def __str__(self):
         return f"{self.label} ({self.position}) - {self.tenant.subdomain}"
+
+
+class TenantWalletTransaction(models.Model):
+    """
+    Registro inmutable de auditoría para cada movimiento financiero en la Billetera Unificada del Inquilino.
+    Unifica consumos de CFDI (Facturapi), Guías de Paquetería (Envia/Skydropx) y Amazon SES.
+    """
+    class ServiceType(models.TextChoices):
+        INVOICING_CFDI = 'INVOICING_CFDI', 'Facturación CFDI 4.0 (Facturapi)'
+        SHIPPING_LABEL = 'SHIPPING_LABEL', 'Guía de Paquetería (Envia / Skydropx)'
+        EMAIL_SES = 'EMAIL_SES', 'Amazon SES / Email Marketing'
+        RECHARGE = 'RECHARGE', 'Recarga de Saldo Billetera'
+        REFUND = 'REFUND', 'Reembolso por Servicio Fallido'
+        ADJUSTMENT = 'ADJUSTMENT', 'Ajuste Administrativo'
+        OTHER = 'OTHER', 'Otro Servicio'
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name='wallet_transactions', verbose_name="Inquilino")
+    service_type = models.CharField(max_length=30, choices=ServiceType.choices, default=ServiceType.OTHER, verbose_name="Tipo de Servicio")
+    amount = models.DecimalField(max_digits=12, decimal_places=2, verbose_name="Monto (+Abono / -Cargo)")
+    balance_before = models.DecimalField(max_digits=12, decimal_places=2, verbose_name="Saldo Previo (MXN)")
+    balance_after = models.DecimalField(max_digits=12, decimal_places=2, verbose_name="Saldo Posterior (MXN)")
+    description = models.CharField(max_length=255, verbose_name="Descripción / Concepto")
+    reference_id = models.CharField(max_length=150, blank=True, null=True, db_index=True, verbose_name="ID de Referencia Externa")
+    metadata = models.JSONField(default=dict, blank=True, verbose_name="Metadatos Adicionales")
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True, verbose_name="Fecha de Operación")
+
+    class Meta:
+        verbose_name = "Transacción de Billetera Unificada"
+        verbose_name_plural = "Transacciones de Billetera Unificada"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"[{self.service_type}] {self.tenant.subdomain}: ${self.amount} (Saldo: ${self.balance_after})"
+
+
+class TenantDeployment(models.Model):
+    """
+    Historial y control de despliegue remoto de contenedores por inquilino.
+    Permite auditar acciones de inicio, detención, reinicio y build sin acceso SSH directo.
+    """
+    class Action(models.TextChoices):
+        DEPLOY = 'DEPLOY', 'Desplegar / Build Completo'
+        START = 'START', 'Iniciar Contenedores'
+        STOP = 'STOP', 'Detener Contenedores'
+        RESTART = 'RESTART', 'Reiniciar Contenedores'
+        STATUS = 'STATUS', 'Inspección de Salud'
+
+    class Status(models.TextChoices):
+        PENDING = 'PENDING', 'Pendiente'
+        IN_PROGRESS = 'IN_PROGRESS', 'En Ejecución'
+        SUCCESS = 'SUCCESS', 'Completado con Éxito'
+        FAILED = 'FAILED', 'Fallido'
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name='deployments', verbose_name="Inquilino")
+    environment = models.CharField(max_length=20, default='staging', choices=[('staging', 'Staging'), ('production', 'Producción')], verbose_name="Ambiente")
+    action = models.CharField(max_length=20, choices=Action.choices, default=Action.DEPLOY, verbose_name="Acción Solicitada")
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING, db_index=True, verbose_name="Estado de Ejecución")
+    output_logs = models.TextField(blank=True, default="", verbose_name="Registro de Logs en Vivo")
+    triggered_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Iniciado por")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Fecha de Solicitud")
+    finished_at = models.DateTimeField(null=True, blank=True, verbose_name="Fecha de Finalización")
+
+    class Meta:
+        verbose_name = "Despliegue de Inquilino"
+        verbose_name_plural = "Despliegues de Inquilinos"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"[{self.environment.upper()}] {self.action} en {self.tenant.subdomain} - {self.status}"
+
 
 

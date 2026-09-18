@@ -3,6 +3,8 @@ from .models import Tenant
 
 class TenantSerializer(serializers.ModelSerializer):
     logo = serializers.ImageField(required=False, allow_null=True)
+    favicon = serializers.ImageField(required=False, allow_null=True)
+    wallet_balance = serializers.DecimalField(max_digits=12, decimal_places=2, read_only=True)
     active_addons = serializers.ReadOnlyField()
     owner_email = serializers.SerializerMethodField()
     
@@ -27,8 +29,8 @@ class TenantSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'name', 'store_category', 'subdomain', 'owner', 'owner_email', 'api_key', 
             'allowed_origins', 'custom_domain', 'use_custom_domain', 'welcome_message', 'require_customer_info',
-            'logo', 'logo_url', 'portal_title', 'footer_text', 'is_active', 'created_at', 'updated_at',
-            'active_addons', 'stamp_balance', 'newsletter_plan', 'newsletter_sent_this_month', 'newsletter_extra_credits',
+            'logo', 'logo_url', 'favicon', 'favicon_url', 'portal_title', 'footer_text', 'is_active', 'created_at', 'updated_at',
+            'active_addons', 'stamp_balance', 'wallet_balance', 'newsletter_plan', 'newsletter_sent_this_month', 'newsletter_extra_credits',
             'invoicing_mode', 'has_active_plan_contract', 'is_addons_only', 'trial_ends_at', 'tenant_context',
             'server_time', 'shipping_wallet_balance',
             # 6-Color Palette (Dark & Light)
@@ -210,17 +212,18 @@ class TenantSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         instance.reset_stamps_if_new_month()
         ret = super().to_representation(instance)
+        request = self.context.get('request')
         if instance.logo:
-            request = self.context.get('request')
-            if request:
-                ret['logo_url'] = request.build_absolute_uri(instance.logo.url)
-            else:
-                ret['logo_url'] = instance.logo.url
+            ret['logo_url'] = request.build_absolute_uri(instance.logo.url) if request else instance.logo.url
+        if instance.favicon:
+            ret['favicon_url'] = request.build_absolute_uri(instance.favicon.url) if request else instance.favicon.url
+        elif not ret.get('favicon_url'):
+            ret['favicon_url'] = '/favicon.ico'
         return ret
 
 
 from rest_framework import serializers
-from .models import Tenant, TenantPage, TenantNavItem
+from .models import Tenant, TenantPage, TenantNavItem, TenantWalletTransaction, TenantDeployment
 
 class TenantPageSerializer(serializers.ModelSerializer):
     class Meta:
@@ -246,6 +249,8 @@ class TenantNavItemSerializer(serializers.ModelSerializer):
 class TenantPublicSerializer(serializers.ModelSerializer):
     active_addons = serializers.ReadOnlyField()
     logo_url = serializers.SerializerMethodField()
+    favicon_url = serializers.SerializerMethodField()
+    wallet_balance = serializers.DecimalField(max_digits=12, decimal_places=2, read_only=True)
     has_active_plan_contract = serializers.ReadOnlyField()
     is_addons_only = serializers.ReadOnlyField()
     server_time = serializers.SerializerMethodField()
@@ -255,8 +260,8 @@ class TenantPublicSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tenant
         fields = [
-            'id', 'name', 'store_category', 'subdomain', 'custom_domain', 'use_custom_domain', 'logo_url', 
-            'welcome_message', 'require_customer_info', 'active_addons',
+            'id', 'name', 'store_category', 'subdomain', 'custom_domain', 'use_custom_domain', 'logo_url', 'favicon_url',
+            'welcome_message', 'require_customer_info', 'active_addons', 'wallet_balance',
             'portal_title', 'footer_text', 'has_active_plan_contract', 'is_addons_only',
             'is_active', 'owner', 'trial_ends_at', 'tenant_context', 'server_time',
             'stripe_publishable_key',
@@ -274,10 +279,14 @@ class TenantPublicSerializer(serializers.ModelSerializer):
     def get_logo_url(self, obj):
         if obj.logo:
             request = self.context.get('request')
-            if request:
-                return request.build_absolute_uri(obj.logo.url)
-            return obj.logo.url
+            return request.build_absolute_uri(obj.logo.url) if request else obj.logo.url
         return obj.logo_url
+
+    def get_favicon_url(self, obj):
+        if obj.favicon:
+            request = self.context.get('request')
+            return request.build_absolute_uri(obj.favicon.url) if request else obj.favicon.url
+        return obj.favicon_url or '/favicon.ico'
 
     def get_server_time(self, obj):
         from django.utils import timezone
@@ -290,5 +299,26 @@ class TenantPublicSerializer(serializers.ModelSerializer):
     def get_navigation_menu(self, obj):
         nav_items = obj.nav_items.filter(is_visible=True).order_by('position', 'order', 'created_at')
         return TenantNavItemSerializer(nav_items, many=True).data
+
+
+class TenantWalletTransactionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TenantWalletTransaction
+        fields = [
+            'id', 'service_type', 'amount', 'balance_before', 'balance_after',
+            'description', 'reference_id', 'metadata', 'created_at'
+        ]
+
+
+class TenantDeploymentSerializer(serializers.ModelSerializer):
+    triggered_by_email = serializers.ReadOnlyField(source='triggered_by.email')
+
+    class Meta:
+        model = TenantDeployment
+        fields = [
+            'id', 'environment', 'action', 'status', 'output_logs',
+            'triggered_by_email', 'created_at', 'finished_at'
+        ]
+
 
 
