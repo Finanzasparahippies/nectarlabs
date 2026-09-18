@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 
-export default function UniversalPortalAdmin() {
+function PortalAdminResolver() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [status, setStatus] = useState<'resolving' | 'redirecting' | 'error'>('resolving');
@@ -56,7 +56,6 @@ export default function UniversalPortalAdmin() {
           setStatus('redirecting');
           router.replace(`/tenants/${subdomain}/portal-admin${search}`);
         } else {
-          // Si no hay subdominio, verificar si es administrador matriz de Nectar Labs
           setStatus('redirecting');
           router.replace(`/dashboard${search}`);
         }
@@ -83,5 +82,17 @@ export default function UniversalPortalAdmin() {
         </p>
       )}
     </div>
+  );
+}
+
+export default function UniversalPortalAdmin() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center">
+        <div className="w-12 h-12 rounded-2xl border-2 border-emerald-500/20 border-t-emerald-500 animate-spin" />
+      </div>
+    }>
+      <PortalAdminResolver />
+    </Suspense>
   );
 }

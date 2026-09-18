@@ -177,7 +177,26 @@ def get_tenant_from_request(request):
                 if tenant:
                     return tenant
 
-            # 4d. Extraer primer token relevante si es subdominio (ej: tenanta.nectarlabs.dev -> tenanta, staging.kores.vip -> kores, kores-staging.nectarlabs.dev -> kores)
+            # 4d. Búsqueda por acrónimos y marcas clave en el host
+            if 'finanzasparahippies' in clean_host_no_port or 'finanzas' in clean_host_no_port:
+                tenant = (
+                    Tenant.objects.filter(subdomain__in=['fph', 'fph-hub', 'finanzasparahippies', 'finanzas-para-hippies'], is_active=True).first()
+                    or Tenant.objects.filter(custom_domain__icontains='finanzasparahippies', is_active=True).first()
+                    or Tenant.objects.filter(name__icontains='Finanzas', is_active=True).first()
+                )
+                if tenant:
+                    return tenant
+
+            if 'kores' in clean_host_no_port:
+                tenant = (
+                    Tenant.objects.filter(subdomain__in=['kores', 'kores-mexico'], is_active=True).first()
+                    or Tenant.objects.filter(custom_domain__icontains='kores', is_active=True).first()
+                    or Tenant.objects.filter(name__icontains='Kores', is_active=True).first()
+                )
+                if tenant:
+                    return tenant
+
+            # 4e. Extraer primer token relevante si es subdominio (ej: tenanta.nectarlabs.dev -> tenanta, staging.kores.vip -> kores, kores-staging.nectarlabs.dev -> kores)
             if '.' in clean_host_no_port:
                 parts = clean_host_no_port.split('.')
                 ignored_tokens = {'www', 'api', 'admin', 'staging', 'nectarlabs', 'dev', 'localhost', 'com', 'vip', 'mx', 'org', 'net'}
@@ -199,16 +218,6 @@ def get_tenant_from_request(request):
                             tenant = Tenant.objects.filter(subdomain__icontains=cand, is_active=True).first()
                             if tenant:
                                 return tenant
-
-                            # Mapeo de alias y acrónimos conocidos entre dominios y subdominios cortos
-                            if cand in ['finanzasparahippies', 'finanzas-para-hippies', 'finanzas']:
-                                tenant = Tenant.objects.filter(subdomain__iexact='fph', is_active=True).first()
-                                if tenant:
-                                    return tenant
-                            if cand == 'fph':
-                                tenant = Tenant.objects.filter(custom_domain__icontains='finanzasparahippies', is_active=True).first()
-                                if tenant:
-                                    return tenant
 
 
     # 5. Fallback por Origin (peticiones CORS de frontends externos o dominios personalizados)

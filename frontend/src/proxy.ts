@@ -168,6 +168,11 @@ export async function middleware(request: NextRequest) {
       return NextResponse.rewrite(url);
     }
 
+    // Si la ruta ya es interna de Nectar Labs (/tenants/...), servirla directamente sin reenviar a customFrontendUrl
+    if (url.pathname.startsWith('/tenants/')) {
+      return NextResponse.next();
+    }
+
     // 2c. Rutas del Núcleo Matriz Néctar Labs (/portal-admin, /autofactura)
     // NUNCA se delegan al microservicio externo del inquilino, siempre se resuelven en la consola central
     const isMatrixCoreRoute =
