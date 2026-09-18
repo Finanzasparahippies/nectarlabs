@@ -14,8 +14,11 @@ RUN apt-get update && apt-get install -y \
     libpq-dev \
     curl \
     docker.io \
-    docker-compose-v2 \
     --no-install-recommends && \
+    mkdir -p /usr/local/lib/docker/cli-plugins && \
+    curl -fsSL https://github.com/docker/compose/releases/download/v2.29.7/docker-compose-linux-x86_64 -o /usr/local/lib/docker/cli-plugins/docker-compose && \
+    chmod +x /usr/local/lib/docker/cli-plugins/docker-compose && \
+    ln -s /usr/local/lib/docker/cli-plugins/docker-compose /usr/local/bin/docker-compose && \
     rm -rf /var/lib/apt/lists/*
 
 # Install Python dependencies
