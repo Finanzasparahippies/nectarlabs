@@ -35,7 +35,7 @@ const pool = new Pool({
     // Matriz de Edge Cases: límites de conexiones para planes gratuitos (Supabase free-tier límite ~20-60)
     max: 10, // Límite máximo de clientes en el pool local
     idleTimeoutMillis: 30000, // Cerrar automáticamente conexiones inactivas tras 30 segundos
-    connectionTimeoutMillis: 2000, // Cancelar el intento si tarda más de 2 segundos (timeout rápido)
+    connectionTimeoutMillis: 10000, // Resiliencia de red: 10 segundos de timeout de conexión
 });
 // Manejador de errores inesperados en conexiones inactivas (evita caídas del proceso Node)
 pool.on('error', (err) => {

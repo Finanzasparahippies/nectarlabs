@@ -299,7 +299,7 @@ wss.on('connection', async (ws, req) => {
 // Este servidor HTTP acepta peticiones POST exclusivas desde la red de Docker (localhost/django)
 // para realizar difusiones del backend a los administradores en tiempo real (por ejemplo, notificar tickets nuevos).
 const INTERNAL_PORT = parseInt(process.env.INTERNAL_PORT || '4001', 10);
-const INTERNAL_SECRET = process.env.INTERNAL_SECRET || 'nectar-internal-secret';
+const INTERNAL_SECRET = process.env.INTERNAL_SECRET || process.env.REALTIME_INTERNAL_SECRET || (process.env.NODE_ENV === 'production' ? '' : 'dev-realtime-internal-secret');
 const internalServer = http.createServer((req, res) => {
     // Limitar enrutamiento solo a POST /internal/broadcast-admin
     if (req.method !== 'POST' || req.url !== '/internal/broadcast-admin') {
@@ -309,7 +309,7 @@ const internalServer = http.createServer((req, res) => {
     }
     // Validar cabecera de secreto interno para prevenir inyecciones externas
     const secret = req.headers['x-internal-secret'];
-    if (secret !== INTERNAL_SECRET) {
+    if (!INTERNAL_SECRET || secret !== INTERNAL_SECRET) {
         res.writeHead(401);
         res.end('Unauthorized');
         return;
