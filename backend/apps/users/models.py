@@ -43,6 +43,11 @@ class User(AbstractUser):
         null=True,
         help_text="Código de referido/vendedor utilizado en el registro."
     )
+    preferences = models.JSONField(
+        default=dict,
+        blank=True,
+        help_text="Preferencias de interfaz y estado de tutoriales completados."
+    )
     
     # Use email as the primary identifier
     USERNAME_FIELD = 'email'

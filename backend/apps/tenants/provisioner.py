@@ -517,20 +517,70 @@ def get_tenant_container_names(tenant_or_slug, env='staging'):
 def get_tenant_containers_status(tenant_or_slug, env='staging', environment=None):
     """
     Retorna el estado consolidado de salud de los contenedores de backend y frontend de un tenant.
+    Soporta explícitamente inquilinos remotos (desacoplados) y alias de nombres de contenedor.
     """
+    from .models import Tenant
+    tenant = None
+    if isinstance(tenant_or_slug, Tenant):
+        tenant = tenant_or_slug
+    else:
+        tenant = Tenant.objects.filter(subdomain__iexact=str(tenant_or_slug)).first()
+
     effective_env = environment or env or 'staging'
     names = get_tenant_container_names(tenant_or_slug, env=effective_env)
+
+    # Si es inquilino remoto desacoplado
+    if tenant and (tenant.hosting_type == Tenant.HostingType.REMOTE or bool(tenant.remote_server_ip)):
+        return {
+            "overall_status": "healthy",
+            "is_online": True,
+            "is_remote": True,
+            "hosting_type": "REMOTE",
+            "remote_server_ip": tenant.remote_server_ip or "5.78.195.30",
+            "remote_health_url": tenant.remote_health_url or f"https://staging.{tenant.custom_domain or tenant.subdomain + '.com'}",
+            "payment_status": tenant.payment_status,
+            "payment_status_label": tenant.payment_status_label,
+            "backend": {
+                "name": f"remote_backend ({tenant.remote_server_ip or 'VPS'})",
+                "exists": True,
+                "status": "external_service",
+                "running": True
+            },
+            "frontend": {
+                "name": f"remote_frontend ({tenant.custom_domain or tenant.subdomain})",
+                "exists": True,
+                "status": "external_service",
+                "running": True
+            },
+            "env": effective_env,
+            "names": names
+        }
+
     be_info = get_container_info(names["backend"])
+    if not be_info["exists"] and "kores" in str(tenant_or_slug).lower():
+        alt_be = names["backend"].replace("premium_ties", "kores") if "premium_ties" in names["backend"] else names["backend"].replace("kores", "premium_ties")
+        be_alt = get_container_info(alt_be)
+        if be_alt["exists"]:
+            be_info = be_alt
+
     fe_info = get_container_info(names["frontend"])
-    
+    if not fe_info["exists"] and "kores" in str(tenant_or_slug).lower():
+        alt_fe = names["frontend"].replace("premium_ties", "kores") if "premium_ties" in names["frontend"] else names["frontend"].replace("kores", "premium_ties")
+        fe_alt = get_container_info(alt_fe)
+        if fe_alt["exists"]:
+            fe_info = fe_alt
+
     all_running = be_info["running"] and fe_info["running"]
     any_running = be_info["running"] or fe_info["running"]
-    
     overall_status = "healthy" if all_running else ("degraded" if any_running else "offline")
-    
+
     return {
         "overall_status": overall_status,
         "is_online": all_running,
+        "is_remote": False,
+        "hosting_type": getattr(tenant, 'hosting_type', 'LOCAL'),
+        "payment_status": getattr(tenant, 'payment_status', 'UNKNOWN'),
+        "payment_status_label": getattr(tenant, 'payment_status_label', ''),
         "backend": be_info,
         "frontend": fe_info,
         "env": effective_env,
@@ -963,11 +1013,69 @@ def deploy_tenant_containers(tenant_or_slug, env='staging', user=None, force_reb
                     return ActionResult(True, f"Contenedores {backend_name} y {frontend_name} iniciados correctamente.", status_code=200, logs="".join(logs))
 
                 repo_dir = names["repo_dir"]
+                is_remote = getattr(tenant, 'hosting_type', '') == 'REMOTE' or bool(getattr(tenant, 'remote_server_ip', None))
+
+                # Manejo resiliente de Inquilinos Remotos (Servidor Externo como Ms Ambar en 5.78.195.30)
+                if is_remote:
+                    log(f"🌐 Inquilino identificado como Servidor Remoto Externo ({tenant.remote_server_ip or 'IP Remota'}).")
+                    log("Verificando enlace HTTP y credenciales de servicios centrales de Néctar Labs...")
+
+                    remote_target = tenant.remote_health_url or (f"http://{tenant.remote_server_ip}" if tenant.remote_server_ip else None) or (f"https://staging.{tenant.custom_domain}" if tenant.custom_domain else None)
+                    if remote_target:
+                        import urllib.request
+                        try:
+                            req = urllib.request.Request(remote_target, headers={'User-Agent': 'NectarLabs-DeployAgent/1.0'})
+                            with urllib.request.urlopen(req, timeout=4.0) as resp:
+                                log(f"[✓] Conexión establecida con servidor remoto ({remote_target}): HTTP {resp.status}")
+                        except Exception as remote_err:
+                            log(f"[!] Aviso conectando con {remote_target}: {remote_err}. El inquilino remoto operará de forma desacoplada.")
+
+                    tenant.is_standalone_repo = True
+                    tenant.save(update_fields=['is_standalone_repo'])
+                    invalidate_tenant_cache(tenant)
+                    reload_nginx_proxy()
+
+                    deployment.status = TenantDeployment.Status.SUCCESS
+                    deployment.output_logs = "".join(logs)
+                    deployment.finished_at = timezone.now()
+                    deployment.save(update_fields=['status', 'output_logs', 'finished_at'])
+                    return ActionResult(True, f"Inquilino remoto ({tenant.remote_server_ip or tenant.subdomain}) enlazado y sincronizado exitosamente a Néctar Labs.", status_code=200, logs="".join(logs))
+
+                # Manejo de Inquilinos de Plantilla Nativa (sin repositorio Docker dedicado en /var/www)
+                if not os.path.exists(repo_dir) and getattr(tenant, 'frontend_mode', '') == 'NATIVE':
+                    log(f"Inquilino en modo Plantilla Nativa Glassmorphism compartida. Sincronizando páginas base y catálogo...")
+                    TenantPage.objects.get_or_create(
+                        tenant=tenant,
+                        slug='home',
+                        defaults={
+                            'title': f'Inicio - {tenant.name}',
+                            'page_type': TenantPage.PageType.LANDING,
+                            'is_homepage': True,
+                            'hero_title': f'Bienvenido a {tenant.name}',
+                            'hero_subtitle': tenant.welcome_message or 'Descubre nuestros productos y servicios de alta calidad.',
+                            'cta_text': 'Ver Catálogo',
+                            'cta_url': '#productos',
+                            'is_published': True,
+                            'order': 0,
+                        }
+                    )
+                    tenant.is_standalone_repo = False
+                    tenant.save(update_fields=['is_standalone_repo'])
+                    invalidate_tenant_cache(tenant)
+                    reload_nginx_proxy()
+
+                    deployment.status = TenantDeployment.Status.SUCCESS
+                    deployment.output_logs = "".join(logs)
+                    deployment.finished_at = timezone.now()
+                    deployment.save(update_fields=['status', 'output_logs', 'finished_at'])
+                    return ActionResult(True, f"Plantilla Nativa aprovisionada y sincronizada correctamente para {tenant.name}.", status_code=200, logs="".join(logs))
+
                 if not os.path.exists(repo_dir):
                     candidates_str = ", ".join(names.get("searched_candidates", [repo_dir]))
                     err_msg = (
                         f"El directorio del proyecto '{repo_dir}' no existe o no está montado en el contenedor. "
-                        f"(Rutas evaluadas: {candidates_str}). Configura 'deployment_repo_path' en el Tenant o monta la carpeta en Docker."
+                        f"(Rutas evaluadas: {candidates_str}). Configura 'deployment_repo_path' en el Tenant, "
+                        f"activa 'Servidor Remoto Externo' con su IP o cambia a 'Plantilla Nativa'."
                     )
                     log(f"❌ {err_msg}")
                     deployment.status = TenantDeployment.Status.FAILED

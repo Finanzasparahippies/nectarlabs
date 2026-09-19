@@ -104,8 +104,18 @@ class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-    @action(detail=False, methods=['get'])
+    @action(detail=False, methods=['get', 'patch'])
     def me(self, request):
+        if request.method == 'PATCH':
+            user = request.user
+            prefs = request.data.get('preferences')
+            if isinstance(prefs, dict):
+                current_prefs = dict(user.preferences or {})
+                current_prefs.update(prefs)
+                user.preferences = current_prefs
+                user.save(update_fields=['preferences'])
+            serializer = self.get_serializer(user)
+            return Response(serializer.data)
         serializer = self.get_serializer(request.user)
         return Response(serializer.data)
 

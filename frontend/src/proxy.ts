@@ -195,7 +195,24 @@ export async function middleware(request: NextRequest) {
     if (customFrontendUrl) {
       try {
         const targetUrl = new URL(url.pathname + url.search, customFrontendUrl);
-        return NextResponse.rewrite(targetUrl);
+        const targetHost = targetUrl.hostname.toLowerCase();
+        const currentCleanHost = cleanHost.toLowerCase();
+        const currentHost = hostname.toLowerCase();
+
+        // Blindaje anti-loop: si customFrontendUrl apunta al mismo host externo o dominio público,
+        // nunca hacer rewrite hacia sí mismo para evitar el bucle de Cloudflare (error 403 por exceso de saltos).
+        const isSelfLoop =
+          targetHost === currentCleanHost ||
+          targetHost === currentHost ||
+          (targetHost.endsWith('.kores.vip') && currentHost.endsWith('.kores.vip')) ||
+          (targetHost.endsWith('.finanzasparahippies.com') && currentHost.endsWith('.finanzasparahippies.com')) ||
+          (targetHost.endsWith('.msambar.com') && currentHost.endsWith('.msambar.com'));
+
+        if (!isSelfLoop) {
+          return NextResponse.rewrite(targetUrl);
+        } else {
+          console.warn(`[MultiTenant Proxy] Evitado bucle de proxy a sí mismo (${customFrontendUrl}) para ${cleanHost}`);
+        }
       } catch (rewriteErr) {
         console.warn(`[MultiTenant Proxy] Error enrutando a ${customFrontendUrl}:`, rewriteErr);
       }

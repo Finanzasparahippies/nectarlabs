@@ -1100,6 +1100,19 @@ export default function TenantAdminPage() {
         const config: TenantConfig = await res.json();
         setTenantConfig(config);
 
+        if (typeof document !== 'undefined') {
+          document.title = `${config.name} | Consola de Administración`;
+          if (config.logo_url) {
+            let link: HTMLLinkElement | null = document.querySelector("link[rel*='icon']");
+            if (!link) {
+              link = document.createElement('link');
+              link.rel = 'shortcut icon';
+              document.head.appendChild(link);
+            }
+            link.href = config.logo_url;
+          }
+        }
+
         // Populate customization states
         setEditName(config.name);
         setEditPortalTitle(config.portal_title || '');

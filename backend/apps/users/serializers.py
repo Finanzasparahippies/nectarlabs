@@ -6,7 +6,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('id', 'email', 'username', 'password', 'role', 'is_approved_seller', 'tenant', 'is_email_verified', 'referral_code')
+        fields = ('id', 'email', 'username', 'password', 'role', 'is_approved_seller', 'tenant', 'is_email_verified', 'referral_code', 'preferences')
 
     def create(self, validated_data):
         # Extract fields to pass to create_user or save after

@@ -15,6 +15,7 @@ import DashboardSidebar from '../../components/DashboardSidebar';
 import ConfirmModal from '../../components/ui/ConfirmModal';
 import Toast from '../../components/ui/Toast';
 import { API_URL, fetcher } from '../../lib/api';
+import { getTenantPublicUrl } from '@/lib/tenantUrls';
 
 const BusinessCommander = dynamic(
   () => import('../../components/dashboard/BusinessCommander'),
@@ -2952,16 +2953,8 @@ function DashboardPageOriginal() {
                   </h2>
                   <div className="space-y-4">
                     {tenants.map(tenant => {
-                      const host = typeof window !== 'undefined' ? window.location.host : '';
-                      let domain = `https://${tenant.subdomain}.nectarlabs.dev`;
-                      let urlDisplay = `${tenant.subdomain}.nectarlabs.dev`;
-                      if (host.includes('localhost') || host.includes('127.0.0.1')) {
-                        domain = `/tenants/${tenant.subdomain}`;
-                        urlDisplay = `${host}/tenants/${tenant.subdomain}`;
-                      } else if (host.includes('staging.nectarlabs.dev')) {
-                        domain = `https://${tenant.subdomain}.staging.nectarlabs.dev`;
-                        urlDisplay = `${tenant.subdomain}.staging.nectarlabs.dev`;
-                      }
+                      const domain = getTenantPublicUrl(tenant);
+                      const urlDisplay = domain.replace(/^https?:\/\//, '');
                       return (
                         <div key={tenant.id} className="p-5 rounded-2xl border border-card-border hover:border-nectar-gold/60 transition-all flex flex-col justify-between gap-4 bg-background/20 relative overflow-hidden group">
                           <div className="space-y-2">

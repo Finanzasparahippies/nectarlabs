@@ -62,13 +62,16 @@ class TenantSerializer(serializers.ModelSerializer):
             'subscriber_count',
 
             # Custom CSS/JS & Frontend Mode
-            'frontend_mode', 'custom_css', 'custom_js', 'custom_backend_url', 'custom_frontend_url', 'is_standalone_repo'
+            'frontend_mode', 'custom_css', 'custom_js', 'custom_backend_url', 'custom_frontend_url', 'is_standalone_repo',
+
+            # Hosting y Estado de Pago
+            'hosting_type', 'remote_server_ip', 'remote_health_url', 'payment_status', 'payment_status_label'
         ]
         read_only_fields = [
             'id', 'owner', 'api_key', 'created_at', 'updated_at', 
             'is_ambassador', 'free_stamps_left', 'stamps_used_this_month', 'stamps_last_reset',
             'subscriber_count', 'has_active_plan_contract', 'is_addons_only', 'trial_ends_at', 'server_time',
-            'shipping_wallet_balance', 'platform_shipping_fee'
+            'shipping_wallet_balance', 'platform_shipping_fee', 'payment_status', 'payment_status_label'
         ]
 
     def get_owner_email(self, obj):
@@ -272,6 +275,7 @@ class TenantPublicSerializer(serializers.ModelSerializer):
             'pollen_active', 'pollen_icon', 'pollen_color', 'pollen_count', 'pollen_blur',
             # Custom CSS/JS & Frontend Mode
             'frontend_mode', 'custom_css', 'custom_js', 'custom_backend_url', 'custom_frontend_url', 'is_standalone_repo',
+            'hosting_type', 'remote_server_ip', 'payment_status', 'payment_status_label',
             # Public Pages & Navigation
             'pages', 'navigation_menu'
         ]

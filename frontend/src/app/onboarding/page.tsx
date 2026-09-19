@@ -58,6 +58,8 @@ function OnboardingContent() {
   const [appliedPromo, setAppliedPromo] = useState<any | null>(null);
   const [promoError, setPromoError] = useState('');
   const [validatingPromo, setValidatingPromo] = useState(false);
+  const [contractFontSize, setContractFontSize] = useState<'normal' | 'large' | 'xlarge'>('normal');
+  const [isZenMode, setIsZenMode] = useState(false);
 
   const [formData, setFormData] = useState<{
     plan: string;
@@ -546,10 +548,58 @@ function OnboardingContent() {
 
         {step === 3 && (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
-            <h1 className="text-5xl font-black tracking-tighter">Firma Digital</h1>
-            <p className="text-xl opacity-60">Revisa cuidadosamente los términos del contrato antes de firmar.</p>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <h1 className="text-4xl md:text-5xl font-black tracking-tighter">Firma Digital & Revisión Legal</h1>
+                <p className="text-sm md:text-lg opacity-60 mt-1">Revisa con total comodidad cada una de las cláusulas de tu contrato de partner tecnológico.</p>
+              </div>
 
-            <div className="bg-card-bg/85 backdrop-blur-md border border-nectar-gold/25 rounded-3xl overflow-hidden flex flex-col min-h-[68vh] max-h-[78vh] md:max-h-[82vh] shadow-[0_0_50px_rgba(198,138,30,0.08)] relative">
+              {/* Reader Ergonomics Toolbar */}
+              <div className="flex items-center gap-2 self-start md:self-auto bg-card-bg/90 border border-card-border/80 p-1.5 rounded-2xl">
+                <span className="text-3xs uppercase tracking-widest font-black opacity-40 px-2">Texto:</span>
+                <button
+                  type="button"
+                  onClick={() => setContractFontSize('normal')}
+                  className={`px-2.5 py-1 text-2xs font-black rounded-xl transition-all ${
+                    contractFontSize === 'normal' ? 'bg-nectar-gold text-black' : 'text-foreground/60 hover:text-foreground'
+                  }`}
+                >
+                  A
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setContractFontSize('large')}
+                  className={`px-2.5 py-1 text-xs font-black rounded-xl transition-all ${
+                    contractFontSize === 'large' ? 'bg-nectar-gold text-black' : 'text-foreground/60 hover:text-foreground'
+                  }`}
+                >
+                  A+
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setContractFontSize('xlarge')}
+                  className={`px-2.5 py-1 text-sm font-black rounded-xl transition-all ${
+                    contractFontSize === 'xlarge' ? 'bg-nectar-gold text-black' : 'text-foreground/60 hover:text-foreground'
+                  }`}
+                >
+                  A++
+                </button>
+                <div className="h-4 w-[1px] bg-card-border/60 mx-1" />
+                <button
+                  type="button"
+                  onClick={() => setIsZenMode(prev => !prev)}
+                  className={`px-3 py-1 text-2xs font-black uppercase tracking-wider rounded-xl transition-all flex items-center gap-1.5 ${
+                    isZenMode ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40' : 'text-foreground/70 hover:text-foreground'
+                  }`}
+                >
+                  <span>{isZenMode ? '🔍 Vista Normal' : '📖 Modo Zen'}</span>
+                </button>
+              </div>
+            </div>
+
+            <div className={`bg-card-bg/85 backdrop-blur-md border border-nectar-gold/25 rounded-3xl overflow-hidden flex flex-col shadow-[0_0_50px_rgba(198,138,30,0.08)] relative transition-all duration-300 ${
+              isZenMode ? 'fixed inset-4 z-50 min-h-[92vh] max-h-[92vh]' : 'min-h-[55vh] max-h-[70vh] md:max-h-[75vh]'
+            }`}>
               <style>{`
                 .custom-contract-scrollbar::-webkit-scrollbar {
                   width: 8px;
@@ -569,13 +619,28 @@ function OnboardingContent() {
               `}</style>
 
               {/* Contract Preview Document */}
-              <div className="p-8 md:p-12 overflow-y-auto custom-contract-scrollbar flex-1 bg-background/30 selection:bg-nectar-gold selection:text-background">
-                <header className="mb-12 border-b border-card-border/60 pb-8">
-                  <h2 className="text-2xl font-black tracking-tighter mb-2">CONTRATO DE PRESTACIÓN DE SERVICIOS TECNOLÓGICOS</h2>
-                  <p className="text-nectar-gold font-bold uppercase tracking-widest text-2xs">Modalidad: Partner Tecnológico</p>
+              <div className={`p-6 sm:p-10 md:p-14 overflow-y-auto custom-contract-scrollbar flex-1 bg-background/30 selection:bg-nectar-gold selection:text-background transition-all ${
+                contractFontSize === 'xlarge' ? 'text-lg leading-loose' : contractFontSize === 'large' ? 'text-base leading-relaxed' : 'text-sm leading-relaxed'
+              }`}>
+                <header className="mb-10 border-b border-card-border/60 pb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <h2 className="text-xl md:text-2xl font-black tracking-tighter mb-1">CONTRATO DE PRESTACIÓN DE SERVICIOS TECNOLÓGICOS</h2>
+                    <p className="text-nectar-gold font-bold uppercase tracking-widest text-2xs">Modalidad: Partner Tecnológico</p>
+                  </div>
+                  {isZenMode && (
+                    <button
+                      type="button"
+                      onClick={() => setIsZenMode(false)}
+                      className="self-start sm:self-auto px-4 py-2 bg-foreground/10 hover:bg-foreground/20 rounded-xl text-xs font-black uppercase tracking-wider"
+                    >
+                      ✕ Salir de Modo Zen
+                    </button>
+                  )}
                 </header>
 
-                <div className="prose prose-invert max-w-none space-y-10 text-sm leading-relaxed opacity-85">
+                <div className={`prose prose-invert max-w-none space-y-10 opacity-90 ${
+                  contractFontSize === 'xlarge' ? 'text-base' : contractFontSize === 'large' ? 'text-sm' : 'text-xs md:text-sm'
+                }`}>
                   <section>
                     <p>Este contrato se celebra entre <strong>Néctar Labs</strong>, representado por <strong>Jesus Saul Villegas Cruz</strong>, en adelante "EL DESARROLLADOR", y <strong>{formData.full_name || '[Nombre del Cliente]'}</strong>, en adelante "EL CLIENTE".</p>
                   </section>

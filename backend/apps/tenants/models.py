@@ -380,9 +380,65 @@ class Tenant(models.Model):
         help_text="Indica si este tenant opera con stack Docker dedicado autónomo en lugar de la plantilla nativa compartida."
     )
 
+    class HostingType(models.TextChoices):
+        LOCAL = 'LOCAL', 'Local / Contenedor Néctar'
+        REMOTE = 'REMOTE', 'Servidor Remoto Externo'
+
+    hosting_type = models.CharField(
+        max_length=20,
+        choices=HostingType.choices,
+        default=HostingType.LOCAL,
+        help_text="Infraestructura donde corre el inquilino (Local Docker en Néctar vs Servidor Remoto Externo)"
+    )
+    remote_server_ip = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        help_text="Dirección IP del servidor remoto (ej: 5.78.195.30)"
+    )
+    remote_health_url = models.URLField(
+        blank=True,
+        null=True,
+        help_text="URL de Healthcheck o monitoreo en el servidor remoto (ej: https://staging.msambar.com/api/health/)"
+    )
+
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    @property
+    def payment_status(self) -> str:
+        """
+        Calcula el estado de facturación y pagos del inquilino de forma idempotente.
+        """
+        if self.is_in_trial:
+            return "TRIAL"
+        if not self.is_active:
+            return "RESERVED"
+        
+        from apps.shop.models import Contract, Installment
+        contract = Contract.objects.filter(user=self.owner, is_active=True, is_fully_signed=True).first()
+        if not contract:
+            return "RESERVED"
+
+        pending_inst = Installment.objects.filter(contract=contract, is_paid=False).order_by('due_date').first()
+        if pending_inst:
+            if pending_inst.due_date < timezone.now().date():
+                return "OVERDUE"
+            return "PENDING_PAYMENT"
+
+        return "ACTIVE_PAID"
+
+    @property
+    def payment_status_label(self) -> str:
+        status_map = {
+            "ACTIVE_PAID": "Al corriente (Plan Activo)",
+            "TRIAL": "En Prueba Gratuita",
+            "PENDING_PAYMENT": "Pendiente de Pago",
+            "OVERDUE": "Cuota Vencida",
+            "RESERVED": "Reservado (Sin Pago Registrado)",
+        }
+        return status_map.get(self.payment_status, "Estado Desconocido")
 
     def __str__(self):
         return f"{self.name} ({self.subdomain})"

@@ -13,6 +13,11 @@ interface TenantItem {
   wallet_balance?: string | number;
   is_active: boolean;
   created_at: string;
+  hosting_type?: 'LOCAL' | 'REMOTE';
+  remote_server_ip?: string | null;
+  remote_health_url?: string | null;
+  payment_status?: string;
+  payment_status_label?: string;
 }
 
 interface ContainerDetail {
@@ -72,6 +77,8 @@ export default function DeployCommander() {
   
   // Modal & Safety
   const [isDeployModalOpen, setIsDeployModalOpen] = useState(false);
+  const [isRemoteCredsOpen, setIsRemoteCredsOpen] = useState(false);
+  const [remotePingLoading, setRemotePingLoading] = useState(false);
   const [forceRebuild, setForceRebuild] = useState(false);
   
   // Terminal State
@@ -388,6 +395,62 @@ export default function DeployCommander() {
     }
   };
 
+  // Ping Remote Host (e.g. Ms Ambar on 5.78.195.30)
+  const handlePingRemoteServer = async () => {
+    if (!selectedTenant) return;
+    setRemotePingLoading(true);
+    try {
+      const token = getStoredToken();
+      const res = await fetch(`${apiBase}/tenants/${selectedTenant.id}/remote-health/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify({
+          url: selectedTenant.remote_health_url || (selectedTenant.remote_server_ip ? `http://${selectedTenant.remote_server_ip}` : undefined)
+        })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setBannerNotice({
+          type: 'success',
+          message: `Servidor Remoto ONLINE: ${data.target_url} (HTTP ${data.http_status}, latencia ${data.latency_ms}ms)`
+        });
+        setLogs(prev => [
+          ...prev,
+          {
+            id: Math.random().toString(),
+            timestamp: new Date().toLocaleTimeString(),
+            text: `🌐 [HEALTHCHECK REMOTO EXITOSO] ${data.target_url} -> HTTP ${data.http_status} (${data.latency_ms}ms)`,
+            stream: 'system'
+          }
+        ]);
+      } else {
+        setBannerNotice({
+          type: 'error',
+          message: `Servidor Remoto no responde: ${data.message || 'Verifica la IP o URL'}`
+        });
+        setLogs(prev => [
+          ...prev,
+          {
+            id: Math.random().toString(),
+            timestamp: new Date().toLocaleTimeString(),
+            text: `⚠️ [HEALTHCHECK REMOTO FALLIDO] ${data.target_url || selectedTenant.remote_server_ip}: ${data.message || 'Sin respuesta'}`,
+            stream: 'stderr'
+          }
+        ]);
+      }
+    } catch (err) {
+      setBannerNotice({
+        type: 'error',
+        message: `Error al probar conexión remota: ${String(err)}`
+      });
+    } finally {
+      setRemotePingLoading(false);
+    }
+  };
+
   // Filtered tenants for search dropdown
   const filteredTenants = tenants.filter((t) => {
     const q = searchQuery.toLowerCase();
@@ -435,7 +498,7 @@ export default function DeployCommander() {
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           {/* Tenant Selector & Subdomain Display */}
           <div className="flex-1 space-y-3">
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <span className="px-3 py-1 bg-nectar-gold/10 text-nectar-gold text-2xs font-black uppercase tracking-widest rounded-full border border-nectar-gold/20">
                 Orquestador PaaS Multi-Inquilino
               </span>
@@ -459,6 +522,33 @@ export default function DeployCommander() {
                 ></span>
                 {overallStatus.toUpperCase()}
               </span>
+
+              {/* Payment & Contract Status Badge */}
+              {selectedTenant && (
+                <span
+                  className={`px-3 py-1 text-2xs font-black uppercase tracking-widest rounded-full border ${
+                    selectedTenant.payment_status === 'ACTIVE_PAID'
+                      ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                      : selectedTenant.payment_status === 'TRIAL'
+                      ? 'bg-blue-500/10 text-blue-400 border-blue-500/30'
+                      : selectedTenant.payment_status === 'PENDING_PAYMENT'
+                      ? 'bg-amber-500/10 text-amber-400 border-amber-500/30'
+                      : selectedTenant.payment_status === 'OVERDUE'
+                      ? 'bg-rose-500/10 text-rose-400 border-rose-500/30'
+                      : 'bg-zinc-500/10 text-zinc-400 border-zinc-500/30'
+                  }`}
+                  title={selectedTenant.payment_status_label || selectedTenant.payment_status}
+                >
+                  💳 {selectedTenant.payment_status_label || (selectedTenant.is_active ? 'Activo' : 'Reservado')}
+                </span>
+              )}
+
+              {/* Hosting Type Badge */}
+              {selectedTenant?.hosting_type === 'REMOTE' && (
+                <span className="px-3 py-1 bg-purple-500/10 text-purple-300 text-2xs font-black uppercase tracking-widest rounded-full border border-purple-500/30 flex items-center gap-1">
+                  🌐 Remoto: {selectedTenant.remote_server_ip || 'Externo'}
+                </span>
+              )}
             </div>
 
             <div className="flex flex-col sm:flex-row sm:items-center gap-4">
@@ -472,11 +562,15 @@ export default function DeployCommander() {
                   }}
                   className="w-full px-4 py-3 rounded-2xl bg-background/80 border border-card-border text-foreground font-bold text-sm focus:outline-none focus:border-nectar-gold transition-colors appearance-none cursor-pointer"
                 >
-                  {tenants.map((t) => (
-                    <option key={t.id} value={t.id} className="bg-background text-foreground">
-                      {t.name} ({t.subdomain})
-                    </option>
-                  ))}
+                  {tenants.map((t) => {
+                    const payBadge = t.payment_status === 'ACTIVE_PAID' ? '🟢 Pagado' : t.payment_status === 'PENDING_PAYMENT' ? '🟡 Pend. Pago' : t.is_active ? '🟢 Activo' : '⚪ Reservado';
+                    const hostBadge = t.hosting_type === 'REMOTE' ? '🌐 Remoto' : '📦 Docker';
+                    return (
+                      <option key={t.id} value={t.id} className="bg-background text-foreground">
+                        {t.name} ({t.subdomain}) — [{payBadge} | {hostBadge}]
+                      </option>
+                    );
+                  })}
                 </select>
                 <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-foreground/40 text-xs">
                   ▼
@@ -498,7 +592,7 @@ export default function DeployCommander() {
                     Billetera: ${Number(selectedTenant.wallet_balance || 0).toFixed(2)} MXN
                   </span>
                   {statusData?.names?.repo_dir && (
-                    <span className="px-3 py-1.5 rounded-xl bg-background/50 border border-card-border font-mono text-foreground/60 text-2xs truncate max-w-[260px]" title="Ruta física de orquestación en el servidor remoto">
+                    <span className="px-3 py-1.5 rounded-xl bg-background/50 border border-card-border font-mono text-foreground/60 text-2xs truncate max-w-[260px]" title="Ruta física de orquestación">
                       📂 {statusData.names.repo_dir}
                     </span>
                   )}
@@ -602,6 +696,34 @@ export default function DeployCommander() {
             )}
             Detener Suite
           </button>
+
+          {/* Botones de acción para Servidor Remoto */}
+          {selectedTenant?.hosting_type === 'REMOTE' && (
+            <>
+              <button
+                onClick={handlePingRemoteServer}
+                disabled={remotePingLoading}
+                className="px-5 py-3 rounded-2xl bg-purple-500/10 border border-purple-500/30 hover:border-purple-400 text-purple-300 font-black text-xs uppercase tracking-wider transition-all flex items-center gap-2 disabled:opacity-50"
+                title="Probar conectividad y latencia hacia el servidor remoto"
+              >
+                {remotePingLoading ? (
+                  <span className="w-3 h-3 border-2 border-purple-300 border-t-transparent rounded-full animate-spin"></span>
+                ) : (
+                  <span>🌐</span>
+                )}
+                Ping Servidor Remoto
+              </button>
+
+              <button
+                onClick={() => setIsRemoteCredsOpen(true)}
+                className="px-5 py-3 rounded-2xl bg-background/80 border border-card-border hover:border-nectar-gold text-foreground font-black text-xs uppercase tracking-wider transition-all flex items-center gap-2"
+                title="Ver variables de entorno (.env) para vincular con el servidor remoto"
+              >
+                <span>🔑</span>
+                Credenciales API
+              </button>
+            </>
+          )}
 
           {/* Direct Link to Staging/Prod Preview */}
           {selectedTenant && (
@@ -1070,6 +1192,73 @@ export default function DeployCommander() {
                 className="px-6 py-2.5 rounded-xl bg-nectar-gold text-black font-black text-xs uppercase tracking-wider hover:opacity-90 transition-opacity"
               >
                 Iniciar Despliegue
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal for Remote Server Connection & Credentials (.env) */}
+      {isRemoteCredsOpen && selectedTenant && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
+          <div className="p-8 rounded-[2.5rem] bg-card-bg border border-card-border max-w-xl w-full shadow-2xl space-y-6 relative animate-scaleUp">
+            <div className="flex items-center justify-between border-b border-card-border pb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-xl">
+                  🌐
+                </div>
+                <div>
+                  <h3 className="text-lg font-black tracking-tight">Conexión de Servidor Remoto</h3>
+                  <p className="text-2xs text-foreground/60">{selectedTenant.name} ({selectedTenant.subdomain})</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsRemoteCredsOpen(false)}
+                className="w-8 h-8 rounded-full bg-background border border-card-border flex items-center justify-center text-xs opacity-60 hover:opacity-100"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-3 text-xs">
+              <p className="text-foreground/80 leading-relaxed">
+                Copia y pega estas variables en el archivo <code className="text-nectar-gold font-mono">.env</code> de tu proyecto remoto (en <code className="font-mono text-purple-300">{selectedTenant.remote_server_ip || 'tu servidor'}</code>) para enlazar timbrado, saldo y add-ons con Nectar Labs:
+              </p>
+
+              <div className="p-4 rounded-2xl bg-black/60 border border-card-border/80 font-mono text-xs space-y-1.5 selection:bg-nectar-gold selection:text-black">
+                <div className="text-zinc-500"># Configuración Gateway Nectar Labs</div>
+                <div className="text-emerald-400">NECTAR_PLATFORM_URL=<span className="text-foreground">{apiBase.replace(/\/api$/, '')}</span></div>
+                <div className="text-emerald-400">NECTAR_API_URL=<span className="text-foreground">{apiBase}</span></div>
+                <div className="text-emerald-400">NECTAR_TENANT_ID=<span className="text-foreground">{selectedTenant.id}</span></div>
+                <div className="text-emerald-400">NECTAR_TENANT_SUBDOMAIN=<span className="text-foreground">{selectedTenant.subdomain}</span></div>
+                <div className="text-emerald-400">NECTAR_HOSTING_TYPE=<span className="text-foreground">REMOTE</span></div>
+                <div className="text-emerald-400">NECTAR_REMOTE_SERVER_IP=<span className="text-foreground">{selectedTenant.remote_server_ip || '5.78.195.30'}</span></div>
+              </div>
+
+              <div className="p-3.5 rounded-2xl bg-purple-500/5 border border-purple-500/20 text-2xs space-y-1 text-purple-200">
+                <div className="font-bold flex items-center gap-1.5 text-purple-300">
+                  <span>💡</span> Endpoint Gateway Universal:
+                </div>
+                <p className="opacity-80">
+                  El servidor remoto puede consumir <code className="text-nectar-gold">{apiBase}/tenants/{selectedTenant.id}/gateway-services/</code> enviando la cabecera <code className="text-foreground">X-Tenant-Subdomain: {selectedTenant.subdomain}</code> para consultar saldo en tiempo real y emitir timbres.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-4 border-t border-card-border">
+              <button
+                onClick={() => {
+                  const envText = `NECTAR_PLATFORM_URL=${apiBase.replace(/\/api$/, '')}\nNECTAR_API_URL=${apiBase}\nNECTAR_TENANT_ID=${selectedTenant.id}\nNECTAR_TENANT_SUBDOMAIN=${selectedTenant.subdomain}\nNECTAR_HOSTING_TYPE=REMOTE\nNECTAR_REMOTE_SERVER_IP=${selectedTenant.remote_server_ip || '5.78.195.30'}`;
+                  navigator.clipboard.writeText(envText);
+                  setBannerNotice({
+                    type: 'success',
+                    message: '¡Variables copiadas al portapapeles con éxito!'
+                  });
+                  setIsRemoteCredsOpen(false);
+                }}
+                className="px-6 py-2.5 rounded-xl bg-nectar-gold text-black font-black text-xs uppercase tracking-wider hover:opacity-90 transition-opacity"
+              >
+                Copiar Variables .env
               </button>
             </div>
           </div>

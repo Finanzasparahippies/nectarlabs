@@ -18,7 +18,8 @@ def handle_tenant_post_save(sender, instance, created, **kwargs):
     1. Si es recién creado, autogenera las páginas iniciales por defecto (Home y Contacto).
     2. Invalida la caché Redis del Tenant.
     """
-    if created:
+    needs_default_pages = created or not instance.pages.exists()
+    if needs_default_pages:
         try:
             # Crear Página Principal por defecto
             TenantPage.objects.get_or_create(

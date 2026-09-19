@@ -60,8 +60,9 @@ class TenantViewSet(viewsets.ModelViewSet):
         if user.is_anonymous:
             return Tenant.objects.select_related('owner').prefetch_related('pages', 'nav_items').filter(is_active=True).order_by('-created_at')
         if user.is_staff or user.role == 'ADMIN':
-            if self.request.query_params.get('all') == 'true':
+            if self.request.query_params.get('active_only') == 'true':
                 return Tenant.objects.select_related('owner').filter(is_active=True).order_by('-created_at')
+            # all=true o admin panel: retorna el inventario completo con sus estados para deploys y administración
             return Tenant.objects.select_related('owner').all().order_by('-created_at')
         return Tenant.objects.select_related('owner').filter(owner=user).order_by('-created_at')
 
@@ -237,6 +238,111 @@ class TenantViewSet(viewsets.ModelViewSet):
             return Response({'error': 'Permiso denegado.'}, status=status.HTTP_403_FORBIDDEN)
         txs = tenant.wallet_transactions.order_by('-created_at')[:50]
         return Response(TenantWalletTransactionSerializer(txs, many=True).data)
+
+    @action(detail=True, methods=['get', 'post'], url_path='remote-health')
+    def remote_health(self, request, pk=None):
+        """
+        Healthcheck bidireccional hacia servidores remotos de inquilinos (ej. Ms Ambar en 5.78.195.30).
+        Valida latencia y código de estado HTTP.
+        """
+        import time
+        import urllib.request
+        import urllib.error
+        tenant = self.get_object()
+
+        candidate_urls = []
+        if tenant.remote_health_url:
+            candidate_urls.append(tenant.remote_health_url)
+        if tenant.remote_server_ip:
+            candidate_urls.append(f"http://{tenant.remote_server_ip}")
+            candidate_urls.append(f"http://{tenant.remote_server_ip}:3000")
+            candidate_urls.append(f"http://{tenant.remote_server_ip}:8000")
+        if tenant.custom_frontend_url and tenant.custom_frontend_url.startswith('http'):
+            candidate_urls.append(tenant.custom_frontend_url)
+        if tenant.custom_domain:
+            candidate_urls.append(f"https://staging.{tenant.custom_domain}")
+            candidate_urls.append(f"https://{tenant.custom_domain}")
+
+        target_url = request.data.get('url') or request.query_params.get('url') or (candidate_urls[0] if candidate_urls else None)
+        if not target_url:
+            return Response({
+                'success': False,
+                'status': 'CONFIG_REQUIRED',
+                'message': 'No hay IP de servidor remoto ni URL de healthcheck configurada para este inquilino.',
+                'tenant_id': str(tenant.id)
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        start_t = time.time()
+        try:
+            req = urllib.request.Request(
+                target_url,
+                headers={'User-Agent': 'NectarLabs-Healthcheck-Agent/1.0', 'X-Nectar-Ping': str(tenant.id)}
+            )
+            with urllib.request.urlopen(req, timeout=4.5) as resp:
+                latency = round((time.time() - start_t) * 1000, 2)
+                return Response({
+                    'success': True,
+                    'status': 'ONLINE',
+                    'http_code': resp.status,
+                    'latency_ms': latency,
+                    'target_url': target_url,
+                    'remote_ip': tenant.remote_server_ip or 'Auto-detect',
+                    'timestamp': timezone.now().isoformat()
+                })
+        except urllib.error.HTTPError as he:
+            latency = round((time.time() - start_t) * 1000, 2)
+            # Códigos HTTP válidos de servidor activo aunque requiera auth o 404 de ruta
+            is_alive = he.code in [200, 204, 301, 302, 401, 403, 404]
+            return Response({
+                'success': is_alive,
+                'status': 'ONLINE' if is_alive else 'ERROR',
+                'http_code': he.code,
+                'latency_ms': latency,
+                'target_url': target_url,
+                'message': f"Servidor remoto respondió con código HTTP {he.code}."
+            })
+        except Exception as e:
+            latency = round((time.time() - start_t) * 1000, 2)
+            return Response({
+                'success': False,
+                'status': 'OFFLINE',
+                'error': str(e),
+                'latency_ms': latency,
+                'target_url': target_url,
+                'message': f"No se pudo conectar con el servidor remoto: {e}"
+            }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+    @action(detail=False, methods=['get'], url_path='gateway-services', permission_classes=[permissions.AllowAny])
+    def gateway_services(self, request):
+        """
+        Pasarela de servicios centrales de Néctar Labs para inquilinos remotos (Ms Ambar, etc.).
+        Autenticado vía X-API-Key o X-Tenant-ID.
+        """
+        from .utils import get_tenant_from_request
+        tenant = get_tenant_from_request(request)
+        if not tenant:
+            return Response({'error': 'Credenciales de inquilino (X-API-Key o tenant_id) inválidas o ausentes.'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        return Response({
+            'tenant_id': str(tenant.id),
+            'name': tenant.name,
+            'subdomain': tenant.subdomain,
+            'hosting_type': tenant.hosting_type,
+            'remote_server_ip': tenant.remote_server_ip,
+            'wallet_balance': str(tenant.wallet_balance),
+            'shipping_wallet_balance': str(tenant.shipping_wallet_balance),
+            'stamp_balance': tenant.stamp_balance,
+            'active_addons': list(tenant.active_addons),
+            'payment_status': tenant.payment_status,
+            'payment_status_label': tenant.payment_status_label,
+            'has_active_plan_contract': tenant.has_active_plan_contract,
+            'features': {
+                'sat_invoicing': 'facturacion-cfdi' in tenant.active_addons or 'mexico-invoicing' in tenant.active_addons or tenant.has_active_plan_contract,
+                'campaigner_masivo': 'newsletter-campaigner' in tenant.active_addons or tenant.has_active_plan_contract,
+                'logistics_gps': 'logistics-gps' in tenant.active_addons or tenant.has_active_plan_contract,
+            },
+            'server_time': timezone.now().isoformat()
+        })
 
     @action(detail=True, methods=['post'], url_path='wallet-recharge')
     def wallet_recharge(self, request, pk=None):
@@ -560,6 +666,17 @@ def resolve_host(request):
     lg_url = request.build_absolute_uri(tenant.logo.url) if tenant.logo else (tenant.logo_url or '')
 
     custom_fe = tenant.custom_frontend_url
+    if custom_fe:
+        # Prevenir bucles de proxy si custom_fe coincide con el host público entrante
+        from urllib.parse import urlparse
+        try:
+            parsed_fe = urlparse(custom_fe)
+            fe_host = (parsed_fe.netloc or parsed_fe.path).split(':')[0].lower()
+            if fe_host in [clean_host, host.lower()] or (tenant.custom_domain and tenant.custom_domain.lower() == fe_host):
+                custom_fe = None
+        except Exception as parse_err:
+            logger.debug(f"Error parseando custom_frontend_url ({custom_fe}): {parse_err}")
+
     if not custom_fe:
         try:
             from .provisioner import get_tenant_container_names
@@ -579,6 +696,10 @@ def resolve_host(request):
         'custom_domain': tenant.custom_domain,
         'custom_frontend_url': custom_fe,
         'is_standalone_repo': getattr(tenant, 'is_standalone_repo', False) or bool(custom_fe),
+        'hosting_type': tenant.hosting_type,
+        'remote_server_ip': tenant.remote_server_ip,
+        'payment_status': tenant.payment_status,
+        'payment_status_label': tenant.payment_status_label,
         'has_isolated_code': has_isolated_code,
         'theme_color': tenant.theme_color,
         'accent_color': tenant.accent_color,
